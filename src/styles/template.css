@@ -219,29 +219,37 @@
 /* Toggle button styles */
 .toggle-btn-container {
     position: fixed;
-    left: var(--sidebar-width);
-    top: 5%;
-    transform: translate(-50%, -50%);
-    z-index: 999;
-    transition: left var(--transition-speed);
+    top: 5px;
+    z-index: 1000;
+    transition: all 0.3s ease;
 }
 
-
-.app.rtl.toggle-btn-container {
-    position: fixed;
-    right: var(--sidebar-width);
-    top: 5%;
-    transform: translate(-50%, -50%);
-    z-index: 999;
-    transition: right var(--transition-speed);
+.rtl .toggle-btn-container {
+    right: 70px; /* Adjust this value to match the collapsed sidebar width */
+    left: auto;
 }
 
-.sidebar.collapsed ~ .toggle-btn-container {
-    left: var(--sidebar-collapsed-width);
+.ltr .toggle-btn-container {
+    left: 70px; /* Adjust this value to match the collapsed sidebar width */
+    right: auto;
+}
+
+.sidebar.expanded + .toggle-btn-container {
+    right: 240px; /* Adjust this value to match the expanded sidebar width */
+}
+
+.rtl .sidebar.expanded + .toggle-btn-container {
+    right: 240px; /* Adjust this value to match the expanded sidebar width */
+    left: auto;
+}
+
+.ltr .sidebar.expanded + .toggle-btn-container {
+    left: 240px; /* Adjust this value to match the expanded sidebar width */
+    right: auto;
 }
 
 .toggle-btn {
-    width: 40px;
+    width: 20px;
     height: 48px;
     background: white;
     border: 1px solid var(--medium-gray);
@@ -257,7 +265,7 @@
 }
 
 .app.rtl .toggle-btn {
-    width: 40px;
+    width: 20px;
     height: 48px;
     background: white;
     border: 1px solid var(--medium-gray);
@@ -269,7 +277,7 @@
     padding-left: 5px;
     cursor: pointer;
     color: var(--dark-gray);
-    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .toggle-btn i {
