@@ -1,0 +1,228 @@
+.orders-content {
+  padding: 20px;
+}
+
+.orders-header {
+  display: flex;
+  align-items: left;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Space between search input and buttons */
+}
+
+.search-input {
+  padding: 8px 8px;
+  width: 300px; /* Set a fixed width for the search input */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Add 15px gap between toggle and search input */
+}
+
+.header-actions {
+  width: 60%; /* Adjust width to 60% */
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Add spacing between buttons */
+  justify-content: flex-end; /* Align buttons to the right */
+}
+
+.toggle-icon {
+  font-size: 2rem; /* Increase the font size */
+  cursor: pointer;
+  color: #00205B;
+}
+
+.toggle-icon:hover {
+  color: #000077;
+}
+
+.add-button {
+  background-color: #00205B;
+  color: white;
+  border: none;
+  width:140px;
+  margin-left: auto;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.add-button:hover {
+  background-color: #3b3bb3;
+}
+
+.action-menu-container {
+  position: relative;
+  padding: 10px;
+}
+
+.action-menu-icon {
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #2c2c2c;
+}
+
+.action-menu-icon:hover {
+  color: #3b3bb3;
+}
+
+.action-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 120px;
+}
+
+.action-menu-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.action-menu-item:hover {
+  background-color: #f9f9f9;
+}
+
+.table-container {
+  justify-content: center;
+  align-items: center;
+  height: 60vh; /* Adjust height as needed */
+}
+
+.orders-table {
+  width: 100%;
+  background-color: white;
+  border: 1.9px solid #D9D9D6;
+  border-radius: 15px;
+  overflow: hidden;
+  color: #5E6A71;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 12px 16px;
+  height: 60px;
+  text-align: center;
+  border-bottom: 1.9px solid #D9D9D6;
+}
+
+.orders-table tr:nth-child(odd) {
+  background-color: #FFF; /* White for odd rows */
+}
+
+.orders-table tr:nth-child(even) {
+  background-color: #F4F5F6; /* Light gray for even rows */
+  border-left:  #F4F5F6;
+  border-right: #F4F5F6; 
+}
+
+.orders-table tr:hover {
+  background-color: #edf2f7; /* Highlight color on hover */
+}
+
+.orders-table th {
+  background-color: #fff;
+  font-weight: 600;
+  color: #5E6A71;
+}
+
+.status-badge {
+  display: inline-block;
+  width: 100px; /* Set a fixed width */
+  height: 40px; /* Set a fixed height */
+  line-height: 40px; /* Vertically center the text */
+  text-align: center; /* Horizontally center the text */
+  border-radius: 8px; /* Add rounded corners */
+  font-size: 0.85rem; /* Adjust font size */
+  font-weight: 600; /* Make the text bold */
+  color: white; /* Text color */
+}
+
+.status-approved {
+  background-color: #00594C; /* Green for approved */
+}
+
+.status-rejected {
+  background-color: #EF7C00; /* Yellow for rejected */
+}
+
+.status-pending {
+  background-color: #D9D9D6; /* Gray for pending */
+  color: #6D787D;
+}
+
+/* Responsive styles for mobile view */
+@media (max-width: 768px) {
+  .orders-content {
+    padding: 0px; /* Reduce padding for mobile view */
+  }
+  .orders-header {
+    flex-direction: column; /* Stack elements vertically */
+    gap:10px;
+    align-items: center;
+  }
+
+  .header-controls {
+    flex-direction: column; /* Stack search input and buttons */
+    align-items: stretch; /* Stretch elements to full width */
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%; /* Make search input take full width */
+  }
+
+  .header-actions {
+    width: 100%; /* Make header actions take full width */
+    justify-content: center; /* Center buttons */
+    gap: 5px; /* Reduce gap between buttons */
+  }
+
+  .toggle-container {
+    width: 50%; /* Adjust width for mobile view */
+    font-size: smaller; /* Reduce font size */
+    justify-content: flex-start; /* Align toggle to the left */
+  }
+
+
+  .table-container {
+    overflow-x: auto; /* Enable horizontal scrolling for the table */
+  }
+
+  .orders-table {
+    width: 100%; /* Ensure the table fits within the container */
+    font-size: xx-small; /* Reduce font size for smaller screens */
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 8px 10px; /* Reduce padding for smaller screens */
+  }
+
+  .status-badge {
+    width: 70px; /* Reduce width for smaller screens */
+    height: 30px; /* Reduce height for smaller screens */
+    line-height: 30px; /* Adjust line-height to vertically center text */
+    font-size: 0.75rem; /* Reduce font size */
+    border-radius: 8px;
+  }
+}

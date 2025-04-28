@@ -44,10 +44,58 @@
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
-        width: 260px;
+        width: var(--sidebar-width);
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        z-index: 1000;
+        transition: transform var(--transition-speed);
     }
+
     .sidebar.expanded {
         transform: translateX(0);
+    }
+
+
+    .toggle-btn-container {
+        display: none; /* Hide toggle button in mobile view */
+    }
+
+    .mobile-menu-btn {
+        display: block; /* Show mobile menu button */
+    }
+
+    .main-content {
+        margin-left: 0; /* No margin when sidebar is hidden */
+        margin-right: 0;
+    }
+}
+
+/* Mobile - RTL adjustments */
+@media (max-width: 768px) {
+    .app.rtl .sidebar {
+        left: auto;
+        right: 0;
+        transform: translateX(100%); /* Hide sidebar in RTL */
+    }
+
+    .app.rtl .sidebar.expanded {
+        transform: translateX(0); /* Show sidebar in RTL */
+    }
+
+    .app.rtl .sidebar.collapsed {
+        transform: translateX(100%); /* Hide collapsed sidebar in RTL */
+    }
+
+    .app.rtl .mobile-menu-btn {
+        margin-right: 10px; /* Adjust mobile menu button for RTL */
+        margin-left: auto;
+    }
+
+    .app.rtl .main-content {
+        margin-left: 0;
+        margin-right: 0; /* No margin for main content in mobile view */
     }
 }
 
@@ -299,6 +347,18 @@
     }
 }
 
+/* Adjust toggle button for mobile */
+@media (max-width: 768px) {
+    .mobile-menu-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: var(--dark-gray);
+        cursor: pointer;
+        margin-left: 10px;
+    }
+}
+
 /* Main Content Styles */
 .main-content {
     flex: 1;
@@ -315,6 +375,7 @@
 @media (max-width: 768px) {
     .main-content {
         margin-left: 0;
+        margin-right: 0;
     }
 }
 
@@ -324,7 +385,6 @@
     border-bottom: 1px solid var(--medium-gray);
     display: flex;
     align-items: center;
-    padding: 0 35px;
     position: sticky;
     top: 0;
     z-index: 100%;
@@ -347,6 +407,7 @@
 }
 
 .header-title {
+    padding: 35px;
     font-size: 1.1rem;
     font-weight: 600;
 }
@@ -366,7 +427,7 @@
     background: none;
     border: 1px solid var(--medium-gray);
     border-radius: 6px;
-    padding: 6px 10px;
+    padding: 35px;
     font-size: 0.85rem;
     color: var(--dark-gray);
     display: flex;
@@ -428,11 +489,6 @@
     justify-content: left;
 }
 
-/* Main content adjustments for RTL */
-.app.rtl .main-content {
-    margin-left: 0;
-    margin-right: var(--sidebar-width);
-}
 
 .app.rtl .sidebar.collapsed ~ .main-content {
     margin-right: var(--sidebar-collapsed-width);
@@ -441,10 +497,11 @@
 /* Language switch button */
 .lang-switch-btn {
     margin-left: auto; /* Default for LTR (English) */
+    margin-right: 20px;;
     background: none;
     border: 1px solid var(--medium-gray);
     border-radius: 6px;
-    padding: 10px 6px;
+    padding: 10px;
     font-size: 0.85rem;
     color: var(--dark-gray);
     display: flex;
@@ -459,6 +516,6 @@
 }
 
 .app.rtl .lang-switch-btn {
-    margin-left: 0;
+    margin-left: 20px;
     margin-right: auto; /* Adjust for RTL (Arabic) */
 }
