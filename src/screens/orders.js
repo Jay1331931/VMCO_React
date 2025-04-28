@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Template from './template';
-import '../styles/orders.css';
+import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOff, faToggleOn, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 
@@ -53,21 +53,22 @@ function Orders() {
 
   return (
     <Template>
-      <div className="orders-content">
-        <div className="orders-header">
+      <div className="page-content">
+        <div className="page-header">
           <div className="header-controls">
             <input type="text" placeholder="Search..." className="search-input" />
-          </div>
-          <div className="header-actions">
             <div className="toggle-container">
               <label>All</label>
               <FontAwesomeIcon
                 icon={isApprovalMode ? faToggleOn : faToggleOff}
                 className="toggle-icon"
                 onClick={toggleApprovalMode}
+                aria-label={isApprovalMode ? "Switch to All Orders" : "Switch to My Approvals"}
               />
               <label>My Approval</label>
             </div>
+          </div>
+          <div className="header-actions">
             <button className="add-button">+ Add</button>
             <div className="action-menu-container" ref={actionMenuRef}>
               <FontAwesomeIcon
@@ -86,17 +87,17 @@ function Orders() {
           </div>
         </div>
         <div className="table-container">
-          <table className="orders-table">
+          <table className="data-table">
             <thead>
               <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Branch</th>
-                <th>Entity</th>
-                <th>Payment Method</th>
-                <th>Delivery Date</th>
-                <th>Total Amount</th>
-                <th>Status</th>
+                <th scope="col">Order #</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Branch</th>
+                <th scope="col">Entity</th>
+                <th scope="col">Payment Method</th>
+                <th scope="col">Delivery Date</th>
+                <th scope="col">Total Amount</th>
+                <th scope="col">Status</th>
               </tr>
             </thead>
             <tbody>

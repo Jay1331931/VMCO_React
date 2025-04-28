@@ -27,7 +27,7 @@ function Template({ children }) {
   const navigate = useNavigate(); // Initialize navigate
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth > 768);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("Customers");
+  const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
 
   const isRTL = i18n.language === 'ar';
@@ -71,7 +71,7 @@ function Template({ children }) {
   };
 
   const menuItems = [
-    { icon: faHouse, label: 'Dashboard' },
+    { icon: faHouse, label: 'Dashboard', default: true },
     { icon: faBookOpen, label: 'Catalog' },
     { icon: faShoppingCart, label: 'Orders' },
     { icon: faUsers, label: 'Customers' },
