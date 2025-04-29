@@ -3,7 +3,7 @@ import '../styles/template.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
 
 import {
   faChevronLeft,
@@ -24,7 +24,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 function Template({ children }) {
-  const navigate = useNavigate(); // Initialize navigate
+  const navigate = useNavigate();
+  const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth > 768);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
@@ -51,6 +52,17 @@ function Template({ children }) {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isRTL]);
 
+  useEffect(() => {
+    const path = location.pathname;
+    switch (path) {
+      case '/orders': setActiveMenu('Orders'); break;
+      case '/customers': setActiveMenu('Customers'); break;
+      case '/catalogue': setActiveMenu('Catalog'); break;
+      default:
+        setActiveMenu('Dashboard');
+    }
+  }, [location.pathname]);
+
   const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
   const handleMobileToggle = () => {
     setSidebarCollapsed(false);
@@ -62,11 +74,13 @@ function Template({ children }) {
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
     // Navigate to the corresponding page
-    if (label === 'Orders') {
-      navigate('/orders'); // Navigate to the Orders page
-    }
-    if (label === 'Customers') {
-      navigate('/customers'); // Navigate to the Customers page
+    switch (label) {
+      case 'Orders': navigate('/orders'); break;
+      case 'Customers': navigate('/customers'); break;
+      case 'Catalog': navigate('/catalogue'); break;
+      default:
+        // If no match is found, stay on current page
+        break;
     }
   };
 
