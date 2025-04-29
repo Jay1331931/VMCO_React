@@ -3,6 +3,7 @@ import '../styles/template.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 import {
   faChevronLeft,
@@ -22,10 +23,11 @@ import {
   faLanguage
 } from '@fortawesome/free-solid-svg-icons';
 
-function Template() {
+function Template({ children }) {
+  const navigate = useNavigate(); // Initialize navigate
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth > 768);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
-  const [activeMenu, setActiveMenu] = useState("Customers");
+  const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
 
   const isRTL = i18n.language === 'ar';
@@ -58,10 +60,18 @@ function Template() {
   const handleMenuClick = (label) => {
     setActiveMenu(label);
     if (window.innerWidth <= 768) setSidebarExpanded(false);
+
+    // Navigate to the corresponding page
+    if (label === 'Orders') {
+      navigate('/orders'); // Navigate to the Orders page
+    }
+    if (label === 'Customers') {
+      navigate('/customers'); // Navigate to the Customers page
+    }
   };
 
   const menuItems = [
-    { icon: faHouse, label: 'Dashboard' },
+    { icon: faHouse, label: 'Dashboard', default: true },
     { icon: faBookOpen, label: 'Catalog' },
     { icon: faShoppingCart, label: 'Orders' },
     { icon: faUsers, label: 'Customers' },
@@ -161,7 +171,7 @@ function Template() {
         </header>
 
         <div className="content">
-          <h1 className="page-title">{t('Content goes here')}</h1>
+          {children} {/* Render dynamic content here */}
         </div>
       </div>
     </div>
