@@ -1,0 +1,219 @@
+.customer-onboarding-content {
+    padding: 20px;
+}
+
+.customer-onboarding-details {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+}
+
+.customer-onboarding-body {
+    display: flex;
+    gap: 30px;
+}
+
+.customer-onboarding-tabs-vertical {
+    display: flex;
+    flex-direction: column;
+    width: 260px;
+    border-right: 1px solid #ccc;
+    padding-right: 20px;
+  }
+
+  .customer-onboarding-tabs-vertical .tab {
+    padding: 5px 5px;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .customer-onboarding-tabs-vertical .tab:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .customer-onboarding-tabs-vertical .tab.active {
+    font-weight: bold;
+    border-left: 4px solid blue;
+    color: blue;
+  }
+
+  .customer-onboarding-tabs-vertical .tabs-title {
+    font:'Segoe UI';
+    font-size: 25px;
+    margin-bottom: 20px;
+  }
+
+  .customer-onboarding-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    flex: 1;
+  }
+
+  .form-main-header {
+    grid-column: 1 / -1; /* Make it span the full width */
+    text-align: right;
+    margin-bottom: 10px;
+  }
+
+  .form-main-header a {
+    color: blue;
+    text-decoration: none;
+  }
+  
+  .form-main-header a:hover {
+    text-decoration: underline;
+  }
+
+  .form-header {
+    grid-column: 1 / -1;;
+    text-align: left;
+    margin-bottom: 10px;
+  }
+  
+  .form-header a {
+    color: blue;
+    text-decoration: none;
+  }
+  
+  .form-header a:hover {
+    text-decoration: underline;
+  }
+
+  .customer-onboarding-form-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .status-text {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    gap: 6px; /* space between "Status:" and badge */
+  }
+  
+  .status-badge {
+    margin: 20px 0;
+    padding: 0px 12px;
+    background-color: #ffebcc;
+    color: #cc6600;
+    border-radius: 5px;
+    display: inline-block;
+    border: 1px solid #cc6600;
+    margin-left: 10px;
+    margin-right: 545px;
+  }
+  .status-label {
+    font-weight: 500;
+    color: #555; /* slightly gray */
+    margin-right: 4px;
+  }
+
+  .customer-onboarding-form-actions button {
+    margin: 20px 0;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
+
+.form-group select,
+.form-group input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.dropdown {
+    font-size: 12px;        /* Smaller text */
+  padding: 6px 12px;       /* Less padding */
+  height: 40px;           /* Optional: fixed height */
+  width: 250px;           /* Optional: fixed width */
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.dropdown option[value=""]:disabled {
+    color: #aaa; /* Light grey placeholder in dropdown */
+  }
+
+  .dropdown option {
+    color: black; /* Default for all options */
+  }
+  
+  .dropdown option:disabled {
+    color: #aaa; /* Light grey only for disabled placeholder */
+  }
+
+.dropdown::placeholder {
+    color: #aaa;
+}
+
+  .text-field.small {
+    font-size: 12px;
+    padding: 4px 8px;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 250px; /* or 100% for full width */
+  }
+
+  .text-field::placeholder {
+    color: #aaa;
+  }
+
+  .file-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    grid-column: span 1;
+}
+
+.document-upload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.document-upload label {
+    margin-right: 150px;
+}
+
+.document-upload.full-width input[type="file"] {
+    position: absolute;
+    margin-left: 350px;
+  }
+
+.checkbox-option {
+    margin-bottom: 8px;           /* Vertical spacing between checkboxes */
+    padding-left: 16px;           /* Optional: adds indentation for each checkbox */
+  }
+  
+  .checkbox-option input[type="checkbox"] {
+    margin-right: 8px;            /* Space between checkbox and label text */
+  }
+
+  .full-width {
+    grid-column: 1 / -1; /* This will make the field span the entire row in a grid layout */
+    width: 100%;
+  }
+  
+  
+
+

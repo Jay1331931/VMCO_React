@@ -1,0 +1,133 @@
+.comment-button {
+    position: fixed;
+    top: 120px;
+    right: 5px;
+    z-index: 1000;/* blue-600 */
+    color: darkblue;
+    background-color: none;
+    cursor: pointer;
+  }
+
+  [dir="rtl"] .comment-button {
+    right: auto;
+    left: 10px;
+  }
+ 
+  .comment-panel {
+    position: fixed;
+    top: 70px;
+    right: 0;
+    width: 340px;
+    height: 90%;
+    background-color: white;
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+  }
+ 
+  .comment-panel.open {
+    transform: translateX(-40px);
+  }
+ 
+  .comment-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+ 
+  .comment-panel-body {
+    padding: 16px;
+    overflow-y: auto;
+    flex-grow: 1;;
+  }
+ 
+  .icon-wrapper {
+    position: relative;
+    border-left: 3px solid #002b5c; /* dark blue */
+    border-left: #002b5c;
+  }
+ 
+  .message-icon {
+    width: 24px;
+    height: 24px;
+    border-left: 3px solid #002b5c;
+    fill: #333;
+  }
+ 
+  .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background-color: #002b5c; /* dark blue */
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 50%;
+    height: 20px;
+    width: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  .comment-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .comment-entry::before {
+    content: '';
+    position: absolute;
+    left: 2.3rem;
+    top: 2.5rem;
+    bottom: -1rem;
+    width: 2px;
+    background: #ccc;
+  }
+  
+  .user-icon {
+    font-size: 30px;
+    color: #888;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  
+  .comment-content {
+    background-color: #f9f9f9;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    flex: 1;
+    width: 50px;
+  }
+  
+  .comment-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.3rem;
+  }
+  
+  .comment-text {
+    color: #444;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  
