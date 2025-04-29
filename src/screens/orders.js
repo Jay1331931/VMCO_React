@@ -3,6 +3,7 @@ import Template from './template';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOff, faToggleOn, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const orders = [
   { id: '0001', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
@@ -12,6 +13,11 @@ const orders = [
   { id: '0005', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
   { id: '0006', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
   { id: '0007', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0008', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0009', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0010', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0011', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0012', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
 ];
 
 const getStatusClass = (status) => {
@@ -29,6 +35,7 @@ function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,23 +60,23 @@ function Orders() {
 
   return (
     <Template>
-      <div className="page-content">
+      <div className="orders-content">
         <div className="page-header">
           <div className="header-controls">
-            <input type="text" placeholder="Search..." className="search-input" />
+            <input type="text" placeholder={t('Search...')} className="search-input" />
             <div className="toggle-container">
-              <label>All</label>
+              <label>{t('All')}</label>
               <FontAwesomeIcon
                 icon={isApprovalMode ? faToggleOn : faToggleOff}
                 className="toggle-icon"
                 onClick={toggleApprovalMode}
-                aria-label={isApprovalMode ? "Switch to All Orders" : "Switch to My Approvals"}
+                aria-label={isApprovalMode ? t('Switch to All Orders') : t('Switch to My Approvals')}
               />
-              <label>My Approval</label>
+              <label>{t('My Approval')}</label>
             </div>
           </div>
           <div className="header-actions">
-            <button className="add-button">+ Add</button>
+            <button className="add-button">{t('+ Add')}</button>
             <div className="action-menu-container" ref={actionMenuRef}>
               <FontAwesomeIcon
                 icon={faEllipsisV}
@@ -78,9 +85,9 @@ function Orders() {
               />
               {isActionMenuOpen && (
                 <div className="action-menu">
-                  <div className="action-menu-item">Export</div>
-                  <div className="action-menu-item">Import</div>
-                  <div className="action-menu-item">Settings</div>
+                  <div className="action-menu-item">{t('Export')}</div>
+                  <div className="action-menu-item">{t('Import')}</div>
+                  <div className="action-menu-item">{t('Settings')}</div>
                 </div>
               )}
             </div>
@@ -90,14 +97,14 @@ function Orders() {
           <table className="data-table">
             <thead>
               <tr>
-                <th scope="col">Order #</th>
-                <th scope="col">Customer</th>
-                <th scope="col">Branch</th>
-                <th scope="col">Entity</th>
-                <th scope="col">Payment Method</th>
-                <th scope="col">Delivery Date</th>
-                <th scope="col">Total Amount</th>
-                <th scope="col">Status</th>
+                <th scope="col">{t('Order #')}</th>
+                <th scope="col">{t('Customer')}</th>
+                <th scope="col">{t('Branch')}</th>
+                <th scope="col">{t('Entity')}</th>
+                <th scope="col">{t('Payment Method')}</th>
+                <th scope="col">{t('Delivery Date')}</th>
+                <th scope="col">{t('Total Amount')}</th>
+                <th scope="col">{t('Status')}</th>
               </tr>
             </thead>
             <tbody>
@@ -112,7 +119,7 @@ function Orders() {
                   <td>{order.totalAmount}</td>
                   <td>
                     <span className={`status-badge ${getStatusClass(order.status)}`}>
-                      {order.status}
+                      {t(order.status)}
                     </span>
                   </td>
                 </tr>

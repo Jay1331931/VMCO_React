@@ -1,31 +1,48 @@
 :root {
+    /* Layout dimensions */
     --sidebar-width: 240px;
     --sidebar-collapsed-width: 70px;
     --header-height: 60px;
-    --primary-color: #4F46E5;
-    --text-color: #333333;
-    --light-gray: #F9FAFB;
-    --medium-gray: #E5E7EB;
-    --dark-gray: #6B7280;
-    --sidebar-bg: #FFFFFF;
-    --sidebar-border: #E5E7EB;
-    --transition-speed: 0.3s;
     --menu-item-height: 36px;
+
+    /* Primary colors */
+    --primary-color: #00205B;    /* Deep blue for primary actions */
+    --primary-hover: #001845;    /* Darker blue for hover states */
+    
+    /* Text colors */
+    --text-primary: #333333;     /* Dark gray for main text */
+    --text-secondary: #6D787D;   /* Medium gray for secondary text */
+    
+    /* UI colors */
+    --bg-light: #F9FAFB;        /* Light gray background */
+    --bg-white: #FFFFFF;        /* White background */
+    --border-color: #D9D9D6;    /* Light gray for borders */
+
+    /* Status colors */
+    --status-approved: #00594C;  /* Green for approved status */
+    --status-rejected: #EF7C00;  /* Orange for rejected status */
+    --status-pending: #6D787D;   /* Gray for pending status */
+
+    /* Font families */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    /* Animation */
+    --transition-speed: 0.3s;
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-primary);
 }
 
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
     height: 100vh;
-    background-color: var(--sidebar-bg);
-    border-right: 1px solid var(--sidebar-border);
+    background-color: var(--bg-white);
+    border-right: 1px solid var(--border-color);
     position: fixed;
     left: 0;
     top: 0;
@@ -104,7 +121,7 @@
     display: flex;
     align-items: center;
     padding: 0 22px;
-    border-bottom: 1px solid var(--sidebar-border);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-header h1 {
@@ -133,7 +150,7 @@
 .menu-section-title {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     text-transform: uppercase;
     padding: 8px 16px;
     letter-spacing: 0.5px;
@@ -147,14 +164,14 @@
     cursor: pointer;
     transition: background-color 0.2s;
     white-space: nowrap;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     margin: 2px 8px;
     border-radius: 6px;
     font-size: 0.9rem;
 }
 
 .menu-item:hover {
-    background-color: var(--medium-gray);
+    background-color: var(--border-color);
 }
 
 .menu-item.active {
@@ -181,10 +198,10 @@
 .user-card {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--sidebar-border);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 12px;
-    background-color: var(--light-gray);
+    background-color: var(--bg-light);
 }
 
 .user-info {
@@ -205,11 +222,11 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: var(--medium-gray);
+    background-color: var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
 }
 
 .user-text {
@@ -225,7 +242,7 @@
 
 .user-email {
     font-size: 0.75rem;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -233,7 +250,7 @@
 
 .logout-icon {
     font-size: 0.9rem;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     padding: 6px;
     border-radius: 50%;
     transition: background-color 0.2s;
@@ -241,7 +258,7 @@
 }
 
 .logout-icon:hover {
-    background-color: var(--medium-gray);
+    background-color: var(--border-color);
 }
 
 /* Collapsed state styles */
@@ -300,7 +317,7 @@
     width: 20px;
     height: 48px;
     background: white;
-    border: 1px solid var(--medium-gray);
+    border: 1px solid var(--border-color);
     border-left: none; /* Default for LTR (English) */
     border-radius: 0 8px 8px 0;
     display: flex;
@@ -308,7 +325,7 @@
     justify-content: right;
     padding-right: 5px;
     cursor: pointer;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -316,7 +333,7 @@
     width: 20px;
     height: 48px;
     background: white;
-    border: 1px solid var(--medium-gray);
+    border: 1px solid var(--border-color);
     border-right: none; /* Default for LTR (English) */
     border-radius: 8px 0 0 8px;
     display: flex;
@@ -324,7 +341,7 @@
     justify-content: left;
     padding-left: 5px;
     cursor: pointer;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -353,7 +370,7 @@
         background: none;
         border: none;
         font-size: 1.5rem;
-        color: var(--dark-gray);
+        color: var(--text-secondary);
         cursor: pointer;
         margin-left: 10px;
     }
@@ -382,7 +399,7 @@
 .header {
     height: var(--header-height);
     background-color: white;
-    border-bottom: 1px solid var(--medium-gray);
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     position: sticky;
@@ -394,7 +411,7 @@
     background: none;
     border: none;
     font-size: 1.2rem;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     cursor: pointer;
     margin-right: 16px;
     display: none;
@@ -425,11 +442,11 @@
 .lang-switch-btn {
     margin-left: auto;
     background: none;
-    border: 1px solid var(--medium-gray);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 35px;
     font-size: 0.85rem;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -438,7 +455,7 @@
 }
 
 .lang-switch-btn:hover {
-    background-color: var(--medium-gray);
+    background-color: var(--border-color);
 }
 
 /* RTL toggle */
@@ -451,7 +468,7 @@
     left: auto;
     right: 0;
     border-right: none;
-    border-left: 1px solid var(--sidebar-border);
+    border-left: 1px solid var(--border-color);
 }
 
 /* Sidebar collapsed adjustments for RTL */
@@ -481,7 +498,7 @@
 }
 
 .app.rtl .toggle-btn {
-    border-left: 1px solid var(--medium-gray);
+    border-left: 1px solid var(--border-color);
     border-right: none;
     border-radius: 8px 0 0 8px;
     padding-left: 5px;
@@ -499,11 +516,11 @@
     margin-left: auto; /* Default for LTR (English) */
     margin-right: 20px;;
     background: none;
-    border: 1px solid var(--medium-gray);
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 10px;
     font-size: 0.85rem;
-    color: var(--dark-gray);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -512,7 +529,7 @@
 }
 
 .lang-switch-btn:hover {
-    background-color: var(--medium-gray);
+    background-color: var(--border-color);
 }
 
 .app.rtl .lang-switch-btn {

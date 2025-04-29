@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import Template from './template';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV} from '@fortawesome/free-solid-svg-icons';
+import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const customers = [
   {companyName: 'Company', primaryContact: {name: '99000/XX024', email: 'CUSTOMER@CUSTOMER.COM'}, companyType: 'Trading/Non-Trading', typeOfBusiness: 'Type Of Business', deliveryLocation: 'Jaynagar', status: 'Pending'},
@@ -10,6 +11,11 @@ const customers = [
   {companyName: 'Third Company', primaryContact: {name: '54321/YY987', email: 'THIRD@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Wholesale', deliveryLocation: 'Indiranagar', status: 'Rejected'},
   {companyName: 'Fourth Company', primaryContact: {name: '67890/ZZ456', email: 'FOURTH@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'E-commerce', deliveryLocation: 'MG Road', status: 'Pending'},
   {companyName: 'Fifth Company', primaryContact: {name: '11111/AA111', email: 'FIFTH@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'Manufacturing', deliveryLocation: 'Whitefield', status: 'Approved'},
+  {companyName: 'Sixth Company', primaryContact: {name: '22222/BB222', email: 'SIXTH@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Services', deliveryLocation: 'Electronic City', status: 'Rejected'},
+  {companyName: 'Seventh Company', primaryContact: {name: '33333/CC333', email: 'SEVEN@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'Retail', deliveryLocation: 'BTM Layout', status: 'Pending'},
+  {companyName: 'Eighth Company', primaryContact: {name: '44444/DD444', email: 'EIGHT@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Wholesale', deliveryLocation: 'Jayanagar', status: 'Approved'},
+  {companyName: 'Ninth Company', primaryContact: {name: '55555/EE555', email: 'NINE@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'E-commerce', deliveryLocation: 'Koramangala', status: 'Rejected'},
+  {companyName: 'Tenth Company', primaryContact: {name: '66666/FF666', email: 'TEN@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Retail', deliveryLocation: 'Indiranagar', status: 'Pending'},
   
   // Add more customer data as needed
 ];
@@ -51,6 +57,7 @@ const getStatusClass = (status) => {
 };
 
 function Customers() {
+  const { t } = useTranslation();
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('customers');
   const actionMenuRef = useRef(null);
@@ -72,8 +79,6 @@ function Customers() {
     setActionMenuOpen(!isActionMenuOpen);
   };
 
-
-
   const handleResend = (invite) => {
     console.log('Resend invite:', invite);
     // Add your resend logic here
@@ -92,12 +97,12 @@ function Customers() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Company ▲</th>
-                  <th>Primary Contact</th>
-                  <th>Company Type</th>
-                  <th>Type Of Business</th>
-                  <th>Delivery Location</th>
-                  <th>Status</th>
+                  <th>{t('Company')}</th>
+                  <th>{t('Primary Contact')}</th>
+                  <th>{t('Company Type')}</th>
+                  <th>{t('Type Of Business')}</th>
+                  <th>{t('Delivery Location')}</th>
+                  <th>{t('Status')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,22 +132,19 @@ function Customers() {
       case 'invites':
         return (
           <div className="table-container">
-            <div className='header-container'>
-                <button className="add-button">+ Invite</button>
-            </div>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Date ▲</th>
-                  <th>Customer Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Company Name</th>
-                  <th>Region</th>
-                  <th>Assign To</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th>{t('Date')}</th>
+                  <th>{t('Customer Name')}</th>
+                  <th>{t('Email')}</th>
+                  <th>{t('Phone')}</th>
+                  <th>{t('Company Name')}</th>
+                  <th>{t('Region')}</th>
+                  <th>{t('Assign To')}</th>
+                  <th>{t('Source')}</th>
+                  <th>{t('Status')}</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -168,7 +170,7 @@ function Customers() {
                             className="action-button resend"
                             onClick={() => handleResend(invite)}
                           >
-                            Resend
+                            {t('Resend')}
                           </button>
                         )}
                         {invite.status === 'New' && (
@@ -176,7 +178,7 @@ function Customers() {
                             className="action-button invite"
                             onClick={() => handleInvite(invite)}
                           >
-                            Invite
+                            {t('Invite')}
                           </button>
                         )}
                       </div>
@@ -202,21 +204,24 @@ function Customers() {
                 className={`tab-button ${activeTab === 'customers' ? 'active' : ''}`}
                 onClick={() => setActiveTab('customers')}
               >
-                Customers
+                {t('Customers')}
               </button>
               <button 
                 className={`tab-button ${activeTab === 'invites' ? 'active' : ''}`}
                 onClick={() => setActiveTab('invites')}
               >
-                Invites
+                {t('Invites')}
               </button>
             </div>
           </div>
           <div className="page-header">
             <div className="header-controls">
-            <input type="text" placeholder="Search..." className="search-input" />
+              <input type="text" placeholder={t('Search...')} className="search-input" />
             </div>
             <div className="header-actions">
+              {activeTab === 'invites' && (
+                <button className="add-button">{t('+ Invite')}</button>
+              )}
               <div className="action-menu-container" ref={actionMenuRef}>
                 <FontAwesomeIcon
                   icon={faEllipsisV}
@@ -225,9 +230,9 @@ function Customers() {
                 />
                 {isActionMenuOpen && (
                   <div className="action-menu">
-                    <div className="action-menu-item">Export</div>
-                    <div className="action-menu-item">Import</div>
-                    <div className="action-menu-item">Settings</div>
+                    <div className="action-menu-item">{t('Export')}</div>
+                    <div className="action-menu-item">{t('Import')}</div>
+                    <div className="action-menu-item">{t('Settings')}</div>
                   </div>
                 )}
               </div>
