@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faBan, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import Template from './template'; // Your layout component
-import '../styles/forms.css'; // CSS styles
+import Template from './template';
+import '../styles/forms.css';
 import CommentPopup from './commentPanel';
 import '../i18n';
 import { useTranslation } from 'react-i18next';

@@ -39,7 +39,7 @@
 import React from 'react';
 import '../styles/commentPanel.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEnvelope, faUserCircle, faComment, faMessage } from '@fortawesome/free-solid-svg-icons';
+import { faUserCircle, faMessage } from '@fortawesome/free-solid-svg-icons';
 
 const CommentPopup = ({ isOpen, setIsOpen }) => {
   const count = 2;
