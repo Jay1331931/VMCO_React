@@ -4,7 +4,7 @@ import Template from './screens/template';
 import Orders from './screens/orders';
 import Customers from './screens/customers';
 import Catalogue from './screens/catalogue';
-import CustomersOnboarding from './screens/customersOnboarding';
+import CustomersDetails from './screens/customersDetails';
 import CommentPopup from './screens/commentPanel'; // Import the CommentPopup component
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
         <Route path="/orders" element={<Orders />} /> {/* Route for Orders */}
         <Route path="/customers" element={<Customers />} /> {/* Route for Customers */}
         <Route path="/catalogue" element={<Catalogue />} /> {/* Route for Catalogue */}
-        <Route path="/customersOnboarding" element={<CustomersOnboarding />} /> {/* Route for Customers Onboarding */}
+        <Route path="/customersDetails" element={<CustomersDetails />} /> {/* Route for Customers Onboarding */}
         </Routes>
     </Router>
   );

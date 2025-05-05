@@ -1,26 +1,33 @@
-.customer-onboarding-content {
+.customers {
+  gap: 1px;
+}
+.customers .customer-onboarding-content {
     padding: 20px;
 }
-
-.customer-onboarding-details {
+.customers .customer-onboarding-details {
         background: #fff;
         padding: 20px;
         border-radius: 10px;
         border: 1px solid #ddd;
 }
-
-.customer-onboarding-body {
+.customers .customer-onboarding-body {
     display: flex;
     gap: 30px;
 }
-
-.customer-onboarding-tabs-vertical {
+.customers .customer-onboarding-tabs-vertical {
     display: flex;
     flex-direction: column;
-    width: 260px;
+    width: 220px;
     border-right: 1px solid #ccc;
     padding-right: 20px;
   }
+
+  [dir="rtl"] .customer-onboarding-tabs-vertical {
+    padding-left: 20px;
+    padding-right: 0;
+    border-right: none; /* Remove the right border in RTL */
+    border-left: 1px solid #ccc; /* Add left border in RTL */
+}
 
   .customer-onboarding-tabs-vertical .tab {
     padding: 5px 5px;
@@ -28,6 +35,18 @@
     border-left: 4px solid transparent;
     transition: all 0.2s ease;
   }
+
+  [dir="rtl"] .customer-onboarding-tabs-vertical .tab {
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+}
+
+[dir="rtl"] .customer-onboarding-tabs-vertical .tab.active {
+    font-weight: bold;
+    border-left: none;
+    border-right: 4px solid blue; /* Active tab border on the right in RTL */
+    color: blue;
+}
   
   .customer-onboarding-tabs-vertical .tab:hover {
     background-color: #f9f9f9;
@@ -45,14 +64,15 @@
     margin-bottom: 20px;
   }
 
-  .customer-onboarding-form-grid {
+  .customers .customer-onboarding-form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    /* grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); */
+    gap: 10px;
     flex: 1;
   }
 
-  .form-main-header {
+  .customers .form-main-header {
     grid-column: 1 / -1; /* Make it span the full width */
     text-align: right;
     margin-bottom: 10px;
@@ -67,10 +87,14 @@
     text-decoration: underline;
   }
 
-  .form-header {
+  .customers .form-header {
     grid-column: 1 / -1;;
     text-align: left;
     margin-bottom: 10px;
+  }
+
+  [dir="rtl"] .form-header {
+    text-align: right;
   }
   
   .form-header a {
@@ -82,45 +106,56 @@
     text-decoration: underline;
   }
 
-  .customer-onboarding-form-actions {
+  .customers .customer-onboarding-form-actions {
+    justify-content: space-between;
     display: flex;
     gap: 10px;
   }
 
-  .status-text {
+  .customers .status-text {
     display: flex;
     align-items: center;
     font-size: 14px;
-    font-weight: 500;
-    gap: 6px; /* space between "Status:" and badge */
+    font-weight: 0;
+    gap: 6px;
+    flex-wrap: wrap;
   }
   
-  .status-badge {
+  .customers .status-badge {
     margin: 20px 0;
     padding: 0px 12px;
-    background-color: #ffebcc;
-    color: #cc6600;
+    background-color: gainsboro;
+    color: gray;
     border-radius: 5px;
     display: inline-block;
-    border: 1px solid #cc6600;
-    margin-left: 10px;
-    margin-right: 545px;
+    /* border: 1px solid #cc6600; */
   }
-  .status-label {
+  
+  .customers .status-label {
     font-weight: 500;
-    color: #555; /* slightly gray */
-    margin-right: 4px;
+    color: #555;
+  }
+  
+  [dir="rtl"] .status-text {
+    flex-direction: row-reverse;
+  }
+
+  .customers .action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .customer-onboarding-form-actions button {
     margin: 20px 0;
     padding: 8px 12px;
     border-radius: 5px;
-    border: none;
     cursor: pointer;
+    font-size: 14px;
+    min-width: 100px;
   }
 
-  .form-group {
+  .customers .form-group {
     display: flex;
     flex-direction: column;
 }
@@ -139,52 +174,63 @@
     border-radius: 5px;
 }
 
-.dropdown {
-    font-size: 12px;        /* Smaller text */
-  padding: 6px 12px;       /* Less padding */
-  height: 40px;           /* Optional: fixed height */
-  width: 250px;           /* Optional: fixed width */
+.customers .dropdown {
+  font-size: 12px;        
+  padding: 6px 12px;       
+  height: 40px;           
+  width: 250px;           
   border-radius: 4px;
   border: 1px solid #ccc;
 }
 
 .dropdown option[value=""]:disabled {
-    color: #aaa; /* Light grey placeholder in dropdown */
+    color: #aaa; 
   }
 
   .dropdown option {
-    color: black; /* Default for all options */
+    color: black; 
   }
   
   .dropdown option:disabled {
-    color: #aaa; /* Light grey only for disabled placeholder */
+    color: #aaa; 
   }
 
 .dropdown::placeholder {
     color: #aaa;
 }
 
-  .text-field.small {
+.customers .text-field.small {
     font-size: 12px;
     padding: 4px 8px;
     height: 40px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 250px; /* or 100% for full width */
+    width: 250px; 
+    
+  }
+
+  .customers .text-field.arabic {
+    font-size: 12px;
+    padding: 4px 8px;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 250px; 
+    text-align: end;
   }
 
   .text-field::placeholder {
     color: #aaa;
   }
 
-  .file-upload {
+  .customers .file-upload {
     display: flex;
     flex-direction: column;
     gap: 6px;
     grid-column: span 1;
 }
 
-.document-upload {
+.customers .document-upload {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -192,7 +238,12 @@
 }
 
 .document-upload label {
-    margin-right: 150px;
+    margin-right: 100px;
+}
+
+[dir="rtl"] .document-upload label {
+    margin-right: 0;
+    margin-left: 100px;
 }
 
 .document-upload.full-width input[type="file"] {
@@ -200,20 +251,357 @@
     margin-left: 350px;
   }
 
-.checkbox-option {
-    margin-bottom: 8px;           /* Vertical spacing between checkboxes */
-    padding-left: 16px;           /* Optional: adds indentation for each checkbox */
+  .customers .checkbox-option {
+    margin-bottom: 8px;           
+    padding-left: 16px;           
   }
   
   .checkbox-option input[type="checkbox"] {
-    margin-right: 8px;            /* Space between checkbox and label text */
+    margin-right: 8px;            
   }
 
   .full-width {
-    grid-column: 1 / -1; /* This will make the field span the entire row in a grid layout */
+    grid-column: 1 / -1; 
     width: 100%;
   }
+
   
   
+  /* Individual styles */
+  .customers .save {
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+  }
+  
+  .customers .block {
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+  }
+  
+  .customers .approve {
+    background-color: darkgreen; /* Blue */
+    color: white;
+    border: none;
+  }
+  
+  .customers .reject {
+    background-color: darkorange; /* Orange */
+    color: white;
+    border: none;
+  }
+  
+  .hidden-file-input {
+    display: none;
+  }
+  
+  .custom-file-button {
+    padding: 8px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    min-width: 120px;
+    min-height: 30px;
+    border: 1px solid black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+  }
+  
+  .custom-file-button:hover {
+    background-color: lightgray;
+  }
 
+  .file-name {
+    display: flex;
+    margin-left: 12px;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
 
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .document-upload.full-width .upload-row label {
+    position: absolute;
+    left: auto;
+    right : 140px;
+  }
+
+  [dir="rtl"] .document-upload.full-width .upload-row label {
+    left: 140px;
+    right: auto;
+  }
+
+  .document-upload.full-width .upload-row .file-name {
+  position: absolute;
+  right: 80px; /* distance from right edge */
+  transform: translateY(-50%);
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  font-size: 12px;
+  font-weight: bold;
+  color: blue;
+  }
+
+  [dir="rtl"] .document-upload.full-width .upload-row .file-name {
+    left: 60px;
+    right: auto;
+  }
+  
+  .customers .error{
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+
+  .product-search-input {
+    padding: 8px 12px;
+    width: 200px;
+    border: 2px solid darkblue;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .branches-search-input {
+    padding: 8px 12px;
+    width: 250px;
+    border: 2px solid darkblue;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-toggle-icon {
+    font-size: 2.5rem; /* Increase the font size */
+    cursor: pointer;
+    color: lightgray;
+  }
+  
+  .product-toggle-icon:hover {
+    color: lightgray;
+  }
+
+  .branches-approve-button {
+      width: 140px; /* Allow button to size based on content */
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      margin: 0; /* Remove margin to align with other buttons */
+      background-color: darkgreen; /* Blue */
+      color: white;
+      border: none;
+      border-radius: 8px;
+  }
+
+  .branches-reject-button {
+      width: 140px; /* Allow button to size based on content */
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      margin: 0; /* Remove margin to align with other buttons */
+      background-color: darkorange; /* Orange */
+      color: white;
+      border: none;
+      border-radius: 8px;
+  }
+ 
+  .branches-toggle-row-btn {
+    background: white;
+    border: 1px solid transparent;
+  }
+
+  .branches-table-container {
+      justify-content: center;
+      align-items: center;
+      /* height: 40vh; */
+      max-height: 60vh; /* Optional: control height */
+  /* overflow-y: auto; Scroll if content exceeds height */
+  padding-top: 10px; /* Prevent overlap */
+  }
+
+  .branches-data-table {
+    width: 100%;
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    color: #5E6A71;
+  }
+  
+  .branches-data-table th {
+    padding: 2px 2px;
+    height: 20px;
+    text-align: center;
+    border-bottom: 1.9px solid #D9D9D6;
+    background-color: #fff;
+    font-weight: 600;
+    color: #5E6A71;
+  }
+  
+  .branches-data-table td {
+    padding: 2px 2px;
+    height: 40px;
+    text-align: center;
+    border-bottom: 1px solid lightgray;
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+  
+  .branches-data-table tr:hover {
+    background-color: white;
+  }
+
+  .branches-content {
+    /* transform: scale(0.8);
+    width: 90%; */
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    display: grid;
+    gap: 10px;
+    flex: 1;
+    padding: 20px;
+  }
+
+  .branches-main-header {
+    justify-self: start;
+    justify-content: space-between;
+  }
+
+  .branches-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 20px;
+  }
+  
+  .branches-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+    width: 80%;
+  }
+
+  .branches-status-badge {
+    width: 70px; /* Reduce width for smaller screens */
+    height: 30px; /* Reduce height for smaller screens */
+    line-height: 30px; /* Adjust line-height to vertically center text */
+    font-size: 0.75rem; /* Reduce font size */
+    border-radius: 8px;
+  }
+
+  .branches-expanded-row {
+    border-left: 5px solid blue;
+  }
+  @media (max-width: 768px) {
+    .customers .customer-onboarding-form-grid {
+      grid-template-columns: 1fr; /* Single column on smaller screens */
+      margin-top: 20px; /* Add margin to the top */
+    }
+    .customers .customer-onboarding-tabs-vertical {
+      width: 100%; /* Full width on smaller screens */
+      border-right: none; /* Remove right border on smaller screens */
+      
+      flex-direction: row;
+      height: 10%;
+
+    }
+
+    .customers .customer-onboarding-tabs-vertical .tab {
+      border-left: none; /* Remove left border on smaller screens */
+      border-bottom: 1px solid gray; /* Remove left border on smaller screens */
+      font-size: 12.5px;
+    }
+    [dir="rtl"] .customer-onboarding-tabs-vertical {
+      border-left: none; /* Remove left border in RTL on smaller screens */
+      border-top: 1px solid #ccc; /* Add top border instead */
+    }
+
+    .customers .customer-onboarding-tabs-vertical .tab.active {
+      border-bottom: 4px solid blue; /* Active tab border on the bottom in RTL */
+    }
+
+    [dir="rtl"] .customer-onboarding-tabs-vertical .tab.active {
+      border-right: none;
+      border-bottom: 4px solid blue; /* Active tab border on the bottom in RTL */
+    }
+
+    .customers .customer-onboarding-tabs-vertical .tabs-title{
+      font-size: 0px; /* Smaller font size on smaller screens */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .customers .customer-onboarding-details {
+      border: none; /* Remove border on smaller screens */
+      padding: 0; /* Remove padding on smaller screens */
+    }
+
+    .customers .customer-onboarding-form-actions {
+      margin-top: 10px;
+      flex-direction: column;
+      gap: 2px; 
+      align-items: stretch;
+    }
+
+    .customers .customer-onboarding-form-actions button {
+      /* margin: 10px 0; Adjust margin for buttons on smaller screens */
+      min-width: 120px;
+      flex: 1 1 auto; /* Allows buttons to shrink/grow */
+      white-space: nowrap;
+    }
+
+    .customers .customer-onboarding-body {
+      flex-direction: column; /* Stack content vertically on smaller screens */
+      gap: 20px; /* Space between sections */
+    }
+
+    .customers .text-field.small {
+      width: 280px;
+    }
+
+    .customers .dropdown {
+      width: 280px;
+    }
+
+    .customers .document-upload.full-width{
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Center the content horizontally */
+      margin-top: 10px; /* Add some space above the upload section */
+      left: 5px; /* Reset margin-left */
+    }
+
+    .customers .document-upload.full-width label {
+      left: 10px;
+    }
+    [dir="rtl"] .customers .document-upload.full-width label {
+      left: auto;
+      right: 10px;
+    }
+    [dir="rtl"] .status-text {
+      flex-direction: row;
+    }
+    [dir="rtl"] .status-label {
+      justify-self: flex-end;
+      margin-left: auto;
+      margin-right: 4px;
+    }
+
+    [dir="rtl"] .customers .status-badge{
+      margin-left: 180px;
+    }
+
+  }
