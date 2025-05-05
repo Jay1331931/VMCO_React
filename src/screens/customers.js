@@ -195,7 +195,7 @@ function Customers() {
   };
 
   return (
-    <Template>
+    <Template title={t('Customers')}>
       <div className="page-content">
         <div className="customer-content">
           <div className="tab-container">

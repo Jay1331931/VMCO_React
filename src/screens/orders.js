@@ -59,7 +59,7 @@ function Orders() {
   };
 
   return (
-    <Template>
+    <Template title={t('Orders')}>
       <div className="orders-content">
         <div className="page-header">
           <div className="header-controls">

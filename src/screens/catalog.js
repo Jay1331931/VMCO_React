@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Template from './template';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faMinus, faPlus, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 const products = [
@@ -18,12 +19,21 @@ const products = [
     { id: 10, name: 'Product Name', code: 'SAR24', image: '' },
     { id: 11, name: 'Product Name', code: 'SAR24', image: '' },
     { id: 12, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 13, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 14, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 15, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 16, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 17, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 18, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 19, name: 'Product Name', code: 'SAR24', image: '' },
+    { id: 20, name: 'Product Name', code: 'SAR24', image: '' },
 ];
 
 const categories = ['VMCO Machines', 'VMCO Other', 'Diayafa', 'Green Mart', 'Naqui'];
 
-function Catalogue() {
+function Catalog() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState('VMCO Machines');
     const [selectedLocation, setSelectedLocation] = useState('JP Nagar');
@@ -50,13 +60,19 @@ function Catalogue() {
         }));
     };
 
+    const handleGoToCart = () => {
+        navigate('/Cart');
+    };
+
     return (
-        <Template>
-            <div className="catalogue-content">
-                <div className="catalogue-header">
+        <Template title={t('Catalog')}>
+            <div className="catalog-content">
+                <div className="catalog-header">
                     <div className="location-selector">
                         <span>Delivery to:</span>
                         <select
+                            id="locationSelect"
+                            name="locationSelect"
                             value={selectedLocation}
                             onChange={(e) => setSelectedLocation(e.target.value)}
                             className="location-select"
@@ -67,8 +83,6 @@ function Catalogue() {
                         </select>
                     </div>
                 </div>
-
-               
 
                 <div className="category-tabs">
                     {categories.map((category) => (
@@ -84,20 +98,38 @@ function Catalogue() {
 
                 <div className="search-section">
                     <div className="search-container">
-                        <input type="text" placeholder={t('Search...')} className="catalogue-search" />
+                        <input 
+                            type="text" 
+                            id="productSearch"
+                            name="productSearch"
+                            placeholder={t('Search...')} 
+                            className="catalog-search" 
+                        />
                     </div>
                     <div className="filter-section">
-                        <select className="category-filter">
+                        <select 
+                            className="category-filter"
+                            id="categoryFilter"
+                            name="categoryFilter"
+                        >
                             <option value="">Category</option>
                             <option value="category1">Category 1</option>
                             <option value="category2">Category 2</option>
                         </select>
-                        <select className="subcategory-filter">
+                        <select 
+                            className="subcategory-filter"
+                            id="subcategoryFilter"
+                            name="subcategoryFilter"
+                        >
                             <option value="">Sub Category</option>
                             <option value="sub1">Sub Category 1</option>
                             <option value="sub2">Sub Category 2</option>
                         </select>
                     </div>
+                    <button className="go-to-cart-btn" onClick={handleGoToCart}>
+                        <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                        <span>{t('Go to Cart')}</span>
+                    </button>
                 </div>
 
                 <div className="products-grid">
@@ -120,6 +152,8 @@ function Catalogue() {
                                     <input
                                         type="number"
                                         className="quantity-input"
+                                        id={`quantity-${product.id}`}
+                                        name={`quantity-${product.id}`}
                                         value={quantities[product.id] || 0}
                                         onChange={(e) => setQuantities({
                                             ...quantities,
@@ -146,4 +180,4 @@ function Catalogue() {
     );
 }
 
-export default Catalogue;
+export default Catalog;
