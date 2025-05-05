@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
@@ -195,7 +195,7 @@ function Customers() {
   };
 
   return (
-    <Template title={t('Customers')}>
+    <Sidebar title={t('Customers')}>
       <div className="page-content">
         <div className="customer-content">
           <div className="tab-container">
@@ -241,7 +241,7 @@ function Customers() {
           {renderContent()}
         </div>
       </div>
-    </Template>
+    </Sidebar>
   );
 }
 

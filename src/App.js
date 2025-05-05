@@ -1,24 +1,24 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Template from './screens/template';
+import Sidebar from '../src/components/Sidebar';
 import Orders from './screens/orders';
 import Customers from './screens/customers';
 import Catalog from './screens/catalog';  
 import Cart from './screens/cart';  
 import CustomersDetails from './screens/customersDetails';
-import CommentPopup from './screens/commentPanel'; // Import the CommentPopup component
+// Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Template />} />
-        <Route path="/orders" element={<Orders />} /> {/* Route for Orders */}
-        <Route path="/customers" element={<Customers />} /> {/* Route for Customers */}
-        <Route path="/catalog" element={<Catalog />} /> {/* Route for Catalog */}
-        <Route path="/cart" element={<Cart />} /> {/* Route for Cart */}
-        <Route path="/customersDetails" element={<CustomersDetails />} /> {/* Route for Customers Onboarding */}
-        </Routes>
+        <Route path="/" element={<Sidebar />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/customers" element={<Customers />} />
+        <Route path="/catalog" element={<Catalog />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/customersDetails" element={<CustomersDetails />} />
+      </Routes>
     </Router>
   );
 }

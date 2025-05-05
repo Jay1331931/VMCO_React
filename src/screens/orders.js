@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOff, faToggleOn, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
@@ -59,7 +59,7 @@ function Orders() {
   };
 
   return (
-    <Template title={t('Orders')}>
+    <Sidebar title={t('Orders')}>
       <div className="orders-content">
         <div className="page-header">
           <div className="header-controls">
@@ -128,7 +128,7 @@ function Orders() {
           </table>
         </div>
       </div>
-    </Template>
+    </Sidebar>
   );
 }
 

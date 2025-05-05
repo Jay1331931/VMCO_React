@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Template from '../template';
+import Sidebar from '../../components/Sidebar';
 import '../../styles/components.css';
 import '../../styles/forms.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

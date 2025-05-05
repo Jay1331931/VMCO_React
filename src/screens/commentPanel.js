@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 const CommentPopup = ({ isOpen, setIsOpen, id, type }) => {
   const count = 5;
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation(); // Remove i18n since it's not used
 
   const comments = [
     {

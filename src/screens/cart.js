@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinus, faPlus, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
@@ -67,14 +67,14 @@ function Cart() {
     };
 
     return (
-        <Template title={t('Your Cart')} dir={t('direction')}>
-            <div className="cart-content">
-                <div className="cart-header">
+        <Sidebar title={t('Your Cart')} dir={t('direction')}>
+            <div className="cart-header">
                     <h2 className="cart-title">Cart (3 items)</h2>
                     <div className="delivery-info">Delivering to JP Nagar</div>
                     <div className="credit-balance">Credit Balance: SAR445</div>
                 </div>
-
+            <div className="cart-content">
+            
                 <div className="cart-items">
                     {cartItems.map((category) => (
                         <div key={category.category} className="category-section">
@@ -134,18 +134,19 @@ function Cart() {
                     ))}
                 </div>
 
-                <div className="cart-footer">
-                    <div className="total-amount">
+                 <div className="total-amount">
                         <h3>{t('Total Amount')} ({cartItems.reduce((sum, cat) => sum + cat.items.length, 0)} {t('Items')})</h3>
                         <span>SAR{calculateTotal()}</span>
                         <button className="checkout-all-btn">{t('CHECKOUT ALL')}</button>
-                    </div>
+                 </div>
+            </div>
+            <div className="cart-footer">
+                    
                     <button className="continue-shopping" onClick={handleContinueShopping}>
                         {t('Continue Shopping')}
                     </button>
                 </div>
-            </div>
-        </Template>
+        </Sidebar>
     );
 }
 

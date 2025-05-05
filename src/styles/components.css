@@ -148,6 +148,7 @@ y.orders-content {
     top: 100%;
     right: 0;
     width: 160px; /* Slightly wider for better touch targets */
+    min-width: 160px; /* Add minimum width for mobile */
   }
 
 
@@ -240,20 +241,11 @@ y.orders-content {
 
 /* Action menu styles */
 .action-menu-container {
-  padding: 10px;
-}
-
-.action-menu-icon {
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #2c2c2c;
-}
-
-.action-menu-icon:hover {
-  color: #3b3bb3;
+  position: relative; /* Add relative positioning to container */
 }
 
 .action-menu {
+  position: absolute; /* Change to absolute positioning */
   top: 100%;
   right: 0;
   background-color: white;
@@ -262,6 +254,7 @@ y.orders-content {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
   width: 120px;
+  min-width: 120px; /* Add minimum width */
 }
 
 /* RTL Support for action menu */
@@ -271,7 +264,6 @@ y.orders-content {
 }
 
 .action-menu-item {
-  padding: 10px 12px;
   cursor: pointer;
   font-size: 0.9rem;
   color: #333;
@@ -284,7 +276,8 @@ y.orders-content {
 .table-container {
   justify-content: center;
   align-items: center;
-  height: 60vh; /* Adjust height as needed */
+  height: auto;
+  overflow-x: auto;
 }
 
 .data-table {
@@ -454,6 +447,7 @@ y.orders-content {
 
   .action-menu {
     width: 160px;
+    min-width: 160px; /* Add minimum width for mobile */
   }
 
   .action-menu-item {
@@ -498,7 +492,6 @@ y.orders-content {
 .table-container {
   justify-content: center;
   align-items: center;
-  height: 60vh;
 }
 
 .contact-info {
@@ -537,16 +530,12 @@ y.orders-content {
 
 /* Action menu styles */
 .action-menu-container {
-  padding: 10px;
-}
-
-.action-menu-icon {
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #2c2c2c;
+  padding: 5px;
+  position: relative; /* Add relative positioning to container */
 }
 
 .action-menu {
+  position: absolute; /* Change to absolute positioning */
   top: 100%;
   right: 0;
   background-color: white;
@@ -555,6 +544,7 @@ y.orders-content {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 10;
   width: 120px;
+  min-width: 120px; /* Add minimum width */
 }
 
 /* RTL Support for action menu */
@@ -648,6 +638,7 @@ y.orders-content {
 
   .action-menu {
     width: 160px;
+    min-width: 160px; /* Add minimum width for mobile */
   }
 
   .action-menu-item {
@@ -823,7 +814,6 @@ y.orders-content {
 
 .product-card:hover {
   transform: translateY(-2px);
-  transition: transform 0.2s ease-in-out;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -1015,6 +1005,10 @@ y.orders-content {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: auto;
 }
 
 .cart-header {
@@ -1046,9 +1040,10 @@ y.orders-content {
 
 .category-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 20px;
   align-items: center;
-  padding: 15px;
+  padding: 20px;
   background-color: #f8f9fa;
   border-radius: 8px 8px 0 0;
 }
@@ -1063,7 +1058,7 @@ y.orders-content {
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 20px;
-  padding: 15px;
+  padding: 20px;
   border-top: 1px solid #eee;
 }
 
@@ -1091,13 +1086,19 @@ y.orders-content {
 }
 
 .total-amount {
-  background: white;
+  background: rgb(200, 200, 200);
   padding: 20px;
+  height: fit-content;
   border-radius: 8px;
   width: 100%;
   max-width: 400px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 20px;
 }
 
 .checkout-all-btn {
@@ -1144,5 +1145,93 @@ y.orders-content {
 
   .checkout-btn {
     width: 100%;
+  }
+}
+
+/* Add these styles at the end of the file */
+
+.product-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.product-popup {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  position: relative;
+}
+
+.popup-image-container {
+  flex: 1;
+  min-width: 300px;
+}
+
+.popup-image {
+  width: 100%;
+  height: 400px;
+  background-color: #D9D9D6;
+  border-radius: 8px;
+}
+
+.popup-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.popup-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+}
+
+/* Responsive styles for popup */
+@media (max-width: 768px) {
+  .product-popup-overlay {
+    padding: 10px;
+  }
+
+  .product-popup {
+    flex-direction: column;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .popup-image-container {
+    min-width: unset;
+  }
+
+  .popup-image {
+    height: 300px;
+  }
+
+  .popup-details {
+    gap: 10px;
+  }
+
+  .popup-close {
+    top: 3px;
+    right: 5px;
   }
 }

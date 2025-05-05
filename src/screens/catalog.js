@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinus, faPlus, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
@@ -39,6 +39,7 @@ function Catalog() {
     const [selectedLocation, setSelectedLocation] = useState('JP Nagar');
     const actionMenuRef = useRef(null);
     const [quantities, setQuantities] = useState({});
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -64,8 +65,16 @@ function Catalog() {
         navigate('/Cart');
     };
 
+    const handleProductClick = (product) => {
+        setSelectedProduct(product);
+    };
+
+    const handleClosePopup = () => {
+        setSelectedProduct(null);
+    };
+
     return (
-        <Template title={t('Catalog')}>
+        <Sidebar title={t('Catalog')}>
             <div className="catalog-content">
                 <div className="catalog-header">
                     <div className="location-selector">
@@ -134,7 +143,12 @@ function Catalog() {
 
                 <div className="products-grid">
                     {products.map((product) => (
-                        <div key={product.id} className="product-card">
+                        <div 
+                            key={product.id} 
+                            className="product-card"
+                            onClick={() => handleProductClick(product)}
+                            style={{ cursor: 'pointer' }}
+                        >
                             <div className="product-image">
                                 {/* Placeholder for product image */}
                                 <div className="image-placeholder"></div>
@@ -176,7 +190,57 @@ function Catalog() {
                     ))}
                 </div>
             </div>
-        </Template>
+            {selectedProduct && (
+                <div className="product-popup-overlay" onClick={handleClosePopup}>
+                    <div className="product-popup" onClick={(e) => e.stopPropagation()}>
+                        <button className="popup-close" onClick={handleClosePopup}>×</button>
+                        <div className="popup-image-container">
+                            {selectedProduct.image ? (
+                                <img 
+                                    src={selectedProduct.image} 
+                                    alt={selectedProduct.name} 
+                                    className="popup-image"
+                                />
+                            ) : (
+                                <div className="popup-image"></div>
+                            )}
+                        </div>
+                        <div className="popup-details">
+                            <h2>{selectedProduct.name}</h2>
+
+                            <h3 className="product-code">{selectedProduct.code}</h3>
+                            <p>{t('description of the product')}</p>
+                            <div className="quantity-controls">
+                                <button
+                                    className="quantity-btn"
+                                    onClick={() => handleQuantityChange(selectedProduct.id, -1)}
+                                >
+                                    <FontAwesomeIcon icon={faMinus} />
+                                </button>
+                                <input
+                                    type="number"
+                                    className="quantity-input"
+                                    value={quantities[selectedProduct.id] || 0}
+                                    onChange={(e) => setQuantities({
+                                        ...quantities,
+                                        [selectedProduct.id]: Math.max(0, parseInt(e.target.value) || 0)
+                                    })}
+                                />
+                                <button
+                                    className="quantity-btn"
+                                    onClick={() => handleQuantityChange(selectedProduct.id, 1)}
+                                >
+                                    <FontAwesomeIcon icon={faPlus} />
+                                </button>
+                            </div>
+                            <button className="add-to-cart-btn">
+                                {t('ADD TO CART')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </Sidebar>
     );
 }
 

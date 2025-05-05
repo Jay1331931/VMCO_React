@@ -50,6 +50,12 @@ function Orders() {
         };
     }, []);
 
+    const handleHeaderClick = () => {
+        // Handle header click event, e.g., navigate to another page or perform an action
+        console.log('Header clicked!');
+
+    }
+
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
     };
@@ -76,31 +82,33 @@ function Orders() {
     return (
         <div className="branches-content">
             <div className="form-main-header">
-                <a href="#">{t('Customer Approval Checklist')}</a>
+                <button className="form-main-header-link" onClick={() => handleHeaderClick()}>
+                    {t('Customer Approval Checklist')}
+                </button>
             </div>
-                <div className='branches-page-header '>
-                    <div className='branches-header-controls'>
-                        <input type="text" placeholder={t('Search...')} className="branches-search-input" />
-                        <button className='branches-approve-button'>{t('Approve')}</button>
-                        <button className='branches-reject-button'>{t('Reject')}</button>
-                        <button className="add-button">{t('+ Add')}</button>
-                        <div className="action-menu-container" ref={actionMenuRef}>
-                            <FontAwesomeIcon
-                                icon={faEllipsisV}
-                                className="action-menu-icon"
-                                onClick={toggleActionMenu}
-                            />
-                            {isActionMenuOpen && (
-                                <div className="action-menu">
-                                    <div className="action-menu-item">{t('Export')}</div>
-                                    <div className="action-menu-item">{t('Import')}</div>
-                                    <div className="action-menu-item">{t('Settings')}</div>
-                                </div>
-                            )}
-                        </div>
+            <div className='branches-page-header '>
+                <div className='branches-header-controls'>
+                    <input type="text" placeholder={t('Search...')} className="branches-search-input" />
+                    <button className='branches-approve-button'>{t('Approve')}</button>
+                    <button className='branches-reject-button'>{t('Reject')}</button>
+                    <button className="add-button">{t('+ Add')}</button>
+                    <div className="action-menu-container" ref={actionMenuRef}>
+                        <FontAwesomeIcon
+                            icon={faEllipsisV}
+                            className="action-menu-icon"
+                            onClick={toggleActionMenu}
+                        />
+                        {isActionMenuOpen && (
+                            <div className="action-menu">
+                                <div className="action-menu-item">{t('Export')}</div>
+                                <div className="action-menu-item">{t('Import')}</div>
+                                <div className="action-menu-item">{t('Settings')}</div>
+                            </div>
+                        )}
                     </div>
                 </div>
-            
+            </div>
+
             <div className="branches-table-container">
                 <table className="branches-data-table">
                     <thead>
@@ -120,28 +128,28 @@ function Orders() {
                         (<tr
                             key={order.id}
                             className={isExpanded(order.id) ? 'branches-expanded-row' : ''}
-                          >
-                                <td>{order.id}</td>
-                                <td>{order.customer}</td>
-                                <td>{order.branch}</td>
-                                <td>{order.entity}</td>
-                                <td>{order.paymentMethod}</td>
-                                <td>{order.deliveryDate}</td>
-                                <td>
-                                    <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
-                                        {t(order.status)}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button
-                                        className="branches-toggle-row-btn"
-                                        onClick={() => toggleRow(order.id)}
-                                        aria-label="Toggle Row"
-                                    >
-                                        {isExpanded(order.id) ? <FontAwesomeIcon icon={faChevronDown} /> : <FontAwesomeIcon icon={faChevronRight} />}
-                                    </button>
-                                </td>
-                            </tr>
+                        >
+                            <td>{order.id}</td>
+                            <td>{order.customer}</td>
+                            <td>{order.branch}</td>
+                            <td>{order.entity}</td>
+                            <td>{order.paymentMethod}</td>
+                            <td>{order.deliveryDate}</td>
+                            <td>
+                                <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
+                                    {t(order.status)}
+                                </span>
+                            </td>
+                            <td>
+                                <button
+                                    className="branches-toggle-row-btn"
+                                    onClick={() => toggleRow(order.id)}
+                                    aria-label="Toggle Row"
+                                >
+                                    {isExpanded(order.id) ? <FontAwesomeIcon icon={faChevronDown} /> : <FontAwesomeIcon icon={faChevronRight} />}
+                                </button>
+                            </td>
+                        </tr>
                         ))}
                     </tbody>
                 </table>

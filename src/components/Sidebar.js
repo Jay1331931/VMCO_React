@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../styles/template.css';
+import '../styles/sidebar.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +23,7 @@ import {
   faLanguage
 } from '@fortawesome/free-solid-svg-icons';
 
-function Template({ children, title }) {
+function Sidebar({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth > 768);
@@ -197,4 +197,4 @@ function Template({ children, title }) {
   );
 }
 
-export default Template;
+export default Sidebar;
