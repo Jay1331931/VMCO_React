@@ -23,7 +23,7 @@ import {
   faLanguage
 } from '@fortawesome/free-solid-svg-icons';
 
-function Template({ children }) {
+function Template({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth > 768);
@@ -57,11 +57,16 @@ function Template({ children }) {
     switch (path) {
       case '/orders': setActiveMenu('Orders'); break;
       case '/customers': setActiveMenu('Customers'); break;
-      case '/catalogue': setActiveMenu('Catalog'); break;
+      case '/catalog': setActiveMenu('Catalog'); break;
       default:
         setActiveMenu('Dashboard');
     }
   }, [location.pathname]);
+
+  useEffect(() => {
+    // Update the active menu based on the title prop
+    setActiveMenu(title);
+  }, [title]);
 
   const toggleSidebar = () => setSidebarCollapsed(!isSidebarCollapsed);
   const handleMobileToggle = () => {
@@ -77,7 +82,7 @@ function Template({ children }) {
     switch (label) {
       case 'Orders': navigate('/orders'); break;
       case 'Customers': navigate('/customers'); break;
-      case 'Catalog': navigate('/catalogue'); break;
+      case 'Catalog': navigate('/catalog'); break;
       default:
         // If no match is found, stay on current page
         break;

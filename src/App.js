@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Template from './screens/template';
 import Orders from './screens/orders';
 import Customers from './screens/customers';
-import Catalogue from './screens/catalogue';
+import Catalog from './screens/catalog';  
+import Cart from './screens/cart';  
 import CustomersDetails from './screens/customersDetails';
 import CommentPopup from './screens/commentPanel'; // Import the CommentPopup component
 
@@ -14,7 +15,8 @@ function App() {
         <Route path="/" element={<Template />} />
         <Route path="/orders" element={<Orders />} /> {/* Route for Orders */}
         <Route path="/customers" element={<Customers />} /> {/* Route for Customers */}
-        <Route path="/catalogue" element={<Catalogue />} /> {/* Route for Catalogue */}
+        <Route path="/catalog" element={<Catalog />} /> {/* Route for Catalog */}
+        <Route path="/cart" element={<Cart />} /> {/* Route for Cart */}
         <Route path="/customersDetails" element={<CustomersDetails />} /> {/* Route for Customers Onboarding */}
         </Routes>
     </Router>
