@@ -1,4 +1,4 @@
-y.orders-content {
+.orders-content {
   padding: 20px;
 }
 
@@ -17,9 +17,9 @@ y.orders-content {
 
 .header-controls {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 15px;
-  flex: 1;
+  justify-content: space-between;
 }
 
 .search-input {
@@ -31,11 +31,6 @@ y.orders-content {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 /* Update mobile responsive styles */
 @media (max-width: 768px) {
@@ -45,45 +40,37 @@ y.orders-content {
   }
 
   .header-controls {
+    display: flex;
     flex-direction: row;
     gap: 10px;
-    width: 100%;
+    align-items: center;
   }
 
   .search-input {
-    width: 100%;
-    margin-bottom: 10px; /* Add space between search and buttons */
+    width: 100%;;
   }
 
-  .header-actions {
-    display: flex;
-    width: 100%;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 5px;
+  .action-menu-container {
+    align-self: flex-end; /* Align to the right */
+    
   }
 
   .toggle-container {
     display: flex;
     align-items: center;
-    gap: 8px;
     font-size: 0.9rem;
     white-space: nowrap;
+    gap: 0; 
   }
 
   .toggle-icon {
-    font-size: 1.75rem; /* Slightly reduce toggle icon size for mobile */
+    font-size: 1.4rem; /* Slightly reduce toggle icon size for mobile */
   }
 
-  .add-button {
-    width: auto; /* Allow button to size based on content */
-    padding: 8px 16px;
-    font-size: 0.9rem;
-    margin: 0; /* Remove margin to align with other buttons */
-  }
-
-  .action-menu-container {
-    padding: 0; /* Remove padding to align with other buttons */
+  [dir="rtl"] .action-menu-container {
+    align-self: flex-start;
+    margin-right: 0;
+    margin-left: 20px;
   }
 
   .orders-content {
@@ -96,7 +83,7 @@ y.orders-content {
   }
 
   .header-controls {
-    flex-direction: column; /* Stack search input and buttons */
+    flex-direction: row; /* Stack search input and buttons */
     align-items: stretch; /* Stretch elements to full width */
     width: 100%;
   }
@@ -109,12 +96,6 @@ y.orders-content {
     width: 100%; /* Make header actions take full width */
     justify-content: stretch; /* Center buttons */
     gap: 5px; /* Reduce gap between buttons */
-  }
-
-  .toggle-container {
-    width: 50%; /* Adjust width for mobile view */
-    font-size: smaller; /* Reduce font size */
-    justify-content: center; /* Align toggle to the left */
   }
 
   .table-container {
@@ -198,7 +179,8 @@ y.orders-content {
 .toggle-container {
   display: flex;
   align-items: center;
-  gap: 15px; /* Add 15px gap between toggle and search input */
+  gap: 5px; /* Add 15px gap between toggle and search input */
+  white-space: nowrap;
 }
 
 .header-actions {
@@ -403,13 +385,13 @@ y.orders-content {
   }
 
   .header-controls {
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
     width: 100%;
   }
 
   .search-input {
-    width: 90%;
+    width: 100%;
   }
 
   .header-actions {
@@ -594,13 +576,13 @@ y.orders-content {
   }
 
   .header-controls {
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
     width: 100%;
   }
 
   .search-input {
-    width: 90%;
+    width: 100%;
   }
 
   .header-actions {
@@ -634,6 +616,7 @@ y.orders-content {
 
   .action-menu-container {
     padding: 5px;
+    align-self: center;
   }
 
   .action-menu {
@@ -679,14 +662,14 @@ y.orders-content {
 
 /* Catalog specific styles */
 .catalog-content{
-  padding: 20px 0;
+  padding: 0;
 }
 
 .catalog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .location-selector {
@@ -740,11 +723,12 @@ y.orders-content {
   .search-section {
     flex-wrap: wrap;
     flex-direction: column;
+    gap: 2px;
   }
 
   .go-to-cart-btn {
-    width: 100%;
-    margin-top: 10px;
+    width: 90%;
+    margin: 0px 10px 0px 10px;
   }
 }
 
@@ -774,7 +758,7 @@ y.orders-content {
 .category-tabs {
   display: flex;
   gap: 2px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border-bottom: 2px solid #D9D9D6;
   white-space: nowrap;
 }
@@ -801,6 +785,7 @@ y.orders-content {
   padding: 20px 0;
   max-width: 1400px; /* Add max-width to ensure consistent sizing */
   margin: 0 auto; /* Center the grid */
+  overflow-y: auto;
 }
 
 .product-card {
@@ -844,17 +829,28 @@ y.orders-content {
   }
 }
 
+/* Update the product image styles */
 .product-image {
   padding: 10px;
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 5px;
 }
 
 .image-placeholder {
-  width: 100%;  /* Changed from fixed 240px */  
-  max-width: 100%;
-  aspect-ratio: 1;  /* Creates a perfect square */
+  width: 100%;
+  height: 100%;
   border-radius: 5px;
   background-color: #D9D9D6;
-  margin: 0 auto;  /* Center the placeholder */
 }
 
 .product-details {
@@ -1062,11 +1058,6 @@ y.orders-content {
   border-top: 1px solid #eee;
 }
 
-.quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
 /* RTL Support */
 [dir="rtl"] .category-title {
@@ -1234,4 +1225,59 @@ y.orders-content {
     top: 3px;
     right: 5px;
   }
+}
+
+/* Loading Spinner styles */
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #00205B;
+  animation: spin 1s linear infinite;
+}
+
+
+.loading-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    grid-column: 1 / -1;
+}
+
+/* Spinner sizes */
+.loading-spinner-container.small .loading-spinner {
+  width: 30px;
+  height: 30px;
+}
+
+.loading-spinner-container.medium .loading-spinner {
+  width: 50px;
+  height: 50px;
+}
+
+.loading-spinner-container.large .loading-spinner {
+  width: 70px;
+  height: 70px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Add these styles to your existing CSS */
+.loading-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    grid-column: 1 / -1;
 }

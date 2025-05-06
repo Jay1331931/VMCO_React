@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMinus, faPlus, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import {  faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import QuantityController from '../components/QuantityController';
 
 function Cart() {
     const { t } = useTranslation();
@@ -13,6 +14,18 @@ function Cart() {
     const [quantities, setQuantities] = useState({});
 
     const cartItems = [
+        {
+            category: 'VMCO Machines',
+            items: [
+                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
+            ]
+        },
+        {
+            category: 'VMCO Others',
+            items: [
+                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
+            ]
+        },
         {
             category: 'Diayafa',
             items: [
@@ -26,12 +39,7 @@ function Cart() {
                 { id: 3, name: 'Product Name', code: 'SAR60', quantity: 10, delivery: '15 Apr 2025' }
             ]
         },
-        {
-            category: 'VMCO Machines',
-            items: [
-                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
-            ]
-        }
+        
     ];
 
     const toggleCategory = (category) => {
@@ -101,26 +109,15 @@ function Cart() {
                                             <div className="item-details">
                                                 <h4 className="item-name">{item.name}</h4>
                                                 <p className="delivery-date">Delivery by {item.delivery}</p>
-                                                <div className="quantity-controls">
-                                                    <button 
-                                                        className="quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, -1)}
-                                                    >
-                                                        <FontAwesomeIcon icon={faMinus} />
-                                                    </button>
-                                                    <input 
-                                                        type="number" 
-                                                        className="quantity-input"
-                                                        value={quantities[item.id] || item.quantity}
-                                                        readOnly
-                                                    />
-                                                    <button 
-                                                        className="quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, 1)}
-                                                    >
-                                                        <FontAwesomeIcon icon={faPlus} />
-                                                    </button>
-                                                </div>
+                                                <QuantityController 
+                                                    itemId={item.id}
+                                                    quantity={quantities[item.id] || item.quantity}
+                                                    onQuantityChange={handleQuantityChange}
+                                                    onInputChange={(itemId, value) => setQuantities({
+                                                        ...quantities,
+                                                        [itemId]: value
+                                                    })}
+                                                />
                                             </div>
                                             <div className="item-price">
                                                 <span>{item.code}</span>
