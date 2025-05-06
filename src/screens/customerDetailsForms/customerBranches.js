@@ -1,11 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import '../../styles/components.css';
-import '../../styles/forms.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOff, faToggleOn, faEllipsisV, faChevronRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faEllipsisV, faChevronRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-
-const orders = [
+import '../../styles/forms.css';
+const branches = [
     { id: '0001', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
     { id: '0002', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
     { id: '0003', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
@@ -20,49 +18,119 @@ const orders = [
     { id: '0012', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
 ];
 
+
 const getStatusClass = (status) => {
     switch (status) {
-        case 'Approved':
-            return 'status-approved';
-        case 'Rejected':
-            return 'status-rejected';
-        default:
-            return 'status-pending';
+        case 'Approved': return 'status-approved';
+        case 'Rejected': return 'status-rejected';
+        default: return 'status-pending';
     }
 };
 
-function Orders() {
-    const [isApprovalMode, setApprovalMode] = useState(false);
-    const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-    const actionMenuRef = useRef(null);
-    const { t } = useTranslation();
+// ========== Form Components ==========
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
-                setActionMenuOpen(false);
-            }
-        };
+const BranchDetailsForm = ({ order }) => {
+    const fields = [
+        { label: 'Branch', value: order.branch, placeholder: 'Branch' },
+        { label: 'City', value: 'Bengaluru', placeholder: 'City' },
+        { label: 'Location Type', value: 'Metro', placeholder: 'Location Type' },
+        { label: 'Geolocation', value: 'URL', placeholder: 'Geolocation' },
+        { label: 'Region', value: 'Region', placeholder: 'Region' },
+        { label: 'Pincode', value: order.deliveryDate, placeholder: 'Pincode' },
+    ];
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+    return (
+        <div className="form-section">
+            <h3>Branch Details</h3>
+            <div className="form-row">
+                {fields.map((field, index) => (
+                    <div className="form-group" key={index}>
+                        <label>{field.label}</label>
+                        <input value={field.value} placeholder={field.placeholder} />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
-    const toggleApprovalMode = () => {
-        setApprovalMode(!isApprovalMode);
-    };
 
-    const toggleActionMenu = () => {
-        setActionMenuOpen(!isActionMenuOpen);
-    };
+const ContactRow = ({ label }) => (
+    <div className="form-row">
+        <div className='form-group'>
+            <input placeholder={`${label} Name`} />
+        </div>
+        <div className='form-group'>
+            <input placeholder="Designation" />
+        </div>
+        <div className='form-group'>
+            <input placeholder="Email" />
+        </div>
+        <div className='form-group'>
+            <input placeholder="Phone" />
+        </div>
+    </div>
+);
 
-    const handleSubmit = (action) => {
-        // Handle the submit action based on the action type (save, block, approve, reject)
-        console.log(`Action: ${action}`);
-    }
+const ContactSection = () => {
+    const contactLabels = ['Primary Contact', 'Secondary Contact', 'Supervisor Contact'];
+
+    return (
+        <div className="form-section">
+            <h3>Personal Details</h3>
+            {contactLabels.map((label, index) => (
+                <div className='form row'>
+                    <div className='form-group'>
+                        <label>{label}</label>
+                        <ContactRow key={index} label={label} />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+
+const OperatingHours = () => {
+    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return (
+        <div className="form-section">
+            <h3>Operating And Delivery Hours For Each Week Day (Mon To Sun)</h3>
+            <table className="hours-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Operating Hours (From - To)</th>
+                        <th>Delivery Hours (From - To)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {weekdays.map((day) => (
+                        <tr key={day}>
+                            <td>{day}</td>
+                            <td><input type="time" defaultValue="09:00" /> - <input type="time" defaultValue="18:00" /></td>
+                            <td><input type="time" defaultValue="09:00" /> - <input type="time" defaultValue="18:00" /></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+// ========== End Form Components ==========
+
+function Branches() {
     const [expandedRows, setExpandedRows] = useState([]);
+    const { t } = useTranslation();
+    const actionMenuRef = useRef(null);
+    const [isActionMenuOpen, setActionMenuOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(branches.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentItems = branches.slice(startIndex, endIndex);
+
     const toggleRow = (orderId) => {
         setExpandedRows((prev) =>
             prev.includes(orderId)
@@ -73,23 +141,30 @@ function Orders() {
 
     const isExpanded = (orderId) => expandedRows.includes(orderId);
 
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+                setActionMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     return (
         <div className="branches-content">
             <div className="form-main-header">
                 <a href="#">{t('Customer Approval Checklist')}</a>
             </div>
-                <div className='branches-page-header '>
-                    <div className='branches-header-controls'>
-                        <input type="text" placeholder={t('Search...')} className="branches-search-input" />
+            <div className="branches-page-header">
+                <div className="branches-header-controls">
+                    <input type="text" placeholder={t('Search...')} className="branches-search-input" />
+                    <div className="branches-action-buttons">
                         <button className='branches-approve-button'>{t('Approve')}</button>
                         <button className='branches-reject-button'>{t('Reject')}</button>
-                        <button className="add-button">{t('+ Add')}</button>
+                        <button className="branches-add-button">{t('+ Add')}</button>
                         <div className="action-menu-container" ref={actionMenuRef}>
-                            <FontAwesomeIcon
-                                icon={faEllipsisV}
-                                className="action-menu-icon"
-                                onClick={toggleActionMenu}
-                            />
+                            <FontAwesomeIcon icon={faEllipsisV} className="action-menu-icon" onClick={() => setActionMenuOpen(!isActionMenuOpen)} />
                             {isActionMenuOpen && (
                                 <div className="action-menu">
                                     <div className="action-menu-item">{t('Export')}</div>
@@ -100,54 +175,102 @@ function Orders() {
                         </div>
                     </div>
                 </div>
-            
+            </div>
+
             <div className="branches-table-container">
                 <table className="branches-data-table">
                     <thead>
                         <tr>
-                            <th scope="col">{t('Branch')}</th>
-                            <th scope="col">{t('City')}</th>
-                            <th scope="col">{t('Location Type')}</th>
-                            <th scope="col">{t('Geolocation')}</th>
-                            <th scope="col">{t('Region')}</th>
-                            <th scope="col">{t('Pincode')}</th>
-                            <th scope="col">{t('Status')}</th>
+                            <th className="desktop-only">{t('Branch')}</th>
+                            <th className="desktop-only">{t('City')}</th>
+                            <th className="desktop-only">{t('Location Type')}</th>
+                            <th className="desktop-only">{t('Geolocation')}</th>
+                            <th className="desktop-only">{t('Region')}</th>
+                            <th className="desktop-only">{t('Pincode')}</th>
+                            <th>{t('Status')}</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.map((order) =>
-                        (<tr
-                            key={order.id}
-                            className={isExpanded(order.id) ? 'branches-expanded-row' : ''}
-                          >
-                                <td>{order.id}</td>
-                                <td>{order.customer}</td>
-                                <td>{order.branch}</td>
-                                <td>{order.entity}</td>
-                                <td>{order.paymentMethod}</td>
-                                <td>{order.deliveryDate}</td>
-                                <td>
-                                    <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
-                                        {t(order.status)}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button
-                                        className="branches-toggle-row-btn"
-                                        onClick={() => toggleRow(order.id)}
-                                        aria-label="Toggle Row"
-                                    >
-                                        {isExpanded(order.id) ? <FontAwesomeIcon icon={faChevronDown} /> : <FontAwesomeIcon icon={faChevronRight} />}
-                                    </button>
-                                </td>
-                            </tr>
+                        {currentItems.map((order) => (
+                            <React.Fragment key={order.id}>
+                                <tr onClick={() => toggleRow(order.id)} className={isExpanded(order.id) ? 'branches-expanded-row' : ''}>
+                                    <td className="mobile-only mobile-primary" data-label="Branch ID">
+                                        <div className="mobile-content">
+                                            <span className="mobile-title">{order.id}</span>
+                                            <span className="mobile-subtitle">{order.branch}</span>
+                                        </div>
+                                    </td>
+                                    <td className="mobile-secondary">
+                                        <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
+                                            {t(order.status)}
+                                        </span>
+                                    </td>
+                                    {/* Hidden columns for desktop data */}
+                                    <td className="desktop-only">{order.id}</td>
+                                    <td className="desktop-only">{order.branch}</td>
+                                    <td className="desktop-only">{order.customer}</td>
+                                    <td className="desktop-only">{order.entity}</td>
+                                    <td className="desktop-only">{order.paymentMethod}</td>
+                                    <td className="desktop-only">{order.deliveryDate}</td>
+                                    <td className='desktop-only'>
+                                        <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
+                                            {t(order.status)}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button className="branches-toggle-row-btn">
+                                            {isExpanded(order.id)
+                                                ? <FontAwesomeIcon icon={faChevronDown} />
+                                                : <FontAwesomeIcon icon={faChevronRight} />}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {isExpanded(order.id) && (
+                                    <tr className="expanded-row">
+                                        <td colSpan="8">
+                                            <div className="expanded-form-container">
+                                                <BranchDetailsForm order={order} />
+                                                <ContactSection />
+                                                <OperatingHours />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
                         ))}
                     </tbody>
                 </table>
+                {/* Pagination */}
+                <div className="pagination-controls large-screen">
+                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
+                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>‹</button>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages)
+                        .map((page, idx, arr) => (
+                            <React.Fragment key={page}>
+                                {idx > 0 && page - arr[idx - 1] > 1 && <span className="dots">…</span>}
+                                <button
+                                    onClick={() => setCurrentPage(page)}
+                                    className={page === currentPage ? 'active' : ''}
+                                >
+                                    {page}
+                                </button>
+                            </React.Fragment>
+                        ))}
+
+                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>›</button>
+                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+
+                    <span className="page-info">
+                        {startIndex + 1}-{Math.min(endIndex, branches.length)} of {branches.length} items
+                    </span>
+                </div>
             </div>
+
         </div>
     );
 }
 
-export default Orders;
+export default Branches;

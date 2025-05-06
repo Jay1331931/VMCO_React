@@ -25,7 +25,7 @@ function CustomersDetails() {
       { type: 'text', name: 'branchName', label: t('Branch Name'), placeholder: t('Enter branch name') },
       { type: 'text', name: 'branchLocation', label: t('Branch Location'), placeholder: t('Enter location') },
     ],
-    'Products': [],
+    'Products & MoQ': [],
   }), [t]);
   const formDataByTab = {
     'Business Details': getBusinessDetailsFormData(t)['Business Details'],
@@ -238,7 +238,7 @@ function CustomersDetails() {
               {/* Form Grid */}
               
 
-                {activeTab === 'Products' ? (
+                {activeTab === 'Products & MoQ' ? (
                   <CustomerProducts />
                 ) : activeTab === 'Branches' ? (
                   <CustomerBranches />
@@ -375,7 +375,21 @@ function CustomersDetails() {
           </div>
 
           {/* Action Buttons */}
-          {activeTab === 'Products' || activeTab === 'Branches' ? null :
+          {activeTab === 'Products & MoQ' || activeTab === 'Branches' ? 
+          (<div className="customer-onboarding-form-actions">
+            <div className="status-text">
+              <span className="status-label">{t('Status')}:</span>
+              <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+            </div>
+            <div className="action-buttons">
+              <button className="branches-save-button" onClick={() => handleSave('save')}>
+                {t('Save Changes')}
+              </button>
+              <button className="block" onClick={() => handleSubmit('block')}>
+                {t('Block')}
+              </button>
+            </div>
+          </div>) :
             (<div className="customer-onboarding-form-actions">
               <div className="status-text">
                 <span className="status-label">{t('Status')}:</span>
