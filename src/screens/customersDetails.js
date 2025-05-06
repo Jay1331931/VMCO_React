@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faBan, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/forms.css';
 import CommentPopup from './commentPanel';
 import '../i18n';
@@ -27,9 +25,9 @@ function CustomersDetails() {
     ],
     'Products & MoQ': [],
   }), [t]);
-  const formDataByTab = {
+  const formDataByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsFormData(t)['Business Details'],
-  };
+  }), [t]);
 
   const tabs = Object.keys(formsByTab);
   // Arabic text checker
@@ -187,34 +185,32 @@ function CustomersDetails() {
   };
 
   const renderHeaderWithLinks = (label) => {
-    // Define all phrases you want to hyperlink and their URLs
     const linkMap = {
       'Download terms & conditions': '/path/to/terms.pdf',
-      // Add more if needed
     };
 
-    let elements = [label];
-
-    // Replace matched phrases in the label with <a> tags
-    Object.entries(linkMap).forEach(([phrase, url]) => {
-      elements = elements.flatMap((part) =>
-        typeof part === 'string' && part.includes(phrase)
-          ? [
-            ...part.split(phrase).flatMap((chunk, idx, arr) =>
-              idx < arr.length - 1
-                ? [chunk, <a key={phrase + idx} href={url} target="_blank" rel="noopener noreferrer">{phrase}</a>]
-                : [chunk]
-            ),
-          ]
-          : [part]
-      );
+    // Split the text and create elements with unique keys
+    const elements = label.split(new RegExp(`(${Object.keys(linkMap).join('|')})`)).map((part, index) => {
+      if (linkMap[part]) {
+        return (
+          <a
+            key={`link-${index}`}
+            href={linkMap[part]}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {part}
+          </a>
+        );
+      }
+      return <span key={`text-${index}`}>{part}</span>;
     });
 
     return elements;
   };
 
   return (
-    <Template>
+    <Sidebar>
       <div className='customers'>
         <div className={`customer-onboarding-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
           <div className="customer-onboarding-details">
@@ -252,8 +248,9 @@ function CustomersDetails() {
                       case 'text':
                         return (
                           <div className="form-group" key={field.name}>
-                            <label htmlFor={field.name}>{field.label}</label>
+                            <label htmlFor={`${field.name}-input`}>{field.label}</label>
                             <input
+                              id={`${field.name}-input`}
                               type="text"
                               name={field.name}
                               value={formData[field.name] || ''}
@@ -273,8 +270,9 @@ function CustomersDetails() {
                       case 'dropdown':
                         return (
                           <div className="form-group" key={field.name}>
-                            <label htmlFor={field.name}>{field.label}</label>
+                            <label htmlFor={`${field.name}-select`}>{field.label}</label>
                             <select
+                              id={`${field.name}-select`}
                               name={field.name}
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
@@ -296,7 +294,7 @@ function CustomersDetails() {
                       case 'file':
                         return (
                           <div className="file-upload" key={field.name}>
-                            <label htmlFor={field.name}>{field.label}</label>
+                            <label htmlFor={`file-${field.name}`}>{field.label}</label>
                             <div className="upload-row">
                               <input
                                 type="file"
@@ -317,7 +315,7 @@ function CustomersDetails() {
                       case 'document':
                         return (
                           <div className="document-upload full-width" key={field.name}>
-                            <label htmlFor={field.name}>{field.label}</label>
+                            <label htmlFor={`file-${field.name}`}>{field.label}</label>
                             <div className="upload-row">
                               <input
                                 type="file"
@@ -338,11 +336,12 @@ function CustomersDetails() {
                       case 'checkbox':
                         return (
                           <div className="form-group" key={field.name}>
-                            <label>{field.label}</label>
+                            <span className="checkbox-group-label">{field.label}</span>
                             {field.options.map((option, idx) => (
                               <div key={idx} className="checkbox-option">
-                                <label>
+                                <label htmlFor={`${field.name}-${idx}`}>
                                   <input
+                                    id={`${field.name}-${idx}`}
                                     type="checkbox"
                                     name={field.name}
                                     value={option}
@@ -415,7 +414,7 @@ function CustomersDetails() {
           <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
         </div>
       </div>
-    </Template>
+    </Sidebar>
 
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faBan, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/forms.css';
 import CommentPopup from './commentPanel';
 import '../i18n';
@@ -185,7 +185,7 @@ function CustomersOnboarding() {
   };
 
   return (
-    <Template>
+    <Sidebar>
       <div className={`customer-onboarding-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
         <div className="customer-onboarding-details">
           <div className="customer-onboarding-body">
@@ -338,7 +338,7 @@ function CustomersOnboarding() {
         <div>
             <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
         </div>
-    </Template>
+    </Sidebar>
     
   );
 }

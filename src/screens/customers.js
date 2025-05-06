@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Template from './template';
+import React, { useState } from 'react';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import ActionButton from '../components/ActionButton';
+import SearchInput from '../components/SearchInput';
+import Table from '../components/Table';
+import Tabs from '../components/Tabs';
 
 const customers = [
   {companyName: 'Company', primaryContact: {name: '99000/XX024', email: 'CUSTOMER@CUSTOMER.COM'}, companyType: 'Trading/Non-Trading', typeOfBusiness: 'Type Of Business', deliveryLocation: 'Jaynagar', status: 'Pending'},
@@ -35,13 +37,35 @@ const invites = [
   {
     date: '15 Apr 2025',
     customerName: 'FULL NAME',
-    email: 'customer1@customer.com',
+    email: 'customer2@customer.com',
     phone: '99000/XX024',
     companyName: 'Company Name',
     region: 'Asia',
     assignTo: 'Name',
     source: 'CRM',
     status: 'New'
+  },
+  {
+    date: '15 Apr 2025',
+    customerName: 'FULL NAME',
+    email: 'customer3@customer.com',
+    phone: '12345/YY678',
+    companyName: 'Another Company',
+    region: 'Europe',
+    assignTo: 'Another Name',
+    source: 'Email',
+    status: 'Pending'
+  },
+  {
+    date: '15 Apr 2025',
+    customerName: 'FULL NAME',
+    email: 'customer4@customer.com',
+    phone: '54321/YY987',
+    companyName: 'Third Company',
+    region: 'North America',
+    assignTo: 'Third Name',
+    source: 'Web',
+    status: 'Pending'
   }
 ];
 
@@ -58,136 +82,120 @@ const getStatusClass = (status) => {
 
 function Customers() {
   const { t } = useTranslation();
-  const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('customers');
-  const actionMenuRef = useRef(null);
+  const [filteredCustomers, setFilteredCustomers] = useState(customers);
+  const [filteredInvites, setFilteredInvites] = useState(invites);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
-        setActionMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const toggleActionMenu = () => {
-    setActionMenuOpen(!isActionMenuOpen);
-  };
+  const customerTabs = [
+    { value: 'customers', label: 'Customers' },
+    { value: 'invites', label: 'Invites' }
+  ];
 
   const handleResend = (invite) => {
     console.log('Resend invite:', invite);
+    alert('Invite resent successfully!');
     // Add your resend logic here
   };
 
   const handleInvite = (invite) => {
     console.log('Send invite:', invite);
+    alert('Invite sent successfully!');
     // Add your invite logic here
   };
+
+  const handleSearch = (searchTerm) => {
+    if (activeTab === 'customers') {
+      const filtered = customers.filter((customer) =>
+        Object.values(customer).some((value) =>
+          typeof value === 'object'
+            ? Object.values(value).some(v => 
+                v.toString().toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+      setFilteredCustomers(filtered);
+    } else {
+      const filtered = invites.filter((invite) =>
+        Object.values(invite).some((value) =>
+          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      );
+      setFilteredInvites(filtered);
+    }
+  };
+
+  const customerColumns = [
+    { key: 'companyName', header: 'Company' },
+    { key: 'primaryContact', header: 'Primary Contact' },
+    { key: 'companyType', header: 'Company Type' },
+    { key: 'typeOfBusiness', header: 'Type Of Business' },
+    { key: 'deliveryLocation', header: 'Delivery Location' },
+    { key: 'status', header: 'Status' }
+  ];
+
+  const inviteColumns = [
+    { key: 'date', header: 'Date' },
+    { key: 'customerName', header: 'Customer Name' },
+    { key: 'email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'companyName', header: 'Company Name' },
+    { key: 'region', header: 'Region' },
+    { key: 'assignTo', header: 'Assign To' },
+    { key: 'source', header: 'Source' },
+    { key: 'status', header: 'Status' },
+    { key: 'actions', header: '' }
+  ];
+
+  const customCellRenderer = {
+    primaryContact: (item) => (
+      <div className="contact-info">
+        <div>{item.primaryContact.name}</div>
+        <div className="email">{item.primaryContact.email}</div>
+      </div>
+    )
+  };
+
+  const renderActionButtons = (invite) => (
+    <div className="action-buttons">
+      {invite.status === 'Pending' && (
+        <button 
+          className="action-button resend"
+          onClick={() => handleResend(invite)}
+        >
+          {t('Resend')}
+        </button>
+      )}
+      {invite.status === 'New' && (
+        <button 
+          className="action-button invite"
+          onClick={() => handleInvite(invite)}
+        >
+          {t('Invite')}
+        </button>
+      )}
+    </div>
+  );
 
   const renderContent = () => {
     switch (activeTab) {
       case 'customers':
         return (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>{t('Company')}</th>
-                  <th>{t('Primary Contact')}</th>
-                  <th>{t('Company Type')}</th>
-                  <th>{t('Type Of Business')}</th>
-                  <th>{t('Delivery Location')}</th>
-                  <th>{t('Status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customers.map((customer, index) => (
-                  <tr key={index}>
-                    <td>{customer.companyName}</td>
-                    <td>
-                      <div className="contact-info">
-                        <div>{customer.primaryContact.name}</div>
-                        <div className="email">{customer.primaryContact.email}</div>
-                      </div>
-                    </td>
-                    <td>{customer.companyType}</td>
-                    <td>{customer.typeOfBusiness}</td>
-                    <td>{customer.deliveryLocation}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusClass(customer.status)}`}>
-                        {customer.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table 
+            columns={customerColumns}
+            data={filteredCustomers}
+            getStatusClass={getStatusClass}
+            customCellRenderer={customCellRenderer}
+          />
         );
       case 'invites':
         return (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>{t('Date')}</th>
-                  <th>{t('Customer Name')}</th>
-                  <th>{t('Email')}</th>
-                  <th>{t('Phone')}</th>
-                  <th>{t('Company Name')}</th>
-                  <th>{t('Region')}</th>
-                  <th>{t('Assign To')}</th>
-                  <th>{t('Source')}</th>
-                  <th>{t('Status')}</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {invites.map((invite, index) => (
-                  <tr key={index}>
-                    <td>{invite.date}</td>
-                    <td>{invite.customerName}</td>
-                    <td>{invite.email}</td>
-                    <td>{invite.phone}</td>
-                    <td>{invite.companyName}</td>
-                    <td>{invite.region}</td>
-                    <td>{invite.assignTo}</td>
-                    <td>{invite.source}</td>
-                    <td>
-                      <span className={`status-badge ${getStatusClass(invite.status)}`}>
-                        {invite.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        {invite.status === 'Pending' && (
-                          <button 
-                            className="action-button resend"
-                            onClick={() => handleResend(invite)}
-                          >
-                            {t('Resend')}
-                          </button>
-                        )}
-                        {invite.status === 'New' && (
-                          <button 
-                            className="action-button invite"
-                            onClick={() => handleInvite(invite)}
-                          >
-                            {t('Invite')}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table 
+            columns={inviteColumns}
+            data={filteredInvites}
+            getStatusClass={getStatusClass}
+            actionButtons={renderActionButtons}
+          />
         );
       default:
         return null;
@@ -195,53 +203,27 @@ function Customers() {
   };
 
   return (
-    <Template title={t('Customers')}>
+    <Sidebar title={t('Customers')}>
       <div className="page-content">
         <div className="customer-content">
-          <div className="tab-container">
-            <div className="tabs">
-              <button 
-                className={`tab-button ${activeTab === 'customers' ? 'active' : ''}`}
-                onClick={() => setActiveTab('customers')}
-              >
-                {t('Customers')}
-              </button>
-              <button 
-                className={`tab-button ${activeTab === 'invites' ? 'active' : ''}`}
-                onClick={() => setActiveTab('invites')}
-              >
-                {t('Invites')}
-              </button>
-            </div>
-          </div>
+          <Tabs
+            tabs={customerTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
           <div className="page-header">
             <div className="header-controls">
-              <input type="text" placeholder={t('Search...')} className="search-input" />
-            </div>
-            <div className="header-actions">
+            <SearchInput onSearch={handleSearch} />
               {activeTab === 'invites' && (
-                <button className="add-button">{t('+ Invite')}</button>
+                <button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>
               )}
-              <div className="action-menu-container" ref={actionMenuRef}>
-                <FontAwesomeIcon
-                  icon={faEllipsisV}
-                  className="action-menu-icon"
-                  onClick={toggleActionMenu}
-                />
-                {isActionMenuOpen && (
-                  <div className="action-menu">
-                    <div className="action-menu-item">{t('Export')}</div>
-                    <div className="action-menu-item">{t('Import')}</div>
-                    <div className="action-menu-item">{t('Settings')}</div>
-                  </div>
-                )}
-              </div>
+              <ActionButton />
             </div>
           </div>
           {renderContent()}
         </div>
       </div>
-    </Template>
+    </Sidebar>
   );
 }
 

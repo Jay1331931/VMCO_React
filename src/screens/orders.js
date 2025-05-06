@@ -1,8 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import Template from './template';
+import React, { useState } from 'react';
+import Sidebar from '../components/Sidebar';
+import ActionButton from '../components/ActionButton';
+import ToggleButton from '../components/ToggleButton';
+import SearchInput from '../components/SearchInput';
+import Table from '../components/Table';
 import '../styles/components.css';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOff, faToggleOn, faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 const orders = [
@@ -18,6 +20,44 @@ const orders = [
   { id: '0010', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
   { id: '0011', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
   { id: '0012', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0013', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0014', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0015', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0016', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0017', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0018', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0019', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0020', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0021', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0022', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0023', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0024', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0025', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0026', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0027', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0028', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0029', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0030', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0031', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0032', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0033', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0034', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0035', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0036', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0037', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0038', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0039', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' }, 
+  { id: '0040', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0041', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0042', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0043', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0044', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0045', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0046', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0047', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
+  { id: '0048', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0049', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
+  { id: '0050', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
 ];
 
 const getStatusClass = (status) => {
@@ -33,102 +73,62 @@ const getStatusClass = (status) => {
 
 function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
-  const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-  const actionMenuRef = useRef(null);
+  const [filteredOrders, setFilteredOrders] = useState(orders);
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
-        setActionMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
   };
 
-  const toggleActionMenu = () => {
-    setActionMenuOpen(!isActionMenuOpen);
+  const handleSearch = (searchTerm) => {
+    const filtered = orders.filter((order) =>
+      Object.values(order).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+    setFilteredOrders(filtered);
   };
 
+  const handleAddOrder = () => {
+    console.log('Add Order clicked');
+    alert('Add Order clicked!');
+    // Add your logic to handle adding an order here
+  }
+
+  const columns = [
+    { key: 'id', header: 'Order #' },
+    { key: 'customer', header: 'Customer' },
+    { key: 'branch', header: 'Branch' },
+    { key: 'entity', header: 'Entity' },
+    { key: 'paymentMethod', header: 'Payment Method' },
+    { key: 'deliveryDate', header: 'Delivery Date' },
+    { key: 'totalAmount', header: 'Total Amount' },
+    { key: 'status', header: 'Status' }
+  ];
+
   return (
-    <Template title={t('Orders')}>
+    <Sidebar title={t('Orders')}>
       <div className="orders-content">
         <div className="page-header">
           <div className="header-controls">
-            <input type="text" placeholder={t('Search...')} className="search-input" />
-            <div className="toggle-container">
-              <label>{t('All')}</label>
-              <FontAwesomeIcon
-                icon={isApprovalMode ? faToggleOn : faToggleOff}
-                className="toggle-icon"
-                onClick={toggleApprovalMode}
-                aria-label={isApprovalMode ? t('Switch to All Orders') : t('Switch to My Approvals')}
-              />
-              <label>{t('My Approval')}</label>
-            </div>
+            <SearchInput onSearch={handleSearch} />
           </div>
           <div className="header-actions">
-            <button className="add-button">{t('+ Add')}</button>
-            <div className="action-menu-container" ref={actionMenuRef}>
-              <FontAwesomeIcon
-                icon={faEllipsisV}
-                className="action-menu-icon"
-                onClick={toggleActionMenu}
-              />
-              {isActionMenuOpen && (
-                <div className="action-menu">
-                  <div className="action-menu-item">{t('Export')}</div>
-                  <div className="action-menu-item">{t('Import')}</div>
-                  <div className="action-menu-item">{t('Settings')}</div>
-                </div>
-              )}
-            </div>
+          <ToggleButton 
+              isToggled={isApprovalMode}
+              onToggle={toggleApprovalMode}
+            />
+            <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>
+            <ActionButton />
           </div>
         </div>
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">{t('Order #')}</th>
-                <th scope="col">{t('Customer')}</th>
-                <th scope="col">{t('Branch')}</th>
-                <th scope="col">{t('Entity')}</th>
-                <th scope="col">{t('Payment Method')}</th>
-                <th scope="col">{t('Delivery Date')}</th>
-                <th scope="col">{t('Total Amount')}</th>
-                <th scope="col">{t('Status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.id}</td>
-                  <td>{order.customer}</td>
-                  <td>{order.branch}</td>
-                  <td>{order.entity}</td>
-                  <td>{order.paymentMethod}</td>
-                  <td>{order.deliveryDate}</td>
-                  <td>{order.totalAmount}</td>
-                  <td>
-                    <span className={`status-badge ${getStatusClass(order.status)}`}>
-                      {t(order.status)}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table 
+          columns={columns}
+          data={filteredOrders}
+          getStatusClass={getStatusClass}
+        />
       </div>
-    </Template>
+    </Sidebar>
   );
 }
 

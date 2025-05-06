@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import Template from './template';
+import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMinus, faPlus, faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import {  faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import QuantityController from '../components/QuantityController';
 
 function Cart() {
     const { t } = useTranslation();
@@ -13,6 +14,18 @@ function Cart() {
     const [quantities, setQuantities] = useState({});
 
     const cartItems = [
+        {
+            category: 'VMCO Machines',
+            items: [
+                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
+            ]
+        },
+        {
+            category: 'VMCO Others',
+            items: [
+                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
+            ]
+        },
         {
             category: 'Diayafa',
             items: [
@@ -26,12 +39,7 @@ function Cart() {
                 { id: 3, name: 'Product Name', code: 'SAR60', quantity: 10, delivery: '15 Apr 2025' }
             ]
         },
-        {
-            category: 'VMCO Machines',
-            items: [
-                { id: 4, name: 'Product Name', code: 'SAR2000', quantity: 10, delivery: '15 Apr 2025' }
-            ]
-        }
+        
     ];
 
     const toggleCategory = (category) => {
@@ -67,14 +75,14 @@ function Cart() {
     };
 
     return (
-        <Template title={t('Your Cart')} dir={t('direction')}>
-            <div className="cart-content">
-                <div className="cart-header">
+        <Sidebar title={t('Your Cart')} dir={t('direction')}>
+            <div className="cart-header">
                     <h2 className="cart-title">Cart (3 items)</h2>
                     <div className="delivery-info">Delivering to JP Nagar</div>
                     <div className="credit-balance">Credit Balance: SAR445</div>
                 </div>
-
+            <div className="cart-content">
+            
                 <div className="cart-items">
                     {cartItems.map((category) => (
                         <div key={category.category} className="category-section">
@@ -101,26 +109,15 @@ function Cart() {
                                             <div className="item-details">
                                                 <h4 className="item-name">{item.name}</h4>
                                                 <p className="delivery-date">Delivery by {item.delivery}</p>
-                                                <div className="quantity-controls">
-                                                    <button 
-                                                        className="quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, -1)}
-                                                    >
-                                                        <FontAwesomeIcon icon={faMinus} />
-                                                    </button>
-                                                    <input 
-                                                        type="number" 
-                                                        className="quantity-input"
-                                                        value={quantities[item.id] || item.quantity}
-                                                        readOnly
-                                                    />
-                                                    <button 
-                                                        className="quantity-btn"
-                                                        onClick={() => handleQuantityChange(item.id, 1)}
-                                                    >
-                                                        <FontAwesomeIcon icon={faPlus} />
-                                                    </button>
-                                                </div>
+                                                <QuantityController 
+                                                    itemId={item.id}
+                                                    quantity={quantities[item.id] || item.quantity}
+                                                    onQuantityChange={handleQuantityChange}
+                                                    onInputChange={(itemId, value) => setQuantities({
+                                                        ...quantities,
+                                                        [itemId]: value
+                                                    })}
+                                                />
                                             </div>
                                             <div className="item-price">
                                                 <span>{item.code}</span>
@@ -134,18 +131,19 @@ function Cart() {
                     ))}
                 </div>
 
-                <div className="cart-footer">
-                    <div className="total-amount">
+                 <div className="total-amount">
                         <h3>{t('Total Amount')} ({cartItems.reduce((sum, cat) => sum + cat.items.length, 0)} {t('Items')})</h3>
                         <span>SAR{calculateTotal()}</span>
                         <button className="checkout-all-btn">{t('CHECKOUT ALL')}</button>
-                    </div>
+                 </div>
+            </div>
+            <div className="cart-footer">
+                    
                     <button className="continue-shopping" onClick={handleContinueShopping}>
                         {t('Continue Shopping')}
                     </button>
                 </div>
-            </div>
-        </Template>
+        </Sidebar>
     );
 }
 

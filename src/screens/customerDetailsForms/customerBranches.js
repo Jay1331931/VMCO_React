@@ -154,7 +154,9 @@ function Branches() {
     return (
         <div className="branches-content">
             <div className="form-main-header">
-                <a href="#">{t('Customer Approval Checklist')}</a>
+                <button className="form-main-header-link" onClick={() => handleHeaderClick()}>
+                    {t('Customer Approval Checklist')}
+                </button>
             </div>
             <div className="branches-page-header">
                 <div className="branches-header-controls">
