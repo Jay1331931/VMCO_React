@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
+import Pagination from '../../components/Pagination';
+import '../../styles/pagination.css';
 import '../../styles/components.css';
 import '../../styles/forms.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -28,6 +30,8 @@ function Products() {
     const { t } = useTranslation();
     const categories = ['VMCO Machines', 'VMCO Other', 'Diayafa', 'Green Mart', 'Naqui'];
     const [activeCategory, setActiveCategory] = useState('VMCO Machines');
+    const [selectedItems, setSelectedItems] = useState([]);
+
     const [isInputFocused, setIsInputFocused] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -54,6 +58,26 @@ function Products() {
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
     };
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            const allIds = currentItems.map((item) => item.id);
+            setSelectedItems(allIds);
+        } else {
+            setSelectedItems([]);
+        }
+    };
+
+    const handleSelectOne = (id) => {
+        setSelectedItems((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((itemId) => itemId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const isAllSelected = currentItems.length > 0 && selectedItems.length === currentItems.length;
+
 
     return (
         <div className="products-content">
@@ -82,24 +106,38 @@ function Products() {
                         />
                         <label>{t('Selected')}</label>
                     </div>
-                    <label>{t('MoQ')}</label>
-                    <input type='text' className='product-text-input' />
-                    <button className='branches-approve-button'>Apply All</button>
+                    <div className='toggle-container'>
+                        <label>{t('MoQ')}</label>
+                        <input type='text' className='product-text-input' />
+                        <button className='branches-approve-button'>Apply All</button>
+                    </div>
                 </div>
             </div>
             <div className="products-table-container">
                 <table className="products-data-table">
                     <thead>
                         <tr>
-                            <th className="checkbox-cell"><input type="checkbox" /></th>
+                            <th className="checkbox-cell">
+                                <input
+                                    type="checkbox"
+                                    checked={isAllSelected}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th>Name</th>
                             <th>Minimum Order Quantity</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((product, index) => (
+                        {currentItems.map((product) => (
                             <tr key={product.id}>
-                                <td className="checkbox-cell"><input type="checkbox" /></td>
+                                <td className="checkbox-cell">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedItems.includes(product.id)}
+                                        onChange={() => handleSelectOne(product.id)}
+                                    />
+                                </td>
                                 <td>{product.id} - {product.customer}</td>
                                 <td className='edit-cell'>
                                     <div className="input-with-icons">
@@ -122,54 +160,15 @@ function Products() {
                     </tbody>
                 </table>
             </div>
-
             {/* Pagination */}
-            <div className="pagination-controls large-screen">
-                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>‹</button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages)
-                    .map((page, idx, arr) => (
-                        <React.Fragment key={page}>
-                            {idx > 0 && page - arr[idx - 1] > 1 && <span className="dots">…</span>}
-                            <button
-                                onClick={() => setCurrentPage(page)}
-                                className={page === currentPage ? 'active' : ''}
-                            >
-                                {page}
-                            </button>
-                        </React.Fragment>
-                    ))}
-
-                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>›</button>
-                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-                <div className="pagination-jump">
-                    <label htmlFor="page-jump">Page:</label>
-                    <input
-                        id="page-jump"
-                        type="number"
-                        min="1"
-                        max={totalPages}
-                        value={pageInput}
-                        onChange={(e) => setPageInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                const pageNumber = Number(pageInput);
-                                if (pageNumber >= 1 && pageNumber <= totalPages) {
-                                    setCurrentPage(pageNumber);
-                                }
-                                setPageInput('');
-                            }
-                        }}
-                        className="page-jump-input"
-                    />
-                </div>
-
-                <span className="page-info">
-                    {startIndex + 1}-{Math.min(endIndex, products.length)} of {products.length} items
-                </span>
-            </div>
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => { setCurrentPage(page); setPageInput(page) }}
+                startIndex={startIndex}
+                endIndex={Math.min(endIndex, products.length)}
+                totalItems={products.length}
+            />
         </div>
     );
 }
