@@ -23,7 +23,7 @@ function CustomersDetails() {
       { type: 'text', name: 'branchName', label: t('Branch Name'), placeholder: t('Enter branch name') },
       { type: 'text', name: 'branchLocation', label: t('Branch Location'), placeholder: t('Enter location') },
     ],
-    'Products': [],
+    'Products & MoQ': [],
   }), [t]);
   const formDataByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsFormData(t)['Business Details'],
@@ -49,8 +49,6 @@ function CustomersDetails() {
       }
     });
 
-    // setFormData(existingData); // Only one update
-    // setFormErrors({});
   }, [activeTab, formDataByTab, formsByTab]);
 
   const setFormDataByTab = (tab) => {
@@ -65,14 +63,6 @@ function CustomersDetails() {
     const { name, value, type, checked } = e.target;
     const inputVal = type === 'checkbox' ? checked : value;
     setChangedFields(prev => new Set(prev).add(name));
-
-    // Arabic field validation
-    // if (name.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
-    //   setFormErrors(prev => ({ ...prev, [name]: 'Please enter Arabic text.' }));
-    // } else {
-    //   setFormErrors(prev => ({ ...prev, [name]: '' }));
-    // }
-
     setFormData(prev => ({ ...prev, [name]: inputVal }));
   };
 
@@ -93,13 +83,13 @@ function CustomersDetails() {
       if (fieldName.toLowerCase().includes('email')) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errors[field.name] = t('Invalid email format');
+          errors[fieldName] = t('Invalid email format');
         }
       }
 
       if (fieldName.toLowerCase().includes('phone') || fieldName.toLowerCase().includes('number') || fieldName.toLowerCase().includes('#')) {
         if (value && isNaN(value)) {
-          errors[field.name] = t('Only numeric values are allowed');
+          errors[fieldName] = t('Only numeric values are allowed');
         }
       }
       // Add other validation rules as needed (dropdowns, file size, etc.)
@@ -126,29 +116,10 @@ function CustomersDetails() {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-  
-    // Load saved data if it exists, else default form data
-    const saved = savedData[tab];
-    if (saved) {
-      setFormData(saved);
-    } else {
-      // const fields = formsByTab[tab];
-      // const initialData = {};
-      // fields.forEach(field => {
-      //   initialData[field.name] = '';
-      // });
-      // setFormData(initialData);
-      setFormDataByTab(tab);
-    }
-  
-    // Clear errors when switching tabs
     setFormErrors({});
   };
   
-
   const [uploadedFiles, setUploadedFiles] = useState({});
-
-
 
   const handleFileUpload = (e, fieldName) => {
     const file = e.target.files[0];
@@ -170,10 +141,8 @@ function CustomersDetails() {
       let updatedValues = prev[fieldName] || [];
 
       if (checked) {
-        // Add the selected option to the array
         updatedValues = [...updatedValues, value];
       } else {
-        // Remove the unselected option from the array
         updatedValues = updatedValues.filter((item) => item !== value);
       }
 
@@ -189,7 +158,6 @@ function CustomersDetails() {
       'Download terms & conditions': '/path/to/terms.pdf',
     };
 
-    // Split the text and create elements with unique keys
     const elements = label.split(new RegExp(`(${Object.keys(linkMap).join('|')})`)).map((part, index) => {
       if (linkMap[part]) {
         return (
@@ -234,7 +202,7 @@ function CustomersDetails() {
               {/* Form Grid */}
               
 
-                {activeTab === 'Products' ? (
+                {activeTab === 'Products & MoQ' ? (
                   <CustomerProducts />
                 ) : activeTab === 'Branches' ? (
                   <CustomerBranches />
@@ -255,6 +223,7 @@ function CustomersDetails() {
                               name={field.name}
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
+                              onBlur={validateChangedFields}
                               placeholder={field.placeholder}
                               className={
                                 field.name.toLowerCase().includes('arabic')
@@ -276,6 +245,7 @@ function CustomersDetails() {
                               name={field.name}
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
+                              onBlur={validateChangedFields}
                               className="dropdown"
                               placeholder="Value"
                               required
@@ -374,7 +344,21 @@ function CustomersDetails() {
           </div>
 
           {/* Action Buttons */}
-          {activeTab === 'Products' || activeTab === 'Branches' ? null :
+          {activeTab === 'Products & MoQ' || activeTab === 'Branches' ? 
+          (<div className="customer-onboarding-form-actions">
+            <div className="status-text">
+              <span className="status-label">{t('Status')}:</span>
+              <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+            </div>
+            <div className="action-buttons">
+              <button className="branches-save-button" onClick={() => handleSave('save')}>
+                {t('Save Changes')}
+              </button>
+              <button className="block" onClick={() => handleSubmit('block')}>
+                {t('Block')}
+              </button>
+            </div>
+          </div>) :
             (<div className="customer-onboarding-form-actions">
               <div className="status-text">
                 <span className="status-label">{t('Status')}:</span>
