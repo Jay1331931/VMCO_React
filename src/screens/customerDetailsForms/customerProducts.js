@@ -30,6 +30,8 @@ function Products() {
     const { t } = useTranslation();
     const categories = ['VMCO Machines', 'VMCO Other', 'Diayafa', 'Green Mart', 'Naqui'];
     const [activeCategory, setActiveCategory] = useState('VMCO Machines');
+    const [selectedItems, setSelectedItems] = useState([]);
+
     const [isInputFocused, setIsInputFocused] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +58,26 @@ function Products() {
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
     };
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            const allIds = currentItems.map((item) => item.id);
+            setSelectedItems(allIds);
+        } else {
+            setSelectedItems([]);
+        }
+    };
+
+    const handleSelectOne = (id) => {
+        setSelectedItems((prevSelected) =>
+            prevSelected.includes(id)
+                ? prevSelected.filter((itemId) => itemId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
+    const isAllSelected = currentItems.length > 0 && selectedItems.length === currentItems.length;
+
 
     return (
         <div className="products-content">
@@ -93,15 +115,27 @@ function Products() {
                 <table className="products-data-table">
                     <thead>
                         <tr>
-                            <th className="checkbox-cell"><input type="checkbox" /></th>
+                            <th className="checkbox-cell">
+                                <input
+                                    type="checkbox"
+                                    checked={isAllSelected}
+                                    onChange={handleSelectAll}
+                                />
+                            </th>
                             <th>Name</th>
                             <th>Minimum Order Quantity</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentItems.map((product, index) => (
+                        {currentItems.map((product) => (
                             <tr key={product.id}>
-                                <td className="checkbox-cell"><input type="checkbox" /></td>
+                                <td className="checkbox-cell">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedItems.includes(product.id)}
+                                        onChange={() => handleSelectOne(product.id)}
+                                    />
+                                </td>
                                 <td>{product.id} - {product.customer}</td>
                                 <td className='edit-cell'>
                                     <div className="input-with-icons">
@@ -124,16 +158,15 @@ function Products() {
                     </tbody>
                 </table>
             </div>
-
             {/* Pagination */}
             <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={(page) => setCurrentPage(page)}
-                    startIndex={startIndex}
-                    endIndex={Math.min(endIndex, products.length)}
-                    totalItems={products.length}
-                />
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+                startIndex={startIndex}
+                endIndex={Math.min(endIndex, products.length)}
+                totalItems={products.length}
+            />
         </div>
     );
 }
