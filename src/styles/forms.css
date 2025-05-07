@@ -405,7 +405,7 @@
   }
 
   .branches-approve-button {
-      width: 140px; /* Allow button to size based on content */
+      width: 100px; /* Allow button to size based on content */
       padding: 10px 16px;
       font-size: 0.9rem;
       margin: 0; /* Remove margin to align with other buttons */
@@ -416,7 +416,7 @@
   }
 
   .branches-reject-button {
-      width: 140px; /* Allow button to size based on content */
+      width: 100px; /* Allow button to size based on content */
       padding: 10px 16px;
       font-size: 0.9rem;
       margin: 0; /* Remove margin to align with other buttons */
@@ -523,6 +523,7 @@
     gap: 15px;
     flex: 1;
     width: 80%;
+    justify-content: space-between;
   }
 
   .branches-status-badge {
@@ -820,7 +821,7 @@ background-color: #edf2f7;
   background-color: var(--primary-color);
   color: var(--bg-white);
   border: none;
-  width: 140px;
+  width: 100px;
   padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../../components/Sidebar';
+import Pagination from '../../components/Pagination';
+import '../../styles/pagination.css';
 import '../../styles/components.css';
 import '../../styles/forms.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -124,52 +126,14 @@ function Products() {
             </div>
 
             {/* Pagination */}
-            <div className="pagination-controls large-screen">
-                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>‹</button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages)
-                    .map((page, idx, arr) => (
-                        <React.Fragment key={page}>
-                            {idx > 0 && page - arr[idx - 1] > 1 && <span className="dots">…</span>}
-                            <button
-                                onClick={() => setCurrentPage(page)}
-                                className={page === currentPage ? 'active' : ''}
-                            >
-                                {page}
-                            </button>
-                        </React.Fragment>
-                    ))}
-
-                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>›</button>
-                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-                <div className="pagination-jump">
-                    <label htmlFor="page-jump">Page:</label>
-                    <input
-                        id="page-jump"
-                        type="number"
-                        min="1"
-                        max={totalPages}
-                        value={pageInput}
-                        onChange={(e) => setPageInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                const pageNumber = Number(pageInput);
-                                if (pageNumber >= 1 && pageNumber <= totalPages) {
-                                    setCurrentPage(pageNumber);
-                                }
-                                setPageInput('');
-                            }
-                        }}
-                        className="page-jump-input"
-                    />
-                </div>
-
-                <span className="page-info">
-                    {startIndex + 1}-{Math.min(endIndex, products.length)} of {products.length} items
-                </span>
-            </div>
+            <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    startIndex={startIndex}
+                    endIndex={Math.min(endIndex, products.length)}
+                    totalItems={products.length}
+                />
         </div>
     );
 }

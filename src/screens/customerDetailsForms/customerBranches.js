@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV, faChevronRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import Pagination from '../../components/Pagination';
+import '../../styles/pagination.css';
 import '../../styles/forms.css';
 const branches = [
     { id: '0001', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
@@ -154,9 +156,7 @@ function Branches() {
     return (
         <div className="branches-content">
             <div className="form-main-header">
-                <button className="form-main-header-link" onClick={() => handleHeaderClick()}>
-                    {t('Customer Approval Checklist')}
-                </button>
+                  <a href="#">{t('Customer Approval Checklist')}</a>
             </div>
             <div className="branches-page-header">
                 <div className="branches-header-controls">
@@ -244,31 +244,15 @@ function Branches() {
                     </tbody>
                 </table>
                 {/* Pagination */}
-                <div className="pagination-controls large-screen">
-                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</button>
-                    <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>‹</button>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => setCurrentPage(page)}
+                    startIndex={startIndex}
+                    endIndex={Math.min(endIndex, branches.length)}
+                    totalItems={branches.length}
+                />
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(page => Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages)
-                        .map((page, idx, arr) => (
-                            <React.Fragment key={page}>
-                                {idx > 0 && page - arr[idx - 1] > 1 && <span className="dots">…</span>}
-                                <button
-                                    onClick={() => setCurrentPage(page)}
-                                    className={page === currentPage ? 'active' : ''}
-                                >
-                                    {page}
-                                </button>
-                            </React.Fragment>
-                        ))}
-
-                    <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>›</button>
-                    <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-
-                    <span className="page-info">
-                        {startIndex + 1}-{Math.min(endIndex, branches.length)} of {branches.length} items
-                    </span>
-                </div>
             </div>
 
         </div>
