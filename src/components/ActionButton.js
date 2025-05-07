@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
-const ActionButton = () => {
+const ActionButton = ({ menuItems = [] }) => {
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
   const { t } = useTranslation();
@@ -34,9 +34,18 @@ const ActionButton = () => {
       />
       {isActionMenuOpen && (
         <div className="action-menu">
-          <div className="action-menu-item">{t('Export')}</div>
-          <div className="action-menu-item">{t('Import')}</div>
-          <div className="action-menu-item">{t('Settings')}</div>
+          {menuItems.map((item, idx) => (
+            <div
+              className="action-menu-item"
+              key={item.key || idx}
+              onClick={() => {
+                setActionMenuOpen(false);
+                item.onClick && item.onClick();
+              }}
+            >
+              {t(item.label)}
+            </div>
+          ))}
         </div>
       )}
     </div>

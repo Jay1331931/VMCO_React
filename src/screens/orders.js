@@ -93,7 +93,21 @@ function Orders() {
     console.log('Add Order clicked');
     alert('Add Order clicked!');
     // Add your logic to handle adding an order here
-  }
+  };
+
+  // Action menu for Orders page
+  const orderMenuItems = [
+    {
+      key: 'favorites',
+      label: 'Favorites',
+      onClick: () => alert('Favorites clicked')
+    },
+    {
+      key: 'customOrders',
+      label: 'Custom Orders',
+      onClick: () => alert('Custom Orders clicked')
+    }
+  ];
 
   const columns = [
     { key: 'id', header: 'Order #' },
@@ -114,12 +128,12 @@ function Orders() {
             <SearchInput onSearch={handleSearch} />
           </div>
           <div className="header-actions">
-          <ToggleButton 
+            <ToggleButton 
               isToggled={isApprovalMode}
               onToggle={toggleApprovalMode}
             />
             <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>
-            <ActionButton />
+            <ActionButton menuItems={orderMenuItems} />
           </div>
         </div>
         <Table 
