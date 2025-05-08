@@ -7,6 +7,9 @@ import Catalog from './screens/catalog';
 import Support from './screens/support';  
 import Cart from './screens/cart';  
 import CustomersDetails from './screens/customersDetails';
+import LoginScreen from './screens/login';
+import CustomersOnboarding from './screens/customersOnboarding';
+import Checkout from './screens/checkout';
 import OrderDetails from './screens/orderDetails';
 import SupportDetails from './screens/supportDetails';
 // Remove unused import: import CommentPopup from './screens/commentPanel';
@@ -22,6 +25,9 @@ function App() {
         <Route path='/support' element={<Support />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
+        <Route path="/login" element={<LoginScreen />} />
+        <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/orderDetails" element={<OrderDetails />} />
         <Route path="/supportDetails" element={<SupportDetails />} />
         </Routes>

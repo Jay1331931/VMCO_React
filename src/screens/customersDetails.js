@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/forms.css';
 import CommentPopup from './commentPanel';
@@ -11,7 +11,10 @@ import { getDocumentsForm } from './customerDetailsForms/customerDocuments';
 import CustomerProducts from './customerDetailsForms/customerProducts';
 import CustomerBranches from './customerDetailsForms/customerBranches';
 function CustomersDetails() {
-
+  const contentRef = useRef(null);
+  const [tabsHeight, setTabsHeight] = useState('auto');
+  
+  
   const { t, i18n } = useTranslation();
   // Define forms per tab
   const formsByTab = useMemo(() => ({
@@ -38,6 +41,12 @@ function CustomersDetails() {
   const [formData, setFormData] = useState(formDataByTab['Business Details']);
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+          const handleResize = () => setIsMobile(window.innerWidth < 768);
+          window.addEventListener('resize', handleResize);
+          return () => window.removeEventListener('resize', handleResize);
+      }, []);
   useEffect(() => {
     const fields = formsByTab[activeTab];
     const existingData = formDataByTab[activeTab] || {};
@@ -50,6 +59,14 @@ function CustomersDetails() {
     });
 
   }, [activeTab, formDataByTab, formsByTab]);
+  
+  useEffect(() => {
+    if (contentRef.current) {
+      const contentHeight = contentRef.current.clientHeight;
+      const adjustment = 50; // your constant value
+      setTabsHeight(`${contentHeight - adjustment}px`);
+    }
+  }, [activeTab, formData]);
 
   const setFormDataByTab = (tab) => {
     setFormData(formDataByTab[tab] || {});
@@ -184,7 +201,7 @@ function CustomersDetails() {
           <div className="customer-onboarding-details">
             <div className="customer-onboarding-body">
               {/* Tabs */}
-              <div className="customer-onboarding-tabs-vertical">
+              <div className="customer-onboarding-tabs-vertical"  style={!isMobile ? { height: tabsHeight } : {}}>
                 <div className="tabs-title">{t('Customer Details')}</div>
                 {tabs.map(tab => (
                   <div
@@ -207,7 +224,7 @@ function CustomersDetails() {
                 ) : activeTab === 'Branches' ? (
                   <CustomerBranches />
                 ) : (
-                  <div className="customer-onboarding-form-grid">
+                  <div className="customer-onboarding-form-grid" ref={contentRef}>
                 <div className="form-main-header">
                   <a href="#">{t('Customer Approval Checklist')}</a>
                 </div>
