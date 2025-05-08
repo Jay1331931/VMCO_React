@@ -83,6 +83,15 @@
     "Source": "Source",
     "Invite": "Invite",
     "Resend": "Resend",
-    "Products & MoQ": "Products & MoQ"
-  }
-  
+    "Products & MoQ": "Products & MoQ",
+    "Login": "Login",
+    "Sign In": "Sign In",
+    "Forgot Password?": "Forgot Password?",
+    "Email (Username)": "Email (Username)",
+    "Password": "Password",
+    "Employee Login": "Employee Login",
+    "Customer Onboarding": "Customer Onboarding",
+    "Phone Number": "Phone Number",
+    "Confirm Password": "Confirm Password",
+    "Submit": "Submit"
+}

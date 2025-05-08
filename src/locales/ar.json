@@ -91,6 +91,15 @@
     "Type of Business": "نوع النشاط التجاري",
     "Delivery Locations": "موقع التسليم",
     "Comments": "تعليقات",
-    "Products & MoQ": "المنتجات و الحد الأدنى للطلب"
+    "Products & MoQ": "المنتجات و الحد الأدنى للطلب",
+    "Login": "تسجيل الدخول",
+    "Sign In": "تسجيل الدخول",
+    "Forgot Password?": "نسيت كلمة المرور؟",
+    "Email (Username)": "البريد الإلكتروني (اسم المستخدم)",
+    "Password": "كلمة المرور",
+    "Employee Login": "تسجيل دخول الموظف",
+    "Customer Onboarding": "تسجيل العملاء",
+    "Phone Number": "رقم الهاتف",
+    "Confirm Password": "تأكيد كلمة المرور",
+    "Submit": "إرسال"
   }
-  

@@ -35,7 +35,6 @@ const getStatusClass = (status) => {
 };
 
 // ========== Form Components ==========
-
 const BranchDetailsForm = ({ order }) => {
     const fields = [
         { label: 'Branch', value: order.branch, placeholder: 'Branch' },
@@ -156,7 +155,7 @@ function Branches() {
     const endIndex = startIndex + itemsPerPage;
     const currentItems = branches.slice(startIndex, endIndex);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
+     const [tabsHeight, setTabsHeight] = useState('auto');
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
@@ -165,11 +164,10 @@ function Branches() {
 
     const toggleRow = (orderId) => {
         setExpandedRows((prev) =>
-            prev.includes(orderId)
-                ? prev.filter((id) => id !== orderId)
-                : [...prev, orderId]
+            prev.includes(orderId) ? [] : [orderId]
         );
     };
+    
 
     const isExpanded = (orderId) => expandedRows.includes(orderId);
 
@@ -183,8 +181,16 @@ function Branches() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    useEffect(() => {
+        if(expandedRows.length > 0) {
+            const contentHeight = 1200;
+            setTabsHeight(`${contentHeight}px`);
+        } else if(expandedRows.length === 0) {
+            setTabsHeight('auto');
+        }
+    }, [isExpanded]);
     return (
-        <div className="branches-content">
+        <div className="branches-content" style={{height: tabsHeight}}>
             <div className="form-main-header">
                 <a href="#">{t('Customer Approval Checklist')}</a>
             </div>

@@ -1281,3 +1281,187 @@
     padding: 20px 0;
     grid-column: 1 / -1;
 }
+
+.login-component {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh; /* Full viewport height */
+}
+
+
+.login-component .login-header {
+  position: absolute;
+  top: 150px;
+  left: 40%;
+  font-size: larger;
+}
+
+[dir="rtl"] .login-component .login-header {
+  right: 40%;
+  left: auto;
+}
+.login-container{
+        background: #fff;
+        padding: 40px;
+        padding-top: 20px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        gap: 60px;
+        width: min-content;
+}
+
+.login-container .form-group {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+[dir="rtl"] .login-container .form-group label {
+  text-align: right;
+}
+
+.login-container .form-group input {
+  width: 250px;
+  height: 30px;
+}
+
+.login-footer {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 120px;
+}
+
+.login-footer a{
+  color: #00205B;
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+.login-footer .login-button {
+  background-color: darkgreen;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+
+.onboarding-component {
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+height: 80vh; /* Full viewport height */
+}
+
+
+.onboarding-component .onboarding-header {
+position: absolute;
+top: 110px;
+left: 30%;
+font-size: larger;
+}
+
+[dir="rtl"] .onboarding-component .onboarding-header {
+right: 30%;
+left: auto;
+}
+.onboarding-container{
+  display: grid;
+    grid-template-columns: repeat(2, 1fr);
+      background: #fff;
+      padding: 40px;
+      padding-top: 20px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      gap: 10px;
+      width: min-content;
+}
+
+.onboarding-container .form-group {
+
+display: flex;
+flex-direction: column;
+}
+
+[dir="rtl"] .onboarding-container .form-group label {
+text-align: right;
+}
+
+.onboarding-container .form-group input {
+width: 250px;
+height: 30px;
+}
+
+.onboarding-footer {
+margin-top: 20px;
+display: flex;
+flex-direction: row;
+margin-left: 42%;
+}
+
+[dir="rtl"] .onboarding-footer {
+  margin-left: auto;
+  margin-right: 67%;
+}
+
+.onboarding-footer a{
+color: #00205B;
+text-decoration: none;
+font-size: 0.9rem;
+margin-top: 10px;
+}
+
+.onboarding-footer a:hover {
+text-decoration: underline;
+}
+
+.onboarding-footer button {
+background-color: darkgreen;
+color: white;
+border: none;
+padding: 5px 10px;
+border-radius: 4px;
+cursor: pointer;
+font-size: 1rem;
+width: 100px;
+height: 30px;
+}
+
+@media (max-width: 768px) {
+  .onboarding-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+    min-height: 50vh;
+    overflow-x: scroll;
+  }
+
+  .onboarding-header {
+    margin-top: -25px;
+  }
+  
+  .onboarding-component {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh; /* Full viewport height */
+    gap: 20px; 
+  }
+
+  .login-header {
+    margin-top: 90px;
+  }
+}
