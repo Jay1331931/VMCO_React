@@ -83,6 +83,7 @@ function Sidebar({ children, title }) {
       case 'Orders': navigate('/orders'); break;
       case 'Customers': navigate('/customers'); break;
       case 'Catalog': navigate('/catalog'); break;
+      case 'Support': navigate('/support'); break;
       default:
         // If no match is found, stay on current page
         break;

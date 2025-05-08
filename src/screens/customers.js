@@ -202,7 +202,7 @@ function Customers() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'customers':
+      case t('customers'):
         return (
           <Table 
             columns={customerColumns}
@@ -211,7 +211,7 @@ function Customers() {
             customCellRenderer={customCellRenderer}
           />
         );
-      case 'invites':
+      case t('invites'):
         return (
           <Table 
             columns={inviteColumns}
@@ -235,13 +235,16 @@ function Customers() {
             onTabChange={setActiveTab}
           />
           <div className="page-header">
-            <div className="header-controls">
+            {activeTab === t('customers') && (
+              <div className="header-controls" style={{ width: '100%' }}>
               <SearchInput onSearch={handleSearch} />
-            {activeTab === 'customers' && (
+              <div className='header-actions'>
               <ActionButton menuItems={customerMenuItems} />
+              </div>
+              </div>
             )}
-            </div>
-            {activeTab === 'invites' && (
+            
+            {activeTab === t('invites') && (
               <>
                 <button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>
                 <ActionButton menuItems={customerMenuItems} />

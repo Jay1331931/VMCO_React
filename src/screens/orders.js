@@ -6,11 +6,11 @@ import SearchInput from '../components/SearchInput';
 import Table from '../components/Table';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const orders = [
-  { id: '0001', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-  { id: '0002', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-  { id: '0003', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0001', customer: 'Customer 1', branch: 'Branch 1', entity: 'VMCO', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
+  { id: '0002', customer: 'Customer 2', branch: 'Branch 1', entity: 'Diyafa', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
   { id: '0004', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
   { id: '0005', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
   { id: '0006', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
@@ -75,6 +75,7 @@ function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState(orders);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -93,6 +94,10 @@ function Orders() {
     console.log('Add Order clicked');
     alert('Add Order clicked!');
     // Add your logic to handle adding an order here
+  };
+
+  const handleRowClick = (order) => {
+    navigate('/orderDetails');
   };
 
   // Action menu for Orders page
@@ -140,6 +145,12 @@ function Orders() {
           columns={columns}
           data={filteredOrders}
           getStatusClass={getStatusClass}
+          onRowClick={handleRowClick}
+          rowRenderer={(row) => (
+            <tr key={row.id} onClick={() => handleRowClick(row)}>
+              {/* Render cells here */}
+            </tr>
+          )}
         />
       </div>
     </Sidebar>
