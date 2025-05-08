@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {  faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import QuantityController from '../components/QuantityController';
@@ -13,6 +13,7 @@ function Cart() {
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({});
 
+    // Example cart items, update as needed
     const cartItems = [
         {
             category: 'VMCO Machines',
@@ -34,12 +35,11 @@ function Cart() {
             ]
         },
         {
-            category: 'Green Mart',
+            category: 'Green Mast',
             items: [
                 { id: 3, name: 'Product Name', code: 'SAR60', quantity: 10, delivery: '15 Apr 2025' }
             ]
-        },
-        
+        }        
     ];
 
     const toggleCategory = (category) => {
@@ -74,42 +74,46 @@ function Cart() {
         navigate('/catalog');
     };
 
+    // Calculate total items for header and summary
+    const totalItems = cartItems.reduce((sum, cat) => sum + cat.items.length, 0);
+
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
-                    <h2 className="cart-title">Cart (3 items)</h2>
-                    <div className="delivery-info">Delivering to JP Nagar</div>
-                    <div className="credit-balance">Credit Balance: SAR445</div>
+                <h2 className="cart-title">Cart ({totalItems} items)</h2>
+                <div className="delivery-info">
+                    <span className="delivery-link">Delivering to JP Nagar</span>
                 </div>
-            <div className="cart-content">
-            
-                <div className="cart-items">
+                <div className="credit-balance">Credit Balance: SAR445</div>
+            </div>
+            <div className="cart-main-content">
+                <div className="cart-items-panel">
                     {cartItems.map((category) => (
                         <div key={category.category} className="category-section">
-                            <div 
-                                className="category-header" 
+                            <div
+                                className="category-header"
                                 onClick={() => toggleCategory(category.category)}
                                 style={{ cursor: 'pointer' }}
                             >
                                 <div className="category-title">
-                                    <h3>{category.category}</h3>
-                                    <FontAwesomeIcon 
-                                        icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp} 
+                                    <FontAwesomeIcon
+                                        icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
                                     />
+                                    <h3>{category.category}</h3>
                                 </div>
-                                <span>{category.items.length} {t('Items')}</span>
+                                <span className="category-count">{category.items.length} Items</span>
                             </div>
                             {!collapsedCategories.has(category.category) && (
                                 <div className="category-items">
-                                    {category.items.map((item) => (
-                                        <div key={item.id} className="cart-item">
+                                    {category.items.map((item, idx) => (
+                                        <div key={item.id + '-' + idx} className="cart-item">
                                             <div className="item-image">
                                                 <div className="image-placeholder"></div>
                                             </div>
                                             <div className="item-details">
                                                 <h4 className="item-name">{item.name}</h4>
-                                                <p className="delivery-date">Delivery by {item.delivery}</p>
-                                                <QuantityController 
+                                                <p className="delivery-date">Delivery By {item.delivery}</p>
+                                                <QuantityController
                                                     itemId={item.id}
                                                     quantity={quantities[item.id] || item.quantity}
                                                     onQuantityChange={handleQuantityChange}
@@ -119,30 +123,39 @@ function Cart() {
                                                     })}
                                                 />
                                             </div>
-                                            <div className="item-price">
-                                                <span>{item.code}</span>
+                                            <div className="item-price-panel">
+                                                <span className="item-price">{parseInt(item.code.replace('SAR', ''))} <span className="sar-label">SAR</span></span>
                                                 <button className="checkout-btn">CHECKOUT</button>
                                             </div>
                                         </div>
                                     ))}
+                                    {/* Example: Show partial payment for VMCO Machines */}
+                                    {category.category === 'VMCO Machines' && (
+                                        <div className="partial-payment-row">
+                                            <span className="partial-payment-warning">Min. 30% Partial Payment required</span>
+                                            <input className="partial-payment-input" type="number" min="0" placeholder="100" />
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     ))}
                 </div>
-
-                 <div className="total-amount">
-                        <h3>{t('Total Amount')} ({cartItems.reduce((sum, cat) => sum + cat.items.length, 0)} {t('Items')})</h3>
-                        <span>SAR{calculateTotal()}</span>
+                <div className="cart-summary-panel">
+                    <div className="total-amount">
+                        <h3 className="summary-title">
+                            {t('Total Amount')} ({totalItems} Items)
+                        </h3>
+                        <span className="summary-amount">{calculateTotal()} <span className="sar-label">SAR</span></span>
                         <button className="checkout-all-btn">{t('CHECKOUT ALL')}</button>
-                 </div>
+                    </div>
+                </div>
             </div>
             <div className="cart-footer">
-                    
-                    <button className="continue-shopping" onClick={handleContinueShopping}>
-                        {t('Continue Shopping')}
-                    </button>
-                </div>
+                <button className="continue-shopping" onClick={handleContinueShopping}>
+                    {t('Continue Shopping')}
+                </button>
+            </div>
         </Sidebar>
     );
 }

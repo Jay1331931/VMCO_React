@@ -177,6 +177,29 @@ function Customers() {
     </div>
   );
 
+  const customerMenuItems = [
+    {
+      key: 'select customers',
+      label: 'Select Customers',
+      onClick: () => alert('Select Customers clicked')
+    },
+    {
+      key: 'add customers',
+      label: 'Add Customers',
+      onClick: () => alert('Add Customers clicked')
+    },
+    {
+      key: 'remove customers',
+      label: 'Remove Customers',
+      onClick: () => alert('Remove Customers clicked')
+    },
+    {
+      key: 'export customers',
+      label: 'Export Customers',
+      onClick: () => alert('Export Customers clicked')
+    }
+  ];
+
   const renderContent = () => {
     switch (activeTab) {
       case 'customers':
@@ -213,12 +236,17 @@ function Customers() {
           />
           <div className="page-header">
             <div className="header-controls">
-            <SearchInput onSearch={handleSearch} />
-              {activeTab === 'invites' && (
-                <button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>
-              )}
-              <ActionButton />
+              <SearchInput onSearch={handleSearch} />
+            {activeTab === 'customers' && (
+              <ActionButton menuItems={customerMenuItems} />
+            )}
             </div>
+            {activeTab === 'invites' && (
+              <>
+                <button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>
+                <ActionButton menuItems={customerMenuItems} />
+              </>
+            )}
           </div>
           {renderContent()}
         </div>
