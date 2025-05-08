@@ -41,6 +41,12 @@ function CustomersDetails() {
   const [formData, setFormData] = useState(formDataByTab['Business Details']);
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+          const handleResize = () => setIsMobile(window.innerWidth < 768);
+          window.addEventListener('resize', handleResize);
+          return () => window.removeEventListener('resize', handleResize);
+      }, []);
   useEffect(() => {
     const fields = formsByTab[activeTab];
     const existingData = formDataByTab[activeTab] || {};
@@ -195,7 +201,7 @@ function CustomersDetails() {
           <div className="customer-onboarding-details">
             <div className="customer-onboarding-body">
               {/* Tabs */}
-              <div className="customer-onboarding-tabs-vertical"  style={{ height: tabsHeight }}>
+              <div className="customer-onboarding-tabs-vertical"  style={!isMobile ? { height: tabsHeight } : {}}>
                 <div className="tabs-title">{t('Customer Details')}</div>
                 {tabs.map(tab => (
                   <div

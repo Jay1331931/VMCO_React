@@ -8,6 +8,7 @@ import Cart from './screens/cart';
 import CustomersDetails from './screens/customersDetails';
 import LoginScreen from './screens/login';
 import CustomersOnboarding from './screens/customersOnboarding';
+import Checkout from './screens/checkout';
 // Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
+        <Route path="/checkout" element={<Checkout />} />
       </Routes>
     </Router>
   );
