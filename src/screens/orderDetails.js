@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
+import GetInventory from '../components/GetInventory';
+import Remarks from '../components/Remarks';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
+import CommentPopup from '../components/commentPanel';
+import '../i18n';
+import { useTranslation } from 'react-i18next'; // Keep only one
+
 import '../styles/components.css';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 const orderProducts = [
     { id: '0001', name: 'Name 01', quantity: 20, unit: 'KG', unitPrice: 12, netAmount: 240, tax: 24 },
@@ -14,6 +19,10 @@ const orderProducts = [
 function OrderDetails() {
     const { t } = useTranslation();
     const location = useLocation();
+    const [showInventory, setShowInventory] = useState(false);
+    const [showRemarks, setShowRemarks] = useState(false);
+      const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+
     // Get order details from navigation state or fallback to defaults
     const order = location.state?.order || {
         id: '0000',
@@ -43,7 +52,7 @@ function OrderDetails() {
     ];
 
     return (
-        <Sidebar title={`Order # ${order.id}`}>
+        <Sidebar title={`Order # ${order.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
             <div className="order-details-container">
                 <h2 className="order-details-title">{`Order # ${order.id}`}</h2>
                 <div className="order-details-section">
@@ -126,11 +135,19 @@ function OrderDetails() {
                 </div>
                 <div className="order-details-actions">
                     <button className="order-action-btn">{t('Download Invoice')}</button>
-                    <button className="order-action-btn">{t('Get Inventory')}</button>
-                    <button className="order-action-btn approve">{t('Approve')}</button>
+                    <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+                        {t('Get Inventory')}
+                    </button>
+                    <button className="order-action-btn approve" onClick={() => setShowRemarks(true)}>
+                        {t('Approve')}
+                    </button>
                     <button className="order-action-btn reject">{t('Reject')}</button>
                 </div>
             </div>
+            <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
+            <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
+            <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+                
         </Sidebar>
     );
 }

@@ -4,7 +4,7 @@ import '../styles/components.css';
 import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
 
-function SupportDetails() {
+function MaintenanceDetails() {
   const location = useLocation();
   const ticket = location.state?.ticket || {
     id: '00025',
@@ -54,17 +54,17 @@ function SupportDetails() {
   };
 
   return (
-    <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
-      <div className="support-details-container">
-        <h2 className="support-details-title">{`Ticket#${ticket.id}`}</h2>
-        <div className="support-details-section">
-          <h3 className="support-details-subtitle">Ticket Details</h3>
-          <div className="support-details-grid">
-            <div className="support-details-field">
+    <Sidebar title={`Ticket#${ticket.id}`}>
+      <div className="maintenance-details-container">
+        <h2 className="maintenance-details-title">{`Ticket#${ticket.id}`}</h2>
+        <div className="maintenance-details-section">
+          <h3 className="maintenance-details-subtitle">Ticket Details</h3>
+          <div className="maintenance-details-grid">
+            <div className="maintenance-details-field">
               <label>Customer Name</label>
               <input value={ticket.customer} disabled />
             </div>
-            <div className="support-details-field">
+            <div className="maintenance-details-field">
               <label>Branch</label>
               <select value={ticket.branch} disabled>
                 <option>Branch 1</option>
@@ -73,7 +73,7 @@ function SupportDetails() {
                 <option>Branch 4</option>
               </select>
             </div>
-            <div className="support-details-field">
+            <div className="maintenance-details-field">
               <label>Issue Type</label>
               <select value={ticket.issueType} disabled>
                 <option>Issue Type</option>
@@ -82,16 +82,16 @@ function SupportDetails() {
                 <option>Product</option>
               </select>
             </div>
-            <div className="support-details-field">
+            <div className="maintenance-details-field">
               <label>Issue Name</label>
               <input value={ticket.issueName} disabled />
             </div>
-            <div className="support-details-field">
+            <div className="maintenance-details-field">
               <label>Created Date</label>
               <input value={ticket.createdDate} disabled />
             </div>
           </div>
-          <div className="support-details-field support-details-textarea">
+          <div className="maintenance-details-field maintenance-details-textarea">
             <label>Issue Details</label>
             <textarea value={ticket.details} disabled />
           </div>
@@ -163,4 +163,4 @@ function SupportDetails() {
   );
 }
 
-export default SupportDetails;
+export default MaintenanceDetails;

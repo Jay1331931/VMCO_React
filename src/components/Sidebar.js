@@ -84,6 +84,7 @@ function Sidebar({ children, title }) {
       case 'Customers': navigate('/customers'); break;
       case 'Catalog': navigate('/catalog'); break;
       case 'Support': navigate('/support'); break;
+      case 'Maintenance Support': navigate('/maintenance'); break;
       default:
         // If no match is found, stay on current page
         break;
