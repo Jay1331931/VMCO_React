@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/pagination.css';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
+
 
 const Pagination = ({ currentPage, totalPages, onPageChange, startIndex, endIndex, totalItems }) => {
+    const { t } = useTranslation();
     const [pageInput, setPageInput] = useState('1');
 
     // Sync input value when currentPage changes

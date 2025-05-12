@@ -35,7 +35,7 @@ function LoginScreen() {
         </div>
             
         
-        <Login title={t('Customer Login')} />
+        <Login title={t('Employee Login')} />
         
         </div>
     );

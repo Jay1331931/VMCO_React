@@ -11,6 +11,8 @@ import CustomersDetails from './screens/customersDetails';
 import LoginScreen from './screens/login';
 import CustomersOnboarding from './screens/customersOnboarding';
 import Checkout from './screens/checkout';
+import ForgotPassword from './components/ForgotPassword';
+import EmployeeLogin from './screens/employeeLogin';
 import OrderDetails from './screens/orderDetails';
 import SupportDetails from './screens/supportDetails';
 import MaintenanceDetails from './screens/maintenanceDetails';
@@ -31,6 +33,8 @@ function App() {
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/employee-login" element={<EmployeeLogin />} />
         <Route path="/orderDetails" element={<OrderDetails />} />
         <Route path="/supportDetails" element={<SupportDetails />} />
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />

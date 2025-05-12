@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function Login({ title }) {
     const { t } = useTranslation();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         document.title = t('Login');
@@ -23,56 +25,61 @@ function Login({ title }) {
         }
     };
 
+    const handleForgotPassword = (e) => {
+        e.preventDefault();
+        navigate('/forgot-password');
+    };
+
     return (
-        <div className='login-component'>
-            <div className="login-header">{title}</div>
-            <div className="login-container">
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="username">{t('Email (Username)')}</label>
-                        <input
-                            type="text"
-                            id="username"
-                            value={username}
-                            placeholder={t('Email (Username)')}
-                            onChange={(e) => setUsername(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">{t('Password')}</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            placeholder={t('Password')}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-                    {error && <p className="error-message">{error}</p>}
-                    <button type="submit" className="login-button">{t('Sign In')}</button>
-                </form>
+        <div className='login-screen'>
+            {title === 'Customer Login' ?
+            (<div className='login-screen-text'>
+                <p>{t('Thank you for completing the invitation.')}</p>
+                <p>{t('Please Login to provide further details')}</p>
+                </div>) : []}
+            
+            <div className='login-component'>
+            <div className="login-header">{t('Login')}</div>
+                <div className="login-container">
+                    <form onSubmit={handleSubmit}>
+                        <div className="form-group">
+                            <label htmlFor="username">{t('Email (Username)')}</label>
+                            <input
+                                type="text"
+                                id="username"
+                                value={username}
+                                placeholder={t('Email (Username)')}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="password">{t('Password')}</label>
+                            <input
+                                type="password"
+                                id="password"
+                                value={password}
+                                placeholder={t('Password')}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
+                        {error && <p className="error-message">{error}</p>}
+
+                    </form>
+                </div>
+                <div className='login-footer'>
+                    {title === 'Customer Login' ? 
+                    (<div className="login-footer-text">
+                    <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
+                    <a href="#">|{t('Register')}</a>
+                    </div>) :
+                    (<div className="login-footer-text">
+                    <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
+                    </div>)
+                    }
+                    <div><button type="submit" className="login-button">{t('Sign In')}</button></div>
+                </div>
+
             </div>
-            <div className='login-footer'>
-                <a href="#">{t('Forgot Password?')}</a>
-            </div>
-            <style>{`
-                .login-button {
-                    margin-top: 18px;
-                    width: 100%;
-                    padding: 14px 0;
-                    border-radius: 8px;
-                    border: none;
-                    background: #0a5640;
-                    color: #fff;
-                    font-size: 1.2rem;
-                    cursor: pointer;
-                    font-weight: 400;
-                    transition: background 0.15s;
-                }
-                .login-button:hover {
-                    background: #084c37;
-                }
-            `}</style>
         </div>
     );
 }
