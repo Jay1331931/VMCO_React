@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from 'react';
-import '../styles/components.css';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 
@@ -51,16 +49,31 @@ function Login({ title }) {
                         />
                     </div>
                     {error && <p className="error-message">{error}</p>}
-
+                    <button type="submit" className="login-button">{t('Sign In')}</button>
                 </form>
             </div>
             <div className='login-footer'>
-        <a href="#">{t('Forgot Password?')}</a>
-        <button type="submit" className="login-button">{t('Sign In')}</button>
-    </div>
-
+                <a href="#">{t('Forgot Password?')}</a>
+            </div>
+            <style>{`
+                .login-button {
+                    margin-top: 18px;
+                    width: 100%;
+                    padding: 14px 0;
+                    border-radius: 8px;
+                    border: none;
+                    background: #0a5640;
+                    color: #fff;
+                    font-size: 1.2rem;
+                    cursor: pointer;
+                    font-weight: 400;
+                    transition: background 0.15s;
+                }
+                .login-button:hover {
+                    background: #084c37;
+                }
+            `}</style>
         </div>
-
     );
 }
 

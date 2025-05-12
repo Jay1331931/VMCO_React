@@ -48,6 +48,62 @@ const ActionButton = ({ menuItems = [] }) => {
           ))}
         </div>
       )}
+
+      <style>{`
+        .action-menu-container {
+          align-self: right;
+          justify-self: flex-end;
+          padding: 5px;
+          position: relative;
+          cursor: pointer;
+        }
+        [dir="rtl"] .action-menu-container {
+          position: relative;
+          align-self: center;
+          margin-right: 0;
+          margin-left: 20px;
+        }
+        .action-menu {
+          top: 100%;
+          right: 0;
+          width: 160px;
+          min-width: 160px;
+          position: absolute;
+          background-color: white;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          z-index: 100;
+        }
+        [dir="rtl"] .action-menu {
+          right: auto;
+          left: 0;
+        }
+        .action-menu-item {
+          padding: 12px 16px;
+          font-size: 1rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+          color: #333;
+          transition: background 0.2s;
+        }
+        .action-menu-item:hover {
+          background-color: #f9f9f9;
+        }
+        @media (max-width: 768px) {
+          .action-menu-container {
+            padding: 5px;
+          }
+          .action-menu {
+            width: 160px;
+            min-width: 160px;
+          }
+          .action-menu-item {
+            padding: 12px 16px;
+            font-size: 1rem;
+          }
+        }
+      `}</style>
     </div>
   );
 };

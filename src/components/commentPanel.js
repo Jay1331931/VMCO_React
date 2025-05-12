@@ -88,10 +88,12 @@ const CommentPopup = ({ isOpen, setIsOpen, id, type }) => {
           outline: none;
           border: none;
         }
+
         [dir="rtl"] .comment-button {
           right: auto;
           left: 0px;
         }
+          
         .comment-panel {
           position: fixed;
           top: 70px;

@@ -24,13 +24,38 @@ const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300 
   };
 
   return (
-    <input
-      type="text"
-      value={searchTerm}
-      placeholder={t('Search...')}
-      className={className}
-      onChange={handleSearchChange}
-    />
+    <>
+      <input
+        type="text"
+        value={searchTerm}
+        placeholder={t('Search...')}
+        className={className}
+        onChange={handleSearchChange}
+        style={{ boxSizing: 'border-box' }}
+      />
+      <style>{`
+        .search-input {
+          padding: 8px 12px;
+          width: 300px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          font-size: 1rem;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          transition: border 0.2s;
+        }
+        .search-input:focus {
+          border: 1.5px solid #0a5640;
+          outline: none;
+        }
+        @media (max-width: 768px) {
+          .search-input {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 0.98rem;
+          }
+        }
+      `}</style>
+    </>
   );
 };
 

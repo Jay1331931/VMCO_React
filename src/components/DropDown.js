@@ -32,6 +32,45 @@ const Dropdown = ({
                     </option>
                 ))}
             </select>
+            <style>{`
+                .dropdown-container {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    margin-bottom: 12px;
+                }
+                .dropdown-label {
+                    font-size: 1rem;
+                    color: #222;
+                    margin-bottom: 2px;
+                    font-weight: 400;
+                }
+                .dropdown-select {
+                    padding: 10px 14px;
+                    border-radius: 8px;
+                    border: 1.5px solid #ddd;
+                    background: #fff;
+                    font-size: 1rem;
+                    color: #222;
+                    outline: none;
+                    transition: border 0.2s;
+                }
+                .dropdown-select:focus {
+                    border: 1.5px solid #0a5640;
+                }
+                .dropdown-select option {
+                    font-size: 1rem;
+                }
+                @media (max-width: 768px) {
+                    .dropdown-select {
+                        font-size: 0.95rem;
+                        padding: 9px 10px;
+                    }
+                    .dropdown-label {
+                        font-size: 0.98rem;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
