@@ -2,13 +2,15 @@
   gap: 1px;
 }
 .customers .customer-onboarding-content {
-    padding: 20px;
+    padding: 0px;
 }
 .customers .customer-onboarding-details {
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
+  background: #fff;
+  border: 1.9px solid #D9D9D6;
+  padding: 20px;
+  border-radius: 16px;
+  max-width: 98%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .customers .customer-onboarding-body {
     display: flex;
@@ -112,6 +114,8 @@
   }
 
   .customers .customer-onboarding-form-actions {
+    margin: 0 20px;
+    padding: 0px 20px;
     justify-content: space-between;
     display: flex;
     gap: 10px;

@@ -224,7 +224,7 @@ function Catalog() {
                             onChange={(e) => setSelectedLocation(e.target.value)}
                             options={locations}
                             className="location-select"
-                            label="Delivery to:"
+                            label={t("Delivery to:")}
                         />
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/forms.css';
-import CommentPopup from './commentPanel';
+import CommentPopup from '../components/commentPanel';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { getBusinessDetailsForm, getBusinessDetailsFormData } from './customerDetailsForms/customerBusinessDetails';

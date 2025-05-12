@@ -17,6 +17,12 @@ const ProductCard = ({
             [product.id]: value
         });
     };
+    
+
+    const handleAddToCart = (e, productId) => {
+        e.stopPropagation(); // Prevent triggering the onProductClick event
+        console.log('Added to cart:', product.name, 'Quantity:', quantities[productId]);
+    }
 
     return (
         <div 
@@ -48,7 +54,7 @@ const ProductCard = ({
                     />
                     <button 
                         className="add-to-cart-btn"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => handleAddToCart(e, product.id)}
                     >
                         {t('ADD TO CART')}
                     </button>
