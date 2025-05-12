@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/pagination.css';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
+
 
 const Pagination = ({ currentPage, totalPages, onPageChange, startIndex, endIndex, totalItems }) => {
+    const { t } = useTranslation();
     const [pageInput, setPageInput] = useState('1');
 
     // Sync input value when currentPage changes
@@ -47,7 +51,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, startIndex, endInde
                 <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages}>»</button>   
             </div>
             <div className="pagination-jump">
-                    <label htmlFor="page-jump">Page:</label>
+                    <label htmlFor="page-jump">{t('Page:')}</label>
                     <input
                         id="page-jump"
                         type="number"
@@ -59,7 +63,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange, startIndex, endInde
                         className="page-jump-input"
                     />
                     <span className="page-info">
-                     of {totalPages} pages
+                     {t('of')} {totalPages} {t('pages')}
                     </span>
                 </div>
         </div>

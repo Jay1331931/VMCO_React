@@ -9,6 +9,8 @@ import CustomersDetails from './screens/customersDetails';
 import LoginScreen from './screens/login';
 import CustomersOnboarding from './screens/customersOnboarding';
 import Checkout from './screens/checkout';
+import ForgotPassword from './components/ForgotPassword';
+import EmployeeLogin from './screens/employeeLogin';
 // Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/employee-login" element={<EmployeeLogin />} />
       </Routes>
     </Router>
   );

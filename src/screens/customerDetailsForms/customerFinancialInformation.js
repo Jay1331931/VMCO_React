@@ -6,9 +6,9 @@ export function getFinancialInformationForm(t) {
   return {
     'Financial Information': [
       { type: 'header', label: t('Bank Details') },
-      { type: 'text', name: 'bankName', label: t('Bank Name'), placeholder: t('Enter bank name') },
-      { type: 'text', name: 'accountNumber', label: t('Account Number'), placeholder: t('Enter account number') },
-      { type: 'text', name: 'ibanNumber', label: t('IBAN'), placeholder: t('Enter IBAN') },
+      { type: 'text', name: 'bankName', label: t('Bank Name'), placeholder: t('Enter bank name'), required: true },
+      { type: 'text', name: 'accountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
+      { type: 'text', name: 'ibanNumber', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
       { type: 'empty' },
       { type: 'checkbox', name: 'paymentMethods', label: t('Payment Method (Post Approval)'), options: [t('Pre-Payment'), t('Partial Payment'), t('Advance Payment')] },
       { type: 'empty' },
