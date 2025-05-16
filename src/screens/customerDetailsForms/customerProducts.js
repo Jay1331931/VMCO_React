@@ -23,8 +23,11 @@ const products = [
     { id: '0012', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
 ];
 
-function Products() {
+function Products(customer) {
     const [isApprovalMode, setApprovalMode] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
     const actionMenuRef = useRef(null);
     const { t } = useTranslation();
@@ -40,8 +43,8 @@ function Products() {
     const [pageInput, setPageInput] = useState('');
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentItems = products.slice(startIndex, endIndex);
-
+    // const currentItems = products.slice(startIndex, endIndex);
+    const currentItems = products;
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -54,6 +57,95 @@ function Products() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // useEffect(() => {
+    //     console.log(customer)
+    //     const fetchProducts = async () => {
+    //         const filters = {
+    //             customer_id: customer?.customer?.id,
+    //             entity: activeCategory
+    //         };
+
+    //         const query = new URLSearchParams({
+    //             page: 1,
+    //             pageSize: 20,
+    //             sortBy: "product_id",
+    //             sortOrder: "asc",
+    //             filters: JSON.stringify(filters)
+    //         });
+
+    //         try {
+    //             const response = await fetch(`http://localhost:3000/api/product-customer-mappings/pagination?${query.toString()}`, {
+    //                 // const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
+    //                 method: 'GET',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 credentials: 'include'
+    //             });
+    //             console.log(response)
+    //             if (!response.ok) {
+    //                 throw new Error('Failed to fetch products');
+    //             }
+    //             const data = await response.json();
+    //             setProducts(data.data);
+    //             console.log('Products:', products);
+    //             console.log(currentItems)
+    //         } catch (err) {
+    //             console.log(err)
+    //             setError(err.message);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     if (customer?.customer?.id && activeCategory) {
+    //         console.log('inside if')
+    //         fetchProducts();
+    //     }
+    // }, [customer]);
+
+useEffect(() => {
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+
+        const filters = {
+            customer_id: customer?.customer?.id,
+            entity: activeCategory
+        };
+
+        const query = new URLSearchParams({
+            page: currentPage,
+            pageSize: 20,
+            sortBy: "product_id",
+            sortOrder: "asc",
+            filters: JSON.stringify(filters)
+        });
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/product-customer-mappings/pagination?${query.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
+            }
+
+            const data = await response.json();
+            setProducts(data.data);  // ✅ Only the data array
+        } catch (err) {
+            console.log(err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (customer?.customer?.id && activeCategory) {
+        fetchProducts();
+    }
+}, [customer, activeCategory, currentPage]);
 
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
@@ -138,12 +230,12 @@ function Products() {
                                         onChange={() => handleSelectOne(product.id)}
                                     />
                                 </td>
-                                <td>{product.id} - {product.customer}</td>
+                                <td>{product.productName}</td>
                                 <td className='edit-cell'>
                                     <div className="input-with-icons">
                                         <input
                                             type="text"
-                                            defaultValue="30"
+                                            value={product.moq || 30}
                                             onFocus={() => setIsInputFocused(true)}
                                             onBlur={() => setIsInputFocused(false)}
                                         />
@@ -162,13 +254,13 @@ function Products() {
             </div>
             {/* Pagination */}
             <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => setCurrentPage(page)}
-                        startIndex={startIndex}
-                        endIndex={Math.min(endIndex, products.length)}
-                        totalItems={products.length}
-                    />
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+                startIndex={startIndex}
+                endIndex={Math.min(endIndex, products.length)}
+                totalItems={products.length}
+            />
         </div>
     );
 }
