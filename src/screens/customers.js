@@ -4,6 +4,7 @@ import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import ActionButton from '../components/ActionButton';
 import SearchInput from '../components/SearchInput';
+import Pagination from '../components/Pagination';
 import Table from '../components/Table';
 import Tabs from '../components/Tabs';
 import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
@@ -88,6 +89,9 @@ function Customers() {
   const [filteredCustomers, setFilteredCustomers] = useState(customers);
   const [customerContacts, setCustomerContacts] = useState({});
   const [filteredInvites, setFilteredInvites] = useState(invites);
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
 const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -454,7 +458,7 @@ const handleRowClick = (customer) => {
         return (
           <Table 
             columns={customerColumns}
-            data={filteredCustomers}
+            data={paginatedCustomers}
             getStatusClass={getStatusClass}
             customCellRenderer={customCellRenderer}
             onRowClick={handleRowClick}
@@ -473,6 +477,8 @@ const handleRowClick = (customer) => {
         return null;
     }
   };
+// Paginate the filtered orders
+  const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <Sidebar title={t('Customers')}>
@@ -502,6 +508,11 @@ const handleRowClick = (customer) => {
           </div>
           {renderContent()}
         </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
     </Sidebar>
   );

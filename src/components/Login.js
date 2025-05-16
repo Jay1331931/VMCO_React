@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from 'react';
-import '../styles/components.css';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -116,7 +114,6 @@ function Login({ title, userType }) {
 
             </div>
         </div>
-
     );
 }
 

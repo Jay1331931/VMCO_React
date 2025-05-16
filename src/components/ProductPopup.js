@@ -11,7 +11,6 @@ function ProductPopup({
 }) {
     const { t } = useTranslation();
 
-    // Always treat product.image as main, and product.additionalImages as array of additional images
     const mainImage = product.image || '';
     const additionalImages = Array.isArray(product.additionalImages) ? product.additionalImages : [];
     const images = [mainImage, ...additionalImages];
@@ -24,55 +23,269 @@ function ProductPopup({
         <div className="product-popup-overlay" onClick={onClose}>
             <div className="product-popup" onClick={e => e.stopPropagation()}>
                 <button className="popup-close" onClick={onClose}>×</button>
-                <div className="popup-image-container">
-                    {selectedImage ? (
-                        <img
-                            src={selectedImage}
-                            alt={product.name}
-                            className="popup-image"
-                        />
-                    ) : (
-                        <div className="popup-image"></div>
-                    )}
-                    <div className="additional-images" style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-                        {images.map((img, idx) => (
-                            <div
-                                key={idx}
-                                className={`additional-image-thumb${selectedImage === img ? ' selected' : ''}`}
-                                onClick={() => setSelectedImage(img)}
-                                style={{
-                                    background: '#D9D9D6',
-                                    backgroundImage: img ? `url(${img})` : 'none',
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    width: 64,
-                                    height: 64,
-                                    borderRadius: 8,
-                                    border: selectedImage === img ? '2px solid #00665A' : '2px solid #e0e0e0',
-                                    cursor: 'pointer',
-                                    display: 'inline-block'
-                                }}
-                                aria-label={`Show image ${idx + 1}`}
+                <div className="popup-content">
+                    <div className="popup-image-section">
+                        {selectedImage ? (
+                            <img
+                                src={selectedImage}
+                                alt={product.name}
+                                className="popup-image"
                             />
-                        ))}
+                        ) : (
+                            <div className="popup-image placeholder"></div>
+                        )}
+                        <div className="additional-images">
+                            {images.map((img, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`additional-image-thumb${selectedImage === img ? ' selected' : ''}`}
+                                    onClick={() => setSelectedImage(img)}
+                                    style={{
+                                        background: '#D9D9D6',
+                                        backgroundImage: img ? `url(${img})` : 'none',
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        width: 64,
+                                        height: 64,
+                                        borderRadius: 8,
+                                        border: selectedImage === img ? '2px solid #00665A' : '2px solid #e0e0e0',
+                                        cursor: 'pointer',
+                                        display: 'inline-block'
+                                    }}
+                                    aria-label={`Show image ${idx + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="popup-details">
+                        <h2 className="popup-product-name">{product.name}</h2>
+                        <div className="popup-product-price-row">
+                            <span className="popup-product-price">{product.price} <span className="popup-product-currency">SAR</span></span>
+                        </div>
+                        <div className="popup-product-unit-row">
+                            <span className="popup-product-unit-label">{t('Unit Price')}:</span>
+                            <span className="popup-product-unit-value">{product.unitPrice} <span className="popup-product-currency">SAR</span></span>
+                        </div>
+                        <p className="popup-product-description">{t('Description...')}</p>
+                        <QuantityController
+                            itemId={product.id}
+                            quantity={quantities[product.id] || 0}
+                            onQuantityChange={onQuantityChange}
+                            onInputChange={onInputChange}
+                        />
+                        <div className='addtocartbutton'>
+                            <button className="add-to-cart-btn">
+                                {t('Add to Cart')}
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div className="popup-details">
-                    <h2>{product.name}</h2>
-                    <h3 className="product-code">{product.code}</h3>
-                    <p>{t('description of the product')}</p>
-                    <QuantityController
-                        itemId={product.id}
-                        quantity={quantities[product.id] || 0}
-                        onQuantityChange={onQuantityChange}
-                        onInputChange={onInputChange}
-                    />
-                    <div className='addtocartbutton'>
-                        <button className="add-to-cart-btn">
-                            {t('ADD TO CART')}
-                        </button>
-                    </div>
-                </div>
+                <style>{`
+                    .product-popup-overlay {
+                        position: fixed;
+                        top: 0; left: 0; right: 0; bottom: 0;
+                        background: rgba(0,0,0,0.12);
+                        z-index: 1000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 24px;
+                    }
+                    .product-popup {
+                        background: #fff;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+                        padding: 0;
+                        max-width: 900px;
+                        width: 100%;
+                        position: relative;
+                        animation: popup-fade-in 0.18s;
+                        min-height: 420px;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    @keyframes popup-fade-in {
+                        from { opacity: 0; transform: scale(0.97);}
+                        to { opacity: 1; transform: scale(1);}
+                    }
+                    .popup-close {
+                        position: absolute;
+                        top: 18px;
+                        right: 18px;
+                        background: none;
+                        border: none;
+                        font-size: 2rem;
+                        color: #888;
+                        cursor: pointer;
+                        z-index: 2;
+                        transition: color 0.15s;
+                    }
+                    .popup-close:hover {
+                        color: #0a5640;
+                    }
+                    .popup-content {
+                        display: flex;
+                        flex-direction: row;
+                        gap: 40px;
+                        padding: 48px 48px 40px 48px;
+                    }
+                    .popup-image-section {
+                        flex: 1.1;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        min-width: 320px;
+                    }
+                    .popup-image {
+                        width: 100%;
+                        max-width: 400px;
+                        aspect-ratio: 1/1;
+                        object-fit: contain;
+                        border-radius: 8px;
+                        background: #F3F3F3;
+                        margin-bottom: 18px;
+                        min-width: 280px;
+                        min-height: 280px;
+                        display: block;
+                    }
+                    .popup-image.placeholder {
+                        background: #E5E5E5;
+                        width: 100%;
+                        max-width: 400px;
+                        aspect-ratio: 1/1;
+                        border-radius: 8px;
+                        margin-bottom: 18px;
+                        min-width: 280px;
+                        min-height: 280px;
+                    }
+                    .additional-images {
+                        display: flex;
+                        gap: 12px;
+                    }
+                    .additional-image-thumb {
+                        border: 2px solid #e0e0e0;
+                        border-radius: 8px;
+                        width: 64px;
+                        height: 64px;
+                        background: #D9D9D6;
+                        background-size: cover;
+                        background-position: center;
+                        cursor: pointer;
+                        transition: border 0.15s;
+                    }
+                    .additional-image-thumb.selected {
+                        border: 2px solid #00665A;
+                    }
+                    .popup-details {
+                        flex: 1.2;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        gap: 10px;
+                        min-width: 320px;
+                        margin-top: 8px;
+                    }
+                    .popup-product-name {
+                        font-size: 1.35rem;
+                        font-weight: 600;
+                        margin: 0 0 8px 0;
+                        color: #222;
+                    }
+                    .popup-product-price-row {
+                        margin-bottom: 0;
+                    }
+                    .popup-product-price {
+                        font-size: 2.2rem;
+                        font-weight: 700;
+                        color: #222;
+                        margin-right: 8px;
+                        vertical-align: middle;
+                    }
+                    .popup-product-currency {
+                        font-size: 1.1rem;
+                        font-weight: 500;
+                        color: #222;
+                        margin-left: 2px;
+                        vertical-align: middle;
+                    }
+                    .popup-product-unit-row {
+                        font-size: 0.98rem;
+                        color: #222;
+                        margin-bottom: 10px;
+                        margin-top: 2px;
+                    }
+                    .popup-product-unit-label {
+                        font-weight: 500;
+                        color: #222;
+                        margin-right: 4px;
+                    }
+                    .popup-product-unit-value {
+                        color: #222;
+                        font-weight: 500;
+                    }
+                    .popup-product-description {
+                        font-size: 1rem;
+                        color: #888;
+                        margin: 0 0 18px 0;
+                    }
+                    .addtocartbutton {
+                        margin-top: 18px;
+                        display: flex;
+                        justify-content: flex-end;
+                    }
+                    .add-to-cart-btn {
+                        background: #0a5640;
+                        color: #fff;
+                        border: none;
+                        border-radius: 6px;
+                        width: 100%;
+                        font-size: 0.7rem;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: background 0.15s;
+                    }
+                    .add-to-cart-btn:hover {
+                        background: #084c37;
+                    }
+                    @media (max-width: 900px) {
+                        .popup-content {
+                            flex-direction: column;
+                            gap: 24px;
+                            padding: 32px 16px 24px 16px;
+                        }
+                        .popup-image-section,
+                        .popup-details {
+                            min-width: 0;
+                        }
+                        .popup-image {
+                            min-width: 180px;
+                            min-height: 180px;
+                            max-width: 100%;
+                        }
+                    }
+                    @media (max-width: 600px) {
+                        .product-popup {
+                            padding: 0;
+                            min-height: unset;
+                        }
+                        .popup-content {
+                            flex-direction: column;
+                            gap: 18px;
+                            padding: 18px 4px 12px 4px;
+                        }
+                        .popup-image {
+                            min-width: 120px;
+                            min-height: 120px;
+                            max-width: 100%;
+                        }
+                        .popup-details {
+                            min-width: 0;
+                        }
+                        .add-to-cart-btn {
+                            align-items: center;
+                        }
+                    }
+                `}</style>
             </div>
         </div>
     );

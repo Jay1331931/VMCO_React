@@ -235,7 +235,16 @@ function Catalog() {
                         onTabChange={setActiveCategory}
                         variant="category"
                     />
-                    <Dropdown
+                   
+                    <button className="go-to-cart-btn" onClick={handleGoToCart}>
+                    <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                    <span>{t('Go to Cart')}</span>
+                </button>
+                </div>
+                <div className="search-section">
+                    <div className="search-container">
+                        <SearchInput />
+                         <Dropdown
                         id={`category-filter-${catalogId}`}
                         name="categoryFilter"
                         options={categories.map(category => ({ value: category, label: category }))}
@@ -249,14 +258,6 @@ function Catalog() {
                         className="category-filter"
                         placeholder="Sub category"
                     />
-                    <button className="go-to-cart-btn" onClick={handleGoToCart}>
-                    <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                    <span>{t('Go to Cart')}</span>
-                </button>
-                </div>
-                <div className="search-section">
-                    <div className="search-container">
-                        <SearchInput />
                     </div>
                 </div>
                 <div className="products-grid">
