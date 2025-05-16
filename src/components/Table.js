@@ -40,7 +40,10 @@ const Table = ({
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
- 
+        //TODO:Update this component to handle date-time field. May input can have one parameter which
+        //will provides aditional properties of the cell to be rendered. In case of date-time field, 
+        //It can {type: 'date-time', format: 'YYYY-MM-DD HH:mm'} and in case of string it can be {type: 'string'}
+    
         // Default cell rendering
         return item[column.key];
     };
