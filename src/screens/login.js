@@ -5,14 +5,20 @@ import { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import {faLanguage, faLocationDot} from '@fortawesome/free-solid-svg-icons';
+import { useLocation } from 'react-router-dom';
 
 function LoginScreen() {
     const { t, i18n } = useTranslation();
-    
+    const location = useLocation();
     useEffect(() => {
         document.title = t('Login');
     }, [t]);
     const isRTL = i18n.language === 'ar';
+const path = location.pathname;
+  const isCustomerLogin = path === '/login';
+
+  const title = isCustomerLogin ? t('Customer Login') : t('Employee Login');
+  const userType = isCustomerLogin ? 'customer' : null;
 
   const toggleLanguage = () => {
     const newLang = isRTL ? 'en' : 'ar';
@@ -35,7 +41,7 @@ function LoginScreen() {
         </div>
             
         
-        <Login title={t('Customer Login')} />
+        <Login title={title} userType = {userType} />
         
         </div>
     );

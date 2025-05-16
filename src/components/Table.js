@@ -1,12 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-const Table = ({ 
-    columns, 
-    data, 
-    getStatusClass, 
+const Table = ({
+    columns,
+    data,
+    getStatusClass,
     actionButtons,
-    customCellRenderer 
+    customCellRenderer,
+    onRowClick
 }) => {
     const { t } = useTranslation();
 
@@ -50,16 +51,20 @@ const Table = ({
                 <thead>
                     <tr>
                         {columns.map((column) => (
-                            <th key={column.key} scope="col">{t(column.header)}</th>
+                            <th key={column.key}>{column.header}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((item, index) => (
-                        <tr key={item.id || index}>
+                    {data.map((row, index) => (
+                        <tr
+                            key={index}
+                            onClick={() => onRowClick && onRowClick(row)}
+                            style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                        >
                             {columns.map((column) => (
-                                <td key={`${item.id || index}-${column.key}`}>
-                                    {renderCell(item, column)}
+                                <td key={`${row.id || index}-${column.key}`}>
+                                    {renderCell(row, column)}
                                 </td>
                             ))}
                         </tr>

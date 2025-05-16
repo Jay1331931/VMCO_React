@@ -5,53 +5,86 @@ import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-function Login({ title }) {
+function Login({ title, userType }) {
     const { t } = useTranslation();
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+
     const navigate = useNavigate();
 
     useEffect(() => {
         document.title = t('Login');
     }, [t]);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (username === '' || password === '') {
+        if (email === '' || password === '') {
             setError(t('Please fill in all fields'));
         } else {
             // Handle login logic here
-            console.log('Logging in with:', { username, password });
+            try {
+                const requestBody = {
+            email,
+            password,
+            ...(title === 'Customer Login' && { user_type: 'customer' })  // 👈 Conditional addition
+        };
+        // const res = await fetch('https://vmcoservertest-cyf3gyg4hpb9h7ek.southindia-01.azurewebsites.net/api/user/email-password', {
+        const res = await fetch('http://localhost:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody),
+            credentials: 'include',
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            setError(data.message || 'Login failed');
+            return;
+        }
+        navigate('/catalog');
+        setMessage(data.message);
+        setError('');
+
+    } catch (error) {
+        console.error('Login error:', error);
+        setError('Unable to connect to server');
+    }
             setError('');
         }
     };
 
     const handleForgotPassword = (e) => {
         e.preventDefault();
-        navigate('/forgot-password');
+        navigate('/forgotPassword', { state: { email } }); // Pass email as state
     };
 
+    const handleRegister = (e) => {
+        e.preventDefault();
+        navigate('/customersOnboarding');
+    };
     return (
         <div className='login-screen'>
             {title === 'Customer Login' ?
-            (<div className='login-screen-text'>
-                <p>{t('Thank you for completing the invitation.')}</p>
-                <p>{t('Please Login to provide further details')}</p>
+                (<div className='login-screen-text'>
+                    <p>{t('Thank you for completing the invitation.')}</p>
+                    <p>{t('Please Login to provide further details')}</p>
                 </div>) : []}
-            
+
             <div className='login-component'>
-            <div className="login-header">{t('Login')}</div>
+                <div className="login-header">{t('Login')}</div>
                 <div className="login-container">
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="username">{t('Email (Username)')}</label>
+                            <label htmlFor="email">{t('Email (email)')}</label>
                             <input
                                 type="text"
-                                id="username"
-                                value={username}
-                                placeholder={t('Email (Username)')}
-                                onChange={(e) => setUsername(e.target.value)}
+                                id="email"
+                                value={email}
+                                placeholder={t('Email (email)')}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                         <div className="form-group">
@@ -69,16 +102,16 @@ function Login({ title }) {
                     </form>
                 </div>
                 <div className='login-footer'>
-                    {title === 'Customer Login' ? 
-                    (<div className="login-footer-text">
-                    <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
-                    <a href="#">|{t('Register')}</a>
-                    </div>) :
-                    (<div className="login-footer-text">
-                    <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
-                    </div>)
+                    {title === 'Customer Login' ?
+                        (<div className="login-footer-text">
+                            <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
+                            <a href="#" onClick={handleRegister}>|{t('Register')}</a>
+                        </div>) :
+                        (<div className="login-footer-text">
+                            <a href="#" onClick={handleForgotPassword}>{t('Forgot Password?')}</a>
+                        </div>)
                     }
-                    <div><button type="submit" className="login-button">{t('Sign In')}</button></div>
+                    <div><button type="submit" className="login-button" onClick={handleSubmit}>{t('Sign In')}</button></div>
                 </div>
 
             </div>

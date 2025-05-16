@@ -1,180 +1,47 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV, faChevronRight, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { faToggleOff, faToggleOn, faCheck, faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons';
-
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 import Pagination from '../../components/Pagination';
 import '../../styles/pagination.css';
 import '../../styles/forms.css';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-
-const branches = [
-    { id: '0001', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0002', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0003', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0004', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
-    { id: '0005', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
-    { id: '0006', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0007', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0008', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
-    { id: '0009', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Rejected' },
-    { id: '0010', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0011', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Pending' },
-    { id: '0012', customer: 'XYZ', branch: 'JP Nagar', entity: 'Entity 1', paymentMethod: 'Credit', deliveryDate: '10 Apr 025', totalAmount: 'SAR2000', status: 'Approved' },
-];
-
+import { or } from 'ajv/dist/compile/codegen';
 
 const getStatusClass = (status) => {
     switch (status) {
-        case 'Approved': return 'status-approved';
-        case 'Rejected': return 'status-rejected';
-        default: return 'status-pending';
+        case 'Active': return 'branch-status-approved';
+        case 'Inactive': return 'branch-status-rejected';
+        default: return 'branch-status-pending';
     }
 };
-
-const LocationPicker = ({ onLocationSelect }) => {
-    const mapContainer = useRef(null);
-    const markerRef = useRef(null); // Using ref instead of state for the marker
-    const [map, setMap] = useState(null);
-    const { t, i18n } = useTranslation();
-    const [coords, setCoords] = useState('Detecting your location...');
-    const [coordsArabic, setCoordsArabic] = useState(t('Detecting your location...'));
-    const [defaultCenter] = useState([77.5946, 12.9716]);
-    const [zoom] = useState(14);
-    const [confirmedLocation, setConfirmedLocation] = useState(null);
-
-    useEffect(() => {
-        let mapInstance;
-
-        const initializeMap = async () => {
-            mapInstance = new maplibregl.Map({
-                container: mapContainer.current,
-                style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
-                center: defaultCenter,
-                zoom: zoom
-            });
-
-            mapInstance.on('load', async () => {
-                setMap(mapInstance);
-                try {
-                    const position = await getCurrentPosition();
-                    const { latitude, longitude } = position.coords;
-                    updateMarker(mapInstance, longitude, latitude);
-                } catch (error) {
-                    console.log('Geolocation error:', error);
-                    setCoords('Click on the map to select a location');
-                    setCoordsArabic(t('Click on the map to select a location'));
-                }
-            });
-
-            mapInstance.on('click', (e) => {
-                if (!confirmedLocation) {
-                    const { lng, lat } = e.lngLat;
-                    updateMarker(mapInstance, lng, lat);
-                }
-            });
-
-            return () => {
-                if (markerRef.current) markerRef.current.remove();
-                mapInstance.remove();
-            };
-        };
-
-        const getCurrentPosition = () => {
-            return new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                });
-            });
-        };
-
-        const updateMarker = (map, lng, lat) => {
-            // Remove existing marker if it exists
-            if (markerRef.current) {
-                markerRef.current.remove();
-                markerRef.current = null;
-            }
-
-            // Create new marker
-            const newMarker = new maplibregl.Marker()
-                .setLngLat([lng, lat])
-                .addTo(map);
-
-            markerRef.current = newMarker;
-            setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-            setCoordsArabic(`خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`);
-
-            map.setCenter([lng, lat]);
-        };
-
-        initializeMap();
-
-        return () => {
-            if (mapInstance) mapInstance.remove();
-        };
-    }, [confirmedLocation]);
-
-    const handleConfirm = () => {
-        if (markerRef.current) {
-            const lngLat = markerRef.current.getLngLat();
-            onLocationSelect(lngLat.lat, lngLat.lng);
-            setConfirmedLocation(lngLat);
-        }
-    };
-
-    const handleReset = () => {
-        if (markerRef.current) {
-            markerRef.current.remove();
-            markerRef.current = null;
-        }
-        setConfirmedLocation(null);
-        setCoords('Click on the map to select a location');
-        setCoordsArabic(t('Click on the map to select a location'));
-    };
-
-    return (
-        <div className="location-picker-container">
-            <div ref={mapContainer} className="map-container" />
-            <div className="location-coords">{i18n.language === 'ar' ? coordsArabic : coords}</div>
-            <div className="location-actions">
-                {!confirmedLocation ? (
-                    <button
-                        className="confirm-location-button"
-                        onClick={handleConfirm}
-                        disabled={!markerRef.current}
-                    >
-                        Confirm Location
-                    </button>
-                ) : (
-                    <>
-                        <div className="location-confirmed">
-                            Location confirmed!
-                        </div>
-                        <button
-                            className="reset-location-button"
-                            onClick={handleReset}
-                        >
-                            Change Location
-                        </button>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};
-
-const BranchDetailsForm = ({ order }) => {
+   
+const BranchDetailsForm = ({ branch }) => {
+    console.log(branch)
     const { t } = useTranslation();
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [sameAsCustomer, setSameAsCustomer] = useState(false);
+    const [approvalRequired, setApprovalRequired] = useState(branch.approvalRequiredForOrdering || false);
+      // Track changes for a specific branch field
+  
+
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+    //   handleBranchFieldChange(branch.id, name, value);
+      // Update local state if needed
+    };
     const fields = [
-        { label: 'Branch', value: order.branch, placeholder: 'Branch', required: true },
-        { label: 'City', value: 'Bengaluru', placeholder: 'City', required: true },
-        { label: 'Location Type', value: 'Metro', placeholder: 'Location Type', required: true },
+        { label: 'Branch', value: branch.branchNameEn, placeholder: 'Branch', required: true },
+        { label: 'Branch (Arabic)', value: branch.branchNameLc, placeholder: 'Branch', required: true },
+        { label: 'Building Name', value: branch.buildingName, placeholder: 'Building Name', required: true },
+        { label: 'Street', value: branch.street, placeholder: 'Street Name', required: true },
+        { label: 'City', value: branch.city, placeholder: 'City', required: true },
+        { label: 'Location Type', value: branch.locationType, placeholder: 'Location Type', required: true },
         {
             label: 'Geolocation',
             value: selectedLocation ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}` : 'Select Location',
@@ -182,8 +49,6 @@ const BranchDetailsForm = ({ order }) => {
             isLocation: true,
             required: true
         },
-        { label: 'Region', value: 'Region', placeholder: 'Region', required: true },
-        { label: 'Pincode', value: order.deliveryDate, placeholder: 'Pincode', required: true },
     ];
 
     const handleLocationSelect = (lat, lng) => {
@@ -194,18 +59,29 @@ const BranchDetailsForm = ({ order }) => {
     return (
         <div className="form-section">
             <h3>{t('Branch Details')}</h3>
-            
+
             <div className="form-group">
                 <label>
-                    <input 
-                        type="checkbox" 
-                        checked={sameAsCustomer} 
-                        onChange={(e) => setSameAsCustomer(e.target.checked)} 
+                    <input
+                        type="checkbox"
+                        checked={sameAsCustomer}
+                        onChange={(e) => setSameAsCustomer(e.target.checked)}
                     />
                     {'\t' + t('Same as Customer Details')}
                 </label>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={approvalRequired}
+                            onChange={(e) => setApprovalRequired(e.target.checked)}
+                        />
+                        {'\t' + t('Approval Required for Ordering')}
+                    </label>
+                </div>
+
             </div>
-        
+
             <div className="form-row">
                 {fields.map((field, index) => (
                     <div className="form-group" key={index}>
@@ -230,7 +106,7 @@ const BranchDetailsForm = ({ order }) => {
                                     </button>
                                 </div>
                             ) : (
-                                <input value={field.value} placeholder={t(field.placeholder)} />
+                                <input value={field.value} placeholder={t(field.placeholder)} onChange={handleInputChange} />
                             )
                         }
                     </div>
@@ -557,9 +433,147 @@ const OperatingHours = () => {
         </div>
     );
 };
-// ========== End Form Components ==========
 
-function Branches({ setTabsHeight }) {
+// LocationPicker component remains the same...
+const LocationPicker = ({ onLocationSelect }) => {
+    const mapContainer = useRef(null);
+    const markerRef = useRef(null); // Using ref instead of state for the marker
+    const [map, setMap] = useState(null);
+    const { t, i18n } = useTranslation();
+    const [coords, setCoords] = useState('Detecting your location...');
+    const [coordsArabic, setCoordsArabic] = useState(t('Detecting your location...'));
+    const [defaultCenter] = useState([77.5946, 12.9716]);
+    const [zoom] = useState(14);
+    const [confirmedLocation, setConfirmedLocation] = useState(null);
+
+    useEffect(() => {
+        let mapInstance;
+
+        const initializeMap = async () => {
+            mapInstance = new maplibregl.Map({
+                container: mapContainer.current,
+                style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
+                center: defaultCenter,
+                zoom: zoom
+            });
+
+            mapInstance.on('load', async () => {
+                setMap(mapInstance);
+                try {
+                    const position = await getCurrentPosition();
+                    const { latitude, longitude } = position.coords;
+                    updateMarker(mapInstance, longitude, latitude);
+                } catch (error) {
+                    console.log('Geolocation error:', error);
+                    setCoords('Click on the map to select a location');
+                    setCoordsArabic(t('Click on the map to select a location'));
+                }
+            });
+
+            mapInstance.on('click', (e) => {
+                if (!confirmedLocation) {
+                    const { lng, lat } = e.lngLat;
+                    updateMarker(mapInstance, lng, lat);
+                }
+            });
+
+            return () => {
+                if (markerRef.current) markerRef.current.remove();
+                mapInstance.remove();
+            };
+        };
+
+        const getCurrentPosition = () => {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000
+                });
+            });
+        };
+
+        const updateMarker = (map, lng, lat) => {
+            // Remove existing marker if it exists
+            if (markerRef.current) {
+                markerRef.current.remove();
+                markerRef.current = null;
+            }
+
+            // Create new marker
+            const newMarker = new maplibregl.Marker()
+                .setLngLat([lng, lat])
+                .addTo(map);
+
+            markerRef.current = newMarker;
+            setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+            setCoordsArabic(`خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`);
+
+            map.setCenter([lng, lat]);
+        };
+
+        initializeMap();
+
+        return () => {
+            if (mapInstance) mapInstance.remove();
+        };
+    }, [confirmedLocation]);
+
+    const handleConfirm = () => {
+        if (markerRef.current) {
+            const lngLat = markerRef.current.getLngLat();
+            onLocationSelect(lngLat.lat, lngLat.lng);
+            setConfirmedLocation(lngLat);
+        }
+    };
+
+    const handleReset = () => {
+        if (markerRef.current) {
+            markerRef.current.remove();
+            markerRef.current = null;
+        }
+        setConfirmedLocation(null);
+        setCoords('Click on the map to select a location');
+        setCoordsArabic(t('Click on the map to select a location'));
+    };
+
+    return (
+        <div className="location-picker-container">
+            <div ref={mapContainer} className="map-container" />
+            <div className="location-coords">{i18n.language === 'ar' ? coordsArabic : coords}</div>
+            <div className="location-actions">
+                {!confirmedLocation ? (
+                    <button
+                        className="confirm-location-button"
+                        onClick={handleConfirm}
+                        disabled={!markerRef.current}
+                    >
+                        Confirm Location
+                    </button>
+                ) : (
+                    <>
+                        <div className="location-confirmed">
+                            Location confirmed!
+                        </div>
+                        <button
+                            className="reset-location-button"
+                            onClick={handleReset}
+                        >
+                            Change Location
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+function Branches({ customer, setTabsHeight, onBranchChanges }) {
+    const location = useLocation();
+    // const customer = location.state?.customer;
+    const [branches, setBranches] = useState([]);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [expandedRows, setExpandedRows] = useState([]);
     const { t } = useTranslation();
     const actionMenuRef = useRef(null);
@@ -569,9 +583,56 @@ function Branches({ setTabsHeight }) {
     const totalPages = Math.ceil(branches.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    const currentItems = branches.slice(startIndex, endIndex);
+    // const currentItems = branches.slice(startIndex, endIndex);
+    const currentItems = branches;
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const contentRef = useRef();
+const [branchChanges, setBranchChanges] = useState({});
+     const handleBranchFieldChange = (branchId, fieldName, value) => {
+    setBranchChanges(prev => ({
+      ...prev,
+      [branchId]: {
+        ...prev[branchId],
+        [fieldName]: value
+      }
+    }));
+  };
+
+
+  // Pass changes back to parent when needed
+  useEffect(() => {
+    if (onBranchChanges && Object.keys(branchChanges).length > 0) {
+      onBranchChanges(branchChanges);
+    }
+  }, [branchChanges, onBranchChanges]);
+
+    useEffect(() => {
+        const fetchBranches = async () => {
+            try {
+                const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
+                    // const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch branches');
+                }
+                const data = await response.json();
+                setBranches(data);
+                console.log('Branches:', data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (customer?.id) {
+            fetchBranches();
+        }
+    }, [customer]);
+
     useEffect(() => {
         const baseRowHeight = 60;
         const collapsedExtraHeight = 40;
@@ -585,35 +646,43 @@ function Branches({ setTabsHeight }) {
         setTabsHeight(`${contentHeight}px`);
     }, [expandedRows.length, currentItems.length]);
 
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    // ... other existing functions remain the same
 
-    const toggleRow = (orderId) => {
+    const parseOperatingHours = (hoursJson) => {
+        try {
+            const hours = JSON.parse(hoursJson);
+            return Object.entries(hours).reduce((acc, [day, timeRange]) => {
+                const [from, to] = timeRange.split('-');
+                acc[day] = { from, to };
+                return acc;
+            }, {});
+        } catch (e) {
+            // Return default hours if parsing fails
+            const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            return weekdays.reduce((acc, day) => {
+                acc[day] = { from: '09:00', to: '18:00' };
+                return acc;
+            }, {});
+        }
+    };
+
+    if (loading) return <div>Loading branches...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    const toggleRow = (branchId) => {
         setExpandedRows((prev) =>
-            prev.includes(orderId) ? [] : [orderId]
+            prev.includes(branchId) ? [] : [branchId]
         );
+        console.log(branchId)
     };
 
 
     const isExpanded = (orderId) => expandedRows.includes(orderId);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
-                setActionMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
     return (
         <div className="branches-content" ref={contentRef}>
             <div className="form-main-header">
-                <a href="#">{t('Customer Approval Checklist')}</a>
+                <a href="#">{t('Customer Branches')}</a>
             </div>
             <div className="branches-page-header">
                 <div className="branches-header-controls">
@@ -637,34 +706,31 @@ function Branches({ setTabsHeight }) {
             </div>
             {isMobile ? (
                 <div className="branches-list">
-                    {currentItems.map((order) => (
-                        <div key={order.id} className="branch-card">
-                            <div className="branch-summary" onClick={() => toggleRow(order.id)}>
-                                <div className="branch-id">{order.id}</div>
-                                <div className="branch-id">{order.branch}</div>
+                    {currentItems.map((branch) => (
+                        <div key={branch.id} className="branch-card">
+                            <div className="branch-summary" onClick={() => toggleRow(branch.id)}>
+                                <div className="branch-id">{branch.erp_branch_id || branch.id}</div>
+                                <div className="branch-name">{branch.branch_name_en}</div>
                                 <div className="branch-status">
-                                    <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
-                                        {t(order.status)}
+                                    <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                        {t(branch.branch_status)}
                                     </span>
                                 </div>
                                 <button className="branches-toggle-row-btn">
-                                    {isExpanded(order.id)
+                                    {isExpanded(branch.id)
                                         ? <FontAwesomeIcon icon={faChevronDown} />
                                         : <FontAwesomeIcon icon={faChevronRight} />}
                                 </button>
                             </div>
-                            {isExpanded(order.id) && (
+                            {isExpanded(branch.id) && (
                                 <div className="branch-expanded">
-                                    <BranchDetailsForm order={order} />
+                                    <BranchDetailsForm branch={branch} />
                                     <ContactSection />
-                                    <OperatingHours />
+                                    <OperatingHours operatingHours={parseOperatingHours(branch.hours)} />
                                 </div>
                             )}
-
                         </div>
-
                     ))}
-                    {/* Pagination */}
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -678,75 +744,65 @@ function Branches({ setTabsHeight }) {
                     />
                 </div>
             ) : (
-                // Keep your existing table layout for desktop here
-
                 <div className="branches-table-container">
                     <table className="branches-data-table">
                         <thead>
                             <tr>
-                                <th className="desktop-only">{t('Branch')}</th>
+                                <th className="desktop-only">{t('Branch ID')}</th>
+                                <th className="desktop-only">{t('Branch Name')}</th>
                                 <th className="desktop-only">{t('City')}</th>
                                 <th className="desktop-only">{t('Location Type')}</th>
-                                <th className="desktop-only">{t('Geolocation')}</th>
-                                <th className="desktop-only">{t('Region')}</th>
-                                <th className="desktop-only">{t('Pincode')}</th>
                                 <th>{t('Status')}</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            {currentItems.map((order) => (
-                                <React.Fragment key={order.id}>
-                                    <tr onClick={() => toggleRow(order.id)} className={isExpanded(order.id) ? 'branches-expanded-row' : ''}>
-                                        <td className="mobile-only mobile-primary" data-label="Branch ID">
+                            {currentItems.map((branch) => (
+                                <React.Fragment key={branch.id}>
+                                    <tr onClick={() => toggleRow(branch.id)} className={isExpanded(branch.id) ? 'branches-expanded-row' : ''}>
+                                        <td className="mobile-only mobile-primary" data-label="Branch">
                                             <div className="mobile-content">
-                                                <span className="mobile-title">{order.id}</span>
-                                                <span className="mobile-subtitle">{order.branch}</span>
+                                                <span className="mobile-title">{branch.erp_branch_id || branch.id}</span>
+                                                <span className="mobile-subtitle">{branch.branch_name_en}</span>
                                             </div>
                                         </td>
                                         <td className="mobile-secondary">
-                                            <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
-                                                {t(order.status)}
+                                            <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                                {t(branch.branch_status)}
                                             </span>
                                         </td>
-                                        {/* Hidden columns for desktop data */}
-                                        <td className="desktop-only">{order.id}</td>
-                                        <td className="desktop-only">{order.branch}</td>
-                                        <td className="desktop-only">{order.customer}</td>
-                                        <td className="desktop-only">{order.entity}</td>
-                                        <td className="desktop-only">{order.paymentMethod}</td>
-                                        <td className="desktop-only">{order.deliveryDate}</td>
+                                        <td className="desktop-only">{branch.erp_branch_id || branch.id}</td>
+                                        <td className="desktop-only">{branch.branchNameEn}</td>
+                                        <td className="desktop-only">{branch.city}</td>
+                                        <td className="desktop-only">{branch.locationType}</td>
                                         <td className='desktop-only'>
-                                            <span className={`branches-status-badge ${getStatusClass(order.status)}`}>
-                                                {t(order.status)}
+                                            <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                                {t(branch.branchStatus)}
                                             </span>
                                         </td>
                                         <td>
                                             <button className="branches-toggle-row-btn">
-                                                {isExpanded(order.id)
+                                                {isExpanded(branch.id)
                                                     ? <FontAwesomeIcon icon={faChevronDown} />
                                                     : <FontAwesomeIcon icon={faChevronRight} />}
                                             </button>
                                         </td>
                                     </tr>
-                                    {!isMobile && isExpanded(order.id) && (
+                                    {!isMobile && isExpanded(branch.id) && (
                                         <tr className="expanded-row">
-                                            <td colSpan="8">
+                                            <td colSpan="6">
                                                 <div className="expanded-form-container">
-                                                    <BranchDetailsForm order={order} />
+                                                    <BranchDetailsForm branch={branch} />
                                                     <ContactSection />
-                                                    <OperatingHours />
+                                                    <OperatingHours operatingHours={parseOperatingHours(branch.hours)} />
                                                 </div>
                                             </td>
                                         </tr>
                                     )}
-
                                 </React.Fragment>
                             ))}
                         </tbody>
-
                     </table>
-                    {/* Pagination */}
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -758,10 +814,8 @@ function Branches({ setTabsHeight }) {
                         endIndex={Math.min(endIndex, branches.length)}
                         totalItems={branches.length}
                     />
-
                 </div>
             )}
-
         </div>
     );
 }

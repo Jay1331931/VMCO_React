@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import '../styles/forms.css';
 import CommentPopup from '../components/commentPanel';
@@ -11,7 +12,7 @@ import { getDocumentsForm } from './customerDetailsForms/customerDocuments';
 import CustomerProducts from './customerDetailsForms/customerProducts';
 import CustomerBranches from './customerDetailsForms/customerBranches';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Pagination from '../components/Pagination';
@@ -154,8 +155,13 @@ function CustomersDetails() {
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
-
+  const location = useLocation();
+  const customer = location.state?.transformedCustomer;
   const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    console.log('Customer details:', customer);
+  }, [customer]);
   // Define forms per tab
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
@@ -169,16 +175,34 @@ function CustomersDetails() {
     'Products & MoQ': [],
   }), [t]);
   const formDataByTab = useMemo(() => ({
-    'Business Details': getBusinessDetailsFormData(t)['Business Details'],
+    // 'Business Details': getBusinessDetailsFormData(t)['Business Details'],
+    'Business Details': getBusinessDetailsFormData(t, customer)['Business Details'],
+    'Contact Details': getBusinessDetailsFormData(t, customer)['Contact Details'],
+    'Financial Information': getBusinessDetailsFormData(t, customer)['Financial Information'],
+    'Documents': getBusinessDetailsFormData(t, customer)['Documents'],
   }), [t]);
-
   const tabs = Object.keys(formsByTab);
+  const initialFormData = useMemo(() => {
+    const allData = {};
+    Object.keys(formsByTab).forEach(tab => {
+      const tabData = getBusinessDetailsFormData(t, customer)?.[tab] || {};
+      const fields = formsByTab[tab];
+
+      fields.forEach(field => {
+        // Only initialize if not already set (to prevent overwriting)
+        if (!(field.name in allData)) {
+          allData[field.name] = tabData[field.name] || (field.type === 'checkbox' ? [] : '');
+        }
+      });
+    });
+    return allData;
+  }, [t, customer, formsByTab]);
   // Arabic text checker
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
   const [activeTab, setActiveTab] = useState('Business Details');
-  const [formData, setFormData] = useState(formDataByTab['Business Details']);
+  const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -188,6 +212,9 @@ function CustomersDetails() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   useEffect(() => {
+    console.log('formDataByTab', formDataByTab);
+    console.log('formData', formData);
+    console.log('Customer', customer);
     const fields = formsByTab[activeTab];
     const existingData = formDataByTab[activeTab] || {};
 
@@ -201,7 +228,11 @@ function CustomersDetails() {
   }, [activeTab, formDataByTab, formsByTab]);
 
   const setFormDataByTab = (tab) => {
-    setFormData(formDataByTab[tab] || {});
+    setFormData(prev => ({
+      ...prev,
+      ...formDataByTab[tab]
+    })
+    );
   }
 
   const [changedFields, setChangedFields] = useState(new Set());
@@ -218,13 +249,13 @@ function CustomersDetails() {
     setSelectedLocation({ lat, lng });
     setShowMap(false);
   };
-  const validateChangedFields = () => {
+  const validateChangedFields = (checkRequired = false) => {
     const errors = {};
     changedFields.forEach((fieldName) => {
       const field = formsByTab[activeTab].find(f => f.name === fieldName);
       const value = formData[fieldName];
 
-      if (field?.type === 'text' && field.required && !value) {
+      if (checkRequired && field?.type === 'text' && field.required && !value) {
         errors[fieldName] = t('This field is required.');
       }
 
@@ -247,11 +278,11 @@ function CustomersDetails() {
       // Add other validation rules as needed (dropdowns, file size, etc.)
       if (activeTab === 'Contact Details') {
         // Primary contact validations
-        if (fieldName === 'primaryContactName' && !formData[fieldName]) {
+        if (checkRequired && fieldName === 'primaryContactName' && !formData[fieldName]) {
           errors[fieldName] = t('Primary contact name is required');
         }
 
-        if (fieldName === 'primaryContactEmail') {
+        if (checkRequired && fieldName === 'primaryContactEmail') {
           if (!formData[fieldName]) {
             errors[fieldName] = t('Primary contact email is required');
           }
@@ -284,17 +315,93 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSave = (action) => {
+
+  // const handleSave = async (action) => {
+  //   // Additional validation for contact details
+  //   if (activeTab === 'Contact Details') {
+  //     if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
+  //       formData.financeHeadEmail === formData.purchasingHeadEmail) {
+  //       alert(t('Finance and Purchasing heads must have unique emails'));
+  //       return;
+  //     }
+
+  //     if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
+  //       (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
+  //       alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
+  //       return;
+  //     }
+  //   }
+
+  //   if (!validateChangedFields(false)) {
+  //     alert(t('Please correct errors before submitting.'));
+  //     return;
+  //   }
+
+  //   // Prepare the update payload with only changed fields
+  //   const payload = {};
+  //   const customerData = customer || {}; // Fallback to empty object if customer is null
+    
+  //   // Compare each changed field with original customer data
+  //   changedFields.forEach(fieldName => {
+  //     // Skip 'id' field and fields that haven't actually changed
+  //     if (fieldName !== 'id' && formData[fieldName] !== customerData[fieldName]) {
+  //       payload[fieldName] = formData[fieldName];
+  //     }
+  //   });
+
+  //   // If no actual changes, show message and return
+  //   if (Object.keys(payload).length === 0) {
+  //     alert(t('No changes detected to save'));
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify(payload),
+  //       credentials: 'include',
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (!res.ok) {
+  //       setFormErrors(data.message || 'Update failed');
+  //       return;
+  //     }
+
+  //     // Update saved data with the successfully saved fields
+  //     setSavedData(prev => ({
+  //       ...prev,
+  //       [activeTab]: {
+  //         ...prev[activeTab],
+  //         ...payload
+  //       }
+  //     }));
+
+  //     // Clear changed fields for successfully saved data
+  //     setChangedFields(prev => {
+  //       const newSet = new Set(prev);
+  //       Object.keys(payload).forEach(field => newSet.delete(field));
+  //       return newSet;
+  //     });
+
+  //     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+      
+  //   } catch (error) {
+  //     console.error('Update error:', error);
+  //     setFormErrors('Unable to connect to server');
+  //   }
+  // };
+const handleSave = async (action) => {
     // Additional validation for contact details
     if (activeTab === 'Contact Details') {
-      // Ensure finance and purchasing heads have unique emails if provided
       if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
         formData.financeHeadEmail === formData.purchasingHeadEmail) {
         alert(t('Finance and Purchasing heads must have unique emails'));
         return;
       }
 
-      // Ensure they're not using primary contact email
       if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
         (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
         alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
@@ -302,29 +409,128 @@ function CustomersDetails() {
       }
     }
 
-    if (!validateChangedFields()) {
+    if (!validateChangedFields(false)) {
       alert(t('Please correct errors before submitting.'));
       return;
     }
 
-    setSavedData(prev => ({
-      ...prev,
-      [activeTab]: formData
-    }));
+    // Define contact detail fields
+    const contactDetailFields = [
+      'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactPhone',
+      'financeHeadName', 'financeHeadDesignation', 'financeHeadEmail', 'financeHeadPhone',
+      'businessHeadName', 'businessHeadDesignation', 'businessHeadEmail', 'businessHeadPhone',
+      'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadPhone'
+    ];
 
-    alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
-    console.log('Submitted data:', formData);
+    // Prepare payloads
+    const customerPayload = {};
+    const contactCreatePayload = {};
+    const contactUpdatePayload = {};
+    const customerData = customer || {};
+
+    changedFields.forEach(fieldName => {
+      if (fieldName === 'id') return;
+      
+      const newValue = formData[fieldName];
+      const oldValue = customerData[fieldName];
+      
+      if (newValue !== oldValue) {
+        if (contactDetailFields.includes(fieldName)) {
+          // Determine if this is a create or update operation
+          if (oldValue === undefined || oldValue === null || oldValue === '') {
+            contactCreatePayload[fieldName] = newValue;
+          } else {
+            contactUpdatePayload[fieldName] = newValue;
+          }
+        } else {
+          customerPayload[fieldName] = newValue;
+        }
+      }
+    });
+
+    // Early return if no changes
+    if (Object.keys(customerPayload).length === 0 && 
+        Object.keys(contactCreatePayload).length === 0 && 
+        Object.keys(contactUpdatePayload).length === 0) {
+      alert(t('No changes detected to save'));
+      return;
+    }
+
+    try {
+      // 1. Update customer table if needed
+      if (Object.keys(customerPayload).length > 0) {
+        await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(customerPayload),
+          credentials: 'include',
+        });
+      }
+
+    //   // 2. Create new contact details if needed
+    //   if (Object.keys(contactCreatePayload).length > 0) {
+    //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify(contactCreatePayload),
+    //       credentials: 'include',
+    //     });
+    //   }
+
+    //   // 3. Update existing contact details if needed
+    //   if (Object.keys(contactUpdatePayload).length > 0) {
+    //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify(contactUpdatePayload),
+    //       credentials: 'include',
+    //     });
+    //   }
+
+    //   // Update UI state
+    //   setSavedData(prev => ({
+    //     ...prev,
+    //     [activeTab]: {
+    //       ...prev[activeTab],
+    //       ...customerPayload,
+    //       ...contactCreatePayload,
+    //       ...contactUpdatePayload
+    //     }
+    //   }));
+
+    //   // Clear changed fields
+    //   setChangedFields(prev => {
+    //     const newSet = new Set(prev);
+    //     [
+    //       ...Object.keys(customerPayload),
+    //       ...Object.keys(contactCreatePayload),
+    //       ...Object.keys(contactUpdatePayload)
+    //     ].forEach(field => newSet.delete(field));
+    //     return newSet;
+    //   });
+
+      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+
+    } catch (error) {
+      console.error('Update error:', error);
+      setFormErrors(error.message || 'Unable to connect to server');
+    }
   };
-
+  const [uploadedFiles, setUploadedFiles] = useState(
+    formData
+  );
   const handleTabClick = (tab) => {
+    console.log('Tab clicked:', tab);
     setTabsHeight('auto');
     setActiveTab(tab);
+    // setFormDataByTab(tab);
     setFormErrors({});
+    if (tab === 'Documents') {
+      setUploadedFiles(formData);
+    }
+    console.log('Uploaded files:', uploadedFiles);
   };
 
-  const [uploadedFiles, setUploadedFiles] = useState({
-    nonTradingDocuments: []
-  });
 
   const handleFileUpload = (e, fieldName) => {
     const files = Array.from(e.target.files);
@@ -335,35 +541,55 @@ function CustomersDetails() {
         const newFiles = files.map(file => ({
           id: Date.now() + Math.random().toString(36).substr(2, 9),
           name: file.name,
-          file: file
+          file: file,
+          url: URL.createObjectURL(file)
         }));
+
+
 
         setUploadedFiles(prev => ({
           ...prev,
           [fieldName]: [...(prev[fieldName] || []), ...newFiles]
         }));
 
-        // Create preview URLs if needed
-        const previewUrls = files.map(file => URL.createObjectURL(file));
+
+
         setFormData(prev => ({
           ...prev,
-          [fieldName]: [...(prev[fieldName] || []), ...previewUrls]
+          [fieldName]: [
+            ...(prev[fieldName] || []),
+            ...newFiles.map(file => file.url)
+          ]
         }));
       } else {
-        // Single file upload (existing logic)
+        // Single file upload
         const file = files[0];
+        const fileData = {
+          name: file.name,
+          file: file,
+          url: URL.createObjectURL(file)
+        };
+
+
+
         setUploadedFiles(prev => ({
           ...prev,
-          [fieldName]: {
-            name: file.name,
-            file: file
-          }
+          [fieldName]: fileData
         }));
-        const previewUrl = URL.createObjectURL(file);
-        setFormData(prev => ({ ...prev, [fieldName]: previewUrl }));
+
+
+
+        setFormData(prev => ({
+          ...prev,
+          [fieldName]: fileData.name
+        }));
       }
     }
+    console.log('Uploaded files:', uploadedFiles);
+    console.log('Form data:', formData);
   };
+
+
 
   const handleFileDelete = (fieldName, fileId = null) => {
     if (fieldName === 'nonTradingDocuments' && fileId) {
@@ -394,13 +620,17 @@ function CustomersDetails() {
       });
       setFormData(prev => ({ ...prev, [fieldName]: '' }));
 
-      if (formData[fieldName] && formData[fieldName].startsWith('blob:')) {
-        URL.revokeObjectURL(formData[fieldName]);
-      }
+      // if (formData[fieldName] && formData[fieldName].startsWith('blob:')) {
+      //   URL.revokeObjectURL(formData[fieldName]);
+      // }
     }
   };
 
   const handleSubmit = (action) => {
+    if (!validateChangedFields(true)) {
+      alert(t('Please correct errors before submitting.'));
+      return;
+    }
     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
     console.log('Submitted data:', formData);
   };
@@ -487,7 +717,7 @@ function CustomersDetails() {
               {activeTab === 'Products & MoQ' ? (
                 <CustomerProducts />
               ) : activeTab === 'Branches' ? (
-                <CustomerBranches setTabsHeight={setTabsHeight} />
+                <CustomerBranches customer={customer} setTabsHeight={setTabsHeight} />
 
               ) : (
                 <div className="customer-onboarding-form-grid" ref={contentRef}>
@@ -681,7 +911,14 @@ function CustomersDetails() {
                               {uploadedFiles[field.name] && (
                                 <div className="file-display">
                                   <span className="file-name">
-                                    {uploadedFiles[field.name].name}
+                                    <button
+                                      type="button"
+                                      className="file-link-button"
+                                      onClick={() => window.open(uploadedFiles[field.name].url, '_blank')}
+                                      title={uploadedFiles[field.name].name || formData[field.name]}
+                                    >
+                                      {uploadedFiles[field.name].name || formData[field.name]}
+                                    </button>
                                     <button
                                       type="button"
                                       className="delete-file-button"
@@ -722,7 +959,14 @@ function CustomersDetails() {
                                   {uploadedFiles[field.name].map((file) => (
                                     <div key={file.id} className="file-display">
                                       <span className="file-name">
-                                        {file.name}
+                                        <button
+                                          type="button"
+                                          className="file-link-button"
+                                          onClick={() => window.open(uploadedFiles[field.name].url, '_blank')}
+                                          title={file.name}
+                                        >
+                                          {file.name}
+                                        </button>
                                         <button
                                           type="button"
                                           className="delete-file-button"
@@ -731,6 +975,7 @@ function CustomersDetails() {
                                           <FontAwesomeIcon icon={faXmark} />
                                         </button>
                                       </span>
+
 
                                     </div>
                                   ))}
@@ -803,7 +1048,7 @@ function CustomersDetails() {
                 <span className="status-badge">{t(formData.status) || t('Pending')}</span>
               </div>
               <div className="action-buttons">
-                <button className="branches-save-button" onClick={() => handleSave('save')}>
+                <button className="save" onClick={() => handleSave('save')}>
                   {t('Save Changes')}
                 </button>
                 <button className="block" onClick={() => handleSubmit('block')}>

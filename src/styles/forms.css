@@ -406,7 +406,68 @@
   color: blue;
   scrollbar-width: 0;
   }
+  /* Add to your CSS file */
+.document-upload.full-width .upload-row .file-name {
+  display: inline-block;
+  max-width: 200px; /* Adjust as needed */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  right:60px;
+}
 
+.file-name-tooltip {
+  visibility: hidden;
+  width: auto;
+  min-width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  padding: 5px 8px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.file-display:hover .file-name-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.file-name-tooltip::after {
+  content:" ";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+.file-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: blue;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-link-button:hover {
+  color: darkblue;
+}
   [dir="rtl"] .document-upload.full-width .upload-row .file-name {
     left: 50px;
     right: auto;
@@ -610,7 +671,18 @@
     line-height: 30px; /* Adjust line-height to vertically center text */
     font-size: 0.75rem; /* Reduce font size */
     border-radius: 8px;
+    background: none !important;;
   }
+.branch-status-pending {
+  color:#5E6A71;
+}
+.branch-status-rejected {
+  color:#EF7C00;
+}
+.branch-status-approved {
+    color: #00594C;
+  }
+  
 
   .branches-expanded-row {
     border-left: 5px solid blue;
@@ -1263,7 +1335,7 @@ background-color: #edf2f7;
     }
 
     .document-upload.full-width .upload-row .file-name {
-      right: 15px; 
+      right: 30px; 
       }
     
       [dir="rtl"] .document-upload.full-width .upload-row .file-name {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,8 @@ import ActionButton from '../components/ActionButton';
 import SearchInput from '../components/SearchInput';
 import Table from '../components/Table';
 import Tabs from '../components/Tabs';
+import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
+import { useNavigate } from 'react-router-dom';
 
 const customers = [
   {companyName: 'Company', primaryContact: {name: '99000/XX024', email: 'CUSTOMER@CUSTOMER.COM'}, companyType: 'Trading/Non-Trading', typeOfBusiness: 'Type Of Business', deliveryLocation: 'Jaynagar', status: 'Pending'},
@@ -84,8 +86,17 @@ function Customers() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('customers');
   const [filteredCustomers, setFilteredCustomers] = useState(customers);
+  const [customerContacts, setCustomerContacts] = useState({});
   const [filteredInvites, setFilteredInvites] = useState(invites);
-
+const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    total: 0
+  });
   const customerTabs = [
     { value: 'customers', label: 'Customers' },
     { value: 'invites', label: 'Invites' }
@@ -126,32 +137,269 @@ function Customers() {
   };
 
   const customerColumns = [
-    { key: 'companyName', header: 'Company' },
+    { key: 'companyNameEn', header: 'Company' },
     { key: 'primaryContact', header: 'Primary Contact' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
-    { key: 'deliveryLocation', header: 'Delivery Location' },
-    { key: 'status', header: 'Status' }
+    { key: 'city', header: 'Delivery Location' },
+    { key: 'customerStatus', header: 'Status' }
   ];
 
   const inviteColumns = [
     { key: 'date', header: 'Date' },
-    { key: 'customerName', header: 'Customer Name' },
-    { key: 'email', header: 'Email' },
-    { key: 'phone', header: 'Phone' },
+    { key: 'leadName', header: 'Customer Name' },
+    { key: 'companyEmail', header: 'Email' },
+    { key: 'companyPhone', header: 'Phone' },
     { key: 'companyName', header: 'Company Name' },
     { key: 'region', header: 'Region' },
-    { key: 'assignTo', header: 'Assign To' },
+    { key: 'assignedTo', header: 'Assign To' },
     { key: 'source', header: 'Source' },
     { key: 'status', header: 'Status' },
     { key: 'actions', header: '' }
   ];
+ const fetchCustomers = async (page = 1, searchTerm = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+      page,
+      pageSize: pagination.pageSize,
+      search: searchTerm,
+      sortBy: 'id',
+      sortOrder: 'asc',
+      filters: '{}'
+    });
+
+    const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+const result = await response.json();
+      console.log('API Response:', result);
+      if (result.status === 'Ok') {
+        setFilteredCustomers(result.data.data);
+        setPagination(prev => ({
+          ...prev,
+          page,
+          total: result.data.data.length
+        }));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customers');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInvites = async (page = 1, searchTerm = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+      page,
+      pageSize: pagination.pageSize,
+      search: searchTerm,
+      sortBy: 'id',
+      sortOrder: 'asc',
+      filters: '{}'
+    });
+
+    const response = await fetch(`http://localhost:3000/api/customer-registration-staging/pagination?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+const result = await response.json();
+      console.log('API Response:', result);
+      if (result.status === 'Ok') {
+        setFilteredInvites(result.data.data);
+        setPagination(prev => ({
+          ...prev,
+          page,
+          total: result.data.data.length
+        }));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch invites');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching invites:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+// function transformCustomerData(customer, customerContacts) {
+//   // Ensure contacts is always an array
+//   console.log('customerContacts', customerContacts);
+//   const contacts = Array.isArray(customerContacts) 
+//     ? customerContacts 
+//     : customerContacts ? [customerContacts] : [];
+
+//   // Create a map of contact_type to contact data for easier lookup
+//   const contactsMap = contacts.reduce((acc, contact) => {
+//     acc[contact.contact_type] = contact;
+//     return acc;
+//   }, {});
+
+//   console.log('Customer Contacts:', contactsMap);
+
+//   return {
+//     ...customer,
+//     // Contact details - each contact type is a separate row in DB
+//     primaryContactName: contactsMap.primary?.name || '',
+//     primaryContactDesignation: contactsMap.primary?.designation || '',
+//     primaryContactEmail: contactsMap.primary?.email || '',
+//     primaryContactMobile: contactsMap.primary?.phone || '',
+    
+//     businessHeadName: contactsMap.business?.name || '',
+//     businessHeadDesignation: contactsMap.business?.designation || '',
+//     businessHeadEmail: contactsMap.business?.email || '',
+//     businessHeadMobile: contactsMap.business?.phone || '',
+    
+//     financeHeadName: contactsMap.finance?.name || '',
+//     financeHeadDesignation: contactsMap.finance?.designation || '',
+//     financeHeadEmail: contactsMap.finance?.email || '',
+//     financeHeadMobile: contactsMap.finance?.phone || '',
+    
+//     purchasingHeadName: contactsMap.purchasing?.name || '',
+//     purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+//     purchasingHeadEmail: contactsMap.purchasing?.email || '',
+//     purchasingHeadMobile: contactsMap.purchasing?.phone || '',
+//   };
+// }
+// Modified transform function
+function transformCustomerData(customer, customerContacts) {
+  // Ensure contacts is always an array
+  console.log('customerContacts', customerContacts);
+  const contacts = Array.isArray(customerContacts) 
+    ? customerContacts 
+    : customerContacts ? [customerContacts] : [];
+
+  // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+  const contactsMap = contacts.reduce((acc, contact) => {
+    acc[contact.contactType] = contact;
+    return acc;
+  }, {});
+
+  console.log('Customer Contacts Map:', contactsMap);
+
+  return {
+    ...customer,
+    // Contact details - each contact type is a separate row in DB
+    primaryContactName: contactsMap.primary?.name || '',
+    primaryContactDesignation: contactsMap.primary?.designation || '',
+    primaryContactEmail: contactsMap.primary?.email || '',
+    primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
+    
+    businessHeadName: contactsMap.business?.name || '',
+    businessHeadDesignation: contactsMap.business?.designation || '',
+    businessHeadEmail: contactsMap.business?.email || '',
+    businessHeadMobile: contactsMap.business?.mobile || '',
+    
+    financeHeadName: contactsMap.finance?.name || '',
+    financeHeadDesignation: contactsMap.finance?.designation || '',
+    financeHeadEmail: contactsMap.finance?.email || '',
+    financeHeadMobile: contactsMap.finance?.mobile || '',
+    
+    purchasingHeadName: contactsMap.purchasing?.name || '',
+    purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+    purchasingHeadEmail: contactsMap.purchasing?.email || '',
+    purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
+
+    // Adding operations contact if needed
+    operationsHeadName: contactsMap.operations?.name || '',
+    operationsHeadDesignation: contactsMap.operations?.designation || '',
+    operationsHeadEmail: contactsMap.operations?.email || '',
+    operationsHeadMobile: contactsMap.operations?.mobile || '',
+  };
+}
+  const fetchCustomerContacts = async (customerId, customer) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:3000/api/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      console.log('API Response:', result);
+      if (result.status === 'Ok') {
+        setCustomerContacts(result.data);
+        const transformedCustomer = transformCustomerData(customer, result.data);
+  console.log('Transformed Customer:', transformedCustomer);
+   navigate(`/customersDetails`, { state: { transformedCustomer } });
+
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customer contacts');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching customer contacts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+//   function transformCustomerData(customer, customerContacts) {
+//   const contacts = Array.isArray(customerContacts) 
+//     ? customerContacts 
+//     : customerContacts ? [customerContacts] : [];
+//   console.log('Customer Contacts:', contacts);
+//   return {
+//     ...customer,
+//     // Contact details
+//     primaryContactName: contacts.find(c => c.contact_type === 'primary')?.name || '',
+//     primaryContactDesignation: contacts.find(c => c.contact_type === 'primary')?.designation || '',
+//     primaryContactEmail: contacts.find(c => c.contact_type === 'primary')?.email || '',
+//     primaryContactMobile: contacts.find(c => c.contact_type === 'primary')?.phone || '',
+    
+//     businessHeadName: contacts.find(c => c.contact_type === 'business')?.name || '',
+//     businessHeadDesignation: contacts.find(c => c.contact_type === 'business')?.designation || '',
+//     businessHeadEmail: contacts.find(c => c.contact_type === 'business')?.email || '',
+//     businessHeadMobile: contacts.find(c => c.contact_type === 'business')?.phone || '',
+    
+//     financeHeadName: contacts.find(c => c.contact_type === 'finance')?.name || '',
+//     financeHeadDesignation: contacts.find(c => c.contact_type === 'finance')?.designation || '',
+//     financeHeadEmail: contacts.find(c => c.contact_type === 'finance')?.email || '',
+//     financeHeadMobile: contacts.find(c => c.contact_type === 'finance')?.phone || '',
+    
+//     purchasingHeadName: contacts.find(c => c.contact_type === 'purchasing')?.name || '',
+//     purchasingHeadDesignation: contacts.find(c => c.contact_type === 'purchasing')?.designation || '',
+//     purchasingHeadEmail: contacts.find(c => c.contact_type === 'purchasing')?.email || '',
+//     purchasingHeadMobile: contacts.find(c => c.contact_type === 'purchasing')?.phone || '',
+//   };
+// }
+
+
+  useEffect(() => {
+    if (activeTab === 'customers') {
+      fetchCustomers();
+    }
+    if (activeTab === 'invites') {
+      fetchInvites();
+    }
+    
+  }, [activeTab]);
+
+const handleRowClick = (customer) => {
+   fetchCustomerContacts(customer.id, customer);
+  // console.log('Customer ID:', customer.id);
+  // console.log('Customer Contacts:', customerContacts);
+  // const transformedCustomer = transformCustomerData(customer, customerContacts);
+  // console.log('Transformed Customer:', transformedCustomer);
+  //  navigate(`/customersDetails`, { state: { transformedCustomer } });
+};
 
   const customCellRenderer = {
     primaryContact: (item) => (
       <div className="contact-info">
-        <div>{item.primaryContact.name}</div>
-        <div className="email">{item.primaryContact.email}</div>
+        <div>{item.primaryContactName}</div>
+        <div className="email">{item.primaryContactEmail}</div>
       </div>
     )
   };
@@ -209,6 +457,7 @@ function Customers() {
             data={filteredCustomers}
             getStatusClass={getStatusClass}
             customCellRenderer={customCellRenderer}
+            onRowClick={handleRowClick}
           />
         );
       case t('invites'):

@@ -31,10 +31,11 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
+        <Route path="/employeeLogin" element={<LoginScreen />} />
         <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
+        <Route path="/customersOnboarding/:id" element={<CustomersOnboarding />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/employee-login" element={<EmployeeLogin />} />
+        <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/orderDetails" element={<OrderDetails />} />
         <Route path="/supportDetails" element={<SupportDetails />} />
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
