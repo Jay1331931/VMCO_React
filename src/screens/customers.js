@@ -4,6 +4,7 @@ import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import ActionButton from '../components/ActionButton';
 import SearchInput from '../components/SearchInput';
+import Pagination from '../components/Pagination';
 import Table from '../components/Table';
 import Tabs from '../components/Tabs';
 
@@ -85,6 +86,9 @@ function Customers() {
   const [activeTab, setActiveTab] = useState('customers');
   const [filteredCustomers, setFilteredCustomers] = useState(customers);
   const [filteredInvites, setFilteredInvites] = useState(invites);
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
 
   const customerTabs = [
     { value: 'customers', label: 'Customers' },
@@ -206,7 +210,7 @@ function Customers() {
         return (
           <Table 
             columns={customerColumns}
-            data={filteredCustomers}
+            data={paginatedCustomers}
             getStatusClass={getStatusClass}
             customCellRenderer={customCellRenderer}
           />
@@ -224,6 +228,8 @@ function Customers() {
         return null;
     }
   };
+// Paginate the filtered orders
+  const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <Sidebar title={t('Customers')}>
@@ -253,6 +259,11 @@ function Customers() {
           </div>
           {renderContent()}
         </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </div>
     </Sidebar>
   );

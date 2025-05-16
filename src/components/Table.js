@@ -1,21 +1,22 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-
-const Table = ({ 
-    columns, 
-    data, 
-    getStatusClass, 
+ 
+const Table = ({
+    columns,
+    data,
+    getStatusClass,
     actionButtons,
-    customCellRenderer 
+    customCellRenderer,
+    onRowClick
 }) => {
     const { t } = useTranslation();
-
+ 
     const renderCell = (item, column) => {
         // If there's a custom renderer for this column, use it
         if (customCellRenderer && customCellRenderer[column.key]) {
             return customCellRenderer[column.key](item);
         }
-
+ 
         // Handle nested objects (e.g., primaryContact.email)
         if (column.key.includes('.')) {
             const keys = column.key.split('.');
@@ -25,7 +26,7 @@ const Table = ({
             }
             return value;
         }
-
+ 
         // Handle status badges
         if (column.key === 'status' && getStatusClass) {
             return (
@@ -34,32 +35,36 @@ const Table = ({
                 </span>
             );
         }
-
+ 
         // Handle action buttons
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
-
+ 
         // Default cell rendering
         return item[column.key];
     };
-
+ 
     return (
         <div className="table-container">
             <table className="data-table">
                 <thead>
                     <tr>
                         {columns.map((column) => (
-                            <th key={column.key} scope="col">{t(column.header)}</th>
+                            <th key={column.key}>{column.header}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((item, index) => (
-                        <tr key={item.id || index}>
+                    {data.map((row, index) => (
+                        <tr
+                            key={index}
+                            onClick={() => onRowClick && onRowClick(row)}
+                            style={{ cursor: onRowClick ? 'pointer' : 'default' }}
+                        >
                             {columns.map((column) => (
-                                <td key={`${item.id || index}-${column.key}`}>
-                                    {renderCell(item, column)}
+                                <td key={`${row.id || index}-${column.key}`}>
+                                    {renderCell(row, column)}
                                 </td>
                             ))}
                         </tr>
