@@ -8,7 +8,8 @@ import Pagination from '../components/Pagination';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { NullType } from 'maplibre-gl';
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
   switch (status) {
@@ -53,11 +54,17 @@ function Orders() {
         filters: '{}'
       });
 
-      const response = await fetch(`http://localhost:3000/api/sales-order/pagination?${params.toString()}`, {
+      const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API did not return JSON. Check API URL and server.');
+      }
+      
       const result = await response.json();
       if (result.status === 'Ok') {
         setFilteredOrders(result.data.data);
@@ -83,9 +90,33 @@ function Orders() {
     setPage(1);
   };
 
-  const handleAddOrder = () => {
-    navigate('/orderDetails', { state: { order: {} } });
-    // Add your logic to handle adding an order here
+  const handleAddOrder = async () => {
+    setLoading(true);
+    try {
+      // Fetch latest order to determine next order number
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 1,
+        sortBy: 'id',
+        sortOrder: 'desc'
+      });
+      const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      let nextOrderId = 1;
+      if (result.status === 'Ok' && result.data.data.length > 0) {
+        nextOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
+      }
+      // Navigate to orderDetails with addMode flag and nextOrderId
+      navigate('/orderDetails', { state: { order: { id: nextOrderId }, addMode: true } });
+    } catch (err) {
+      setError('Failed to get next order number');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRowClick = (order) => {
@@ -107,7 +138,7 @@ function Orders() {
   ];
 
   const columns = [
-    { key: 'erpOrderId', header: 'Order #' },
+    { key: 'id', header: 'Order #' },
     { key: 'erpCustId', header: 'Customer' },
     { key: 'erpBranchId', header: 'Branch' },
     { key: 'entity', header: 'Entity' },

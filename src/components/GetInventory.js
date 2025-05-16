@@ -16,7 +16,6 @@ function GetInventory({ open, onClose }) {
       <div className="gi-modal">
         <div className="gi-header">
           <span className="gi-title">Get Inventory</span>
-          <button className="gi-close" onClick={onClose}>&times;</button>
         </div>
         <div className="gi-table-container">
           <table className="gi-table">
@@ -79,13 +78,6 @@ function GetInventory({ open, onClose }) {
         .gi-title {
           font-size: 1.25rem;
           font-weight: light;
-        }
-        .gi-close {
-          background: none;
-          border: none;
-          font-size: 1.5rem;
-          cursor: pointer;
-          color: #888;
         }
         .gi-table-container {
           margin: 10px 28px;

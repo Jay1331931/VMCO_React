@@ -151,7 +151,7 @@ function Catalog() {
             }));
             setDisplayedProducts(prev => [...prev, ...newProducts]);
             setIsLoading(false);
-        }, 1000);
+        }, 2000);
     }, [currentPage, productsPerPage]);
 
     useEffect(() => {

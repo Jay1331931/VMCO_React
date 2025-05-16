@@ -53,6 +53,35 @@ function MaintenanceDetails() {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
+
+ // State for video popup
+  const [popupVideo, setPopupVideo] = useState(null);
+
+  // Videos state (allow dynamic add)
+  const [videos, setVideos] = useState([]);
+
+  // File input ref for videos
+  const videoInputRef = useRef(null);
+
+  // Handle video add
+  const handleAddVideo = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setVideos((prev) => [...prev, ev.target.result]);
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset input so same file can be selected again if needed
+    e.target.value = '';
+  };
+
+  // Open file dialog for videos
+  const openVideoDialog = () => {
+    if (videoInputRef.current) videoInputRef.current.click();
+  };
+
   return (
     <Sidebar title={`Ticket#${ticket.id}`}>
       <div className="maintenance-details-container">
@@ -90,11 +119,24 @@ function MaintenanceDetails() {
               <label>Created Date</label>
               <input value={ticket.createdDate} disabled />
             </div>
+            <div className="maintenance-details-field">
+              <label>Machine Serial Number</label>
+              <input value={ticket.serialNumber} disabled />
+            </div>
+            <div className="maintenance-details-field">
+              <label>Warranty Date</label>
+              <input value={ticket.warrantyDate} disabled />
+            </div>
+            <div className="maintenance-details-field">
+              <label>Maitenance Charges</label>
+              <input value={ticket.maintenanceCharge} disabled />
+            </div>
           </div>
           <div className="maintenance-details-field maintenance-details-textarea">
             <label>Issue Details</label>
             <textarea value={ticket.details} disabled />
           </div>
+          <div className='attachments'>
           <div className="maintenance-details-images">
             <label>Images</label>
             <div className="maintenance-images-list">
@@ -102,10 +144,11 @@ function MaintenanceDetails() {
                 <div
                   key={idx}
                   className="maintenance-image-placeholder"
-                  style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
                   onClick={() => img && setPopupImage(img)}
                   title={img ? 'Click to view' : ''}
-                />
+                >
+                  <image width="100" height="100" style={{ objectFit: 'cover' }} src={img} />
+                </div>
               ))}
               {/* Add Image Button */}
               <button
@@ -124,6 +167,38 @@ function MaintenanceDetails() {
                 onChange={handleAddImage}
               />
             </div>
+          </div>
+          <div className="maintenance-details-videos">
+            <label>Videos</label>
+            <div className="maintenance-videos-list">
+              {videos.map((vid, idx) => (
+                <div
+                  key={idx}
+                  className="maintenance-video-placeholder"
+                  onClick={() => vid && setPopupVideo(vid)}
+                  title={vid ? 'Click to view' : ''}
+                >
+                  <video width="100" height="100" style={{ objectFit: 'cover' }} src={vid} />
+                </div>
+              ))}
+              {/* Add Video Button */}
+              <button
+                type="button"
+                className="maintenance-add-image-btn"
+                onClick={openVideoDialog}
+                title="Add Video"
+              >
+                +
+              </button>
+              <input
+                type="file"
+                accept="video/*"
+                ref={videoInputRef}
+                style={{ display: 'none' }}
+                onChange={handleAddVideo}
+              />
+            </div>
+          </div>
           </div>
         </div>
       </div>
