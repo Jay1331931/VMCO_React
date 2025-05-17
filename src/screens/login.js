@@ -1,5 +1,4 @@
 import Login from '../components/Login';
-import Sidebar from '../components/Sidebar';
 import { useTranslation } from 'react-i18next';
 import { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

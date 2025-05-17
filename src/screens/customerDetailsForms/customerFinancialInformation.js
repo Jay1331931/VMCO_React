@@ -14,8 +14,12 @@ export function getFinancialInformationForm(t) {
       { type: 'empty' },
       { type: 'checkbox', name: 'paymentMethodCOD', label: '', options: [t('Cash on Delivery (COD)')] },
       { type: 'text', name: 'cod', label: '', placeholder: t('Enter COD value') },
+      { type: 'empty' },
+      { type: 'text', name: 'codLimit', label: '', placeholder: t('Enter COD limit') },
       { type: 'checkbox', name: 'paymentMethodCredit', label: '', options: [t('Credit')] },
       { type: 'text', name: 'creditLimit', label: '', placeholder: t('Enter credit limit') },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriod', label: '', placeholder: t('Enter credit period') },
     ],
   };
 }

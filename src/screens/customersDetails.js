@@ -157,6 +157,9 @@ function CustomersDetails() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const location = useLocation();
   const customer = location.state?.transformedCustomer;
+
+  const [branchesData, setBranchesData] = useState([]);
+  const [branchChanges, setBranchChanges] = useState({});
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
@@ -340,7 +343,7 @@ function CustomersDetails() {
   //   // Prepare the update payload with only changed fields
   //   const payload = {};
   //   const customerData = customer || {}; // Fallback to empty object if customer is null
-    
+
   //   // Compare each changed field with original customer data
   //   changedFields.forEach(fieldName => {
   //     // Skip 'id' field and fields that haven't actually changed
@@ -387,13 +390,13 @@ function CustomersDetails() {
   //     });
 
   //     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
-      
+
   //   } catch (error) {
   //     console.error('Update error:', error);
   //     setFormErrors('Unable to connect to server');
   //   }
   // };
-const handleSave = async (action) => {
+  const handleSave = async (action) => {
     // Additional validation for contact details
     if (activeTab === 'Contact Details') {
       if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
@@ -430,10 +433,10 @@ const handleSave = async (action) => {
 
     changedFields.forEach(fieldName => {
       if (fieldName === 'id') return;
-      
+
       const newValue = formData[fieldName];
       const oldValue = customerData[fieldName];
-      
+
       if (newValue !== oldValue) {
         if (contactDetailFields.includes(fieldName)) {
           // Determine if this is a create or update operation
@@ -449,9 +452,9 @@ const handleSave = async (action) => {
     });
 
     // Early return if no changes
-    if (Object.keys(customerPayload).length === 0 && 
-        Object.keys(contactCreatePayload).length === 0 && 
-        Object.keys(contactUpdatePayload).length === 0) {
+    if (Object.keys(customerPayload).length === 0 &&
+      Object.keys(contactCreatePayload).length === 0 &&
+      Object.keys(contactUpdatePayload).length === 0) {
       alert(t('No changes detected to save'));
       return;
     }
@@ -467,48 +470,60 @@ const handleSave = async (action) => {
         });
       }
 
-    //   // 2. Create new contact details if needed
-    //   if (Object.keys(contactCreatePayload).length > 0) {
-    //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify(contactCreatePayload),
-    //       credentials: 'include',
-    //     });
-    //   }
+      //   // 2. Create new contact details if needed
+      //   if (Object.keys(contactCreatePayload).length > 0) {
+      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
+      //       method: 'POST',
+      //       headers: { 'Content-Type': 'application/json' },
+      //       body: JSON.stringify(contactCreatePayload),
+      //       credentials: 'include',
+      //     });
+      //   }
 
-    //   // 3. Update existing contact details if needed
-    //   if (Object.keys(contactUpdatePayload).length > 0) {
-    //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify(contactUpdatePayload),
-    //       credentials: 'include',
-    //     });
-    //   }
+      //   // 3. Update existing contact details if needed
+      //   if (Object.keys(contactUpdatePayload).length > 0) {
+      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
+      //       method: 'POST',
+      //       headers: { 'Content-Type': 'application/json' },
+      //       body: JSON.stringify(contactUpdatePayload),
+      //       credentials: 'include',
+      //     });
+      //   }
 
-    //   // Update UI state
-    //   setSavedData(prev => ({
-    //     ...prev,
-    //     [activeTab]: {
-    //       ...prev[activeTab],
-    //       ...customerPayload,
-    //       ...contactCreatePayload,
-    //       ...contactUpdatePayload
-    //     }
-    //   }));
+      //   // Update UI state
+      //   setSavedData(prev => ({
+      //     ...prev,
+      //     [activeTab]: {
+      //       ...prev[activeTab],
+      //       ...customerPayload,
+      //       ...contactCreatePayload,
+      //       ...contactUpdatePayload
+      //     }
+      //   }));
 
-    //   // Clear changed fields
-    //   setChangedFields(prev => {
-    //     const newSet = new Set(prev);
-    //     [
-    //       ...Object.keys(customerPayload),
-    //       ...Object.keys(contactCreatePayload),
-    //       ...Object.keys(contactUpdatePayload)
-    //     ].forEach(field => newSet.delete(field));
-    //     return newSet;
-    //   });
-
+      //   // Clear changed fields
+      //   setChangedFields(prev => {
+      //     const newSet = new Set(prev);
+      //     [
+      //       ...Object.keys(customerPayload),
+      //       ...Object.keys(contactCreatePayload),
+      //       ...Object.keys(contactUpdatePayload)
+      //     ].forEach(field => newSet.delete(field));
+      //     return newSet;
+      //   });
+      if (Object.keys(branchChanges).length > 0) {
+        await Promise.all(
+          Object.entries(branchChanges).map(async ([branchId, changes]) => {
+            const response = await fetch(`http://localhost:3000/api/customer-branches/${branchId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(changes),
+              credentials: 'include',
+            });
+            return response.json();
+          })
+        );
+      }
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
     } catch (error) {
@@ -715,9 +730,15 @@ const handleSave = async (action) => {
 
 
               {activeTab === 'Products & MoQ' ? (
-                <CustomerProducts />
+                <CustomerProducts customer={customer}/>
               ) : activeTab === 'Branches' ? (
-                <CustomerBranches customer={customer} setTabsHeight={setTabsHeight} />
+                <CustomerBranches
+                  customer={customer}
+                  setTabsHeight={setTabsHeight}
+                  branches={branchesData}
+                  onBranchesChange={setBranchesData}
+                  onBranchChanges={setBranchChanges}
+                />
 
               ) : (
                 <div className="customer-onboarding-form-grid" ref={contentRef}>
@@ -985,12 +1006,15 @@ const handleSave = async (action) => {
                           </div>
                         );
                       case 'checkbox':
-                        return (
-                          <div className="form-group" key={field.name}>
+                        return (<>
+                          <div className='form-header'>
                             <span className="checkbox-group-label">
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
                             </span>
+                          </div>
+                          <div className="form-group" key={field.name}>
+
                             {field.options.map((option, idx) => (
                               <div key={idx} className="checkbox-option">
                                 <label htmlFor={`${field.name}-${idx}`}>
@@ -1007,7 +1031,7 @@ const handleSave = async (action) => {
                               </div>
                             ))}
                           </div>
-                        );
+                        </>);
                       case 'empty':
                         return <div key={field.name}></div>;
                       case 'header':
