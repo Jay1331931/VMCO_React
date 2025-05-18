@@ -10,7 +10,7 @@ import { getContactDetailsForm } from './customerDetailsForms/customerContactDet
 import { getFinancialInformationForm } from './customerDetailsForms/customerFinancialInformation';
 import { getDocumentsForm } from './customerDetailsForms/customerDocuments';
 import CustomerProducts from './customerDetailsForms/customerProducts';
-import CustomerBranches from './customerDetailsForms/customerBranches';
+import CustomerBranches from './customerDetailsForms/customerBranches2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import maplibregl from 'maplibre-gl';
@@ -156,8 +156,8 @@ function CustomersDetails() {
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const location = useLocation();
-  const customer = location.state?.transformedCustomer;
-
+  const transformedCustomer = location.state?.transformedCustomer;
+  const [customer, setCustomer] = useState(transformedCustomer);
   const [branchesData, setBranchesData] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const { t, i18n } = useTranslation();
@@ -318,85 +318,70 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
+function transformCustomerData(customer, customerContacts) {
+  // Ensure contacts is always an array
+  console.log('customerContacts', customerContacts);
+  const contacts = Array.isArray(customerContacts) 
+    ? customerContacts 
+    : customerContacts ? [customerContacts] : [];
 
-  // const handleSave = async (action) => {
-  //   // Additional validation for contact details
-  //   if (activeTab === 'Contact Details') {
-  //     if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
-  //       formData.financeHeadEmail === formData.purchasingHeadEmail) {
-  //       alert(t('Finance and Purchasing heads must have unique emails'));
-  //       return;
-  //     }
+  // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+  const contactsMap = contacts.reduce((acc, contact) => {
+    acc[contact.contactType] = contact;
+    return acc;
+  }, {});
 
-  //     if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
-  //       (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
-  //       alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
-  //       return;
-  //     }
-  //   }
+  console.log('Customer Contacts Map:', contactsMap);
 
-  //   if (!validateChangedFields(false)) {
-  //     alert(t('Please correct errors before submitting.'));
-  //     return;
-  //   }
+  return {
+    ...customer,
+    // Contact details - each contact type is a separate row in DB
+    primaryContactName: contactsMap.primary?.name || '',
+    primaryContactDesignation: contactsMap.primary?.designation || '',
+    primaryContactEmail: contactsMap.primary?.email || '',
+    primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
+    
+    businessHeadName: contactsMap.business?.name || '',
+    businessHeadDesignation: contactsMap.business?.designation || '',
+    businessHeadEmail: contactsMap.business?.email || '',
+    businessHeadMobile: contactsMap.business?.mobile || '',
+    
+    financeHeadName: contactsMap.finance?.name || '',
+    financeHeadDesignation: contactsMap.finance?.designation || '',
+    financeHeadEmail: contactsMap.finance?.email || '',
+    financeHeadMobile: contactsMap.finance?.mobile || '',
+    
+    purchasingHeadName: contactsMap.purchasing?.name || '',
+    purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+    purchasingHeadEmail: contactsMap.purchasing?.email || '',
+    purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
 
-  //   // Prepare the update payload with only changed fields
-  //   const payload = {};
-  //   const customerData = customer || {}; // Fallback to empty object if customer is null
-
-  //   // Compare each changed field with original customer data
-  //   changedFields.forEach(fieldName => {
-  //     // Skip 'id' field and fields that haven't actually changed
-  //     if (fieldName !== 'id' && formData[fieldName] !== customerData[fieldName]) {
-  //       payload[fieldName] = formData[fieldName];
-  //     }
-  //   });
-
-  //   // If no actual changes, show message and return
-  //   if (Object.keys(payload).length === 0) {
-  //     alert(t('No changes detected to save'));
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify(payload),
-  //       credentials: 'include',
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (!res.ok) {
-  //       setFormErrors(data.message || 'Update failed');
-  //       return;
-  //     }
-
-  //     // Update saved data with the successfully saved fields
-  //     setSavedData(prev => ({
-  //       ...prev,
-  //       [activeTab]: {
-  //         ...prev[activeTab],
-  //         ...payload
-  //       }
-  //     }));
-
-  //     // Clear changed fields for successfully saved data
-  //     setChangedFields(prev => {
-  //       const newSet = new Set(prev);
-  //       Object.keys(payload).forEach(field => newSet.delete(field));
-  //       return newSet;
-  //     });
-
-  //     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
-
-  //   } catch (error) {
-  //     console.error('Update error:', error);
-  //     setFormErrors('Unable to connect to server');
-  //   }
-  // };
-  const handleSave = async (action) => {
+    // Adding operations contact if needed
+    operationsHeadName: contactsMap.operations?.name || '',
+    operationsHeadDesignation: contactsMap.operations?.designation || '',
+    operationsHeadEmail: contactsMap.operations?.email || '',
+    operationsHeadMobile: contactsMap.operations?.mobile || '',
+  };
+}
+  const fetchCustomerContacts = async (customerId, customer) => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      console.log('API Response:', result);
+      if (result.status === 'Ok') {
+setCustomer(transformCustomerData(customer, result.data));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customer contacts');
+      }
+    } catch (err) {
+      console.error('Error fetching customer contacts:', err);
+    }
+  };
+const handleSave = async (action) => {
     // Additional validation for contact details
     if (activeTab === 'Contact Details') {
       if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
@@ -454,7 +439,8 @@ function CustomersDetails() {
     // Early return if no changes
     if (Object.keys(customerPayload).length === 0 &&
       Object.keys(contactCreatePayload).length === 0 &&
-      Object.keys(contactUpdatePayload).length === 0) {
+      Object.keys(contactUpdatePayload).length === 0 &&
+      uploadedFiles.length === 0) {
       alert(t('No changes detected to save'));
       return;
     }
@@ -480,15 +466,15 @@ function CustomersDetails() {
       //     });
       //   }
 
-      //   // 3. Update existing contact details if needed
-      //   if (Object.keys(contactUpdatePayload).length > 0) {
-      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify(contactUpdatePayload),
-      //       credentials: 'include',
-      //     });
-      //   }
+      // 3. Update existing contact details if needed
+      if (Object.keys(contactUpdatePayload).length > 0) {
+        await fetch(`http://localhost:3000/api/customer-contacts/${customer.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(contactUpdatePayload),
+          credentials: 'include',
+        });
+      }
 
       //   // Update UI state
       //   setSavedData(prev => ({
@@ -524,11 +510,26 @@ function CustomersDetails() {
           })
         );
       }
+      handleSaveFiles();
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
     } catch (error) {
       console.error('Update error:', error);
       setFormErrors(error.message || 'Unable to connect to server');
+    }
+
+    try {
+
+    const response = await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+const result = await response.json();
+      setCustomer(result.data)
+      fetchCustomerContacts(customer.id, customer)
+    } catch (err) {
+      console.error('Error fetching customer:', err);
     }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
@@ -546,65 +547,123 @@ function CustomersDetails() {
     console.log('Uploaded files:', uploadedFiles);
   };
 
+  const [pendingFileUploads, setPendingFileUploads] = useState({});
 
-  const handleFileUpload = (e, fieldName) => {
+  const handleFileUpload = async (e, fieldName) => {
     const files = Array.from(e.target.files);
 
     if (files.length > 0) {
-      if (fieldName === 'nonTradingDocuments') {
-        // For multi-document upload
-        const newFiles = files.map(file => ({
-          id: Date.now() + Math.random().toString(36).substr(2, 9),
-          name: file.name,
-          file: file,
-          url: URL.createObjectURL(file)
-        }));
+      try {
+        if (fieldName === 'nonTradingDocuments') {
+          // For multi-document upload
+          const newFiles = files.map(file => ({
+            id: Date.now() + Math.random().toString(36).substr(2, 9),
+            name: file.name,
+            file: file,
+            url: URL.createObjectURL(file),
+            isNew: true // Mark as new file
+          }));
+
+          setUploadedFiles(prev => ({
+            ...prev,
+            [fieldName]: [...(prev[fieldName] || []), ...newFiles]
+          }));
 
 
+          // Store pending uploads separately
+          setPendingFileUploads(prev => ({
+            ...prev,
+            [fieldName]: [...(prev[fieldName] || []), ...newFiles]
+          }));
 
-        setUploadedFiles(prev => ({
-          ...prev,
-          [fieldName]: [...(prev[fieldName] || []), ...newFiles]
-        }));
+        } else {
+          // Single file upload
+          const file = files[0];
+          const fileData = {
+            name: file.name,
+            file: file,
+            url: URL.createObjectURL(file),
+            isNew: true // Mark as new file
+          };
 
+          // Update preview state
+          setUploadedFiles(prev => ({
+            ...prev,
+            [fieldName]: fileData
+          }));
+          setFormData(prev => ({
+            ...prev,
+            [fieldName]: { name: fileData.name }
+          }));
 
-
-        setFormData(prev => ({
-          ...prev,
-          [fieldName]: [
-            ...(prev[fieldName] || []),
-            ...newFiles.map(file => file.url)
-          ]
-        }));
-      } else {
-        // Single file upload
-        const file = files[0];
-        const fileData = {
-          name: file.name,
-          file: file,
-          url: URL.createObjectURL(file)
-        };
-
-
-
-        setUploadedFiles(prev => ({
-          ...prev,
-          [fieldName]: fileData
-        }));
-
-
-
-        setFormData(prev => ({
-          ...prev,
-          [fieldName]: fileData.name
-        }));
+          // Store pending upload
+          setPendingFileUploads(prev => ({
+            ...prev,
+            [fieldName]: fileData
+          }));
+        }
+      } catch (error) {
+        console.error('Error handling file:', error);
+        alert(`Error handling file: ${error.message}`);
       }
     }
-    console.log('Uploaded files:', uploadedFiles);
-    console.log('Form data:', formData);
   };
 
+  const handleSaveFiles = async () => {
+    try {
+      const uploadPromises = [];
+      console.log(pendingFileUploads)
+      // Process single file uploads
+      Object.entries(pendingFileUploads).forEach(([fieldName, fileData]) => {
+        if (fieldName !== 'nonTradingDocuments' && fileData?.isNew) {
+          const formData = new FormData();
+          formData.append('file', fileData.file);
+          formData.append('fileType', fieldName);
 
+
+          fetch(`http://localhost:3000/api/customers/file/${customer.id}`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }
+          );
+        }
+      });
+
+      // Process multiple documents if needed
+      if (pendingFileUploads.nonTradingDocuments) {
+        pendingFileUploads.nonTradingDocuments.forEach(fileData => {
+          if (fileData.isNew) {
+            const formData = new FormData();
+            formData.append('file', fileData.file);
+            formData.append('fileType', 'nonTradingDocuments');
+
+            uploadPromises.push(
+              fetch(`http://localhost:3000/api/customers/file/${customer.id}`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+              })
+            );
+          }
+        });
+      }
+
+      // Execute all uploads
+      const results = await Promise.all(uploadPromises);
+      const allSuccessful = results.every(res => res.ok);
+
+      if (allSuccessful) {
+        // alert('All files saved successfully!');
+        setPendingFileUploads({}); // Clear pending uploads
+      } else {
+        throw new Error('Some files failed to upload');
+      }
+    } catch (error) {
+      console.error('Error saving files:', error);
+      alert(`Error saving files: ${error.message}`);
+    }
+  };
 
   const handleFileDelete = (fieldName, fileId = null) => {
     if (fieldName === 'nonTradingDocuments' && fileId) {
@@ -730,7 +789,7 @@ function CustomersDetails() {
 
 
               {activeTab === 'Products & MoQ' ? (
-                <CustomerProducts customer={customer}/>
+                <CustomerProducts customer={customer} />
               ) : activeTab === 'Branches' ? (
                 <CustomerBranches
                   customer={customer}
@@ -929,26 +988,70 @@ function CustomersDetails() {
                               <label htmlFor={`file-${field.name}`} className="custom-file-button">
                                 {t('Upload')}
                               </label>
-                              {uploadedFiles[field.name] && (
+                             {uploadedFiles[field.name] && (
                                 <div className="file-display">
-                                  <span className="file-name">
-                                    <button
-                                      type="button"
-                                      className="file-link-button"
-                                      onClick={() => window.open(uploadedFiles[field.name].url, '_blank')}
-                                      title={uploadedFiles[field.name].name || formData[field.name]}
-                                    >
-                                      {uploadedFiles[field.name].name || formData[field.name]}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="delete-file-button"
-                                      onClick={() => handleFileDelete(field.name)}
-                                    >
-                                      <FontAwesomeIcon icon={faXmark} />
-                                    </button>
-                                  </span>
-
+                                  {Array.isArray(uploadedFiles[field.name]) ? (
+                                    uploadedFiles[field.name].map((fileObj, index) => (
+                                      <div key={fileObj.id || index} className="file-item">
+                                        {fileObj.isNew ? (
+                                          <>
+                                            <span className="file-name">
+                                              {fileObj.name}
+                                              <button
+                                                type="button"
+                                                className="delete-file-button"
+                                                onClick={() => handleFileDelete(field.name, fileObj.id)}
+                                              >
+                                                <FontAwesomeIcon icon={faXmark} />
+                                              </button>
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span className='file-name'>
+                                              {fileObj.name}
+                                              <button
+                                                type="button"
+                                                className="view-file-button"
+                                                onClick={() => window.open(fileObj.url || '#', '_blank')}
+                                              >
+                                                View
+                                              </button>
+                                            </span>
+                                          </>
+                                        )}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="file-item">
+                                      {uploadedFiles[field.name].isNew ? (
+                                        <>
+                                          <span className="file-name">
+                                            {uploadedFiles[field.name].name}
+                                            <button
+                                              type="button"
+                                              className="delete-file-button"
+                                              onClick={() => handleFileDelete(field.name)}
+                                            >
+                                              <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="file-name">
+                                            <button
+                                              type="button"
+                                              className="custom-file-button"
+                                              onClick={() => window.open(uploadedFiles[field.name].url || '#', '_blank')}
+                                            >
+                                              View
+                                            </button>
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1066,28 +1169,39 @@ function CustomersDetails() {
           </div>
           {/* Action Buttons */}
           {activeTab === 'Products & MoQ' || activeTab === 'Branches' ?
-            (<div className="customer-onboarding-form-actions">
+          [
+            // (
+            // <div className="customer-onboarding-form-actions">
+            //   <div className="status-text">
+            //     <span className="status-label">{t('Status')}:</span>
+            //     <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+            //   </div>
+            //   <div className="action-buttons">
+            //     <button className="save" onClick={() => handleSave('save')}>
+            //       {t('Save Changes')}
+            //     </button>
+            //     <button className="block" onClick={() => handleSubmit('block')}>
+            //       {t('Block')}
+            //     </button>
+            //   </div>
+            // </div>
+            // ) 
+          ]:
+            (
+            <div className="customer-onboarding-form-actions">
               <div className="status-text">
                 <span className="status-label">{t('Status')}:</span>
                 <span className="status-badge">{t(formData.status) || t('Pending')}</span>
               </div>
               <div className="action-buttons">
                 <button className="save" onClick={() => handleSave('save')}>
-                  {t('Save Changes')}
+                  {t('Save')}
                 </button>
-                <button className="block" onClick={() => handleSubmit('block')}>
-                  {t('Block')}
-                </button>
-              </div>
-            </div>) :
-            (<div className="customer-onboarding-form-actions">
-              <div className="status-text">
-                <span className="status-label">{t('Status')}:</span>
-                <span className="status-badge">{t(formData.status) || t('Pending')}</span>
-              </div>
-              <div className="action-buttons">
                 <button className="save" onClick={() => handleSave('save')}>
                   {t('Save Changes')}
+                </button>
+                <button className="block" onClick={() => handleSubmit('submit')}>
+                  {t('Submit')}
                 </button>
                 <button className="block" onClick={() => handleSubmit('block')}>
                   {t('Block')}
@@ -1099,7 +1213,8 @@ function CustomersDetails() {
                   {t('Reject')}
                 </button>
               </div>
-            </div>)}
+            </div>
+          )}
         </div>
         <div>
           <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />

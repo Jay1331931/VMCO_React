@@ -121,6 +121,12 @@
     gap: 10px;
   }
 
+  .expanded-form-container-footer {
+    display: flex;
+    justify-content: right;
+    padding: 0px 20px;
+  }
+
   .customers .status-text {
     display: flex;
     align-items: center;
@@ -302,8 +308,11 @@
     margin-left: 350px;
   }
 
+  .customers .checkbox-group-label {
+    margin-top: 10px;
+  }
   .customers .checkbox-option {
-    margin-bottom: 8px;           
+            
     padding-left: 16px;           
   }
   
@@ -416,6 +425,22 @@
   position: absolute;
   right:60px;
 }
+
+.view-file-button {
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 0.9rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.view-file-button:hover {
+  background-color: #0056b3;
+}
+
 
 .file-name-tooltip {
   visibility: hidden;

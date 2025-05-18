@@ -39,7 +39,6 @@ export function getBusinessDetailsForm(t) {
 //   }
 // }
 export function getBusinessDetailsFormData(t, customer = null) {
-  console.log('customer', customer);
   if (customer) {
     // Return the customer data if provided
     return {
@@ -89,8 +88,9 @@ export function getBusinessDetailsFormData(t, customer = null) {
         ibanNumber: customer.iban || '',
       },
       'Documents' : {
-        commercialRegistration: {name: customer.crCertificate} || '',
+        crCertificate: {name: customer.crCertificate} || '',
         vatCertificate: {name: customer.vatCertificate} || '',
+        bankLetter: {name: customer.bankLetter} || '',
       }
     }
   

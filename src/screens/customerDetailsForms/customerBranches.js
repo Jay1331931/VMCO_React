@@ -168,7 +168,7 @@ const LocationPicker = ({ onLocationSelect }) => {
     );
 };
 
-function Branches({ customer, setTabsHeight, custbranches, onBranchesChange, onBranchChanges }) {
+function Branches({ customer, setTabsHeight}) {
     const location = useLocation();
     // const customer = location.state?.customer;
     const [branches, setBranches] = useState([]);
@@ -188,23 +188,96 @@ function Branches({ customer, setTabsHeight, custbranches, onBranchesChange, onB
     const currentItems = branches;
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const contentRef = useRef();
-    const [branchChanges, setBranchChanges] = useState({});
-    // Update the handleBranchFieldChange function
-    const handleBranchFieldChange = (branchId, fieldName, value) => {
-        setBranchChanges(prev => ({
-            ...prev,
-            [branchId]: {
-                ...prev[branchId],
-                [fieldName]: value
+    // const [branchChanges, setBranchChanges] = useState({});
+        function transformBranchData(branches, branchContacts) {
+        console.log('Branches:', branches);
+        console.log('Branch Contacts:', branchContacts);
+        const branchesArray = Array.isArray(branches) ? branches : [branches];
+        const contactsArray = Array.isArray(branchContacts) ? branchContacts : (branchContacts ? [branchContacts] : []);
+
+        return branchesArray.map(branch => {
+            // Filter contacts for this specific branch
+            const branchContacts = contactsArray.filter(contact => contact.branchId === branch.id);
+
+            // Create a map of contactType to contact data
+            const contactsMap = branchContacts.reduce((acc, contact) => {
+                acc[contact.contactType] = contact;
+                return acc;
+            }, {});
+
+            return {
+                ...branch,
+                // Primary contact information
+                primaryContactName: contactsMap.primary?.name || '',
+                primaryContactDesignation: contactsMap.primary?.designation || '',
+                primaryContactEmail: contactsMap.primary?.email || '',
+                primaryContactMobile: contactsMap.primary?.mobile || '',
+
+                // Secondary contact information
+                secondaryContactName: contactsMap.secondary?.name || '',
+                secondaryContactDesignation: contactsMap.secondary?.designation || '',
+                secondaryContactEmail: contactsMap.secondary?.email || '',
+                secondaryContactMobile: contactsMap.secondary?.mobile || '',
+
+                // Supervisor contact information
+                supervisorContactName: contactsMap.supervisor?.name || '',
+                supervisorContactDesignation: contactsMap.supervisor?.designation || '',
+                supervisorContactEmail: contactsMap.supervisor?.email || '',
+                supervisorContactMobile: contactsMap.supervisor?.mobile || '',
+
+                // Include all original contacts array for reference
+                allContacts: branchContacts
+            };
+        });
+    }
+    const fetchBranchContacts = async (branchId, branches) => {
+        setLoading(true);
+        setError(null);
+        const customerId = branches.find((branch) => branch.id === branchId)?.customerId;
+        console.log('Customer ID:', customerId);
+        try {
+            const response = await fetch(`http://localhost:3000/api/customer-contacts/branch/${branchId}/customer/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            const result = await response.json();
+            console.log('API Response:', result);
+            if (result.status === 'Ok') {
+                const transformedBranch = transformBranchData(branches, result.data);
+                console.log('Transformed Branch:', transformedBranch);
+                transformedBranch.filter((branch) => branch.id === branchId).forEach((branch) => {
+                    setTransformedBranches([branch]);
+                }
+
+                );
+                console.log('Transformed Branches:', transformedBranches);
+
+            } else {
+                throw new Error(response.data.message || 'Failed to fetch customer contacts');
             }
-        }));
-        console.log('Branch changes', branchChanges);
+        } catch (err) {
+            setError(err.message);
+            console.error('Error fetching customer contacts:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleBranchFieldChange = (branchId, fieldName, value) => {
+        // setBranchChanges(prev => ({
+        //     ...prev,
+        //     [branchId]: {
+        //         ...prev[branchId],
+        //         [fieldName]: value
+        //     }
+        // }));
+        // console.log('Branch changes', branchChanges);
         // Also update the local branches data for UI
-        onBranchesChange(prev =>
-            prev.map(branch =>
-                branch.id === branchId ? { ...branch, [fieldName]: value } : branch
-            )
-        );
+        // onBranchesChange(prev =>
+        //     prev.map(branch =>
+        //         branch.id === branchId ? { ...branch, [fieldName]: value } : branch
+        //     )
+        // );
     };
 
     // const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
@@ -824,40 +897,65 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
         );
     };
     // Pass changes back to parent when needed
-    useEffect(() => {
-        if (onBranchChanges && Object.keys(branchChanges).length > 0) {
-            onBranchChanges(branchChanges);
-        }
-    }, [branchChanges, onBranchChanges]);
+    // useEffect(() => {
+    //     if (onBranchChanges && Object.keys(branchChanges).length > 0) {
+    //         onBranchChanges(branchChanges);
+    //     }
+    // }, [branchChanges, onBranchChanges]);
 
-    useEffect(() => {
-        const fetchBranches = async () => {
-            try {
-                const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
-                    // const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch branches');
-                }
-                const data = await response.json();
-                setBranches(data);
-                onBranchesChange(data);
-                console.log('Branches:', data);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+    // useEffect(() => {
+    //     const fetchBranches = async () => {
+    //         try {
+    //             const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
+    //                 // const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
+    //                 method: 'GET',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 credentials: 'include'
+    //             });
+    //             if (!response.ok) {
+    //                 throw new Error('Failed to fetch branches');
+    //             }
+    //             const data = await response.json();
+    //             setBranches(data);
+    //             onBranchesChange(data);
+    //             console.log('Branches:', data);
+    //         } catch (err) {
+    //             setError(err.message);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
 
-        if (customer?.id) {
-            fetchBranches();
-        }
-    }, [customer]);
+    //     if (customer?.id) {
+    //         fetchBranches();
+    //     }
+    // }, [customer]);
+const fetchBranches = useCallback(async () => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    
+    if (!response.ok) throw new Error('Failed to fetch branches');
+    
+    const data = await response.json();
+    setBranches(data);
+    // onBranchesChange(data);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}, [customer.id]);
 
+// Fetch immediately
+useMemo(() => {
+  if (customer?.id) {
+    fetchBranches();
+  }
+}, [customer?.id, fetchBranches]);
     useEffect(() => {
         const baseRowHeight = 80;
         const collapsedExtraHeight = 40;
@@ -896,80 +994,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
 
 
 
-    function transformBranchData(branches, branchContacts) {
-        console.log('Branches:', branches);
-        console.log('Branch Contacts:', branchContacts);
-        const branchesArray = Array.isArray(branches) ? branches : [branches];
-        const contactsArray = Array.isArray(branchContacts) ? branchContacts : (branchContacts ? [branchContacts] : []);
 
-        return branchesArray.map(branch => {
-            // Filter contacts for this specific branch
-            const branchContacts = contactsArray.filter(contact => contact.branchId === branch.id);
-
-            // Create a map of contactType to contact data
-            const contactsMap = branchContacts.reduce((acc, contact) => {
-                acc[contact.contactType] = contact;
-                return acc;
-            }, {});
-
-            return {
-                ...branch,
-                // Primary contact information
-                primaryContactName: contactsMap.primary?.name || '',
-                primaryContactDesignation: contactsMap.primary?.designation || '',
-                primaryContactEmail: contactsMap.primary?.email || '',
-                primaryContactMobile: contactsMap.primary?.mobile || '',
-
-                // Secondary contact information
-                secondaryContactName: contactsMap.secondary?.name || '',
-                secondaryContactDesignation: contactsMap.secondary?.designation || '',
-                secondaryContactEmail: contactsMap.secondary?.email || '',
-                secondaryContactMobile: contactsMap.secondary?.mobile || '',
-
-                // Supervisor contact information
-                supervisorContactName: contactsMap.supervisor?.name || '',
-                supervisorContactDesignation: contactsMap.supervisor?.designation || '',
-                supervisorContactEmail: contactsMap.supervisor?.email || '',
-                supervisorContactMobile: contactsMap.supervisor?.mobile || '',
-
-                // Include all original contacts array for reference
-                allContacts: branchContacts
-            };
-        });
-    }
-    const fetchBranchContacts = async (branchId, branches) => {
-        setLoading(true);
-        setError(null);
-        const customerId = branches.find((branch) => branch.id === branchId)?.customerId;
-        console.log('Customer ID:', customerId);
-        try {
-            const response = await fetch(`http://localhost:3000/api/customer-contacts/branch/${branchId}/customer/${customerId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-            });
-            const result = await response.json();
-            console.log('API Response:', result);
-            if (result.status === 'Ok') {
-                const transformedBranch = transformBranchData(branches, result.data);
-                console.log('Transformed Branch:', transformedBranch);
-                transformedBranch.filter((branch) => branch.id === branchId).forEach((branch) => {
-                    setTransformedBranches([branch]);
-                }
-
-                );
-                console.log('Transformed Branches:', transformedBranches);
-
-            } else {
-                throw new Error(response.data.message || 'Failed to fetch customer contacts');
-            }
-        } catch (err) {
-            setError(err.message);
-            console.error('Error fetching customer contacts:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
     const toggleRow = (branchId) => {
         setExpandedRows((prev) =>
             prev.includes(branchId) ? [] : [branchId]
@@ -1028,9 +1053,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                 <div className="branch-expanded">
                                     <BranchDetailsForm
                                         branch={branch}
-                                        branchChanges={branchChanges}
-                                        handleBranchFieldChange={handleBranchFieldChange}
-                                    />
+                                         />
                                     <ContactSection branch={branch} />
                                     <OperatingHours hoursData={branch.hours} branchId={branch.id} />
                                 </div>
@@ -1100,9 +1123,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                                 <div className="expanded-form-container">
                                                     <BranchDetailsForm
                                                         branch={branch}
-                                                        branchChanges={branchChanges}
-                                                        handleBranchFieldChange={handleBranchFieldChange}
-                                                    />
+                                                         />
                                                     <ContactSection branch={transformedBranches[0]} />
                                                     <OperatingHours hoursData={branch.hours} branchId={branch.id} />
                                                 </div>
