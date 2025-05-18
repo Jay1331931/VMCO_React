@@ -3,9 +3,11 @@ import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
+import formatDate from '../utilities/dateFormatter'; // Import the date formatter
 
 function SupportDetails() {
   const location = useLocation();
+  console.log('Location state#######:', location.state);
   const ticket = location.state?.ticket || {
     id: '00025',
     customer: 'Customer Name',
@@ -90,38 +92,32 @@ function SupportDetails() {
           <div className="support-details-grid">
             <div className="support-details-field">
               <label>Customer Name</label>
-              <input value={ticket.customer} disabled />
+              <input value={ticket.companyNameEn} disabled />
             </div>
             <div className="support-details-field">
               <label>Branch</label>
-              <select value={ticket.branch} disabled>
-                <option>Branch 1</option>
-                <option>Branch 2</option>
-                <option>Branch 3</option>
-                <option>Branch 4</option>
+              <select value={ticket.branchNameEn} disabled>
+                <option>{ticket.branchNameEn}</option> {/* TODO: WE may need to get all the options for employee  if changes is allowed */ }
               </select>
             </div>
             <div className="support-details-field">
               <label>Issue Type</label>
-              <select value={ticket.issueType} disabled>
-                <option>Issue Type</option>
-                <option>Payment</option>
-                <option>Delivery</option>
-                <option>Product</option>
+              <select value={ticket.grievanceType} disabled>
+                <option>{ticket.grievanceType}</option> {/* TODO: WE may need to get all the options for employee  if changes is allowed */ }
               </select>
             </div>
             <div className="support-details-field">
               <label>Issue Name</label>
-              <input value={ticket.issueName} disabled />
+              <input value={ticket.grievanceName} disabled /> {/* TODO: There is no Issue Name in DB */}
             </div>
             <div className="support-details-field">
               <label>Created Date</label>
-              <input value={ticket.createdDate} disabled />
+              <input value={formatDate(ticket.updatedAt,'YYYY-MM-DD HH:SS')} disabled />
             </div>
           </div>
           <div className="support-details-field support-details-textarea">
             <label>Issue Details</label>
-            <textarea value={ticket.details} disabled />
+            <textarea value={ticket.description} disabled />
           </div>
           <div className='attachments'>
             <div className="maintenance-details-images">
@@ -201,15 +197,13 @@ function SupportDetails() {
         </div>
         <div className="support-assign">
           <span>Assign to:</span>
-          <select defaultValue={ticket.assignedBranch}>
+          {/* <select defaultValue={ticket.assignedBranch}>
             <option>Branch 1</option>
             <option>Branch 2</option>
             <option>Branch 3</option>
-          </select>
-          <select defaultValue={ticket.assignedPerson}>
-            <option>Person</option>
-            <option>Employee 1</option>
-            <option>Employee 2</option>
+          </select> */}
+          <select defaultValue={ticket.assignedTo}>
+            <option>{ticket.assignedTo}</option>
           </select>
         </div>
         <div className="support-details-actions">
@@ -238,4 +232,41 @@ function SupportDetails() {
   );
 }
 
+
 export default SupportDetails;
+
+    /** the object structure for ticket
+     {
+                "id": 1,
+                "ticketId": "TKT-000000001",
+                "customerId": 1,
+                "branchId": 1,
+                "grievanceType": "Machine Issue",
+                "description": "Coffee machine not dispensing correctly",
+                "dateOfComplaint": {},
+                "assignedTeamMember": 1,
+                "assignedTeamMemberDept": "Technical",
+                "status": "Open",
+                "attachment": "issue_photo.jpg",
+                "slaDueDate": null,
+                "criticalLevel": "High",
+                "comments": [
+                    {
+                        "userid": 1,
+                        "comment": "Technician assigned",
+                        "createdAt": "2025-04-01T10:00:00Z"
+                    }
+                ],
+                "feedbackRating": null,
+                "feedbackComment": null,
+                "createdAt": "2025-05-12T09:40:35.699Z",
+                "updatedAt": "2025-05-12T09:40:35.699Z",
+                "createdBy": 1,
+                "modifiedBy": 1,
+                "companyNameEn": "Al Khaleej Trading",
+                "companyNameAr": "الخليج التجارية",
+                "branchNameEn": "Khaleej Riyadh Branch",
+                "branchNameLc": "فرع الخليج الرياض",
+                "assignedTo": "SE1"
+            }
+     */
