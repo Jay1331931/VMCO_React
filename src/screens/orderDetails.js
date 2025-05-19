@@ -9,6 +9,8 @@ import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/components.css';
+import GetProducts from "../components/GetProducts";
+import QuantityController from '../components/QuantityController';
 
 const defaultOrder = {
   id: '',
@@ -19,15 +21,15 @@ const defaultOrder = {
   entity: '',
   paymentMethod: '',
   totalAmount: '',
-  amountPaid: '',
-  deliveryCost: '',
-  deliveryDate: '',
-  createdDate: '',
-  updatedDate: '',
+  paidAmount: '', // Use the correct field name
+  deliveryCharges: '',
+  expectedDeliveryDate: '',
+  createdAt: '',
+  updatedAt: '',
   status: '',
   driver: '',
   vehicleNumber: '',
-  images: '',
+  images: [],
   products: []
 };
 
@@ -59,16 +61,46 @@ function OrderDetails() {
   const [showInventory, setShowInventory] = useState(false);
   const [showRemarks, setShowRemarks] = useState(false);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  const [showProductPopup, setShowProductPopup] = useState(false);
+  const [backendProducts, setBackendProducts] = useState([]);
+  const [productLoading, setProductLoading] = useState(false);
+  
 
   // Table columns
   const columns = [
-    { key: 'id', header: 'Product #' },
+    { key: 'id', header: 'Product ID' },
     { key: 'erpProdId', header: 'Product Name' },
-    { key: 'quantityOrdered', header: 'Quantity' },
+    {
+      key: 'quantityOrdered',
+      header: 'Quantity',
+      render: (row) =>
+        addMode ? (
+          <QuantityController
+            itemId={row.id}
+            quantity={row.quantityOrdered || 0}
+            onQuantityChange={(itemId, delta) => {
+              const idx = formData.products.findIndex(p => p.id === itemId);
+              if (idx !== -1) {
+                const newQty = Math.max(0, (parseInt(formData.products[idx].quantityOrdered) || 0) + delta);
+                handleProductChange(idx, 'quantityOrdered', newQty);
+              }
+            }}
+            onInputChange={(itemId, value) => {
+              const idx = formData.products.findIndex(p => p.id === itemId);
+              if (idx !== -1) {
+                handleProductChange(idx, 'quantityOrdered', value);
+              }
+            }}
+            stopPropagation={true}
+          />
+        ) : row.quantityOrdered
+    },
     { key: 'unit', header: 'Unit' },
     { key: 'unitPrice', header: 'Unit Price (SAR)' },
     { key: 'netAmount', header: 'Net Amount (SAR)' },
-    { key: 'salesTaxRate', header: 'Tax (SAR)' }
+    { key: 'salesTaxRate', header: 'Tax (SAR)' },
+    // Only add the actions column in addMode, no render property
+    ...(addMode ? [{ key: 'actions', header: 'Actions' }] : [])
   ];
 
   // Fetch order details from backend
@@ -162,17 +194,10 @@ function OrderDetails() {
   // Add a default product row in add mode
   useEffect(() => {
     if (addMode && formData.products.length === 0) {
+      // Do not add an empty row by default
       setFormData(prev => ({
         ...prev,
-        products: [{
-          id: '',
-          erpProdId: '',
-          quantityOrdered: '',
-          unit: '',
-          unitPrice: '',
-          netAmount: '',
-          salesTaxRate: ''
-        }]
+        products: []
       }));
     }
     // eslint-disable-next-line
@@ -187,6 +212,14 @@ function OrderDetails() {
     });
   };
 
+  // Delete product row handler
+  const handleDeleteProductRow = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      products: prev.products.filter((_, i) => i !== idx)
+    }));
+  };
+
   // Download invoice
   const handleDownloadInvoice = (orderId) => {
     alert(`Downloading invoice for order ID: ${orderId}`);
@@ -194,12 +227,127 @@ function OrderDetails() {
   };
 
   // Save handler
-  const handleSave = (action = 'save') => {
-    alert(`${t(action.charAt(0).toUpperCase() + action.slice(1))} action triggered.`);
-    // Add your save logic here
+  const handleSave = async (action = 'save') => {
+    if (addMode) {
+      // Save changes to products (sales_order_lines)
+      try {
+        setLoading(true);
+        let allSuccess = true;
+        let errorMsg = '';
+        
+
+        const productsPayload = formData.products.map(product => ({
+          ...product,
+          order_id: formData.id // assuming backend expects order_id
+        }));
+
+        console.log('Submitting products payload:', productsPayload); // <-- Add this line
+
+        const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productsPayload),
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          try {
+            const errorData = await response.json();
+            errorMsg = errorData.message || 'Failed to save product lines';
+          } catch {}
+          allSuccess = false;
+        }
+        if (allSuccess) {
+          alert(t('Order products saved successfully!'));
+          // Optionally, refresh order details or navigate
+        } else {
+          setError(errorMsg);
+          alert(t(errorMsg));
+        }
+      } catch (err) {
+        setError(err.message);
+        alert(t(err.message));
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Prepare payload for backend
+    const payload = {
+      ...formData,
+      images: Array.isArray(images) ? images : [],
+      products: formData.products.map(p => ({
+        ...p,
+        quantityOrdered: Number(p.quantityOrdered) || 0
+      })),
+      invoices: [],
+      //status by default should be pending
+      status: formData.status || 'Pending',
+    };
+
+    // Remove fields not needed by backend
+    delete payload.id;
+    delete payload.createdAt;
+    delete payload.updatedAt;
+    delete payload.status;
+
+    console.log('Submitting order payload:', payload); // <-- Add this line
+
+    try {
+      setLoading(true);
+      // 1. Create the order
+      const response = await fetch(`${API_BASE_URL}/sales-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorMsg = 'Failed to create order';
+        try {
+          const errorData = await response.json();
+          errorMsg = errorData.message || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
+      }
+
+      const result = await response.json();
+      if (result.status === 'Ok' && result.data && result.data.id) {
+        // 2. Post products to sales_order_lines with the new order id
+        const orderId = result.data.id;
+        const productsPayload = formData.products.map(product => ({
+          ...product,
+          order_id: orderId
+        }));
+        const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productsPayload),
+          credentials: 'include',
+        });
+        if (!linesResponse.ok) {
+          let errorMsg = 'Failed to save product lines';
+          try {
+            const errorData = await linesResponse.json();
+            errorMsg = errorData.message || errorMsg;
+          } catch {}
+          throw new Error(errorMsg);
+        }
+        alert(t('Order and products created successfully!'));
+        navigate('/orders');
+      } else {
+        throw new Error(result.message || 'Failed to create order');
+      }
+    } catch (err) {
+      setError(err.message);
+      alert(t(err.message));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Block/Approve/Reject handler
+  // cancel/Approve/Reject handler
   const handleSubmit = (action) => {
     alert(`${t(action.charAt(0).toUpperCase() + action.slice(1))} action triggered.`);
     // Add your logic here
@@ -245,6 +393,27 @@ function OrderDetails() {
     }));
   };
 
+ 
+  // Add selected product to products table
+  const handleSelectProduct = (product) => {
+    setFormData(prev => ({
+      ...prev,
+      products: [
+        ...prev.products,
+        {
+          id: product.id,
+          erpProdId: product.product_name,
+          quantityOrdered: '' || 1,
+          unit: product.unit || '',
+          unitPrice: product.unit_price || '',
+          netAmount: product.net_amount || '',
+          salesTaxRate: product.vat_percentage || '',
+        }
+      ]
+    }));
+    setShowProductPopup(false);
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
 
@@ -258,70 +427,64 @@ function OrderDetails() {
               <div className="order-details-grid">
                 <div className="order-details-field">
                   <label>{t('Customer Company Name')}</label>
-                  <input name="erpCustId" value={formData.erpCustId} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Branch')}</label>
-                  <input name="erpBranchId" value={formData.erpBranchId} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Order By')}</label>
-                  <input name="orderBy" value={formData.orderBy} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('ERP#')}</label>
-                  <input name="erp" value={formData.erpCustId} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Entity')}</label>
-                  <input name="entity" value={formData.entity} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Payment Method')}</label>
-                  <input name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Total Amount')}</label>
-                  <input name="totalAmount" value={formData.totalAmount} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Amount Paid')}</label>
-                  <input name="amountPaid" value={formData.paidAmount} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Delivery Cost')}</label>
-                  <input name="deliveryCost" value={formData.deliveryCost} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Delivery Date')}</label>
                   <input
-                    name="deliveryDate"
-                    value={
-                      addMode
-                        ? formData.deliveryDate
-                        : formData.expectedDeliveryDate
-                        ? new Date(formData.expectedDeliveryDate).toLocaleDateString()
-                        : ''
-                    }
+                    name="erpCustId"
+                    value={formData.erpCustId ?? ''}
                     onChange={handleInputChange}
                     disabled={!addMode}
                   />
                 </div>
                 <div className="order-details-field">
+                  <label>{t('Branch')}</label>
+                  <input name="erpBranchId" value={formData.erpBranchId ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Order By')}</label>
+                  <input name="orderBy" value={formData.orderBy ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('ERP#')}</label>
+                  <input name="erp" value={formData.erp ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Entity')}</label>
+                  <input name="entity" value={formData.entity ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Payment Method')}</label>
+                  <input name="paymentMethod" value={formData.paymentMethod ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Total Amount')}</label>
+                  <input name="totalAmount" value={formData.totalAmount ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Amount Paid')}</label>
+                  <input name="paidAmount" value={formData.paidAmount ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Delivery Charges')}</label>
+                  <input name="deliveryCharges" value={formData.deliveryCharges ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
+                  <label>{t('Delivery Date')}</label>
+                  <input name="expectedDeliveryDate" value={formData.expectedDeliveryDate ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                </div>
+                <div className="order-details-field">
                   <label>{t('Created Date')}</label>
-                  <input name="createdDate" value={formData.createdAt} disabled />
+                  <input name="createdDate" value={formData.createdAt ?? ''} disabled />
                 </div>
                 <div className="order-details-field">
                   <label>{t('Updated Date')}</label>
-                  <input name="updatedDate" value={formData.updatedAt} disabled />
+                  <input name="updatedDate" value={formData.updatedAt ?? ''} disabled />
                 </div>
                 <div className="order-details-field">
                   <label>{t('Driver')}</label>
-                  <input name="driverName" value={formData.driverName} onChange={handleInputChange} disabled={!addMode} />
+                  <input name="driver" value={formData.driver ?? ''} onChange={handleInputChange} disabled={!addMode} />
                 </div>
                 <div className="order-details-field">
                   <label>{t('Vehicle Number')}</label>
-                  <input name="vehicleNumber" value={formData.vehicleNumber} onChange={handleInputChange} disabled={!addMode} />
+                  <input name="vehicleNumber" value={formData.vehicleNumber ?? ''} onChange={handleInputChange} disabled={!addMode} />
                 </div>
               </div>
               <label>{t('Delivery images')}</label>
@@ -354,45 +517,42 @@ function OrderDetails() {
             </div>
             <div className="order-products-section">
               <h3 className="order-details-subtitle">{t('Products')}</h3>
-              <Table
-                columns={columns}
-                data={formData.products}
-                renderCell={(row, col, rowIndex) => {
-                  // Show dropdowns for all rows in add mode
-                  if (addMode) {
-                    if (col.key === 'erpProdId') {
-                      return (
-                        <select
-                          value={row.erpProdId}
-                          onChange={e => handleProductChange(rowIndex, 'erpProdId', e.target.value)}
-                          className="product-name-dropdown"
-                        >
-                          <option value="">Select Product</option>
-                          {productOptions.map(opt => (
-                            <option key={opt.id} value={opt.id}>{opt.name}</option>
-                          ))}
-                        </select>
-                      );
-                    }
-                    if (col.key === 'quantityOrdered') {
-                      return (
-                        <select
-                          value={row.quantityOrdered}
-                          onChange={e => handleProductChange(rowIndex, 'quantityOrdered', e.target.value)}
-                          className="quantity-dropdown"
-                        >
-                          <option value="">Select Quantity</option>
-                          {quantityOptions.map(q => (
-                            <option key={q} value={q}>{q}</option>
-                          ))}
-                        </select>
-                      );
-                    }
+              {addMode && (
+                <button
+                  type="button"
+                  className="order-action-btn approve"
+                  onClick={() => setShowProductPopup(true)}
+                  style={{ marginBottom: 8 }}
+                >
+                  Add products
+                </button>
+              )}
+              {/* Hide table in add mode until products are selected */}
+              {(!addMode || (formData.products && formData.products.length > 0)) && (
+                <Table
+                  columns={columns}
+                  data={formData.products.filter(
+                    p => p.id || p.erpProdId || p.quantityOrdered || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
+                  )}
+                  actionButtons={
+                    addMode
+                      ? (row) => (
+                          <button
+                            className="order-action-btn reject"
+                            style={{ padding: '4px 10px', fontSize: 14 }}
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteProductRow(formData.products.indexOf(row));
+                            }}
+                            type="button"
+                          >
+                            {t('Delete')}
+                          </button>
+                        )
+                      : undefined
                   }
-                  // Default rendering
-                  return row[col.key];
-                }}
-              />
+                />
+              )}
             </div>
           </div>
           <div className="order-details-footer">
@@ -403,33 +563,42 @@ function OrderDetails() {
               </span>
             </div>
             
-              <>
-                <button className="order-action-btn" onClick={() => handleSave('save')}>
-                  {t('Save Changes')}
+              <button className="order-action-btn" onClick={() => handleSave('save')}>
+                {t('Save Changes')}
+              </button>
+              <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
+                {t('Cancel Order')}
+              </button>
+              <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+                {t('Download Invoice')}
+              </button>
+              <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+                {t('Get Inventory')}
+              </button>
+              <div className="order-details-actions">
+                <button className="order-action-btn approve" onClick={() => handleSubmit('approve')} disabled={formData.status === 'approved'}>
+                  {t('Approve')}
                 </button>
-                <button className="order-action-btn" onClick={() => handleSubmit('block')}>
-                  {t('Block')}
+                <button className="order-action-btn reject" onClick={() => handleSubmit('reject')} disabled={formData.status === 'approved'}>
+                  {t('Reject')}
                 </button>
-                <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
-                  {t('Download Invoice')}
-                </button>
-                <button className="order-action-btn" onClick={() => setShowInventory(true)}>
-                  {t('Get Inventory')}
-                </button>
-                <div className="order-details-actions">
-                  <button className="order-action-btn approve" onClick={() => handleSubmit('approve')} disabled={formData.status === 'approved'}>
-                    {t('Approve')}
-                  </button>
-                  <button className="order-action-btn reject" onClick={() => handleSubmit('reject')} disabled={formData.status === 'approved'}>
-                    {t('Reject')}
-                  </button>
-                </div>
-              </>
+              </div>
           </div>
         </div>
         <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
         <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
         <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+        {/* Product Popup */}
+        {showProductPopup && (
+          <GetProducts
+            open={showProductPopup}
+            onClose={() => setShowProductPopup(false)}
+            onSelectProduct={handleSelectProduct}
+            API_BASE_URL={API_BASE_URL}
+            token={localStorage.getItem('token')}
+            t={t}
+          />
+        )}
       </div>
     </Sidebar>
   );
