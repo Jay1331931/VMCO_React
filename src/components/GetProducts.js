@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import Pagination from "./Pagination";
 
 function GetProducts({
   open,
@@ -7,103 +8,182 @@ function GetProducts({
   API_BASE_URL,
   token,
   t = (x) => x // fallback translation
-}) {
-  const [backendProducts, setBackendProducts] = useState([]);
+}) {  const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(25);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 25,
+    total: 0
+  });
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // actual query sent to backend
-  const [total, setTotal] = useState(0); // Initialize with 0 instead of undefined
   const debounceTimeout = useRef();
-
   // Debounce search input
   useEffect(() => {
     if (!open) return;
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
       setSearchQuery(search);
-      setPage(1);
+      setPagination(prev => ({ ...prev, page: 1 })); // Reset to page 1 on new search
     }, 400);
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
 
-  useEffect(() => {
-    if (open) {
-      setProductLoading(true);
-      const params = new URLSearchParams({
-        page: page, // changed 'Page' to 'page' for API param
-        pageSize,
+  // Function to fetch total number of products (count)
+  const fetchTotalCount = async () => {
+    if (!open) return;
+    
+    try {
+      // Create params for count request - include search if applicable
+      const countParams = new URLSearchParams({
         search: searchQuery,
-        sortBy: "id",
-        sortOrder: "asc"
+        countOnly: true // Add a parameter indicating we only need counts if your API supports it
       });
-      fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+      
+      const response = await fetch(`${API_BASE_URL}/products/count?${countParams.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("API response:", data); // Add logging to debug API response
-          // Support both array and paginated object
-          if (Array.isArray(data)) {
-            setBackendProducts(data);
-            setTotal(data.length);
-          } else if (data && Array.isArray(data.data)) {
-            setBackendProducts(data.data);
-            // Try to get total from data.total, data.pagination.total, or fallback to data.data.length
-            const backendTotal =
-              (data.total !== undefined && Number(data.total)) ||
-              (data.pagination && data.pagination.total !== undefined && Number(data.pagination.total)) ||
-              data.data.length;
-            console.log("Setting total to:", backendTotal); // Log the total being set
-            setTotal(backendTotal);
-          } else {
-            setBackendProducts([]);
-            setTotal(0);
-          }
-        })
-        .catch(() => {
-          setBackendProducts([]);
-          setTotal(0);
-        })
-        .finally(() => setProductLoading(false));
+      });
+      
+      const data = await response.json();
+      console.log("Count API response:", data);
+      
+      // Extract the count from the response based on your API's response format
+      const count = data.count || data.total || data; // Adjust based on your API response structure
+      
+      if (count !== undefined && !isNaN(Number(count))) {
+        console.log("Setting total from count API to:", Number(count));
+        setPagination(prev => ({
+          ...prev,
+          total: Number(count)
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching total count:", error);
+      // We don't reset total to 0 here as we'll get it from the main products API call
     }
-  }, [open, API_BASE_URL, token, page, pageSize, searchQuery]);
+  };
 
+  // Effect to fetch the total count when the component opens or search changes
+  useEffect(() => {
+    if (open) {
+      fetchTotalCount();
+    }
+  }, [open, searchQuery, API_BASE_URL, token]);
+
+  // Function to fetch products with pagination
+  const fetchProducts = async () => {
+    if (!open) return;
+    
+    setProductLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        search: searchQuery,
+        sortBy: "id",
+        sortOrder: "asc"
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        credentials: "include",
+      });
+      
+      const data = await response.json();
+      console.log("API response:", data);
+      
+      // Support both array and paginated object
+      if (Array.isArray(data)) {
+        setBackendProducts(data);
+        setPagination(prev => ({
+          ...prev,
+          total: data.length
+        }));
+      } else if (data && Array.isArray(data.data)) {
+        setBackendProducts(data.data);
+        
+        // Get total from response data
+        const backendTotal =
+          (data.total !== undefined && Number(data.total)) ||
+          (data.pagination && data.pagination.total !== undefined && Number(data.pagination.total)) ||
+          data.data.length;
+        
+        console.log("Setting total to:", backendTotal);
+        setPagination(prev => ({
+          ...prev,
+          total: backendTotal
+        }));
+      } else {
+        setBackendProducts([]);
+        setPagination(prev => ({
+          ...prev,
+          total: 0
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setBackendProducts([]);
+      setPagination(prev => ({
+        ...prev,
+        total: 0
+      }));
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
+  // Effect to trigger product fetch when relevant dependencies change
+  useEffect(() => {
+    fetchProducts();
+  }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery]);
   if (!open) return null;
 
-  // Calculate totalPages: 0 if no products, otherwise based on total and pageSize
-  const totalPages = Math.max(1, Math.ceil(Number(total || 0) / Number(pageSize)));
+  // Calculate totalPages based on total number of products and page size
+  const { page, pageSize, total } = pagination;
+  const division = Math.floor(Number(total || 0) / Number(pageSize));
+  const hasRemainder = (Number(total || 0) % Number(pageSize)) > 0;
+  const totalPages = total > 0 ? (hasRemainder ? division + 1 : division) : 1;
 
   console.log("Pagination values:", { 
     page, 
     pageSize, 
     total, 
+    division,
+    hasRemainder,
     calculatedTotalPages: totalPages 
   });
 
   return (
     <div>
       <div className="gp-backdrop" onClick={onClose} />
-      <div className="gp-modal">
-        <div className="gp-header">
+      <div className="gp-modal">        <div className="gp-header">
           <span className="gp-title">{t("Select a Product")}</span>
+          <button
+            className="gp-close-btn"
+            onClick={onClose}
+            style={{ marginLeft: 'auto' }}
+          >
+            {t("Close")}
+          </button>
         </div>
         <div style={{ padding: "0 28px 10px 28px" }}>
           <input
             type="text"
             placeholder={t("Search products...")}
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => {
+            onChange={e => setSearch(e.target.value)}            onKeyDown={e => {
               if (e.key === 'Enter') {
                 setSearchQuery(search);
-                setPage(1);
+                setPagination(prev => ({ ...prev, page: 1 }));
               }
             }}
             style={{
@@ -133,36 +213,17 @@ function GetProducts({
               {backendProducts.length === 0 && <li>{t("No products found.")}</li>}
             </ul>
           )}
-        </div>
-        <div className="gp-footer">
-          <div style={{ flex: 1 }}>
-            <span>
-              {t("Page")} {totalPages === 0 ? 0 : page} {t("of")} {totalPages}
-            </span>
-          </div>
-          <button
-            className="gp-close-btn"
-            onClick={onClose}
-            style={{ marginLeft: 8 }}
-          >
-            {t("Close")}
-          </button>
-          <button
-            className="gp-close-btn"
-            onClick={() => setPage(page - 1)}
-            disabled={Number(page) <= 1 || totalPages === 0}
-            style={{ marginLeft: 8 }}
-          >
-            {t("Prev")}
-          </button>
-          <button
-            className="gp-close-btn"
-            onClick={() => setPage(page + 1)}
-            disabled={Number(page) >= Number(totalPages) || totalPages === 0}
-            style={{ marginLeft: 8 }}
-          >
-            {t("Next")}
-          </button>
+        </div>        <div className="gp-footer">
+          {totalPages > 0 && (
+            <Pagination
+              currentPage={Number(page)}
+              totalPages={totalPages}
+              onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))}
+              startIndex={(page - 1) * pageSize + 1}
+              endIndex={Math.min(page * pageSize, total)}
+              totalItems={total}
+            />
+          )}
         </div>
       </div>
 
@@ -222,12 +283,10 @@ function GetProducts({
         }
         .gp-product-btn:hover {
           background: #f2f2f2;
-        }
-        .gp-footer {
+        }        .gp-footer {
           display: flex;
-          justify-content: flex-end;
+          flex-direction: column;
           align-items: center;
-          gap: 8px;
           padding: 16px 28px 22px 28px;
         }
         .gp-close-btn {

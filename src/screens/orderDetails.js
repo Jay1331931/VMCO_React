@@ -65,11 +65,14 @@ function OrderDetails() {
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   
-
   // Table columns
   const columns = [
     { key: 'id', header: 'Product ID' },
-    { key: 'erpProdId', header: 'Product Name' },
+    { 
+      key: 'productName', 
+      header: 'Product Name',
+      render: (row) => row.productName || row.product_name || row.erpProdId || 'Unknown Product'
+    },
     {
       key: 'quantityOrdered',
       header: 'Quantity',
@@ -144,7 +147,6 @@ function OrderDetails() {
     fetchOrderDetails();
     // eslint-disable-next-line
   }, [orderFromNav.id, addMode]);
-
   // Fetch order product details
   useEffect(() => {
     if (addMode) return;
@@ -175,10 +177,17 @@ function OrderDetails() {
 
         const result = await response.json();
         if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
+          // Map the product data to ensure we use productName instead of erpProdId
+          const processedProducts = result.data.data.map(product => ({
+            ...product,
+            productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product',
+          }));
+          
           setFormData(prev => ({
             ...prev,
-            products: result.data.data
+            products: processedProducts
           }));
+          console.log('Processed order products:', processedProducts);
         } else {
           throw new Error(result.message || 'Failed to fetch order products');
         }
@@ -234,11 +243,10 @@ function OrderDetails() {
         setLoading(true);
         let allSuccess = true;
         let errorMsg = '';
-        
-
-        const productsPayload = formData.products.map(product => ({
+            const productsPayload = formData.products.map(product => ({
           ...product,
-          order_id: formData.id // assuming backend expects order_id
+          order_id: formData.id, // assuming backend expects order_id
+          productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product'
         }));
 
         console.log('Submitting products payload:', productsPayload); // <-- Add this line
@@ -318,7 +326,8 @@ function OrderDetails() {
         const orderId = result.data.id;
         const productsPayload = formData.products.map(product => ({
           ...product,
-          order_id: orderId
+          order_id: orderId,
+          productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product'
         }));
         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
           method: 'POST',
@@ -393,8 +402,7 @@ function OrderDetails() {
     }));
   };
 
- 
-  // Add selected product to products table
+   // Add selected product to products table
   const handleSelectProduct = (product) => {
     setFormData(prev => ({
       ...prev,
@@ -402,12 +410,12 @@ function OrderDetails() {
         ...prev.products,
         {
           id: product.id,
-          erpProdId: product.product_name,
+          productName: product.productName || product.product_name || 'Unknown Product',
           quantityOrdered: '' || 1,
           unit: product.unit || '',
-          unitPrice: product.unit_price || '',
-          netAmount: product.net_amount || '',
-          salesTaxRate: product.vat_percentage || '',
+          unitPrice: product.unitPrice || 'Field not in products table',
+          netAmount: product.netAmount || 'Field not in products table',
+          salesTaxRate: product.vatPercentage || '',
         }
       ]
     }));
@@ -532,7 +540,7 @@ function OrderDetails() {
                 <Table
                   columns={columns}
                   data={formData.products.filter(
-                    p => p.id || p.erpProdId || p.quantityOrdered || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
+                    p => p.id || p.erpProductName || p.quantityOrdered || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
                   )}
                   actionButtons={
                     addMode

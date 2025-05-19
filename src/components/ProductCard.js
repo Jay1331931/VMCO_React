@@ -40,10 +40,10 @@ const ProductCard = ({
                 ) : (
                     <div className="image-placeholder"></div>
                 )}
-            </div>
-            <div className="product-details">
+            </div>            <div className="product-details">
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-code">{product.code}</p>
+                {product.entity && <p className="product-entity">{product.entity}</p>}
                 <div className="quantity-controls">
                     <QuantityController
                         itemId={product.id}
@@ -115,7 +115,17 @@ const ProductCard = ({
 .product-code {
   font-size: 0.9rem;
   color: #6B7280;
+  margin: 0 0 5px 0;
+}
+
+.product-entity {
+  font-size: 0.8rem;
+  color: #00205B;
   margin: 0 0 15px 0;
+  padding: 2px 8px;
+  background-color: #f0f4ff;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .quantity-controls {

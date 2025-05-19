@@ -9,7 +9,8 @@ const Dropdown = ({
     options,
     className,
     label,
-    placeholder
+    placeholder,
+    disabled
 }) => {
     const { t } = useTranslation();
 
@@ -21,7 +22,8 @@ const Dropdown = ({
                 name={name}
                 value={value}
                 onChange={onChange}
-                className={`dropdown-select ${className || ''}`}
+                className={`dropdown-select ${className || ''} ${disabled ? 'disabled' : ''}`}
+                disabled={disabled}
             >
                 {placeholder && (
                     <option value="">{t(placeholder)}</option>
@@ -54,9 +56,6 @@ const Dropdown = ({
                     color: #222;
                     outline: none;
                     transition: border 0.2s;
-                }
-                .dropdown-select:focus {
-                    border: 1.5px solid #0a5640;
                 }
                 .dropdown-select option {
                     font-size: 1rem;
