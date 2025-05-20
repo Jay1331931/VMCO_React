@@ -18,6 +18,12 @@ function SupportDetails() {
   const [selectedBranch, setSelectedBranch] = useState(
     currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc
   );
+  
+  // State for employees dropdown
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
+  
   const [isEditing, setIsEditing] = useState(true);
 
   // Fetch branches when dropdown is clicked
@@ -52,6 +58,38 @@ function SupportDetails() {
     }
   };
 
+  // Fetch employees from backend
+  const fetchEmployees = async () => {
+    if (employees.length > 0) return; // Don't fetch if we already have employees
+    const supportStaffDesignation = "sales executive";
+    setLoadingEmployees(true);
+    try {
+      // Replace with your actual API endpoint URL
+      const apiUrl = process.env.REACT_APP_API_BASE_URL 
+        ? `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=10&sortOrder=asc&filters={"designation": "${supportStaffDesignation}"}`
+        : 'http://localhost:3000/api/grievances/employees';
+        
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const resp = await response.json();
+      console.log('Fetched employees:', resp.data.data);
+      setEmployees(resp.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch employees:', err);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
   // Handle branch click to load options
   const handleBranchClick = () => {
     if (isEditing) {
@@ -62,6 +100,11 @@ function SupportDetails() {
   // Handle branch selection
   const handleBranchChange = (e) => {
     setSelectedBranch(e.target.value);
+  };
+
+  // Handle employee selection
+  const handleEmployeeChange = (e) => {
+    setSelectedEmployee(e.target.value);
   };
 
   // Toggle edit mode
@@ -137,6 +180,7 @@ function SupportDetails() {
     // This would typically involve an API call to update the ticket
     setIsEditing(false);
     console.log('Saving ticket with selected branch:', selectedBranch);
+    console.log('Assigned to employee:', selectedEmployee);
     // After successful save, you might want to refresh the data
   };
 
@@ -289,14 +333,21 @@ function SupportDetails() {
         </div>
         <div className="support-assign">
           <span>Assign to:</span>
-          <select defaultValue={ticket.assignedTo} disabled={!isEditing}>
-            <option>{ticket.assignedTo}</option>
-            {isEditing && (
-              <>
-                <option>SE1</option>
-                <option>SE2</option>
-                <option>SE3</option>
-              </>
+          <select 
+            value={selectedEmployee}
+            onChange={handleEmployeeChange}
+            disabled={!isEditing}
+          >
+            {loadingEmployees ? (
+              <option>Loading employees...</option>
+            ) : employees.length > 0 ? (
+              employees.map(employee => (
+                <option key={employee.id} value={employee.employeeId}>
+                  {employee.name}
+                </option>
+              ))
+            ) : (
+              <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
             )}
           </select>
         </div>

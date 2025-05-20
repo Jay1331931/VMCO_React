@@ -27,6 +27,9 @@ export const formatDate = (isoDateString, format = 'YYYY-MM-DD HH:MM') => {
   
   // Format mapping
   switch (format) {
+    case 'YYYY-MM-DD':
+      return `${year}-${month}-${day}`;
+
     case 'YYYY-MM-DD HH:MM':
       return `${year}-${month}-${day} ${hours}:${minutes}`;
     
