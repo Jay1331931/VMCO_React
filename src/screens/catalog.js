@@ -112,8 +112,6 @@ function Catalog() {
                     }
                 }
                 
-                console.log(`Need to fetch pages: ${pagesToFetch.join(', ')}`);
-                
                 if (pagesToFetch.length === 0) {
                     // All needed pages are already loaded
                     setIsLoading(false);
@@ -177,7 +175,6 @@ function Catalog() {
                     });
                     
                     const result = await response.json();
-                    console.log(`API response for page ${pageNumber}:`, result);
                     
                     // Extract the new products from the response
                     let pageProducts = [];
@@ -227,8 +224,6 @@ function Catalog() {
                 const moreAvailable = loadedProductsCount < maxTotalCount;
                 setHasMore(moreAvailable);
                 
-                console.log(`Loaded all pages from 1 to ${currentPage}. Has more: ${moreAvailable}`);
-                
             } catch (err) {
                 console.error('Error fetching products:', err);
                 // Don't reset existing products on error
@@ -249,7 +244,6 @@ function Catalog() {
         const entityToFilter = selectedCategory ? selectedCategory.entity : null;
         
         let filtered = [...products]; // Create a copy of products array for filtering
-        console.log(`Starting client-side filtering with ${filtered.length} products for ${activeCategory}`);
         
         // Filter by entity first
         if (entityToFilter) {
@@ -280,7 +274,6 @@ function Catalog() {
                        productCode.includes(searchLower) ||
                        productDescription.includes(searchLower);
             });
-            console.log(`After search filtering for "${searchQuery}": ${filtered.length} products remain`);
         }
         
         // Apply category filter
@@ -303,7 +296,6 @@ function Catalog() {
         // No need for pagination here since we handle that with server-side fetching
         setDisplayedProducts(filtered);
         
-        console.log(`Filtered ${products.length} products down to ${filtered.length} for ${activeCategory}`);
     }, [products, activeCategory, searchQuery, categoryFilter, subCategoryFilter]);
       // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
     useEffect(() => {
@@ -312,13 +304,11 @@ function Catalog() {
         // Function to handle automatic loading of more pages
         const loadMorePagesWithDelay = () => {
             if (hasMore && !isLoading && !isLoadingMore) {
-                console.log('Setting up delayed loading for next page group...');
                 setIsLoadingMore(true);
                 
                 // Wait for 3 seconds before loading the next page set
                 timeoutId = setTimeout(() => {
                     // Increment the max page to load - this will trigger loading all pages up to this number
-                    console.log('Loading more pages: incrementing max page from', currentPage);
                     setCurrentPage(prev => Math.min(prev + 1, 3)); // Don't go beyond page 3
                 }, 3000); // 3 seconds delay
             }
@@ -416,7 +406,6 @@ function Catalog() {
                     <div className="search-container">
                         <SearchInput 
                             onSearch={(searchTerm) => {
-                                console.log(`Searching for: "${searchTerm}"`);
                                 setSearchQuery(searchTerm);
                                 setCurrentPage(1); // Reset to page 1 when searching
                             }}

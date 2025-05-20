@@ -8,16 +8,18 @@ function GetProducts({
   API_BASE_URL,
   token,
   t = (x) => x // fallback translation
-}) {  const [backendProducts, setBackendProducts] = useState([]);
+}) {  
+  const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 25,
+    pageSize: 10,
     total: 0
   });
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // actual query sent to backend
   const debounceTimeout = useRef();
+  
   // Debounce search input
   useEffect(() => {
     if (!open) return;
@@ -34,13 +36,7 @@ function GetProducts({
     if (!open) return;
     
     try {
-      // Create params for count request - include search if applicable
-      const countParams = new URLSearchParams({
-        search: searchQuery,
-        countOnly: true // Add a parameter indicating we only need counts if your API supports it
-      });
-      
-      const response = await fetch(`${API_BASE_URL}/products/count?${countParams.toString()}`, {
+      const response = await fetch(`${API_BASE_URL}/products/count`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -50,30 +46,16 @@ function GetProducts({
       });
       
       const data = await response.json();
-      console.log("Count API response:", data);
-      
-      // Extract the count from the response based on your API's response format
-      const count = data.count || data.total || data; // Adjust based on your API response structure
-      
-      if (count !== undefined && !isNaN(Number(count))) {
-        console.log("Setting total from count API to:", Number(count));
+      if (data && data.total !== undefined) {
         setPagination(prev => ({
           ...prev,
-          total: Number(count)
+          total: Number(data.totalRecords)
         }));
       }
     } catch (error) {
       console.error("Error fetching total count:", error);
-      // We don't reset total to 0 here as we'll get it from the main products API call
     }
   };
-
-  // Effect to fetch the total count when the component opens or search changes
-  useEffect(() => {
-    if (open) {
-      fetchTotalCount();
-    }
-  }, [open, searchQuery, API_BASE_URL, token]);
 
   // Function to fetch products with pagination
   const fetchProducts = async () => {
@@ -106,21 +88,15 @@ function GetProducts({
         setBackendProducts(data);
         setPagination(prev => ({
           ...prev,
-          total: data.length
+          total: data.totalRecords
         }));
       } else if (data && Array.isArray(data.data)) {
         setBackendProducts(data.data);
         
-        // Get total from response data
-        const backendTotal =
-          (data.total !== undefined && Number(data.total)) ||
-          (data.pagination && data.pagination.total !== undefined && Number(data.pagination.total)) ||
-          data.data.length;
-        
-        console.log("Setting total to:", backendTotal);
+      
         setPagination(prev => ({
           ...prev,
-          total: backendTotal
+          total: data.totalRecords
         }));
       } else {
         setBackendProducts([]);
@@ -145,22 +121,12 @@ function GetProducts({
   useEffect(() => {
     fetchProducts();
   }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery]);
+  
   if (!open) return null;
 
   // Calculate totalPages based on total number of products and page size
   const { page, pageSize, total } = pagination;
-  const division = Math.floor(Number(total || 0) / Number(pageSize));
-  const hasRemainder = (Number(total || 0) % Number(pageSize)) > 0;
-  const totalPages = total > 0 ? (hasRemainder ? division + 1 : division) : 1;
-
-  console.log("Pagination values:", { 
-    page, 
-    pageSize, 
-    total, 
-    division,
-    hasRemainder,
-    calculatedTotalPages: totalPages 
-  });
+  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
 
   return (
     <div>

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
-import Dropdown from '../components/DropDown';
 import CommentPopup from '../components/commentPanel';
 import GetInventory from '../components/GetInventory';
 import Remarks from '../components/Remarks';
@@ -35,15 +34,6 @@ const defaultOrder = {
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// Example product options (replace with your actual product list)
-const productOptions = [
-  { id: 'P001', name: 'Product A' },
-  { id: 'P002', name: 'Product B' },
-  { id: 'P003', name: 'Product C' }
-];
-
-// Example quantity options
-const quantityOptions = [1, 2, 3, 4, 5];
 
 function OrderDetails() {
   const { t } = useTranslation();
@@ -238,121 +228,186 @@ function OrderDetails() {
   // Save handler
   const handleSave = async (action = 'save') => {
     if (addMode) {
-      // Save changes to products (sales_order_lines)
+      // Validation - check if essential fields are filled
+      if (!formData.erpCustId || !formData.erpBranchId) {
+        alert(t('Customer and Branch are required fields.'));
+        return;
+      }
+
+      // Prepare payload for backend
+      const payload = {
+        erpCustId: formData.erpCustId,
+        erpBranchId: formData.erpBranchId,
+        orderBy: formData.orderBy || '',
+        erp: formData.erp || '',
+        entity: formData.entity || '',
+        paymentMethod: formData.paymentMethod || '',
+        totalAmount: formData.totalAmount || '0',
+        paidAmount: formData.paidAmount || '0',
+        deliveryCharges: formData.deliveryCharges || '0',
+        expectedDeliveryDate: formData.expectedDeliveryDate || new Date().toISOString().split('T')[0],
+        driver: formData.driver || '',
+        vehicleNumber: formData.vehicleNumber || '',
+        status: 'Pending', // Explicitly set status to Pending for new orders
+      };
+
       try {
         setLoading(true);
-        let allSuccess = true;
-        let errorMsg = '';
-            const productsPayload = formData.products.map(product => ({
-          ...product,
-          order_id: formData.id, // assuming backend expects order_id
-          productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product'
-        }));
+        console.log('Submitting order payload:', payload);
 
-        console.log('Submitting products payload:', productsPayload); // <-- Add this line
-
-        const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+        // Step 1: Create the order first
+        const response = await fetch(`${API_BASE_URL}/sales-order`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productsPayload),
+          body: JSON.stringify(payload),
           credentials: 'include',
         });
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
           try {
-            const errorData = await response.json();
-            errorMsg = errorData.message || 'Failed to save product lines';
-          } catch {}
-          allSuccess = false;
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.message || 'Failed to create order');
+          } catch (e) {
+            throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
+          }
         }
-        if (allSuccess) {
-          alert(t('Order products saved successfully!'));
-          // Optionally, refresh order details or navigate
-        } else {
-          setError(errorMsg);
-          alert(t(errorMsg));
+
+
+        const orderId = payload.id;
+        
+        const productsPayload = formData.products
+          .map(products => ({
+            order_id: orderId,
+            product_id: products.id,
+            quantity: products.quantity,
+            unit: products.unit,
+            unit_price: parseFloat(products.unitPrice),
+            net_amount: parseFloat(products.netAmount),
+            sales_tax_rate: parseFloat(products.salesTaxRate),
+          }));
+
+        console.log('Submitting products payload:', productsPayload);
+
+        if (productsPayload.length === 0) {
+          console.warn('No valid products to submit');
+          alert(t('Order created successfully, but no products were added.'));
+          navigate('/orders');
+          return;
+        }
+        
+        try {
+          const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productsPayload),
+            credentials: 'include',
+          });
+
+          if (!linesResponse.ok) {
+            // Handle HTTP error response
+            const errorText = await linesResponse.text();
+            console.error('Server response for product lines:', errorText);
+            try {
+              const errorData = JSON.parse(errorText);
+              throw new Error(errorData.message || 'Failed to save product lines');
+            } catch (e) {
+              throw new Error(`Failed to save product lines: ${linesResponse.status} ${linesResponse.statusText}`);
+            }
+          }
+
+          // If we get here, both order and products were saved successfully
+          alert(t('Order and products created successfully!'));
+          navigate('/orders');
+        } catch (err) {
+          console.error('Error saving product lines:', err);
+          // Even if product lines failed, the order was created successfully
+          alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
+          navigate('/orders');
         }
       } catch (err) {
+        console.error('Error creating order:', err);
+        
+        // Don't treat success messages as errors
+        if (err.message && err.message.toLowerCase().includes('successfully')) {
+          alert(t('Order created successfully'));
+          navigate('/orders');
+        } else {
+          setError(err.message);
+          alert(t(err.message));
+        }
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Update existing order
+      try {
+        setLoading(true);
+        
+        // For updating existing orders, only update the fields that have changed
+        const payload = {};
+        
+        // Only add fields that are editable and have values
+        ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity', 
+         'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges', 
+         'expectedDeliveryDate', 'driver', 'vehicleNumber'].forEach(field => {
+          if (formData[field] !== undefined && formData[field] !== null) {
+            payload[field] = formData[field];
+          }
+        });
+        
+        if (Object.keys(payload).length === 0) {
+          alert(t('No changes detected to save.'));
+          return;
+        }
+        
+        console.log('Updating order with payload:', payload);
+        
+        const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+          method: 'POST', // Assuming your API uses POST for updates
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          credentials: 'include',
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
+          try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.message || 'Failed to update order');
+          } catch (e) {
+            throw new Error(`Failed to update order: ${response.status} ${response.statusText}`);
+          }
+        }
+        
+        alert(t('Order updated successfully!'));
+        
+        // Refresh order details
+        const id = formData.id;
+        const refreshResponse = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (refreshResponse.ok) {
+          const result = await refreshResponse.json();
+          if (result.status === 'Ok' && result.data) {
+            setFormData({
+              ...result.data,
+              products: result.data.products || []
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error updating order:', err);
         setError(err.message);
         alert(t(err.message));
       } finally {
         setLoading(false);
       }
-      return;
-    }
-
-    // Prepare payload for backend
-    const payload = {
-      ...formData,
-      images: Array.isArray(images) ? images : [],
-      products: formData.products.map(p => ({
-        ...p,
-        quantityOrdered: Number(p.quantityOrdered) || 0
-      })),
-      invoices: [],
-      //status by default should be pending
-      status: formData.status || 'Pending',
-    };
-
-    // Remove fields not needed by backend
-    delete payload.id;
-    delete payload.createdAt;
-    delete payload.updatedAt;
-    delete payload.status;
-
-    console.log('Submitting order payload:', payload); // <-- Add this line
-
-    try {
-      setLoading(true);
-      // 1. Create the order
-      const response = await fetch(`${API_BASE_URL}/sales-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        let errorMsg = 'Failed to create order';
-        try {
-          const errorData = await response.json();
-          errorMsg = errorData.message || errorMsg;
-        } catch {}
-        throw new Error(errorMsg);
-      }
-
-      const result = await response.json();
-      if (result.status === 'Ok' && result.data && result.data.id) {
-        // 2. Post products to sales_order_lines with the new order id
-        const orderId = result.data.id;
-        const productsPayload = formData.products.map(product => ({
-          ...product,
-          order_id: orderId,
-          productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product'
-        }));
-        const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productsPayload),
-          credentials: 'include',
-        });
-        if (!linesResponse.ok) {
-          let errorMsg = 'Failed to save product lines';
-          try {
-            const errorData = await linesResponse.json();
-            errorMsg = errorData.message || errorMsg;
-          } catch {}
-          throw new Error(errorMsg);
-        }
-        alert(t('Order and products created successfully!'));
-        navigate('/orders');
-      } else {
-        throw new Error(result.message || 'Failed to create order');
-      }
-    } catch (err) {
-      setError(err.message);
-      alert(t(err.message));
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -404,22 +459,54 @@ function OrderDetails() {
 
    // Add selected product to products table
   const handleSelectProduct = (product) => {
+    // Ensure we have proper numeric values for calculations
+    const unitPrice = parseFloat(product.unitPrice || 0);
+    const quantity = 1; // Default quantity
+    const vatRate = parseFloat(product.vatPercentage || 0);
+    
+    // Calculate net amount
+    const netAmount = (unitPrice * quantity).toFixed(2);
+    
     setFormData(prev => ({
       ...prev,
       products: [
         ...prev.products,
         {
           id: product.id,
+          product_id: product.id, // Ensure product_id is set for API
           productName: product.productName || product.product_name || 'Unknown Product',
-          quantityOrdered: '' || 1,
+          quantityOrdered: quantity,
           unit: product.unit || '',
-          unitPrice: product.unitPrice || 'Field not in products table',
-          netAmount: product.netAmount || 'Field not in products table',
-          salesTaxRate: product.vatPercentage || '',
+          unitPrice: unitPrice.toString(),
+          netAmount: netAmount,
+          salesTaxRate: vatRate.toString(),
         }
       ]
     }));
     setShowProductPopup(false);
+  };
+
+  // Utility function for more robust API error handling
+  const handleApiError = async (response, defaultMessage) => {
+    if (!response.ok) {
+      console.error(`API Error: ${response.status} ${response.statusText}`);
+      let errorMessage = defaultMessage;
+      
+      try {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || defaultMessage;
+        } else {
+          const textError = await response.text();
+          console.error('API response text:', textError);
+        }
+      } catch (err) {
+        console.error('Error parsing error response:', err);
+      }
+      
+      throw new Error(errorMessage);
+    }
   };
 
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
