@@ -54,14 +54,14 @@ function OrderDetails() {
   const [showProductPopup, setShowProductPopup] = useState(false);
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
-  
+
   // Table columns
   const columns = [
     { key: 'id', header: 'Product ID' },
-    { 
-      key: 'productName', 
+    {
+      key: 'productName',
       header: 'Product Name',
-      render: (row) => row.productName || row.product_name || row.erpProdId || 'Unknown Product'
+      render: (row) =>  row.erpProdId
     },
     {
       key: 'quantityOrdered',
@@ -69,17 +69,21 @@ function OrderDetails() {
       render: (row) =>
         addMode ? (
           <QuantityController
-            itemId={row.id}
+            itemId={row.id || row.product_id}
             quantity={row.quantityOrdered || 0}
             onQuantityChange={(itemId, delta) => {
-              const idx = formData.products.findIndex(p => p.id === itemId);
+              const idx = formData.products.findIndex(p => 
+                (p.id === itemId || p.product_id === itemId)
+              );
               if (idx !== -1) {
                 const newQty = Math.max(0, (parseInt(formData.products[idx].quantityOrdered) || 0) + delta);
                 handleProductChange(idx, 'quantityOrdered', newQty);
               }
             }}
             onInputChange={(itemId, value) => {
-              const idx = formData.products.findIndex(p => p.id === itemId);
+              const idx = formData.products.findIndex(p => 
+                (p.id === itemId || p.product_id === itemId)
+              );
               if (idx !== -1) {
                 handleProductChange(idx, 'quantityOrdered', value);
               }
@@ -170,9 +174,10 @@ function OrderDetails() {
           // Map the product data to ensure we use productName instead of erpProdId
           const processedProducts = result.data.data.map(product => ({
             ...product,
-            productName: product.productName || product.product_name || product.erpProdId || 'Unknown Product',
+            id: product.productId,
+            productName: product.productName || product.product_name || product.erp_prod_id, 
           }));
-          
+
           setFormData(prev => ({
             ...prev,
             products: processedProducts
@@ -274,13 +279,21 @@ function OrderDetails() {
           }
         }
 
+        // Parse the response as JSON to get the inserted row's id
+        const result = await response.json();
+        console.log('Order creation result:', result);
 
-        const orderId = payload.id;
-        
+        if (!result.data || !result.data.id) {
+          throw new Error('Order ID not returned from API');
+        }
+
+
+
         const productsPayload = formData.products
           .map(products => ({
-            order_id: orderId,
+            order_id: result.data.id,
             product_id: products.id,
+            erp_product_id: products.erp_prod_id,
             quantity: products.quantity,
             unit: products.unit,
             unit_price: parseFloat(products.unitPrice),
@@ -296,7 +309,7 @@ function OrderDetails() {
           navigate('/orders');
           return;
         }
-        
+
         try {
           const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
             method: 'POST',
@@ -328,7 +341,7 @@ function OrderDetails() {
         }
       } catch (err) {
         console.error('Error creating order:', err);
-        
+
         // Don't treat success messages as errors
         if (err.message && err.message.toLowerCase().includes('successfully')) {
           alert(t('Order created successfully'));
@@ -344,33 +357,33 @@ function OrderDetails() {
       // Update existing order
       try {
         setLoading(true);
-        
+
         // For updating existing orders, only update the fields that have changed
         const payload = {};
-        
+
         // Only add fields that are editable and have values
-        ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity', 
-         'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges', 
-         'expectedDeliveryDate', 'driver', 'vehicleNumber'].forEach(field => {
-          if (formData[field] !== undefined && formData[field] !== null) {
-            payload[field] = formData[field];
-          }
-        });
-        
+        ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
+          'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
+          'expectedDeliveryDate', 'driver', 'vehicleNumber'].forEach(field => {
+            if (formData[field] !== undefined && formData[field] !== null) {
+              payload[field] = formData[field];
+            }
+          });
+
         if (Object.keys(payload).length === 0) {
           alert(t('No changes detected to save.'));
           return;
         }
-        
+
         console.log('Updating order with payload:', payload);
-        
+
         const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
           method: 'POST', // Assuming your API uses POST for updates
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           credentials: 'include',
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Server response:', errorText);
@@ -381,9 +394,9 @@ function OrderDetails() {
             throw new Error(`Failed to update order: ${response.status} ${response.statusText}`);
           }
         }
-        
+
         alert(t('Order updated successfully!'));
-        
+
         // Refresh order details
         const id = formData.id;
         const refreshResponse = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
@@ -391,7 +404,7 @@ function OrderDetails() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
+
         if (refreshResponse.ok) {
           const result = await refreshResponse.json();
           if (result.status === 'Ok' && result.data) {
@@ -457,26 +470,25 @@ function OrderDetails() {
     }));
   };
 
-   // Add selected product to products table
+  // Add selected product to products table
   const handleSelectProduct = (product) => {
     // Ensure we have proper numeric values for calculations
     const unitPrice = parseFloat(product.unitPrice || 0);
     const quantity = 1; // Default quantity
     const vatRate = parseFloat(product.vatPercentage || 0);
-    
+
     // Calculate net amount
     const netAmount = (unitPrice * quantity).toFixed(2);
-    
+
     setFormData(prev => ({
       ...prev,
       products: [
         ...prev.products,
         {
           id: product.id,
-          product_id: product.id, // Ensure product_id is set for API
           productName: product.productName || product.product_name || 'Unknown Product',
           quantityOrdered: quantity,
-          unit: product.unit || '',
+          unit: product.unit ,
           unitPrice: unitPrice.toString(),
           netAmount: netAmount,
           salesTaxRate: vatRate.toString(),
@@ -491,7 +503,7 @@ function OrderDetails() {
     if (!response.ok) {
       console.error(`API Error: ${response.status} ${response.statusText}`);
       let errorMessage = defaultMessage;
-      
+
       try {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
@@ -504,7 +516,7 @@ function OrderDetails() {
       } catch (err) {
         console.error('Error parsing error response:', err);
       }
-      
+
       throw new Error(errorMessage);
     }
   };
@@ -632,18 +644,18 @@ function OrderDetails() {
                   actionButtons={
                     addMode
                       ? (row) => (
-                          <button
-                            className="order-action-btn reject"
-                            style={{ padding: '4px 10px', fontSize: 14 }}
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleDeleteProductRow(formData.products.indexOf(row));
-                            }}
-                            type="button"
-                          >
-                            {t('Delete')}
-                          </button>
-                        )
+                        <button
+                          className="order-action-btn reject"
+                          style={{ padding: '4px 10px', fontSize: 14 }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleDeleteProductRow(formData.products.indexOf(row));
+                          }}
+                          type="button"
+                        >
+                          {t('Delete')}
+                        </button>
+                      )
                       : undefined
                   }
                 />
@@ -657,27 +669,27 @@ function OrderDetails() {
                 {t(formData.status) || t('Pending')}
               </span>
             </div>
-            
-              <button className="order-action-btn" onClick={() => handleSave('save')}>
-                {t('Save Changes')}
+
+            <button className="order-action-btn" onClick={() => handleSave('save')}>
+              {t('Save Changes')}
+            </button>
+            <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
+              {t('Cancel Order')}
+            </button>
+            <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+              {t('Download Invoice')}
+            </button>
+            <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+              {t('Get Inventory')}
+            </button>
+            <div className="order-details-actions">
+              <button className="order-action-btn approve" onClick={() => handleSubmit('approve')} disabled={formData.status === 'approved'}>
+                {t('Approve')}
               </button>
-              <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
-                {t('Cancel Order')}
+              <button className="order-action-btn reject" onClick={() => handleSubmit('reject')} disabled={formData.status === 'approved'}>
+                {t('Reject')}
               </button>
-              <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
-                {t('Download Invoice')}
-              </button>
-              <button className="order-action-btn" onClick={() => setShowInventory(true)}>
-                {t('Get Inventory')}
-              </button>
-              <div className="order-details-actions">
-                <button className="order-action-btn approve" onClick={() => handleSubmit('approve')} disabled={formData.status === 'approved'}>
-                  {t('Approve')}
-                </button>
-                <button className="order-action-btn reject" onClick={() => handleSubmit('reject')} disabled={formData.status === 'approved'}>
-                  {t('Reject')}
-                </button>
-              </div>
+            </div>
           </div>
         </div>
         <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
