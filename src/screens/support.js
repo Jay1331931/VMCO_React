@@ -20,22 +20,21 @@ import formatDate from '../utilities/dateFormatter';
 // ];
 
 function Support() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   
   const [initialTickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  console.log('Before user effect');
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        console.log('Fetching support tickets...');
         // Replace with your actual API endpoint URL
         //TODO: Parameters such as search, sort order must be added dynamiccally
         const apiUrl = process.env.REACT_APP_API_BASE_URL 
-          ? `${process.env.REACT_APP_API_BASE_URL}/api/grievances`
+          ? `${process.env.REACT_APP_API_BASE_URL}/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc`
           : 'http://localhost:3000/api/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc';
           
         const response = await fetch(apiUrl);
@@ -63,8 +62,8 @@ function Support() {
   //TODO: Handle arabic and english names for company and branch
   const columns = [
     { key: 'id', header: 'Ticket #' },
-    { key: 'companyNameEn', header: 'Customer' },
-    { key: 'branchNameEn', header: 'Branch' },
+    { key: currentLanguage=='en'?'companyNameEn':'companyNameAr', header: 'Customer' },
+    { key: currentLanguage=='en'?'branchNameEn':'branchNameAr', header: 'Branch' },
     { key: 'grievanceName', header: 'Issue Name' },
     { key: 'grievanceType', header: 'Issue Type' },
     { key: 'createdAt', header: 'Created Date' },
