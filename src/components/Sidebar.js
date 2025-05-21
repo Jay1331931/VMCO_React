@@ -23,6 +23,8 @@ import {
   faLanguage
 } from '@fortawesome/free-solid-svg-icons';
 
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function Sidebar({ children, title }) {
   const navigate = useNavigate();
   const location = useLocation(); // Add this to track current route
@@ -91,6 +93,19 @@ function Sidebar({ children, title }) {
     }
   };
 
+  const handleLogout = async () => {
+    const refreshResponse = await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (refreshResponse.ok) {
+          // Logout successful, redirect to login page
+          navigate('/login');
+        }
+  };
+
   const menuItems = [
     { icon: faHouse, label: 'Dashboard', default: true },
     { icon: faBookOpen, label: 'Catalog' },
@@ -151,7 +166,7 @@ function Sidebar({ children, title }) {
                   <div className="user-email">{t('customer@consumer')}</div>
                 </div>
               </div>
-              <div className="logout-icon" onClick={() => alert('Logging out...')}>
+              <div className="logout-icon" onClick={handleLogout}>
                 <FontAwesomeIcon icon={faSignOutAlt} />
               </div>
             </div>
