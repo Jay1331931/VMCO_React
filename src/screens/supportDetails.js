@@ -184,6 +184,12 @@ function SupportDetails() {
     // After successful save, you might want to refresh the data
   };
 
+  const handleCommentClick = () => {
+    //TODO: implement API call to add comment
+    console.log("~~~~~~~~~~ Comment Added");
+    console.log("~~~~~~~~~~ ticket comments", ticket.comments); 
+  };
+
   return (
     <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="support-details-container">
@@ -383,8 +389,8 @@ function SupportDetails() {
           </div>
         </div>
       )}
-      
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+      {/*TODO: part of params like currentUser Details must be dynamic */}
+      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:'SE1', userId:'1'}}   /> 
     </Sidebar>
   );
 }
@@ -408,8 +414,11 @@ export default SupportDetails;
                 "criticalLevel": "High",
                 "comments": [
                     {
+                        "action": "Approved",
                         "userid": 1,
-                        "comment": "Technician assigned",
+                        "message": "Technician assigned",
+                        userName: "SE1",
+                        "userId": 1,
                         "createdAt": "2025-04-01T10:00:00Z"
                     }
                 ],

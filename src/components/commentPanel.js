@@ -4,12 +4,17 @@ import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { faMessage } from '@fortawesome/free-regular-svg-icons';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
+import formatDate from '../utilities/dateFormatter'; // Import the date formatter
+
+/**
+ * comment object structure
+ {"action": "New", "date": "2025-05-21 00:00", "message": "Technician assigned", "userName": "currentUser.userName", "userId": "currentUser.userId"} 
+ {"status": "New", "actionTimestamp": "2025-05-21 00:00", "comment": "Technician assigned", "userName": "currentUser.userName", "userId": "currentUser.userId"} 
+ */
 
 const CommentPopup = ({ 
   isOpen, 
   setIsOpen, 
-  id, 
-  type, 
   onAddComment, 
   showCommentForm = true,
   externalComments = [],
@@ -25,8 +30,7 @@ const CommentPopup = ({
       // Create a new comment object
       const newComment = {
         action: 'New',
-        date: formatDate(new Date()),
-        time: formatTime(new Date()),
+        date: formatDate(new Date(),'YYYY-MM-DD HH:MM'),
         message: commentText.trim(),
         userName: currentUser.userName,
         userId: currentUser.userId
@@ -34,6 +38,7 @@ const CommentPopup = ({
 
       // Add the new comment to the comments array
       const updatedComments = [newComment, ...comments];
+      externalComments.push(newComment);
       setComments(updatedComments);
       setCount(updatedComments.length);
 
@@ -48,23 +53,6 @@ const CommentPopup = ({
   };
 
   // Helper function to format date as DD MMM YYYY
-  const formatDate = (date) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const day = date.getDate();
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
-  };
-
-  // Helper function to format time as HH:MMam/pm
-  const formatTime = (date) => {
-    let hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // The hour '0' should be '12'
-    return `${hours}:${minutes}${ampm}`;
-  };
 
   return (
     <>
@@ -109,8 +97,8 @@ const CommentPopup = ({
                 </div>
                 <div className="comment-content">
                   <div className="comment-meta">
-                    <strong>{t(comment.action || 'Comment')}</strong>
-                    <span>{`${comment.date} ${comment.time}`}</span>
+                    <p>{`${comment.date}`}</p>
+                    <p>{t(comment.action || 'Comment')}</p>
                   </div>
                   <div className="comment-text">{comment.message}</div>
                 </div>
