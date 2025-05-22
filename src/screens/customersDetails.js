@@ -18,7 +18,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import Pagination from '../components/Pagination';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const LocationPicker = ({ onLocationSelect }) => {
+const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   const mapContainer = useRef(null);
   const markerRef = useRef(null); // Using ref instead of state for the marker
   const [map, setMap] = useState(null);
@@ -28,22 +28,25 @@ const LocationPicker = ({ onLocationSelect }) => {
   const [defaultCenter] = useState([77.5946, 12.9716]);
   const [zoom] = useState(14);
   const [confirmedLocation, setConfirmedLocation] = useState(null);
-
+console.log('initialLat:', initialLat);
+    console.log('initialLng:', initialLng);
+    
   useEffect(() => {
     let mapInstance;
-
+    
     const initializeMap = async () => {
       mapInstance = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
-        center: defaultCenter,
+        center: initialLat && initialLng ? [initialLng, initialLat] : defaultCenter,
         zoom: zoom
       });
 
       mapInstance.on('load', async () => {
         setMap(mapInstance);
         try {
-          const position = await getCurrentPosition();
+          const position = initialLat && initialLng ? {coords: {latitude: initialLat, longitude: initialLng}} : await getCurrentPosition();
+          console.log('Geolocation position:', position.coords);
           const { latitude, longitude } = position.coords;
           updateMarker(mapInstance, longitude, latitude);
         } catch (error) {
@@ -149,156 +152,6 @@ const LocationPicker = ({ onLocationSelect }) => {
     </div>
   );
 };
-// const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
-//   const mapContainer = useRef(null);
-//   const markerRef = useRef(null);
-//   const [map, setMap] = useState(null);
-//   const { t, i18n } = useTranslation();
-//   const [coords, setCoords] = useState('Detecting your location...');
-//   const [coordsArabic, setCoordsArabic] = useState(t('Detecting your location...'));
-//   const [defaultCenter] = useState([77.5946, 12.9716]);
-//   const [zoom] = useState(14);
-//   const [confirmedLocation, setConfirmedLocation] = useState(
-//     initialLat && initialLng ? { lat: initialLat, lng: initialLng } : null
-//   );
-// const updateMarker = (map, lng, lat) => {
-//       // Remove existing marker if it exists
-//       if (markerRef.current) {
-//         markerRef.current.remove();
-//         markerRef.current = null;
-//       }
-
-//       // Create new marker
-//       const newMarker = new maplibregl.Marker()
-//         .setLngLat([lng, lat])
-//         .addTo(map);
-
-//       markerRef.current = newMarker;
-//       setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-//       setCoordsArabic(`خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`);
-
-//       map.flyTo({
-//         center: [lng, lat],
-//         essential: true
-//       });
-//     };
-//   useEffect(() => {
-//     let mapInstance;
-
-//     const initializeMap = async () => {
-//       mapInstance = new maplibregl.Map({
-//         container: mapContainer.current,
-//         style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
-//         center: initialLat && initialLng ? [initialLng, initialLat] : defaultCenter,
-//         zoom: zoom
-//       });
-
-//       mapInstance.on('load', async () => {
-//         setMap(mapInstance);
-        
-//         // If initial location is provided, use that
-//         if (initialLat && initialLng) {
-//           updateMarker(mapInstance, initialLng, initialLat);
-//           setConfirmedLocation({ lat: initialLat, lng: initialLng });
-//         } else {
-//           // Otherwise try to get current location
-//           try {
-//             const position = await getCurrentPosition();
-//             const { latitude, longitude } = position.coords;
-//             updateMarker(mapInstance, longitude, latitude);
-//           } catch (error) {
-//             console.log('Geolocation error:', error);
-//             setCoords('Click on the map to select a location');
-//             setCoordsArabic(t('Click on the map to select a location'));
-//           }
-//         }
-//       });
-
-//       mapInstance.on('click', (e) => {
-//         if (!confirmedLocation) {
-//           const { lng, lat } = e.lngLat;
-//           updateMarker(mapInstance, lng, lat);
-//         }
-//       });
-
-//       return () => {
-//         if (markerRef.current) markerRef.current.remove();
-//         mapInstance.remove();
-//       };
-//     };
-
-//     const getCurrentPosition = () => {
-//       return new Promise((resolve, reject) => {
-//         navigator.geolocation.getCurrentPosition(resolve, reject, {
-//           enableHighAccuracy: true,
-//           timeout: 5000
-//         });
-//       });
-//     };
-
-    
-
-//     initializeMap();
-
-//     return () => {
-//       if (mapInstance) mapInstance.remove();
-//     };
-//   }, [confirmedLocation, initialLat, initialLng]);
-
-//   const handleConfirm = () => {
-//     if (markerRef.current) {
-//       const lngLat = markerRef.current.getLngLat();
-//       onLocationSelect(lngLat.lat, lngLat.lng);
-//       setConfirmedLocation(lngLat);
-//     }
-//   };
-
-//   const handleReset = () => {
-//     if (markerRef.current) {
-//       markerRef.current.remove();
-//       markerRef.current = null;
-//     }
-//     setConfirmedLocation(null);
-//     setCoords('Click on the map to select a location');
-//     setCoordsArabic(t('Click on the map to select a location'));
-    
-//     // If there was an initial location, restore it
-//     if (initialLat && initialLng) {
-//       updateMarker(map, initialLng, initialLat);
-//       setConfirmedLocation({ lng: initialLng, lat: initialLat });
-//     }
-//   };
-
-//   return (
-//     <div className="location-picker-container">
-//       <div ref={mapContainer} className="map-container" />
-//       <div className="location-coords">{i18n.language === 'ar' ? coordsArabic : coords}</div>
-//       <div className="location-actions">
-//         {!confirmedLocation ? (
-//           <button
-//             className="confirm-location-button"
-//             onClick={handleConfirm}
-//             disabled={!markerRef.current}
-//           >
-//             {t('Confirm Location')}
-//           </button>
-//         ) : (
-//           <>
-//             <div className="location-confirmed">
-//               {t('Location confirmed!')}
-//             </div>
-//             <button
-//               className="reset-location-button"
-//               onClick={handleReset}
-//             >
-//               {t('Change Location')}
-//             </button>
-//           </>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
 function CustomersDetails() {
   const contentRef = useRef(null);
   const [tabsHeight, setTabsHeight] = useState('auto');
