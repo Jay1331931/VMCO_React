@@ -17,7 +17,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Define categories with their corresponding entity values
 const categories = [
     { value: 'VMCO Machines', entity: 'VMCO', label: 'VMCO Machines' },
-    { value: 'VMCO Consumables', entity: 'VMCO Consumables', label: 'VMCO Consumables' },
+    { value: 'VMCO Consumables', entity: 'VMCO', label: 'VMCO Consumables' },
     { value: 'Diyafa', entity: 'Diyafa', label: 'Diyafa' },
     { value: 'Green Mast', entity: 'Green Mast', label: 'Green Mast' },
     { value: 'Naqui', entity: 'Naqui', label: 'Naqui' }
@@ -60,18 +60,35 @@ function Catalog() {
     const isProductMachine = (product) => {
         if (!product) return false;
         
-        // Check explicit productType field
-        if (product.productType === 'machine') return true;
+        // Check explicit productType field first
+        if (product.productType === 'machine' || product.product_type === 'machine') return true;
+        if (product.productType === 'consumable' || product.product_type === 'consumable') return true;
         
         // Check category and subCategory fields
         const categoryLower = (product.category || '').toLowerCase();
         const subCategoryLower = (product.subCategory || product.sub_category || '').toLowerCase();
         
         // Look for machine-related keywords in category or subcategory
-        return categoryLower.includes('machine') || 
-               subCategoryLower.includes('machine') ||
-               categoryLower.includes('equipment') ||
-               subCategoryLower.includes('equipment');
+        const machineKeywords = ['machine', 'equipment', 'appliance', 'device'];
+        const consumableKeywords = ['consumable', 'supply', 'accessory', 'part'];
+        
+        // First check for machine keywords
+        for (const keyword of machineKeywords) {
+            if (categoryLower.includes(keyword) || subCategoryLower.includes(keyword)) {
+                return true;
+            }
+        }
+        
+        // Then check for consumable keywords - if found, it's definitely not a machine
+        for (const keyword of consumableKeywords) {
+            if (categoryLower.includes(keyword) || subCategoryLower.includes(keyword)) {
+                return false;
+            }
+        }
+        
+        // If we can't determine based on keywords, default behavior depends on which tab we're in
+        // In most cases, if we can't tell, it's safer to treat as a consumable
+        return false;
     };
     
     // Map product fields from backend to component props
@@ -137,25 +154,20 @@ function Catalog() {
                     // Handle entity filtering - this is the category tab selected by the user
                     const selectedCategory = categories.find(cat => cat.value === activeCategory);
                     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+                    
                     if (entityToFilter) {
                         params.append('entity', entityToFilter);
-                        // Some APIs might use 'entityName' instead of 'entity'
-                        params.append('entityName', entityToFilter);
                     }
 
-                    // For VMCO Machines and VMCO Consumables, add additional filtering
-                    if (activeCategory === 'VMCO Machines') {
-                        params.append('productType', 'vmco');
+                    // For all tabs, just filter by entity without special handling
+                    if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
+                        params.append('entity', 'VMCO');
                     } else if (activeCategory === 'Diyafa') {
-                        params.append('productType', 'Diyafa');
-                    } else if (activeCategory === 'VMCO Consumables') {
-                        params.append('productType', 'vmco consumables');
-                    }
-                    else if (activeCategory === 'Green Mast') {
-                        params.append('productType', 'green mast');
-                    }
-                    else if (activeCategory === 'Naqui') {
-                        params.append('productType', 'naqui');
+                        params.append('entity', 'Diyafa');
+                    } else if (activeCategory === 'Green Mast') {
+                        params.append('entity', 'Green Mast');
+                    } else if (activeCategory === 'Naqui') {
+                        params.append('entity', 'Naqui');
                     }
                     
                     // Add category and subcategory filters
@@ -252,14 +264,7 @@ function Catalog() {
                 return productEntity === entityToFilter.toLowerCase();
             });
             
-            // For VMCO entities, filter by product type (machine vs other)
-            if (entityToFilter === 'VMCO') {
-                const isVMCOMachines = activeCategory === 'VMCO Machines';
-                filtered = filtered.filter(product => {
-                    const isMachine = isProductMachine(product);
-                    return isVMCOMachines ? isMachine : !isMachine;
-                });
-            }
+            // No special handling for VMCO entities anymore
         }
         
         // Apply search filter on product name
@@ -292,8 +297,6 @@ function Catalog() {
         }
         
         setFilteredProducts(filtered);
-        // We now set displayed products directly to filtered products
-        // No need for pagination here since we handle that with server-side fetching
         setDisplayedProducts(filtered);
         
     }, [products, activeCategory, searchQuery, categoryFilter, subCategoryFilter]);
@@ -342,9 +345,11 @@ function Catalog() {
     };
 
     const handleQuantityChange = (productId, value) => {
+        // Update local state only for immediate UI feedback
+        const newQuantity = Math.max(0, Number(quantities[productId] || 0) + value);
         setQuantities(prev => ({
             ...prev,
-            [productId]: Math.max(0, Number(prev[productId] || 0) + value)
+            [productId]: newQuantity
         }));
     };
 
@@ -367,6 +372,137 @@ function Catalog() {
     //    - Naqui: Shows only Naqui products
     // 2. Filtering happens at both server-side (API) and client-side
     // 3. When changing tabs, other filters (category, subcategory, search) are reset
+
+    const handleAddToCart = async (productId) => {
+        try {
+            // Find the product being added
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            
+            // Get the quantity from state
+            const quantity = quantities[productId] || 1; // Default to 1 if not set
+            
+            // Calculate needed values
+            const unitPrice = product.price || product.unitPrice || 0;
+            const netAmount = unitPrice * quantity;
+            const sugarTaxAmount = product.sugarTaxAmount || 0;
+            
+            // Prepare cart item data
+            const cartItem = {
+                productId: product.id,
+                productName: product.productName || product.product_name,
+                entity: product.entity,
+                category: product.category,
+                unit: product.unit || 'EA',
+                unitPrice: unitPrice,
+                netAmount: netAmount,
+                quantity: quantity,
+                sugarTaxAmount: sugarTaxAmount,
+                locationId: selectedLocation
+            };
+            
+            // Make API call to add item to cart
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(cartItem)
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to add item to cart');
+            }
+            
+            // Show success message
+            console.log('Product added to cart successfully');
+            
+        } catch (error) {
+            console.error('Error adding product to cart:', error);
+            // Consider showing an error notification to the user
+        }
+    };
+
+    // Get unique categories filtered by the current entity tab
+const getFilteredCategories = () => {
+    // Get the entity for the current active tab
+    const selectedCategory = categories.find(cat => cat.value === activeCategory);
+    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+    
+    if (!entityToFilter) return [];
+    
+    // First filter by entity
+    let filteredProductsByEntity = products.filter(p => 
+        (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
+    );
+    
+    // Additional filtering for VMCO tabs
+    if (activeCategory === 'VMCO Machines') {
+        // For VMCO Machines tab, exclude categories that have "consumable" in their name
+        return Array.from(new Set(
+            filteredProductsByEntity
+                .map(p => p.category)
+                .filter(Boolean)
+                .filter(category => 
+                    !(category.toLowerCase().includes('consumable') || 
+                      category.toLowerCase().includes('supply') ||
+                      category.toLowerCase().includes('accessory'))
+                )
+        ));
+    } else if (activeCategory === 'VMCO Consumables') {
+        // For VMCO Consumables tab, exclude categories that have "machine" in their name
+        return Array.from(new Set(
+            filteredProductsByEntity
+                .map(p => p.category)
+                .filter(Boolean)
+                .filter(category => 
+                    !(category.toLowerCase().includes('machine') || 
+                      category.toLowerCase().includes('equipment') ||
+                      category.toLowerCase().includes('device'))
+                )
+        ));
+    } else {
+        // For all other tabs, just filter by entity without special handling
+        return Array.from(new Set(
+            filteredProductsByEntity
+                .map(p => p.category)
+                .filter(Boolean)
+        ));
+    }
+};
+
+// Get unique subcategories filtered by the current entity tab and selected category
+const getFilteredSubcategories = () => {
+    // Get the entity for the current active tab
+    const selectedCategory = categories.find(cat => cat.value === activeCategory);
+    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+    
+    if (!entityToFilter) return [];
+    
+    let filteredProducts = products;
+    
+    // Filter by entity first
+    filteredProducts = filteredProducts.filter(
+        p => (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
+    );
+    
+    // No special handling for VMCO entities anymore
+    
+    // If a category is selected, filter by that category
+    if (categoryFilter) {
+        filteredProducts = filteredProducts.filter(
+            p => (p.category || '').toLowerCase() === categoryFilter.toLowerCase()
+        );
+    }
+    
+    // Return unique subcategories from the filtered products
+    return Array.from(new Set(
+        filteredProducts
+            .map(p => p.subCategory || p.sub_category)
+            .filter(Boolean)
+    ));
+};
 
     return (
         <Sidebar title={t('Catalog')}>
@@ -395,6 +531,8 @@ function Catalog() {
                             setSubCategoryFilter('');
                             setSearchQuery('');
                             setCurrentPage(1);
+                            setLoadedPages([]);
+                            setHasMore(true);
                         }}
                         variant="category"
                     />
@@ -411,30 +549,31 @@ function Catalog() {
                             }}
                             debounceTime={500} // Increased debounce time for better performance
                             className="product-search-input"
-                        />                        <Dropdown
+                        />                        
+                        <Dropdown
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
-                            options={categoryTabs} // Use categoryTabs to match the tab options
-                            className="category-filter tab-linked-filter"
+                            options={getFilteredCategories().map(cat => ({ value: cat, label: cat }))}
+                            className="category-filter"
                             placeholder="Category"
-                            value={activeCategory} // Set value to match the active tab
+                            value={categoryFilter}
                             onChange={e => {
-                                // This won't be triggered since the dropdown is disabled
-                                // but keep it for consistency
-                                setActiveCategory(e.target.value);
-                                setCategoryFilter('');
-                                setSubCategoryFilter('');
+                                setCategoryFilter(e.target.value);
+                                setSubCategoryFilter(''); // Reset subcategory when category changes
+                                setCurrentPage(1);
                             }}
-                            disabled={true} // Disable the dropdown
                         />
                         <Dropdown
                             id={`subcategory-filter-${catalogId}`}
                             name="subCategoryFilter"
-                            options={uniqueSubCategories.map(sub => ({ value: sub, label: sub }))}
+                            options={getFilteredSubcategories().map(sub => ({ value: sub, label: sub }))}
                             className="category-filter"
                             placeholder="Sub category"
                             value={subCategoryFilter}
-                            onChange={e => setSubCategoryFilter(e.target.value)}
+                            onChange={e => {
+                                setSubCategoryFilter(e.target.value);
+                                setCurrentPage(1);
+                            }}
                         />
                     </div>
                 </div>                <div className="products-grid">
@@ -445,6 +584,7 @@ function Catalog() {
                                 product={mapProductToCardProps(product)}
                                 quantities={quantities}
                                 onQuantityChange={handleQuantityChange}
+                                onAddToCart={() => handleAddToCart(product.id)}
                                 onProductClick={() => handleProductClick(product)}
                                 setQuantities={setQuantities}
                             />
@@ -490,6 +630,7 @@ function Catalog() {
                         product={mapProductToCardProps(selectedProduct)}
                         quantities={quantities}
                         onQuantityChange={handleQuantityChange}
+                        onAddToCart={() => handleAddToCart(selectedProduct.id)}
                         onInputChange={(itemId, value) => setQuantities({
                             ...quantities,
                             [itemId]: value
