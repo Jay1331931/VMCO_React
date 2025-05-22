@@ -411,7 +411,8 @@ function Catalog() {
                             }}
                             debounceTime={500} // Increased debounce time for better performance
                             className="product-search-input"
-                        />                        <Dropdown
+                        />                        
+                        <Dropdown
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
                             options={categoryTabs} // Use categoryTabs to match the tab options

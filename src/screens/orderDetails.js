@@ -52,9 +52,9 @@ function OrderDetails() {
   const [showRemarks, setShowRemarks] = useState(false);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [showProductPopup, setShowProductPopup] = useState(false);
-  const [backendProducts, setBackendProducts] = useState([]);
-  const [productLoading, setProductLoading] = useState(false);
-
+  const [backendProducts] = useState([]);
+  
+  const [popupImage, setPopupImage] = useState(null);
   // Table columns
   const columns = [
     { key: 'id', header: 'Product ID' },
@@ -64,39 +64,45 @@ function OrderDetails() {
       render: (row) =>  row.erpProdId
     },
     {
-      key: 'quantityOrdered',
+      key: 'quantity',
       header: 'Quantity',
-      render: (row) =>
-        addMode ? (
+      render: (row) => (
+        <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
             itemId={row.id || row.product_id}
-            quantity={row.quantityOrdered || 0}
-            onQuantityChange={(itemId, delta) => {
-              const idx = formData.products.findIndex(p => 
-                (p.id === itemId || p.product_id === itemId)
+            quantity={row.quantity || row.quantity}
+            onQuantityChange={(_, delta) => {
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                const newQty = Math.max(0, (parseInt(formData.products[idx].quantityOrdered) || 0) + delta);
-                handleProductChange(idx, 'quantityOrdered', newQty);
+                // Convert to number with parseInt to ensure we're doing numeric addition
+                const currentQty = parseInt(formData.products[idx].quantity || formData.products[idx].quantity || 0, 10);
+                const newQty = currentQty + parseInt(delta, 10);
+                handleQuantityChange(idx, Math.max(0, newQty));
               }
             }}
-            onInputChange={(itemId, value) => {
-              const idx = formData.products.findIndex(p => 
-                (p.id === itemId || p.product_id === itemId)
+            onInputChange={(_, value) => {
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                handleProductChange(idx, 'quantityOrdered', value);
+                // Make sure value is treated as a number
+                handleQuantityChange(idx, parseInt(value, 10) || 0);
               }
             }}
-            stopPropagation={true}
           />
-        ) : row.quantityOrdered
+          {/* Unit icon (example: FontAwesome fa-balance-scale for KG) */}
+          <span title={row.unit}>
+            <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />
+          </span>
+        </div>
+      )
     },
     { key: 'unit', header: 'Unit' },
     { key: 'unitPrice', header: 'Unit Price (SAR)' },
     { key: 'netAmount', header: 'Net Amount (SAR)' },
     { key: 'salesTaxRate', header: 'Tax (SAR)' },
-    // Only add the actions column in addMode, no render property
     ...(addMode ? [{ key: 'actions', header: 'Actions' }] : [])
   ];
 
@@ -176,6 +182,7 @@ function OrderDetails() {
             ...product,
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id, 
+            quantity: product.quantity,
           }));
 
           setFormData(prev => ({
@@ -207,11 +214,12 @@ function OrderDetails() {
     // eslint-disable-next-line
   }, [addMode]);
 
-  // Handle product row changes
-  const handleProductChange = (idx, field, value) => {
+  // quantity change handler
+  const handleQuantityChange = (idx, value) => {
     setFormData(prev => {
       const updatedProducts = [...prev.products];
-      updatedProducts[idx][field] = value;
+      // Make sure we store the value as a number
+      updatedProducts[idx].quantity = parseInt(value, 10);
       return { ...prev, products: updatedProducts };
     });
   };
@@ -290,16 +298,16 @@ function OrderDetails() {
 
 
         const productsPayload = formData.products
-          .map(products => ({
+          {backendProducts.map(products => ({
             order_id: result.data.id,
             product_id: products.id,
-            erp_product_id: products.erp_prod_id,
+            erp_prod_id: products.erpProdId,
             quantity: products.quantity,
             unit: products.unit,
             unit_price: parseFloat(products.unitPrice),
             net_amount: parseFloat(products.netAmount),
             sales_tax_rate: parseFloat(products.salesTaxRate),
-          }));
+          }))};
 
         console.log('Submitting products payload:', productsPayload);
 
@@ -430,8 +438,7 @@ function OrderDetails() {
     // Add your logic here
   };
 
-  // State for image popup
-  const [popupImage, setPopupImage] = useState(null);
+
 
   // Images state (allow dynamic add)
   const [images, setImages] = useState(
@@ -474,7 +481,7 @@ function OrderDetails() {
   const handleSelectProduct = (product) => {
     // Ensure we have proper numeric values for calculations
     const unitPrice = parseFloat(product.unitPrice || 0);
-    const quantity = 1; // Default quantity
+    const quantity = parseFloat(product.quantity || 1);
     const vatRate = parseFloat(product.vatPercentage || 0);
 
     // Calculate net amount
@@ -485,42 +492,23 @@ function OrderDetails() {
       products: [
         ...prev.products,
         {
-          id: product.id,
-          productName: product.productName || product.product_name || 'Unknown Product',
-          quantityOrdered: quantity,
+          order_id: formData.id,
+          line_number: prev.products.length + 1,
+          erp_line_number:'SO000' + (formData.id) + '-' +(prev.products.length + 1),
+          product_id: product.id,
+          erp_prod_id: product.erpProdId  || 'Unknown Product',
+          quantity: quantity,
           unit: product.unit ,
-          unitPrice: unitPrice.toString(),
-          netAmount: netAmount,
-          salesTaxRate: vatRate.toString(),
+          unit_price: unitPrice.toString(),
+          net_amount: netAmount,
+          sales_tax_rate: vatRate.toString(),
         }
       ]
     }));
     setShowProductPopup(false);
   };
 
-  // Utility function for more robust API error handling
-  const handleApiError = async (response, defaultMessage) => {
-    if (!response.ok) {
-      console.error(`API Error: ${response.status} ${response.statusText}`);
-      let errorMessage = defaultMessage;
-
-      try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || defaultMessage;
-        } else {
-          const textError = await response.text();
-          console.error('API response text:', textError);
-        }
-      } catch (err) {
-        console.error('Error parsing error response:', err);
-      }
-
-      throw new Error(errorMessage);
-    }
-  };
-
+  
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
 
@@ -639,7 +627,7 @@ function OrderDetails() {
                 <Table
                   columns={columns}
                   data={formData.products.filter(
-                    p => p.id || p.erpProductName || p.quantityOrdered || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
+                    p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
                   )}
                   actionButtons={
                     addMode
@@ -705,6 +693,45 @@ function OrderDetails() {
             token={localStorage.getItem('token')}
             t={t}
           />
+        )}
+        {/* Image Popup */}
+        {popupImage && (
+          <div
+            className="image-popup-overlay"
+            onClick={() => setPopupImage(null)}
+            style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(0,0,0,0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000
+            }}
+          >
+            <img
+              src={popupImage}
+              alt="Preview"
+              style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8, background: '#fff' }}
+              onClick={e => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setPopupImage(null)}
+              style={{
+                position: 'absolute',
+                top: 20,
+                right: 40,
+                fontSize: 24,
+                background: 'transparent',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+          </div>
         )}
       </div>
     </Sidebar>
