@@ -10,6 +10,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/components.css';
 import GetProducts from "../components/GetProducts";
 import QuantityController from '../components/QuantityController';
+import GetCustomers from '../components/GetCustomers';
+import GetBranches from '../components/GetBranches';
 
 const defaultOrder = {
   id: '',
@@ -36,6 +38,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 
 function OrderDetails() {
+  const { i18n } = useTranslation();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,6 +55,8 @@ function OrderDetails() {
   const [showRemarks, setShowRemarks] = useState(false);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [showProductPopup, setShowProductPopup] = useState(false);
+  const [showCustomerPopup, setShowCustomerPopup] = useState(false);
+  const [showBranchPopup, setShowBranchPopup] = useState(false);
   const [backendProducts] = useState([]);
   
   const [popupImage, setPopupImage] = useState(null);
@@ -61,7 +66,7 @@ function OrderDetails() {
     {
       key: 'productName',
       header: 'Product Name',
-      render: (row) =>  row.erpProdId
+      render: (row) => row.productName || row.erpProdId || 'Unknown Product'
     },
     {
       key: 'quantity',
@@ -70,16 +75,16 @@ function OrderDetails() {
         <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
             itemId={row.id || row.product_id}
-            quantity={row.quantity || row.quantity}
+            quantity={row.quantity || 1}
             onQuantityChange={(_, delta) => {
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
                 // Convert to number with parseInt to ensure we're doing numeric addition
-                const currentQty = parseInt(formData.products[idx].quantity || formData.products[idx].quantity || 0, 10);
+                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
                 const newQty = currentQty + parseInt(delta, 10);
-                handleQuantityChange(idx, Math.max(0, newQty));
+                handleQuantityChange(idx, Math.max(1, newQty)); // Ensure minimum quantity is 1
               }
             }}
             onInputChange={(_, value) => {
@@ -87,22 +92,47 @@ function OrderDetails() {
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                // Make sure value is treated as a number
-                handleQuantityChange(idx, parseInt(value, 10) || 0);
+                // Make sure value is treated as a number and is at least 1
+                handleQuantityChange(idx, Math.max(1, parseInt(value, 10) || 1));
               }
             }}
           />
-          {/* Unit icon (example: FontAwesome fa-balance-scale for KG) */}
-          <span title={row.unit}>
-            <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />
+          <span title={row.unit || ''}>
+            {row.unit && <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />}
           </span>
         </div>
       )
     },
-    { key: 'unit', header: 'Unit' },
-    { key: 'unitPrice', header: 'Unit Price (SAR)' },
-    { key: 'netAmount', header: 'Net Amount (SAR)' },
-    { key: 'salesTaxRate', header: 'Tax (SAR)' },
+    { 
+      key: 'unit', 
+      header: 'Unit',
+      render: (row) => row.unit || ''
+    },
+    { 
+      key: 'unitPrice', 
+      header: 'Unit Price (SAR)',
+      render: (row) => {
+        const price = parseFloat(row.unitPrice || 0);
+        return isNaN(price) ? '0.00' : price.toFixed(2);
+      }
+    },
+    { 
+      key: 'netAmount', 
+      header: 'Net Amount (SAR)',
+      render: (row) => {
+        const qty = parseFloat(row.quantity || 1);
+        const price = parseFloat(row.unitPrice || 0);
+        return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
+      }
+    },
+    { 
+      key: 'salesTaxRate', 
+      header: 'Tax (SAR)',
+      render: (row) => {
+        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
+      }
+    },
     ...(addMode ? [{ key: 'actions', header: 'Actions' }] : [])
   ];
 
@@ -220,6 +250,11 @@ function OrderDetails() {
       const updatedProducts = [...prev.products];
       // Make sure we store the value as a number
       updatedProducts[idx].quantity = parseInt(value, 10);
+      
+      // Update the net amount based on the new quantity
+      const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
+      updatedProducts[idx].netAmount = (unitPrice * value).toFixed(2);
+      
       return { ...prev, products: updatedProducts };
     });
   };
@@ -247,10 +282,10 @@ function OrderDetails() {
         return;
       }
 
-      // Prepare payload for backend
+      // Prepare payload for backend - correctly map database IDs and ERP IDs
       const payload = {
-        erpCustId: formData.erpCustId,
-        erpBranchId: formData.erpBranchId,
+        erpCustId: formData.erp, // Include the ERP customer ID
+        erpBranchId: formData.erpBranchIdValue || '', // Include the ERP branch ID if available
         orderBy: formData.orderBy || '',
         erp: formData.erp || '',
         entity: formData.entity || '',
@@ -297,17 +332,18 @@ function OrderDetails() {
 
 
 
-        const productsPayload = formData.products
-          {backendProducts.map(products => ({
-            order_id: result.data.id,
-            product_id: products.id,
-            erp_prod_id: products.erpProdId,
-            quantity: products.quantity,
-            unit: products.unit,
-            unit_price: parseFloat(products.unitPrice),
-            net_amount: parseFloat(products.netAmount),
-            sales_tax_rate: parseFloat(products.salesTaxRate),
-          }))};
+        const productsPayload = formData.products.map((product, index) => ({
+          order_id: result.data.id,
+          line_number: index + 1, // Generate sequential line numbers
+          erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
+          product_id: product.id || product.product_id,
+          erp_prod_id: product.erpProdId || product.erp_prod_id || '',
+          quantity: parseInt(product.quantity || 1, 10),
+          unit: product.unit || '',
+          unit_price: parseFloat(product.unitPrice || 0),
+          net_amount: parseFloat(product.netAmount || 0),
+          sales_tax_rate: parseFloat(product.salesTaxRate || product.vatPercentage || 0)
+        }));
 
         console.log('Submitting products payload:', productsPayload);
 
@@ -481,10 +517,10 @@ function OrderDetails() {
   const handleSelectProduct = (product) => {
     // Ensure we have proper numeric values for calculations
     const unitPrice = parseFloat(product.unitPrice || 0);
-    const quantity = parseFloat(product.quantity || 1);
+    const quantity = 1; // Default to 1 when adding a product
     const vatRate = parseFloat(product.vatPercentage || 0);
 
-    // Calculate net amount
+    // Calculate net amount (unit price * quantity)
     const netAmount = (unitPrice * quantity).toFixed(2);
 
     setFormData(prev => ({
@@ -492,22 +528,117 @@ function OrderDetails() {
       products: [
         ...prev.products,
         {
-          order_id: formData.id,
-          line_number: prev.products.length + 1,
-          erp_line_number:'SO000' + (formData.id) + '-' +(prev.products.length + 1),
-          product_id: product.id,
-          erp_prod_id: product.erpProdId  || 'Unknown Product',
+          id: product.id, // Product ID for identifying the product
+          product_id: product.id, // Duplicate for compatibility with different naming conventions
+          productName: product.productName || product.product_name || product.name || 'Unknown Product',
+          erpProdId: product.erpProdId || product.erp_prod_id || '', // ERP product ID
           quantity: quantity,
-          unit: product.unit ,
-          unit_price: unitPrice.toString(),
-          net_amount: netAmount,
-          sales_tax_rate: vatRate.toString(),
+          unit: product.unit || '',
+          unitPrice: unitPrice.toFixed(2),
+          netAmount: netAmount,
+          salesTaxRate: vatRate.toFixed(2),
+          // Include any other properties needed for display/calculations
         }
       ]
     }));
     setShowProductPopup(false);
   };
 
+  // Handle customer selection
+  const handleSelectCustomer = (customer) => {
+    setFormData(prev => ({
+      ...prev,
+      erpCustId: customer.id,
+      selectedCustomerName: customer.company_name_en || customer.companyNameEn || '',
+      // Populate the ERP# field with the customer's erp_cust_id
+      erp: customer.erp_cust_id || customer.erpCustId || ''
+    }));
+    setShowCustomerPopup(false);
+  };
+
+  // Handle branch selection
+  const handleSelectBranch = (branch) => {
+    setFormData(prev => ({
+      ...prev,
+      erpBranchId: branch.id, // Database branch ID
+      erpBranchIdValue: branch.erp_branch_id || branch.erpBranchId || '', // Store ERP branch ID
+      selectedBranchName: branch.branch_name_en || branch.branchNameEn || ''
+    }));
+    setShowBranchPopup(false);
+  };
+
+  // Add this to your existing state declarations
+  const [entityOptions, setEntityOptions] = useState([]);
+
+  // Add this useEffect to fetch entity options
+  useEffect(() => {
+    const fetchEntityOptions = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch entity options');
+        
+        const result = await response.json();
+        if (result.status === 'Ok' && Array.isArray(result.data)) {
+          // Assuming the API returns an array of entity names
+          setEntityOptions(result.data);
+        } else if (Array.isArray(result)) {
+          // Or in case the API directly returns an array
+          setEntityOptions(result);
+        } else {
+          throw new Error('Unexpected response format for entity options');
+        }
+      } catch (err) {
+        console.error('Error fetching entity options:', err);
+        // Fallback to some default entities if the API call fails
+        setEntityOptions(['VMCO', 'Diyafa', 'Green Mast', 'Naqui']);
+      }
+    };
+
+    fetchEntityOptions();
+  }, [API_BASE_URL]);
+
+  // Add this to your existing state declarations
+  const [customerOptions, setCustomerOptions] = useState([]);
+
+  // Add this useEffect to fetch customer options
+  useEffect(() => {
+    const fetchCustomerOptions = async () => {
+      try {
+        const params = new URLSearchParams({
+          page: 1,
+          pageSize: 100, // Fetch a reasonable number of customers
+          sortBy: (i18n.language === 'ar' ? 'company_name_ar' : 'company_name_en'),
+          sortOrder: 'asc'
+        });
+
+        const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch customer options');
+        
+        const result = await response.json();
+        if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
+          setCustomerOptions(result.data.data);
+        } else {
+          throw new Error('Unexpected response format for customer options');
+        }
+      } catch (err) {
+        console.error('Error fetching customer options:', err);
+        // Fallback to empty array if the API call fails
+        setCustomerOptions([]);
+      }
+    };
+
+    fetchCustomerOptions();
+  }, [API_BASE_URL]);
   
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
@@ -521,17 +652,70 @@ function OrderDetails() {
             <div className="order-details-section">
               <div className="order-details-grid">
                 <div className="order-details-field">
-                  <label>{t('Customer Company Name')}</label>
-                  <input
-                    name="erpCustId"
-                    value={formData.erpCustId ?? ''}
-                    onChange={handleInputChange}
-                    disabled={!addMode}
-                  />
+                  <label htmlFor="customerField">{t('Customer Company Name')}</label>
+                  {addMode ? (
+                    <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input 
+                        id="customerField"
+                        name="selectedCustomerName" 
+                        value={formData.selectedCustomerName || ''} 
+                        disabled={true}
+                        className="customer-input"
+                        placeholder={t('Click to select customer')}
+                      />
+                      <button 
+                        type="button" 
+                        className="order-action-btn approve"
+                        onClick={() => setShowCustomerPopup(true)}
+                        aria-label="Select customer"
+                      >
+                        {t('Select Customer')}
+                      </button>
+                    </div>
+                  ) : (
+                    <input 
+                      id="erpCustIdField"
+                      name="erpCustId" 
+                      value={formData.erpCustId ?? ''} 
+                      disabled 
+                    />
+                  )}
                 </div>
                 <div className="order-details-field">
                   <label>{t('Branch')}</label>
-                  <input name="erpBranchId" value={formData.erpBranchId ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                  {addMode ? (
+                    <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <input 
+                        id="branchField"
+                        name="selectedBranchName" 
+                        value={formData.selectedBranchName || ''} 
+                        disabled={true}
+                        className="customer-input"
+                        placeholder={t('Click to select branch')}
+                      />
+                      <button 
+                        type="button" 
+                        className="order-action-btn approve"
+                        onClick={() => {
+                          if (!formData.erpCustId) {
+                            alert(t('Please select a customer first'));
+                            return;
+                          }
+                          setShowBranchPopup(true);
+                        }}
+                        aria-label="Select branch"
+                      >
+                        {t('Select Branch')}
+                      </button>
+                    </div>
+                  ) : (
+                    <input 
+                      id="erpBranchIdField"
+                      name="erpBranchId" 
+                      value={formData.erpBranchId ?? ''} 
+                      disabled 
+                    />
+                  )}
                 </div>
                 <div className="order-details-field">
                   <label>{t('Order By')}</label>
@@ -539,11 +723,33 @@ function OrderDetails() {
                 </div>
                 <div className="order-details-field">
                   <label>{t('ERP#')}</label>
-                  <input name="erp" value={formData.erp ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                  <input 
+                    name="erp" 
+                    value={formData.erp ?? ''} 
+                    onChange={handleInputChange} 
+                    disabled={true} // Always disable this field
+                    placeholder={t('ERP ID')}
+                  />
                 </div>
                 <div className="order-details-field">
                   <label>{t('Entity')}</label>
-                  <input name="entity" value={formData.entity ?? ''} onChange={handleInputChange} disabled={!addMode} />
+                  {addMode ? (
+                    <select 
+                      name="entity" 
+                      value={formData.entity || ''} 
+                      onChange={handleInputChange}
+                      className="entity-dropdown"
+                    >
+                      <option value="">{t('Select Entity')}</option>
+                      {entityOptions.map((entity, index) => (
+                        <option key={index} value={entity}>
+                          {entity}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input name="entity" value={formData.entity || ''} disabled />
+                  )}
                 </div>
                 <div className="order-details-field">
                   <label>{t('Payment Method')}</label>
@@ -691,6 +897,27 @@ function OrderDetails() {
             onSelectProduct={handleSelectProduct}
             API_BASE_URL={API_BASE_URL}
             token={localStorage.getItem('token')}
+            t={t}
+          />
+        )}
+        {/* Customer Popup */}
+        {showCustomerPopup && (
+          <GetCustomers
+            open={showCustomerPopup}
+            onClose={() => setShowCustomerPopup(false)}
+            onSelectCustomer={handleSelectCustomer}
+            API_BASE_URL={API_BASE_URL}
+            t={t}
+          />
+        )}
+        {/* Branch Popup */}
+        {showBranchPopup && (
+          <GetBranches
+            open={showBranchPopup}
+            onClose={() => setShowBranchPopup(false)}
+            onSelectBranch={handleSelectBranch}
+            customerId={formData.erpCustId}
+            API_BASE_URL={API_BASE_URL}
             t={t}
           />
         )}

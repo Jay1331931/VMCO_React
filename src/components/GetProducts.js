@@ -36,7 +36,7 @@ function GetProducts({
     if (!open) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/products/count`, {
+      const response = await fetch(`${API_BASE_URL}/products`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
