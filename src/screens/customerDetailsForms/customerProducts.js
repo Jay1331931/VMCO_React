@@ -33,6 +33,7 @@ function Products(customer) {
     const [pageInput, setPageInput] = useState('');
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     // const currentItems = products.slice(startIndex, endIndex);
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -47,7 +48,6 @@ function Products(customer) {
         };
     }, []);
 
-
     useEffect(() => {
         const fetchProducts = async () => {
             setLoading(true);
@@ -55,9 +55,14 @@ function Products(customer) {
 
             const filters = {
                 customer_id: customer?.customer?.id,
-                entity: activeCategory
+                entity: activeCategory,
             };
-
+if(isApprovalMode) {
+                // If not in approval mode, add the visible filter
+                filters.visible = true;
+            } else {
+                delete filters.visible; // Remove the visible filter if in approval mode
+            }
             const query = new URLSearchParams({
                 page: currentPage,
                 pageSize: 20,
@@ -67,7 +72,7 @@ function Products(customer) {
             });
 
             try {
-                const response = await fetch(`http://localhost:3000/api/product-customer-mappings/pagination?${query.toString()}`, {
+                const response = await fetch(`${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include'
@@ -94,26 +99,27 @@ function Products(customer) {
         if (customer?.customer?.id && activeCategory) {
             fetchProducts();
         }
-    }, [customer, activeCategory, currentPage]);
+    }, [customer, activeCategory, currentPage, isApprovalMode]);
 
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
+        // fetchProducts();
     };
 
-    
+
     const handleSelectAll = (e) => {
         if (e.target.checked) {
             const allIds = currentItems.map((item) => item.id);
             setSelectedItems(allIds);
-            setCurrentItems(prevItems => 
-            prevItems.map(item => ({ ...item, visible: true }))
-        );
+            setCurrentItems(prevItems =>
+                prevItems.map(item => ({ ...item, visible: true }))
+            );
             callUpdateSelectedItemsAPI(allIds, true);
         } else {
             setSelectedItems([]);
-            setCurrentItems(prevItems => 
-            prevItems.map(item => ({ ...item, visible: false }))
-        );
+            setCurrentItems(prevItems =>
+                prevItems.map(item => ({ ...item, visible: false }))
+            );
             callUpdateSelectedItemsAPI([], false);
         }
     };
@@ -129,88 +135,69 @@ function Products(customer) {
 
     };
 
-    // const handleToggleVisibility = (id) => {
-    //     console.log(id)
-        
-    //     setCurrentItems(prevItems =>
-    //         prevItems.map(item =>
-    //             item.id === id
-    //                 ? { ...item, visible: !item.visible }
-    //                 : item
-    //         )
-    //     );
-    //     // Also update selectedItems if needed
-    //     setSelectedItems(prevSelected =>
-    //         prevSelected.includes(id)
-    //             ? prevSelected.filter(itemId => itemId !== id)
-    //             : [...prevSelected, id]
-    //     );
-    
-    // debouncedAPICall(selectedItems);
-    // };
     const handleToggleVisibility = (id) => {
-    setCurrentItems(prevItems =>
-        prevItems.map(item =>
-            item.id === id
-                ? { ...item, visible: !item.visible }
-                : item
-        )
-    );
-    
-    // Use the callback form to get the updated selectedItems
-    setSelectedItems(prevSelected => {
-        const newSelected = prevSelected.includes(id)
-            ? [...prevSelected.filter(itemId => itemId !== id)]
-            : [...prevSelected, id];
-        console.log('Selected items:', newSelected);
-        // Call API with the new selection
-        callUpdateSelectedItemsAPI([id]);
-        return newSelected;
-    });
-};
+        setCurrentItems(prevItems =>
+            prevItems.map(item =>
+                item.id === id
+                    ? { ...item, visible: !item.visible }
+                    : item
+            )
+        );
 
-  const callUpdateSelectedItemsAPI = async (selectedItems, state = false) => {
-    console.log('current items:', currentItems);
-    console.log('selected items:', selectedItems);
-    try {
-        let updatedItems;
-        
-        if (selectedItems.length === 0) {
-            // When deselecting all, set all items to visible: false
-            updatedItems = currentItems.map(item => ({
-                ...item,
-                visible: false
-            }));
-        } else if (state) {
-            // When selecting all with state=true (select all case)
-            updatedItems = currentItems.map(item => ({
-                ...item,
-                visible: true
-            }));
-        } else {
-            // Toggle case for individual items
-            updatedItems = currentItems.map(item => ({
-                ...item,
-                visible: selectedItems.includes(item.id) ? !item.visible : item.visible
-            }));
-        }
-
-        console.log('Updating items with visibility:', updatedItems);
-
-        const response = await fetch('http://localhost:3000/api/product-customer-mappings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedItems),
-            credentials: 'include',
+        // Use the callback form to get the updated selectedItems
+        setSelectedItems(prevSelected => {
+            const newSelected = prevSelected.includes(id)
+                ? [...prevSelected.filter(itemId => itemId !== id)]
+                : [...prevSelected, id];
+            console.log('Selected items:', newSelected);
+            // Call API with the new selection
+            callUpdateSelectedItemsAPI([id]);
+            return newSelected;
         });
-        
-        const data = await response.json();
-        console.log('API response:', data);
-    } catch (error) {
-        console.error('Failed to update selected items:', error);
-    }
-};
-    const isAllSelected = currentItems.length > 0 && selectedItems.length === currentItems.length;
+    };
+
+    const callUpdateSelectedItemsAPI = async (selectedItems, state = false) => {
+        console.log('current items:', currentItems);
+        console.log('selected items:', selectedItems);
+        try {
+            let updatedItems;
+
+            if (selectedItems.length === 0) {
+                // When deselecting all, set all items to visible: false
+                updatedItems = currentItems.map(item => ({
+                    ...item,
+                    visible: false
+                }));
+            } else if (state) {
+                // When selecting all with state=true (select all case)
+                updatedItems = currentItems.map(item => ({
+                    ...item,
+                    visible: true
+                }));
+            } else {
+                // Toggle case for individual items
+                updatedItems = currentItems.map(item => ({
+                    ...item,
+                    visible: selectedItems.includes(item.id) ? !item.visible : item.visible
+                }));
+            }
+
+            console.log('Updating items with visibility:', updatedItems);
+
+            const response = await fetch(`${API_BASE_URL}/product-customer-mappings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedItems),
+                credentials: 'include',
+            });
+
+            const data = await response.json();
+            console.log('API response:', data);
+        } catch (error) {
+            console.error('Failed to update selected items:', error);
+        }
+    };
+    const isAllSelected = currentItems.length > 0 && currentItems.every(item => item.visible);
     const handleMoqChange = (id, value) => {
         setCurrentItems(prevItems =>
             prevItems.map(item =>
@@ -221,23 +208,23 @@ function Products(customer) {
         );
     };
 
-    const handleSaveMoq = (id) => {
+    const handleSaveMoq = (id, value) => {
         console.log('save called');
         const product = currentItems.find(item => item.id === id);
-        console.log('Saving MoQ:', product.moq);
+        console.log('Saving MoQ:', value);
         try {
-            const response = fetch(`http://localhost:3000/api/product-customer-mappings/${id}`, {
+            const response = fetch(`${API_BASE_URL}/product-customer-mappings/${id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ moq: product.moq }),
+                body: JSON.stringify({ moq: value }),
                 credentials: 'include'
             });
-            
+
         } catch (error) {
             console.error('Error saving MoQ:', error);
         }
-        
-        
+
+
         setIsInputFocused(false);
         setEditingMoq(null);
     };
@@ -247,7 +234,7 @@ function Products(customer) {
         const product = currentItems.find(item => item.id === id);
         const originalMoq = product?.originalMoq;
         handleMoqChange(id, originalMoq);
-        handleSaveMoq(id);
+        handleSaveMoq(id, originalMoq);
         setIsInputFocused(false);
         setEditingMoq(null);
     };
@@ -281,7 +268,23 @@ function Products(customer) {
                     <div className='toggle-container'>
                         <label>{t('MoQ')}</label>
                         <input type='text' className='product-text-input' />
-                        <button className='branches-approve-button'>Apply All</button>
+                        <button className='branches-approve-button' disabled={currentItems.filter(item => item.visible).length < 2}
+                            onClick={() => {
+                                const moqValue = document.querySelector('.product-text-input').value;
+                                if (!moqValue) return;
+
+                                const numericValue = parseInt(moqValue);
+                                if (isNaN(numericValue)) return;
+
+                                // Update all visible items
+                                currentItems
+                                    .filter(item => item.visible)
+                                    .forEach(item => {
+                                        handleMoqChange(item.id, numericValue);
+                                        handleSaveMoq(item.id, numericValue);
+                                    });
+                            }}
+                        >Apply All</button>
                     </div>
                 </div>
             </div>
@@ -331,7 +334,7 @@ function Products(customer) {
                                         />
                                         {isInputFocused && (
                                             <>
-                                                <button className="icon-button" onClick={() => handleSaveMoq(product.id)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faCheck} /></button>
+                                                <button className="icon-button" onClick={() => handleSaveMoq(product.id, product.moq)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faCheck} /></button>
                                                 <button className="icon-button" onClick={() => handleCancelMoq(product.id)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faXmark} /></button>
                                             </>
                                         )}

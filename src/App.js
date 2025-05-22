@@ -16,6 +16,7 @@ import EmployeeLogin from './screens/employeeLogin';
 import OrderDetails from './screens/orderDetails';
 import SupportDetails from './screens/supportDetails';
 import MaintenanceDetails from './screens/maintenanceDetails';
+import Logout from './screens/logout';
 // Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/employeeLogin" element={<LoginScreen />} />
+        <Route path="/login/employee" element={<LoginScreen />} />
         <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
         <Route path="/customersOnboarding/:id" element={<CustomersOnboarding />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -39,6 +40,7 @@ function App() {
         <Route path="/orderDetails" element={<OrderDetails />} />
         <Route path="/supportDetails" element={<SupportDetails />} />
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
+        <Route path="/logout" element={<Logout />} />
         </Routes>
     </Router>
   );

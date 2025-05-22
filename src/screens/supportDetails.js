@@ -1,27 +1,118 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter'; // Import the date formatter
 
 function SupportDetails() {
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
   const location = useLocation();
-  console.log('Location state#######:', location.state);
-  const ticket = location.state?.ticket || {
-    id: '00025',
-    customer: 'Customer Name',
-    branch: 'Branch 1',
-    issueType: 'Issue Type',
-    issueName: 'Issue Name',
-    createdDate: 'May 04, 2025',
-    details: 'Issue details',
-    images: [''],
-    status: 'In Progress',
-    assignedBranch: 'Branch 1',
-    assignedPerson: 'Person'
+  const ticket = location.state?.ticket || {};
+  
+  // State for branches dropdown
+  const [branches, setBranches] = useState([]);
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState(
+    currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc
+  );
+  
+  // State for employees dropdown
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
+  
+  const [isEditing, setIsEditing] = useState(true);
+
+  // Fetch branches when dropdown is clicked
+  const fetchBranches = async () => {
+    console.log('Fetching size...'+branches.length);
+    if (branches.length > 0) return; // Don't fetch if we already have branches
+    
+    setLoadingBranches(true);
+    try {
+      // Replace with your actual API endpoint URL
+      const apiUrl = process.env.REACT_APP_API_BASE_URL 
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId}`
+        : 'http://localhost:3000/api/branches';
+        
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Fetched branches:', data);
+      //iterate data object to collect branchNameEn vles in array
+
+      const branchNames = data;
+
+      setBranches(branchNames || []);
+    } catch (err) {
+      console.error('Failed to fetch branches:', err);
+    } finally {
+      setLoadingBranches(false);
+    }
   };
 
+  // Fetch employees from backend
+  const fetchEmployees = async () => {
+    if (employees.length > 0) return; // Don't fetch if we already have employees
+    const supportStaffDesignation = "sales executive";
+    setLoadingEmployees(true);
+    try {
+      // Replace with your actual API endpoint URL
+      const apiUrl = process.env.REACT_APP_API_BASE_URL 
+        ? `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=10&sortOrder=asc&filters={"designation": "${supportStaffDesignation}"}`
+        : 'http://localhost:3000/api/grievances/employees';
+        
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const resp = await response.json();
+      console.log('Fetched employees:', resp.data.data);
+      setEmployees(resp.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch employees:', err);
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  // Handle branch click to load options
+  const handleBranchClick = () => {
+    if (isEditing) {
+      fetchBranches();
+    }
+  };
+
+  // Handle branch selection
+  const handleBranchChange = (e) => {
+    setSelectedBranch(e.target.value);
+  };
+
+  // Handle employee selection
+  const handleEmployeeChange = (e) => {
+    setSelectedEmployee(e.target.value);
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+  };
+
+  // Rest of your existing state variables...
   // State for image popup
   const [popupImage, setPopupImage] = useState(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -83,6 +174,22 @@ function SupportDetails() {
     if (videoInputRef.current) videoInputRef.current.click();
   };
 
+  // Handle save
+  const handleSave = () => {
+    // Implement save functionality here
+    // This would typically involve an API call to update the ticket
+    setIsEditing(false);
+    console.log('Saving ticket with selected branch:', selectedBranch);
+    console.log('Assigned to employee:', selectedEmployee);
+    // After successful save, you might want to refresh the data
+  };
+
+  const handleCommentClick = () => {
+    //TODO: implement API call to add comment
+    console.log("~~~~~~~~~~ Comment Added");
+    console.log("~~~~~~~~~~ ticket comments", ticket.comments); 
+  };
+
   return (
     <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="support-details-container">
@@ -92,23 +199,55 @@ function SupportDetails() {
           <div className="support-details-grid">
             <div className="support-details-field">
               <label>Customer Name</label>
-              <input value={ticket.companyNameEn} disabled />
+              <input 
+                value={currentLanguage=='en' ? ticket.companyNameEn : ticket.companyNameAr} 
+                disabled 
+              />
             </div>
             <div className="support-details-field">
               <label>Branch</label>
-              <select value={ticket.branchNameEn} disabled>
-                <option>{ticket.branchNameEn}</option> {/* TODO: WE may need to get all the options for employee  if changes is allowed */ }
+              <select 
+                value={selectedBranch} 
+                disabled={!isEditing}
+                onChange={handleBranchChange}
+                onClick={handleBranchClick}
+              >
+                {loadingBranches ? (
+                  <option>Loading branches...</option>
+                ) : branches.length > 0 ? (
+                  branches.map(branch => (
+                    <option 
+                      key={branch.id} 
+                      value={currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
+                    >
+                      {currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
+                    </option>
+                  ))
+                ) : (
+                  <option>
+                    {currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc}
+                  </option>
+                )}
               </select>
             </div>
             <div className="support-details-field">
               <label>Issue Type</label>
-              <select value={ticket.grievanceType} disabled>
-                <option>{ticket.grievanceType}</option> {/* TODO: WE may need to get all the options for employee  if changes is allowed */ }
+              <select value={ticket.grievanceType} disabled={!isEditing}>
+                <option>{ticket.grievanceType}</option>
+                {isEditing && (
+                  <>
+                    <option>Machine Issue</option>
+                    <option>Product Quality</option>
+                    <option>Service Complaint</option>
+                    <option>Payment Problem</option>
+                    <option>Other</option>
+                  </>
+                )}
               </select>
             </div>
             <div className="support-details-field">
               <label>Issue Name</label>
-              <input value={ticket.grievanceName} disabled /> {/* TODO: There is no Issue Name in DB */}
+              <input value={ticket.grievanceName} disabled={!isEditing} />
             </div>
             <div className="support-details-field">
               <label>Created Date</label>
@@ -117,8 +256,9 @@ function SupportDetails() {
           </div>
           <div className="support-details-field support-details-textarea">
             <label>Issue Details</label>
-            <textarea value={ticket.description} disabled />
+            <textarea value={ticket.description} disabled={!isEditing} />
           </div>
+          
           <div className='attachments'>
             <div className="maintenance-details-images">
               <label>Images</label>
@@ -193,32 +333,54 @@ function SupportDetails() {
       <div className="support-details-footer">
         <div className="support-status">
           <span>Order Status:</span>
-          <span className={`order-status-badge status-${ticket.status.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
+          <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>
+            {ticket.status}
+          </span>
         </div>
         <div className="support-assign">
           <span>Assign to:</span>
-          {/* <select defaultValue={ticket.assignedBranch}>
-            <option>Branch 1</option>
-            <option>Branch 2</option>
-            <option>Branch 3</option>
-          </select> */}
-          <select defaultValue={ticket.assignedTo}>
-            <option>{ticket.assignedTo}</option>
+          <select 
+            value={selectedEmployee}
+            onChange={handleEmployeeChange}
+            disabled={!isEditing}
+          >
+            {loadingEmployees ? (
+              <option>Loading employees...</option>
+            ) : employees.length > 0 ? (
+              employees.map(employee => (
+                <option key={employee.id} value={employee.employeeId}>
+                  {employee.name}
+                </option>
+              ))
+            ) : (
+              <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+            )}
           </select>
         </div>
         <div className="support-details-actions">
-          <button className="support-action-btn save">Save</button>
-          <button className="support-action-btn differ">Differ</button>
+          {isEditing ? (
+            <>
+              <button className="support-action-btn save" onClick={handleSave}>Save</button>
+              <button className="support-action-btn cancel" onClick={toggleEditMode}>Cancel</button>
+            </>
+          ) : (
+            <>
+              <button className="support-action-btn edit" onClick={toggleEditMode}>Edit</button>
+              <button className="support-action-btn differ">Differ</button>
+            </>
+          )}
         </div>
       </div>
+      
       {popupImage && (
         <div className="image-popup-overlay" onClick={() => setPopupImage(null)}>
           <div className="image-popup-content" onClick={e => e.stopPropagation()}>
-            <img src={popupImage} controls style={{ maxWidth: '100%', maxHeight: '100%' }} />
+            <img src={popupImage} style={{ maxWidth: '100%', maxHeight: '100%' }} />
             <button className="image-popup-close" onClick={() => setPopupImage(null)}>×</button>
           </div>
         </div>
       )}
+      
       {popupVideo && (
         <div className="image-popup-overlay" onClick={() => setPopupVideo(null)}>
           <div className="image-popup-content" onClick={e => e.stopPropagation()}>
@@ -227,11 +389,11 @@ function SupportDetails() {
           </div>
         </div>
       )}
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+      {/*TODO: part of params like currentUser Details must be dynamic */}
+      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:'SE1', userId:'1'}}   /> 
     </Sidebar>
   );
 }
-
 
 export default SupportDetails;
 
@@ -252,8 +414,11 @@ export default SupportDetails;
                 "criticalLevel": "High",
                 "comments": [
                     {
+                        "action": "Approved",
                         "userid": 1,
-                        "comment": "Technician assigned",
+                        "message": "Technician assigned",
+                        userName: "SE1",
+                        "userId": 1,
                         "createdAt": "2025-04-01T10:00:00Z"
                     }
                 ],
