@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
+  //get the status from the order
+  
   switch (status) {
     case 'Approved':
       return 'status-approved';

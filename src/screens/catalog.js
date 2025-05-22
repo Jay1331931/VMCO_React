@@ -12,184 +12,326 @@ import Tabs from '../components/Tabs';
 import ProductPopup from '../components/ProductPopup';
 import SearchInput from '../components/SearchInput';
 
-const products = [
-    { id: 1, name: 'Product 1', code: 'SAR24', image: 'https://shopatshams.com.pk/cdn/shop/products/1117826-1_73225306-dd8e-4b6c-88b0-52e394d10172.jpg?v=1634903061', additionalImages: ['https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCjOB037ulNEDjgZohK5Hr4vNAQ90_ChsFVQ&s', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH8WOqyNTKBki66sRT-sDV4jXHcJLNvDenLamwNSbcsHGxWUF5Sf1eSqpIQjY1bRO-Uc8&usqp=CAU', 'https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_3.jpg'] },
-    { id: 2, name: 'Product 2', code: 'SAR24', image: 'https://driftbasket.com/wp-content/uploads/2024/04/pepsi-BLUE-TITAN-0_33L-SRB_600_600px-e1713358658329.jpg', additionalImages: ['https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxPwagsrUPMvuj-3EzzLmaKEd4LqvOym2HobFxeSh9iB3jRcxmTNjazwwj9dC-WddyCrc&usqp=CAU', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRH8WOqyNTKBki66sRT-sDV4jXHcJLNvDenLamwNSbcsHGxWUF5Sf1eSqpIQjY1bRO-Uc8&usqp=CAU', 'https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_3.jpg'] },
-    { id: 3, name: 'Product 3', code: 'SAR24', image: 'https://m.media-amazon.com/images/I/51Bp30CR3IL.jpg', additionalImages: ['', '', ''] },
-    { id: 4, name: 'Product 4', code: 'SAR24', image: 'https://snackstar.in/cdn/shop/products/532b3a20-33f9-495f-b8e5-c3f9bb769888.jpg?v=1598346308', additionalImages: ['', '', ''] },
-    { id: 5, name: 'Product 5', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 6, name: 'Product 6', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 7, name: 'Product 7', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 8, name: 'Product 8', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 9, name: 'Product 9', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 10, name: 'Product 10', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 11, name: 'Product 11', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 12, name: 'Product 12', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 13, name: 'Product 13', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 14, name: 'Product 14', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 15, name: 'Product 15', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 16, name: 'Product 16', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 17, name: 'Product 17', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 18, name: 'Product 18', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 19, name: 'Product 19', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 20, name: 'Product 20', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 21, name: 'Product 21', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 22, name: 'Product 22', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 23, name: 'Product 23', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 24, name: 'Product 24', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 25, name: 'Product 25', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 26, name: 'Product 26', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 27, name: 'Product 27', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 28, name: 'Product 28', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 29, name: 'Product 29', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 30, name: 'Product 30', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 31, name: 'Product 31', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 32, name: 'Product 32', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 33, name: 'Product 33', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 34, name: 'Product 34', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 35, name: 'Product 35', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 36, name: 'Product 36', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 37, name: 'Product 37', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 38, name: 'Product 38', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 39, name: 'Product 39', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 40, name: 'Product 40', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 41, name: 'Product 41', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 42, name: 'Product 42', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 43, name: 'Product 43', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 44, name: 'Product 44', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 45, name: 'Product 45', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 46, name: 'Product 46', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 47, name: 'Product 47', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 48, name: 'Product 48', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 49, name: 'Product 49', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 50, name: 'Product 50', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 51, name: 'Product 51', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 52, name: 'Product 52', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 53, name: 'Product 53', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 54, name: 'Product 54', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 55, name: 'Product 55', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 56, name: 'Product 56', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 57, name: 'Product 57', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 58, name: 'Product 58', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 59, name: 'Product 59', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 60, name: 'Product 60', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 61, name: 'Product 61', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 62, name: 'Product 62', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 63, name: 'Product 63', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 64, name: 'Product 64', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 65, name: 'Product 65', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 66, name: 'Product 66', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 67, name: 'Product 67', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 68, name: 'Product 68', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 69, name: 'Product 69', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 70, name: 'Product 70', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 71, name: 'Product 71', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 72, name: 'Product 72', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 73, name: 'Product 73', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 74, name: 'Product 74', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 75, name: 'Product 75', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 76, name: 'Product 76', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 77, name: 'Product 77', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 78, name: 'Product 78', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 79, name: 'Product 79', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 80, name: 'Product 80', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 81, name: 'Product 81', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 82, name: 'Product 82', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 83, name: 'Product 83', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 84, name: 'Product 84', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 85, name: 'Product 85', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 86, name: 'Product 86', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 87, name: 'Product 87', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 88, name: 'Product 88', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 89, name: 'Product 89', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 90, name: 'Product 90', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 91, name: 'Product 91', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 92, name: 'Product 92', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 93, name: 'Product 93', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 94, name: 'Product 94', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 95, name: 'Product 95', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 96, name: 'Product 96', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 97, name: 'Product 97', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 98, name: 'Product 98', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 99, name: 'Product 99', code: 'SAR24', image: '', additionalImages: ['', '', ''] },
-    { id: 100, name: 'Product 100', code: 'SAR24', image: '', additionalImages: ['', '', ''] }
-];
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const categories = ['VMCO Machines', 'VMCO Other', 'Diayafa', 'Green Mart', 'Naqui'];
+// Define categories with their corresponding entity values
+const categories = [
+    { value: 'VMCO Machines', entity: 'VMCO', label: 'VMCO Machines' },
+    { value: 'VMCO Consumables', entity: 'VMCO Consumables', label: 'VMCO Consumables' },
+    { value: 'Diyafa', entity: 'Diyafa', label: 'Diyafa' },
+    { value: 'Green Mast', entity: 'Green Mast', label: 'Green Mast' },
+    { value: 'Naqui', entity: 'Naqui', label: 'Naqui' }
+];
 
 function Catalog() {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [activeCategory, setActiveCategory] = useState('VMCO Machines');
+    const [activeCategory, setActiveCategory] = useState(categories[0].value);
     const [selectedLocation, setSelectedLocation] = useState('JP Nagar');
     const [quantities, setQuantities] = useState({});
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [selectedProduct, setSelectedProduct] = useState(null);    const [products, setProducts] = useState([]);
+    const [totalProducts, setTotalProducts] = useState(0);
     const [displayedProducts, setDisplayedProducts] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setCurrentPage] = useState(1); // Now represents the max page to load
+    const [loadedPages, setLoadedPages] = useState([]); // Track which pages have been loaded
     const [isLoading, setIsLoading] = useState(false);
-    const productsPerPage = 12;
+    const [isLoadingMore, setIsLoadingMore] = useState(false); // New state for loading more products
+    const [hasMore, setHasMore] = useState(true); // New state to track if there are more products to load
+    const [categoryFilter, setCategoryFilter] = useState('');
+    const [subCategoryFilter, setSubCategoryFilter] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
+    const productsPerPage = 60;
+    
+    // First filter products based on entity and other criteria
+    const [filteredProducts, setFilteredProducts] = useState([]);
 
     const locations = [
         { value: 'JP Nagar', label: 'JP Nagar' },
         { value: 'Jayanagar', label: 'Jayanagar' },
         { value: 'Banashankari', label: 'Banashankari' }
     ];
-
+    
     const categoryTabs = categories.map(category => ({
-        value: category,
-        label: category
+        value: category.value,
+        label: category.label
     }));
 
-    const loadMoreProducts = useCallback(() => {
-        setIsLoading(true);
-        setTimeout(() => {
-            const startIndex = (currentPage - 1) * productsPerPage;
-            const endIndex = startIndex + productsPerPage;
-            const newProducts = products.slice(startIndex, endIndex).map(product => ({
-                ...product,
-                uniqueId: `${product.id}-${currentPage}-${Date.now()}`
-            }));
-            setDisplayedProducts(prev => [...prev, ...newProducts]);
-            setIsLoading(false);
-        }, 2000);
-    }, [currentPage, productsPerPage]);
-
+    // Helper function to determine if a product is a machine or not
+    const isProductMachine = (product) => {
+        if (!product) return false;
+        
+        // Check explicit productType field
+        if (product.productType === 'machine') return true;
+        
+        // Check category and subCategory fields
+        const categoryLower = (product.category || '').toLowerCase();
+        const subCategoryLower = (product.subCategory || product.sub_category || '').toLowerCase();
+        
+        // Look for machine-related keywords in category or subcategory
+        return categoryLower.includes('machine') || 
+               subCategoryLower.includes('machine') ||
+               categoryLower.includes('equipment') ||
+               subCategoryLower.includes('equipment');
+    };
+    
+    // Map product fields from backend to component props
+    const mapProductToCardProps = (product) => {
+        return {
+            id: product.id,
+            name: product.productName || product.product_name || "Unknown Product", // Support both field formats
+            code: product.erpProdId || product.erp_prod_id || "No ID", // Support both field formats
+            image: product.image, // Add image URL if available
+            description: product.description,
+            category: product.category,
+            subCategory: product.sub_category || product.subCategory,
+            entity: product.entity, // Make sure entity is included in mapped props
+            unit: product.unit,
+            vat: product.vatPercentage || product.VAT_percentage,
+            // Keep the original data too for use in other places
+            ...product
+        };
+    };    // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
-        const handleScroll = () => {
-            const scrollHeight = document.documentElement.scrollHeight;
-            const scrollTop = document.documentElement.scrollTop;
-            const clientHeight = document.documentElement.clientHeight;
-
-            if (scrollTop + clientHeight >= scrollHeight - 20 && !isLoading) {
-                if (displayedProducts.length < products.length) {
-                    setCurrentPage(prev => prev + 1);
+        const fetchAllPages = async () => {
+            // Show loading state
+            if (currentPage === 1) {
+                setIsLoading(true);
+            } else {
+                setIsLoadingMore(true);
+            }
+            
+            try {
+                // Determine which pages we need to fetch
+                // If currentPage is 1, fetch page 1
+                // If currentPage is 2, fetch pages 1-2 if not already loaded
+                // If currentPage is 3, fetch pages 1-3 if not already loaded
+                const pagesToFetch = [];
+                for (let i = 1; i <= currentPage; i++) {
+                    if (!loadedPages.includes(i)) {
+                        pagesToFetch.push(i);
+                    }
                 }
+                
+                if (pagesToFetch.length === 0) {
+                    // All needed pages are already loaded
+                    setIsLoading(false);
+                    setIsLoadingMore(false);
+                    return;
+                }
+                
+                // Reset products if we're starting fresh
+                if (pagesToFetch.includes(1)) {
+                    setProducts([]);
+                    setLoadedPages([]);
+                }
+                
+                // Create a function to fetch a single page
+                const fetchPage = async (pageNumber) => {
+                    const params = new URLSearchParams({
+                        page: pageNumber,
+                        pageSize: productsPerPage,
+                        sortBy: 'id',
+                        sortOrder: 'asc',
+                    });
+                    
+                    // Handle entity filtering - this is the category tab selected by the user
+                    const selectedCategory = categories.find(cat => cat.value === activeCategory);
+                    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+                    if (entityToFilter) {
+                        params.append('entity', entityToFilter);
+                        // Some APIs might use 'entityName' instead of 'entity'
+                        params.append('entityName', entityToFilter);
+                    }
+
+                    // For VMCO Machines and VMCO Consumables, add additional filtering
+                    if (activeCategory === 'VMCO Machines') {
+                        params.append('productType', 'vmco');
+                    } else if (activeCategory === 'Diyafa') {
+                        params.append('productType', 'Diyafa');
+                    } else if (activeCategory === 'VMCO Consumables') {
+                        params.append('productType', 'vmco consumables');
+                    }
+                    else if (activeCategory === 'Green Mast') {
+                        params.append('productType', 'green mast');
+                    }
+                    else if (activeCategory === 'Naqui') {
+                        params.append('productType', 'naqui');
+                    }
+                    
+                    // Add category and subcategory filters
+                    if (categoryFilter) params.append('category', categoryFilter);
+                    if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
+                    
+                    // Add search query - search for product name
+                    if (searchQuery) {
+                        params.append('search', searchQuery);
+                        params.append('searchFields', 'productName,product_name'); // Search in product name fields
+                    }
+
+                    const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Extract the new products from the response
+                    let pageProducts = [];
+                    let totalCount = 0;
+                    
+                    if (Array.isArray(result)) {
+                        pageProducts = result;
+                        totalCount = result.length;
+                    } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+                        pageProducts = result.data;
+                        totalCount = 
+                            (result.total !== undefined && Number(result.total)) ||
+                            (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
+                            result.data.length;
+                    } else if (result && Array.isArray(result.data)) {
+                        pageProducts = result.data;
+                        totalCount = 
+                            (result.total !== undefined && Number(result.total)) ||
+                            (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
+                            result.data.length;
+                    }
+                    
+                    return { pageProducts, totalCount, pageNumber };
+                };
+                
+                // Fetch all pages in sequence
+                let allProducts = [...products];
+                let maxTotalCount = 0;
+                
+                for (const page of pagesToFetch) {
+                    const { pageProducts, totalCount, pageNumber } = await fetchPage(page);
+                    
+                    // Add these products to our collection
+                    allProducts = [...allProducts, ...pageProducts];
+                    maxTotalCount = Math.max(maxTotalCount, totalCount);
+                    
+                    // Mark this page as loaded
+                    setLoadedPages(prev => [...prev, pageNumber]);
+                }
+                
+                // Set all products at once after we've loaded everything
+                setProducts(allProducts);
+                setTotalProducts(maxTotalCount);
+                
+                // Determine if there are more products to load
+                const loadedProductsCount = productsPerPage * Math.max(...pagesToFetch);
+                const moreAvailable = loadedProductsCount < maxTotalCount;
+                setHasMore(moreAvailable);
+                
+            } catch (err) {
+                console.error('Error fetching products:', err);
+                // Don't reset existing products on error
+                setHasMore(false);
+            } finally {
+                setIsLoading(false);
+                setIsLoadingMore(false);
             }
         };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [displayedProducts.length, isLoading]);
-
+        
+        fetchAllPages();
+    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL, loadedPages, products]);// Filter products based on tab, category, and subcategory
     useEffect(() => {
-        loadMoreProducts();
-    }, [currentPage, loadMoreProducts]);
-
+        // We're already filtering server-side via API params, but we also handle client-side filtering
+        // for better UX while waiting for API responses
+        // Get the entity value for the selected category tab
+        const selectedCategory = categories.find(cat => cat.value === activeCategory);
+        const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+        
+        let filtered = [...products]; // Create a copy of products array for filtering
+        
+        // Filter by entity first
+        if (entityToFilter) {
+            filtered = filtered.filter(product => {
+                const productEntity = (product.entity || '').toLowerCase();
+                return productEntity === entityToFilter.toLowerCase();
+            });
+            
+            // For VMCO entities, filter by product type (machine vs other)
+            if (entityToFilter === 'VMCO') {
+                const isVMCOMachines = activeCategory === 'VMCO Machines';
+                filtered = filtered.filter(product => {
+                    const isMachine = isProductMachine(product);
+                    return isVMCOMachines ? isMachine : !isMachine;
+                });
+            }
+        }
+        
+        // Apply search filter on product name
+        if (searchQuery && searchQuery.trim() !== '') {
+            const searchLower = searchQuery.toLowerCase().trim();
+            filtered = filtered.filter(product => {
+                const productName = (product.productName || product.product_name || '').toLowerCase();
+                const productCode = (product.erpProdId || product.erp_prod_id || '').toLowerCase();
+                const productDescription = (product.description || '').toLowerCase();
+                
+                return productName.includes(searchLower) || 
+                       productCode.includes(searchLower) ||
+                       productDescription.includes(searchLower);
+            });
+        }
+        
+        // Apply category filter
+        if (categoryFilter && categoryFilter.trim() !== '') {
+            filtered = filtered.filter(product => 
+                (product.category || '').toLowerCase() === categoryFilter.toLowerCase()
+            );
+        }
+        
+        // Apply subcategory filter
+        if (subCategoryFilter && subCategoryFilter.trim() !== '') {
+            filtered = filtered.filter(product => {
+                const subCategory = (product.subCategory || product.sub_category || '').toLowerCase();
+                return subCategory === subCategoryFilter.toLowerCase();
+            });
+        }
+        
+        setFilteredProducts(filtered);
+        // We now set displayed products directly to filtered products
+        // No need for pagination here since we handle that with server-side fetching
+        setDisplayedProducts(filtered);
+        
+    }, [products, activeCategory, searchQuery, categoryFilter, subCategoryFilter]);
+      // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (selectedProduct) {
-                const popup = document.querySelector('.product-popup');
-                if (popup && !popup.contains(event.target)) {
-                    setSelectedProduct(null);
-                }
+        let timeoutId = null;
+        
+        // Function to handle automatic loading of more pages
+        const loadMorePagesWithDelay = () => {
+            if (hasMore && !isLoading && !isLoadingMore) {
+                setIsLoadingMore(true);
+                
+                // Wait for 3 seconds before loading the next page set
+                timeoutId = setTimeout(() => {
+                    // Increment the max page to load - this will trigger loading all pages up to this number
+                    setCurrentPage(prev => Math.min(prev + 1, 3)); // Don't go beyond page 3
+                }, 3000); // 3 seconds delay
             }
         };
-
-        document.addEventListener('mousedown', handleClickOutside);
+        
+        // After products are loaded and we're not in a loading state, set up the next load
+        // Only continue if we haven't reached page 3 yet
+        if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && currentPage < 3) {
+            loadMorePagesWithDelay();
+        }
+        
+        // Clean up the timeout if the component unmounts or dependencies change
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
         };
-    }, [selectedProduct]);
+    }, [currentPage, hasMore, isLoading, isLoadingMore, products.length]);    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+        setLoadedPages([]);
+        setHasMore(true); // Reset hasMore when filters change to ensure new data is fetched
+    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery]);
 
     const handleProductClick = (product) => {
         setSelectedProduct(product);
@@ -212,6 +354,20 @@ function Catalog() {
 
     const catalogId = React.useId();
 
+    // Get unique categories and subcategories for dropdowns
+    const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+    const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
+
+    // Notes on the catalog entity filtering:
+    // 1. Each tab corresponds to a specific entity:
+    //    - VMCO Machines: Shows VMCO products that are machines
+    //    - VMCO Other: Shows VMCO products that are not machines
+    //    - Diyafa: Shows only Diyafa products
+    //    - Green Mast: Shows only Green Mast products
+    //    - Naqui: Shows only Naqui products
+    // 2. Filtering happens at both server-side (API) and client-side
+    // 3. When changing tabs, other filters (category, subcategory, search) are reset
+
     return (
         <Sidebar title={t('Catalog')}>
             <div className="catalog-content">
@@ -232,53 +388,106 @@ function Catalog() {
                     <Tabs
                         tabs={categoryTabs}
                         activeTab={activeCategory}
-                        onTabChange={setActiveCategory}
+                        onTabChange={(newCategory) => {
+                            setActiveCategory(newCategory);
+                            // Reset other filters when changing entity
+                            setCategoryFilter('');
+                            setSubCategoryFilter('');
+                            setSearchQuery('');
+                            setCurrentPage(1);
+                        }}
                         variant="category"
                     />
-                   
                     <button className="go-to-cart-btn" onClick={handleGoToCart}>
-                    <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                    <span>{t('Go to Cart')}</span>
-                </button>
-                </div>
-                <div className="search-section">
+                        <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                        <span>{t('Go to Cart')}</span>
+                    </button>
+                </div>                <div className="search-section">
                     <div className="search-container">
-                        <SearchInput />
-                         <Dropdown
-                        id={`category-filter-${catalogId}`}
-                        name="categoryFilter"
-                        options={categories.map(category => ({ value: category, label: category }))}
-                        className="category-filter"
-                        placeholder="Category"
-                    />
-                    <Dropdown
-                        id={`category-filter-${catalogId}`}
-                        name="categoryFilter"
-                        options={categories.map(category => ({ value: category, label: category }))}
-                        className="category-filter"
-                        placeholder="Sub category"
-                    />
-                    </div>
-                </div>
-                <div className="products-grid">
-                    {displayedProducts.map((product) => (
-                        <ProductCard
-                            key={product.uniqueId}
-                            product={product}
-                            quantities={quantities}
-                            onQuantityChange={handleQuantityChange}
-                            onProductClick={handleProductClick}
+                        <SearchInput 
+                            onSearch={(searchTerm) => {
+                                setSearchQuery(searchTerm);
+                                setCurrentPage(1); // Reset to page 1 when searching
+                            }}
+                            debounceTime={500} // Increased debounce time for better performance
+                            className="product-search-input"
+                        />                        <Dropdown
+                            id={`category-filter-${catalogId}`}
+                            name="categoryFilter"
+                            options={categoryTabs} // Use categoryTabs to match the tab options
+                            className="category-filter tab-linked-filter"
+                            placeholder="Category"
+                            value={activeCategory} // Set value to match the active tab
+                            onChange={e => {
+                                // This won't be triggered since the dropdown is disabled
+                                // but keep it for consistency
+                                setActiveCategory(e.target.value);
+                                setCategoryFilter('');
+                                setSubCategoryFilter('');
+                            }}
+                            disabled={true} // Disable the dropdown
                         />
-                    ))}
+                        <Dropdown
+                            id={`subcategory-filter-${catalogId}`}
+                            name="subCategoryFilter"
+                            options={uniqueSubCategories.map(sub => ({ value: sub, label: sub }))}
+                            className="category-filter"
+                            placeholder="Sub category"
+                            value={subCategoryFilter}
+                            onChange={e => setSubCategoryFilter(e.target.value)}
+                        />
+                    </div>
+                </div>                <div className="products-grid">
+                    {displayedProducts.length > 0 ? (
+                        displayedProducts.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={mapProductToCardProps(product)}
+                                quantities={quantities}
+                                onQuantityChange={handleQuantityChange}
+                                onProductClick={() => handleProductClick(product)}
+                                setQuantities={setQuantities}
+                            />
+                        ))
+                    ) : !isLoading && (
+                        <div className="no-products-message">
+                            {searchQuery ? (
+                                <p>{t('No products found matching your search term "{{searchTerm}}".', { searchTerm: searchQuery })}</p>
+                            ) : (
+                                <p>{t('No products found matching your criteria.')}</p>
+                            )}
+                        </div>
+                    )}
                     {isLoading && (
                         <div className="loading-container">
                             <LoadingSpinner size="medium" />
                         </div>
                     )}
-                </div>
+                </div>                {/* Separate loading indicator at the bottom of the page */}
+                {isLoadingMore && (
+                    <div className="loading-more-container">
+                        <LoadingSpinner size="medium" />
+                        <span className="loading-more-text">
+                            {currentPage === 1 ? 
+                                t('Loading page 2...') : 
+                                currentPage === 2 ? 
+                                    t('Loading page 3...') : 
+                                    t('Loading more products...')}
+                        </span>
+                    </div>
+                )}
+                {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && currentPage >= 3 && (
+                    <div className="end-of-results-message">
+                        <p>{t('All pages loaded. Showing pages 1-3.')}</p>
+                    </div>
+                )}
+                {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && currentPage < 3 && (
+                    <div className="end-of-results-message">
+                    </div>
+                )}
                 {selectedProduct && (
                     <ProductPopup
-                        product={selectedProduct}
+                        product={mapProductToCardProps(selectedProduct)}
                         quantities={quantities}
                         onQuantityChange={handleQuantityChange}
                         onInputChange={(itemId, value) => setQuantities({
@@ -288,7 +497,88 @@ function Catalog() {
                         onClose={handleClosePopup}
                     />
                 )}
-            </div>
+            </div>            <style jsx="true">{`
+                .no-products-message {
+                    width: 100%;
+                    text-align: center;
+                    padding: 40px 0;
+                    color: #666;
+                    font-size: 1.1rem;
+                    grid-column: 1 / -1;
+                }
+                
+                .product-search-input {
+                    padding: 10px 15px;
+                    width: 300px;
+                    border: 1px solid #ccc;
+                    border-radius: 4px;
+                    font-size: 1rem;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    transition: all 0.2s ease;
+                    margin-right: 10px;
+                }
+                
+                .product-search-input:focus {
+                    border-color: #0a5640;
+                    box-shadow: 0 2px 8px rgba(10, 86, 64, 0.15);
+                    width: 320px;
+                }
+                  .loading-more-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 30px 0;
+                    width: 100%;
+                    margin: 20px 0;
+                    background-color: #f9f9f9;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                }
+                
+                .loading-more-text {
+                    margin-top: 15px;
+                    color: #666;
+                    font-size: 1rem;
+                    font-weight: 500;
+                }
+                  .end-of-results-message {
+                    width: 100%;
+                    text-align: center;
+                    padding: 20px 0;
+                    color: #666;
+                    font-size: 0.9rem;
+                    grid-column: 1 / -1;
+                    border-top: 1px solid #eee;
+                    margin-top: 20px;
+                }
+                  /* Style for the category filter to show it's linked to tabs */
+                .category-filter {
+                    background-color: #f5f5f5;
+                }
+                
+                
+                .tab-linked-filter::after {
+                    content: '(Linked to tabs)';
+                    position: absolute;
+                    bottom: -16px;
+                    left: 0;
+                    font-size: 10px;
+                    color: #666;
+                    font-style: italic;
+                }
+                
+                @media (max-width: 768px) {
+                    .product-search-input {
+                        width: 100%;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .search-container {
+                        flex-direction: column;
+                    }
+                }
+            `}</style>
         </Sidebar>
     );
 }

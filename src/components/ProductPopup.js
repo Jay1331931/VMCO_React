@@ -56,17 +56,16 @@ function ProductPopup({
                                 />
                             ))}
                         </div>
-                    </div>
-                    <div className="popup-details">
+                    </div>                    <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
+                        {product.entity && <div className="popup-product-entity">{product.entity}</div>}
                         <div className="popup-product-price-row">
                             <span className="popup-product-price">{product.price} <span className="popup-product-currency">SAR</span></span>
-                        </div>
-                        <div className="popup-product-unit-row">
+                        </div><div className="popup-product-unit-row">
                             <span className="popup-product-unit-label">{t('Unit Price')}:</span>
                             <span className="popup-product-unit-value">{product.unitPrice} <span className="popup-product-currency">SAR</span></span>
                         </div>
-                        <p className="popup-product-description">{t('Description...')}</p>
+                        <p className="popup-product-description">{product.description || t('No description available')}</p>
                         <QuantityController
                             itemId={product.id}
                             quantity={quantities[product.id] || 0}
@@ -184,12 +183,20 @@ function ProductPopup({
                         gap: 10px;
                         min-width: 320px;
                         margin-top: 8px;
-                    }
-                    .popup-product-name {
+                    }                    .popup-product-name {
                         font-size: 1.35rem;
                         font-weight: 600;
                         margin: 0 0 8px 0;
                         color: #222;
+                    }
+                    .popup-product-entity {
+                        font-size: 0.9rem;
+                        color: #00205B;
+                        margin: 0 0 10px 0;
+                        padding: 3px 10px;
+                        background-color: #f0f4ff;
+                        border-radius: 4px;
+                        display: inline-block;
                     }
                     .popup-product-price-row {
                         margin-bottom: 0;
@@ -229,23 +236,26 @@ function ProductPopup({
                         margin: 0 0 18px 0;
                     }
                     .addtocartbutton {
-                        margin-top: 18px;
+                        margin-top: auto;
                         display: flex;
                         justify-content: flex-end;
                     }
                     .add-to-cart-btn {
-                        background: #0a5640;
-                        color: #fff;
-                        border: none;
-                        border-radius: 6px;
                         width: 100%;
-                        font-size: 0.7rem;
-                        font-weight: 500;
+                        height: 30px;
+                        padding: 10px 10px;
+                        background-color: #00205B;
+                        color: white;
+                        align-items: center;
+                        border: none;
+                        border-radius: 4px;
                         cursor: pointer;
-                        transition: background 0.15s;
+                        font-size: 0.7rem;
+                        font-weight: 600;
                     }
+
                     .add-to-cart-btn:hover {
-                        background: #084c37;
+                        background-color: #001845;
                     }
                     @media (max-width: 900px) {
                         .popup-content {
