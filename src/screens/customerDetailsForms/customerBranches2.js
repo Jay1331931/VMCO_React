@@ -25,7 +25,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const [temporaryBranches, setTemporaryBranches] = useState([]);
     const [nextTempId, setNextTempId] = useState(-1);
     const isMobile = false;
-
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     const handleAddBranch = () => {
     const tempId = nextTempId;
     setNextTempId(prev => prev - 1); // Decrement for next temporary ID
@@ -38,8 +38,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         locationType: '',
         branch_status: 'pending',
         customerId: customer.id,
-        isNew: true, // Flag to identify new branches
-        // Add other required fields with empty/default values
+        isNew: true, 
     };
     
     setTemporaryBranches(prev => [newBranch, ...prev]);
@@ -85,7 +84,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         const customerId = branches.find(branch => branch.id === branchId)?.customerId;
         
         try {
-            const response = await fetch(`http://localhost:3000/api/customer-contacts/branch/${branchId}/customer/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -118,22 +117,41 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         }
     };
 
-    // Fetch all branches for the customer
     const fetchBranches = useCallback(async () => {
-        try {
-            const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
+         setLoading(true);
+            setError(null);
+
+            const filters = {
+                customer_id: customer.id,
+            };
+
+            const query = new URLSearchParams({
+                page: currentPage,
+                pageSize: 20,
+                sortBy: "id",
+                sortOrder: "asc",
+                filters: JSON.stringify(filters)
             });
 
-            if (!response.ok) throw new Error('Failed to fetch branches');
-            
-            const data = await response.json();
-            setBranches(data);
-        } catch (err) {
-            setError(err.message);
-        }
+            try {
+                const response = await fetch(`${API_BASE_URL}/customer-branches/pagination?${query.toString()}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch branches');
+                }
+
+                const data = await response.json();
+                setBranches(data.data);
+            } catch (err) {
+                console.log(err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
     }, [customer.id]);
 
     // Toggle row expansion and fetch contacts if expanding
@@ -233,68 +251,6 @@ const validateChangedFields = (branchData,checkRequired = false) => {
     // setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-//     const handleSave = async (id) => {
-//     // Additional validation for contact details
-    
-    
-
-//     // Define contact detail fields
-//     const contactDetailFields = [
-//       'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactPhone',
-//       'secondaryContactName', 'secondaryContactDesignation', 'secondaryContactEmail', 'secondaryContactPhone',
-//       'supervisorContactName', 'supervisorContactDesignation', 'supervisorContactEmail', 'supervisorContactPhone'
-//     ];
-
-//     // Prepare payloads
-//     const branchPayload = {};
-//     const contactCreatePayload = {};
-//     const contactUpdatePayload = {};
-//     // const customerData = customer || {};
-//     console.log(branchChanges)
-//     const branchData = branchChanges[id] || {};
-//     console.log('Branch data:', branchData);
-//     if (!validateChangedFields(branchData,false)) {
-//       alert(t('Please correct errors before submitting.'));
-//       return;
-//     }
-//     Object.keys(branchData).forEach((fieldName) => {
-//         if(contactDetailFields.includes(fieldName)) {
-//             contactUpdatePayload[fieldName] = branchData[fieldName];
-//         } else {
-//             branchPayload[fieldName] = branchData[fieldName];
-//         }});
-
-//         console.log('contactUpdatePayload', contactUpdatePayload)
-//         console.log('branchUpdatePayload', branchPayload)
-
-//         try {
-//             if(Object.keys(branchPayload).length > 0) {
-//                 await fetch(`http://localhost:3000/api/customer-branches/id/${id}`, {
-//                     method: 'POST',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify(branchPayload),
-//                     credentials: 'include'
-//                 });
-//             }
-//         } catch (error) {
-//             console.error('Error updating branch:', error);
-//         }
-
-//         try {
-//             if(Object.keys(contactUpdatePayload).length > 0) {
-//                 await fetch(`http://localhost:3000/api/customer-contacts/customer/${customer.id}/branch/${id}`, {
-//                     method: 'POST',
-//                     headers: { 'Content-Type': 'application/json' },
-//                     body: JSON.stringify(contactUpdatePayload),
-//                     credentials: 'include'
-//                 });
-
-//             }
-//         } catch (error) {
-//             console.error('Error updating contact:', error);
-//         }
-    
-//   };
 
     const handleSave = async (id) => {
     const isNewBranch = id < 0; // Negative IDs are temporary
@@ -327,7 +283,7 @@ const validateChangedFields = (branchData,checkRequired = false) => {
     try {
         if (isNewBranch) {
             // CREATE new branch
-            const response = await fetch(`http://localhost:3000/api/customer-branches`, {
+            const response = await fetch(`${API_BASE_URL}/customer-branches`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -350,7 +306,7 @@ const validateChangedFields = (branchData,checkRequired = false) => {
                 
                 // If there are contacts to save
                 if (Object.keys(contactPayload).length > 0) {
-                    await fetch(`http://localhost:3000/api/customer-contacts/customer/${customer.id}/branch/${result.data.id}`, {
+                    await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${result.data.id}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(contactPayload),
@@ -361,7 +317,7 @@ const validateChangedFields = (branchData,checkRequired = false) => {
         } else {
             // UPDATE existing branch
             if (Object.keys(branchPayload).length > 0) {
-                await fetch(`http://localhost:3000/api/customer-branches/id/${id}`, {
+                await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(branchPayload),
@@ -370,7 +326,7 @@ const validateChangedFields = (branchData,checkRequired = false) => {
             }
             
             if (Object.keys(contactPayload).length > 0) {
-                await fetch(`http://localhost:3000/api/customer-contacts/customer/${customer.id}/branch/${id}`, {
+                await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(contactPayload),
@@ -592,100 +548,137 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
 // LocationPicker component
-    const LocationPicker = ({ onLocationSelect }) => {
-        const mapContainer = useRef(null);
-        const markerRef = useRef(null);
-        const [map, setMap] = useState(null);
-        const [coords, setCoords] = useState('Detecting your location...');
-        const [confirmedLocation, setConfirmedLocation] = useState(null);
+const LocationPicker = ({ onLocationSelect }) => {
+  const mapContainer = useRef(null);
+  const markerRef = useRef(null); // Using ref instead of state for the marker
+  const [map, setMap] = useState(null);
+  const { t, i18n } = useTranslation();
+  const [coords, setCoords] = useState('Detecting your location...');
+  const [coordsArabic, setCoordsArabic] = useState(t('Detecting your location...'));
+  const [defaultCenter] = useState([77.5946, 12.9716]);
+  const [zoom] = useState(14);
+  const [confirmedLocation, setConfirmedLocation] = useState(null);
 
-        useEffect(() => {
-            let mapInstance;
+  useEffect(() => {
+    let mapInstance;
 
-            const initializeMap = () => {
-                mapInstance = new maplibregl.Map({
-                    container: mapContainer.current,
-                    style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
-                    center: [77.5946, 12.9716],
-                    zoom: 14
-                });
+    const initializeMap = async () => {
+      mapInstance = new maplibregl.Map({
+        container: mapContainer.current,
+        style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
+        center: defaultCenter,
+        zoom: zoom
+      });
 
-                mapInstance.on('load', () => {
-                    setMap(mapInstance);
-                });
+      mapInstance.on('load', async () => {
+        setMap(mapInstance);
+        try {
+          const position = await getCurrentPosition();
+          const { latitude, longitude } = position.coords;
+          updateMarker(mapInstance, longitude, latitude);
+        } catch (error) {
+          console.log('Geolocation error:', error);
+          setCoords('Click on the map to select a location');
+          setCoordsArabic(t('Click on the map to select a location'));
+        }
+      });
 
-                mapInstance.on('click', (e) => {
-                    if (!confirmedLocation) {
-                        const { lng, lat } = e.lngLat;
-                        updateMarker(mapInstance, lng, lat);
-                    }
-                });
+      mapInstance.on('click', (e) => {
+        if (!confirmedLocation) {
+          const { lng, lat } = e.lngLat;
+          updateMarker(mapInstance, lng, lat);
+        }
+      });
 
-                return () => {
-                    if (markerRef.current) markerRef.current.remove();
-                    mapInstance.remove();
-                };
-            };
-
-            const updateMarker = (map, lng, lat) => {
-                if (markerRef.current) {
-                    markerRef.current.remove();
-                }
-
-                const newMarker = new maplibregl.Marker()
-                    .setLngLat([lng, lat])
-                    .addTo(map);
-
-                markerRef.current = newMarker;
-                setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-                map.setCenter([lng, lat]);
-            };
-
-            initializeMap();
-
-            return () => {
-                if (mapInstance) mapInstance.remove();
-            };
-        }, [confirmedLocation]);
-
-        const handleConfirm = () => {
-            if (markerRef.current) {
-                const lngLat = markerRef.current.getLngLat();
-                onLocationSelect(lngLat.lat, lngLat.lng);
-                setConfirmedLocation(lngLat);
-            }
-        };
-
-        const handleReset = () => {
-            if (markerRef.current) {
-                markerRef.current.remove();
-                markerRef.current = null;
-            }
-            setConfirmedLocation(null);
-            setCoords('Click on the map to select a location');
-        };
-
-        return (
-            <div className="location-picker-container">
-                <div ref={mapContainer} className="map-container" />
-                <div className="location-coords">{coords}</div>
-                <div className="location-actions">
-                    {!confirmedLocation ? (
-                        <button className="confirm-location-button" onClick={handleConfirm} disabled={!markerRef.current}>
-                            Confirm Location
-                        </button>
-                    ) : (
-                        <>
-                            <div className="location-confirmed">Location confirmed!</div>
-                            <button className="reset-location-button" onClick={handleReset}>
-                                Change Location
-                            </button>
-                        </>
-                    )}
-                </div>
-            </div>
-        );
+      return () => {
+        if (markerRef.current) markerRef.current.remove();
+        mapInstance.remove();
+      };
     };
+
+    const getCurrentPosition = () => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000
+        });
+      });
+    };
+
+    const updateMarker = (map, lng, lat) => {
+      // Remove existing marker if it exists
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
+
+      // Create new marker
+      const newMarker = new maplibregl.Marker()
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      markerRef.current = newMarker;
+      setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+      setCoordsArabic(`خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`);
+
+      map.setCenter([lng, lat]);
+    };
+
+    initializeMap();
+
+    return () => {
+      if (mapInstance) mapInstance.remove();
+    };
+  }, [confirmedLocation]);
+
+  const handleConfirm = () => {
+    if (markerRef.current) {
+      const lngLat = markerRef.current.getLngLat();
+      onLocationSelect(lngLat.lat, lngLat.lng);
+      setConfirmedLocation(lngLat);
+    }
+  };
+
+  const handleReset = () => {
+    if (markerRef.current) {
+      markerRef.current.remove();
+      markerRef.current = null;
+    }
+    setConfirmedLocation(null);
+    setCoords('Click on the map to select a location');
+    setCoordsArabic(t('Click on the map to select a location'));
+  };
+
+  return (
+    <div className="location-picker-container">
+      <div ref={mapContainer} className="map-container" />
+      <div className="location-coords">{i18n.language === 'ar' ? coordsArabic : coords}</div>
+      <div className="location-actions">
+        {!confirmedLocation ? (
+          <button
+            className="confirm-location-button"
+            onClick={handleConfirm}
+            disabled={!markerRef.current}
+          >
+            Confirm Location
+          </button>
+        ) : (
+          <>
+            <div className="location-confirmed">
+              Location confirmed!
+            </div>
+            <button
+              className="reset-location-button"
+              onClick={handleReset}
+            >
+              Change Location
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
     // Get current values from branchChanges or fall back to branch data
     const getFieldValue = (fieldName) => {
         return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
@@ -718,9 +711,25 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
     const handleLocationSelect = useCallback((lat, lng) => {
         setSelectedLocation({ lat, lng });
         setShowMap(false);
-        handleBranchFieldChange(branch.id, 'geolocation', `${lat},${lng}`);
+        // Store as object for display but convert to string for backend
+        handleBranchFieldChange(branch.id, 'geolocation', { x: lng, y: lat });
     }, [branch.id, handleBranchFieldChange]);
-
+     const getLocationDisplay = (location) => {
+        if (!location) return 'Select Location';
+        
+        // Handle both string format "lat,lng" and object {x,y} format
+        if (typeof location === 'string') {
+            const [lat, lng] = location.split(',');
+            return `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        }
+        
+        // Handle object format
+        if (location.x && location.y) {
+            return `${location.y.toFixed(6)}, ${location.x.toFixed(6)}`;
+        }
+        
+        return 'Select Location';
+    };
     const fields = useMemo(() => [
         { label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
         { label: 'Branch (Arabic)', name: 'branchNameLc', placeholder: 'Branch (Arabic)', required: true },
@@ -781,7 +790,9 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                             {field.isLocation ? (
                                 <div className="location-input-container">
                                     <input
-                                        value={displayValue}
+                                        // value={displayValue}
+                                          value={getLocationDisplay(value)}
+        onChange={handleLocationSelect}
                                         placeholder={t(field.placeholder)}
                                         readOnly
                                     />
