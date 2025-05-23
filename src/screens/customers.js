@@ -10,68 +10,6 @@ import Tabs from '../components/Tabs';
 import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
 import { useNavigate } from 'react-router-dom';
 
-const customers = [
-  {companyName: 'Company', primaryContact: {name: '99000/XX024', email: 'CUSTOMER@CUSTOMER.COM'}, companyType: 'Trading/Non-Trading', typeOfBusiness: 'Type Of Business', deliveryLocation: 'Jaynagar', status: 'Pending'},
-  {companyName: 'Another Company', primaryContact: {name: '12345/XX678', email: 'ANOTHER@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'Retail', deliveryLocation: 'Koramangala', status: 'Approved'},
-  {companyName: 'Third Company', primaryContact: {name: '54321/YY987', email: 'THIRD@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Wholesale', deliveryLocation: 'Indiranagar', status: 'Rejected'},
-  {companyName: 'Fourth Company', primaryContact: {name: '67890/ZZ456', email: 'FOURTH@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'E-commerce', deliveryLocation: 'MG Road', status: 'Pending'},
-  {companyName: 'Fifth Company', primaryContact: {name: '11111/AA111', email: 'FIFTH@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'Manufacturing', deliveryLocation: 'Whitefield', status: 'Approved'},
-  {companyName: 'Sixth Company', primaryContact: {name: '22222/BB222', email: 'SIXTH@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Services', deliveryLocation: 'Electronic City', status: 'Rejected'},
-  {companyName: 'Seventh Company', primaryContact: {name: '33333/CC333', email: 'SEVEN@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'Retail', deliveryLocation: 'BTM Layout', status: 'Pending'},
-  {companyName: 'Eighth Company', primaryContact: {name: '44444/DD444', email: 'EIGHT@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Wholesale', deliveryLocation: 'Jayanagar', status: 'Approved'},
-  {companyName: 'Ninth Company', primaryContact: {name: '55555/EE555', email: 'NINE@CUSTOMER.COM'}, companyType: 'Trading', typeOfBusiness: 'E-commerce', deliveryLocation: 'Koramangala', status: 'Rejected'},
-  {companyName: 'Tenth Company', primaryContact: {name: '66666/FF666', email: 'TEN@CUSTOMER.COM'}, companyType: 'Non-Trading', typeOfBusiness: 'Retail', deliveryLocation: 'Indiranagar', status: 'Pending'},
-  
-  // Add more customer data as needed
-];
-
-const invites = [
-  {
-    date: '15 Apr 2025',
-    customerName: 'FULL NAME',
-    email: 'customer1@customer.com',
-    phone: '99000/XX024',
-    companyName: 'Company Name',
-    region: 'Asia',
-    assignTo: 'Name',
-    source: 'Source',
-    status: 'Pending'
-  },
-  {
-    date: '15 Apr 2025',
-    customerName: 'FULL NAME',
-    email: 'customer2@customer.com',
-    phone: '99000/XX024',
-    companyName: 'Company Name',
-    region: 'Asia',
-    assignTo: 'Name',
-    source: 'CRM',
-    status: 'New'
-  },
-  {
-    date: '15 Apr 2025',
-    customerName: 'FULL NAME',
-    email: 'customer3@customer.com',
-    phone: '12345/YY678',
-    companyName: 'Another Company',
-    region: 'Europe',
-    assignTo: 'Another Name',
-    source: 'Email',
-    status: 'Pending'
-  },
-  {
-    date: '15 Apr 2025',
-    customerName: 'FULL NAME',
-    email: 'customer4@customer.com',
-    phone: '54321/YY987',
-    companyName: 'Third Company',
-    region: 'North America',
-    assignTo: 'Third Name',
-    source: 'Web',
-    status: 'Pending'
-  }
-];
-
 const getStatusClass = (status) => {
   switch (status) {
     case 'Approved':
@@ -86,16 +24,16 @@ const getStatusClass = (status) => {
 function Customers() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('customers');
-  const [filteredCustomers, setFilteredCustomers] = useState(customers);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [customerContacts, setCustomerContacts] = useState({});
-  const [filteredInvites, setFilteredInvites] = useState(invites);
+  const [filteredInvites, setFilteredInvites] = useState([]);
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const totalPages = Math.ceil(filteredCustomers.length / pageSize);
 const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -109,18 +47,16 @@ const [loading, setLoading] = useState(false);
   const handleResend = (invite) => {
     console.log('Resend invite:', invite);
     alert('Invite resent successfully!');
-    // Add your resend logic here
   };
 
   const handleInvite = (invite) => {
     console.log('Send invite:', invite);
     alert('Invite sent successfully!');
-    // Add your invite logic here
   };
 
   const handleSearch = (searchTerm) => {
     if (activeTab === 'customers') {
-      const filtered = customers.filter((customer) =>
+      const filtered = filteredCustomers.filter((customer) =>
         Object.values(customer).some((value) =>
           typeof value === 'object'
             ? Object.values(value).some(v => 
@@ -131,7 +67,7 @@ const [loading, setLoading] = useState(false);
       );
       setFilteredCustomers(filtered);
     } else {
-      const filtered = invites.filter((invite) =>
+      const filtered = filteredInvites.filter((invite) =>
         Object.values(invite).some((value) =>
           value.toString().toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -174,7 +110,7 @@ const [loading, setLoading] = useState(false);
       filters: '{}'
     });
 
-    const response = await fetch(`http://localhost:3000/api/customers/pagination?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
@@ -212,7 +148,7 @@ const result = await response.json();
       filters: '{}'
     });
 
-    const response = await fetch(`http://localhost:3000/api/customer-registration-staging/pagination?${params.toString()}`, {
+    const response = await fetch(`${API_BASE_URL}/customer-registration-staging/pagination?${params.toString()}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
@@ -236,45 +172,7 @@ const result = await response.json();
       setLoading(false);
     }
   };
-// function transformCustomerData(customer, customerContacts) {
-//   // Ensure contacts is always an array
-//   console.log('customerContacts', customerContacts);
-//   const contacts = Array.isArray(customerContacts) 
-//     ? customerContacts 
-//     : customerContacts ? [customerContacts] : [];
 
-//   // Create a map of contact_type to contact data for easier lookup
-//   const contactsMap = contacts.reduce((acc, contact) => {
-//     acc[contact.contact_type] = contact;
-//     return acc;
-//   }, {});
-
-//   console.log('Customer Contacts:', contactsMap);
-
-//   return {
-//     ...customer,
-//     // Contact details - each contact type is a separate row in DB
-//     primaryContactName: contactsMap.primary?.name || '',
-//     primaryContactDesignation: contactsMap.primary?.designation || '',
-//     primaryContactEmail: contactsMap.primary?.email || '',
-//     primaryContactMobile: contactsMap.primary?.phone || '',
-    
-//     businessHeadName: contactsMap.business?.name || '',
-//     businessHeadDesignation: contactsMap.business?.designation || '',
-//     businessHeadEmail: contactsMap.business?.email || '',
-//     businessHeadMobile: contactsMap.business?.phone || '',
-    
-//     financeHeadName: contactsMap.finance?.name || '',
-//     financeHeadDesignation: contactsMap.finance?.designation || '',
-//     financeHeadEmail: contactsMap.finance?.email || '',
-//     financeHeadMobile: contactsMap.finance?.phone || '',
-    
-//     purchasingHeadName: contactsMap.purchasing?.name || '',
-//     purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
-//     purchasingHeadEmail: contactsMap.purchasing?.email || '',
-//     purchasingHeadMobile: contactsMap.purchasing?.phone || '',
-//   };
-// }
 // Modified transform function
 function transformCustomerData(customer, customerContacts) {
   // Ensure contacts is always an array
@@ -321,11 +219,49 @@ function transformCustomerData(customer, customerContacts) {
     operationsHeadMobile: contactsMap.operations?.mobile || '',
   };
 }
+
+const fetchCustomerPaymentMethods = async (customerId, customer) => {
+  console.log('fetching customer payment methods');
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch (`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const result = await response.json();
+    console.log('API Response:', result);
+    if(result.status === 'Ok') {
+      // if method details values exists Add each method detail field as field name and its value in customer
+      if (result.data.methodDetails) {
+        Object.keys(result.data.methodDetails).forEach(fieldName => {
+          const newValue = result.data.methodDetails[fieldName];
+          if (newValue) {
+            customer[fieldName] = newValue;
+            if(fieldName === 'credit'){
+              customer['creditLimit'] = newValue.limit;
+              customer['creditPeriod'] = newValue.period;
+              customer['creditBalance'] = newValue.balance;
+            }
+          }
+        });
+      }
+    }
+    return customer;
+  } catch (err) {
+    setError(err.message);
+    console.error('Error fetching customer payment methods:', err);
+  } finally {
+    setLoading(false);
+  }
+}
+
   const fetchCustomerContacts = async (customerId, customer) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://localhost:3000/api/customer-contacts/${customerId}`, {
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -334,8 +270,9 @@ function transformCustomerData(customer, customerContacts) {
       console.log('API Response:', result);
       if (result.status === 'Ok') {
         setCustomerContacts(result.data);
-        const transformedCustomer = transformCustomerData(customer, result.data);
-  console.log('Transformed Customer:', transformedCustomer);
+        let transformedCustomer = transformCustomerData(customer, result.data);
+  transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
+        console.log('Transformed Customer:', transformedCustomer);
    navigate(`/customersDetails`, { state: { transformedCustomer } });
 
       } else {
@@ -349,37 +286,7 @@ function transformCustomerData(customer, customerContacts) {
     }
   };
 
-//   function transformCustomerData(customer, customerContacts) {
-//   const contacts = Array.isArray(customerContacts) 
-//     ? customerContacts 
-//     : customerContacts ? [customerContacts] : [];
-//   console.log('Customer Contacts:', contacts);
-//   return {
-//     ...customer,
-//     // Contact details
-//     primaryContactName: contacts.find(c => c.contact_type === 'primary')?.name || '',
-//     primaryContactDesignation: contacts.find(c => c.contact_type === 'primary')?.designation || '',
-//     primaryContactEmail: contacts.find(c => c.contact_type === 'primary')?.email || '',
-//     primaryContactMobile: contacts.find(c => c.contact_type === 'primary')?.phone || '',
-    
-//     businessHeadName: contacts.find(c => c.contact_type === 'business')?.name || '',
-//     businessHeadDesignation: contacts.find(c => c.contact_type === 'business')?.designation || '',
-//     businessHeadEmail: contacts.find(c => c.contact_type === 'business')?.email || '',
-//     businessHeadMobile: contacts.find(c => c.contact_type === 'business')?.phone || '',
-    
-//     financeHeadName: contacts.find(c => c.contact_type === 'finance')?.name || '',
-//     financeHeadDesignation: contacts.find(c => c.contact_type === 'finance')?.designation || '',
-//     financeHeadEmail: contacts.find(c => c.contact_type === 'finance')?.email || '',
-//     financeHeadMobile: contacts.find(c => c.contact_type === 'finance')?.phone || '',
-    
-//     purchasingHeadName: contacts.find(c => c.contact_type === 'purchasing')?.name || '',
-//     purchasingHeadDesignation: contacts.find(c => c.contact_type === 'purchasing')?.designation || '',
-//     purchasingHeadEmail: contacts.find(c => c.contact_type === 'purchasing')?.email || '',
-//     purchasingHeadMobile: contacts.find(c => c.contact_type === 'purchasing')?.phone || '',
-//   };
-// }
-
-
+  
   useEffect(() => {
     if (activeTab === 'customers') {
       fetchCustomers();

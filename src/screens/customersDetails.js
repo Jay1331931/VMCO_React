@@ -10,14 +10,15 @@ import { getContactDetailsForm } from './customerDetailsForms/customerContactDet
 import { getFinancialInformationForm } from './customerDetailsForms/customerFinancialInformation';
 import { getDocumentsForm } from './customerDetailsForms/customerDocuments';
 import CustomerProducts from './customerDetailsForms/customerProducts';
-import CustomerBranches from './customerDetailsForms/customerBranches';
+import CustomerBranches from './customerDetailsForms/customerBranches2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faLocationDot, faDownload, faEye } from '@fortawesome/free-solid-svg-icons';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Pagination from '../components/Pagination';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const LocationPicker = ({ onLocationSelect }) => {
+const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   const mapContainer = useRef(null);
   const markerRef = useRef(null); // Using ref instead of state for the marker
   const [map, setMap] = useState(null);
@@ -27,22 +28,25 @@ const LocationPicker = ({ onLocationSelect }) => {
   const [defaultCenter] = useState([77.5946, 12.9716]);
   const [zoom] = useState(14);
   const [confirmedLocation, setConfirmedLocation] = useState(null);
-
+console.log('initialLat:', initialLat);
+    console.log('initialLng:', initialLng);
+    
   useEffect(() => {
     let mapInstance;
-
+    
     const initializeMap = async () => {
       mapInstance = new maplibregl.Map({
         container: mapContainer.current,
         style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
-        center: defaultCenter,
+        center: initialLat && initialLng ? [initialLng, initialLat] : defaultCenter,
         zoom: zoom
       });
 
       mapInstance.on('load', async () => {
         setMap(mapInstance);
         try {
-          const position = await getCurrentPosition();
+          const position = initialLat && initialLng ? {coords: {latitude: initialLat, longitude: initialLng}} : await getCurrentPosition();
+          console.log('Geolocation position:', position.coords);
           const { latitude, longitude } = position.coords;
           updateMarker(mapInstance, longitude, latitude);
         } catch (error) {
@@ -148,7 +152,6 @@ const LocationPicker = ({ onLocationSelect }) => {
     </div>
   );
 };
-
 function CustomersDetails() {
   const contentRef = useRef(null);
   const [tabsHeight, setTabsHeight] = useState('auto');
@@ -156,15 +159,13 @@ function CustomersDetails() {
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const location = useLocation();
-  const customer = location.state?.transformedCustomer;
-
+  const transformedCustomer = location.state?.transformedCustomer;
+  const [customer, setCustomer] = useState(transformedCustomer);
   const [branchesData, setBranchesData] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const { t, i18n } = useTranslation();
 
-  useEffect(() => {
-    console.log('Customer details:', customer);
-  }, [customer]);
+  
   // Define forms per tab
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
@@ -215,9 +216,6 @@ function CustomersDetails() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   useEffect(() => {
-    console.log('formDataByTab', formDataByTab);
-    console.log('formData', formData);
-    console.log('Customer', customer);
     const fields = formsByTab[activeTab];
     const existingData = formDataByTab[activeTab] || {};
 
@@ -250,13 +248,28 @@ function CustomersDetails() {
   };
   const handleLocationSelect = (lat, lng) => {
     setSelectedLocation({ lat, lng });
+    setFormData(prev => ({
+      ...prev,
+      geolocation: { x: lat, y: lng }
+    }));
+    setChangedFields(prev => {
+    // Create a new Set from the previous state
+    const newSet = new Set(prev);
+    // Add the geolocation field name
+    newSet.add('geolocation');
+    return newSet;
+  });
     setShowMap(false);
   };
-  const validateChangedFields = (checkRequired = false) => {
+  const validateChangedFields = (action, checkRequired = false) => {
     const errors = {};
     changedFields.forEach((fieldName) => {
       const field = formsByTab[activeTab].find(f => f.name === fieldName);
       const value = formData[fieldName];
+
+      if(action === 'save changes' && field.required && !value) {
+        errors[fieldName] = t('This field is required.');
+      }
 
       if (checkRequired && field?.type === 'text' && field.required && !value) {
         errors[fieldName] = t('This field is required.');
@@ -318,86 +331,70 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
+  function transformCustomerData(customer, customerContacts) {
 
-  // const handleSave = async (action) => {
-  //   // Additional validation for contact details
-  //   if (activeTab === 'Contact Details') {
-  //     if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
-  //       formData.financeHeadEmail === formData.purchasingHeadEmail) {
-  //       alert(t('Finance and Purchasing heads must have unique emails'));
-  //       return;
-  //     }
+    const contacts = Array.isArray(customerContacts)
+      ? customerContacts
+      : customerContacts ? [customerContacts] : [];
 
-  //     if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
-  //       (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
-  //       alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
-  //       return;
-  //     }
-  //   }
+    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+    const contactsMap = contacts.reduce((acc, contact) => {
+      acc[contact.contactType] = contact;
+      return acc;
+    }, {});
 
-  //   if (!validateChangedFields(false)) {
-  //     alert(t('Please correct errors before submitting.'));
-  //     return;
-  //   }
+    return {
+      ...customer,
+      // Contact details - each contact type is a separate row in DB
+      primaryContactName: contactsMap.primary?.name || '',
+      primaryContactDesignation: contactsMap.primary?.designation || '',
+      primaryContactEmail: contactsMap.primary?.email || '',
+      primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
 
-  //   // Prepare the update payload with only changed fields
-  //   const payload = {};
-  //   const customerData = customer || {}; // Fallback to empty object if customer is null
+      businessHeadName: contactsMap.business?.name || '',
+      businessHeadDesignation: contactsMap.business?.designation || '',
+      businessHeadEmail: contactsMap.business?.email || '',
+      businessHeadMobile: contactsMap.business?.mobile || '',
 
-  //   // Compare each changed field with original customer data
-  //   changedFields.forEach(fieldName => {
-  //     // Skip 'id' field and fields that haven't actually changed
-  //     if (fieldName !== 'id' && formData[fieldName] !== customerData[fieldName]) {
-  //       payload[fieldName] = formData[fieldName];
-  //     }
-  //   });
+      financeHeadName: contactsMap.finance?.name || '',
+      financeHeadDesignation: contactsMap.finance?.designation || '',
+      financeHeadEmail: contactsMap.finance?.email || '',
+      financeHeadMobile: contactsMap.finance?.mobile || '',
 
-  //   // If no actual changes, show message and return
-  //   if (Object.keys(payload).length === 0) {
-  //     alert(t('No changes detected to save'));
-  //     return;
-  //   }
+      purchasingHeadName: contactsMap.purchasing?.name || '',
+      purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+      purchasingHeadEmail: contactsMap.purchasing?.email || '',
+      purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
 
-  //   try {
-  //     const res = await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify(payload),
-  //       credentials: 'include',
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (!res.ok) {
-  //       setFormErrors(data.message || 'Update failed');
-  //       return;
-  //     }
-
-  //     // Update saved data with the successfully saved fields
-  //     setSavedData(prev => ({
-  //       ...prev,
-  //       [activeTab]: {
-  //         ...prev[activeTab],
-  //         ...payload
-  //       }
-  //     }));
-
-  //     // Clear changed fields for successfully saved data
-  //     setChangedFields(prev => {
-  //       const newSet = new Set(prev);
-  //       Object.keys(payload).forEach(field => newSet.delete(field));
-  //       return newSet;
-  //     });
-
-  //     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
-
-  //   } catch (error) {
-  //     console.error('Update error:', error);
-  //     setFormErrors('Unable to connect to server');
-  //   }
-  // };
+      // Adding operations contact if needed
+      operationsHeadName: contactsMap.operations?.name || '',
+      operationsHeadDesignation: contactsMap.operations?.designation || '',
+      operationsHeadEmail: contactsMap.operations?.email || '',
+      operationsHeadMobile: contactsMap.operations?.mobile || '',
+    };
+  }
+  const fetchCustomerContacts = async (customerId, customer) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      if (result.status === 'Ok') {
+        setCustomer(transformCustomerData(customer, result.data));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customer contacts');
+      }
+    } catch (err) {
+      console.error('Error fetching customer contacts:', err);
+    }
+  };
   const handleSave = async (action) => {
-    // Additional validation for contact details
+switch (action) {
+    case 'save':
+    case 'save changes':
+
     if (activeTab === 'Contact Details') {
       if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
         formData.financeHeadEmail === formData.purchasingHeadEmail) {
@@ -412,10 +409,17 @@ function CustomersDetails() {
       }
     }
 
-    if (!validateChangedFields(false)) {
+    if (!validateChangedFields(action, false)) {
       alert(t('Please correct errors before submitting.'));
       return;
     }
+
+    break;
+    case 'block':
+      formData.customerStatus = 'Blocked';
+      setChangedFields(prev => new Set(prev).add('customerStatus'));
+    break;
+  }
 
     // Define contact detail fields
     const contactDetailFields = [
@@ -425,10 +429,32 @@ function CustomersDetails() {
       'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadPhone'
     ];
 
-    // Prepare payloads
+    const paymentDetailFields = [
+      'prePayment','partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
+    ]
+
     const customerPayload = {};
     const contactCreatePayload = {};
     const contactUpdatePayload = {};
+    const paymentMethodPayload = {method_details: {
+      credit: {
+        isAllowed: formData.credit.isAllowed,
+        limit: formData.creditLimit,
+        period: formData.creditPeriod,
+        balance: formData.credit.balance
+      },
+      prePayment: {
+        isAllowed: formData.prePayment.isAllowed,
+      },
+      advancePayment: {
+        isAllowed: formData.advancePayment.isAllowed,
+        balance: formData.advancePayment.balance
+      },
+      COD: {
+        isAllowed: formData.COD.isAllowed,
+        limit: formData.COD.limit,
+      }
+    }};
     const customerData = customer || {};
 
     changedFields.forEach(fieldName => {
@@ -439,13 +465,15 @@ function CustomersDetails() {
 
       if (newValue !== oldValue) {
         if (contactDetailFields.includes(fieldName)) {
-          // Determine if this is a create or update operation
           if (oldValue === undefined || oldValue === null || oldValue === '') {
             contactCreatePayload[fieldName] = newValue;
           } else {
             contactUpdatePayload[fieldName] = newValue;
           }
-        } else {
+        } else if (paymentDetailFields.includes(fieldName)) {
+          
+        }
+         else {
           customerPayload[fieldName] = newValue;
         }
       }
@@ -454,7 +482,8 @@ function CustomersDetails() {
     // Early return if no changes
     if (Object.keys(customerPayload).length === 0 &&
       Object.keys(contactCreatePayload).length === 0 &&
-      Object.keys(contactUpdatePayload).length === 0) {
+      Object.keys(contactUpdatePayload).length === 0 &&
+      uploadedFiles.length === 0) {
       alert(t('No changes detected to save'));
       return;
     }
@@ -462,10 +491,19 @@ function CustomersDetails() {
     try {
       // 1. Update customer table if needed
       if (Object.keys(customerPayload).length > 0) {
-        await fetch(`http://localhost:3000/api/customers/id/${customer.id}`, {
+        await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(customerPayload),
+          credentials: 'include',
+        });
+      }
+
+      if (Object.keys(paymentMethodPayload).length > 0) {
+        await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentMethodPayload),
           credentials: 'include',
         });
       }
@@ -480,15 +518,15 @@ function CustomersDetails() {
       //     });
       //   }
 
-      //   // 3. Update existing contact details if needed
-      //   if (Object.keys(contactUpdatePayload).length > 0) {
-      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify(contactUpdatePayload),
-      //       credentials: 'include',
-      //     });
-      //   }
+      // 3. Update existing contact details if needed
+      if (Object.keys(contactUpdatePayload).length > 0) {
+        await fetch(`${API_BASE_URL}/customer-contacts/${customer.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(contactUpdatePayload),
+          credentials: 'include',
+        });
+      }
 
       //   // Update UI state
       //   setSavedData(prev => ({
@@ -514,7 +552,7 @@ function CustomersDetails() {
       if (Object.keys(branchChanges).length > 0) {
         await Promise.all(
           Object.entries(branchChanges).map(async ([branchId, changes]) => {
-            const response = await fetch(`http://localhost:3000/api/customer-branches/${branchId}`, {
+            const response = await fetch(`${API_BASE_URL}/customer-branches/${branchId}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(changes),
@@ -524,18 +562,32 @@ function CustomersDetails() {
           })
         );
       }
+      handleSaveFiles();
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
     } catch (error) {
       console.error('Update error:', error);
       setFormErrors(error.message || 'Unable to connect to server');
     }
+
+    try {
+
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      setCustomer(result.data)
+      fetchCustomerContacts(customer.id, customer)
+    } catch (err) {
+      console.error('Error fetching customer:', err);
+    }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
     formData
   );
   const handleTabClick = (tab) => {
-    console.log('Tab clicked:', tab);
     setTabsHeight('auto');
     setActiveTab(tab);
     // setFormDataByTab(tab);
@@ -543,111 +595,191 @@ function CustomersDetails() {
     if (tab === 'Documents') {
       setUploadedFiles(formData);
     }
-    console.log('Uploaded files:', uploadedFiles);
   };
 
+  const [pendingFileUploads, setPendingFileUploads] = useState({});
 
-  const handleFileUpload = (e, fieldName) => {
-    const files = Array.from(e.target.files);
+const handleFileUpload = async (e, fieldName) => {
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
 
-    if (files.length > 0) {
-      if (fieldName === 'nonTradingDocuments') {
-        // For multi-document upload
-        const newFiles = files.map(file => ({
-          id: Date.now() + Math.random().toString(36).substr(2, 9),
-          name: file.name,
-          file: file,
-          url: URL.createObjectURL(file)
-        }));
-
-
-
-        setUploadedFiles(prev => ({
-          ...prev,
-          [fieldName]: [...(prev[fieldName] || []), ...newFiles]
-        }));
-
-
-
-        setFormData(prev => ({
-          ...prev,
-          [fieldName]: [
-            ...(prev[fieldName] || []),
-            ...newFiles.map(file => file.url)
-          ]
-        }));
-      } else {
-        // Single file upload
-        const file = files[0];
-        const fileData = {
-          name: file.name,
-          file: file,
-          url: URL.createObjectURL(file)
-        };
-
-
-
-        setUploadedFiles(prev => ({
-          ...prev,
-          [fieldName]: fileData
-        }));
-
-
-
-        setFormData(prev => ({
-          ...prev,
-          [fieldName]: fileData.name
-        }));
-      }
-    }
-    console.log('Uploaded files:', uploadedFiles);
-    console.log('Form data:', formData);
-  };
-
-
-
-  const handleFileDelete = (fieldName, fileId = null) => {
-    if (fieldName === 'nonTradingDocuments' && fileId) {
-      // Delete specific document from multi-document upload
+  try {
+ // Special handling for logo upload
+    if (fieldName.includes('Logo')) {
+      const file = files[0];
+      const fileData = {
+        name: file.name,
+        file,
+        url: URL.createObjectURL(file),
+        isNew: true,
+      };
       setUploadedFiles(prev => ({
         ...prev,
-        [fieldName]: prev[fieldName].filter(file => file.id !== fileId)
+        [fieldName]: fileData, // Directly assign the object (no array spread)
       }));
-
-      setFormData(prev => ({
+      setPendingFileUploads(prev => ({
         ...prev,
-        [fieldName]: prev[fieldName].filter((_, index) =>
-          prev[fieldName][index] !== fileId
-        )
+        [fieldName]: fileData,
+      }));
+      return;
+    }
+
+    if (fieldName === 'nonTradingDocuments') {
+      // Multi-file upload (array)
+      const newFiles = files.map(file => ({
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+        name: file.name,
+        file,
+        url: URL.createObjectURL(file),
+        isNew: true,
       }));
 
-      // Revoke object URL if needed
-      const urlToRevoke = formData[fieldName].find(url => url.includes(fileId));
-      if (urlToRevoke) {
-        URL.revokeObjectURL(urlToRevoke);
-      }
-    } else {
-      // Single file delete (existing logic)
-      setUploadedFiles(prev => {
-        const newFiles = { ...prev };
-        delete newFiles[fieldName];
-        return newFiles;
-      });
-      setFormData(prev => ({ ...prev, [fieldName]: '' }));
+      setUploadedFiles(prev => ({
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName], // Preserve existing object structure
+          name: [...(prev[fieldName]?.name || []), ...newFiles], // Update the `name` array
+        },
+      }));
 
-      // if (formData[fieldName] && formData[fieldName].startsWith('blob:')) {
-      //   URL.revokeObjectURL(formData[fieldName]);
-      // }
+      setPendingFileUploads(prev => ({
+        ...prev,
+        [fieldName]: [...(prev[fieldName] || []), ...newFiles],
+      }));
+    } else {
+      // Single file upload (object)
+      const file = files[0];
+      const fileData = {
+        name: file.name,
+        file,
+        url: URL.createObjectURL(file),
+        isNew: true,
+      };
+
+      setUploadedFiles(prev => ({
+        ...prev,
+        [fieldName]: fileData, // Directly assign the object (no array spread)
+      }));
+
+      setPendingFileUploads(prev => ({
+        ...prev,
+        [fieldName]: fileData,
+      }));
+    }
+  } catch (error) {
+    console.error('Error handling file:', error);
+    alert(`Error handling file: ${error.message}`);
+  }
+};
+  const handleSaveFiles = async () => {
+    try {
+      const uploadPromises = [];
+      // Process single file uploads
+      Object.entries(pendingFileUploads).forEach(([fieldName, fileData]) => {
+        if (fieldName !== 'nonTradingDocuments' && fileData?.isNew) {
+          const formData = new FormData();
+          formData.append('file', fileData.file);
+          formData.append('fileType', fieldName);
+
+
+          fetch(`${API_BASE_URL}/customers/file/${customer.id}`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }
+          );
+        }
+      });
+
+      // Process multiple documents if needed
+      if (pendingFileUploads.nonTradingDocuments) {
+        pendingFileUploads.nonTradingDocuments.forEach(fileData => {
+          if (fileData.isNew) {
+            const formData = new FormData();
+            formData.append('file', fileData.file);
+            formData.append('fileType', 'nonTradingDocuments');
+
+            uploadPromises.push(
+              fetch(`${API_BASE_URL}/customers/file/${customer.id}`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+              })
+            );
+          }
+        });
+      }
+
+      // Execute all uploads
+      const results = await Promise.all(uploadPromises);
+      const allSuccessful = results.every(res => res.ok);
+
+      if (allSuccessful) {
+        // alert('All files saved successfully!');
+        setPendingFileUploads({}); // Clear pending uploads
+      } else {
+        throw new Error('Some files failed to upload');
+      }
+    } catch (error) {
+      console.error('Error saving files:', error);
+      alert(`Error saving files: ${error.message}`);
     }
   };
 
+ const handleFileDelete = (fieldName, fileId = null) => {
+  if (fieldName === 'nonTradingDocuments' && fileId) {
+    // Handle deletion from nonTradingDocuments (multi-file upload)
+    setUploadedFiles(prev => {
+      // Ensure we're working with the correct structure { name: [...] }
+      const currentFiles = prev[fieldName]?.name || [];
+      
+      return {
+        ...prev,
+        [fieldName]: {
+          ...prev[fieldName], // Preserve other properties if any
+          name: currentFiles.filter(file => file.id !== fileId), // Filter out the deleted file
+        },
+      };
+    });
+
+    // Update formData (if needed)
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: {
+        ...prev[fieldName],
+        name: (prev[fieldName]?.name || []).filter(file => file.id !== fileId),
+      },
+    }));
+
+    // Revoke object URL (cleanup)
+    const fileToDelete = uploadedFiles[fieldName]?.name?.find(file => file.id === fileId);
+    if (fileToDelete?.url) {
+      URL.revokeObjectURL(fileToDelete.url);
+    }
+
+  } else {
+    // Handle single file deletion (crCertificate, vatCertificate, etc.)
+    setUploadedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[fieldName]; // Remove the entire field for single files
+      return newFiles;
+    });
+
+    setFormData(prev => {
+      // Revoke object URL if it exists
+      if (prev[fieldName]?.url?.startsWith('blob:')) {
+        URL.revokeObjectURL(prev[fieldName].url);
+      }
+      return { ...prev, [fieldName]: null }; // Reset to null or empty object
+    });
+  }
+};
   const handleSubmit = (action) => {
     if (!validateChangedFields(true)) {
       alert(t('Please correct errors before submitting.'));
       return;
     }
     alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
-    console.log('Submitted data:', formData);
   };
 
   const handleCheckboxChange = (e, fieldName) => {
@@ -667,13 +799,14 @@ function CustomersDetails() {
         updatedData[fieldName] = checked ? [value] : [];
       } else {
         // Handle other checkboxes if needed
-        let updatedValues = prev[fieldName] || [];
+        let updatedValues = prev[fieldName] || {}
         if (checked) {
-          updatedValues = [...updatedValues, value];
+          updatedValues = {...updatedValues, isAllowed: true};
         } else {
-          updatedValues = updatedValues.filter((item) => item !== value);
+          updatedValues = {...updatedValues, isAllowed: false};
         }
         updatedData[fieldName] = updatedValues;
+        setChangedFields(prev => new Set(prev).add(fieldName));
       }
 
       return updatedData;
@@ -703,8 +836,89 @@ function CustomersDetails() {
 
     return elements;
   };
+const handleViewFile = async (customerId, fileName, fileType) => {
+  try {
+    if (fileType.includes('Logo')) {
+      const logoType = fileType.toLowerCase().includes('company') ? 'company' : 'brand';
+      const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          fileType, 
+          fileName: 'logo' // Can be undefined since we're using logoType
+        }),
+        credentials: 'include',
+      });
 
-  return (
+      if (!response.ok) throw new Error('Failed to fetch logo');
+      
+      const blob = await response.blob();
+      // const blobUrl = URL.createObjectURL(blob);
+      
+      // // Open in new tab for viewing
+      // window.open(blobUrl, '_blank');
+      // Create object URL from the Blob
+    const imageUrl = URL.createObjectURL(blob);
+    
+    // Create a new window/tab with the image
+    const newWindow = window.open('', '_blank');
+    newWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${logoType} Logo</title>
+        </head>
+        <body style="margin:0;padding:0;text-align:center;">
+          <img src="${imageUrl}" 
+               style="max-width:100%; max-height:100vh;" 
+               alt="${logoType} Logo" />
+        </body>
+      </html>
+    `);
+    newWindow.document.close();
+      // Clean up after delay
+      setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fileType, fileName }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch file');
+    }
+
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (fileType === 'nonTradingDocuments' || fileName.endsWith('.pdf')) {
+      window.open(blobUrl, '_blank');
+    } else {
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // Clean up
+    URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error('Error viewing file:', error);
+    alert('Failed to open file. Please try again.');
+  }
+};
+  
+return (
     <Sidebar>
       <div className='customers'>
         <div className={`customer-onboarding-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
@@ -730,7 +944,7 @@ function CustomersDetails() {
 
 
               {activeTab === 'Products & MoQ' ? (
-                <CustomerProducts customer={customer}/>
+                <CustomerProducts customer={customer} />
               ) : activeTab === 'Branches' ? (
                 <CustomerBranches
                   customer={customer}
@@ -788,7 +1002,11 @@ function CustomersDetails() {
                             {field.isLocation ? (
                               <div className="location-input-container">
                                 <input
-                                  value={selectedLocation ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}` : 'Select Location'}
+                                  value={
+                                    formData[field.name]
+                                      ? `${formData[field.name].x.toFixed(6)}, ${formData[field.name].y.toFixed(6)}`
+                                      : 'Select Location'
+                                  }
                                   placeholder={t(field.placeholder)}
                                   className="text-field small"
                                   readOnly
@@ -821,7 +1039,6 @@ function CustomersDetails() {
                             )}
                           </div>
                         );
-                      // In your form rendering section, add this case:
                       case 'conditionalText':
                         const shouldShow = formData[field.showWhen] === field.showValue;
                         if (!shouldShow) return null;
@@ -892,120 +1109,241 @@ function CustomersDetails() {
                               <label htmlFor={`file-${field.name}`} className="custom-file-button">
                                 {t('Upload')}
                               </label>
-                              {uploadedFiles[field.name] && (
-                                <div className="file-display">
-                                  <span className="file-name">
-                                    {uploadedFiles[field.name].name}
-                                    <button
-                                      type="button"
-                                      className="delete-file-button"
-                                      onClick={() => handleFileDelete(field.name)}
-                                    >
-                                      <FontAwesomeIcon icon={faXmark} />
-                                    </button>
-                                  </span>
-
-                                </div>
-                              )}
+                              {uploadedFiles[field.name].isNew ? (
+          <span className="file-name">
+            <button
+              type="button"
+              className="file-link-button"
+            >
+              {uploadedFiles[field.name].name}
+            </button>
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => handleFileDelete(field.name)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </span>
+        ) : (
+          <span className="file-name">
+            <button
+              type="button"
+              className="view-file-button"
+              onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+            >
+              <FontAwesomeIcon icon={faEye} />
+            </button>
+          </span>
+        )}
                             </div>
                           </div>
                         );
-
                       case 'document':
                         return (
-                          <div className="document-upload full-width" key={field.name}>
-                            <label htmlFor={`file-${field.name}`}>
-                              {field.label}
-                              {field.required && <span className="required-field">*</span>}
-                            </label>
-                            <div className="upload-row">
+                          <tr className="document-upload full-width" key={field.name}>
+                            {/* First column - Label */}
+                            <td className="label-cell" style={{
+                              whiteSpace: 'nowrap',
+                              paddingRight: '16px',
+                              verticalAlign: 'top',
+                            }}>
+                              <label htmlFor={`file-${field.name}`}>
+                                {field.label}
+                                {field.required && <span className="required-field">*</span>}
+                              </label>
+                            </td>
+
+                            {/* Second column - Upload button */}
+                            <td className="upload-cell" style={{
+                              width: '100px',  /* Fixed width for upload column */
+                              paddingRight: '16px',
+                              verticalAlign: 'top'
+                            }}>
                               <input
                                 type="file"
-                                accept="pdf/*"
+                                accept=".pdf,application/pdf"
                                 id={`file-${field.name}`}
-                                onChange={(e) => handleFileUpload(e, field.name)}
+                                onChange={(e) => {
+            const files = e.target.files;
+            if (files.length > 0) {
+              // Client-side validation
+              if (files[0].type !== 'application/pdf') {
+                alert('Please upload only PDF files');
+                e.target.value = ''; // Clear the input
+                return;
+              }
+              handleFileUpload(e, field.name);
+            }
+          }}
                                 className="hidden-file-input"
                               />
-                              <label htmlFor={`file-${field.name}`} className="custom-file-button">
+                              <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{
+                                display: 'inline-block',
+                                width: '100%',
+                                textAlign: 'center'
+                              }}>
                                 {t('Upload')}
                               </label>
+                            </td>
+
+                            {/* Third column - File display */}
+                            <td className="file-display-cell">
                               {uploadedFiles[field.name] && (
-                                <div className="file-display">
-                                  <span className="file-name">
-                                    <button
-                                      type="button"
-                                      className="file-link-button"
-                                      onClick={() => window.open(uploadedFiles[field.name].url, '_blank')}
-                                      title={uploadedFiles[field.name].name || formData[field.name]}
-                                    >
-                                      {uploadedFiles[field.name].name || formData[field.name]}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="delete-file-button"
-                                      onClick={() => handleFileDelete(field.name)}
-                                    >
-                                      <FontAwesomeIcon icon={faXmark} />
-                                    </button>
-                                  </span>
-
-                                </div>
-                              )}
-                            </div>
-                          </div>
+  <div className="file-display">
+    {Array.isArray(uploadedFiles[field.name]) ? (
+      uploadedFiles[field.name].map((fileObj, index) => (
+        <div key={fileObj.id || index} className="file-item">
+          {fileObj.isNew ? (
+            <span className="file-name">
+              <button
+                type="button"
+                className="file-link-button"
+              >
+                {fileObj.name}
+              </button>
+              <button
+                type="button"
+                className="delete-file-button"
+                onClick={() => handleFileDelete(field.name, fileObj.id)}
+              >
+                <FontAwesomeIcon icon={faXmark} />
+              </button>
+            </span>
+          ) : (
+            <span className='file-name'>
+              {fileObj.name}
+              <button
+                type="button"
+                className="view-file-button"
+                onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
+              >
+                View <FontAwesomeIcon icon={faEye} />
+              </button>
+            </span>
+          )}
+        </div>
+      ))
+    ) : (
+      <div className="file-item">
+        {uploadedFiles[field.name].isNew ? (
+          <span className="file-name">
+            <button
+              type="button"
+              className="file-link-button"
+            >
+              {uploadedFiles[field.name].name}
+            </button>
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => handleFileDelete(field.name)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </span>
+        ) : (
+          <span className="file-name">
+            <button
+              type="button"
+              className="view-file-button"
+              onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+            >
+              <FontAwesomeIcon icon={faEye} />
+            </button>
+          </span>
+        )}
+      </div>
+    )}
+  </div>
+)}
+                            </td>
+                          </tr>
                         );
+
                       case 'multiDocument':
-                        return (
-                          <div className="document-upload full-width" key={field.name}>
-                            <label>
-                              {field.label}
-                              {field.required && <span className="required-field">*</span>}
-                            </label>
+  return (
+    <tr className="document-upload full-width" key={field.name}>
+      {/* Label */}
+      <td className="label-cell" style={{ whiteSpace: 'nowrap', paddingRight: '16px', verticalAlign: 'top' }}>
+        <label htmlFor={`file-${field.name}`}>
+          {field.label}
+          {field.required && <span className="required-field">*</span>}
+        </label>
+      </td>
 
-                            <div className="upload-row">
-                              <input
-                                type="file"
-                                id={`file-${field.name}`}
-                                onChange={(e) => handleFileUpload(e, field.name)}
-                                className="hidden-file-input"
-                                multiple
-                                accept={field.accept}
-                              />
-                              <label htmlFor={`file-${field.name}`} className="custom-file-button">
-                                {t('Upload')}
-                              </label>
+      {/* Upload Button */}
+      <td className="upload-cell" style={{ width: '100px', paddingRight: '16px', verticalAlign: 'top' }}>
+        <input
+          type="file"
+          accept="pdf/*"
+          id={`file-${field.name}`}
+          onChange={(e) => handleFileUpload(e, field.name)}
+          className="hidden-file-input"
+          multiple
+        />
+        <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{ display: 'inline-block', width: '100%', textAlign: 'center' }}>
+          {t('Upload')}
+        </label>
+      </td>
 
-                              {uploadedFiles[field.name]?.length > 0 && (
-                                <div className="uploaded-files-list">
-                                  {uploadedFiles[field.name].map((file) => (
-                                    <div key={file.id} className="file-display">
-                                      <span className="file-name">
-                                        <button
-                                          type="button"
-                                          className="file-link-button"
-                                          onClick={() => window.open(uploadedFiles[field.name].url, '_blank')}
-                                          title={file.name}
-                                        >
-                                          {file.name}
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="delete-file-button"
-                                          onClick={() => handleFileDelete(field.name, file.id)}
-                                        >
-                                          <FontAwesomeIcon icon={faXmark} />
-                                        </button>
-                                      </span>
+      {/* File Display */}
+      <td className="file-display-cell">
+        {uploadedFiles[field.name]?.name?.length > 0 && (
+  <div className="uploaded-files-list">
+    {uploadedFiles[field.name].name.map((file, index) => {
+  const fileObj = typeof file === 'string' ? { name: file } : file;
+  
+  return ( // <-- Add this return statement
+    <div
+      key={fileObj.id || index}
+      className={`file-display ${fileObj.isNew ? 'new-file' : 'existing-file'}`}
+    >
+      <span className="file-name">
+        {fileObj.isNew !== true && (
+          <button
+            type="button"
+            className="view-file-button"
+            onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
+            title={fileObj.name}
+          >
+            <FontAwesomeIcon icon={faEye} />
+          </button>
+        )}
+        {!fileObj.isNew && (
+        <span className='file-link-button' style={{ marginLeft: fileObj.isNew !== true ? '8px' : 0 }}>
+          {fileObj.name}
+        </span>
+        )}
+        {fileObj.isNew && (
+        <span className="file-name">
+            <button
+              type="button"
+              className="file-link-button"
+            >
+              {fileObj.name}
+            </button>
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => handleFileDelete(field.name, fileObj.id)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </span>
+        )}
+      </span>
+    </div>
+  );
+})}
+  </div>
+)}
 
+      </td>
+    </tr>
+  );
 
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      case 'checkbox':
+                        case 'checkbox':
                         return (<>
                           <div className='form-header'>
                             <span className="checkbox-group-label">
@@ -1023,7 +1361,7 @@ function CustomersDetails() {
                                     type="checkbox"
                                     name={field.name}
                                     value={option}
-                                    checked={formData[field.name]?.includes(option)}
+                                    checked={formData[field.name]?.isAllowed}
                                     onChange={(e) => handleCheckboxChange(e, field.name)}
                                   />
                                   {option}
@@ -1054,52 +1392,46 @@ function CustomersDetails() {
                           <FontAwesomeIcon icon={faXmark} />
                         </button>
                         <h3>{t('Select Location')}</h3>
-                        <LocationPicker onLocationSelect={handleLocationSelect} />
+                        <LocationPicker onLocationSelect={handleLocationSelect} initialLat={formData.geolocation?.x}
+        initialLng={formData.geolocation?.y}/>
                       </div>
                     </div>
                   )}
                 </div>
               )}
-
-
             </div>
           </div>
           {/* Action Buttons */}
           {activeTab === 'Products & MoQ' || activeTab === 'Branches' ?
-            (<div className="customer-onboarding-form-actions">
-              <div className="status-text">
-                <span className="status-label">{t('Status')}:</span>
-                <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+            [            ] :
+            (
+              <div className="customer-onboarding-form-actions">
+                <div className="status-text">
+                  <span className="status-label">{t('Status')}:</span>
+                  <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+                </div>
+                <div className="action-buttons">
+                  <button className="save" onClick={() => handleSave('save')}>
+                    {t('Save')}
+                  </button>
+                  <button className="save" onClick={() => handleSave('save changes')}>
+                    {t('Save Changes')}
+                  </button>
+                  <button className="block" onClick={() => handleSubmit('submit')}>
+                    {t('Submit')}
+                  </button>
+                  <button className="block" onClick={() => handleSave('block')}>
+                    {t('Block')}
+                  </button>
+                  <button className="approve" onClick={() => handleSubmit('approve')}>
+                    {t('Approve')}
+                  </button>
+                  <button className="reject" onClick={() => handleSubmit('reject')}>
+                    {t('Reject')}
+                  </button>
+                </div>
               </div>
-              <div className="action-buttons">
-                <button className="save" onClick={() => handleSave('save')}>
-                  {t('Save Changes')}
-                </button>
-                <button className="block" onClick={() => handleSubmit('block')}>
-                  {t('Block')}
-                </button>
-              </div>
-            </div>) :
-            (<div className="customer-onboarding-form-actions">
-              <div className="status-text">
-                <span className="status-label">{t('Status')}:</span>
-                <span className="status-badge">{t(formData.status) || t('Pending')}</span>
-              </div>
-              <div className="action-buttons">
-                <button className="save" onClick={() => handleSave('save')}>
-                  {t('Save Changes')}
-                </button>
-                <button className="block" onClick={() => handleSubmit('block')}>
-                  {t('Block')}
-                </button>
-                <button className="approve" onClick={() => handleSubmit('approve')}>
-                  {t('Approve')}
-                </button>
-                <button className="reject" onClick={() => handleSubmit('reject')}>
-                  {t('Reject')}
-                </button>
-              </div>
-            </div>)}
+            )}
         </div>
         <div>
           <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />

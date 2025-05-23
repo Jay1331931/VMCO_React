@@ -105,7 +105,7 @@ export function getContactDetailsForm(t) {
       { type: 'header', label: t('Business Address') },
       { type: 'text', name: 'buildingName', label: t('Building Name'), placeholder: t('Enter building name'), required: true },
       { type: 'text', name: 'street', label: t('Street'), placeholder: t('Enter street'), required: true },
-      { type: 'text', name: 'district', label: t('District'), placeholder: t('Enter district'), required: true },
+      { type: 'dropdown', name: 'district', label: t('District'), placeholder: t('Enter district'), required: true, options: ['District 1', 'District 2', 'District 3'] },
       { type: 'dropdown', name: 'city', label: t('City'), placeholder: t('Enter city'), options:['Jeddah'], required: true },
       { type: 'text', name: 'region', label: t('Region'), placeholder: t('Enter region'), required: true },
       { type: 'text', name: 'geolocation', label: t('Geolocation'), placeholder: t('Enter geolocation'), required: true, isLocation: true },

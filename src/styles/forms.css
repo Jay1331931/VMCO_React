@@ -121,6 +121,12 @@
     gap: 10px;
   }
 
+  .expanded-form-container-footer {
+    display: flex;
+    justify-content: right;
+    padding: 0px 20px;
+  }
+
   .customers .status-text {
     display: flex;
     align-items: center;
@@ -302,8 +308,11 @@
     margin-left: 350px;
   }
 
+  .customers .checkbox-group-label {
+    margin-top: 10px;
+  }
   .customers .checkbox-option {
-    margin-bottom: 8px;           
+            
     padding-left: 16px;           
   }
   
@@ -373,7 +382,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100px;
+    max-width: 200px;
   }
 
   .upload-row {
@@ -382,7 +391,6 @@
     align-items: center;
     gap: 12px;
     margin-top: 8px;
-    justify-content: space-between;
   }
 
   .document-upload.full-width .upload-row label {
@@ -416,6 +424,22 @@
   position: absolute;
   right:60px;
 }
+
+.view-file-button {
+  margin-left: 0px;
+  padding: 2px 8px;
+  font-size: 1rem;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.view-file-button:hover {
+  background-color: white;
+}
+
 
 .file-name-tooltip {
   visibility: hidden;
@@ -459,7 +483,7 @@
   padding: 0;
   cursor: pointer;
   color: blue;
-  max-width: 180px;
+  max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -473,7 +497,7 @@
     right: auto;
   }
 
-  .file-name .delete-file-button {
+  .delete-file-button {
   background: none;
   border: none;
   color: #ff4444;
@@ -490,7 +514,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f5f5f5;
   padding: 4px 8px;
   border-radius: 4px;
 }
@@ -547,6 +570,12 @@
       border: none;
       border-radius: 8px;
   }
+
+  .branches-approve-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #cccccc;
+}
 
   .branches-reject-button {
       width: 100px; /* Allow button to size based on content */
@@ -722,7 +751,7 @@
     column-gap: 5px;
     flex: 1;
   }
-  
+
   .form-row .form-group input {
     font-size: 12px;
     padding: 3px 6px;
@@ -732,6 +761,18 @@
     width: 140px; 
     row-gap: 10px;
     column-gap: 5px;
+  }
+
+  .form-row .form-group select {
+    font-size: 12px;
+    padding: 3px 6px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 140px; 
+    row-gap: 10px;
+    column-gap: 5px;
+
   }
 
   .form-row .form-group {
@@ -1223,6 +1264,36 @@ background-color: #edf2f7;
   width: fit-content;
 }
 
+/* Table layout */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* First column will expand to fit the widest label */
+td.label-cell {
+  width: 50%;
+  white-space: nowrap;
+  padding-right: 20px; /* Add some spacing between columns */
+  vertical-align: top;
+}
+
+/* Upload button column */
+td.upload-cell {
+  
+  padding-right: 20px;
+}
+
+/* File display column */
+td.file-display-cell {
+  width: auto;
+  vertical-align: top;
+}
+
+/* Make sure buttons align properly */
+.custom-file-button, .view-file-button, .delete-file-button {
+  vertical-align: middle;
+}
 
 
   @media (max-width: 768px) {

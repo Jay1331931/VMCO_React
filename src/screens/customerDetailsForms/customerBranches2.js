@@ -1,0 +1,1226 @@
+
+import maplibregl from 'maplibre-gl';
+
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEllipsisV, faChevronDown, faChevronRight, faLocationDot, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faToggleOff, faToggleOn, faCheck } from '@fortawesome/free-solid-svg-icons';
+import Pagination from '../../components/Pagination';
+import '../../styles/pagination.css';
+import '../../styles/forms.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
+const CustomerBranches = ({ customer, setTabsHeight }) => {
+    const { t } = useTranslation();
+    const contentRef = useRef(null);
+    const actionMenuRef = useRef(null);
+    const [isActionMenuOpen, setActionMenuOpen] = useState(false);
+    const [expandedRows, setExpandedRows] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [branches, setBranches] = useState([]);
+    const [branchChanges, setBranchChanges] = useState({});
+    const [transformedBranches, setTransformedBranches] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [temporaryBranches, setTemporaryBranches] = useState([]);
+    const [nextTempId, setNextTempId] = useState(-1);
+    const isMobile = false;
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    const handleAddBranch = () => {
+        const tempId = nextTempId;
+        setNextTempId(prev => prev - 1); // Decrement for next temporary ID
+
+        const newBranch = {
+            id: tempId,
+            erp_branch_id: `TEMP_${Math.abs(tempId)}`,
+            branch_name_en: '',
+            city: '',
+            locationType: '',
+            branch_status: 'pending',
+            customerId: customer.id,
+            isNew: true,
+        };
+
+        setTemporaryBranches(prev => [newBranch, ...prev]);
+        setBranches(prev => [newBranch, ...prev]);
+        setExpandedRows(prev => [tempId]);
+    };
+
+    // Transform branch data with contacts
+    const transformBranchData = (branches, branchContacts) => {
+        const branchesArray = Array.isArray(branches) ? branches : [branches];
+        const contactsArray = Array.isArray(branchContacts) ? branchContacts : (branchContacts ? [branchContacts] : []);
+
+        return branchesArray.map(branch => {
+            const branchContacts = contactsArray.filter(contact => contact.branchId === branch.id);
+            const contactsMap = branchContacts.reduce((acc, contact) => {
+                acc[contact.contactType] = contact;
+                return acc;
+            }, {});
+
+            return {
+                ...branch,
+                primaryContactName: contactsMap.primary?.name || '',
+                primaryContactDesignation: contactsMap.primary?.designation || '',
+                primaryContactEmail: contactsMap.primary?.email || '',
+                primaryContactMobile: contactsMap.primary?.mobile || '',
+                secondaryContactName: contactsMap.secondary?.name || '',
+                secondaryContactDesignation: contactsMap.secondary?.designation || '',
+                secondaryContactEmail: contactsMap.secondary?.email || '',
+                secondaryContactMobile: contactsMap.secondary?.mobile || '',
+                supervisorContactName: contactsMap.supervisor?.name || '',
+                supervisorContactDesignation: contactsMap.supervisor?.designation || '',
+                supervisorContactEmail: contactsMap.supervisor?.email || '',
+                supervisorContactMobile: contactsMap.supervisor?.mobile || '',
+                allContacts: branchContacts
+            };
+        });
+    };
+
+    // Fetch contacts for a specific branch
+    const fetchBranchContacts = async (branchId) => {
+        setLoading(true);
+        setError(null);
+        const customerId = branches.find(branch => branch.id === branchId)?.customerId;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'Ok') {
+                const transformed = transformBranchData(
+                    branches.filter(branch => branch.id === branchId),
+                    result.data
+                );
+
+                if (transformed.length > 0) {
+                    setTransformedBranches(transformed);
+                    setBranches(prevBranches =>
+                        prevBranches.map(branch =>
+                            branch.id === branchId ? { ...branch, ...transformed[0] } : branch
+                        )
+                    );
+                }
+            } else {
+                throw new Error(result.message || 'Failed to fetch contacts');
+            }
+        } catch (err) {
+            setError(err.message);
+            console.error('Error fetching contacts:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchBranches = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+
+        const filters = {
+            customer_id: customer.id,
+        };
+
+        const query = new URLSearchParams({
+            page: currentPage,
+            pageSize: 20,
+            sortBy: "id",
+            sortOrder: "asc",
+            filters: JSON.stringify(filters)
+        });
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/customer-branches/pagination?${query.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch branches');
+            }
+
+            const data = await response.json();
+            setBranches(data.data);
+        } catch (err) {
+            console.log(err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [customer.id]);
+
+    // Toggle row expansion and fetch contacts if expanding
+    const toggleRow = async (branchId) => {
+        if (!expandedRows.includes(branchId)) {
+            await fetchBranchContacts(branchId);
+        }
+        setExpandedRows((prev) =>
+            prev.includes(branchId) ? [] : [branchId]
+        );
+    };
+
+    // Get the current branch data (merged with transformed data if available)
+    const getCurrentBranch = (branchId) => {
+        const transformedBranch = transformedBranches.find(b => b.id === branchId);
+        return transformedBranch || branches.find(b => b.id === branchId);
+    };
+
+    // Update tabs height when expanded rows change
+    useEffect(() => {
+        const baseRowHeight = 80;
+        const collapsedExtraHeight = 40;
+        const expandedExtraHeight = 1100;
+        const numRows = branches.length;
+        const rowHeightTotal = numRows * baseRowHeight;
+        const contentHeight = rowHeightTotal + (expandedRows.length > 0 ? expandedExtraHeight : collapsedExtraHeight);
+        setTabsHeight(`${contentHeight}px`);
+    }, [expandedRows.length, branches.length]);
+
+    // Fetch branches on mount
+    useEffect(() => {
+        if (customer?.id) {
+            fetchBranches();
+        }
+    }, [customer?.id, fetchBranches]);
+
+    // Pagination variables
+    const itemsPerPage = 10;
+    const totalPages = Math.ceil(branches.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    // const currentItems = branches.slice(startIndex, endIndex);
+    const currentItems = [...branches].slice(startIndex, endIndex);
+    const isExpanded = (branchId) => expandedRows.includes(branchId);
+
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'approved': return 'status-approved';
+            case 'pending': return 'status-pending';
+            case 'rejected': return 'status-rejected';
+            default: return 'status-default';
+        }
+    };
+
+    const handleBranchFieldChange = (branchId, fieldName, value) => {
+        setBranchChanges(prev => ({
+            ...prev,
+            [branchId]: {
+                ...prev[branchId],
+                [fieldName]: value
+            }
+        }));
+        console.log('Branch changes:', branchChanges);
+    };
+    const isArabicText = (text) => {
+        return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+    };
+    const validateChangedFields = (branchData, checkRequired = false) => {
+        const errors = {};
+        Object.keys(branchData).forEach((fieldName) => {
+            //   const field = formsByTab[activeTab].find(f => f.name === fieldName);
+            const value = branchData[fieldName];
+
+            //   if (checkRequired && field?.type === 'text' && field.required && !value) {
+            //     errors[fieldName] = t('This field is required.');
+            //   }
+
+            if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
+                errors[fieldName] = t('Please enter Arabic text.');
+            }
+
+            if (fieldName.toLowerCase().includes('email')) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (value && !emailRegex.test(value)) {
+                    errors[fieldName] = t('Invalid email format');
+                }
+            }
+
+            if (fieldName.toLowerCase().includes('phone') || fieldName.toLowerCase().includes('number') || fieldName.toLowerCase().includes('#')) {
+                if (value && isNaN(value)) {
+                    errors[fieldName] = t('Only numeric values are allowed');
+                }
+            }
+
+        });
+
+        // setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleSave = async (id) => {
+        const isNewBranch = id < 0; // Negative IDs are temporary
+        const branchData = branchChanges[id] || {};
+        console.log('Branch data to save:', branchData);
+        if (!validateChangedFields(branchData, false)) {
+            alert(t('Please correct errors before submitting.'));
+            return;
+        }
+
+        // Define contact detail fields
+        const contactDetailFields = [
+            'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactMobile',
+            'secondaryContactName', 'secondaryContactDesignation', 'secondaryContactEmail', 'secondaryContactMobile',
+            'supervisorContactName', 'supervisorContactDesignation', 'supervisorContactEmail', 'supervisorContactMobile'
+        ];
+
+        // Prepare payloads
+        const branchPayload = {};
+        const contactPayload = {};
+
+        Object.keys(branchData).forEach((fieldName) => {
+            if (contactDetailFields.includes(fieldName)) {
+                contactPayload[fieldName] = branchData[fieldName];
+            } else {
+                branchPayload[fieldName] = branchData[fieldName];
+            }
+        });
+
+        try {
+            if (isNewBranch) {
+                // CREATE new branch
+                const response = await fetch(`${API_BASE_URL}/customer-branches`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ...branchPayload,
+                        customer_id: customer.id
+                    }),
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Update local state with real ID from server
+                    setBranches(prev =>
+                        prev.map(branch =>
+                            branch.id === id ? { ...branch, ...result.data, id: result.data.id, isNew: false } : branch
+                        )
+                    );
+                    setTemporaryBranches(prev => prev.filter(b => b.id !== id));
+
+                    // If there are contacts to save
+                    if (Object.keys(contactPayload).length > 0) {
+                        await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${result.data.id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(contactPayload),
+                            credentials: 'include'
+                        });
+                    }
+                }
+            } else {
+                // UPDATE existing branch
+                if (Object.keys(branchPayload).length > 0) {
+                    await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(branchPayload),
+                        credentials: 'include'
+                    });
+                }
+
+                if (Object.keys(contactPayload).length > 0) {
+                    await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(contactPayload),
+                        credentials: 'include'
+                    });
+                }
+            }
+
+            // Clear changes for this branch
+            setBranchChanges(prev => {
+                const newChanges = { ...prev };
+                delete newChanges[id];
+                return newChanges;
+            });
+
+            // Refresh data
+            await fetchBranches();
+
+        } catch (error) {
+            console.error('Error saving branch:', error);
+        }
+    };
+
+
+    return (
+        <div className="branches-content" ref={contentRef}>
+            <div className="form-main-header">
+                <a href="#">{t('Customer Approval Checklist')}</a>
+            </div>
+            <div className="branches-page-header">
+                <div className="branches-header-controls">
+                    <input type="text" placeholder={t('Search...')} className="branches-search-input" />
+                    <div className="branches-action-buttons">
+                        <button className='branches-approve-button'>{t('Approve')}</button>
+                        <button className='branches-reject-button'>{t('Reject')}</button>
+                        <button className="branches-add-button" onClick={handleAddBranch}>{t('+ Add')}</button>
+                        <div className="action-menu-container" ref={actionMenuRef}>
+                            <FontAwesomeIcon icon={faEllipsisV} className="action-menu-icon" onClick={() => setActionMenuOpen(!isActionMenuOpen)} />
+                            {isActionMenuOpen && (
+                                <div className="action-menu">
+                                    <div className="action-menu-item">{t('Export')}</div>
+                                    <div className="action-menu-item">{t('Import')}</div>
+                                    <div className="action-menu-item">{t('Settings')}</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {isMobile ? (
+                <div className="branches-list">
+                    {currentItems.map((branch) => (
+                        <div key={branch.id} className="branch-card">
+                            <div className="branch-summary" onClick={() => toggleRow(branch.id)}>
+                                <div className="branch-id">{branch.erp_branch_id || branch.id}</div>
+                                <div className="branch-name">{branch.branch_name_en}</div>
+                                <div className="branch-status">
+                                    <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                        {t(branch.branch_status)}
+                                    </span>
+                                </div>
+                                <button className="branches-toggle-row-btn">
+                                    {isExpanded(branch.id)
+                                        ? <FontAwesomeIcon icon={faChevronDown} />
+                                        : <FontAwesomeIcon icon={faChevronRight} />}
+                                </button>
+                            </div>
+                            {isExpanded(branch.id) && (
+                                <div className="branch-expanded">
+                                    <BranchDetailsForm
+                                        branch={branch}
+                                        branchChanges={branchChanges}
+                                        handleBranchFieldChange={handleBranchFieldChange}
+                                    />
+                                    <ContactSection
+                                        branch={branch}
+                                        branchChanges={branchChanges}
+                                        handleBranchFieldChange={handleBranchFieldChange}
+                                    />
+                                    <OperatingHours
+                                        hoursData={branch.hours}
+                                        branchId={branch.id}
+                                        handleBranchFieldChange={handleBranchFieldChange}
+                                    />
+
+                                    <div className='customer-onboarding-form-actions'>
+                                        <div className="action-buttons">
+                                            <button className="save" onClick={() => handleSave(branch.id)} >
+                                                {t('Save Changes')}
+                                            </button>
+                                            <button className="block" >
+                                                {t('Block')}
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={(page) => {
+                            setCurrentPage(page);
+                            setExpandedRows([]);
+                        }}
+                        startIndex={startIndex}
+                        endIndex={Math.min(endIndex, branches.length)}
+                        totalItems={branches.length}
+                    />
+                </div>
+            ) : (
+                <div className="branches-table-container">
+                    <table className="branches-data-table">
+                        <thead>
+                            <tr>
+                                <th className="desktop-only">{t('Branch ID')}</th>
+                                <th className="desktop-only">{t('Branch Name')}</th>
+                                <th className="desktop-only">{t('City')}</th>
+                                <th className="desktop-only">{t('Location Type')}</th>
+                                <th>{t('Status')}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.map((branch) => (
+                                <React.Fragment key={branch.id}>
+                                    <tr onClick={() => toggleRow(branch.id)} className={isExpanded(branch.id) ? 'branches-expanded-row' : ''}>
+                                        <td className="mobile-only mobile-primary" data-label="Branch">
+                                            <div className="mobile-content">
+                                                <span className="mobile-title">{branch.erp_branch_id || branch.id}</span>
+                                                <span className="mobile-subtitle">{branch.branch_name_en}</span>
+                                            </div>
+                                        </td>
+                                        <td className="mobile-secondary">
+                                            <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                                {t(branch.branch_status)}
+                                            </span>
+                                        </td>
+                                        <td className="desktop-only">{branch.erp_branch_id || branch.id}</td>
+                                        <td className="desktop-only">{branch.branchNameEn}</td>
+                                        <td className="desktop-only">{branch.city}</td>
+                                        <td className="desktop-only">{branch.locationType}</td>
+                                        <td className='desktop-only'>
+                                            <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
+                                                {t(branch.branchStatus)}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button className="branches-toggle-row-btn">
+                                                {isExpanded(branch.id)
+                                                    ? <FontAwesomeIcon icon={faChevronDown} />
+                                                    : <FontAwesomeIcon icon={faChevronRight} />}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {!isMobile && isExpanded(branch.id) && (
+                                        <tr className="expanded-row">
+                                            <td colSpan="6">
+                                                <div className="expanded-form-container">
+                                                    <BranchDetailsForm
+                                                        branch={branch}
+                                                        branchChanges={branchChanges}
+                                                        handleBranchFieldChange={handleBranchFieldChange}
+                                                    />
+                                                    <ContactSection
+                                                        branch={branch}
+                                                        branchChanges={branchChanges}
+                                                        handleBranchFieldChange={handleBranchFieldChange}
+                                                    />
+                                                    <OperatingHours
+                                                        hoursData={branch.hours}
+                                                        branchId={branch.id}
+                                                        handleBranchFieldChange={handleBranchFieldChange}
+                                                    />
+                                                    <div className='expanded-form-container-footer'>
+                                                        <div className='customer-onboarding-form-actions'>
+                                                            <div className="action-buttons">
+                                                                <button className="save" onClick={() => handleSave(branch.id)}>
+                                                                    {t('Save')}
+                                                                </button>
+                                                                <button className="save" >
+                                                                    {t('Save Changes')}
+                                                                </button>
+                                                                <button className="block" >
+                                                                    {t('Block')}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={(page) => {
+                            setExpandedRows([]);
+                            setCurrentPage(page);
+                        }}
+                        startIndex={startIndex}
+                        endIndex={Math.min(endIndex, branches.length)}
+                        totalItems={branches.length}
+                    />
+                </div>
+            )}
+        </div>
+    );
+};
+const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
+    const { t } = useTranslation();
+    const [showMap, setShowMap] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    // LocationPicker component
+    const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
+        const mapContainer = useRef(null);
+        const markerRef = useRef(null); // Using ref instead of state for the marker
+        const [map, setMap] = useState(null);
+        const { t, i18n } = useTranslation();
+        const [coords, setCoords] = useState('Detecting your location...');
+        const [coordsArabic, setCoordsArabic] = useState(t('Detecting your location...'));
+        const [defaultCenter] = useState([77.5946, 12.9716]);
+        const [zoom] = useState(14);
+        const [confirmedLocation, setConfirmedLocation] = useState(null);
+        console.log('Initial Lat:', initialLat);
+        console.log('Initial Lng:', initialLng);
+        useEffect(() => {
+            let mapInstance;
+
+            const initializeMap = async () => {
+                mapInstance = new maplibregl.Map({
+                    container: mapContainer.current,
+                    style: 'https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc',
+                    center: initialLat && initialLng ? [initialLat, initialLng] : defaultCenter,
+                    zoom: zoom
+                });
+
+                mapInstance.on('load', async () => {
+                    setMap(mapInstance);
+                    try {
+                        const position = initialLat && initialLng ? {coords: {latitude: initialLat, longitude: initialLng}} : await getCurrentPosition();
+                        const { latitude, longitude } = position.coords;
+                        updateMarker(mapInstance, longitude, latitude);
+                    } catch (error) {
+                        console.log('Geolocation error:', error);
+                        setCoords('Click on the map to select a location');
+                        setCoordsArabic(t('Click on the map to select a location'));
+                    }
+                });
+
+                mapInstance.on('click', (e) => {
+                    if (!confirmedLocation) {
+                        const { lng, lat } = e.lngLat;
+                        updateMarker(mapInstance, lng, lat);
+                    }
+                });
+
+                return () => {
+                    if (markerRef.current) markerRef.current.remove();
+                    mapInstance.remove();
+                };
+            };
+
+            const getCurrentPosition = () => {
+                return new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 5000
+                    });
+                });
+            };
+
+            const updateMarker = (map, lng, lat) => {
+                // Remove existing marker if it exists
+                if (markerRef.current) {
+                    markerRef.current.remove();
+                    markerRef.current = null;
+                }
+
+                // Create new marker
+                const newMarker = new maplibregl.Marker()
+                    .setLngLat([lng, lat])
+                    .addTo(map);
+
+                markerRef.current = newMarker;
+                setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+                setCoordsArabic(`خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`);
+
+                map.setCenter([lng, lat]);
+            };
+
+            initializeMap();
+
+            return () => {
+                if (mapInstance) mapInstance.remove();
+            };
+        }, [confirmedLocation]);
+
+        const handleConfirm = () => {
+            if (markerRef.current) {
+                const lngLat = markerRef.current.getLngLat();
+                onLocationSelect(lngLat.lat, lngLat.lng);
+                setConfirmedLocation(lngLat);
+            }
+        };
+
+        const handleReset = () => {
+            if (markerRef.current) {
+                markerRef.current.remove();
+                markerRef.current = null;
+            }
+            setConfirmedLocation(null);
+            setCoords('Click on the map to select a location');
+            setCoordsArabic(t('Click on the map to select a location'));
+        };
+
+        return (
+            <div className="location-picker-container">
+                <div ref={mapContainer} className="map-container" />
+                <div className="location-coords">{i18n.language === 'ar' ? coordsArabic : coords}</div>
+                <div className="location-actions">
+                    {!confirmedLocation ? (
+                        <button
+                            className="confirm-location-button"
+                            onClick={handleConfirm}
+                            disabled={!markerRef.current}
+                        >
+                            Confirm Location
+                        </button>
+                    ) : (
+                        <>
+                            <div className="location-confirmed">
+                                Location confirmed!
+                            </div>
+                            <button
+                                className="reset-location-button"
+                                onClick={handleReset}
+                            >
+                                Change Location
+                            </button>
+                        </>
+                    )}
+                </div>
+            </div>
+        );
+    };
+    // Get current values from branchChanges or fall back to branch data
+    const getFieldValue = (fieldName) => {
+        return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+    };
+
+    // Handle checkbox changes
+    const [sameAsCustomer, setSameAsCustomer] = useState(
+        getFieldValue('sameAsCustomer') || false
+    );
+    const [approvalRequired, setApprovalRequired] = useState(
+        getFieldValue('approvalRequiredForOrdering') || false
+    );
+
+    // Use useCallback to memoize the handler
+    const handleInputChange = useCallback((e) => {
+        const { name, value } = e.target;
+        console.log('Input changed:', name, value);
+        handleBranchFieldChange(branch.id, name, value);
+    }, [branch.id, handleBranchFieldChange]);
+
+    const handleCheckboxChange = useCallback((e) => {
+        const { name, checked } = e.target;
+        if (name === 'sameAsCustomer') {
+            setSameAsCustomer(checked);
+        } else if (name === 'approvalRequiredForOrdering') {
+            setApprovalRequired(checked);
+        }
+        handleBranchFieldChange(branch.id, name, checked);
+    }, [branch.id, handleBranchFieldChange]);
+
+    const handleLocationSelect = useCallback((lat, lng) => {
+        setSelectedLocation({ lat, lng });
+        setShowMap(false);
+        // Store as object for display but convert to string for backend
+        handleBranchFieldChange(branch.id, 'geolocation', { x: lat, y: lng });
+    }, [branch.id, handleBranchFieldChange]);
+    const getLocationDisplay = (location) => {
+        if (!location) return 'Select Location';
+
+        // Handle both string format "lat,lng" and object {x,y} format
+        if (typeof location === 'string') {
+            const [lat, lng] = location.split(',');
+            return `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
+        }
+
+        // Handle object format
+        if (location.x && location.y) {
+            return `${location.y.toFixed(6)}, ${location.x.toFixed(6)}`;
+        }
+
+        return 'Select Location';
+    };
+    const fields = useMemo(() => [
+        { type: 'text', label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
+        { type: 'text', label: 'Branch (Arabic)', name: 'branchNameLc', placeholder: 'Branch (Arabic)', required: true },
+        { type: 'text', label: 'Building Name', name: 'buildingName', placeholder: 'Building Name', required: true },
+        { type: 'text', label: 'Street', name: 'street', placeholder: 'Street', required: true },
+        { type: 'dropdown', label: 'City', name: 'city', placeholder: 'City', required: true, options: ['Jeddah', 'Riyadh', 'Dammam'] },
+        { type: 'dropdown', label: 'Location Type', name: 'locationType', placeholder: 'Location Type', required: true, options: ['Office', 'Warehouse', 'Showroom'] },
+        {
+            label: 'Geolocation',
+            name: 'geolocation',
+            placeholder: 'Geolocation',
+            isLocation: true,
+            required: true
+        }
+    ], []);
+
+    return (
+        <div className="form-section">
+            <h3>{t('Branch Details')}</h3>
+
+            <div className="form-group">
+                <label>
+                    <input
+                        type="checkbox"
+                        name="sameAsCustomer"
+                        checked={sameAsCustomer}
+                        onChange={handleCheckboxChange}
+                    />
+                    {'\t' + t('Same as Customer Details')}
+                </label>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="approvalRequiredForOrdering"
+                            checked={approvalRequired}
+                            onChange={handleCheckboxChange}
+                        />
+                        {'\t' + t('Approval Required for Ordering')}
+                    </label>
+                </div>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="approvalRequiredForOrdering"
+                            checked={approvalRequired}
+                            onChange={handleCheckboxChange}
+                        />
+                        {'\t' + t('Delivery Cost')}
+                    </label>
+                </div>
+            </div>
+
+            <div className="form-row">
+                {fields.map((field, index) => {
+                    const value = getFieldValue(field.name);
+                    const displayValue = field.isLocation && selectedLocation
+                        ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`
+                        : value;
+
+                    return (
+                        <div className="form-group" key={index}>
+        <label>
+            {t(field.label)}
+            {field.required && <span className="required-field">*</span>}
+        </label>
+
+        {field.isLocation ? (
+            <div className="location-input-container">
+                <input
+                    value={getLocationDisplay(value)}
+                    onChange={handleLocationSelect}
+                    placeholder={t(field.placeholder)}
+                    readOnly
+                />
+                <button
+                    type="button"
+                    className="location-picker-button"
+                    onClick={() => setShowMap(true)}
+                >
+                    <FontAwesomeIcon icon={faLocationDot} />
+                </button>
+            </div>
+        ) : (
+            <div className='form-row'>
+                {(() => {
+                    switch (field.type) {
+                        case 'text':
+                            return (
+                                <input
+                                    type="text"
+                                    name={field.name}
+                                    value={value}
+                                    placeholder={t(field.placeholder)}
+                                    onChange={handleInputChange}
+                                />
+                            );
+                        case 'dropdown':
+                            return (
+                                <select
+                                    name={field.name}
+                                    value={value}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">{t(field.placeholder)}</option>
+                                    {field.options.map((opt, idx) => (
+                                <option key={idx} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                                </select>
+                            );
+                        default:
+                            return null;
+                    }
+                })()}
+            </div>
+        )}
+    </div>
+                    );
+                })}
+            </div>
+
+            {showMap && (
+                <div className="map-modal">
+                    <div className="map-modal-content">
+                        <button
+                            className="close-modal-button"
+                            onClick={() => setShowMap(false)}
+                        >
+                            <FontAwesomeIcon icon={faXmark} />
+                        </button>
+                        <h3>{t('Select Location')}</h3>
+                        <LocationPicker onLocationSelect={handleLocationSelect} initialLat={getFieldValue('geolocation')?.x}
+        initialLng={getFieldValue('geolocation')?.y}/>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+const ContactRow = ({ label, isRequired, onChange }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="form-row">
+            <div className='form-group'>
+                <label></label>
+                <input
+                    placeholder={t(`${label} Name`)}
+                    required={isRequired}
+                    onChange={onChange}
+                />
+            </div>
+            <div className='form-group'>
+                <label></label>
+                <input
+                    placeholder={t("Designation")}
+                    required={isRequired}
+                    onChange={onChange}
+                />
+            </div>
+            <div className='form-group'>
+                <label></label>
+                <input
+                    placeholder={t("Email")}
+                    required={isRequired}
+                    onChange={onChange}
+                />
+            </div>
+            <div className='form-group'>
+                <label></label>
+                <input
+                    placeholder={t("Phone")}
+                    required={isRequired}
+                    onChange={onChange}
+                />
+            </div>
+        </div>
+    );
+};
+
+const ContactSection = ({ branch, branchChanges, handleBranchFieldChange }) => {
+    const { t } = useTranslation();
+
+    // Get current values from branchChanges or fall back to branch data
+    const getFieldValue = (fieldName) => {
+        return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+    };
+
+    // Contact types we want to display
+    const contactTypes = [
+        {
+            type: 'primary',
+            label: 'Primary Contact',
+            isRequired: true,
+            fields: [
+                { name: 'Name', field: 'primaryContactName' },
+                { name: 'Designation', field: 'primaryContactDesignation' },
+                { name: 'Email', field: 'primaryContactEmail' },
+                { name: 'Phone', field: 'primaryContactMobile' }
+            ]
+        },
+        {
+            type: 'secondary',
+            label: 'Secondary Contact',
+            isRequired: true,
+            fields: [
+                { name: 'Name', field: 'secondaryContactName' },
+                { name: 'Designation', field: 'secondaryContactDesignation' },
+                { name: 'Email', field: 'secondaryContactEmail' },
+                { name: 'Phone', field: 'secondaryContactMobile' }
+            ]
+        },
+        {
+            type: 'supervisor',
+            label: 'Supervisor Contact',
+            isRequired: false,
+            fields: [
+                { name: 'Name', field: 'supervisorContactName' },
+                { name: 'Designation', field: 'supervisorContactDesignation' },
+                { name: 'Email', field: 'supervisorContactEmail' },
+                { name: 'Phone', field: 'supervisorContactMobile' }
+            ]
+        }
+    ];
+
+    const handleContactChange = (fieldName, value) => {
+        handleBranchFieldChange(branch.id, fieldName, value);
+    };
+
+    return (
+        <div className="form-section">
+            <h3>{t('Personal Details')}</h3>
+            {contactTypes.map(({ type, label, isRequired, fields }, index) => (
+                <div className='form row' key={index}>
+                    <div className='form-group'>
+                        <label>
+                            {t(label)}
+                            {isRequired && <span className="required-field">*</span>}
+                        </label>
+                        <div className="form-row">
+                            {fields.map(({ name, field }) => (
+                                <div className='form-group' key={field}>
+                                    <input
+                                        placeholder={t(name)}
+                                        value={getFieldValue(field)}
+                                        required={isRequired}
+                                        onChange={(e) => handleContactChange(field, e.target.value)}
+                                    />
+                                </div>
+                            ))}
+
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+
+};
+const parseTimeRange = (timeRange) => {
+    if (typeof timeRange === 'object') return timeRange;
+    const [from, to] = timeRange.split('-');
+    return { from, to };
+};
+const OperatingHours = ({ hoursData, branchId, handleBranchFieldChange }) => {
+    const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const { t } = useTranslation();
+
+    // Helper function to parse time range strings
+    const parseTimeRange = (timeRange) => {
+        if (!timeRange) return { from: '09:00', to: '18:00' };
+        const [from, to] = timeRange.split('-');
+        return { from: from || '09:00', to: to || '18:00' };
+    };
+
+    // Helper function to stringify hours for storage
+    const stringifyHours = (hoursData) => {
+        const result = {
+            operatingHours: {},
+            deliveryHours: {}
+        };
+
+        weekdays.forEach(day => {
+            result.operatingHours[day] =
+                `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
+            result.deliveryHours[day] =
+                `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
+        });
+
+        return JSON.stringify(result);
+    };
+
+    // Initialize state with parsed hours or defaults
+    const [hours, setHours] = useState(() => {
+        const defaultHours = weekdays.reduce((acc, day) => ({
+            ...acc,
+            [day]: {
+                operating: { from: '09:00', to: '18:00' },
+                delivery: { from: '09:00', to: '18:00' }
+            }
+        }), {});
+
+        if (!hoursData) return defaultHours;
+
+        try {
+            const parsedData = typeof hoursData === 'string' ? JSON.parse(hoursData) : hoursData;
+            return weekdays.reduce((acc, day) => ({
+                ...acc,
+                [day]: {
+                    operating: parseTimeRange(parsedData.operatingHours?.[day]),
+                    delivery: parseTimeRange(parsedData.deliveryHours?.[day])
+                }
+            }), {});
+        } catch (e) {
+            console.error('Error parsing hours data:', e);
+            return defaultHours;
+        }
+    });
+
+    const [modifiedDays, setModifiedDays] = useState({});
+    const [activeField, setActiveField] = useState(null);
+    const [originalValues, setOriginalValues] = useState({});
+
+    const handleHoursChange = (day, type, field, value) => {
+        const updatedHours = {
+            ...hours,
+            [day]: {
+                ...hours[day],
+                [type]: {
+                    ...hours[day][type],
+                    [field]: value
+                }
+            }
+        };
+
+        setHours(updatedHours);
+        setModifiedDays(prev => ({ ...prev, [day]: true }));
+        handleBranchFieldChange(branchId, 'hours', stringifyHours(updatedHours));
+    };
+
+    const applyAllHours = (sourceDay, type) => {
+        const timeToApply = hours[sourceDay][type];
+        const updatedHours = {
+            ...hours,
+            ...weekdays.reduce((acc, day) => ({
+                ...acc,
+                [day]: {
+                    ...hours[day],
+                    [type]: timeToApply
+                }
+            }), {})
+        };
+
+        setHours(updatedHours);
+        setModifiedDays({});
+        handleBranchFieldChange(branchId, 'hours', stringifyHours(updatedHours));
+    };
+
+    const handleCancel = () => {
+        if (activeField) {
+            const [day, type, field] = activeField.split('-');
+            const originalValue = originalValues[activeField];
+
+            const updatedHours = {
+                ...hours,
+                [day]: {
+                    ...hours[day],
+                    [type]: {
+                        ...hours[day][type],
+                        [field]: originalValue
+                    }
+                }
+            };
+
+            setHours(updatedHours);
+            setActiveField(null);
+            handleBranchFieldChange(branchId, 'hours', stringifyHours(updatedHours));
+        }
+    };
+
+    const formatDayName = (day) => day.charAt(0).toUpperCase() + day.slice(1);
+
+    return (
+        <div className="form-section">
+            <h3>
+                {t('Operating And Delivery Hours')}
+                <span className="required-field">*</span>
+            </h3>
+            <table className="hours-table">
+                <thead>
+                    <tr>
+                        <th>{t('Day')}</th>
+                        <th>{t('Operating Hours')}</th>
+                        <th>{t('Delivery Hours')}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {weekdays.map((day) => (
+                        <tr key={day} className={day === 'friday' ? 'friday-row' : ''}>
+                            <td>{t(formatDayName(day))}</td>
+
+                            {/* Operating Hours */}
+                            <td>
+                                <TimeInputGroup
+                                    day={day}
+                                    type="operating"
+                                    time={hours[day].operating}
+                                    isActive={activeField}
+                                    isModified={modifiedDays[day]}
+                                    onChange={handleHoursChange}
+                                    onFocus={(field, value) => {
+                                        setActiveField(`${day}-operating-${field}`);
+                                        setOriginalValues(prev => ({
+                                            ...prev,
+                                            [`${day}-operating-${field}`]: value
+                                        }));
+                                    }}
+                                    onApplyAll={() => applyAllHours(day, 'operating')}
+                                />
+                            </td>
+
+                            {/* Delivery Hours */}
+                            <td>
+                                <TimeInputGroup
+                                    day={day}
+                                    type="delivery"
+                                    time={hours[day].delivery}
+                                    isActive={activeField}
+                                    isModified={modifiedDays[day]}
+                                    onChange={handleHoursChange}
+                                    onFocus={(field, value) => {
+                                        setActiveField(`${day}-delivery-${field}`);
+                                        setOriginalValues(prev => ({
+                                            ...prev,
+                                            [`${day}-delivery-${field}`]: value
+                                        }));
+                                    }}
+                                    onApplyAll={() => applyAllHours(day, 'delivery')}
+                                />
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFocus, onApplyAll }) => {
+    return (
+        <div className={`time-input-group ${day === 'friday' ? 'friday-time-input-group' : ''}`}>
+            <input
+                type="time"
+                value={time.from}
+                onChange={(e) => onChange(day, type, 'from', e.target.value)}
+                onFocus={() => onFocus('from', time.from)}
+                onBlur={() => { }}
+            />
+            <span>-</span>
+            <input
+                type="time"
+                value={time.to}
+                onChange={(e) => onChange(day, type, 'to', e.target.value)}
+                onFocus={() => onFocus('to', time.to)}
+                onBlur={() => { }}
+            />
+
+            {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (
+                <div className="time-action-buttons">
+                    <button className="time-confirm-button" /*onClick={onConfirm}*/>
+                        <FontAwesomeIcon icon={faCheck} />
+                    </button>
+                    <button className="time-cancel-button" /*onClick={onCancel}*/>
+                        <FontAwesomeIcon icon={faXmark} />
+                    </button>
+                </div>
+            )}
+
+            {isModified && (
+                <button
+                    className="apply-row-button"
+                    onClick={onApplyAll}
+                    title="Apply to all days"
+                >
+                    Apply All
+                </button>
+            )}
+        </div>
+    );
+};
+export default CustomerBranches;

@@ -16,6 +16,10 @@ const Table = ({
         if (customCellRenderer && customCellRenderer[column.key]) {
             return customCellRenderer[column.key](item);
         }
+
+        if(column?.render){
+            return column.render(item);
+        }
  
         // Handle nested objects (e.g., primaryContact.email)
         if (column.key.includes('.')) {

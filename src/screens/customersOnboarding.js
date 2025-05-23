@@ -169,7 +169,7 @@ function CustomersOnboarding() {
                 console.error('Error during registration:', error);
             }
         }
-        
+
         if (isValid) {
             setIsSubmitting(true);
             if (!isRegistered) {
@@ -181,16 +181,37 @@ function CustomersOnboarding() {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            companyNameEn : formData.companyName,
+                            companyNameEn: formData.companyName,
                             region: formData.region,
-                            primaryContactEmail: formData.companyEmail,
-                            primaryContactMobile: formData.companyPhone,
-                            primaryContactName: formData.leadName,
+                            customerStatus: 'new'
                         }),
                         credentials: 'include',
                     });
                     const result = await response.json();
+
                     console.log(result);
+                    const contactTypes = ['primary', 'finance', 'business', 'purchasing'];
+                    contactTypes.forEach(async (type) => {
+                        const res = await fetch('http://localhost:3000/api/customer-contacts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                customerId: result.data.id,
+                                contactType: type,
+                            }),
+                            credentials: 'include',
+                        });
+                    });
+
+                    const res = await fetch('http://localhost:3000/api/payment-method', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            customerId: result.data.id,
+                            methodDetails: {prePayment:{isAllowed:true}, advancePayment:{isAllowed:false, balance: "2000"}, COD:{isAllowed:false, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}},
+                        }),
+                        credentials: 'include',
+                    });
                 } catch (error) {
                     console.error('Error during registration:', error);
                 }
@@ -329,7 +350,7 @@ function CustomersOnboarding() {
                             disabled={isSubmitting}
                             onClick={handleSubmit}
                         >
-                           {t('Submit')}
+                            {t('Submit')}
                         </button>
                     </div>
                 </div>

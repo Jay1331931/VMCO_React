@@ -46,6 +46,7 @@ const QuantityController = ({
                 <FontAwesomeIcon icon={faPlus} />
             </button>
             <style>{`
+                
                 .quantity-controls {
                     display: flex;
                     gap: 10px;
@@ -62,7 +63,7 @@ const QuantityController = ({
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
+                    justify-items: center;
                     font-size: 1rem;
                     transition: background 0.15s, color 0.15s;
                 }

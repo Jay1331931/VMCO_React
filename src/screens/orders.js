@@ -12,6 +12,8 @@ import { useNavigate } from 'react-router-dom';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
+  //get the status from the order
+  
   switch (status) {
     case 'Approved':
       return 'status-approved';
@@ -27,6 +29,7 @@ function Orders() {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -68,7 +71,7 @@ function Orders() {
       const result = await response.json();
       if (result.status === 'Ok') {
         setFilteredOrders(result.data.data);
-        setTotal(result.data.total || result.data.data.length);
+        setTotal(result.data.totalRecords);
       } else {
         throw new Error(result.message || 'Failed to fetch orders');
       }
@@ -81,12 +84,12 @@ function Orders() {
   };
 
   useEffect(() => {
-    fetchOrders(page);
+    fetchOrders(page, searchQuery);
     // eslint-disable-next-line
-  }, [page]);
+  }, [page, searchQuery]);
 
   const handleSearch = (searchTerm) => {
-    fetchOrders(1, searchTerm);
+    setSearchQuery(searchTerm);
     setPage(1);
   };
 
