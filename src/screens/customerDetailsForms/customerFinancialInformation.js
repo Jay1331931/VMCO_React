@@ -10,6 +10,10 @@ export function getFinancialInformationForm(t) {
       { type: 'text', name: 'accountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
       { type: 'text', name: 'ibanNumber', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
       { type: 'empty' },
+      // { type: 'header', label: t('Price Plan')},
+      { type: 'dropdown', name: 'pricePlan', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C']},
+      { type: 'checkbox', name: 'deliveryCost', label: '', options: [t('Delivery Cost')] },
+
       { type: 'header', label: '' },
       // { type: 'header', label: t('Payment Method (Post Approval)') },
       { type: 'checkbox', name: 'prePayment', label: t('Payment Methods'), options: [t('Pre-Payment')] },

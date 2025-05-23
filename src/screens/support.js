@@ -71,6 +71,10 @@ function Support() {
     { key: 'status', header: 'Status' }
   ];
 
+  const handleAdd = () => {
+    navigate("/supportDetails")
+  }
+
   const getStatusClass = (status) => {
     switch (status) {
       case 'Closed':
@@ -99,6 +103,7 @@ function Support() {
       <div className="support-content">
         <div className="support-header">
           <SearchInput onSearch={setSearchQuery} />
+          <button className="support-add-button" onClick={handleAdd} >{t('+ Add')}</button>
         </div>
         <Table
           columns={columns}
