@@ -7,7 +7,8 @@ const ProductCard = ({
     quantities,
     onQuantityChange,
     onProductClick,
-    setQuantities
+    setQuantities,
+    onAddToCart // Destructure onAddToCart prop
 }) => {
     const { t } = useTranslation();
 
@@ -18,10 +19,9 @@ const ProductCard = ({
         });
     };
 
-
-    const handleAddToCart = (e, productId) => {
+    const handleAddToCart = (e) => {
         e.stopPropagation(); // Prevent triggering the onProductClick event
-        console.log('Added to cart:', product.name, 'Quantity:', quantities[productId]);
+        onAddToCart(product.id); // Call the parent component's onAddToCart function
     }
 
     return (
@@ -54,7 +54,7 @@ const ProductCard = ({
                     />
                     <button
                         className="add-to-cart-btn"
-                        onClick={(e) => handleAddToCart(e, product.id)}
+                        onClick={(e) => handleAddToCart(e)}
                     >
                         {t('ADD TO CART')}
                     </button>

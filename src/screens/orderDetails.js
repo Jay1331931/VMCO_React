@@ -77,6 +77,7 @@ function OrderDetails() {
             itemId={row.id || row.product_id}
             quantity={row.quantity || 1}
             onQuantityChange={(_, delta) => {
+              if (!addMode) return; // Skip if not in add mode
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
@@ -88,6 +89,7 @@ function OrderDetails() {
               }
             }}
             onInputChange={(_, value) => {
+              if (!addMode) return; // Skip if not in add mode
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
@@ -659,18 +661,10 @@ function OrderDetails() {
                         id="customerField"
                         name="selectedCustomerName" 
                         value={formData.selectedCustomerName || ''} 
-                        disabled={true}
+                        onClick={() => setShowCustomerPopup(true)}
                         className="customer-input"
                         placeholder={t('Click to select customer')}
                       />
-                      <button 
-                        type="button" 
-                        className="order-action-btn approve"
-                        onClick={() => setShowCustomerPopup(true)}
-                        aria-label="Select customer"
-                      >
-                        {t('Select Customer')}
-                      </button>
                     </div>
                   ) : (
                     <input 
@@ -689,13 +683,6 @@ function OrderDetails() {
                         id="branchField"
                         name="selectedBranchName" 
                         value={formData.selectedBranchName || ''} 
-                        disabled={true}
-                        className="customer-input"
-                        placeholder={t('Click to select branch')}
-                      />
-                      <button 
-                        type="button" 
-                        className="order-action-btn approve"
                         onClick={() => {
                           if (!formData.erpCustId) {
                             alert(t('Please select a customer first'));
@@ -703,10 +690,9 @@ function OrderDetails() {
                           }
                           setShowBranchPopup(true);
                         }}
-                        aria-label="Select branch"
-                      >
-                        {t('Select Branch')}
-                      </button>
+                        className="customer-input"
+                        placeholder={t('Click to select branch')}
+                      />
                     </div>
                   ) : (
                     <input 

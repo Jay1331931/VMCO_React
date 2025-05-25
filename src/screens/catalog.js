@@ -27,9 +27,11 @@ function Catalog() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState(categories[0].value);
-    const [selectedLocation, setSelectedLocation] = useState('JP Nagar');
+    const [selectedLocation, setSelectedLocation] = useState('');
+    const [branches, setBranches] = useState([]);
     const [quantities, setQuantities] = useState({});
-    const [selectedProduct, setSelectedProduct] = useState(null);    const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [products, setProducts] = useState([]);
     const [totalProducts, setTotalProducts] = useState(0);
     const [displayedProducts, setDisplayedProducts] = useState([]);
     const [currentPage, setCurrentPage] = useState(1); // Now represents the max page to load
@@ -45,11 +47,6 @@ function Catalog() {
     // First filter products based on entity and other criteria
     const [filteredProducts, setFilteredProducts] = useState([]);
 
-    const locations = [
-        { value: 'JP Nagar', label: 'JP Nagar' },
-        { value: 'Jayanagar', label: 'Jayanagar' },
-        { value: 'Banashankari', label: 'Banashankari' }
-    ];
     
     const categoryTabs = categories.map(category => ({
         value: category.value,
@@ -119,9 +116,6 @@ function Catalog() {
             
             try {
                 // Determine which pages we need to fetch
-                // If currentPage is 1, fetch page 1
-                // If currentPage is 2, fetch pages 1-2 if not already loaded
-                // If currentPage is 3, fetch pages 1-3 if not already loaded
                 const pagesToFetch = [];
                 for (let i = 1; i <= currentPage; i++) {
                     if (!loadedPages.includes(i)) {
@@ -136,12 +130,6 @@ function Catalog() {
                     return;
                 }
                 
-                // Reset products if we're starting fresh
-                if (pagesToFetch.includes(1)) {
-                    setProducts([]);
-                    setLoadedPages([]);
-                }
-                
                 // Create a function to fetch a single page
                 const fetchPage = async (pageNumber) => {
                     const params = new URLSearchParams({
@@ -151,7 +139,7 @@ function Catalog() {
                         sortOrder: 'asc',
                     });
                     
-                    // Handle entity filtering - this is the category tab selected by the user
+                    // Handle entity filtering
                     const selectedCategory = categories.find(cat => cat.value === activeCategory);
                     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
                     
@@ -174,10 +162,10 @@ function Catalog() {
                     if (categoryFilter) params.append('category', categoryFilter);
                     if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
                     
-                    // Add search query - search for product name
+                    // Add search query
                     if (searchQuery) {
                         params.append('search', searchQuery);
-                        params.append('searchFields', 'productName,product_name'); // Search in product name fields
+                        params.append('searchFields', 'productName,product_name');
                     }
 
                     const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
@@ -212,33 +200,47 @@ function Catalog() {
                     return { pageProducts, totalCount, pageNumber };
                 };
                 
+                // Key fix: Handle the reset products case differently
+                let allProducts = [];
+                let newLoadedPages = [];
+                
+                // Reset products if we're starting fresh
+                if (pagesToFetch.includes(1)) {
+                    // Just prepare to reset - don't call setState yet
+                    allProducts = [];
+                    newLoadedPages = [];
+                } else {
+                    // If not resetting, start with existing data
+                    allProducts = [...products];
+                    newLoadedPages = [...loadedPages];
+                }
+                
                 // Fetch all pages in sequence
-                let allProducts = [...products];
                 let maxTotalCount = 0;
                 
                 for (const page of pagesToFetch) {
-                    const { pageProducts, totalCount, pageNumber } = await fetchPage(page);
+                    const { pageProducts, totalCount } = await fetchPage(page);
                     
                     // Add these products to our collection
                     allProducts = [...allProducts, ...pageProducts];
                     maxTotalCount = Math.max(maxTotalCount, totalCount);
                     
-                    // Mark this page as loaded
-                    setLoadedPages(prev => [...prev, pageNumber]);
+                    // Add to our new loaded pages array
+                    newLoadedPages.push(page);
                 }
                 
-                // Set all products at once after we've loaded everything
+                // Set all products and loaded pages at once after we've loaded everything
                 setProducts(allProducts);
                 setTotalProducts(maxTotalCount);
+                setLoadedPages(newLoadedPages);
                 
                 // Determine if there are more products to load
-                const loadedProductsCount = productsPerPage * Math.max(...pagesToFetch);
+                const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
                 const moreAvailable = loadedProductsCount < maxTotalCount;
                 setHasMore(moreAvailable);
                 
             } catch (err) {
                 console.error('Error fetching products:', err);
-                // Don't reset existing products on error
                 setHasMore(false);
             } finally {
                 setIsLoading(false);
@@ -247,7 +249,8 @@ function Catalog() {
         };
         
         fetchAllPages();
-    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL, loadedPages, products]);// Filter products based on tab, category, and subcategory
+    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
+    // Filter products based on tab, category, and subcategory
     useEffect(() => {
         // We're already filtering server-side via API params, but we also handle client-side filtering
         // for better UX while waiting for API responses
@@ -359,72 +362,148 @@ function Catalog() {
 
     const catalogId = React.useId();
 
-    // Get unique categories and subcategories for dropdowns
-    const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
-    const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
+// Get unique categories and subcategories for dropdowns
+const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
 
-    // Notes on the catalog entity filtering:
-    // 1. Each tab corresponds to a specific entity:
-    //    - VMCO Machines: Shows VMCO products that are machines
-    //    - VMCO Other: Shows VMCO products that are not machines
-    //    - Diyafa: Shows only Diyafa products
-    //    - Green Mast: Shows only Green Mast products
-    //    - Naqui: Shows only Naqui products
-    // 2. Filtering happens at both server-side (API) and client-side
-    // 3. When changing tabs, other filters (category, subcategory, search) are reset
-
-    const handleAddToCart = async (productId) => {
+// NEW: Branch selection functionality moved here (before add to cart function)
+// This useEffect fetches customer branches using the customer_id from the auth token
+useEffect(() => {
+    const fetchBranches = async () => {
         try {
-            // Find the product being added
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
+            setIsLoading(true); // Show loading state while fetching
             
-            // Get the quantity from state
-            const quantity = quantities[productId] || 1; // Default to 1 if not set
-            
-            // Calculate needed values
-            const unitPrice = product.price || product.unitPrice || 0;
-            const netAmount = unitPrice * quantity;
-            const sugarTaxAmount = product.sugarTaxAmount || 0;
-            
-            // Prepare cart item data
-            const cartItem = {
-                productId: product.id,
-                productName: product.productName || product.product_name,
-                entity: product.entity,
-                category: product.category,
-                unit: product.unit || 'EA',
-                unitPrice: unitPrice,
-                netAmount: netAmount,
-                quantity: quantity,
-                sugarTaxAmount: sugarTaxAmount,
-                locationId: selectedLocation
-            };
-            
-            // Make API call to add item to cart
-            const response = await fetch(`${API_BASE_URL}/cart`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+            // The API endpoint already reads the customer_id from the JWT token
+            const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
+                method: 'GET',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                credentials: 'include',
-                body: JSON.stringify(cartItem)
+                credentials: 'include' // This includes the auth token/cookies
             });
             
             if (!response.ok) {
-                throw new Error('Failed to add item to cart');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
             }
             
-            // Show success message
-            console.log('Product added to cart successfully');
+            const data = await response.json();
+            let branchData = [];
+            
+            // Handle response structure with better validation
+            if (Array.isArray(data)) {
+                branchData = data;
+            } else if (data.status === 'Ok' && Array.isArray(data.data)) {
+                branchData = data.data;
+            } else if (data && Array.isArray(data.data)) {
+                branchData = data.data;
+            } else {
+                console.warn('Unexpected branch data format:', data);
+                branchData = [];
+            }
+            
+            // Map branches to dropdown format with proper field validation
+            const branchOptions = branchData.map(branch => ({
+                value: String(branch.id || branch.branch_id), // Ensure IDs are strings
+                label: branch.branch_name_en || branch.branchNameEn || 'Unknown Branch',
+                // Keep additional data for reference if needed
+                raw: branch
+            }));
+            
+            setBranches(branchOptions);
+            
+            // Add additional logging to see the actual data structure
+            console.log('Fetched branch data:', branchData);
             
         } catch (error) {
-            console.error('Error adding product to cart:', error);
-            // Consider showing an error notification to the user
+            console.error('Error fetching branches:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
+    
+    fetchBranches();
+}, [API_BASE_URL]); 
 
-    // Get unique categories filtered by the current entity tab
+// Notes on the catalog entity filtering:
+// 1. Each tab corresponds to a specific entity:
+//    - VMCO Machines: Shows VMCO products that are machines
+//    - VMCO Other: Shows VMCO products that are not machines
+//    - Diyafa: Shows only Diyafa products
+//    - Green Mast: Shows only Green Mast products
+//    - Naqui: Shows only Naqui products
+// 2. Filtering happens at both server-side (API) and client-side
+// 3. When changing tabs, other filters (category, subcategory, search) are reset
+
+// MOVED: Add to cart functionality now comes after branch selection
+const handleAddToCart = async (productId) => {
+    try {
+        // Check if a branch is selected
+        if (!selectedLocation) {
+            alert(t('Please select a delivery branch first'));
+            return;
+        }
+        // Find the product being added
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+        
+        // Get the quantity from state, ensuring it's at least 1
+        const quantity = Math.max(1, quantities[productId] || 1);
+        
+        // Calculate needed values
+        const unitPrice = product.unitPrice || 1;
+        const netAmount = unitPrice * quantity;
+        const sugarTaxPrice = product.sugarTaxPrice;
+
+        // Prepare cart item data with all required fields from the database schema
+        const cartItem = {
+            customerId: '1',// The customer_id is read from the JWT token in the backend
+            branchId: selectedLocation, // Using snake_case as required by the API
+            productId: product.id,
+            productName: product.productName || product.product_name || '',
+            entity: product.entity || '',
+            category: product.category || '',
+            unit: product.unit || 'EA',
+            unitPrice: unitPrice, // Using snake_case as required by the API
+            quantityOrdered: quantity, // Using snake_case as required by the API
+            netAmount: netAmount,  // Using snake_case as required by the API
+            sugarTaxPrice: sugarTaxPrice, // Using snake_case as required by the API
+        };
+        
+        console.log('Sending to cart:', cartItem);
+        
+        // Make API call to add item to cart
+        const response = await fetch(`${API_BASE_URL}/cart`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include', // This sends along the auth cookies/JWT
+            body: JSON.stringify(cartItem)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+        }
+        
+        // Show success message to the user
+        alert(t('Product added to cart successfully'));
+        
+        // Reset quantity after successful add
+        setQuantities(prev => ({
+            ...prev,
+            [productId]: 0
+        }));
+        
+    } catch (error) {
+        console.error('Error adding product to cart:', error);
+        alert(t('Failed to add product to cart. Please try again.'));
+    }
+};
+
+// Get unique categories filtered by the current entity tab
 const getFilteredCategories = () => {
     // Get the entity for the current active tab
     const selectedCategory = categories.find(cat => cat.value === activeCategory);
@@ -513,11 +592,45 @@ const getFilteredSubcategories = () => {
                             id={`location-select-${catalogId}`}
                             name="locationSelect"
                             value={selectedLocation}
-                            onChange={(e) => setSelectedLocation(e.target.value)}
-                            options={locations}
+                            onChange={(e) => {
+                                const selectedValue = e.target.value;
+                                
+                                // Convert to string to ensure comparison works correctly
+                                const selectedBranch = branches.find(branch => String(branch.value) === String(selectedValue));
+                                
+                                // Save branch name to localStorage if found
+                                if (selectedBranch && selectedBranch.label) {
+                                    console.log('Saving branch name to localStorage:', selectedBranch.label);
+                                    localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                } else {
+                                    console.log('No branch found with id:', selectedValue);
+                                    // Add additional debug info to help diagnose
+                                    console.log('Available branches:', branches);
+                                    console.log('Selected value type:', typeof selectedValue);
+                                    console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');
+                                }
+                                
+                                // Update your local state
+                                setSelectedLocation(selectedValue);
+                            }}
+                            options={branches}
                             className="location-select"
                             label={t("Delivery to:")}
+                            placeholder={t("Select branch")} // Add a placeholder
+                            disabled={isLoading || branches.length === 0} // Disable when loading or no branches
                         />
+                        {/* Add a loading indicator within the location selector */}
+                        {isLoading && branches.length === 0 && (
+                            <div className="dropdown-loading">
+                                <LoadingSpinner size="small" />
+                            </div>
+                        )}
+                        {/* Add an error message if no branches are loaded */}
+                        {!isLoading && branches.length === 0 && (
+                            <div className="no-branches-message">
+                                {t('No branches available')}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="filter-section">
@@ -536,7 +649,13 @@ const getFilteredSubcategories = () => {
                         }}
                         variant="category"
                     />
-                    <button className="go-to-cart-btn" onClick={handleGoToCart}>
+                    <button 
+                        className={`go-to-cart-btn ${!selectedLocation ? 'disabled' : ''}`}
+                        style={{opacity: !selectedLocation ? 0.6 : 1, cursor: !selectedLocation ? 'not-allowed' : 'pointer',
+                        }}
+                        onClick={handleGoToCart}
+                        disabled={!selectedLocation}
+                    >
                         <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
                         <span>{t('Go to Cart')}</span>
                     </button>

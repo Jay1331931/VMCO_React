@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +12,27 @@ function Cart() {
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({});
+    // Set a default message for when no branch is selected
+    const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
+
+    // Improved useEffect to handle branch name retrieval
+    useEffect(() => {
+        // Get the branch name from localStorage
+        const branchName = localStorage.getItem('selectedBranchName');
+        
+        // Log for debugging
+        console.log('Retrieved branch name:', branchName);
+        
+        // Check if branch is selected, if not redirect with alert
+        if (!branchName || branchName.trim() === '') {
+            alert(t('Please select a branch before accessing your cart'));
+            navigate('/'); // Navigate to home page or wherever branch selection happens
+            return;
+        }
+
+        // Update state if we have a valid branch name
+        setSelectedBranchName(branchName);
+    }, [navigate, t]);
 
     // Example cart items, update as needed
     const cartItems = [
@@ -82,7 +103,12 @@ function Cart() {
             <div className="cart-header">
                 <h2 className="cart-title">Cart ({totalItems} items)</h2>
                 <div className="delivery-info">
-                    <span className="delivery-link">Delivering to JP Nagar</span>
+                    <span className="delivery-link">
+                        {t('Delivering to')}{' '}
+                        {selectedBranchName && selectedBranchName !== 'No location selected' 
+                            ? <strong>{selectedBranchName}</strong> 
+                            : <em>(No location selected)</em>}
+                    </span>
                 </div>
                 <div className="credit-balance">Credit Balance: SAR445</div>
             </div>
@@ -125,7 +151,7 @@ function Cart() {
                                             </div>
                                             <div className="item-price-panel">
                                                 <span className="item-price">{parseInt(item.code.replace('SAR', ''))} <span className="sar-label">SAR</span></span>
-                                                <button className="checkout-btn">CHECKOUT</button>
+                                                <button className="checkout-btn">Place Order</button>
                                             </div>
                                         </div>
                                     ))}

@@ -7,7 +7,8 @@ function ProductPopup({
     quantities,
     onQuantityChange,
     onInputChange,
-    onClose
+    onClose,
+    onAddToCart // Add this new prop
 }) {
     const { t } = useTranslation();
 
@@ -16,6 +17,12 @@ function ProductPopup({
     const images = [mainImage, ...additionalImages];
 
     const [selectedImage, setSelectedImage] = useState(mainImage);
+
+    // Add handler for add to cart button
+    const handleAddToCart = (e) => {
+        e.stopPropagation(); // Prevent closing the popup
+        onAddToCart(product.id); // Call the parent component's onAddToCart function
+    };
 
     if (!product) return null;
 
@@ -56,7 +63,8 @@ function ProductPopup({
                                 />
                             ))}
                         </div>
-                    </div>                    <div className="popup-details">
+                    </div>                    
+                    <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
                         {product.entity && <div className="popup-product-entity">{product.entity}</div>}
                         <div className="popup-product-price-row">
@@ -71,9 +79,13 @@ function ProductPopup({
                             quantity={quantities[product.id] || 0}
                             onQuantityChange={onQuantityChange}
                             onInputChange={onInputChange}
+                            stopPropagation={true}
                         />
                         <div className='addtocartbutton'>
-                            <button className="add-to-cart-btn">
+                            <button 
+                                className="add-to-cart-btn"
+                                onClick={handleAddToCart}
+                            >
                                 {t('Add to Cart')}
                             </button>
                         </div>

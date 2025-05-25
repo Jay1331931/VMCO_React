@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
+import Pagination from './Pagination';
 
 function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, t = (x) => x }) {
   const [branches, setBranches] = useState([]);
@@ -70,10 +71,23 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
       }
       
       // Update pagination based on branches length
-      setPagination(prev => ({
-        ...prev,
-        total: branches.length
-      }));
+      if (Array.isArray(result.data)) {
+        setPagination(prev => ({
+          ...prev,
+          total: result.data.totalRecords
+        }));
+      } else if (Array.isArray(result)) {
+        setPagination(prev => ({
+          ...prev,
+          total: result.length
+        }));
+      } else {
+        const branchesData = result.branches || result.items || result.data || [];
+        setPagination(prev => ({
+          ...prev,
+          total: Array.isArray(branchesData) ? branchesData.length : 1
+        }));
+      }
     } catch (err) {
       console.error('Error fetching branches:', err);
       setError(err.message);
@@ -134,7 +148,7 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Branch ID')}</th>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('ERP Branch ID')}</th>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Branch Name')}</th>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Actions')}</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -166,25 +180,17 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           )}
         </div>
         <div className="gb-footer">
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
-            <button
-              onClick={() => pagination.page > 1 && setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-              disabled={pagination.page === 1}
-              className="gb-close-btn"
-            >
-              {t('Previous')}
-            </button>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              {t('Page')} {pagination.page} {t('of')} {totalPages}
-            </span>
-            <button
-              onClick={() => pagination.page < totalPages && setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-              disabled={pagination.page === totalPages}
-              className="gb-close-btn"
-            >
-              {t('Next')}
-            </button>
-          </div>
+          {totalPages > 0 && (
+            <Pagination
+              currentPage={Number(pagination.page)}
+              totalPages={totalPages}
+              onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))
+              }
+              startIndex={(pagination.page - 1) * pagination.pageSize + 1}
+              endIndex={Math.min(pagination.page * pagination.pageSize, pagination.total)}
+              totalItems={pagination.total}
+            />
+          )}
         </div>
       </div>
 

@@ -31,32 +31,7 @@ function GetProducts({
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
 
-  // Function to fetch total number of products (count)
-  const fetchTotalCount = async () => {
-    if (!open) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/products`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      });
-      
-      const data = await response.json();
-      if (data && data.total !== undefined) {
-        setPagination(prev => ({
-          ...prev,
-          total: Number(data.totalRecords)
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching total count:", error);
-    }
-  };
-
+  
   // Function to fetch products with pagination
   const fetchProducts = async () => {
     if (!open) return;
