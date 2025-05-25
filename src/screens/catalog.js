@@ -116,9 +116,6 @@ function Catalog() {
             
             try {
                 // Determine which pages we need to fetch
-                // If currentPage is 1, fetch page 1
-                // If currentPage is 2, fetch pages 1-2 if not already loaded
-                // If currentPage is 3, fetch pages 1-3 if not already loaded
                 const pagesToFetch = [];
                 for (let i = 1; i <= currentPage; i++) {
                     if (!loadedPages.includes(i)) {
@@ -133,12 +130,6 @@ function Catalog() {
                     return;
                 }
                 
-                // Reset products if we're starting fresh
-                if (pagesToFetch.includes(1)) {
-                    setProducts([]);
-                    setLoadedPages([]);
-                }
-                
                 // Create a function to fetch a single page
                 const fetchPage = async (pageNumber) => {
                     const params = new URLSearchParams({
@@ -148,7 +139,7 @@ function Catalog() {
                         sortOrder: 'asc',
                     });
                     
-                    // Handle entity filtering - this is the category tab selected by the user
+                    // Handle entity filtering
                     const selectedCategory = categories.find(cat => cat.value === activeCategory);
                     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
                     
@@ -171,10 +162,10 @@ function Catalog() {
                     if (categoryFilter) params.append('category', categoryFilter);
                     if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
                     
-                    // Add search query - search for product name
+                    // Add search query
                     if (searchQuery) {
                         params.append('search', searchQuery);
-                        params.append('searchFields', 'productName,product_name'); // Search in product name fields
+                        params.append('searchFields', 'productName,product_name');
                     }
 
                     const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
@@ -209,33 +200,47 @@ function Catalog() {
                     return { pageProducts, totalCount, pageNumber };
                 };
                 
+                // Key fix: Handle the reset products case differently
+                let allProducts = [];
+                let newLoadedPages = [];
+                
+                // Reset products if we're starting fresh
+                if (pagesToFetch.includes(1)) {
+                    // Just prepare to reset - don't call setState yet
+                    allProducts = [];
+                    newLoadedPages = [];
+                } else {
+                    // If not resetting, start with existing data
+                    allProducts = [...products];
+                    newLoadedPages = [...loadedPages];
+                }
+                
                 // Fetch all pages in sequence
-                let allProducts = [...products];
                 let maxTotalCount = 0;
                 
                 for (const page of pagesToFetch) {
-                    const { pageProducts, totalCount, pageNumber } = await fetchPage(page);
+                    const { pageProducts, totalCount } = await fetchPage(page);
                     
                     // Add these products to our collection
                     allProducts = [...allProducts, ...pageProducts];
                     maxTotalCount = Math.max(maxTotalCount, totalCount);
                     
-                    // Mark this page as loaded
-                    setLoadedPages(prev => [...prev, pageNumber]);
+                    // Add to our new loaded pages array
+                    newLoadedPages.push(page);
                 }
                 
-                // Set all products at once after we've loaded everything
+                // Set all products and loaded pages at once after we've loaded everything
                 setProducts(allProducts);
                 setTotalProducts(maxTotalCount);
+                setLoadedPages(newLoadedPages);
                 
                 // Determine if there are more products to load
-                const loadedProductsCount = productsPerPage * Math.max(...pagesToFetch);
+                const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
                 const moreAvailable = loadedProductsCount < maxTotalCount;
                 setHasMore(moreAvailable);
                 
             } catch (err) {
                 console.error('Error fetching products:', err);
-                // Don't reset existing products on error
                 setHasMore(false);
             } finally {
                 setIsLoading(false);
@@ -244,7 +249,8 @@ function Catalog() {
         };
         
         fetchAllPages();
-    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL, loadedPages, products]);// Filter products based on tab, category, and subcategory
+    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
+    // Filter products based on tab, category, and subcategory
     useEffect(() => {
         // We're already filtering server-side via API params, but we also handle client-side filtering
         // for better UX while waiting for API responses
@@ -399,7 +405,7 @@ useEffect(() => {
             
             // Map branches to dropdown format with proper field validation
             const branchOptions = branchData.map(branch => ({
-                value: branch.id || branch.branch_id,
+                value: String(branch.id || branch.branch_id), // Ensure IDs are strings
                 label: branch.branch_name_en || branch.branchNameEn || 'Unknown Branch',
                 // Keep additional data for reference if needed
                 raw: branch
@@ -407,8 +413,8 @@ useEffect(() => {
             
             setBranches(branchOptions);
             
+            // Add additional logging to see the actual data structure
             console.log('Fetched branch data:', branchData);
-            console.log('Formatted branch options:', branchOptions);
             
         } catch (error) {
             console.error('Error fetching branches:', error);
@@ -586,7 +592,27 @@ const getFilteredSubcategories = () => {
                             id={`location-select-${catalogId}`}
                             name="locationSelect"
                             value={selectedLocation}
-                            onChange={(e) => setSelectedLocation(e.target.value)}
+                            onChange={(e) => {
+                                const selectedValue = e.target.value;
+                                
+                                // Convert to string to ensure comparison works correctly
+                                const selectedBranch = branches.find(branch => String(branch.value) === String(selectedValue));
+                                
+                                // Save branch name to localStorage if found
+                                if (selectedBranch && selectedBranch.label) {
+                                    console.log('Saving branch name to localStorage:', selectedBranch.label);
+                                    localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                } else {
+                                    console.log('No branch found with id:', selectedValue);
+                                    // Add additional debug info to help diagnose
+                                    console.log('Available branches:', branches);
+                                    console.log('Selected value type:', typeof selectedValue);
+                                    console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');
+                                }
+                                
+                                // Update your local state
+                                setSelectedLocation(selectedValue);
+                            }}
                             options={branches}
                             className="location-select"
                             label={t("Delivery to:")}
@@ -623,7 +649,13 @@ const getFilteredSubcategories = () => {
                         }}
                         variant="category"
                     />
-                    <button className="go-to-cart-btn" onClick={handleGoToCart}>
+                    <button 
+                        className={`go-to-cart-btn ${!selectedLocation ? 'disabled' : ''}`}
+                        style={{opacity: !selectedLocation ? 0.6 : 1, cursor: !selectedLocation ? 'not-allowed' : 'pointer',
+                        }}
+                        onClick={handleGoToCart}
+                        disabled={!selectedLocation}
+                    >
                         <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
                         <span>{t('Go to Cart')}</span>
                     </button>
