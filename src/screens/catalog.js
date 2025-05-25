@@ -600,8 +600,12 @@ const getFilteredSubcategories = () => {
                                 
                                 // Save branch name to localStorage if found
                                 if (selectedBranch && selectedBranch.label) {
-                                    console.log('Saving branch name to localStorage:', selectedBranch.label);
+                            
                                     localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                    localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                    console.log('Selected branch:', selectedBranch.label);
+                                    console.log('Selected branch ID:', selectedBranch.value);
+
                                 } else {
                                     console.log('No branch found with id:', selectedValue);
                                     // Add additional debug info to help diagnose
