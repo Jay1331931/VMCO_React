@@ -252,6 +252,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         return Object.keys(errors).length === 0;
     };
 
+
     const handleSave = async (id) => {
         const isNewBranch = id < 0; // Negative IDs are temporary
         const branchData = branchChanges[id] || {};
@@ -547,7 +548,66 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
     const { t } = useTranslation();
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     // LocationPicker component
+    
+      const [dropdownOptions, setDropdownOptions] = useState({});
+    
+      const getOptionsFromBasicsMaster = async (fieldName) => {
+      const params = new URLSearchParams({
+        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
+      });
+    
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+    
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    
+        const result = await response.json(); // Don't forget 'await' here
+        
+        const options = result.data.map(item => item.value);
+      
+        return options;
+    
+      } catch (err) {
+        console.error('Error fetching options:', err);
+        return []; // Return empty array on error
+      }
+    };
+      useEffect(() => {
+        const fetchDropdownOptions = async () => {
+          const options = {};
+          console.log('branch', branch)
+          // Find all dropdown fields and fetch their options
+          const dropdownFields = ['city', 'locationType']
+          console.log('dropdownFields', dropdownFields)
+          for (const field of dropdownFields) {
+            try {
+              const data = await getOptionsFromBasicsMaster(field);
+              // options[field.name] = data;
+              options[field] = data.map(opt =>
+                typeof opt === 'string'
+                ? opt.charAt(0).toUpperCase() + opt.slice(1).toLowerCase()
+                : opt // Fallback if not a string
+            );
+            } catch (err) {
+              console.error(`Failed to fetch options for ${field}:`, err);
+              options[field] = []; // Fallback to empty array
+            }
+          }
+    
+          setDropdownOptions(options);
+          console.log('dropdown options', dropdownOptions)
+        };
+    
+        fetchDropdownOptions();
+      }, [branch]);
     const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
         const mapContainer = useRef(null);
         const markerRef = useRef(null); // Using ref instead of state for the marker
@@ -838,11 +898,14 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                     onChange={handleInputChange}
                                 >
                                     <option value="">{t(field.placeholder)}</option>
-                                    {field.options.map((opt, idx) => (
-                                <option key={idx} value={opt}>
-                                  {opt}
+                                    {
+                                dropdownOptions[field.name]?dropdownOptions[field.name].map((opt, idx) =>(
+                                  <option key={idx} value={opt}>
+                                  {t(opt)}
                                 </option>
-                              ))}
+                                ) 
+                                ):[]
+                              }
                                 </select>
                             );
                         default:
