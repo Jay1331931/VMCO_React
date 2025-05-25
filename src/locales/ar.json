@@ -205,5 +205,9 @@
     "Confirm Location": "تأكيد الموقع",
     "Latitude:": "خط العرض:",
     "Longitude:": "خط الطول:",
-    "Detecting your location...": "يتم اكتشاف موقعك..."
+    "Detecting your location...": "يتم اكتشاف موقعك...",
+    "Trading": "تجاري",
+    "Non-trading": "غير تجاري",
+    "Riyadh": "الرياض",
+    "Jeddah": "جدة"
   }
