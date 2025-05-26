@@ -267,11 +267,11 @@ function Cart() {
             // Create sales order payload
             const orderPayload = {
                 customerId, // Use customer ID
-               // erpCustId: customer.erpCustId, // Use the erpCustId that belongs to the customer id customerId
+                // erpCustId: customer.erpCustId, // Use the erpCustId that belongs to the customer id customerId
                 branchId: selectedBranchId, // Use selected branch ID
                 erpBranchId: selectedBranchErpId, // Use same as branch ID
                 orderBy: 'Customer', // Default value
-                entity: categoryItems[0]?.entity || categoryName.split(' ')[0].toLowerCase(), // Get entity from first item or from category name
+                entity: getEntityFromCategory(categoryName), // Use helper function to determine entity from category
                 paymentMethod: 'Online', // Default value
                 totalAmount: totalAmount.toString(),
                 paidAmount: '0', // Default value for now
@@ -279,6 +279,24 @@ function Cart() {
                 expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
                 status: 'Pending', // Default status for new orders
             };
+
+            // Helper function to determine entity based on category
+            function getEntityFromCategory(category) {
+                const categoryLower = category.toLowerCase();
+                
+                if (categoryLower.includes('vmco')) {
+                    return 'vmco';
+                } else if (categoryLower.includes('diayafa') || categoryLower.includes('diyafa')) {
+                    return 'diyafa';
+                } else if (categoryLower.includes('green mast')) {
+                    return 'green mast';
+                } else if (categoryLower.includes('naqui')) {
+                    return 'naqui';
+                }
+                
+                // Default fallback to the first word of category (original logic)
+                return category.split(' ')[0].toLowerCase();
+            }
 
             console.log('Creating order with payload:', orderPayload);
 
@@ -346,21 +364,32 @@ function Cart() {
                 }
             }
 
-            // Step 3: Remove items from cart
-            const cartItemIds = categoryItems.map(item => item.id);
-            
-            // Delete each item from the cart
-            for (const cartItemId of cartItemIds) {
-                try {
-                    await fetch(`${API_BASE_URL}/cart/${cartItemId}`, {
-                        method: 'DELETE',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                    });
-                } catch (err) {
-                    console.error(`Error removing cart item ${cartItemId}:`, err);
-                    // Continue with other deletions even if one fails
+            // Step 3: Remove items from cart using the batch deletion endpoint
+            try {
+                // Get customer ID from localStorage or use a default
+                const customerId = localStorage.getItem('customerId') || '3';
+                
+                // Build the URL with query parameters
+                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+                deleteUrl.searchParams.append('customer_id', customerId);
+                deleteUrl.searchParams.append('branch_id', selectedBranchId);
+                deleteUrl.searchParams.append('entity', getEntityFromCategory(categoryName));
+                deleteUrl.searchParams.append('category', categoryName);
+                
+                console.log(`Deleting cart items with URL: ${deleteUrl}`);
+                
+                const deleteResponse = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                
+                if (!deleteResponse.ok) {
+                    console.error(`Error removing cart items: ${deleteResponse.status} ${deleteResponse.statusText}`);
                 }
+            } catch (err) {
+                console.error('Error removing cart items:', err);
+                // Continue with the order process even if deletion fails
             }
 
             // Show success message

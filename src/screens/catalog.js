@@ -455,51 +455,86 @@ const handleAddToCart = async (productId) => {
         const netAmount = unitPrice * quantity;
         const sugarTaxPrice = product.sugarTaxPrice;
 
-        // Prepare cart item data with all required fields from the database schema
-        const cartItem = {
-            customerId: '3',// The customer_id is read from the JWT token in the backend
-            branchId: selectedLocation, // Using snake_case as required by the API
-            productId: product.id,
-            productName: product.productName || product.product_name || '',
-            erpProdId: product.erpProdId || product.erp_prod_id || '',
-            entity: product.entity || '',
-            category: product.category || '',
-            unit: product.unit || 'EA',
-            unitPrice: unitPrice, // Using snake_case as required by the API
-            quantityOrdered: quantity, // Using snake_case as required by the API
-            netAmount: netAmount,  // Using snake_case as required by the API
-            sugarTaxPrice: sugarTaxPrice, // Using snake_case as required by the API
-        };
-        
-        console.log('Sending to cart:', cartItem);
-        
-        // Make API call to add item to cart
-        const response = await fetch(`${API_BASE_URL}/cart`, {
-            method: 'POST',
+        // First check if this item already exists in the cart
+        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
-            credentials: 'include', // This sends along the auth cookies/JWT
-            body: JSON.stringify(cartItem)
+            credentials: 'include', // Send along auth cookies/JWT
         });
-        // Check if the response is OK
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+
+        const checkResult = await checkResponse.json();
+        console.log('Check cart response:', checkResult);
+        
+        if (checkResult.data.data && checkResult.data.data.length > 0) {
+            // Item exists in cart, update the quantity
+            const existingItem = checkResult.data.data[0];
+            const updatedQuantity = existingItem.quantityOrdered + quantity;
+            
+            const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    quantityOrdered: updatedQuantity,
+                    netAmount: unitPrice * updatedQuantity
+                })
+            });
+            
+            if (!updateResponse.ok) {
+                const errorData = await updateResponse.json().catch(() => ({}));
+                throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
+            }
+            
+            alert(t('Product quantity updated in cart successfully'));
+        } else {
+            // Item doesn't exist in cart, add it as new
+            const cartItem = {
+                customerId: '3',// The customer_id is read from the JWT token in the backend
+                branchId: selectedLocation,
+                productId: product.id,
+                productName: product.productName || product.product_name || '',
+                erpProdId: product.erpProdId || product.erp_prod_id || '',
+                entity: product.entity || '',
+                category: product.category || '',
+                unit: product.unit || 'EA',
+                unitPrice: unitPrice,
+                quantityOrdered: quantity,
+                netAmount: netAmount,
+                sugarTaxPrice: sugarTaxPrice,
+            };
+            
+            console.log('Adding new item to cart:', cartItem);
+            
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(cartItem)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+            }
+            
+            alert(t('Product added to cart successfully'));
         }
         
-        // Show success message to the user
-        alert(t('Product added to cart successfully'));
-        
-        // Reset quantity after successful add
+        // Reset quantity after successful add/update
         setQuantities(prev => ({
             ...prev,
             [productId]: 0
         }));
         
     } catch (error) {
-        console.error('Error adding product to cart:', error);
-        alert(t('Failed to add product to cart. Please try again.'));
+        console.error('Error handling product cart action:', error);
+        alert(t('Failed to update cart. Please try again.'));
     }
 };
 
