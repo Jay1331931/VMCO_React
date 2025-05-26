@@ -25,6 +25,7 @@ function Cart() {
         { category: 'Green Mast', items: [] },
         { category: 'Naqui', items: [] }    
     ]);
+    const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
     // Fetch branch information from localStorage
     useEffect(() => {
@@ -94,8 +95,8 @@ function Cart() {
                     throw new Error(`Error: ${response.status} ${response.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log('Fetched cart data:', data);
+                const result = await response.json();
+                console.log('Fetched cart data:', result);
                 
                 // Initialize arrays for each category
                 const vmcoMachines = [];
@@ -105,8 +106,8 @@ function Cart() {
                 const naqui = [];
                 
                 // Extract cart items from the response with better error handling
-                const cartProducts = Array.isArray(data) ? data : 
-                                   (data.data && Array.isArray(data.data)) ? data.data : [];
+                const cartProducts = Array.isArray(result.data.data) ? result.data.data : 
+                                   (result.data && Array.isArray(result.data)) ? result.data : [];
                 
                 // Map initial quantities from fetched data
                 const initialQuantities = {};
@@ -115,15 +116,13 @@ function Cart() {
                 const isProductMachine = (product) => {
                     const productType = (product.productType || product.product_type || '').toLowerCase();
                     const category = (product.category || '').toLowerCase();
-                    const subCategory = (product.subCategory || product.sub_category || '').toLowerCase();
                     
                     // Check explicit productType field first
                     if (productType.includes('machine') || productType.includes('equipment')) return true;
                     if (productType.includes('consumable') || productType.includes('supply')) return false;
                     
                     // Check category fields
-                    return category.includes('machine') || category.includes('equipment') || 
-                           subCategory.includes('machine') || subCategory.includes('equipment');
+                    return category.includes('machine') || category.includes('equipment')
                 };
                 
                 // Process each product and categorize it correctly
@@ -131,11 +130,11 @@ function Cart() {
                     // Format the product data for display
                     const formattedItem = {
                         id: product.id,
-                        name: product.productName || product.name || 'Unknown Product',
-                        price: product.unitPrice || product.price || 0,
-                        quantity: product.quantityOrdered || product.quantity || 1,
+                        name: product.productName,
+                        price: product.unitPrice,
+                        quantity: product.quantityOrdered,
                         delivery: product.estimatedDelivery || product.delivery || '15 Apr 2025',
-                        imageUrl: product.imageUrl || product.image_url || '/placeholder-image.png',
+                        imageUrl: product.image, 
                         productCode: product.erpProdId || product.product_id || product.code,
                         // Include all original properties
                         ...product
@@ -236,6 +235,181 @@ function Cart() {
         navigate('/catalog');
     };
 
+    // Handle place order button click
+    const handlePlaceOrder = async (categoryItems, categoryName) => {
+        if (categoryItems.length === 0) {
+            alert(t('No items in this category to order.'));
+            return;
+        }
+
+        if (isPlacingOrder) {
+            alert(t('An order is already being processed. Please wait.'));
+            return;
+        }
+
+        try {
+            setIsPlacingOrder(true);
+            setError(null);
+
+            // Get customer ID from localStorage or another source
+            const customerId = localStorage.getItem('customerId') || '3'; // Default if not available
+
+            // Calculate total amount for this category
+            const totalAmount = categoryItems.reduce((total, item) => {
+                const price = parseFloat(item.price) || 0;
+                const qty = quantities[item.id] || item.quantity || 1;
+                return total + (price * qty);
+            }, 0);
+
+            // Create sales order payload
+            const orderPayload = {
+                customerId, // Use customer ID
+               // erpCustId: customer.erpCustId, // Use the erpCustId that belongs to the customer id customerId
+                branchId: selectedBranchId, // Use selected branch ID
+               // erpBranchId: selectedBranchId.erpBranchId, // Use same as branch ID
+                orderBy: 'Customer', // Default value
+                entity: categoryItems[0]?.entity || categoryName.split(' ')[0].toLowerCase(), // Get entity from first item or from category name
+                paymentMethod: 'Online', // Default value
+                totalAmount: totalAmount.toString(),
+                paidAmount: '0', // Default value for now
+                deliveryCharges: '0', // Default value for now
+                expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+                status: 'Pending', // Default status for new orders
+            };
+
+            console.log('Creating order with payload:', orderPayload);
+
+            // Step 1: Create the sales order
+            const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderPayload),
+                credentials: 'include',
+            });
+
+            if (!orderResponse.ok) {
+                const errorText = await orderResponse.text();
+                console.error('Server response:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || 'Failed to create order');
+                } catch (e) {
+                    throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText}`);
+                }
+            }
+
+            // Parse the response to get the order ID
+            const orderResult = await orderResponse.json();
+            console.log('Order creation result:', orderResult);
+
+            if (!orderResult.data || !orderResult.data.id) {
+                throw new Error('Order ID not returned from API');
+            }
+
+            const orderId = orderResult.data.id;
+
+            // Step 2: Create sales order lines for each product
+            const productsPayload = categoryItems.map((item, index) => ({
+                order_id: orderId,
+                line_number: index + 1, // Generate sequential line numbers
+                erp_line_number: index + 1, // Using same as line_number
+                product_id: item.productId || item.id, // Use the proper product ID
+                erp_prod_id: item.erpProdId || item.erp_prod_id || '', // Use ERP product ID if available
+                quantity: parseInt(quantities[item.id] || item.quantity || 1, 10),
+                unit: item.unit || 'EA',
+                unit_price: parseFloat(item.unitPrice || item.price || 0),
+                net_amount: parseFloat(item.price || 0) * parseInt(quantities[item.id] || item.quantity || 1, 10),
+                sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+            }));
+
+            console.log('Submitting products payload:', productsPayload);
+
+            // Add product lines to the order
+            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productsPayload),
+                credentials: 'include',
+            });
+
+            if (!linesResponse.ok) {
+                const errorText = await linesResponse.text();
+                console.error('Server response for product lines:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || 'Failed to add products to order');
+                } catch (e) {
+                    throw new Error(`Failed to add products to order: ${linesResponse.status} ${linesResponse.statusText}`);
+                }
+            }
+
+            // Step 3: Remove items from cart
+            const cartItemIds = categoryItems.map(item => item.id);
+            
+            // Delete each item from the cart
+            for (const cartItemId of cartItemIds) {
+                try {
+                    await fetch(`${API_BASE_URL}/cart/${cartItemId}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                    });
+                } catch (err) {
+                    console.error(`Error removing cart item ${cartItemId}:`, err);
+                    // Continue with other deletions even if one fails
+                }
+            }
+
+            // Show success message
+            alert(t(`Order for ${categoryName} placed successfully! Order #${orderId}`));
+            
+            // Refresh cart items
+            window.location.reload();
+            
+        } catch (err) {
+            console.error('Error placing order:', err);
+            setError(err.message);
+            alert(t(`Failed to place order: ${err.message}`));
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
+    // Handle place all orders button click
+    const handlePlaceAllOrders = async () => {
+        // Check if there are any items to order
+        const allItems = cartItems.flatMap(category => category.items);
+        if (allItems.length === 0) {
+            alert(t('Your cart is empty.'));
+            return;
+        }
+
+        if (isPlacingOrder) {
+            alert(t('An order is already being processed. Please wait.'));
+            return;
+        }
+
+        try {
+            setIsPlacingOrder(true);
+            
+            // Place an order for each category that has items
+            for (const category of cartItems) {
+                if (category.items.length > 0) {
+                    await handlePlaceOrder(category.items, category.category);
+                }
+            }
+            
+            alert(t('All orders have been placed successfully!'));
+            window.location.reload(); // Refresh page after all orders are placed
+            
+        } catch (err) {
+            console.error('Error placing all orders:', err);
+            alert(t(`Failed to place all orders: ${err.message}`));
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
     // Calculate total items for header and summary
     const totalItems = cartItems.reduce((sum, cat) => sum + cat.items.length, 0);
 
@@ -285,14 +459,14 @@ function Cart() {
                                                         {item.imageUrl ? (
                                                             <img 
                                                                 src={item.imageUrl} 
-                                                                alt={item.name} 
+                                                                alt={''} 
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;
                                                                     e.target.src = '/placeholder-image.png';
                                                                 }}
                                                             />
                                                         ) : (
-                                                            <div className="image-placeholder"></div>
+                                                            <div className="image-placeholder" style={{ backgroundColor: '#cccccc', height: '100%', width: '100%' }}></div>
                                                         )}
                                                     </div>
                                                     <div className="item-details">
@@ -321,7 +495,6 @@ function Cart() {
                                                             Total: {parseInt(item.price) * (quantities[item.id] || item.quantity)} 
                                                             <span className="sar-label">SAR</span>
                                                         </span>
-                                                        <button className="checkout-btn">Place Order</button>
                                                     </div>
                                                 </div>
                                             ))
@@ -330,7 +503,25 @@ function Cart() {
                                         {category.category === 'VMCO Machines' && category.items.length > 0 && (
                                             <div className="partial-payment-row">
                                                 <span className="partial-payment-warning">Min. 30% Partial Payment required</span>
-                                                <input className="partial-payment-input" type="number" min="0" placeholder="100" />
+                                            </div>
+                                        )}
+                                        {category.items.length > 0 && (
+                                            <div className="checkout-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                <span className="checkout-info" style={{ margin: '10px', fontWeight: 'bold' }}>
+                                                    {t('Total for this category')}: 
+                                                    {category.items.reduce((total, item) => {
+                                                        const price = parseFloat(item.price) || 0;
+                                                        return total + price * (quantities[item.id] || item.quantity);
+                                                    }, 0)} 
+                                                    <span className="sar-label" style={{ margin: '5px' }}>SAR</span>
+                                                </span>
+                                                <button 
+                                                    className="checkout-btn"
+                                                    onClick={() => handlePlaceOrder(category.items, category.category)}
+                                                    disabled={isPlacingOrder}
+                                                >
+                                                    {isPlacingOrder ? t('Processing...') : t('Place Order')}
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -345,7 +536,13 @@ function Cart() {
                             {t('Total Amount')} ({totalItems} Items)
                         </h3>
                         <span className="summary-amount">{calculateTotal()} <span className="sar-label">SAR</span></span>
-                        <button className="checkout-all-btn">{t('Place all orders')}</button>
+                        <button 
+                            className="checkout-all-btn"
+                            onClick={handlePlaceAllOrders}
+                            disabled={isPlacingOrder || totalItems === 0}
+                        >
+                            {isPlacingOrder ? t('Processing...') : t('Place all orders')}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -373,6 +570,12 @@ function Cart() {
                     color: #888;
                     font-style: italic;
                     padding: 10px;
+                }
+                
+                /* Styling for disabled buttons */
+                button:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
                 }
             `}</style>
         </Sidebar>

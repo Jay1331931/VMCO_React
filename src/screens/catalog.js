@@ -104,7 +104,9 @@ function Catalog() {
             // Keep the original data too for use in other places
             ...product
         };
-    };    // Fetch products from backend - now loads all pages from 1 to currentPage
+    };
+    
+    // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
         const fetchAllPages = async () => {
             // Show loading state
@@ -175,22 +177,28 @@ function Catalog() {
                     });
                     
                     const result = await response.json();
-                    
+                    console.log(`Fetched page ${pageNumber} products:`, result);
                     // Extract the new products from the response
                     let pageProducts = [];
                     let totalCount = 0;
+
+                    if(result.status === 'Ok')
+                    {
+                        pageProducts = result.data.data;
+                        totalCount = result.data.totalRecords
+                    }
                     
-                    if (Array.isArray(result)) {
-                        pageProducts = result;
+                    if (Array.isArray(result.data)) {
+                        pageProducts = result.data.data;
                         totalCount = result.length;
-                    } else if (result.status === 'Ok' && Array.isArray(result.data)) {
-                        pageProducts = result.data;
+                    } else if (result.status === 'Ok' && Array.isArray(result.data.data)) {
+                        pageProducts = result.data.data;
                         totalCount = 
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
                             result.data.length;
-                    } else if (result && Array.isArray(result.data)) {
-                        pageProducts = result.data;
+                    } else if (result && Array.isArray(result.data.data)) {
+                        pageProducts = result.data.data;
                         totalCount = 
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
@@ -426,17 +434,7 @@ useEffect(() => {
     fetchBranches();
 }, [API_BASE_URL]); 
 
-// Notes on the catalog entity filtering:
-// 1. Each tab corresponds to a specific entity:
-//    - VMCO Machines: Shows VMCO products that are machines
-//    - VMCO Other: Shows VMCO products that are not machines
-//    - Diyafa: Shows only Diyafa products
-//    - Green Mast: Shows only Green Mast products
-//    - Naqui: Shows only Naqui products
-// 2. Filtering happens at both server-side (API) and client-side
-// 3. When changing tabs, other filters (category, subcategory, search) are reset
-
-// MOVED: Add to cart functionality now comes after branch selection
+//  Add to cart functionality
 const handleAddToCart = async (productId) => {
     try {
         // Check if a branch is selected
@@ -458,10 +456,11 @@ const handleAddToCart = async (productId) => {
 
         // Prepare cart item data with all required fields from the database schema
         const cartItem = {
-            customerId: '1',// The customer_id is read from the JWT token in the backend
+            customerId: '3',// The customer_id is read from the JWT token in the backend
             branchId: selectedLocation, // Using snake_case as required by the API
             productId: product.id,
             productName: product.productName || product.product_name || '',
+            erpProdId: product.erpProdId || product.erp_prod_id || '',
             entity: product.entity || '',
             category: product.category || '',
             unit: product.unit || 'EA',
@@ -482,7 +481,7 @@ const handleAddToCart = async (productId) => {
             credentials: 'include', // This sends along the auth cookies/JWT
             body: JSON.stringify(cartItem)
         });
-        
+        // Check if the response is OK
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
