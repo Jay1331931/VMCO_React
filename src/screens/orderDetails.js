@@ -75,7 +75,8 @@ function OrderDetails() {
         <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
             itemId={row.id || row.product_id}
-            quantity={row.quantity || 1}
+            quantity={row.quantity}
+            disabled={!addMode} // Disable in view mode
             onQuantityChange={(_, delta) => {
               if (!addMode) return; // Skip if not in add mode
               const idx = formData.products.findIndex(

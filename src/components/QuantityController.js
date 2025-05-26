@@ -89,6 +89,11 @@ const QuantityController = ({
                     -webkit-appearance: none;
                     margin: 0;
                 }
+                .quantity-btn:disabled {
+                    background: #f4f4f4;
+                    cursor: not-allowed;
+                    color: #999999;
+                }
                 @media (max-width: 768px) {
                     .quantity-controls {
                         gap: 5px;

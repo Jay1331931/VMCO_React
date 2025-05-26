@@ -396,25 +396,26 @@ useEffect(() => {
                 throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
             }
             
-            const data = await response.json();
+            const result = await response.json();
             let branchData = [];
             
             // Handle response structure with better validation
-            if (Array.isArray(data)) {
-                branchData = data;
-            } else if (data.status === 'Ok' && Array.isArray(data.data)) {
-                branchData = data.data;
-            } else if (data && Array.isArray(data.data)) {
-                branchData = data.data;
+            if (Array.isArray(result)) {
+                branchData = result;
+            } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+                branchData = result.data;
+            } else if (result && Array.isArray(result.data)) {
+                branchData = result.data;
             } else {
-                console.warn('Unexpected branch data format:', data);
+                console.warn('Unexpected branch data format:', result);
                 branchData = [];
             }
             
             // Map branches to dropdown format with proper field validation
             const branchOptions = branchData.map(branch => ({
                 value: String(branch.id || branch.branch_id), // Ensure IDs are strings
-                label: branch.branch_name_en || branch.branchNameEn || 'Unknown Branch',
+                label: branch.branch_name_en || branch.branchNameEn,
+                erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
                 // Keep additional data for reference if needed
                 raw: branch
             }));
@@ -599,15 +600,15 @@ const getFilteredSubcategories = () => {
                                 
                                 // Save branch name to localStorage if found
                                 if (selectedBranch && selectedBranch.label) {
-                            
                                     localStorage.setItem('selectedBranchName', selectedBranch.label);
                                     localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                    localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                    
                                     console.log('Selected branch:', selectedBranch.label);
                                     console.log('Selected branch ID:', selectedBranch.value);
-
+                                    console.log('Selected branch ERP ID:', selectedBranch.erpBranchId);
                                 } else {
                                     console.log('No branch found with id:', selectedValue);
-                                    // Add additional debug info to help diagnose
                                     console.log('Available branches:', branches);
                                     console.log('Selected value type:', typeof selectedValue);
                                     console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');

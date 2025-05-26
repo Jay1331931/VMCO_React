@@ -16,6 +16,7 @@ function Cart() {
     const [quantities, setQuantities] = useState({});
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchId, setSelectedBranchId] = useState('');
+    const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState([
@@ -33,8 +34,9 @@ function Cart() {
         try {
             const branchName = localStorage.getItem('selectedBranchName');
             const branchId = localStorage.getItem('selectedBranchId');
+            const branchErpId = localStorage.getItem('selectedBranchErpId');  // <-- Fixed key name here
             
-            console.log('Retrieved branch info:', { branchName, branchId });
+            console.log('Retrieved branch info:', { branchName, branchId, branchErpId });
             
             if (!branchId || !branchName || branchName.trim() === '') {
                 console.warn('Branch selection is missing or incomplete');
@@ -45,7 +47,8 @@ function Cart() {
 
             setSelectedBranchName(branchName);
             setSelectedBranchId(branchId);
-            
+            setSelectedBranchErpId(branchErpId);  // <-- Use the correct variable name
+
         } catch (error) {
             console.error('Error retrieving branch info from localStorage:', error);
             alert(t('Error loading your branch information. Please select a branch again.'));
@@ -266,7 +269,7 @@ function Cart() {
                 customerId, // Use customer ID
                // erpCustId: customer.erpCustId, // Use the erpCustId that belongs to the customer id customerId
                 branchId: selectedBranchId, // Use selected branch ID
-               // erpBranchId: selectedBranchId.erpBranchId, // Use same as branch ID
+                erpBranchId: selectedBranchErpId, // Use same as branch ID
                 orderBy: 'Customer', // Default value
                 entity: categoryItems[0]?.entity || categoryName.split(' ')[0].toLowerCase(), // Get entity from first item or from category name
                 paymentMethod: 'Online', // Default value
