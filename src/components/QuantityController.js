@@ -7,12 +7,20 @@ const QuantityController = ({
     quantity = 0,
     onQuantityChange,
     onInputChange,
-    stopPropagation = false
+    stopPropagation = false,
+    minQuantity = 0,  // Add minQuantity prop with default of 0
+    moq = 0          // Add moq prop with default of 0
 }) => {
     const handleButtonClick = (e, delta) => {
         if (stopPropagation) {
             e.stopPropagation();
         }
+        
+        // Prevent decreasing below MOQ
+        if (delta < 0 && quantity <= moq) {
+            return;
+        }
+        
         onQuantityChange(itemId, delta);
     };
 
@@ -20,14 +28,24 @@ const QuantityController = ({
         if (stopPropagation) {
             e.stopPropagation();
         }
-        onInputChange(itemId, Math.max(0, parseInt(e.target.value) || 0));
+        
+        const newValue = e.target.value === '' ? '' : parseInt(e.target.value);
+        
+        // Ensure the value isn't less than MOQ
+        const validValue = newValue === '' ? '' : Math.max(moq, newValue);
+        onInputChange(itemId, validValue);
     };
+
+    // Disable the minus button if quantity is at or below MOQ
+    const isMinusDisabled = quantity <= moq;
 
     return (
         <div className="quantity-controls">
             <button
-                className="quantity-btn"
+                className={`quantity-btn ${isMinusDisabled ? 'disabled' : ''}`}
                 onClick={(e) => handleButtonClick(e, -1)}
+                disabled={isMinusDisabled}
+                aria-label="Decrease quantity"
             >
                 <FontAwesomeIcon icon={faMinus} />
             </button>
@@ -38,13 +56,24 @@ const QuantityController = ({
                 name={`quantity-${itemId}`}
                 value={quantity}
                 onChange={handleInputChange}
+                onClick={(e) => stopPropagation && e.stopPropagation()}
+                min={moq}  // Set the min attribute to MOQ
             />
             <button
                 className="quantity-btn"
                 onClick={(e) => handleButtonClick(e, 1)}
+                aria-label="Increase quantity"
             >
                 <FontAwesomeIcon icon={faPlus} />
             </button>
+            
+            {/* Add MOQ indicator if moq > 0 */}
+            {moq > 0 && (
+                <div className="moq-indicator" title={`Minimum Order Quantity: ${moq}`}>
+                    Min: {moq}
+                </div>
+            )}
+            
             <style>{`
                 
                 .quantity-controls {
@@ -89,10 +118,18 @@ const QuantityController = ({
                     -webkit-appearance: none;
                     margin: 0;
                 }
-                .quantity-btn:disabled {
-                    background: #f4f4f4;
+                
+                .quantity-btn.disabled {
+                    opacity: 0.5;
                     cursor: not-allowed;
-                    color: #999999;
+                }
+                .moq-indicator {
+                    position: absolute;
+                    bottom: -20px;
+                    left: 0;
+                    font-size: 0.7rem;
+                    color: #666;
+                    white-space: nowrap;
                 }
                 @media (max-width: 768px) {
                     .quantity-controls {

@@ -101,6 +101,7 @@ function Catalog() {
             entity: product.entity, // Make sure entity is included in mapped props
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
+            moq: product.moq || product.minimumOrderQuantity || 0, // Make sure MOQ is included
             // Keep the original data too for use in other places
             ...product
         };
@@ -355,14 +356,25 @@ function Catalog() {
         setSelectedProduct(null);
     };
 
-    const handleQuantityChange = (productId, value) => {
-        // Update local state only for immediate UI feedback
-        const newQuantity = Math.max(0, Number(quantities[productId] || 0) + value);
-        setQuantities(prev => ({
-            ...prev,
-            [productId]: newQuantity
-        }));
-    };
+    // Update the handleQuantityChange function
+
+const handleQuantityChange = (productId, value) => {
+    // Find the product to get its MOQ
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const moq = Number(product.moq || 0);
+    
+    // Calculate the new quantity ensuring it doesn't go below MOQ
+    const currentQuantity = quantities[productId] || 0;
+    const newQuantity = Math.max(moq, currentQuantity + value);
+    
+    // Update local state only for immediate UI feedback
+    setQuantities(prev => ({
+        ...prev,
+        [productId]: newQuantity
+    }));
+};
 
     const handleGoToCart = () => {
         navigate('/Cart');
@@ -443,12 +455,27 @@ const handleAddToCart = async (productId) => {
             alert(t('Please select a delivery branch first'));
             return;
         }
+        
         // Find the product being added
         const product = products.find(p => p.id === productId);
         if (!product) return;
         
-        // Get the quantity from state, ensuring it's at least 1
-        const quantity = Math.max(1, quantities[productId] || 1);
+        // Get MOQ and ensure quantity meets it
+        const moq = Number(product.moq || 0);
+        let quantity = quantities[productId] || 0;
+        
+        // If quantity is less than MOQ, set it to MOQ
+        if (quantity < moq) {
+            quantity = moq;
+            // Update the quantities state
+            setQuantities(prev => ({
+                ...prev,
+                [productId]: moq
+            }));
+        }
+        
+        // Ensure quantity is at least 1
+        quantity = Math.max(1, quantity);
         
         // Calculate needed values
         const unitPrice = product.unitPrice || 1;
@@ -617,6 +644,27 @@ const getFilteredSubcategories = () => {
             .filter(Boolean)
     ));
 };
+
+    // Initialize quantities with MOQ values when products are loaded
+    useEffect(() => {
+        if (products.length > 0) {
+            let initialQuantities = {...quantities};
+            let hasChanges = false;
+            
+            products.forEach(product => {
+                // Only set MOQ for products without quantity or with 0 quantity
+                if (product.moq && (!initialQuantities[product.id] || initialQuantities[product.id] === 0)) {
+                    initialQuantities[product.id] = Number(product.moq);
+                    hasChanges = true;
+                }
+            });
+            
+            // Only update state if there were changes
+            if (hasChanges) {
+                setQuantities(initialQuantities);
+            }
+        }
+    }, [products]); // Only depends on products changing
 
     return (
         <Sidebar title={t('Catalog')}>
