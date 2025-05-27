@@ -449,6 +449,7 @@ useEffect(() => {
 
 //  Add to cart functionality
 const handleAddToCart = async (productId) => {
+    console.log('Adding product to cart:', productId);
     try {
         // Check if a branch is selected
         if (!selectedLocation) {
@@ -461,8 +462,8 @@ const handleAddToCart = async (productId) => {
         if (!product) return;
         
         // Get MOQ and ensure quantity meets it
-        const moq = Number(product.moq || 0);
-        let quantity = quantities[productId] || 0;
+        const moq = Number(product.moq);
+        let quantity = quantities[productId];
         
         // If quantity is less than MOQ, set it to MOQ
         if (quantity < moq) {
@@ -483,7 +484,7 @@ const handleAddToCart = async (productId) => {
         const sugarTaxPrice = product.sugarTaxPrice;
 
         // First check if this item already exists in the cart
-        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"customer_id":3,"branch_id":${selectedLocation},"product_id":${productId}}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -493,7 +494,7 @@ const handleAddToCart = async (productId) => {
 
         const checkResult = await checkResponse.json();
         console.log('Check cart response:', checkResult);
-        
+
         if (checkResult.data.data && checkResult.data.data.length > 0) {
             // Item exists in cart, update the quantity
             const existingItem = checkResult.data.data[0];
@@ -517,7 +518,8 @@ const handleAddToCart = async (productId) => {
             }
             
             alert(t('Product quantity updated in cart successfully'));
-        } else {
+        } 
+        else {
             // Item doesn't exist in cart, add it as new
             const cartItem = {
                 customerId: '3',// The customer_id is read from the JWT token in the backend
@@ -525,8 +527,8 @@ const handleAddToCart = async (productId) => {
                 productId: product.id,
                 productName: product.productName || product.product_name || '',
                 erpProdId: product.erpProdId || product.erp_prod_id || '',
-                entity: product.entity || '',
-                category: product.category || '',
+                entity: product.entity, // Keep original case
+                category: product.category, // Keep original case
                 unit: product.unit || 'EA',
                 unitPrice: unitPrice,
                 quantityOrdered: quantity,

@@ -22,7 +22,7 @@ function Cart() {
     const [cartItems, setCartItems] = useState([
         { category: 'VMCO Machines', items: [] },
         { category: 'VMCO Consumables', items: [] },
-        { category: 'Diayafa', items: [] },
+        { category: 'Diyafa', items: [] },
         { category: 'Green Mast', items: [] },
         { category: 'Naqui', items: [] }    
     ]);
@@ -104,7 +104,7 @@ function Cart() {
                 // Initialize arrays for each category
                 const vmcoMachines = [];
                 const vmcoConsumables = [];
-                const diayafa = [];
+                const diyafa = [];
                 const greenMast = [];
                 const naqui = [];
                 
@@ -157,8 +157,8 @@ function Cart() {
                         } else {
                             vmcoConsumables.push(formattedItem);
                         }
-                    } else if (entity === 'diayafa' || entity === 'diyafa') {
-                        diayafa.push(formattedItem);
+                    } else if (entity === 'diyafa' || entity === 'diyafa') {
+                        diyafa.push(formattedItem);
                     } else if (entity === 'green mast') {
                         greenMast.push(formattedItem);
                     } else if (entity === 'naqui') {
@@ -166,9 +166,9 @@ function Cart() {
                     } else {
                         // If entity is not specified, try to determine by category
                         const category = (product.category || '').toLowerCase();
-                        
-                        if (category.includes('diayafa') || category.includes('diyafa')) {
-                            diayafa.push(formattedItem);
+
+                        if (category.includes('diyafa') || category.includes('diyafa')) {
+                            diyafa.push(formattedItem);
                         }
                         else if (category.includes('green mast')) {
                             greenMast.push(formattedItem);
@@ -187,7 +187,7 @@ function Cart() {
                 setCartItems([
                     { category: 'VMCO Machines', items: vmcoMachines },
                     { category: 'VMCO Consumables', items: vmcoConsumables },
-                    { category: 'Diayafa', items: diayafa },
+                    { category: 'Diyafa', items: diyafa },
                     { category: 'Green Mast', items: greenMast },
                     { category: 'Naqui', items: naqui }
                 ]);
@@ -279,6 +279,7 @@ function Cart() {
                 expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
                 status: 'Pending', // Default status for new orders
             };
+            
 
             // Helper function to determine entity based on category
             function getEntityFromCategory(category) {
@@ -286,7 +287,7 @@ function Cart() {
                 
                 if (categoryLower.includes('vmco')) {
                     return 'vmco';
-                } else if (categoryLower.includes('diayafa') || categoryLower.includes('diyafa')) {
+                } else if (categoryLower.includes('diyafa') || categoryLower.includes('diyafa')) {
                     return 'diyafa';
                 } else if (categoryLower.includes('green mast')) {
                     return 'green mast';
@@ -295,7 +296,7 @@ function Cart() {
                 }
                 
                 // Default fallback to the first word of category (original logic)
-                return category.split(' ')[0].toLowerCase();
+                return category;
             }
 
             console.log('Creating order with payload:', orderPayload);
