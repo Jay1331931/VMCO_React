@@ -257,7 +257,7 @@ function Cart() {
     };
 
     const handleContinueShopping = () => {
-        navigate('/catalog');
+        navigate(-1);
     };
 
     // Handle place order button click
