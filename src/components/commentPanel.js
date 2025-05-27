@@ -23,7 +23,7 @@ const CommentPopup = ({
   const { t } = useTranslation();
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState(externalComments);
-  const [count, setCount] = useState(externalComments.length);
+  const [count, setCount] = useState(externalComments?.length);
 
   const handleAddComment = () => {
     if (commentText.trim()) {
