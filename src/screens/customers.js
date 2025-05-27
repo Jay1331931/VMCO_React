@@ -277,6 +277,7 @@ function transformCustomerData(customer, customerContacts) {
     operationsHeadMobile: contactsMap.operations?.mobile || '',
     // Adding isApprovalMode to indicate if the customer is in approval mode
     isApprovalMode: false,
+    workflowData: [],
   };
 }
 
@@ -336,6 +337,7 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
         // Navigate to customer details with approval mode if applicable
         if (isApprovalMode) {
           transformedCustomer.isApprovalMode = true;
+          transformedCustomer.workflowData = customer.workflowData || [];
         } else {
           transformedCustomer.isApprovalMode = false;
         }
@@ -429,6 +431,8 @@ const handleRowClick = (customer) => {
   ];
 
   const renderContent = () => {
+    console.log('Filtered Approvals:', filteredApprovals);
+    console.log('Paginated Approvals:', paginatedApprovals);
     switch (activeTab) {
       case t('customers'):
         const customerColumnsToUse = isApprovalMode ? approvalColumns : customerColumns;

@@ -16,6 +16,7 @@ import { faXmark, faLocationDot, faDownload, faEye } from '@fortawesome/free-sol
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Pagination from '../components/Pagination';
+import ApprovalDialog from '../components/ApprovalDialog';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -164,7 +165,8 @@ function CustomersDetails() {
   const [branchesData, setBranchesData] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const { t, i18n } = useTranslation();
-
+const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+const [approvalAction, setApprovalAction] = useState(null);
   
   // Define forms per tab
   const formsByTab = useMemo(() => ({
@@ -830,13 +832,108 @@ const handleFileUpload = async (e, fieldName) => {
     });
   }
 };
+
+const handleApprovalSubmit = async (action) => {
+  setApprovalAction(action);
+  setIsApprovalDialogOpen(true);
+};
+
+const handleDialogSubmit = async (comment) => {
+  const payload = {
+    workflowData: customer.workflowData || {},
+    approvedStatus: approvalAction === 'approve' ? "Approved" : "Rejected",
+    comment: comment
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+
+    if (response.ok) {
+      // Refresh customer data or navigate away
+      const result = await response.json();
+      // Handle success (maybe refresh the customer data)
+    } else {
+      throw new Error('Failed to submit approval');
+    }
+  } catch (error) {
+    console.log('Error', error.message)
+    console.error(`Error ${approvalAction}ing customer:`, error);
+    alert(`Error ${approvalAction}ing customer: ${error.message}`);
+  }
+};
+
   const handleSubmit = (action) => {
     if (!validateChangedFields(true)) {
       alert(t('Please correct errors before submitting.'));
       return;
     }
-    alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
-  };
+    if( action === 'approve') {
+      console.log('Approving customer:', customer);
+      // Open dialog box where user can also add comments
+      const comment = prompt(t('Please enter your comments for approval:'));
+      console.log('Approval comment:', comment);
+      const payload = {
+        workflowData: customer.workflowData || {},
+        approvedStatus: "approved",
+        comment: comment
+    }
+    try {
+    const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+    res.then(response => {
+      if (response.ok) {
+        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
+      }
+    });
+  } catch (error) {
+    console.error('Error approving customer:', error);
+  alert(`Error approving customer: ${error.message}`);
+  }
+  }
+
+  if(action === 'reject') {
+    // Handle rejection logic
+    console.log('Rejecting customer:', customer);
+      // Open dialog box where user can also add comments
+      const comment = prompt(t('Please enter your comments for rejection:'));
+      console.log('Rejection comment:', comment);
+      const payload = {
+        workflowData: customer.workflowData || {},
+        approvedStatus: "rejected",
+        comment: comment
+    }
+    try {
+    const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+      credentials: 'include',
+    });
+    res.then(response => {
+      if (response.ok) {
+        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
+      }
+    });
+  } catch (error) {
+    console.error('Error rejecting customer:', error);
+  alert(`Error rejecting customer: ${error.message}`);
+  }
+  }
+};
+  // In your component
 
   const handleCheckboxChange = (e, fieldName) => {
     const { value, checked } = e.target;
@@ -1490,10 +1587,10 @@ return (
                     <button className="block" onClick={() => handleSave('block')}>
                     {t('Block')}
                   </button>
-                  <button className="approve" onClick={() => handleSubmit('approve')}>
+                  <button className="approve" onClick={() => handleApprovalSubmit('approve')}>
                     {t('Approve')}
                   </button>
-                  <button className="reject" onClick={() => handleSubmit('reject')}>
+                  <button className="reject" onClick={() => handleApprovalSubmit('reject')}>
                     {t('Reject')}
                   </button>
                   </>
@@ -1505,11 +1602,21 @@ return (
         {customer.isApprovalMode && (
           <>
             <div>
-              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={customer.approvalHistory}/>
+              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={customer.approvalHistory ? customer.approvalHistory : []}/>
             </div>
           </>
         )}
       </div>
+      <ApprovalDialog
+  isOpen={isApprovalDialogOpen}
+  onClose={() => setIsApprovalDialogOpen(false)}
+  action={approvalAction}
+  onSubmit={handleDialogSubmit}
+  customerName={customer.customerName || 'this customer'}
+  title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
+  subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this customer?') : t('Are you sure you want to reject this customer?')}
+/>
+
     </Sidebar>
 
   );
