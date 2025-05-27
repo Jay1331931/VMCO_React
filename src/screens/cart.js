@@ -6,27 +6,40 @@ import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import QuantityController from '../components/QuantityController';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Cart() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({});
+    const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState([
-        { category: 'VMCO Machines', items: [] },
-        { category: 'VMCO Consumables', items: [] },
-        { category: 'Diyafa', items: [] },
-        { category: 'Green Mast', items: [] },
-        { category: 'Naqui', items: [] }    
+        { category: t('VMCO Machines'), items: [] },
+        { category: t('VMCO Consumables'), items: [] },
+        { category: t('Diyafa'), items: [] },
+        { category: t('Green Mast'), items: [] },
+        { category: t('Naqui'), items: [] }
     ]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+    const { token, user, isAuthenticated, logout } = useAuth();
+    console.log('User data:', user);
+
+   const customerId = user?.customerId;
+       // Update selectedCustomerId whenever customerId changes
+       useEffect(() => {
+           if (customerId) {
+               setSelectedCustomerId(customerId);
+           }
+       }, [customerId]);
+   
 
     // Fetch branch information from localStorage
     useEffect(() => {
@@ -35,9 +48,9 @@ function Cart() {
             const branchName = localStorage.getItem('selectedBranchName');
             const branchId = localStorage.getItem('selectedBranchId');
             const branchErpId = localStorage.getItem('selectedBranchErpId');  // <-- Fixed key name here
-            
+
             console.log('Retrieved branch info:', { branchName, branchId, branchErpId });
-            
+
             if (!branchId || !branchName || branchName.trim() === '') {
                 console.warn('Branch selection is missing or incomplete');
                 alert(t('Please select a branch before accessing your cart'));
@@ -61,7 +74,7 @@ function Cart() {
         const fetchCartItems = async () => {
             setIsLoading(true);
             setError(null);
-            
+
             try {
                 // Set up parameters for pagination
                 const params = new URLSearchParams({
@@ -70,21 +83,14 @@ function Cart() {
                     sortBy: 'id',
                     sortOrder: 'asc'
                 });
-                
+
                 // Create filters object and add it as a JSON string
                 const filters = {
                     branch_id: selectedBranchId
                 };
-                
-                // Add customer_id if available (you might want to get this from localStorage or context)
-                const customerId = localStorage.getItem('customerId');
-                if (customerId) {
-                    filters.customer_id = customerId;
-                }
-                
-                // Add filters as a JSON string parameter
+                filters.customer_id = selectedCustomerId || '3'; // Use selected customer ID or default to '3'
                 params.append('filters', JSON.stringify(filters));
-                
+
                 const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
                     method: 'GET',
                     headers: {
@@ -93,63 +99,79 @@ function Cart() {
                     },
                     credentials: 'include' // Include cookies/auth tokens
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`Error: ${response.status} ${response.statusText}`);
                 }
-                
+
                 const result = await response.json();
                 console.log('Fetched cart data:', result);
-                
+
                 // Initialize arrays for each category
                 const vmcoMachines = [];
                 const vmcoConsumables = [];
                 const diyafa = [];
                 const greenMast = [];
                 const naqui = [];
-                
+
                 // Extract cart items from the response with better error handling
-                const cartProducts = Array.isArray(result.data.data) ? result.data.data : 
-                                   (result.data && Array.isArray(result.data)) ? result.data : [];
-                
+                const cartProducts = Array.isArray(result.data.data) ? result.data.data :
+                    (result.data && Array.isArray(result.data)) ? result.data : [];
+
                 // Map initial quantities from fetched data
                 const initialQuantities = {};
-                
+
                 // Helper function to determine if a product is a machine
                 const isProductMachine = (product) => {
                     const productType = (product.productType || product.product_type || '').toLowerCase();
                     const category = (product.category || '').toLowerCase();
-                    
+
                     // Check explicit productType field first
                     if (productType.includes('machine') || productType.includes('equipment')) return true;
                     if (productType.includes('consumable') || productType.includes('supply')) return false;
-                    
+
                     // Check category fields
                     return category.includes('machine') || category.includes('equipment')
                 };
+
+                // Get current language
+                const currentLanguage = i18n.language;
+                const isArabic = currentLanguage.startsWith('ar');
+
                 
+
                 // Process each product and categorize it correctly
                 cartProducts.forEach(product => {
+
+                    // Choose the right product name based on language
+        let productName = product.productName || product.product_name;
+        
+        // If language is not English and we have a localized name, use it
+        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
+            productName = product.product_name_lc || product.productNameLc || productName;
+        }
+        
                     // Format the product data for display
                     const formattedItem = {
                         id: product.id,
-                        name: product.productName,
+                        name: productName, // Language-aware
+                        description: isArabic && product.descriptionLc ? product.descriptionLc : product.description,
                         price: product.unitPrice,
                         quantity: product.quantityOrdered,
                         delivery: product.estimatedDelivery || product.delivery || '15 Apr 2025',
-                        imageUrl: product.image, 
+                        imageUrl: product.image,
                         productCode: product.erpProdId || product.product_id || product.code,
                         // Include all original properties
                         ...product
                     };
-                    
+
                     // Store initial quantities
                     initialQuantities[formattedItem.id] = formattedItem.quantity;
-                    
+
                     // Categorize based on entity and product type
                     const entity = (product.entity || '').toLowerCase();
                     const isMachine = isProductMachine(product);
-                    
+
                     // Categorize based on entity and product type
                     if (entity === 'vmco') {
                         if (isMachine) {
@@ -182,19 +204,19 @@ function Cart() {
                         }
                     }
                 });
-                
+
                 // Update the cart items with the categorized data
                 setCartItems([
-                    { category: 'VMCO Machines', items: vmcoMachines },
-                    { category: 'VMCO Consumables', items: vmcoConsumables },
-                    { category: 'Diyafa', items: diyafa },
-                    { category: 'Green Mast', items: greenMast },
-                    { category: 'Naqui', items: naqui }
+                    { category: t('VMCO Machines'), items: vmcoMachines },
+                    { category: t('VMCO Consumables'), items: vmcoConsumables },
+                    { category: t('Diyafa'), items: diyafa },
+                    { category: t('Green Mast'), items: greenMast },
+                    { category: t('Naqui'), items: naqui }
                 ]);
-                
+
                 // Initialize quantities from fetched data
                 setQuantities(initialQuantities);
-                
+
             } catch (err) {
                 console.error('Error fetching cart items:', err);
                 setError('Failed to load cart items. Please try again.');
@@ -202,9 +224,9 @@ function Cart() {
                 setIsLoading(false);
             }
         };
-        
+
         fetchCartItems();
-    }, [selectedBranchId, API_BASE_URL]);
+    }, [selectedBranchId, API_BASE_URL, i18n.language]); // Add i18n.language as a dependency
 
     const toggleCategory = (category) => {
         setCollapsedCategories(prev => {
@@ -253,10 +275,6 @@ function Cart() {
         try {
             setIsPlacingOrder(true);
             setError(null);
-
-            // Get customer ID from localStorage or another source
-            const customerId = localStorage.getItem('customerId') || '3'; // Default if not available
-
             // Calculate total amount for this category
             const totalAmount = categoryItems.reduce((total, item) => {
                 const price = parseFloat(item.price) || 0;
@@ -266,8 +284,7 @@ function Cart() {
 
             // Create sales order payload
             const orderPayload = {
-                customerId, // Use customer ID
-                // erpCustId: customer.erpCustId, // Use the erpCustId that belongs to the customer id customerId
+                customerId: selectedCustomerId || '3', // Use selected customer ID
                 branchId: selectedBranchId, // Use selected branch ID
                 erpBranchId: selectedBranchErpId, // Use same as branch ID
                 orderBy: 'Customer', // Default value
@@ -279,12 +296,12 @@ function Cart() {
                 expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
                 status: 'Pending', // Default status for new orders
             };
-            
+
 
             // Helper function to determine entity based on category
             function getEntityFromCategory(category) {
                 const categoryLower = category.toLowerCase();
-                
+
                 if (categoryLower.includes('vmco')) {
                     return 'vmco';
                 } else if (categoryLower.includes('diyafa') || categoryLower.includes('diyafa')) {
@@ -294,7 +311,7 @@ function Cart() {
                 } else if (categoryLower.includes('naqui')) {
                     return 'naqui';
                 }
-                
+
                 // Default fallback to the first word of category (original logic)
                 return category;
             }
@@ -368,23 +385,22 @@ function Cart() {
             // Step 3: Remove items from cart using the batch deletion endpoint
             try {
                 // Get customer ID from localStorage or use a default
-                const customerId = localStorage.getItem('customerId') || '3';
-                
+
                 // Build the URL with query parameters
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', customerId);
+                deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3'); // Use selected customer ID or default to '3'
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
                 deleteUrl.searchParams.append('entity', getEntityFromCategory(categoryName));
                 deleteUrl.searchParams.append('category', categoryName);
-                
+
                 console.log(`Deleting cart items with URL: ${deleteUrl}`);
-                
+
                 const deleteResponse = await fetch(deleteUrl, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
-                
+
                 if (!deleteResponse.ok) {
                     console.error(`Error removing cart items: ${deleteResponse.status} ${deleteResponse.statusText}`);
                 }
@@ -395,10 +411,10 @@ function Cart() {
 
             // Show success message
             alert(t(`Order for ${categoryName} placed successfully! Order #${orderId}`));
-            
+
             // Refresh cart items
             window.location.reload();
-            
+
         } catch (err) {
             console.error('Error placing order:', err);
             setError(err.message);
@@ -424,37 +440,194 @@ function Cart() {
 
         try {
             setIsPlacingOrder(true);
-            
-            // Place an order for each category that has items
-            for (const category of cartItems) {
-                if (category.items.length > 0) {
-                    await handlePlaceOrder(category.items, category.category);
-                }
+            setError(null);
+
+            // Group items by entity
+            const vmcoMachineItems = cartItems.find(cat => cat.category === t('VMCO Machines'))?.items || [];
+            const vmcoConsumableItems = cartItems.find(cat => cat.category === t('VMCO Consumables'))?.items || [];
+            const diyafaItems = cartItems.find(cat => cat.category === t('Diyafa'))?.items || [];
+            const greenMastItems = cartItems.find(cat => cat.category === t('Green Mast'))?.items || [];
+            const naquiItems = cartItems.find(cat => cat.category === t('Naqui'))?.items || [];
+
+            // Process VMCO items together (machines and consumables)
+            const vmcoItems = [...vmcoMachineItems, ...vmcoConsumableItems];
+            if (vmcoItems.length > 0) {
+                await createEntityOrder('vmco', vmcoItems);
             }
-            
+
+            // Process other entities
+            if (diyafaItems.length > 0) {
+                await createEntityOrder('diyafa', diyafaItems);
+            }
+
+            if (greenMastItems.length > 0) {
+                await createEntityOrder('green mast', greenMastItems);
+            }
+
+            if (naquiItems.length > 0) {
+                await createEntityOrder('naqui', naquiItems);
+            }
+
             alert(t('All orders have been placed successfully!'));
             window.location.reload(); // Refresh page after all orders are placed
-            
+
         } catch (err) {
             console.error('Error placing all orders:', err);
             alert(t(`Failed to place all orders: ${err.message}`));
         } finally {
             setIsPlacingOrder(false);
         }
-    };
 
+    // Helper function to create an order for a specific entity
+    async function createEntityOrder(entity, items) {
+        if (items.length === 0) return;
+
+        // Calculate total amount for this entity
+        const totalAmount = items.reduce((total, item) => {
+            const price = parseFloat(item.price) || 0;
+            const qty = quantities[item.id] || item.quantity || 1;
+            return total + (price * qty);
+        }, 0);
+
+        // Create sales order payload
+        const orderPayload = {
+            customerId: selectedCustomerId || '3', //
+            branchId: selectedBranchId,
+            erpBranchId: selectedBranchErpId,
+            orderBy: 'Customer',
+            entity: entity,
+            paymentMethod: 'Online',
+            totalAmount: totalAmount.toString(),
+            paidAmount: '0',
+            deliveryCharges: '0',
+            expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+            status: 'Pending',
+        };
+
+        console.log(`Creating ${entity} order with payload:`, orderPayload);
+
+        // Step 1: Create the sales order
+        const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderPayload),
+            credentials: 'include',
+        });
+
+        if (!orderResponse.ok) {
+            const errorText = await orderResponse.text();
+            console.error('Server response:', errorText);
+            try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.message || `Failed to create ${entity} order`);
+            } catch (e) {
+                throw new Error(`Failed to create ${entity} order: ${orderResponse.status} ${orderResponse.statusText}`);
+            }
+        }
+
+        // Parse the response to get the order ID
+        const orderResult = await orderResponse.json();
+        console.log(`${entity} order creation result:`, orderResult);
+
+        if (!orderResult.data || !orderResult.data.id) {
+            throw new Error(`Order ID not returned from API for ${entity}`);
+        }
+
+        const orderId = orderResult.data.id;
+
+        // Step 2: Create sales order lines for each product
+        const productsPayload = items.map((item, index) => ({
+            order_id: orderId,
+            line_number: index + 1,
+            erp_line_number: index + 1,
+            product_id: item.productId || item.id,
+            erp_prod_id: item.erpProdId || item.erp_prod_id || '',
+            quantity: parseInt(quantities[item.id] || item.quantity || 1, 10),
+            unit: item.unit || 'EA',
+            unit_price: parseFloat(item.unitPrice || item.price || 0),
+            net_amount: parseFloat(item.price || 0) * parseInt(quantities[item.id] || item.quantity || 1, 10),
+            sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+        }));
+
+        console.log(`Submitting ${entity} products payload:`, productsPayload);
+
+        // Add product lines to the order
+        const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productsPayload),
+            credentials: 'include',
+        });
+
+        if (!linesResponse.ok) {
+            const errorText = await linesResponse.text();
+            console.error(`Server response for ${entity} product lines:`, errorText);
+            try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.message || `Failed to add products to ${entity} order`);
+            } catch (e) {
+                throw new Error(`Failed to add products to ${entity} order: ${linesResponse.status} ${linesResponse.statusText}`);
+            }
+        }
+
+        // Step 3: Remove items from cart
+        try {
+            // For VMCO, we need to delete both machines and consumables
+            if (entity === 'vmco') {
+                await deleteCartItems('vmco', t('VMCO Machines'));
+                await deleteCartItems('vmco', t('VMCO Consumables'));
+            } else {
+                // Map entity to category name
+                let categoryName;
+                if (entity === 'diyafa') categoryName = t('Diyafa');
+                else if (entity === 'green mast') categoryName = t('Green Mast');
+                else if (entity === 'naqui') categoryName = t('Naqui');
+                
+                await deleteCartItems(entity, categoryName);
+            }
+        } catch (err) {
+            console.error(`Error removing ${entity} cart items:`, err);
+            // Continue with the order process even if deletion fails
+        }
+
+        console.log(`Successfully placed order for ${entity}, Order #${orderId}`);
+    }
+
+    // Helper function to delete cart items
+    async function deleteCartItems(entity, categoryName) {
+        // Build the URL with query parameters
+        const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+        deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3'); // Use selected customer ID or default to '3'
+        deleteUrl.searchParams.append('branch_id', selectedBranchId);
+        deleteUrl.searchParams.append('entity', entity);
+        deleteUrl.searchParams.append('category', categoryName);
+
+        console.log(`Deleting cart items with URL: ${deleteUrl}`);
+
+        const deleteResponse = await fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+        });
+
+        if (!deleteResponse.ok) {
+            console.error(`Error removing cart items: ${deleteResponse.status} ${deleteResponse.statusText}`);
+            // We don't throw here to allow the process to continue
+        }
+    }
+};
     // Calculate total items for header and summary
     const totalItems = cartItems.reduce((sum, cat) => sum + cat.items.length, 0);
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
-                <h2 className="cart-title">Cart ({totalItems} items)</h2>
+                <h2 className="cart-title">{t('Cart')} ({totalItems} {t('items')})</h2>
                 <div className="delivery-info">
                     <span className="delivery-link">
                         {t('Delivering to')}{' '}
-                        {selectedBranchName && selectedBranchName !== 'No location selected' 
-                            ? <strong>{selectedBranchName}</strong> 
+                        {selectedBranchName && selectedBranchName !== 'No location selected'
+                            ? <strong>{selectedBranchName}</strong>
                             : <em>(No location selected)</em>}
                     </span>
                 </div>
@@ -484,15 +657,15 @@ function Cart() {
                                 {!collapsedCategories.has(category.category) && (
                                     <div className="category-items">
                                         {category.items.length === 0 ? (
-                                            <div className="empty-category">No items in this category</div>
+                                            <div className="empty-category">{t('No items in this category')}</div>
                                         ) : (
                                             category.items.map((item, idx) => (
                                                 <div key={item.id + '-' + idx} className="cart-item">
                                                     <div className="item-image">
                                                         {item.imageUrl ? (
-                                                            <img 
-                                                                src={item.imageUrl} 
-                                                                alt={''} 
+                                                            <img
+                                                                src={item.imageUrl}
+                                                                alt={item.name}
                                                                 onError={(e) => {
                                                                     e.target.onerror = null;
                                                                     e.target.src = '/placeholder-image.png';
@@ -505,6 +678,7 @@ function Cart() {
                                                     <div className="item-details">
                                                         <h4 className="item-name">{item.name}</h4>
                                                         <p className="item-code">{item.productCode}</p>
+                                                        {item.description && <p className="item-description">{item.description}</p>}
                                                         <p className="delivery-date">Delivery By {item.delivery}</p>
                                                         <QuantityController
                                                             itemId={item.id}
@@ -521,11 +695,11 @@ function Cart() {
                                                     </div>
                                                     <div className="item-price-panel">
                                                         <span className="item-price">
-                                                            {parseInt(item.price)} 
+                                                            {parseInt(item.price)}
                                                             <span className="sar-label">SAR</span>
                                                         </span>
                                                         <span className="item-total-price">
-                                                            Total: {parseInt(item.price) * (quantities[item.id] || item.quantity)} 
+                                                            Total: {parseInt(item.price) * (quantities[item.id] || item.quantity)}
                                                             <span className="sar-label">SAR</span>
                                                         </span>
                                                     </div>
@@ -541,14 +715,14 @@ function Cart() {
                                         {category.items.length > 0 && (
                                             <div className="checkout-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <span className="checkout-info" style={{ margin: '10px', fontWeight: 'bold' }}>
-                                                    {t('Total for this category')}: 
+                                                    {t('Total for this category')}:
                                                     {category.items.reduce((total, item) => {
                                                         const price = parseFloat(item.price) || 0;
                                                         return total + price * (quantities[item.id] || item.quantity);
-                                                    }, 0)} 
+                                                    }, 0)}
                                                     <span className="sar-label" style={{ margin: '5px' }}>SAR</span>
                                                 </span>
-                                                <button 
+                                                <button
                                                     className="checkout-btn"
                                                     onClick={() => handlePlaceOrder(category.items, category.category)}
                                                     disabled={isPlacingOrder}
@@ -569,7 +743,7 @@ function Cart() {
                             {t('Total Amount')} ({totalItems} Items)
                         </h3>
                         <span className="summary-amount">{calculateTotal()} <span className="sar-label">SAR</span></span>
-                        <button 
+                        <button
                             className="checkout-all-btn"
                             onClick={handlePlaceAllOrders}
                             disabled={isPlacingOrder || totalItems === 0}
