@@ -522,6 +522,12 @@
   -moz-appearance: textfield;
 }
 
+.quantity-btn:disabled{
+  background-color: #F0F0F0;
+  color: #A0A0A0;
+  cursor: not-allowed;
+}
+
 /* Specifically target Firefox */
 .quantity-input::-webkit-outer-spin-button,
 .quantity-input::-webkit-inner-spin-button {

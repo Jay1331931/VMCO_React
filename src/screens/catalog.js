@@ -101,10 +101,13 @@ function Catalog() {
             entity: product.entity, // Make sure entity is included in mapped props
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
+            moq: product.moq || product.minimumOrderQuantity || 0, // Make sure MOQ is included
             // Keep the original data too for use in other places
             ...product
         };
-    };    // Fetch products from backend - now loads all pages from 1 to currentPage
+    };
+    
+    // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
         const fetchAllPages = async () => {
             // Show loading state
@@ -175,22 +178,28 @@ function Catalog() {
                     });
                     
                     const result = await response.json();
-                    
+                    console.log(`Fetched page ${pageNumber} products:`, result);
                     // Extract the new products from the response
                     let pageProducts = [];
                     let totalCount = 0;
+
+                    if(result.status === 'Ok')
+                    {
+                        pageProducts = result.data.data;
+                        totalCount = result.data.totalRecords
+                    }
                     
-                    if (Array.isArray(result)) {
-                        pageProducts = result;
+                    if (Array.isArray(result.data)) {
+                        pageProducts = result.data.data;
                         totalCount = result.length;
-                    } else if (result.status === 'Ok' && Array.isArray(result.data)) {
-                        pageProducts = result.data;
+                    } else if (result.status === 'Ok' && Array.isArray(result.data.data)) {
+                        pageProducts = result.data.data;
                         totalCount = 
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
                             result.data.length;
-                    } else if (result && Array.isArray(result.data)) {
-                        pageProducts = result.data;
+                    } else if (result && Array.isArray(result.data.data)) {
+                        pageProducts = result.data.data;
                         totalCount = 
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
@@ -347,14 +356,25 @@ function Catalog() {
         setSelectedProduct(null);
     };
 
-    const handleQuantityChange = (productId, value) => {
-        // Update local state only for immediate UI feedback
-        const newQuantity = Math.max(0, Number(quantities[productId] || 0) + value);
-        setQuantities(prev => ({
-            ...prev,
-            [productId]: newQuantity
-        }));
-    };
+    // Update the handleQuantityChange function
+
+const handleQuantityChange = (productId, value) => {
+    // Find the product to get its MOQ
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const moq = Number(product.moq || 0);
+    
+    // Calculate the new quantity ensuring it doesn't go below MOQ
+    const currentQuantity = quantities[productId] || 0;
+    const newQuantity = Math.max(moq, currentQuantity + value);
+    
+    // Update local state only for immediate UI feedback
+    setQuantities(prev => ({
+        ...prev,
+        [productId]: newQuantity
+    }));
+};
 
     const handleGoToCart = () => {
         navigate('/Cart');
@@ -388,25 +408,26 @@ useEffect(() => {
                 throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
             }
             
-            const data = await response.json();
+            const result = await response.json();
             let branchData = [];
             
             // Handle response structure with better validation
-            if (Array.isArray(data)) {
-                branchData = data;
-            } else if (data.status === 'Ok' && Array.isArray(data.data)) {
-                branchData = data.data;
-            } else if (data && Array.isArray(data.data)) {
-                branchData = data.data;
+            if (Array.isArray(result)) {
+                branchData = result;
+            } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+                branchData = result.data;
+            } else if (result && Array.isArray(result.data)) {
+                branchData = result.data;
             } else {
-                console.warn('Unexpected branch data format:', data);
+                console.warn('Unexpected branch data format:', result);
                 branchData = [];
             }
             
             // Map branches to dropdown format with proper field validation
             const branchOptions = branchData.map(branch => ({
                 value: String(branch.id || branch.branch_id), // Ensure IDs are strings
-                label: branch.branch_name_en || branch.branchNameEn || 'Unknown Branch',
+                label: branch.branch_name_en || branch.branchNameEn,
+                erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
                 // Keep additional data for reference if needed
                 raw: branch
             }));
@@ -426,17 +447,7 @@ useEffect(() => {
     fetchBranches();
 }, [API_BASE_URL]); 
 
-// Notes on the catalog entity filtering:
-// 1. Each tab corresponds to a specific entity:
-//    - VMCO Machines: Shows VMCO products that are machines
-//    - VMCO Other: Shows VMCO products that are not machines
-//    - Diyafa: Shows only Diyafa products
-//    - Green Mast: Shows only Green Mast products
-//    - Naqui: Shows only Naqui products
-// 2. Filtering happens at both server-side (API) and client-side
-// 3. When changing tabs, other filters (category, subcategory, search) are reset
-
-// MOVED: Add to cart functionality now comes after branch selection
+//  Add to cart functionality
 const handleAddToCart = async (productId) => {
     try {
         // Check if a branch is selected
@@ -444,62 +455,113 @@ const handleAddToCart = async (productId) => {
             alert(t('Please select a delivery branch first'));
             return;
         }
+        
         // Find the product being added
         const product = products.find(p => p.id === productId);
         if (!product) return;
         
-        // Get the quantity from state, ensuring it's at least 1
-        const quantity = Math.max(1, quantities[productId] || 1);
+        // Get MOQ and ensure quantity meets it
+        const moq = Number(product.moq || 0);
+        let quantity = quantities[productId] || 0;
+        
+        // If quantity is less than MOQ, set it to MOQ
+        if (quantity < moq) {
+            quantity = moq;
+            // Update the quantities state
+            setQuantities(prev => ({
+                ...prev,
+                [productId]: moq
+            }));
+        }
+        
+        // Ensure quantity is at least 1
+        quantity = Math.max(1, quantity);
         
         // Calculate needed values
         const unitPrice = product.unitPrice || 1;
         const netAmount = unitPrice * quantity;
         const sugarTaxPrice = product.sugarTaxPrice;
 
-        // Prepare cart item data with all required fields from the database schema
-        const cartItem = {
-            customerId: '1',// The customer_id is read from the JWT token in the backend
-            branchId: selectedLocation, // Using snake_case as required by the API
-            productId: product.id,
-            productName: product.productName || product.product_name || '',
-            entity: product.entity || '',
-            category: product.category || '',
-            unit: product.unit || 'EA',
-            unitPrice: unitPrice, // Using snake_case as required by the API
-            quantityOrdered: quantity, // Using snake_case as required by the API
-            netAmount: netAmount,  // Using snake_case as required by the API
-            sugarTaxPrice: sugarTaxPrice, // Using snake_case as required by the API
-        };
-        
-        console.log('Sending to cart:', cartItem);
-        
-        // Make API call to add item to cart
-        const response = await fetch(`${API_BASE_URL}/cart`, {
-            method: 'POST',
+        // First check if this item already exists in the cart
+        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             },
-            credentials: 'include', // This sends along the auth cookies/JWT
-            body: JSON.stringify(cartItem)
+            credentials: 'include', // Send along auth cookies/JWT
         });
+
+        const checkResult = await checkResponse.json();
+        console.log('Check cart response:', checkResult);
         
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+        if (checkResult.data.data && checkResult.data.data.length > 0) {
+            // Item exists in cart, update the quantity
+            const existingItem = checkResult.data.data[0];
+            const updatedQuantity = existingItem.quantityOrdered + quantity;
+            
+            const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    quantityOrdered: updatedQuantity,
+                    netAmount: unitPrice * updatedQuantity
+                })
+            });
+            
+            if (!updateResponse.ok) {
+                const errorData = await updateResponse.json().catch(() => ({}));
+                throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
+            }
+            
+            alert(t('Product quantity updated in cart successfully'));
+        } else {
+            // Item doesn't exist in cart, add it as new
+            const cartItem = {
+                customerId: '3',// The customer_id is read from the JWT token in the backend
+                branchId: selectedLocation,
+                productId: product.id,
+                productName: product.productName || product.product_name || '',
+                erpProdId: product.erpProdId || product.erp_prod_id || '',
+                entity: product.entity || '',
+                category: product.category || '',
+                unit: product.unit || 'EA',
+                unitPrice: unitPrice,
+                quantityOrdered: quantity,
+                netAmount: netAmount,
+                sugarTaxPrice: sugarTaxPrice,
+            };
+            
+            console.log('Adding new item to cart:', cartItem);
+            
+            const response = await fetch(`${API_BASE_URL}/cart`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(cartItem)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+            }
+            
+            alert(t('Product added to cart successfully'));
         }
         
-        // Show success message to the user
-        alert(t('Product added to cart successfully'));
-        
-        // Reset quantity after successful add
+        // Reset quantity after successful add/update
         setQuantities(prev => ({
             ...prev,
             [productId]: 0
         }));
         
     } catch (error) {
-        console.error('Error adding product to cart:', error);
-        alert(t('Failed to add product to cart. Please try again.'));
+        console.error('Error handling product cart action:', error);
+        alert(t('Failed to update cart. Please try again.'));
     }
 };
 
@@ -583,6 +645,27 @@ const getFilteredSubcategories = () => {
     ));
 };
 
+    // Initialize quantities with MOQ values when products are loaded
+    useEffect(() => {
+        if (products.length > 0) {
+            let initialQuantities = {...quantities};
+            let hasChanges = false;
+            
+            products.forEach(product => {
+                // Only set MOQ for products without quantity or with 0 quantity
+                if (product.moq && (!initialQuantities[product.id] || initialQuantities[product.id] === 0)) {
+                    initialQuantities[product.id] = Number(product.moq);
+                    hasChanges = true;
+                }
+            });
+            
+            // Only update state if there were changes
+            if (hasChanges) {
+                setQuantities(initialQuantities);
+            }
+        }
+    }, [products]); // Only depends on products changing
+
     return (
         <Sidebar title={t('Catalog')}>
             <div className="catalog-content">
@@ -600,11 +683,15 @@ const getFilteredSubcategories = () => {
                                 
                                 // Save branch name to localStorage if found
                                 if (selectedBranch && selectedBranch.label) {
-                                    console.log('Saving branch name to localStorage:', selectedBranch.label);
                                     localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                    localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                    localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                    
+                                    console.log('Selected branch:', selectedBranch.label);
+                                    console.log('Selected branch ID:', selectedBranch.value);
+                                    console.log('Selected branch ERP ID:', selectedBranch.erpBranchId);
                                 } else {
                                     console.log('No branch found with id:', selectedValue);
-                                    // Add additional debug info to help diagnose
                                     console.log('Available branches:', branches);
                                     console.log('Selected value type:', typeof selectedValue);
                                     console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');

@@ -17,6 +17,7 @@ import OrderDetails from './screens/orderDetails';
 import SupportDetails from './screens/supportDetails';
 import MaintenanceDetails from './screens/maintenanceDetails';
 import Logout from './screens/logout';
+import RbacEditor from './screens/rbacEditor';
 // Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
         <Route path="/orderDetails" element={<OrderDetails />} />
         <Route path="/supportDetails" element={<SupportDetails />} />
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
+        <Route path="/rbacEditor" element={<RbacEditor />} />
         <Route path="/logout" element={<Logout />} />
         </Routes>
     </Router>

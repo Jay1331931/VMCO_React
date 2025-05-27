@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
 import SearchInput from '../components/SearchInput';
@@ -6,18 +6,12 @@ import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import formatDate from '../utilities/dateFormatter';
+import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
+import ActionButton from '../components/ActionButton';
+//import { supportMenuItems } from '../utilities/supportMenuItems';
 
-
-
-// const initialTickets = [
-//   { id: '0001', customer: 'Customer 1', branch: 'Branch 1', issueName: 'Damaged Product', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'The product is damaged', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'In Progress' },
-//   { id: '0002', customer: 'Customer 2', branch: 'Branch 1', issueName: 'Payment Issues', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'Not able to pay', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'Closed' },
-//   { id: '0003', customer: 'Customer 1', branch: 'Branch 2', issueName: 'Missing Parts', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'I have not received all the parts', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'In Progress' },
-//   { id: '0004', customer: 'Customer 3', branch: 'Branch 4', issueName: 'Delivery Delay', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'The delivery is delayed', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'Rejected' },
-//   { id: '0005', customer: 'Customer 4', branch: 'Branch 7', issueName: 'Product Not Received', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'The product has not arrived', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'In Progress' },
-//   { id: '0006', customer: 'Customer 5', branch: 'Branch 5', issueName: 'Incorrect Item', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'Received the wrong item', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'In Progress' },
-//   { id: '0007', customer: 'Customer 6', branch: 'Branch 3', issueName: 'Missing Item', issueType: 'Issue Type', createdDate: '10 Apr 025', details: 'Item is missing', images: [{image1: '', image2: '', image3: '', image4: ''}], assignedTo: 'Employee 1', status: 'In Progress' },
-// ];
 
 function Support() {
   const { t, i18n } = useTranslation();
@@ -28,36 +22,53 @@ function Support() {
   const [initialTickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const { token, user, isAuthenticated, logout } = useAuth();
+  
+  //RBAC
+  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], 'supList');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+  console.log('~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n', user);
+ 
   useEffect(() => {
+
+    //Handle isAuthenticated or token expired and lout. Genertic common without writing code in every component
     const fetchTickets = async () => {
       try {
-        // Replace with your actual API endpoint URL
-        //TODO: Parameters such as search, sort order must be added dynamiccally
         const apiUrl = process.env.REACT_APP_API_BASE_URL 
           ? `${process.env.REACT_APP_API_BASE_URL}/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc`
           : 'http://localhost:3000/api/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc';
-          
-        const response = await fetch(apiUrl);
-        
+
+        const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'          
+        });
+        console.error('Error fetching tickets:', response);
         if (!response.ok) {
+          if (response.status === 401) {
+            logout();
+            navigate(user.userType==='customer'?'/login':'/login/employee');
+            return;
+          }
+          
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
         const resp = await response.json();
         console.log('Fetched tickets:', typeof(resp.data.data));
         setTickets(resp.data.data);
       } catch (err) {
         console.error('Failed to fetch support tickets:', err);
         setError(err.message);
-        // Fall back to static data if API call fails
-        setTickets(initialTickets);
+        setTickets([]); 
       } finally {
         setLoading(false);
       }
     };
-    console.log('Component mounted, fetching tickets...');
     fetchTickets();
-  }, []);
+  }, [navigate]);
 
   //TODO: Handle arabic and english names for company and branch
   const columns = [
@@ -95,7 +106,16 @@ function Support() {
   
   // Handle row click to navigate to supportDetails page with ticket details
   const handleRowClick = (ticket) => {
-    navigate('/supportDetails', { state: { ticket } });
+    navigate('/supportDetails', { state: { ticket: ticket, mode: 'edit' } });
+  };
+
+  // Handle adding a new ticket
+  const handleAddTicket = () => {
+    if (isAuthenticated) {
+      navigate('/supportDetails', { state: { ticket: {}, mode: 'add' } });
+    } else {
+      navigate(user.userType === 'customer' ? '/login' : '/login/employee');
+    }
   };
 
   return (
@@ -105,6 +125,8 @@ function Support() {
           <SearchInput onSearch={setSearchQuery} />
           <button className="support-add-button" onClick={handleAdd} >{t('+ Add')}</button>
         </div>
+        {isV('btnAdd') && <button className="add-button" onClick={handleAddTicket}>{t('+ Add')}</button>}
+        {/* <ActionButton menuItems={supportMenuItems} /> */}
         <Table
           columns={columns}
           data={filteredTickets}
