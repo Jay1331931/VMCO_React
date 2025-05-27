@@ -3,6 +3,7 @@ import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import ActionButton from '../components/ActionButton';
+import ToggleButton from '../components/ToggleButton';
 import SearchInput from '../components/SearchInput';
 import Pagination from '../components/Pagination';
 import Table from '../components/Table';
@@ -25,6 +26,7 @@ function Customers() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('customers');
   const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [filteredApprovals, setFilteredApprovals] = useState([]);
   const [customerContacts, setCustomerContacts] = useState({});
   const [filteredInvites, setFilteredInvites] = useState([]);
   const [page, setPage] = useState(1);
@@ -43,6 +45,16 @@ const [loading, setLoading] = useState(false);
     { value: 'customers', label: 'Customers' },
     { value: 'invites', label: 'Invites' }
   ];
+const [isApprovalMode, setApprovalMode] = useState(false);
+const toggleApprovalMode = () => {
+    setApprovalMode(!isApprovalMode);
+    console.log('Approval mode:', isApprovalMode);
+    if (!isApprovalMode) {
+      fetchApprovals();
+    } else {
+      fetchCustomers();
+    }
+  };
 
   const handleResend = (invite) => {
     console.log('Resend invite:', invite);
@@ -85,6 +97,15 @@ const [loading, setLoading] = useState(false);
     { key: 'customerStatus', header: 'Status' }
   ];
 
+   const approvalColumns = [
+    { key: 'companyNameEn', header: 'Company' },
+    { key: 'primaryContact', header: 'Primary Contact' },
+    { key: 'companyType', header: 'Company Type' },
+    { key: 'typeOfBusiness', header: 'Type Of Business' },
+    { key: 'city', header: 'Delivery Location' },
+    { key: 'customerStatus', header: 'Status' },
+    { key: 'name', header: 'Workflow Name' }
+  ];
   const inviteColumns = [
     { key: 'date', header: 'Date' },
     { key: 'leadName', header: 'Customer Name' },
@@ -130,6 +151,43 @@ const result = await response.json();
     } catch (err) {
       setError(err.message);
       console.error('Error fetching customers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchApprovals = async (page = 1, searchTerm = '') => {
+    setLoading(true);
+    setError(null);
+    console.log('Fetching approvals');
+    try {
+      const params = new URLSearchParams({
+      page,
+      pageSize: pagination.pageSize,
+      search: searchTerm,
+      sortBy: 'id',
+      sortOrder: 'asc',
+      filters: '{}'
+    });
+    const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+const result = await response.json();
+      console.log('API Response:', result);
+      if (result.status === 'Ok') {
+        setFilteredApprovals(result.data.data);
+        setPagination(prev => ({
+          ...prev,
+          page,
+          total: result.data.data.length
+        }));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch approvals');
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error('Error fetching approvals:', err);
     } finally {
       setLoading(false);
     }
@@ -217,6 +275,8 @@ function transformCustomerData(customer, customerContacts) {
     operationsHeadDesignation: contactsMap.operations?.designation || '',
     operationsHeadEmail: contactsMap.operations?.email || '',
     operationsHeadMobile: contactsMap.operations?.mobile || '',
+    // Adding isApprovalMode to indicate if the customer is in approval mode
+    isApprovalMode: false,
   };
 }
 
@@ -273,6 +333,12 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
         let transformedCustomer = transformCustomerData(customer, result.data);
   transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
         console.log('Transformed Customer:', transformedCustomer);
+        // Navigate to customer details with approval mode if applicable
+        if (isApprovalMode) {
+          transformedCustomer.isApprovalMode = true;
+        } else {
+          transformedCustomer.isApprovalMode = false;
+        }
    navigate(`/customersDetails`, { state: { transformedCustomer } });
 
       } else {
@@ -290,6 +356,9 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
   useEffect(() => {
     if (activeTab === 'customers') {
       fetchCustomers();
+    }
+    else if (activeTab === 'customers' && isApprovalMode) {
+      fetchApprovals();
     }
     if (activeTab === 'invites') {
       fetchInvites();
@@ -362,10 +431,12 @@ const handleRowClick = (customer) => {
   const renderContent = () => {
     switch (activeTab) {
       case t('customers'):
+        const customerColumnsToUse = isApprovalMode ? approvalColumns : customerColumns;
+
         return (
           <Table 
-            columns={customerColumns}
-            data={paginatedCustomers}
+            columns={customerColumnsToUse}
+            data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
             getStatusClass={getStatusClass}
             customCellRenderer={customCellRenderer}
             onRowClick={handleRowClick}
@@ -386,7 +457,7 @@ const handleRowClick = (customer) => {
   };
 // Paginate the filtered orders
   const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
-
+  const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
   return (
     <Sidebar title={t('Customers')}>
       <div className="page-content">
@@ -401,7 +472,12 @@ const handleRowClick = (customer) => {
               <div className="header-controls" style={{ width: '100%' }}>
               <SearchInput onSearch={handleSearch} />
               <div className='header-actions'>
-              <ActionButton menuItems={customerMenuItems} />
+                <ToggleButton 
+              isToggled={isApprovalMode}
+              onToggle={toggleApprovalMode}
+            />
+            <button className='add-button' style={{ visibility: 'hidden' }}></button>
+             <ActionButton menuItems={customerMenuItems} />
               </div>
               </div>
             )}

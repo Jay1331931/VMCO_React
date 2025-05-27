@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
+import Pagination from './Pagination';
 
 
 function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) => x }) {
@@ -57,7 +58,7 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) =
         setCustomers(result.data.data);
         setPagination(prev => ({
           ...prev,
-          total: result.data.total
+          total: result.data.totalRecords,
         }));
       } else {
         throw new Error('Unexpected response format');
@@ -122,7 +123,7 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) =
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Customer ID')}</th>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('ERP Customer ID')}</th>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Company Name')}</th>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Actions')}</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -152,25 +153,16 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) =
           )}
         </div>
         <div className="gp-footer">
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '10px' }}>
-            <button
-              onClick={() => pagination.page > 1 && setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-              disabled={pagination.page === 1}
-              className="gp-close-btn"
-            >
-              {t('Previous')}
-            </button>
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-              {t('Page')} {pagination.page} {t('of')} {totalPages}
-            </span>
-            <button
-              onClick={() => pagination.page < totalPages && setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-              disabled={pagination.page === totalPages}
-              className="gp-close-btn"
-            >
-              {t('Next')}
-            </button>
-          </div>
+          {totalPages > 0 && (
+            <Pagination
+              currentPage={Number(pagination.page)}
+              totalPages={totalPages}
+              onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))}
+              startIndex={(pagination.page - 1) * pagination.pageSize + 1}
+              endIndex={Math.min(pagination.page * pagination.pageSize, pagination.total)}
+              totalItems={pagination.total}
+            />
+          )}
         </div>
       </div>
 

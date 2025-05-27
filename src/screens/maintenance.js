@@ -77,6 +77,9 @@ function Maintenance() {
       String(val).toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
+  const handleAdd = () => {
+    navigate('/maintenanceDetails')
+  }
   
   // Handle row click to navigate to Maintenance details page with ticket details
   const handleRowClick = (ticket) => {
@@ -88,6 +91,7 @@ function Maintenance() {
       <div className="maintenance-content">
         <div className="maintenance-header">
           <SearchInput onSearch={setSearchQuery} />
+          <button className="support-add-button" onClick={handleAdd} >{t('+ Add')}</button>
         </div>
         {loading ? (
           <div className="loading">Loading...</div>

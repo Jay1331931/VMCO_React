@@ -7,6 +7,8 @@ function GetProducts({
   onSelectProduct,
   API_BASE_URL,
   token,
+  customerId,
+  entity,
   t = (x) => x // fallback translation
 }) {  
   const [backendProducts, setBackendProducts] = useState([]);
@@ -31,32 +33,7 @@ function GetProducts({
     return () => clearTimeout(debounceTimeout.current);
   }, [search, open]);
 
-  // Function to fetch total number of products (count)
-  const fetchTotalCount = async () => {
-    if (!open) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/products`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        credentials: "include",
-      });
-      
-      const data = await response.json();
-      if (data && data.total !== undefined) {
-        setPagination(prev => ({
-          ...prev,
-          total: Number(data.totalRecords)
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching total count:", error);
-    }
-  };
-
+  
   // Function to fetch products with pagination
   const fetchProducts = async () => {
     if (!open) return;
@@ -67,36 +44,36 @@ function GetProducts({
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
+        filters: JSON.stringify({"customerId":parseInt(customerId), "entity":entity}),
         sortBy: "id",
         sortOrder: "asc"
       });
-      
+
       const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         credentials: "include",
       });
       
-      const data = await response.json();
-      console.log("API response:", data);
+      const result = await response.json();
+      console.log("API response:", result);
       
       // Support both array and paginated object
-      if (Array.isArray(data)) {
-        setBackendProducts(data);
+      if (Array.isArray(result.data.data)) {
+        setBackendProducts(result.data.data);
         setPagination(prev => ({
           ...prev,
-          total: data.totalRecords
+          total: result.data.totalRecords
         }));
-      } else if (data && Array.isArray(data.data)) {
-        setBackendProducts(data.data);
+      } else if (result && Array.isArray(result.data.data)) {
+        setBackendProducts(result.data.data);
         
       
         setPagination(prev => ({
           ...prev,
-          total: data.totalRecords
+          total: result.data.totalRecords
         }));
       } else {
         setBackendProducts([]);

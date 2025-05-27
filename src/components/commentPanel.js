@@ -204,16 +204,14 @@ const CommentPopup = ({
         .comment-entry {
           display: flex;
           align-items: flex-start;
-          gap: 1rem;
           position: relative;
-          padding-left: 1.5rem;
           margin-bottom: 1.5rem;
         }
         .comment-entry::before {
           content: '';
           position: absolute;
-          left: 2.8rem;
-          top: 2.5rem;
+          left: 2rem;
+          top: 3rem;
           bottom: -1rem;
           width: 2px;
           background: #ccc;

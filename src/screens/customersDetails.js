@@ -245,6 +245,7 @@ function CustomersDetails() {
     const inputVal = type === 'checkbox' ? checked : value;
     setChangedFields(prev => new Set(prev).add(name));
     setFormData(prev => ({ ...prev, [name]: inputVal }));
+    console.log(formData)
   };
   const handleLocationSelect = (lat, lng) => {
     setSelectedLocation({ lat, lng });
@@ -597,6 +598,61 @@ switch (action) {
     }
   };
 
+  const [dropdownOptions, setDropdownOptions] = useState({});
+
+  const getOptionsFromBasicsMaster = async (fieldName) => {
+  const params = new URLSearchParams({
+    filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
+  });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json(); // Don't forget 'await' here
+    
+    const options = result.data.map(item => item.value);
+    return options;
+
+  } catch (err) {
+    console.error('Error fetching options:', err);
+    return []; // Return empty array on error
+  }
+};
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      const options = {};
+      // Find all dropdown fields and fetch their options
+      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown');
+      
+      for (const field of dropdownFields) {
+        try {
+          const data = await getOptionsFromBasicsMaster(field.name);
+          // options[field.name] = data;
+          options[field.name] = data.map(opt => 
+          typeof opt === 'string' 
+            ? opt.charAt(0).toUpperCase() + opt.slice(1)
+            : opt // Fallback if not a string
+        );
+        } catch (err) {
+          console.error(`Failed to fetch options for ${field.name}:`, err);
+          options[field.name] = []; // Fallback to empty array
+        }
+      }
+
+      setDropdownOptions(options);
+      console.log('dropdown options', dropdownOptions)
+    };
+
+    fetchDropdownOptions();
+  }, [formsByTab, activeTab]);
   const [pendingFileUploads, setPendingFileUploads] = useState({});
 
 const handleFileUpload = async (e, fieldName) => {
@@ -1083,11 +1139,19 @@ return (
                               <option value="" disabled hidden>
                                 Value
                               </option>
-                              {field.options.map((opt, idx) => (
+                              {
+                                dropdownOptions[field.name]?dropdownOptions[field.name].map((opt, idx) =>(
+                                  <option key={idx} value={opt}>
+                                  {t(opt)}
+                                </option>
+                                ) 
+                                ):[]
+                              }
+                              {/* {field.options.map((opt, idx) => (
                                 <option key={idx} value={opt}>
                                   {opt}
                                 </option>
-                              ))}
+                              ))} */}
                             </select>
                           </div>
                         );
@@ -1408,7 +1472,7 @@ return (
               <div className="customer-onboarding-form-actions">
                 <div className="status-text">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className="status-badge">{t(formData.status) || t('Pending')}</span>
+                  <span className="status-badge">{t(customer.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
                   <button className="save" onClick={() => handleSave('save')}>
@@ -1420,7 +1484,10 @@ return (
                   <button className="block" onClick={() => handleSubmit('submit')}>
                     {t('Submit')}
                   </button>
-                  <button className="block" onClick={() => handleSave('block')}>
+                  
+                  { customer.isApprovalMode && (
+                    <>
+                    <button className="block" onClick={() => handleSave('block')}>
                     {t('Block')}
                   </button>
                   <button className="approve" onClick={() => handleSubmit('approve')}>
@@ -1429,13 +1496,19 @@ return (
                   <button className="reject" onClick={() => handleSubmit('reject')}>
                     {t('Reject')}
                   </button>
+                  </>
+                )}
                 </div>
               </div>
             )}
         </div>
-        <div>
-          <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
-        </div>
+        {customer.isApprovalMode && (
+          <>
+            <div>
+              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={customer.approvalHistory}/>
+            </div>
+          </>
+        )}
       </div>
     </Sidebar>
 

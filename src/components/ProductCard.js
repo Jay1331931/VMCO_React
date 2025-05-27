@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import QuantityController from './QuantityController';
 
@@ -7,21 +7,35 @@ const ProductCard = ({
     quantities,
     onQuantityChange,
     onProductClick,
-    setQuantities
+    setQuantities,
+    onAddToCart // Destructure onAddToCart prop
 }) => {
     const { t } = useTranslation();
 
+    // Initialize with MOQ when product is loaded or changed
+    useEffect(() => {
+        if (product && product.moq && (!quantities[product.id] || quantities[product.id] < Number(product.moq))) {
+            setQuantities(prev => ({
+                ...prev,
+                [product.id]: Number(product.moq) || 0
+            }));
+        }
+    }, [product, quantities, setQuantities]);
+
     const handleQuantityInputChange = (productId, value) => {
+        // Ensure the value is not less than the MOQ
+        const moq = Number(product.moq) || 0;
+        const newValue = Math.max(moq, Number(value));
+        
         setQuantities({
             ...quantities,
-            [product.id]: value
+            [product.id]: newValue
         });
     };
 
-
-    const handleAddToCart = (e, productId) => {
+    const handleAddToCart = (e) => {
         e.stopPropagation(); // Prevent triggering the onProductClick event
-        console.log('Added to cart:', product.name, 'Quantity:', quantities[productId]);
+        onAddToCart(product.id); // Call the parent component's onAddToCart function
     }
 
     return (
@@ -40,21 +54,39 @@ const ProductCard = ({
                 ) : (
                     <div className="image-placeholder"></div>
                 )}
-            </div>            <div className="product-details">
+            </div>            
+            <div className="product-details">
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
                 <div className="quantity-controls">
                     <QuantityController
                         itemId={product.id}
-                        quantity={quantities[product.id] || 0}
-                        onQuantityChange={onQuantityChange}
+                        quantity={quantities[product.id] || (product.moq ? Number(product.moq) : 0)}
+                        onQuantityChange={(id, delta) => {
+                            // Only allow quantity changes that don't go below MOQ
+                            const currentQty = quantities[product.id] || 0;
+                            const moq = Number(product.moq) || 0;
+                            const newQty = currentQty + delta;
+                            
+                            if (newQty >= moq) {
+                                onQuantityChange(id, delta);
+                            } else if (delta > 0 && currentQty < moq) {
+                                // Special case: If increasing from below MOQ, jump to MOQ
+                                setQuantities(prev => ({
+                                    ...prev,
+                                    [product.id]: moq
+                                }));
+                            }
+                        }}
                         onInputChange={handleQuantityInputChange}
                         stopPropagation={true}
+                        minQuantity={Number(product.moq) || 0} // Pass MOQ as min quantity
+                        moq={Number(product.moq) || 0} // Pass MOQ directly
                     />
                     <button
                         className="add-to-cart-btn"
-                        onClick={(e) => handleAddToCart(e, product.id)}
+                        onClick={(e) => handleAddToCart(e)}
                     >
                         {t('ADD TO CART')}
                     </button>

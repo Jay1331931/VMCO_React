@@ -75,8 +75,10 @@ function OrderDetails() {
         <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
             itemId={row.id || row.product_id}
-            quantity={row.quantity || 1}
+            quantity={row.quantity}
+            disabled={!addMode} // Disable in view mode
             onQuantityChange={(_, delta) => {
+              if (!addMode) return; // Skip if not in add mode
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
@@ -88,6 +90,7 @@ function OrderDetails() {
               }
             }}
             onInputChange={(_, value) => {
+              if (!addMode) return; // Skip if not in add mode
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
@@ -116,6 +119,15 @@ function OrderDetails() {
         return isNaN(price) ? '0.00' : price.toFixed(2);
       }
     },
+    
+    { 
+      key: 'salesTaxRate', 
+      header: 'Tax (SAR)',
+      render: (row) => {
+        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
+      }
+    },
     { 
       key: 'netAmount', 
       header: 'Net Amount (SAR)',
@@ -123,14 +135,6 @@ function OrderDetails() {
         const qty = parseFloat(row.quantity || 1);
         const price = parseFloat(row.unitPrice || 0);
         return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
-      }
-    },
-    { 
-      key: 'salesTaxRate', 
-      header: 'Tax (SAR)',
-      render: (row) => {
-        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
-        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
       }
     },
     ...(addMode ? [{ key: 'actions', header: 'Actions' }] : [])
@@ -548,10 +552,11 @@ function OrderDetails() {
   const handleSelectCustomer = (customer) => {
     setFormData(prev => ({
       ...prev,
-      erpCustId: customer.id,
+      erpCustId: customer.erpCustId,
+      customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: customer.company_name_en || customer.companyNameEn || '',
       // Populate the ERP# field with the customer's erp_cust_id
-      erp: customer.erp_cust_id || customer.erpCustId || ''
+      
     }));
     setShowCustomerPopup(false);
   };
@@ -572,9 +577,10 @@ function OrderDetails() {
 
   // Add this useEffect to fetch entity options
   useEffect(() => {
-    const fetchEntityOptions = async () => {
+       const fetchEntityOptions = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/basics-masters`, {
+        // Updated URL to include query parameter for entity master type
+        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
@@ -583,19 +589,22 @@ function OrderDetails() {
         if (!response.ok) throw new Error('Failed to fetch entity options');
         
         const result = await response.json();
-        if (result.status === 'Ok' && Array.isArray(result.data)) {
-          // Assuming the API returns an array of entity names
-          setEntityOptions(result.data);
-        } else if (Array.isArray(result)) {
-          // Or in case the API directly returns an array
-          setEntityOptions(result);
+
+        if (result.status === 'Ok' && result.data) {
+          const options = result.data;
+          // Extract entity values from the response data
+          const entityValues = options.map(item => item.value);
+          setEntityOptions(entityValues);
+        } else if (result.data && Array.isArray(result.data)) {
+          const options = result.data;
+          // Handle the actual response structure we're seeing in the logs
+          const entityValues = options.map(item => item.value);
+          setEntityOptions(entityValues);
         } else {
           throw new Error('Unexpected response format for entity options');
         }
       } catch (err) {
         console.error('Error fetching entity options:', err);
-        // Fallback to some default entities if the API call fails
-        setEntityOptions(['VMCO', 'Diyafa', 'Green Mast', 'Naqui']);
       }
     };
 
@@ -659,18 +668,11 @@ function OrderDetails() {
                         id="customerField"
                         name="selectedCustomerName" 
                         value={formData.selectedCustomerName || ''} 
-                        disabled={true}
+                        onClick={() => setShowCustomerPopup(true)}
                         className="customer-input"
                         placeholder={t('Click to select customer')}
+                        readOnly // Add readOnly prop
                       />
-                      <button 
-                        type="button" 
-                        className="order-action-btn approve"
-                        onClick={() => setShowCustomerPopup(true)}
-                        aria-label="Select customer"
-                      >
-                        {t('Select Customer')}
-                      </button>
                     </div>
                   ) : (
                     <input 
@@ -678,6 +680,7 @@ function OrderDetails() {
                       name="erpCustId" 
                       value={formData.erpCustId ?? ''} 
                       disabled 
+                      readOnly // Add readOnly prop
                     />
                   )}
                 </div>
@@ -689,13 +692,6 @@ function OrderDetails() {
                         id="branchField"
                         name="selectedBranchName" 
                         value={formData.selectedBranchName || ''} 
-                        disabled={true}
-                        className="customer-input"
-                        placeholder={t('Click to select branch')}
-                      />
-                      <button 
-                        type="button" 
-                        className="order-action-btn approve"
                         onClick={() => {
                           if (!formData.erpCustId) {
                             alert(t('Please select a customer first'));
@@ -703,10 +699,10 @@ function OrderDetails() {
                           }
                           setShowBranchPopup(true);
                         }}
-                        aria-label="Select branch"
-                      >
-                        {t('Select Branch')}
-                      </button>
+                        className="customer-input"
+                        placeholder={t('Click to select branch')}
+                        readOnly // Add readOnly prop
+                      />
                     </div>
                   ) : (
                     <input 
@@ -714,6 +710,7 @@ function OrderDetails() {
                       name="erpBranchId" 
                       value={formData.erpBranchId ?? ''} 
                       disabled 
+                      readOnly // Add readOnly prop
                     />
                   )}
                 </div>
@@ -897,6 +894,8 @@ function OrderDetails() {
             onSelectProduct={handleSelectProduct}
             API_BASE_URL={API_BASE_URL}
             token={localStorage.getItem('token')}
+            customerId={formData.customerId}
+            entity={formData.entity}
             t={t}
           />
         )}
@@ -916,7 +915,7 @@ function OrderDetails() {
             open={showBranchPopup}
             onClose={() => setShowBranchPopup(false)}
             onSelectBranch={handleSelectBranch}
-            customerId={formData.erpCustId}
+            customerId={formData.customerId}
             API_BASE_URL={API_BASE_URL}
             t={t}
           />
