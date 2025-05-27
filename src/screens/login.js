@@ -13,7 +13,7 @@ function LoginScreen() {
         document.title = t('Login');
     }, [t]);
     const isRTL = i18n.language === 'ar';
-const path = location.pathname;
+  const path = location.pathname;
   const isCustomerLogin = path === '/login';
 
   const title = isCustomerLogin ? t('Customer Login') : t('Employee Login');

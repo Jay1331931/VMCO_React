@@ -5,14 +5,55 @@ import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter'; // Import the date formatter
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
+
+
+
+
 
 function SupportDetails() {
+  const defaultTicket = {
+        id: null,
+        ticketId: "",
+        customerId: null,
+        branchId: null,
+        grievanceType: "",
+        grievanceName: "",
+        description: "",
+        dateOfComplaint:null,
+        assignedTeamMember: "",
+        assignedTeamMemberDept: "",
+        status: "",
+        attachment: "",
+        slaDueDate: null,
+        criticalLevel: "",
+        comments: [],
+        feedbackRating: null,
+        feedbackComment: null,
+        customerRegion: null,
+        branchRegion: null,
+    };
+  
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const location = useLocation();
-  const ticket = location.state?.ticket || {};
-  
+  const formMode = location.state?.mode;
+  console.log("^^^^ Mode ^^^^ :"+formMode);
+  const { token, user, isAuthenticated, logout } = useAuth();
+
+  //RBAC
+  //use formMode to decide if it is editform or add form
+  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+
+  const ticketRcvd = location.state?.ticket || {};
+  const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
+  //console.log(JSON.stringify(ticket));
   // State for branches dropdown
+  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(
@@ -25,6 +66,8 @@ function SupportDetails() {
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
   
   const [isEditing, setIsEditing] = useState(true);
+ 
+  
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
@@ -35,10 +78,14 @@ function SupportDetails() {
     try {
       // Replace with your actual API endpoint URL
       const apiUrl = process.env.REACT_APP_API_BASE_URL 
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId}`
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId? ticket.customerId : user.customerId}`
         : 'http://localhost:3000/api/branches';
         
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl,{
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'          
+        });
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -68,8 +115,12 @@ function SupportDetails() {
       const apiUrl = process.env.REACT_APP_API_BASE_URL 
         ? `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=10&sortOrder=asc&filters={"designation": "${supportStaffDesignation}"}`
         : 'http://localhost:3000/api/grievances/employees';
-        
-      const response = await fetch(apiUrl);
+
+      const response = await fetch(apiUrl,{
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'          
+        });
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -88,25 +139,12 @@ function SupportDetails() {
   // Fetch employees on component mount
   useEffect(() => {
     fetchEmployees();
+    fetchBranches();
+  
   }, []);
 
-  // Handle branch click to load options
-  const handleBranchClick = () => {
-    if (isEditing) {
-      fetchBranches();
-    }
-  };
 
-  // Handle branch selection
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.target.value);
-  };
-
-  // Handle employee selection
-  const handleEmployeeChange = (e) => {
-    setSelectedEmployee(e.target.value);
-  };
-
+ 
   // Toggle edit mode
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
@@ -175,19 +213,83 @@ function SupportDetails() {
   };
 
   // Handle save
-  const handleSave = () => {
-    // Implement save functionality here
-    // This would typically involve an API call to update the ticket
+  const handleSave = async (e) => {
+    //TODO: onSave validaations
+
     setIsEditing(false);
+    ticket.customerId=user.customerId;
+    ticket.dateOfComplaint = new Date().toISOString();
+    ticket.attachment='none';//TODO: in DB is is not null. Need to be nullaable
+    ticket.comments='[]';//assign an empty array
     console.log('Saving ticket with selected branch:', selectedBranch);
     console.log('Assigned to employee:', selectedEmployee);
-    // After successful save, you might want to refresh the data
-  };
+    try{
 
-  const handleCommentClick = () => {
+      const endPoint = formMode=='add'? '/grievances': '/grievances/id/'+ticket.id;
+      const method = formMode=='add'? 'POST': 'PATCH';
+
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
+        : null;
+      console.log("the url:"+apiUrl+"\n emthod:"+method);
+      const response = await fetch(apiUrl, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' ,
+        body: JSON.stringify(ticket)
+      });
+
+      if (!response.ok) {
+
+        const errorText = await response.text();
+        console.log(`Error ${response.status}: ${response.statusText}. Details: ${errorText}`);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error saving ticket:', error);
+    }
+  }
+
+  const handleCommentClick = async () => {
     //TODO: implement API call to add comment
     console.log("~~~~~~~~~~ Comment Added");
-    console.log("~~~~~~~~~~ ticket comments", ticket.comments); 
+    console.log("~~~~~~~~~~ ticket comments", ticket); 
+    try{
+
+      const endPoint = '/grievances/id/'+ticket.id;
+      const method = 'PATCH';
+
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
+        : null;
+      console.log("the url:"+apiUrl);
+      const response = await fetch(apiUrl, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include' ,
+        body: JSON.stringify(ticket)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error saving ticket:', error);
+    }
+
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTicket(prev => ({ ...prev, [name]: value }));
+    console.log("The ticket after change:\n"+JSON.stringify(ticket));
+    
+    // Special handling for customer selection
+    if (name === 'customerId' && value) {
+      fetchBranches(value);
+      // Reset branch when customer changes
+      setTicket(prev => ({ ...prev, branchId: '' }));
+    }
   };
 
   return (
@@ -200,39 +302,42 @@ function SupportDetails() {
             <div className="support-details-field">
               <label>Customer Name</label>
               <input 
-                value={currentLanguage=='en' ? ticket.companyNameEn : ticket.companyNameAr} 
-                disabled 
+                value={companyNameToShow} 
+                disabled={true} 
               />
             </div>
+
+            {/** Branch Section */}
             <div className="support-details-field">
-              <label>Branch</label>
+              <label htmlFor="branchId">{t('Branch')} *</label>
               <select 
-                value={selectedBranch} 
-                disabled={!isEditing}
-                onChange={handleBranchChange}
-                onClick={handleBranchClick}
+                id="branchId"
+                name="branchId"
+                value={ticket.branchId}
+                onChange={handleInputChange}
+                disabled={!isE('branch')}
               >
+                <option value="">{t('Select Branch')}</option>
                 {loadingBranches ? (
-                  <option>Loading branches...</option>
-                ) : branches.length > 0 ? (
+                  <option disabled>{t('loading')}</option>
+                ) : (
                   branches.map(branch => (
-                    <option 
-                      key={branch.id} 
-                      value={currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
-                    >
+                    <option key={branch.id} value={branch.id}>
                       {currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
                     </option>
                   ))
-                ) : (
-                  <option>
-                    {currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc}
-                  </option>
                 )}
               </select>
-            </div>
+            </div>            
             <div className="support-details-field">
               <label>Issue Type</label>
-              <select value={ticket.grievanceType} disabled={!isEditing}>
+              <select
+                id="grievanceType"
+                name="grievanceType" 
+                value={ticket.grievanceType}
+                onChange={handleInputChange} 
+                disabled={!isE('issueType')}
+              >
                 <option>{ticket.grievanceType}</option>
                 {isEditing && (
                   <>
@@ -247,16 +352,31 @@ function SupportDetails() {
             </div>
             <div className="support-details-field">
               <label>Issue Name</label>
-              <input value={ticket.grievanceName} disabled={!isEditing} />
+              <input 
+              id='grievanceName'
+              name='grievanceName' 
+              onChange={handleInputChange} 
+              value={ticket.grievanceName} 
+              disabled={!isE('issueName')} 
+              />
             </div>
-            <div className="support-details-field">
+            {
+              formMode == 'edit'?
+             <div className="support-details-field">
               <label>Created Date</label>
               <input value={formatDate(ticket.updatedAt,'YYYY-MM-DD HH:SS')} disabled />
             </div>
+            : null
+            }
           </div>
           <div className="support-details-field support-details-textarea">
             <label>Issue Details</label>
-            <textarea value={ticket.description} disabled={!isEditing} />
+            <textarea 
+              id='description'
+              name='description' 
+              onChange={handleInputChange} 
+              value={ticket.description} 
+              disabled={!isE('issueDetails')} />
           </div>
           
           <div className='attachments'>
@@ -337,30 +457,35 @@ function SupportDetails() {
             {ticket.status}
           </span>
         </div>
-        <div className="support-assign">
-          <span>Assign to:</span>
-          <select 
-            value={selectedEmployee}
-            onChange={handleEmployeeChange}
-            disabled={!isEditing}
-          >
-            {loadingEmployees ? (
-              <option>Loading employees...</option>
-            ) : employees.length > 0 ? (
-              employees.map(employee => (
-                <option key={employee.id} value={employee.employeeId}>
-                  {employee.name}
-                </option>
-              ))
-            ) : (
-              <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
-            )}
-          </select>
-        </div>
+        { isV('assignedTo') &&(
+          <div className="support-assign">
+            <span>Assign to:</span>
+            <select 
+              id="assignedTeamMember"
+              name="assignedTeamMember"            
+              value={ticket.assignedTeamMember}
+              onChange={handleInputChange}
+              disabled={!isE('assignedTo')}
+            >
+              <option value="">{t('Select Assignee')}</option>
+              {loadingEmployees ? (
+                <option>Loading employees...</option>
+              ) : employees.length > 0 ? (
+                employees.map(employee => (
+                  <option key={employee.id} value={employee.employeeId}>
+                    {employee.name}
+                  </option>
+                ))
+              ) : (
+                <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+              )}
+            </select>
+          </div>
+      )}
         <div className="support-details-actions">
           {isEditing ? (
             <>
-              <button className="support-action-btn save" onClick={handleSave}>Save</button>
+              {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave}>Save</button>}
               <button className="support-action-btn cancel" onClick={toggleEditMode}>Cancel</button>
             </>
           ) : (
@@ -390,7 +515,7 @@ function SupportDetails() {
         </div>
       )}
       {/*TODO: part of params like currentUser Details must be dynamic */}
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:'SE1', userId:'1'}}   /> 
+      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:user.userName, userId:user.userId}}   /> 
     </Sidebar>
   );
 }

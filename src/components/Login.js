@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Login({ title, userType }) {
+    const { login } = useAuth();
     const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -38,6 +40,12 @@ function Login({ title, userType }) {
 
         const data = await res.json();
 
+        console.log('Login response:', data);
+        const cookie = getCookie('token');
+        console.log('Cookie:', cookie);
+
+        login(cookie, data.data);
+
         if (!res.ok) {
             setError(data.message || 'Login failed');
             return;
@@ -53,6 +61,19 @@ function Login({ title, userType }) {
             setError('');
         }
     };
+
+const getCookie = (name) => {
+  const cookies = document.cookie
+    .split(';')
+    .map(cookie => cookie.trim())
+    .reduce((acc, cookie) => {
+      const [key, value] = cookie.split('=');
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+    
+  return cookies[name] || null;
+};
 
     const handleForgotPassword = (e) => {
         e.preventDefault();
