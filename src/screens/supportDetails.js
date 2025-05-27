@@ -39,7 +39,6 @@ function SupportDetails() {
   const currentLanguage = i18n.language;
   const location = useLocation();
   const formMode = location.state?.mode;
-  console.log("^^^^ Mode ^^^^ :"+formMode);
   const { token, user, isAuthenticated, logout } = useAuth();
 
   //RBAC
@@ -51,7 +50,6 @@ function SupportDetails() {
 
   const ticketRcvd = location.state?.ticket || {};
   const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
-  //console.log(JSON.stringify(ticket));
   // State for branches dropdown
   const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
   const [branches, setBranches] = useState([]);
@@ -71,7 +69,6 @@ function SupportDetails() {
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
-    console.log('Fetching size...'+branches.length);
     if (branches.length > 0) return; // Don't fetch if we already have branches
     
     setLoadingBranches(true);
@@ -92,7 +89,6 @@ function SupportDetails() {
       }
       
       const data = await response.json();
-      console.log('Fetched branches:', data);
       //iterate data object to collect branchNameEn vles in array
 
       const branchNames = data;
@@ -127,7 +123,6 @@ function SupportDetails() {
       }
       
       const resp = await response.json();
-      console.log('Fetched employees:', resp.data.data);
       setEmployees(resp.data.data || []);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
@@ -217,12 +212,12 @@ function SupportDetails() {
     //TODO: onSave validaations
 
     setIsEditing(false);
-    ticket.customerId=user.customerId;
-    ticket.dateOfComplaint = new Date().toISOString();
-    ticket.attachment='none';//TODO: in DB is is not null. Need to be nullaable
-    ticket.comments='[]';//assign an empty array
-    console.log('Saving ticket with selected branch:', selectedBranch);
-    console.log('Assigned to employee:', selectedEmployee);
+    if(formMode=='add' && !ticket.id){
+      ticket.customerId=user.customerId;
+      ticket.dateOfComplaint = new Date().toISOString();
+      ticket.attachment='none';//TODO: in DB is is not null. Need to be nullaable
+      ticket.comments='[]';//assign an empty array
+    }
     try{
 
       const endPoint = formMode=='add'? '/grievances': '/grievances/id/'+ticket.id;
@@ -231,7 +226,6 @@ function SupportDetails() {
       const apiUrl = process.env.REACT_APP_API_BASE_URL
         ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
         : null;
-      console.log("the url:"+apiUrl+"\n emthod:"+method);
       const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -242,7 +236,6 @@ function SupportDetails() {
       if (!response.ok) {
 
         const errorText = await response.text();
-        console.log(`Error ${response.status}: ${response.statusText}. Details: ${errorText}`);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
@@ -250,10 +243,7 @@ function SupportDetails() {
     }
   }
 
-  const handleCommentClick = async () => {
-    //TODO: implement API call to add comment
-    console.log("~~~~~~~~~~ Comment Added");
-    console.log("~~~~~~~~~~ ticket comments", ticket); 
+  const handleAddComment = async () => {
     try{
 
       const endPoint = '/grievances/id/'+ticket.id;
@@ -262,7 +252,6 @@ function SupportDetails() {
       const apiUrl = process.env.REACT_APP_API_BASE_URL
         ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
         : null;
-      console.log("the url:"+apiUrl);
       const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -282,7 +271,6 @@ function SupportDetails() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTicket(prev => ({ ...prev, [name]: value }));
-    console.log("The ticket after change:\n"+JSON.stringify(ticket));
     
     // Special handling for customer selection
     if (name === 'customerId' && value) {
@@ -515,7 +503,7 @@ function SupportDetails() {
         </div>
       )}
       {/*TODO: part of params like currentUser Details must be dynamic */}
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:user.userName, userId:user.userId}}   /> 
+      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleAddComment} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:user.userName, userId:user.userId}}   /> 
     </Sidebar>
   );
 }

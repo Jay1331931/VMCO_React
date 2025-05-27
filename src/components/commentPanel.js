@@ -18,7 +18,7 @@ const CommentPopup = ({
   onAddComment, 
   showCommentForm = true,
   externalComments = [],
-  currentUser = { userName: 'Anonymous', userId: 'user-0000' } 
+  currentUser  
 }) => {
   const { t } = useTranslation();
   const [commentText, setCommentText] = useState('');
@@ -35,7 +35,7 @@ const CommentPopup = ({
         userName: currentUser.userName,
         userId: currentUser.userId
       };
-
+      
       // Add the new comment to the comments array
       const updatedComments = [newComment, ...comments];
       externalComments.push(newComment);
