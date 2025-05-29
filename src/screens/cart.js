@@ -240,6 +240,61 @@ function Cart() {
         });
     };
 
+    // Add this function to the Cart component
+const handleRemoveItem = async (item) => {
+    if (!item || !item.id) {
+        console.error('Invalid item provided to handleRemoveItem');
+        return;
+    }
+
+    if (isPlacingOrder) {
+        alert(t('An order is being processed. Please wait.'));
+        return;
+    }
+
+    try {
+        setIsPlacingOrder(true); // Use the same state to prevent multiple actions
+        
+        // Build the URL for the delete request
+        const deleteUrl = new URL(`${API_BASE_URL}/cart?customer_id=${customerId || '3'}&branch_id=${selectedBranchId}&entity=${item.entity}&category=${item.category}&id=${item.id}`);
+
+        console.log(`Removing cart item with ID: ${item.id}`);
+
+        const deleteResponse = await fetch(deleteUrl, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!deleteResponse.ok) {
+            const errorText = await deleteResponse.text();
+            console.error(`Error removing item: ${deleteResponse.status}`, errorText);
+            throw new Error(`Failed to remove item: ${deleteResponse.statusText}`);
+        }
+
+        // Update the local cart state by filtering out the removed item
+        setCartItems(prevCartItems => 
+            prevCartItems.map(category => ({
+                ...category,
+                items: category.items.filter(cartItem => cartItem.id !== item.id)
+            }))
+        );
+
+        // Also remove the item from quantities state
+        setQuantities(prev => {
+            const newQuantities = { ...prev };
+            delete newQuantities[item.id];
+            return newQuantities;
+        });
+
+    } catch (err) {
+        console.error('Error removing item:', err);
+        alert(t(`Failed to remove item: ${err.message}`));
+    } finally {
+        setIsPlacingOrder(false);
+    }
+};
+
     const handleQuantityChange = (itemId, delta) => {
         setQuantities(prev => ({
             ...prev,
@@ -702,6 +757,13 @@ function Cart() {
                                                             Total: {parseInt(item.price) * (quantities[item.id] || item.quantity)}
                                                             <span className="sar-label">SAR</span>
                                                         </span>
+                                                         <button
+                                                    className="remove-btn"
+                                                    onClick={() => handleRemoveItem(item)} /* Fix: pass the current item, not category.item */
+                                                    disabled={isPlacingOrder}
+                                                >
+                                                    {isPlacingOrder ? t('Processing...') : t('Remove item')}
+                                                </button>
                                                     </div>
                                                 </div>
                                             ))
@@ -737,7 +799,7 @@ function Cart() {
                         ))}
                     </div>
                 )}
-                <div className="cart-summary-panel">
+                {/* <div className="cart-summary-panel">
                     <div className="total-amount">
                         <h3 className="summary-title">
                             {t('Total Amount')} ({totalItems} Items)
@@ -751,7 +813,7 @@ function Cart() {
                             {isPlacingOrder ? t('Processing...') : t('Place all orders')}
                         </button>
                     </div>
-                </div>
+                </div> */}
             </div>
             <div className="cart-footer">
                 <button className="continue-shopping" onClick={handleContinueShopping}>
@@ -789,4 +851,4 @@ function Cart() {
     );
 }
 
-export default Cart;
+export default Cart

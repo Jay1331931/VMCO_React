@@ -152,7 +152,6 @@ function Orders() {
     { key: 'paymentMethod', header: 'Payment Method' },
     { key: 'deliveryDate', header: 'Delivery Date' },
     { key: 'paidAmount', header: 'Paid Amount' },
-    { key: 'customerApproval', header: 'Customer Approval' },
     { key: 'status', header: 'Status' },
     { key: 'checkout', header: 'Checkout'}
   ];

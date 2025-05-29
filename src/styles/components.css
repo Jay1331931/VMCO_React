@@ -680,6 +680,18 @@
   background-color: #e67600;
 }
 
+.remove-btn {
+  background-color: #ef6363;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.70rem;
+  transition: background 0.2s;
+}
+
 .partial-payment-row {
   display: flex;
   align-items: center;
