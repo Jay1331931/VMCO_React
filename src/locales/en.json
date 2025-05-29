@@ -116,6 +116,7 @@
     "Favorites": "Favorites",
     "Custom Orders": "Custom Orders",
     "Select Customer": "Select Customer",
+    "Select Branch": "Select Branch",
     "Block Customer": "Block Customer",
     "Delete Customer": "Delete Customer",
     "Add Customers": "Add Customers",
@@ -135,5 +136,19 @@
     "Assigned To": "Assigned To",
     "Support - Tickets": "Support - Tickets",
     "Download": "Download",
+    "Cart": "Cart",
+    "items": "items",
+    "Delivering to": "Delivering to",
+    "VMCO Machines": "VMCO Machines",
+    "VMCO Consumables": "VMCO Consumables",
+    "No items in this category": "No items in this category",
+    "Total for this category": "Total for this category",
+    "Diyafa": "Diyafa",
+    "Green Mast": "Green Mast",
+    "Naqui": "Naqui",
+    "Place Order": "Place Order",
+    "Place all orders": "Place all orders",
     "Min. 30% Partial Payment required": "Min. 30% Partial Payment required"
+
+    
 }

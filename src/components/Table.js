@@ -7,7 +7,8 @@ const Table = ({
     getStatusClass,
     actionButtons,
     customCellRenderer,
-    onRowClick
+    onRowClick,
+    onCheckout
 }) => {
     const { t } = useTranslation();
  
@@ -44,6 +45,22 @@ const Table = ({
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
+        
+        // Handle checkout button
+        if (column.key === 'checkout' && onCheckout) {
+            return (
+                <button 
+                    className="action-button checkout"
+                    onClick={(e) => {
+                        e.stopPropagation(); // Prevent row click event
+                        onCheckout(item);
+                    }}
+                >
+                    {t('Checkout')}
+                </button>
+            );
+        }
+        
         //TODO:Update this component to handle date-time field. May input can have one parameter which
         //will provides aditional properties of the cell to be rendered. In case of date-time field, 
         //It can {type: 'date-time', format: 'YYYY-MM-DD HH:mm'} and in case of string it can be {type: 'string'}
@@ -149,6 +166,10 @@ const Table = ({
                 .action-button.invite {
                     background-color: transparent;
                     color: #1F4DE2;
+                }
+                .action-button.checkout {
+                    background-color: #00594C;
+                    color: white;
                 }
                 .action-button:hover {
                     opacity: 0.9;
