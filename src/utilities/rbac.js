@@ -1,42 +1,106 @@
 // RBAC Manager class
 class RbacManager {
-  constructor(role, form,inWF,isOwner) {
+  constructor(role, form, inWF, isOwner) {
     this.currentRole = role;
     this.currentForm = form;
     this.itemInWF = null;
     this.isUserOwner = null;
   }
-  
+
   // Static roles definition
   static roleformfieldmap = {
     admin: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
-          customer: { visible: false, editable: true },
-          date: { visible: true, editable: false },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          total: { visible: true, editable: true }
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
         }
       },
       orderDetailAdd: {
         fields: {
-          orderNumber: { visible: true, editable: true },
-          customer: { visible: true, editable: true },
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
-          discount: { visible: true, editable: true },
-          deliveryDate: { visible: true, editable: true }
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
         }
       },
       orderDetailEdit: {
         fields: {
-          orderNumber: { visible: true, editable: true },
-          customer: { visible: true, editable: true },
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
           products: { visible: true, editable: true },
-          discount: { visible: true, editable: true },
-          deliveryDate: { visible: true, editable: true }
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
         }
       },
+
+      catalog: {
+        fields: {
+          selectBranch: { visible: true, editable: true },
+          search: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          quantityController: { visible: true, editable: true },
+          addToCart: { visible: true, editable: true },
+          goToCart: { visible: true, editable: true },
+          sort: { visible: true, editable: true }
+        }
+      },
+
       customersList: {
         fields: {
           name: { visible: true, editable: true },
@@ -153,7 +217,7 @@ class RbacManager {
       supDetailAdd: {
         fields: {
           customerName: { visible: true, editable: false },
-          branch: { visible: true, editable:false },
+          branch: { visible: true, editable: false },
           issueType: { visible: true, editable: true },
           issueName: { visible: true, editable: true },
           issueDetails: { visible: true, editable: false },
@@ -166,7 +230,7 @@ class RbacManager {
       supDetailEdit: {
         fields: {
           customerName: { visible: true, editable: false },
-          branch: { visible: true, editable:false },
+          branch: { visible: true, editable: false },
           issueType: { visible: true, editable: true },
           issueName: { visible: true, editable: false },
           issueDetails: { visible: true, editable: false },
@@ -201,15 +265,6 @@ class RbacManager {
           scheduleDate: { visible: true, editable: true },
           assignTo: { visible: true, editable: true },
           notes: { visible: true, editable: true }
-        }
-      },
-      catelog: {
-        fields: {
-          categories: { visible: true, editable: true },
-          products: { visible: true, editable: true },
-          filters: { visible: true, editable: true },
-          sort: { visible: true, editable: true },
-          search: { visible: true, editable: true }
         }
       },
       prodDetail: {
@@ -251,11 +306,99 @@ class RbacManager {
         }
       }
     },
-   
-    branch_primary: {
-      // Define branch_primary permissions for all forms
-    },
+
     customer_primary: {
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: false, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: false, editable: false },
+          approvalButton: { visible: false, editable: false },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: false },
+          branchName: { visible: true, editable: false },
+          orderBy: { visible: true, editable: false },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: false },
+          paymentMethod: { visible: true, editable: false },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
+          deliveryCharges: { visible: true, editable: false },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: false },
+          vehicleNumber: { visible: true, editable: false },
+          images: { visible: true, editable: false },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: false },
+          orderFooter: { visible: true, editable: false },
+          btnSave: { visible: true, editable: false },
+          btnCancel: { visible: true, editable: false },
+          btnInvoice: { visible: true, editable: false },
+          btnInventory: { visible: true, editable: false },
+          actionButtons: { visible: true, editable: false },
+          btnApprove: { visible: false, editable: false },
+          btnReject: { visible: false, editable: false },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: false },
+          branchName: { visible: true, editable: false },
+          orderBy: { visible: true, editable: false },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: false },
+          paymentMethod: { visible: true, editable: false },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: true, editable: false },
+          deliveryCharges: { visible: true, editable: false },
+          expectedDeliveryDate: { visible: true, editable: false },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: false, editable: false },
+          vehicleNumber: { visible: false, editable: false },
+          images: { visible: false, editable: false },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: false, editable: false },
+          actionButtons: { visible: false, editable: false },
+          btnApprove: { visible: false, editable: false },
+          btnReject: { visible: false, editable: false },
+        }
+      },
+      catalog: {
+        fields: {
+          selectBranch: { visible: true, editable: true },
+          search: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          quantityController: { visible: true, editable: true },
+          addToCart: { visible: true, editable: true },
+          goToCart: { visible: true, editable: true },
+          sort: { visible: true, editable: true },
+          search: { visible: true, editable: true }
+        }
+      },
 
       supList: {
         fields: {
@@ -265,7 +408,7 @@ class RbacManager {
       supDetailAdd: {
         fields: {
           customerName: { visible: true, editable: false },
-          branch: { visible: true, editable:true },
+          branch: { visible: true, editable: true },
           issueType: { visible: true, editable: true },
           issueName: { visible: true, editable: true },
           issueDetails: { visible: true, editable: true },
@@ -278,7 +421,7 @@ class RbacManager {
       supDetailEdit: {
         fields: {
           customerName: { visible: true, editable: false },
-          branch: { visible: true, editable:true },
+          branch: { visible: true, editable: true },
           issueType: { visible: true, editable: true },
           issueName: { visible: true, editable: false },
           issueDetails: { visible: true, editable: false },
@@ -290,30 +433,657 @@ class RbacManager {
       },
       // Define customer_primary permissions for all forms
     },
+
+    branch_primary: {
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: false, editable: false },
+          branchName: { visible: true, editable: false },
+          orderBy: { visible: true, editable: false },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: false },
+          paymentMethod: { visible: true, editable: false },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
+          deliveryCharges: { visible: true, editable: false },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: false },
+          vehicleNumber: { visible: true, editable: false },
+          images: { visible: true, editable: false },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: false },
+          orderFooter: { visible: true, editable: false },
+          btnSave: { visible: true, editable: false },
+          btnCancel: { visible: true, editable: false },
+          btnInvoice: { visible: true, editable: false },
+          btnInventory: { visible: true, editable: false },
+          actionButtons: { visible: true, editable: false },
+          btnApprove: { visible: false, editable: false },
+          btnReject: { visible: false, editable: false },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: false },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: false },
+          paymentMethod: { visible: true, editable: false },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: true, editable: false },
+          deliveryCharges: { visible: true, editable: false },
+          expectedDeliveryDate: { visible: true, editable: false },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: false, editable: false },
+          vehicleNumber: { visible: false, editable: false },
+          images: { visible: false, editable: false },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: false, editable: false },
+          actionButtons: { visible: false, editable: false },
+          btnApprove: { visible: false, editable: false },
+          btnReject: { visible: false, editable: false },
+        }
+      },
+    },
+
     opsCordinator: {
-      // Define opsCordinator permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     opsManager: {
-      // Define opsManager permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     salesExecutive: {
-      // Define salesExecutive permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     areaSalesManager: {
-      // Define areaSalesManager permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     fieldEngineer: {
-      // Define fieldEngineer permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     maintenanceTechnician: {
-      // Define maintenanceTechnician permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
     },
+
     driver: {
-      // Define driver permissions for all forms
+      orderList: {
+        fields: {
+          orderNumber: { visible: true, editable: true },
+          companyName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          paymentStatus: { visible: true, editable: true },
+          toyalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          status: { visible: true, editable: true },
+          action: { visible: true, editable: true },
+          addButton: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+
+        }
+      },
+      orderDetailAdd: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          updatedDate: { visible: false, editable: false },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        }
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true }
+        }
+      },
     }
   };
 
-  static getRoles(){
+  static getRoles() {
     return Object.keys(RbacManager.roleformfieldmap);
   }
 
@@ -341,7 +1111,7 @@ class RbacManager {
    */
   isV(field) {
     const access = this.getFieldAccess(field);
-    return (access==null ? true : access.visible);
+    return (access == null ? true : access.visible);
   }
 
   /**
@@ -353,7 +1123,7 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access==null ? true : access.editable)&&(this.itemInWF==null?true:this.isUserOwner);
+    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner);
   }
 }
 

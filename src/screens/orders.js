@@ -8,6 +8,10 @@ import Pagination from '../components/Pagination';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -25,6 +29,9 @@ const getStatusClass = (status) => {
 };
 
 function Orders() {
+  const {  user } = useAuth();
+  const location = useLocation();
+  const formMode = location.state?.mode;
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,6 +45,12 @@ function Orders() {
 
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+
+  //RBAC
+  //use formMode to decide if it is editform or add form
+  const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'orderList');
+  const isV = rbacMgr.isV.bind(rbacMgr);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -67,7 +80,7 @@ function Orders() {
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('API did not return JSON. Check API URL and server.');
       }
-      
+
       const result = await response.json();
       if (result.status === 'Ok') {
         setFilteredOrders(result.data.data);
@@ -113,8 +126,8 @@ function Orders() {
       if (result.status === 'Ok' && result.data.data.length > 0) {
         nextOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
       }
-      // Navigate to orderDetails with addMode flag and nextOrderId
-      navigate('/orderDetails', { state: { order: { id: nextOrderId }, addMode: true } });
+      // Navigate to orderDetails with mode: 'add' and nextOrderId
+      navigate('/orderDetails', { state: { order: { id: nextOrderId }, mode: 'add' } });
     } catch (err) {
       setError('Failed to get next order number');
     } finally {
@@ -123,7 +136,7 @@ function Orders() {
   };
 
   const handleRowClick = (order) => {
-    navigate('/orderDetails', { state: { order } });
+    navigate('/orderDetails', { state: { order, mode: 'edit' } });
   };
 
   const handleCheckout = (order) => {
@@ -145,15 +158,17 @@ function Orders() {
   ];
 
   const columns = [
-    { key: 'id', header: 'Order #' },
-    { key: 'erpCustId', header: 'Customer' },
-    { key: 'erpBranchId', header: 'Branch' },
-    { key: 'entity', header: 'Entity' },
-    { key: 'paymentMethod', header: 'Payment Method' },
-    { key: 'deliveryDate', header: 'Delivery Date' },
-    { key: 'paidAmount', header: 'Paid Amount' },
-    { key: 'status', header: 'Status' },
-    { key: 'checkout', header: 'Checkout'}
+    { key: 'id', header: 'Order #', include: isV('orderNumber') },
+    { key: 'erpCustId', header: 'Customer', include: isV( 'companyName') },
+    { key: 'erpBranchId', header: 'Branch', include: isV( 'branchName') },
+    { key: 'entity', header: 'Entity', include: isV( 'entity') },
+    { key: 'paymentMethod', header: 'Payment Method', include: isV( 'paymentMethod') },
+    { key: 'deliveryDate', header: 'Delivery Date', include: isV( 'expectedDeliveryDate') },
+    {key: 'totalAmount', header: 'Total Amount', include: isV( 'totalAmount') },
+    { key: 'paidAmount', header: 'Paid Amount', include: isV( 'paidAmount') },
+    { key: 'paymentStatus', header: 'Payment Status', include: isV( 'paymentStatus') },
+    { key: 'status', header: 'Status', include: isV( 'status') },
+    { key: 'checkout', header: 'Checkout', include: isV( 'action') }
   ];
 
   // Paginate the filtered orders
@@ -167,16 +182,17 @@ function Orders() {
             <SearchInput onSearch={handleSearch} />
           </div>
           <div className="header-actions">
-            <ToggleButton 
+            {isV('approvalButton') && <ToggleButton
+            className="toggle-button"
               isToggled={isApprovalMode}
               onToggle={toggleApprovalMode}
-            />
-            <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>
+            />}
+            {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
             <ActionButton menuItems={orderMenuItems} />
           </div>
         </div>
-        <Table 
-          columns={columns}
+        <Table
+          columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}

@@ -12,6 +12,8 @@ import GetProducts from "../components/GetProducts";
 import QuantityController from '../components/QuantityController';
 import GetCustomers from '../components/GetCustomers';
 import GetBranches from '../components/GetBranches';
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac'; // Add this import
 
 const defaultOrder = {
   id: '',
@@ -22,7 +24,7 @@ const defaultOrder = {
   entity: '',
   paymentMethod: '',
   totalAmount: '',
-  paidAmount: '', // Use the correct field name
+  paidAmount: '',
   deliveryCharges: '',
   expectedDeliveryDate: '',
   createdAt: '',
@@ -36,19 +38,34 @@ const defaultOrder = {
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-
 function OrderDetails() {
+  // Existing code...
   const { i18n } = useTranslation();
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  // Get form mode from location state (add, edit, view)
+  const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
-  const addMode = location.state?.addMode || false;
+  
+  // Initialize RBAC manager
+  const rbacMgr = new RbacManager(
+    user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 
+    formMode === 'add' ? 'orderDetailAdd' : 'orderDetailEdit'
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+  
+  // Initialize form data
   const [formData, setFormData] = useState({
     ...defaultOrder,
     ...orderFromNav,
     id: orderFromNav.id || ''
   });
+  
+  // State variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
@@ -58,15 +75,58 @@ function OrderDetails() {
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [showBranchPopup, setShowBranchPopup] = useState(false);
   const [backendProducts] = useState([]);
-  
   const [popupImage, setPopupImage] = useState(null);
+  const [isEditing, setIsEditing] = useState(formMode === 'add' || formMode === 'edit');
+  const [nextOrderId, setNextOrderId] = useState('');
+  
+  // Fetch next order ID when in add mode
+  useEffect(() => {
+    const fetchNextOrderId = async () => {
+      if (formMode !== 'add') return;
+      
+      try {
+        const params = new URLSearchParams({
+          page: 1,
+          pageSize: 1,
+          sortBy: 'id',
+          sortOrder: 'desc'
+        });
+        
+        const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        const result = await response.json();
+        let newOrderId = 1;
+        
+        if (result.status === 'Ok' && result.data.data.length > 0) {
+          newOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
+        }
+        
+        setNextOrderId(newOrderId.toString());
+        setFormData(prev => ({
+          ...prev,
+          id: newOrderId.toString()
+        }));
+      } catch (err) {
+        console.error('Failed to get next order number:', err);
+        setError('Failed to get next order number');
+      }
+    };
+    
+    fetchNextOrderId();
+  }, [formMode, API_BASE_URL]);
+
   // Table columns
   const columns = [
-    { key: 'id', header: 'Product ID' },
+    { key: 'id', header: 'Product ID', include: isV('productIdCol') },
     {
       key: 'productName',
       header: 'Product Name',
-      render: (row) => row.productName || row.erpProdId || 'Unknown Product'
+      render: (row) => row.productName || row.erpProdId || 'Unknown Product',
+      include: isV('productNameCol'),
     },
     {
       key: 'quantity',
@@ -76,26 +136,24 @@ function OrderDetails() {
           <QuantityController
             itemId={row.id || row.product_id}
             quantity={row.quantity}
-            disabled={!addMode} // Disable in view mode
+            disabled={!isE('products')}
             onQuantityChange={(_, delta) => {
-              if (!addMode) return; // Skip if not in add mode
+              if (!isE('products')) return;
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                // Convert to number with parseInt to ensure we're doing numeric addition
                 const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
                 const newQty = currentQty + parseInt(delta, 10);
-                handleQuantityChange(idx, Math.max(1, newQty)); // Ensure minimum quantity is 1
+                handleQuantityChange(idx, Math.max(1, newQty));
               }
             }}
             onInputChange={(_, value) => {
-              if (!addMode) return; // Skip if not in add mode
+              if (!isE('products')) return;
               const idx = formData.products.findIndex(
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                // Make sure value is treated as a number and is at least 1
                 handleQuantityChange(idx, Math.max(1, parseInt(value, 10) || 1));
               }
             }}
@@ -104,12 +162,14 @@ function OrderDetails() {
             {row.unit && <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />}
           </span>
         </div>
-      )
+      ),
+      include: isV('quantityCol'),
     },
     { 
       key: 'unit', 
       header: 'Unit',
-      render: (row) => row.unit || ''
+      render: (row) => row.unit || '',
+      include: isV('unitCol'),
     },
     { 
       key: 'unitPrice', 
@@ -117,16 +177,17 @@ function OrderDetails() {
       render: (row) => {
         const price = parseFloat(row.unitPrice || 0);
         return isNaN(price) ? '0.00' : price.toFixed(2);
-      }
+      },
+      include: isV('unitPriceCol'),
     },
-    
     { 
       key: 'salesTaxRate', 
       header: 'Tax (SAR)',
       render: (row) => {
         const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
         return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
-      }
+      },
+      include: isV('salesTaxRateCol'),
     },
     { 
       key: 'netAmount', 
@@ -135,17 +196,19 @@ function OrderDetails() {
         const qty = parseFloat(row.quantity || 1);
         const price = parseFloat(row.unitPrice || 0);
         return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
-      }
+      },
+      include: isV('netAmountCol'),
     },
-    ...(addMode ? [{ key: 'actions', header: 'Actions' }] : [])
+    ...(isE('products') ? [{ key: 'actions', header: 'Actions' }] : [])
   ];
 
   // Fetch order details from backend
   useEffect(() => {
-    if (addMode) {
+    if (formMode === 'add') {
       setLoading(false);
       return;
     }
+    
     const fetchOrderDetails = async () => {
       setLoading(true);
       setError(null);
@@ -180,10 +243,11 @@ function OrderDetails() {
 
     fetchOrderDetails();
     // eslint-disable-next-line
-  }, [orderFromNav.id, addMode]);
+  }, [orderFromNav.id, formMode]);
+  
   // Fetch order product details
   useEffect(() => {
-    if (addMode) return;
+    if (formMode === 'add') return;
     const fetchOrderProducts = async () => {
       if (!orderFromNav.id) return;
       try {
@@ -234,11 +298,11 @@ function OrderDetails() {
 
     fetchOrderProducts();
     // eslint-disable-next-line
-  }, [orderFromNav.id, addMode]);
+  }, [orderFromNav.id, formMode]);
 
   // Add a default product row in add mode
   useEffect(() => {
-    if (addMode && formData.products.length === 0) {
+    if (formMode === 'add' && formData.products.length === 0) {
       // Do not add an empty row by default
       setFormData(prev => ({
         ...prev,
@@ -246,7 +310,7 @@ function OrderDetails() {
       }));
     }
     // eslint-disable-next-line
-  }, [addMode]);
+  }, [formMode]);
 
   // quantity change handler
   const handleQuantityChange = (idx, value) => {
@@ -271,6 +335,11 @@ function OrderDetails() {
     }));
   };
 
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+  };
+
   // Download invoice
   const handleDownloadInvoice = (orderId) => {
     alert(`Downloading invoice for order ID: ${orderId}`);
@@ -278,8 +347,8 @@ function OrderDetails() {
   };
 
   // Save handler
-  const handleSave = async (action = 'save') => {
-    if (addMode) {
+  const handleSave = async () => {
+    if (formMode === 'add') {
       // Validation - check if essential fields are filled
       if (!formData.erpCustId || !formData.erpBranchId) {
         alert(t('Customer and Branch are required fields.'));
@@ -654,312 +723,463 @@ function OrderDetails() {
 
   return (
     <Sidebar>
-      <div className="order-details-container">
-        <div className={`order-details-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
-          <div className="order-details-body">
-            <h2 className="order-details-title">{`${t('Order #')} ${formData.id}`}</h2>
-            <div className="order-details-section">
-              <div className="order-details-grid">
-                <div className="order-details-field">
-                  <label htmlFor="customerField">{t('Customer Company Name')}</label>
-                  {addMode ? (
-                    <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {isV('orderDetails') && (
+        <div className="order-details-container">
+          <div className={`order-details-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
+            <div className="order-details-body">
+              <h2 className="order-details-title">
+                {formMode === 'add' 
+                  ? `${t('New Order')} #${nextOrderId}` 
+                  : `${t('Order #')} ${formData.id}`}
+              </h2>
+              <div className="order-details-section">
+                <div className="order-details-grid">
+                  {isV('customerName') && (
+                    <div className="order-details-field">
+                      <label htmlFor="customerField">{t('Customer Company Name')}</label>
+                      {formMode === 'add' ? (
+                        <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input 
+                            id="customerField"
+                            name="selectedCustomerName" 
+                            value={formData.selectedCustomerName } 
+                            onClick={() => isE('customerName') && setShowCustomerPopup(true)}
+                            className="customer-input"
+                            placeholder={t('Click to select customer')}
+                            disabled={!isE('customerName')}
+                          />
+                        </div>
+                      ) : (
+                        <input 
+                          id="erpCustIdField"
+                          name="erpCustId" 
+                          value={formData.erpCustId ?? ''} 
+                          disabled={!isE('customerName')}
+                        />
+                      )}
+                    </div>
+                  )}
+                  
+                  {isV('branchName') && (
+                    <div className="order-details-field">
+                      <label>{t('Branch')}</label>
+                      {formMode === 'add' ? (
+                        <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <input 
+                            id="branchField"
+                            name="selectedBranchName" 
+                            value={formData.selectedBranchName || ''} 
+                            onClick={() => {
+                              if (!formData.erpCustId) {
+                                alert(t('Please select a customer first'));
+                                return;
+                              }
+                              if (isE('branchName')) setShowBranchPopup(true);
+                            }}
+                            className="customer-input"
+                            placeholder={t('Click to select branch')}
+                            readOnly
+                            disabled={!isE('branchName')}
+                          />
+                        </div>
+                      ) : (
+                        <input 
+                          id="erpBranchIdField"
+                          name="erpBranchId" 
+                          value={formData.erpBranchId ?? ''} 
+                          disabled 
+                          readOnly
+                        />
+                      )}
+                    </div>
+                  )}
+                  
+                  {isV('orderBy') && (
+                    <div className="order-details-field">
+                      <label>{t('Order By')}</label>
                       <input 
-                        id="customerField"
-                        name="selectedCustomerName" 
-                        value={formData.selectedCustomerName || ''} 
-                        onClick={() => setShowCustomerPopup(true)}
-                        className="customer-input"
-                        placeholder={t('Click to select customer')}
-                        readOnly // Add readOnly prop
+                        name="orderBy" 
+                        value={formData.orderBy ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('orderBy')} 
                       />
                     </div>
-                  ) : (
-                    <input 
-                      id="erpCustIdField"
-                      name="erpCustId" 
-                      value={formData.erpCustId ?? ''} 
-                      disabled 
-                      readOnly // Add readOnly prop
-                    />
                   )}
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Branch')}</label>
-                  {addMode ? (
-                    <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  
+                  {isV('erpId') && (
+                    <div className="order-details-field">
+                      <label>{t('ERP#')}</label>
                       <input 
-                        id="branchField"
-                        name="selectedBranchName" 
-                        value={formData.selectedBranchName || ''} 
-                        onClick={() => {
-                          if (!formData.erpCustId) {
-                            alert(t('Please select a customer first'));
-                            return;
-                          }
-                          setShowBranchPopup(true);
-                        }}
-                        className="customer-input"
-                        placeholder={t('Click to select branch')}
-                        readOnly // Add readOnly prop
+                        name="erp" 
+                        value={formData.erp ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('erpId')} 
+                        placeholder={t('ERP ID')}
                       />
                     </div>
-                  ) : (
-                    <input 
-                      id="erpBranchIdField"
-                      name="erpBranchId" 
-                      value={formData.erpBranchId ?? ''} 
-                      disabled 
-                      readOnly // Add readOnly prop
-                    />
                   )}
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Order By')}</label>
-                  <input name="orderBy" value={formData.orderBy ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('ERP#')}</label>
-                  <input 
-                    name="erp" 
-                    value={formData.erp ?? ''} 
-                    onChange={handleInputChange} 
-                    disabled={true} // Always disable this field
-                    placeholder={t('ERP ID')}
-                  />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Entity')}</label>
-                  {addMode ? (
-                    <select 
-                      name="entity" 
-                      value={formData.entity || ''} 
-                      onChange={handleInputChange}
-                      className="entity-dropdown"
-                    >
-                      <option value="">{t('Select Entity')}</option>
-                      {entityOptions.map((entity, index) => (
-                        <option key={index} value={entity}>
-                          {entity}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input name="entity" value={formData.entity || ''} disabled />
-                  )}
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Payment Method')}</label>
-                  <input name="paymentMethod" value={formData.paymentMethod ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Total Amount')}</label>
-                  <input name="totalAmount" value={formData.totalAmount ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Amount Paid')}</label>
-                  <input name="paidAmount" value={formData.paidAmount ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Delivery Charges')}</label>
-                  <input name="deliveryCharges" value={formData.deliveryCharges ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Delivery Date')}</label>
-                  <input name="expectedDeliveryDate" value={formData.expectedDeliveryDate ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Created Date')}</label>
-                  <input name="createdDate" value={formData.createdAt ?? ''} disabled />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Updated Date')}</label>
-                  <input name="updatedDate" value={formData.updatedAt ?? ''} disabled />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Driver')}</label>
-                  <input name="driver" value={formData.driver ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-                <div className="order-details-field">
-                  <label>{t('Vehicle Number')}</label>
-                  <input name="vehicleNumber" value={formData.vehicleNumber ?? ''} onChange={handleInputChange} disabled={!addMode} />
-                </div>
-              </div>
-              <label>{t('Delivery images')}</label>
-              <div className="maintenance-images-list">
-                <button
-                  type="button"
-                  className="maintenance-add-image-btn"
-                  onClick={openFileDialog}
-                  title="Add Image"
-                >
-                  +
-                </button>
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  style={{ display: 'none' }}
-                  onChange={handleAddImage}
-                />
-                {images.map((img, idx) => (
-                  <div
-                    key={idx}
-                    className="maintenance-image-placeholder"
-                    style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-                    onClick={() => img && setPopupImage(img)}
-                    title={img ? 'Click to view' : ''}
-                  />
-                ))}
-              </div>
-            </div>
-            <div className="order-products-section">
-              <h3 className="order-details-subtitle">{t('Products')}</h3>
-              {addMode && (
-                <button
-                  type="button"
-                  className="order-action-btn approve"
-                  onClick={() => setShowProductPopup(true)}
-                  style={{ marginBottom: 8 }}
-                >
-                  Add products
-                </button>
-              )}
-              {/* Hide table in add mode until products are selected */}
-              {(!addMode || (formData.products && formData.products.length > 0)) && (
-                <Table
-                  columns={columns}
-                  data={formData.products.filter(
-                    p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
-                  )}
-                  actionButtons={
-                    addMode
-                      ? (row) => (
-                        <button
-                          className="order-action-btn reject"
-                          style={{ padding: '4px 10px', fontSize: 14 }}
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteProductRow(formData.products.indexOf(row));
-                          }}
-                          type="button"
+                  
+                  {isV('entity') && (
+                    <div className="order-details-field">
+                      <label>{t('Entity')}</label>
+                      {formMode === 'add' ? (
+                        <select 
+                          name="entity" 
+                          value={formData.entity || ''} 
+                          onChange={handleInputChange}
+                          className="entity-dropdown"
+                          disabled={!isE('entity')}
                         >
-                          {t('Delete')}
-                        </button>
-                      )
-                      : undefined
-                  }
-                />
+                          <option value="">{t('Select Entity')}</option>
+                          {entityOptions.map((entity, index) => (
+                            <option key={index} value={entity}>
+                              {entity}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input 
+                          name="entity" 
+                          value={formData.entity || ''} 
+                          disabled 
+                        />
+                      )}
+                    </div>
+                  )}
+                  
+                  {isV('paymentMethod') && (
+                    <div className="order-details-field">
+                      <label>{t('Payment Method')}</label>
+                      <input 
+                        name="paymentMethod" 
+                        value={formData.paymentMethod ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('paymentMethod')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('totalAmount') && (
+                    <div className="order-details-field">
+                      <label>{t('Total Amount')}</label>
+                      <input 
+                        name="totalAmount" 
+                        value={formData.totalAmount ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('totalAmount')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('paidAmount') && (
+                    <div className="order-details-field">
+                      <label>{t('Amount Paid')}</label>
+                      <input 
+                        name="paidAmount" 
+                        value={formData.paidAmount ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('paidAmount')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('deliveryCharges') && (
+                    <div className="order-details-field">
+                      <label>{t('Delivery Charges')}</label>
+                      <input 
+                        name="deliveryCharges" 
+                        value={formData.deliveryCharges ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('deliveryCharges')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('expectedDeliveryDate') && (
+                    <div className="order-details-field">
+                      <label>{t('Delivery Date')}</label>
+                      <input 
+                        name="expectedDeliveryDate" 
+                        value={formData.expectedDeliveryDate ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('expectedDeliveryDate')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('createdDate') && (
+                    <div className="order-details-field">
+                      <label>{t('Created Date')}</label>
+                      <input 
+                        name="createdDate" 
+                        value={formData.createdAt ?? ''} 
+                        disabled 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('updatedDate') && (
+                    <div className="order-details-field">
+                      <label>{t('Updated Date')}</label>
+                      <input 
+                        name="updatedDate" 
+                        value={formData.updatedAt ?? ''} 
+                        disabled 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('driver') && (
+                    <div className="order-details-field">
+                      <label>{t('Driver')}</label>
+                      <input 
+                        name="driver" 
+                        value={formData.driver ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('driver')} 
+                      />
+                    </div>
+                  )}
+                  
+                  {isV('vehicleNumber') && (
+                    <div className="order-details-field">
+                      <label>{t('Vehicle Number')}</label>
+                      <input 
+                        name="vehicleNumber" 
+                        value={formData.vehicleNumber ?? ''} 
+                        onChange={handleInputChange} 
+                        disabled={!isE('vehicleNumber')} 
+                      />
+                    </div>
+                  )}
+                </div>
+                
+                {isV('images') && (
+                  <>
+                    <label>{t('Delivery images')}</label>
+                    <div className="maintenance-images-list">
+                      {isV('addImages') && (
+                        <>
+                          <button
+                            type="button"
+                            className="maintenance-add-image-btn"
+                            onClick={openFileDialog}
+                            title="Add Image"
+                            disabled={!isE('vehicleNumber')}
+                          >
+                            +
+                          </button>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            ref={fileInputRef}
+                            style={{ display: 'none' }}
+                            onChange={handleAddImage}
+                          />
+                        </>
+                      )}
+                      {images.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className="maintenance-image-placeholder"
+                          style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+                          onClick={() => img && setPopupImage(img)}
+                          title={img ? 'Click to view' : ''}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {isV('products') && (
+                <div className="order-products-section">
+                  <h3 className="order-details-subtitle">{t('Products')}</h3>
+                  {formMode === 'add' || (formMode === 'edit' && isE('products')) && (
+                    <button
+                      type="button"
+                      className="order-action-btn approve"
+                      onClick={() => setShowProductPopup(true)}
+                      style={{ marginBottom: 8 }}
+                    >
+                      {t('Add products')}
+                    </button>
+                  )}
+                  {/* Hide table in add mode until products are selected */}
+                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
+                    <Table
+                      columns={columns}
+                      data={formData.products.filter(
+                        p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
+                      )}
+                      actionButtons={
+                        formMode === 'add' && isE('products')
+                          ? (row) => (
+                            <button
+                              className="order-action-btn reject"
+                              style={{ padding: '4px 10px', fontSize: 14 }}
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteProductRow(formData.products.indexOf(row));
+                              }}
+                              type="button"
+                            >
+                              {t('Delete')}
+                            </button>
+                          )
+                          : undefined
+                      }
+                    />
+                  )}
+                </div>
               )}
             </div>
-          </div>
-          <div className="order-details-footer">
-            <div className="order-status">
-              <span className="status-label">{t('Status')}:</span>
-              <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'pending'}`}>
-                {t(formData.status) || t('Pending')}
-              </span>
-            </div>
+            
+            {isV('orderFooter') && (
+              <div className="order-details-footer">
+                {isV('orderStatus') && (
+                  <div className="order-status">
+                    <span className="status-label">{t('Status')}:</span>
+                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'pending'}`}>
+                      {t(formData.status) || t('Pending')}
+                    </span>
+                  </div>
+                )}
 
-            <button className="order-action-btn" onClick={() => handleSave('save')}>
-              {t('Save Changes')}
-            </button>
-            <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
-              {t('Cancel Order')}
-            </button>
-            <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
-              {t('Download Invoice')}
-            </button>
-            <button className="order-action-btn" onClick={() => setShowInventory(true)}>
-              {t('Get Inventory')}
-            </button>
-            <div className="order-details-actions">
-              <button className="order-action-btn approve" onClick={() => handleSubmit('approve')} disabled={formData.status === 'approved'}>
-                {t('Approve')}
-              </button>
-              <button className="order-action-btn reject" onClick={() => handleSubmit('reject')} disabled={formData.status === 'approved'}>
-                {t('Reject')}
-              </button>
-            </div>
+                {isV('btnSave') && isE('btnSave') && (
+                  <button className="order-action-btn" onClick={() => handleSave('save')}>
+                    {t('Save Changes')}
+                  </button>
+                )}
+                
+                {isV('btnCancel') && isE('btnCancel') && (
+                  <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
+                    {t('Cancel Order')}
+                  </button>
+                )}
+                
+                {isV('btnInvoice') && isE('btnInvoice') && (
+                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+                    {t('Download Invoice')}
+                  </button>
+                )}
+                
+                {isV('btnInventory') && isE('btnInventory') && (
+                  <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+                    {t('Get Inventory')}
+                  </button>
+                )}
+                
+                {isV('actionButtons') && (
+                  <div className="order-details-actions">
+                    {isV('btnApprove') && isE('btnApprove') && (
+                      <button 
+                        className="order-action-btn approve" 
+                        onClick={() => handleSubmit('approve')} 
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Approve')}
+                      </button>
+                    )}
+                    
+                    {isV('btnReject') && isE('btnReject') && (
+                      <button 
+                        className="order-action-btn reject" 
+                        onClick={() => handleSubmit('reject')} 
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Reject')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-        <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
-        <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
-        <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
-        {/* Product Popup */}
-        {showProductPopup && (
-          <GetProducts
-            open={showProductPopup}
-            onClose={() => setShowProductPopup(false)}
-            onSelectProduct={handleSelectProduct}
-            API_BASE_URL={API_BASE_URL}
-            token={localStorage.getItem('token')}
-            customerId={formData.customerId}
-            entity={formData.entity}
-            t={t}
-          />
-        )}
-        {/* Customer Popup */}
-        {showCustomerPopup && (
-          <GetCustomers
-            open={showCustomerPopup}
-            onClose={() => setShowCustomerPopup(false)}
-            onSelectCustomer={handleSelectCustomer}
-            API_BASE_URL={API_BASE_URL}
-            t={t}
-          />
-        )}
-        {/* Branch Popup */}
-        {showBranchPopup && (
-          <GetBranches
-            open={showBranchPopup}
-            onClose={() => setShowBranchPopup(false)}
-            onSelectBranch={handleSelectBranch}
-            customerId={formData.customerId}
-            API_BASE_URL={API_BASE_URL}
-            t={t}
-          />
-        )}
-        {/* Image Popup */}
-        {popupImage && (
-          <div
-            className="image-popup-overlay"
-            onClick={() => setPopupImage(null)}
-            style={{
-              position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,
-              background: 'rgba(0,0,0,0.7)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000
-            }}
-          >
-            <img
-              src={popupImage}
-              alt="Preview"
-              style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8, background: '#fff' }}
-              onClick={e => e.stopPropagation()}
+          
+          {/* Rest of the component with modals and popups */}
+          <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
+          <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
+          <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+          
+          {/* Product Popup */}
+          {showProductPopup && (
+            <GetProducts
+              open={showProductPopup}
+              onClose={() => setShowProductPopup(false)}
+              onSelectProduct={handleSelectProduct}
+              API_BASE_URL={API_BASE_URL}
+              token={localStorage.getItem('token')}
+              customerId={formData.customerId}
+              entity={formData.entity}
+              t={t}
             />
-            <button
+          )}
+          
+          {/* Customer Popup */}
+          {showCustomerPopup && (
+            <GetCustomers
+              open={showCustomerPopup}
+              onClose={() => setShowCustomerPopup(false)}
+              onSelectCustomer={handleSelectCustomer}
+              API_BASE_URL={API_BASE_URL}
+              t={t}
+            />
+          )}
+          
+          {/* Branch Popup */}
+          {showBranchPopup && (
+            <GetBranches
+              open={showBranchPopup}
+              onClose={() => setShowBranchPopup(false)}
+              onSelectBranch={handleSelectBranch}
+              customerId={formData.customerId}
+              API_BASE_URL={API_BASE_URL}
+              t={t}
+            />
+          )}
+          
+          {/* Image Popup */}
+          {popupImage && (
+            <div
+              className="image-popup-overlay"
               onClick={() => setPopupImage(null)}
               style={{
-                position: 'absolute',
-                top: 20,
-                right: 40,
-                fontSize: 24,
-                background: 'transparent',
-                color: '#fff',
-                border: 'none',
-                cursor: 'pointer'
+                position: 'fixed',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000
               }}
-              aria-label="Close"
             >
-              &times;
-            </button>
-          </div>
-        )}
-      </div>
+              <img
+                src={popupImage}
+                alt="Preview"
+                style={{ maxHeight: '80vh', maxWidth: '90vw', borderRadius: 8, background: '#fff' }}
+                onClick={e => e.stopPropagation()}
+              />
+              <button
+                onClick={() => setPopupImage(null)}
+                style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 40,
+                  fontSize: 24,
+                  background: 'transparent',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </Sidebar>
   );
 }
