@@ -126,6 +126,10 @@ function Orders() {
     navigate('/orderDetails', { state: { order } });
   };
 
+  const handleCheckout = (order) => {
+    navigate('/checkout', { state: { order } });
+  };
+
   // Action menu for Orders page
   const orderMenuItems = [
     {
@@ -149,7 +153,8 @@ function Orders() {
     { key: 'deliveryDate', header: 'Delivery Date' },
     { key: 'paidAmount', header: 'Paid Amount' },
     { key: 'customerApproval', header: 'Customer Approval' },
-    { key: 'status', header: 'Status' }
+    { key: 'status', header: 'Status' },
+    { key: 'checkout', header: 'Checkout'}
   ];
 
   // Paginate the filtered orders
@@ -176,6 +181,7 @@ function Orders() {
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}
+          onCheckout={handleCheckout}
         />
         <Pagination
           currentPage={page}

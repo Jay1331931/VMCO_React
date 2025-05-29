@@ -8,9 +8,9 @@ function ProductPopup({
     onQuantityChange,
     onInputChange,
     onClose,
-    onAddToCart // Add this new prop
+    onAddToCart
 }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const mainImage = product.image || '';
     const additionalImages = Array.isArray(product.additionalImages) ? product.additionalImages : [];
@@ -73,7 +73,9 @@ function ProductPopup({
                             <span className="popup-product-unit-label">{t('Unit Price')}:</span>
                             <span className="popup-product-unit-value">{product.unitPrice} <span className="popup-product-currency">SAR</span></span>
                         </div>
-                        <p className="popup-product-description">{product.description || t('No description available')}</p>
+                        <p className="popup-product-description">
+                            {(i18n.language === 'en' ? product.description : product.descriptionLc)}
+                        </p>
                         <QuantityController
                             itemId={product.id}
                             quantity={quantities[product.id] || 0}

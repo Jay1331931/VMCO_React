@@ -5,12 +5,45 @@ import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter'; // Import the date formatter
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
 
 function MaintenanceDetails() {
-const { t, i18n } = useTranslation();
+
+  const defaultTicket = {
+    "id": null,
+    "requestId": null,
+    "customerId": null,
+    "branchId": null,
+    "category": null,
+    "issueName": null,
+    "issueDetails": null,
+    "urgencyLevel": null,
+    "machineSerialNumber": null,
+    "warrantyEndDate": null,
+    "attachment": null,
+    "status": null,
+    "assignedTeamMember": null,
+    "assignedTeamMemberDept": null,
+    "comments": [],
+    "chargers": null,
+    "customerRegion": null,
+    "branchRegion": null,
+  };
+            
+  const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const location = useLocation();
-  const ticket = location.state?.ticket || {};
+  const formMode = location.state?.mode;
+  const { token, user, isAuthenticated, logout } = useAuth();
+
+    //RBAC
+  //use formMode to decide if it is editform or add form
+  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+  const [ticket, setTicket] = useState(location.state?.ticket || defaultTicket);
   
   // State for branches dropdown
   const [branches, setBranches] = useState([]);
@@ -34,10 +67,15 @@ const { t, i18n } = useTranslation();
     try {
       // Replace with your actual API endpoint URL
       const apiUrl = process.env.REACT_APP_API_BASE_URL 
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId}`
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId? ticket.customerId : user.customerId}/pagination?page=1&pageSize=10&sortBy=branch_name&sortOrder=asc`
         : 'http://localhost:3000/api/branches';
         
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl,{
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'          
+        });
+
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -66,7 +104,11 @@ const { t, i18n } = useTranslation();
         ? `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=10&sortOrder=asc&filters={"designation": "${supportStaffDesignation}"}`
         : 'http://localhost:3000/api/maintenance/employees';
         
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl,{
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'          
+        });
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -85,6 +127,7 @@ const { t, i18n } = useTranslation();
   // Fetch employees on component mount
   useEffect(() => {
     fetchEmployees();
+    fetchBranches();
   }, []);
 
   // Handle branch click to load options
@@ -196,7 +239,7 @@ const { t, i18n } = useTranslation();
               <label>Branch</label>
               <select 
                 value={selectedBranch} 
-                disabled={!isEditing}
+                disabled={false}
                 onChange={handleBranchChange}
                 onClick={handleBranchClick}
               >
@@ -220,7 +263,7 @@ const { t, i18n } = useTranslation();
             </div>
             <div className="maintenance-details-field">
               <label>Issue Type</label>
-              <select value={ticket.category} disabled> {/* TODO:Issue types to be read and populaated from basic masters */}
+              <select value={ticket.category} > {/* TODO:Issue types to be read and populaated from basic masters */}
                 <option>Issue Type</option>
                 <option>Payment</option>
                 <option>Delivery</option>
@@ -229,28 +272,28 @@ const { t, i18n } = useTranslation();
             </div>
             <div className="maintenance-details-field">
               <label>Issue Name</label>
-              <input value={ticket.issueName} disabled />
+              <input value={ticket.issueName}/>
             </div>
             <div className="maintenance-details-field">
               <label>Created Date</label>
-              <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')} disabled />
+              <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')}  />
             </div>
             <div className="maintenance-details-field">
               <label>Machine Serial Number</label>
-              <input value={ticket.machineSerialNumber} disabled />
+              <input value={ticket.machineSerialNumber}  />
             </div>
             <div className="maintenance-details-field">
               <label>Warranty Date</label>
-              <input value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')} disabled />
+              <input value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')}  />
             </div>
             <div className="maintenance-details-field">
               <label>Maitenance Charges</label>
-              <input value={ticket.chargers.maintenance} disabled />
+              <input value={ticket.chargers?.maintenance}  />
             </div>
           </div>
           <div className="maintenance-details-field maintenance-details-textarea">
             <label>Issue Details</label>
-            <textarea value={ticket.issueDetails} disabled />
+            <textarea value={ticket.issueDetails}  />
           </div>
           <div className='attachments'>
           <div className="maintenance-details-images">
@@ -321,7 +364,7 @@ const { t, i18n } = useTranslation();
       <div className="support-details-footer">
         <div className="support-status">
           <span>Order Status:</span>
-          <span className={`order-status-badge status-${ticket.status.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
+          <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
         </div>
         <div className="support-assign">
           <span>Assign to:</span>

@@ -11,6 +11,8 @@ import Dropdown from '../components/DropDown';
 import Tabs from '../components/Tabs';
 import ProductPopup from '../components/ProductPopup';
 import SearchInput from '../components/SearchInput';
+import { useAuth } from '../context/AuthContext';
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -24,10 +26,11 @@ const categories = [
 ];
 
 function Catalog() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState(categories[0].value);
     const [selectedLocation, setSelectedLocation] = useState('');
+    const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [branches, setBranches] = useState([]);
     const [quantities, setQuantities] = useState({});
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -43,7 +46,8 @@ function Catalog() {
     const [subCategoryFilter, setSubCategoryFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState("");
     const productsPerPage = 60;
-    
+    const { token, user, isAuthenticated, logout } = useAuth();
+    console.log('User Dataaaaa:', user);
     // First filter products based on entity and other criteria
     const [filteredProducts, setFilteredProducts] = useState([]);
 
@@ -53,59 +57,51 @@ function Catalog() {
         label: category.label
     }));
 
-    // Helper function to determine if a product is a machine or not
-    const isProductMachine = (product) => {
-        if (!product) return false;
-        
-        // Check explicit productType field first
-        if (product.productType === 'machine' || product.product_type === 'machine') return true;
-        if (product.productType === 'consumable' || product.product_type === 'consumable') return true;
-        
-        // Check category and subCategory fields
-        const categoryLower = (product.category || '').toLowerCase();
-        const subCategoryLower = (product.subCategory || product.sub_category || '').toLowerCase();
-        
-        // Look for machine-related keywords in category or subcategory
-        const machineKeywords = ['machine', 'equipment', 'appliance', 'device'];
-        const consumableKeywords = ['consumable', 'supply', 'accessory', 'part'];
-        
-        // First check for machine keywords
-        for (const keyword of machineKeywords) {
-            if (categoryLower.includes(keyword) || subCategoryLower.includes(keyword)) {
-                return true;
-            }
+    const customerId = user?.customerId;
+    // Update selectedCustomerId whenever customerId changes
+    useEffect(() => {
+        if (customerId) {
+            setSelectedCustomerId(customerId);
         }
-        
-        // Then check for consumable keywords - if found, it's definitely not a machine
-        for (const keyword of consumableKeywords) {
-            if (categoryLower.includes(keyword) || subCategoryLower.includes(keyword)) {
-                return false;
-            }
-        }
-        
-        // If we can't determine based on keywords, default behavior depends on which tab we're in
-        // In most cases, if we can't tell, it's safer to treat as a consumable
-        return false;
-    };
-    
+    }, [customerId]);
+
+       
     // Map product fields from backend to component props
-    const mapProductToCardProps = (product) => {
+    const mapProductToCardProps = useCallback((product) => {
+        const currentLanguage = i18n.language;
+        
+        // Choose the right product name based on language
+        let productName = product.productName || product.product_name;
+        
+        // If language is not English and we have a localized name, use it
+        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
+            productName = product.product_name_lc || product.productNameLc || productName;
+        }
+        
+        // Choose the right product description based on language
+        let productDescription = product.description;
+        
+        // If language is not English and we have a localized description, use it
+        if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
+            productDescription = product.description_lc || product.descriptionLc;
+        }
+        
         return {
             id: product.id,
-            name: product.productName || product.product_name || "Unknown Product", // Support both field formats
-            code: product.erpProdId || product.erp_prod_id || "No ID", // Support both field formats
-            image: product.image, // Add image URL if available
-            description: product.description,
+            name: productName, // Language-aware
+            code: product.erpProdId || product.erp_prod_id || "No ID",
+            image: product.image,
+            description: productDescription, // Now language-aware
             category: product.category,
             subCategory: product.sub_category || product.subCategory,
-            entity: product.entity, // Make sure entity is included in mapped props
+            entity: product.entity,
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
-            moq: product.moq || product.minimumOrderQuantity || 0, // Make sure MOQ is included
+            moq: product.moq || product.minimumOrderQuantity || 0,
             // Keep the original data too for use in other places
             ...product
         };
-    };
+    }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
     
     // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
@@ -168,7 +164,7 @@ function Catalog() {
                     // Add search query
                     if (searchQuery) {
                         params.append('search', searchQuery);
-                        params.append('searchFields', 'productName,product_name');
+                        params.append('searchFields', 'productName,product_name,product_name_lc,productNameLc');
                     }
 
                     const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
@@ -284,12 +280,16 @@ function Catalog() {
             const searchLower = searchQuery.toLowerCase().trim();
             filtered = filtered.filter(product => {
                 const productName = (product.productName || product.product_name || '').toLowerCase();
+                const localizedName = (product.product_name_lc || product.productNameLc || '').toLowerCase();
                 const productCode = (product.erpProdId || product.erp_prod_id || '').toLowerCase();
                 const productDescription = (product.description || '').toLowerCase();
+                const localizedDescription = (product.description_lc || product.descriptionLc || '').toLowerCase();
                 
                 return productName.includes(searchLower) || 
+                       localizedName.includes(searchLower) ||
                        productCode.includes(searchLower) ||
-                       productDescription.includes(searchLower);
+                       productDescription.includes(searchLower) ||
+                       localizedDescription.includes(searchLower);
             });
         }
         
@@ -426,7 +426,9 @@ useEffect(() => {
             // Map branches to dropdown format with proper field validation
             const branchOptions = branchData.map(branch => ({
                 value: String(branch.id || branch.branch_id), // Ensure IDs are strings
-                label: branch.branch_name_en || branch.branchNameEn,
+                label: i18n.language === 'en' ? 
+                    (branch.branch_name_en || branch.branchNameEn) : 
+                    (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
                 erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
                 // Keep additional data for reference if needed
                 raw: branch
@@ -445,10 +447,11 @@ useEffect(() => {
     };
     
     fetchBranches();
-}, [API_BASE_URL]); 
+}, [API_BASE_URL, i18n.language]); // Keep i18n.language as dependency to refresh branches on language change
 
 //  Add to cart functionality
 const handleAddToCart = async (productId) => {
+    console.log('Adding product to cart:', productId);
     try {
         // Check if a branch is selected
         if (!selectedLocation) {
@@ -461,8 +464,8 @@ const handleAddToCart = async (productId) => {
         if (!product) return;
         
         // Get MOQ and ensure quantity meets it
-        const moq = Number(product.moq || 0);
-        let quantity = quantities[productId] || 0;
+        const moq = Number(product.moq);
+        let quantity = quantities[productId];
         
         // If quantity is less than MOQ, set it to MOQ
         if (quantity < moq) {
@@ -483,7 +486,7 @@ const handleAddToCart = async (productId) => {
         const sugarTaxPrice = product.sugarTaxPrice;
 
         // First check if this item already exists in the cart
-        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"customer_id":3,"branch_id":${selectedLocation},"product_id":${productId}}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -493,7 +496,7 @@ const handleAddToCart = async (productId) => {
 
         const checkResult = await checkResponse.json();
         console.log('Check cart response:', checkResult);
-        
+
         if (checkResult.data.data && checkResult.data.data.length > 0) {
             // Item exists in cart, update the quantity
             const existingItem = checkResult.data.data[0];
@@ -517,16 +520,18 @@ const handleAddToCart = async (productId) => {
             }
             
             alert(t('Product quantity updated in cart successfully'));
-        } else {
+        } 
+        else {
             // Item doesn't exist in cart, add it as new
             const cartItem = {
-                customerId: '3',// The customer_id is read from the JWT token in the backend
+                customerId: selectedCustomerId || '3',
                 branchId: selectedLocation,
                 productId: product.id,
-                productName: product.productName || product.product_name || '',
+                productName: product.productName || product.product_name,
+                productNameLc: product.productNameLc || product.product_name_lc,
                 erpProdId: product.erpProdId || product.erp_prod_id || '',
-                entity: product.entity || '',
-                category: product.category || '',
+                entity: product.entity, // Keep original case
+                category: product.category, // Keep original case
                 unit: product.unit || 'EA',
                 unitPrice: unitPrice,
                 quantityOrdered: quantity,
@@ -703,7 +708,7 @@ const getFilteredSubcategories = () => {
                             options={branches}
                             className="location-select"
                             label={t("Delivery to:")}
-                            placeholder={t("Select branch")} // Add a placeholder
+                            placeholder={t("Select Branch")} // Add a placeholder
                             disabled={isLoading || branches.length === 0} // Disable when loading or no branches
                         />
                         {/* Add a loading indicator within the location selector */}
