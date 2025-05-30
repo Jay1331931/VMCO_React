@@ -1,10 +1,10 @@
 // RBAC Manager class
 class RbacManager {
-  constructor(role, form,inWF,isOwner) {
+  constructor(role, form,inWF = null,isOwner = false) {
     this.currentRole = role;
     this.currentForm = form;
-    this.itemInWF = null;
-    this.isUserOwner = null;
+    this.itemInWF = inWF;
+    this.isUserOwner = isOwner;
   }
   
   // Static roles definition
