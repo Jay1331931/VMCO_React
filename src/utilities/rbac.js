@@ -845,8 +845,7 @@ class RbacManager {
           creditPeriod: { visible: true, editable: true },
         }
       },
-      
-    },
+    
     salesExecutive: {
       orderList: {
         fields: {
