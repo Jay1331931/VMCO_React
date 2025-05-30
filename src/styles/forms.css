@@ -328,16 +328,39 @@
   
   
   /* Individual styles */
-  .customers .save {
+  .customers .save 
+  {
     color: black;
     background-color: white;
     border: 1px solid black;
   }
+
+  .customers .save:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   
+  .customers .savechanges {
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+  }
+
+  .customers .savechanges:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   .customers .block {
     color: black;
     background-color: white;
     border: 1px solid black;
+  }
+  .customers .block:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
   }
   
   .customers .approve {
@@ -345,11 +368,20 @@
     color: white;
     border: none;
   }
-  
+  .customers .approve:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   .customers .reject {
     background-color: darkorange; /* Orange */
     color: white;
     border: none;
+  }
+  .customers .reject:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
   }
   
   .hidden-file-input {
