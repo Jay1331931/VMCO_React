@@ -25,9 +25,13 @@ function Maintenance() {
         const apiUrl = process.env.REACT_APP_API_BASE_URL 
           ? `${process.env.REACT_APP_API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
           : 'http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc';
-          
-        const response = await fetch(apiUrl);
-        
+
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -78,12 +82,12 @@ function Maintenance() {
     )
   );
   const handleAdd = () => {
-    navigate('/maintenanceDetails')
+    navigate('/maintenanceDetails', { state: { ticket: {}, mode: 'add' } });
   }
-  
+
   // Handle row click to navigate to Maintenance details page with ticket details
   const handleRowClick = (ticket) => {
-    navigate('/maintenanceDetails', { state: { ticket } });
+    navigate('/maintenanceDetails', { state: { ticket: ticket, mode: 'edit' } });
   };
 
   return (

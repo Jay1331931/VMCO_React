@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import QuantityController from './QuantityController';
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
 
 const ProductCard = ({
     product,
@@ -11,6 +13,16 @@ const ProductCard = ({
     onAddToCart // Destructure onAddToCart prop
 }) => {
     const { t } = useTranslation();
+    const { user } = useAuth();
+    
+    // Initialize RBAC manager
+    const rbacMgr = new RbacManager(
+        user?.userType === 'employee' && user?.roles[0] !== 'admin' 
+            ? user?.designation 
+            : user?.roles?.[0], 
+        'catalog'
+    );
+    const isV = rbacMgr.isV.bind(rbacMgr);
 
     // Initialize with MOQ when product is loaded or changed
     useEffect(() => {
@@ -60,36 +72,40 @@ const ProductCard = ({
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
                 <div className="quantity-controls">
-                    <QuantityController
-                        itemId={product.id}
-                        quantity={quantities[product.id] || (product.moq ? Number(product.moq) : 0)}
-                        onQuantityChange={(id, delta) => {
-                            // Only allow quantity changes that don't go below MOQ
-                            const currentQty = quantities[product.id] || 0;
-                            const moq = Number(product.moq) || 0;
-                            const newQty = currentQty + delta;
-                            
-                            if (newQty >= moq) {
-                                onQuantityChange(id, delta);
-                            } else if (delta > 0 && currentQty < moq) {
-                                // Special case: If increasing from below MOQ, jump to MOQ
-                                setQuantities(prev => ({
-                                    ...prev,
-                                    [product.id]: moq
-                                }));
-                            }
-                        }}
-                        onInputChange={handleQuantityInputChange}
-                        stopPropagation={true}
-                        minQuantity={Number(product.moq) || 0} // Pass MOQ as min quantity
-                        moq={Number(product.moq) || 0} // Pass MOQ directly
-                    />
-                    <button
-                        className="add-to-cart-btn"
-                        onClick={(e) => handleAddToCart(e)}
-                    >
-                        {t('ADD TO CART')}
-                    </button>
+                    {isV('quantityController') && (
+                        <QuantityController
+                            itemId={product.id}
+                            quantity={quantities[product.id] || (product.moq ? Number(product.moq) : 0)}
+                            onQuantityChange={(id, delta) => {
+                                // Only allow quantity changes that don't go below MOQ
+                                const currentQty = quantities[product.id] || 0;
+                                const moq = Number(product.moq) || 0;
+                                const newQty = currentQty + delta;
+                                
+                                if (newQty >= moq) {
+                                    onQuantityChange(id, delta);
+                                } else if (delta > 0 && currentQty < moq) {
+                                    // Special case: If increasing from below MOQ, jump to MOQ
+                                    setQuantities(prev => ({
+                                        ...prev,
+                                        [product.id]: moq
+                                    }));
+                                }
+                            }}
+                            onInputChange={handleQuantityInputChange}
+                            stopPropagation={true}
+                            minQuantity={Number(product.moq) || 0} // Pass MOQ as min quantity
+                            moq={Number(product.moq) || 0} // Pass MOQ directly
+                        />
+                    )}
+                    {isV('addToCart') && (
+                        <button
+                            className="add-to-cart-btn"
+                            onClick={(e) => handleAddToCart(e)}
+                        >
+                            {t('ADD TO CART')}
+                        </button>
+                    )}
                 </div>
             </div>
             <style>{`
