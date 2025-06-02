@@ -30,7 +30,7 @@ class RbacManager {
       },
       orderDetailAdd: {
         fields: {
-          orderDetails: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
           customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
@@ -60,7 +60,7 @@ class RbacManager {
       },
       orderDetailEdit: {
         fields: {
-          orderDetails: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
           customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
@@ -329,13 +329,13 @@ class RbacManager {
       },
       orderDetailAdd: {
         fields: {
-          orderDetails: { visible: true, editable: false },
-          customerName: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
+          customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: false },
           orderBy: { visible: true, editable: false },
           erpId: { visible: true, editable: false },
-          entity: { visible: true, editable: false },
-          paymentMethod: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
           totalAmount: { visible: true, editable: false },
           paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },

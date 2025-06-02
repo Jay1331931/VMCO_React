@@ -5,6 +5,7 @@ import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
 import { useAuth } from '../context/AuthContext';
+import SaudiTime from '../components/Time';
 import {
   faChevronLeft,
   faChevronRight,
@@ -203,12 +204,13 @@ function Sidebar({ children, title }) {
             <FontAwesomeIcon icon={faBars} />
           </button>
           <div className="header-title">{t(activeMenu)}</div>
+          {/* Saudi time next to language switch */}
+          <SaudiTime />
           <button className="lang-switch-btn" onClick={toggleLanguage}>
             <FontAwesomeIcon icon={faLanguage} />
             <span>{isRTL ? 'EN' : 'عربى'}</span>
           </button>
         </header>
-
         <div className="content">
           {children} {/* Render dynamic content here */}
         </div>

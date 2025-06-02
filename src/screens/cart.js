@@ -42,6 +42,7 @@ function Cart() {
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
     const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
     const [pendingOrderItems, setPendingOrderItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +108,7 @@ function Cart() {
                 // Create a single filters object with all required fields
                 const filters = {
                     user_id: selectedUserId, // Make sure userId is defined, fallback to user.id if available
-                    customer_id: selectedCustomerId || customerId || '3',
+                    customer_id: selectedCustomerId,
                     branch_id: selectedBranchId
                 };
 
@@ -286,10 +287,15 @@ function Cart() {
         try {
             setIsPlacingOrder(true); // Use the same state to prevent multiple actions
 
-            // Build the URL for the delete request
-            const deleteUrl = new URL(`${API_BASE_URL}/cart?customer_id=${customerId || '3'}&branch_id=${selectedBranchId}&entity=${item.entity}&category=${item.category}&id=${item.id}`);
+            // Build the URL for the delete request with correct query params
+            const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+            deleteUrl.searchParams.append('customer_id', customerId);
+            deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            if (item.entity) deleteUrl.searchParams.append('entity', item.entity);
+            if (item.category) deleteUrl.searchParams.append('category', item.category);
+            deleteUrl.searchParams.append('product_id', item.productId);
 
-            console.log(`Removing cart item with ID: ${item.id}`);
+            console.log(`Removing cart item with params: ${deleteUrl}`);
 
             const deleteResponse = await fetch(deleteUrl, {
                 method: 'DELETE',
@@ -347,7 +353,7 @@ function Cart() {
     };
 
     // Handle place order button click
-    const handlePlaceOrder = async (categoryItems, categoryName, paymentMethod) => {
+    const handlePlaceOrder = async (categoryItems, categoryName) => {
         if (categoryItems.length === 0) {
             alert(t('No items in this category to order.'));
             return;
@@ -374,7 +380,7 @@ function Cart() {
 
             // Step 1: Check if there's an existing pending order for this customer+branch+entity
             const orderFiltersObj = {
-                customerId: selectedCustomerId || '3',
+                customerId: selectedCustomerId,
                 branchId: selectedBranchId,
                 entity: entity,
                 status: 'Open'
@@ -444,8 +450,8 @@ function Cart() {
                         updateLinesPayload.push({
                             id: existingLine.id,
                             order_id: orderId,
-                            quantity: quantity,
-                            net_amount: netAmount
+                            quantity: parseInt(existingLine.quantityOrdered) + parseInt(quantity),
+                            net_amount: unitPrice * (existingLine.quantity + parseInt(quantity))
                         });
                     }
                 });
@@ -468,7 +474,8 @@ function Cart() {
                 }, 0);
 
                 const updateOrderPayload = {
-                    id: orderId
+                    id: orderId,
+                    paymentMethod:selectedPaymentMethod
                 };
 
                 const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
@@ -491,12 +498,12 @@ function Cart() {
                 }, 0);
 
                 const orderPayload = {
-                    customerId: selectedCustomerId || '3',
+                    customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     erpBranchId: selectedBranchErpId,
                     orderBy: 'Customer',
                     entity: entity,
-                    paymentMethod: paymentMethod,
+                    paymentMethod: selectedPaymentMethod,
                     totalAmount: totalAmount.toString(),
                     paidAmount: '0',
                     deliveryCharges: '0',
@@ -693,7 +700,7 @@ function Cart() {
             try {
                 // Build the URL with query parameters
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3');
+                deleteUrl.searchParams.append('customer_id', selectedCustomerId);
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
                 deleteUrl.searchParams.append('entity', entity);
                 deleteUrl.searchParams.append('category', categoryName);
@@ -729,12 +736,12 @@ function Cart() {
         }
     };
 
-    const handleSelectPaymentMethod = async (categoryItems, categoryName, paymentMethod) => {
+    const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
-        handlePlaceOrder(pendingOrderItems, pendingOrderCategory, paymentMethod);
-
+        setSelectedPaymentMethod(method);
+        // Call place order with the selected method
+        handlePlaceOrder(pendingOrderItems, pendingOrderCategory, method);
     };
-
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>

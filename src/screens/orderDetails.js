@@ -777,10 +777,10 @@ function OrderDetails() {
                             id="customerField"
                             name="selectedCustomerName"
                             value={formData.selectedCustomerName}
-                            onClick={() => isE('customerName') && setShowCustomerPopup(true)}
+                            onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
-                            disabled={!isE('customerName')}
+                            disabled={isE('customerName')}
                           />
                         </div>
                       ) : (
@@ -813,7 +813,7 @@ function OrderDetails() {
                             className="customer-input"
                             placeholder={t('Click to select branch')}
                             readOnly
-                            disabled={!isE('branchName')}
+                            disabled={isE('branchName')}
                           />
                         </div>
                       ) : (
@@ -835,7 +835,7 @@ function OrderDetails() {
                         name="orderBy"
                         value={formData.orderBy ?? ''}
                         onChange={handleInputChange}
-                        disabled={!isE('orderBy')}
+                        disabled={isE('orderBy')}
                       />
                     </div>
                   )}
@@ -847,7 +847,7 @@ function OrderDetails() {
                         name="erp"
                         value={formData.erp ?? ''}
                         onChange={handleInputChange}
-                        disabled={!isE('erpId')}
+                        disabled={isE('erpId')}
                         placeholder={t('ERP ID')}
                       />
                     </div>
@@ -862,7 +862,7 @@ function OrderDetails() {
                           value={formData.entity || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={!isE('entity')}
+                          disabled={isE('entity')}
                         >
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
@@ -890,7 +890,7 @@ function OrderDetails() {
                           value={formData.paymentMethod || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={!isE('paymentMethod')}
+                          disabled={isE('paymentMethod')}
                         >
                           <option value="">{t('Select Payment Method')}</option>
                           {paymentMethodOptions.map((paymentMethod, index) => (

@@ -493,7 +493,7 @@ function Catalog() {
             const sugarTaxPrice = product.sugarTaxPrice;
 
             // First check if this item already exists in the cart
-            const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":28, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
+            const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":${user.userId}, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -507,8 +507,8 @@ function Catalog() {
             if (checkResult.data.data && checkResult.data.data.length > 0) {
                 // Item exists in cart, update the quantity
                 const existingItem = checkResult.data.data[0];
-                const updatedQuantity = existingItem.quantityOrdered + quantity;
-
+                const updatedQuantity = parseInt(existingItem.quantityOrdered) + parseInt(quantity);
+                
                 const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
                     method: 'PATCH',
                     headers: {
@@ -531,8 +531,8 @@ function Catalog() {
             else {
                 // Item doesn't exist in cart, add it as new
                 const cartItem = {
-                    userId: userId || '28', // Use user ID from auth context
-                    customerId: selectedCustomerId || '3',
+                    userId: userId, // Use user ID from auth context
+                    customerId: selectedCustomerId,
                     branchId: selectedLocation,
                     productId: product.id,
                     productName: product.productName || product.product_name,
@@ -542,7 +542,7 @@ function Catalog() {
                     category: product.category, // Keep original case
                     unit: product.unit || 'EA',
                     unitPrice: unitPrice,
-                    quantityOrdered: quantity,
+                    quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
                     sugarTaxPrice: sugarTaxPrice,
                 };
