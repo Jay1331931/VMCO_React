@@ -416,7 +416,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                                     <div className='customer-onboarding-form-actions'>
                                         <div className="action-buttons">
                                             <button className="save" onClick={() => handleSave(branch.id)} >
-                                                {t('Save Changes')}
+                                                {t('Save')}
                                             </button>
                                             <button className="block" >
                                                 {t('Block')}
@@ -510,9 +510,6 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                                                             <div className="action-buttons">
                                                                 <button className="save" onClick={() => handleSave(branch.id)}>
                                                                     {t('Save')}
-                                                                </button>
-                                                                <button className="save" >
-                                                                    {t('Save Changes')}
                                                                 </button>
                                                                 <button className="block" >
                                                                     {t('Block')}
@@ -813,6 +810,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
             <h3>{t('Branch Details')}</h3>
 
             <div className="form-group">
+
                 <label>
                     <input
                         type="checkbox"
@@ -822,17 +820,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                     />
                     {'\t' + t('Same as Customer Details')}
                 </label>
-                <div className="form-group">
-                    <label>
-                        <input
-                            type="checkbox"
-                            name="approvalRequiredForOrdering"
-                            checked={approvalRequired}
-                            onChange={handleCheckboxChange}
-                        />
-                        {'\t' + t('Approval Required for Ordering')}
-                    </label>
-                </div>
+                
                 <div className="form-group">
                     <label>
                         <input
