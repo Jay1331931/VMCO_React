@@ -45,26 +45,26 @@ function OrderDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
-  
+
   // Initialize RBAC manager
   const rbacMgr = new RbacManager(
-    user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 
+    user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0],
     formMode === 'add' ? 'orderDetailAdd' : 'orderDetailEdit'
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-  
+
   // Initialize form data
   const [formData, setFormData] = useState({
     ...defaultOrder,
     ...orderFromNav,
     id: orderFromNav.id || ''
   });
-  
+
   // State variables
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,16 +74,14 @@ function OrderDetails() {
   const [showProductPopup, setShowProductPopup] = useState(false);
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [showBranchPopup, setShowBranchPopup] = useState(false);
-  const [backendProducts] = useState([]);
   const [popupImage, setPopupImage] = useState(null);
-  const [isEditing, setIsEditing] = useState(formMode === 'add' || formMode === 'edit');
   const [nextOrderId, setNextOrderId] = useState('');
-  
+
   // Fetch next order ID when in add mode
   useEffect(() => {
     const fetchNextOrderId = async () => {
       if (formMode !== 'add') return;
-      
+
       try {
         const params = new URLSearchParams({
           page: 1,
@@ -91,20 +89,20 @@ function OrderDetails() {
           sortBy: 'id',
           sortOrder: 'desc'
         });
-        
+
         const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
+
         const result = await response.json();
         let newOrderId = 1;
-        
+
         if (result.status === 'Ok' && result.data.data.length > 0) {
           newOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
         }
-        
+
         setNextOrderId(newOrderId.toString());
         setFormData(prev => ({
           ...prev,
@@ -115,9 +113,9 @@ function OrderDetails() {
         setError('Failed to get next order number');
       }
     };
-    
+
     fetchNextOrderId();
-  }, [formMode, API_BASE_URL]);
+  }, [formMode]);
 
   // Table columns
   const columns = [
@@ -165,14 +163,14 @@ function OrderDetails() {
       ),
       include: isV('quantityCol'),
     },
-    { 
-      key: 'unit', 
+    {
+      key: 'unit',
       header: 'Unit',
       render: (row) => row.unit || '',
       include: isV('unitCol'),
     },
-    { 
-      key: 'unitPrice', 
+    {
+      key: 'unitPrice',
       header: 'Unit Price (SAR)',
       render: (row) => {
         const price = parseFloat(row.unitPrice || 0);
@@ -180,8 +178,8 @@ function OrderDetails() {
       },
       include: isV('unitPriceCol'),
     },
-    { 
-      key: 'salesTaxRate', 
+    {
+      key: 'salesTaxRate',
       header: 'Tax (SAR)',
       render: (row) => {
         const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
@@ -189,8 +187,8 @@ function OrderDetails() {
       },
       include: isV('salesTaxRateCol'),
     },
-    { 
-      key: 'netAmount', 
+    {
+      key: 'netAmount',
       header: 'Net Amount (SAR)',
       render: (row) => {
         const qty = parseFloat(row.quantity || 1);
@@ -208,7 +206,7 @@ function OrderDetails() {
       setLoading(false);
       return;
     }
-    
+
     const fetchOrderDetails = async () => {
       setLoading(true);
       setError(null);
@@ -244,7 +242,7 @@ function OrderDetails() {
     fetchOrderDetails();
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode]);
-  
+
   // Fetch order product details
   useEffect(() => {
     if (formMode === 'add') return;
@@ -279,7 +277,7 @@ function OrderDetails() {
           const processedProducts = result.data.data.map(product => ({
             ...product,
             id: product.productId,
-            productName: product.productName || product.product_name || product.erp_prod_id, 
+            productName: product.productName || product.product_name || product.erp_prod_id,
             quantity: product.quantity,
           }));
 
@@ -318,11 +316,11 @@ function OrderDetails() {
       const updatedProducts = [...prev.products];
       // Make sure we store the value as a number
       updatedProducts[idx].quantity = parseInt(value, 10);
-      
+
       // Update the net amount based on the new quantity
       const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
       updatedProducts[idx].netAmount = (unitPrice * value).toFixed(2);
-      
+
       return { ...prev, products: updatedProducts };
     });
   };
@@ -333,11 +331,6 @@ function OrderDetails() {
       ...prev,
       products: prev.products.filter((_, i) => i !== idx)
     }));
-  };
-
-  // Toggle edit mode
-  const toggleEditMode = () => {
-    setIsEditing(!isEditing);
   };
 
   // Download invoice
@@ -625,7 +618,7 @@ function OrderDetails() {
       customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: customer.company_name_en || customer.companyNameEn || '',
       // Populate the ERP# field with the customer's erp_cust_id
-      
+
     }));
     setShowCustomerPopup(false);
   };
@@ -643,10 +636,11 @@ function OrderDetails() {
 
   // Add this to your existing state declarations
   const [entityOptions, setEntityOptions] = useState([]);
+  const [paymentMethodOptions, setPaymentMethodOptions] = useState([]);
 
   // Add this useEffect to fetch entity options
   useEffect(() => {
-       const fetchEntityOptions = async () => {
+    const fetchEntityOptions = async () => {
       try {
         // Updated URL to include query parameter for entity master type
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
@@ -654,9 +648,9 @@ function OrderDetails() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch entity options');
-        
+
         const result = await response.json();
 
         if (result.status === 'Ok' && result.data) {
@@ -678,13 +672,15 @@ function OrderDetails() {
     };
 
     fetchEntityOptions();
-  }, [API_BASE_URL]);
+  }, []);
 
   // Add this to your existing state declarations
+  // eslint-disable-next-line
   const [customerOptions, setCustomerOptions] = useState([]);
 
-  // Add this useEffect to fetch customer options
+  // Add this useEffect to fetch customer options when the GetCustomers component is opened
   useEffect(() => {
+    // This function only needs to be kept if you want to pass it to a child component
     const fetchCustomerOptions = async () => {
       try {
         const params = new URLSearchParams({
@@ -699,9 +695,9 @@ function OrderDetails() {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch customer options');
-        
+
         const result = await response.json();
         if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
           setCustomerOptions(result.data.data);
@@ -715,9 +711,47 @@ function OrderDetails() {
       }
     };
 
-    fetchCustomerOptions();
-  }, [API_BASE_URL]);
-  
+    // Only fetch if the popup is open
+    if (showCustomerPopup) {
+      fetchCustomerOptions();
+    }
+  }, [showCustomerPopup, i18n.language]);
+
+  // Add this useEffect to fetch payment method options
+  useEffect(() => {
+    const fetchPaymentMethodOptions = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch payment method options');
+
+        const result = await response.json();
+
+        if (result.status === 'Ok' && result.data) {
+          const options = result.data;
+          // Extract payment method values from the response data
+          const paymentMethodValues = options.map(item => item.value);
+          setPaymentMethodOptions(paymentMethodValues);
+        } else if (result.data && Array.isArray(result.data)) {
+          const options = result.data;
+          // Handle the actual response structure we're seeing in the logs
+          const paymentMethodValues = options.map(item => item.value);
+          setPaymentMethodOptions(paymentMethodValues);
+        } else {
+          throw new Error('Unexpected response format for payment method options');
+        }
+      } catch (err) {
+        console.error('Error fetching payment method options:', err);
+      }
+    };
+
+    fetchPaymentMethodOptions();
+  }, []);
+
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
 
@@ -728,8 +762,8 @@ function OrderDetails() {
           <div className={`order-details-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
             <div className="order-details-body">
               <h2 className="order-details-title">
-                {formMode === 'add' 
-                  ? `${t('New Order')} #${nextOrderId}` 
+                {formMode === 'add'
+                  ? `${t('New Order')} #${nextOrderId}`
                   : `${t('Order #')} ${formData.id}`}
               </h2>
               <div className="order-details-section">
@@ -739,10 +773,10 @@ function OrderDetails() {
                       <label htmlFor="customerField">{t('Customer Company Name')}</label>
                       {formMode === 'add' ? (
                         <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <input 
+                          <input
                             id="customerField"
-                            name="selectedCustomerName" 
-                            value={formData.selectedCustomerName } 
+                            name="selectedCustomerName"
+                            value={formData.selectedCustomerName}
                             onClick={() => isE('customerName') && setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
@@ -750,25 +784,25 @@ function OrderDetails() {
                           />
                         </div>
                       ) : (
-                        <input 
+                        <input
                           id="erpCustIdField"
-                          name="erpCustId" 
-                          value={formData.erpCustId ?? ''} 
+                          name="erpCustId"
+                          value={formData.erpCustId ?? ''}
                           disabled={!isE('customerName')}
                         />
                       )}
                     </div>
                   )}
-                  
+
                   {isV('branchName') && (
                     <div className="order-details-field">
                       <label>{t('Branch')}</label>
                       {formMode === 'add' ? (
                         <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <input 
+                          <input
                             id="branchField"
-                            name="selectedBranchName" 
-                            value={formData.selectedBranchName || ''} 
+                            name="selectedBranchName"
+                            value={formData.selectedBranchName || ''}
                             onClick={() => {
                               if (!formData.erpCustId) {
                                 alert(t('Please select a customer first'));
@@ -783,49 +817,49 @@ function OrderDetails() {
                           />
                         </div>
                       ) : (
-                        <input 
+                        <input
                           id="erpBranchIdField"
-                          name="erpBranchId" 
-                          value={formData.erpBranchId ?? ''} 
-                          disabled 
+                          name="erpBranchId"
+                          value={formData.erpBranchId ?? ''}
+                          disabled
                           readOnly
                         />
                       )}
                     </div>
                   )}
-                  
+
                   {isV('orderBy') && (
                     <div className="order-details-field">
                       <label>{t('Order By')}</label>
-                      <input 
-                        name="orderBy" 
-                        value={formData.orderBy ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('orderBy')} 
+                      <input
+                        name="orderBy"
+                        value={formData.orderBy ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('orderBy')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('erpId') && (
                     <div className="order-details-field">
                       <label>{t('ERP#')}</label>
-                      <input 
-                        name="erp" 
-                        value={formData.erp ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('erpId')} 
+                      <input
+                        name="erp"
+                        value={formData.erp ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('erpId')}
                         placeholder={t('ERP ID')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('entity') && (
                     <div className="order-details-field">
                       <label>{t('Entity')}</label>
                       {formMode === 'add' ? (
-                        <select 
-                          name="entity" 
-                          value={formData.entity || ''} 
+                        <select
+                          name="entity"
+                          value={formData.entity || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
                           disabled={!isE('entity')}
@@ -838,122 +872,138 @@ function OrderDetails() {
                           ))}
                         </select>
                       ) : (
-                        <input 
-                          name="entity" 
-                          value={formData.entity || ''} 
-                          disabled 
+                        <input
+                          name="entity"
+                          value={formData.entity || ''}
+                          disabled
                         />
                       )}
                     </div>
                   )}
-                  
+
                   {isV('paymentMethod') && (
                     <div className="order-details-field">
                       <label>{t('Payment Method')}</label>
-                      <input 
-                        name="paymentMethod" 
-                        value={formData.paymentMethod ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('paymentMethod')} 
-                      />
+                      {formMode === 'add' ? (
+                        <select
+                          name="paymentMethod"
+                          value={formData.paymentMethod || ''}
+                          onChange={handleInputChange}
+                          className="entity-dropdown"
+                          disabled={!isE('paymentMethod')}
+                        >
+                          <option value="">{t('Select Payment Method')}</option>
+                          {paymentMethodOptions.map((paymentMethod, index) => (
+                            <option key={index} value={paymentMethod}>
+                              {paymentMethod}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          name="paymentMethod"
+                          value={formData.paymentMethod || ''}
+                          disabled
+                        />
+                      )}
                     </div>
                   )}
-                  
+
                   {isV('totalAmount') && (
                     <div className="order-details-field">
                       <label>{t('Total Amount')}</label>
-                      <input 
-                        name="totalAmount" 
-                        value={formData.totalAmount ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('totalAmount')} 
+                      <input
+                        name="totalAmount"
+                        value={formData.totalAmount ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('totalAmount')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('paidAmount') && (
                     <div className="order-details-field">
                       <label>{t('Amount Paid')}</label>
-                      <input 
-                        name="paidAmount" 
-                        value={formData.paidAmount ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('paidAmount')} 
+                      <input
+                        name="paidAmount"
+                        value={formData.paidAmount ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('paidAmount')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('deliveryCharges') && (
                     <div className="order-details-field">
                       <label>{t('Delivery Charges')}</label>
-                      <input 
-                        name="deliveryCharges" 
-                        value={formData.deliveryCharges ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('deliveryCharges')} 
+                      <input
+                        name="deliveryCharges"
+                        value={formData.deliveryCharges ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('deliveryCharges')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('expectedDeliveryDate') && (
                     <div className="order-details-field">
                       <label>{t('Delivery Date')}</label>
-                      <input 
-                        name="expectedDeliveryDate" 
-                        value={formData.expectedDeliveryDate ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('expectedDeliveryDate')} 
+                      <input
+                        name="expectedDeliveryDate"
+                        value={formData.expectedDeliveryDate ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('expectedDeliveryDate')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('createdDate') && (
                     <div className="order-details-field">
                       <label>{t('Created Date')}</label>
-                      <input 
-                        name="createdDate" 
-                        value={formData.createdAt ?? ''} 
-                        disabled 
+                      <input
+                        name="createdDate"
+                        value={formData.createdAt ?? ''}
+                        disabled
                       />
                     </div>
                   )}
-                  
+
                   {isV('updatedDate') && (
                     <div className="order-details-field">
                       <label>{t('Updated Date')}</label>
-                      <input 
-                        name="updatedDate" 
-                        value={formData.updatedAt ?? ''} 
-                        disabled 
+                      <input
+                        name="updatedDate"
+                        value={formData.updatedAt ?? ''}
+                        disabled
                       />
                     </div>
                   )}
-                  
+
                   {isV('driver') && (
                     <div className="order-details-field">
                       <label>{t('Driver')}</label>
-                      <input 
-                        name="driver" 
-                        value={formData.driver ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('driver')} 
+                      <input
+                        name="driver"
+                        value={formData.driver ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('driver')}
                       />
                     </div>
                   )}
-                  
+
                   {isV('vehicleNumber') && (
                     <div className="order-details-field">
                       <label>{t('Vehicle Number')}</label>
-                      <input 
-                        name="vehicleNumber" 
-                        value={formData.vehicleNumber ?? ''} 
-                        onChange={handleInputChange} 
-                        disabled={!isE('vehicleNumber')} 
+                      <input
+                        name="vehicleNumber"
+                        value={formData.vehicleNumber ?? ''}
+                        onChange={handleInputChange}
+                        disabled={!isE('vehicleNumber')}
                       />
                     </div>
                   )}
                 </div>
-                
+
                 {isV('images') && (
                   <>
                     <label>{t('Delivery images')}</label>
@@ -991,11 +1041,11 @@ function OrderDetails() {
                   </>
                 )}
               </div>
-              
+
               {isV('products') && (
                 <div className="order-products-section">
                   <h3 className="order-details-subtitle">{t('Products')}</h3>
-                  {formMode === 'add' || (formMode === 'edit' && isE('products')) && (
+                  {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
                     <button
                       type="button"
                       className="order-action-btn approve"
@@ -1034,7 +1084,7 @@ function OrderDetails() {
                 </div>
               )}
             </div>
-            
+
             {isV('orderFooter') && (
               <div className="order-details-footer">
                 {isV('orderStatus') && (
@@ -1051,41 +1101,41 @@ function OrderDetails() {
                     {t('Save Changes')}
                   </button>
                 )}
-                
+
                 {isV('btnCancel') && isE('btnCancel') && (
                   <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
                     {t('Cancel Order')}
                   </button>
                 )}
-                
+
                 {isV('btnInvoice') && isE('btnInvoice') && (
                   <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
                     {t('Download Invoice')}
                   </button>
                 )}
-                
+
                 {isV('btnInventory') && isE('btnInventory') && (
                   <button className="order-action-btn" onClick={() => setShowInventory(true)}>
                     {t('Get Inventory')}
                   </button>
                 )}
-                
+
                 {isV('actionButtons') && (
                   <div className="order-details-actions">
                     {isV('btnApprove') && isE('btnApprove') && (
-                      <button 
-                        className="order-action-btn approve" 
-                        onClick={() => handleSubmit('approve')} 
+                      <button
+                        className="order-action-btn approve"
+                        onClick={() => handleSubmit('approve')}
                         disabled={formData.status === 'approved'}
                       >
                         {t('Approve')}
                       </button>
                     )}
-                    
+
                     {isV('btnReject') && isE('btnReject') && (
-                      <button 
-                        className="order-action-btn reject" 
-                        onClick={() => handleSubmit('reject')} 
+                      <button
+                        className="order-action-btn reject"
+                        onClick={() => handleSubmit('reject')}
                         disabled={formData.status === 'approved'}
                       >
                         {t('Reject')}
@@ -1096,12 +1146,12 @@ function OrderDetails() {
               </div>
             )}
           </div>
-          
+
           {/* Rest of the component with modals and popups */}
           <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
           <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
-          
+
           {/* Product Popup */}
           {showProductPopup && (
             <GetProducts
@@ -1115,7 +1165,7 @@ function OrderDetails() {
               t={t}
             />
           )}
-          
+
           {/* Customer Popup */}
           {showCustomerPopup && (
             <GetCustomers
@@ -1126,7 +1176,7 @@ function OrderDetails() {
               t={t}
             />
           )}
-          
+
           {/* Branch Popup */}
           {showBranchPopup && (
             <GetBranches
@@ -1138,7 +1188,7 @@ function OrderDetails() {
               t={t}
             />
           )}
-          
+
           {/* Image Popup */}
           {popupImage && (
             <div
