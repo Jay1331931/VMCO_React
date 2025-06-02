@@ -544,7 +544,8 @@ function Catalog() {
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: sugarTaxPrice,
+                    sugarTaxPrice: parseFloat(product.sugarTaxPrice).toFixed(2) || '0.00',
+                    salesTaxRate:parseFloat(product.vatPercentage).toFixed(2)
                 };
 
                 console.log('Adding new item to cart:', cartItem);

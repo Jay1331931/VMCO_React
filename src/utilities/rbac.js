@@ -1,3 +1,5 @@
+import constants from '../constants';
+
 // RBAC Manager class
 class RbacManager {
   constructor(role, form,inWF = null,isOwner = false) {
@@ -7,9 +9,8 @@ class RbacManager {
     this.isUserOwner = isOwner;
   }
 
-  // Static roles definition
   static roleformfieldmap = {
-    admin: {
+    [constants.ROLES.SUPER_ADMIN]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -309,7 +310,7 @@ class RbacManager {
       }
     },
 
-    customer_primary: {
+    [constants.ROLES.CUSTOMER_PRIMARY]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -563,7 +564,7 @@ class RbacManager {
       },
     },
 
-    branch_primary: {
+   [constants.ROLES.BRANCH_PRIMARY]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -646,7 +647,7 @@ class RbacManager {
       },
     },
 
-    operations_coordinator: {
+    [constants.ROLES.OPS_COORDINATOR]: {
       // Define opsCordinator permissions for all forms
       custDetailsAdd: {
         fields: {
@@ -772,7 +773,8 @@ class RbacManager {
       },
       
     },
-    opsManager: {
+
+    [constants.ROLES.OPS_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -975,9 +977,7 @@ class RbacManager {
       },
     },
 
-      
-    
-    salesExecutive: {
+    [constants.ROLES.SALES_EXECUTIVE]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1058,7 +1058,7 @@ class RbacManager {
       },
     },
 
-    areaSalesManager: {
+    [constants.ROLES.AREA_SALES_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1139,7 +1139,7 @@ class RbacManager {
       },
     },
 
-    fieldEngineer: {
+    [constants.ROLES.FIELD_ENGINEER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1220,7 +1220,7 @@ class RbacManager {
       },
     },
 
-    maintenanceTechnician: {
+    [constants.ROLES.MAINTENANCE_TECHNICIAN]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1301,7 +1301,7 @@ class RbacManager {
       },
     },
 
-    driver: {
+    [constants.ROLES.DRIVER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },

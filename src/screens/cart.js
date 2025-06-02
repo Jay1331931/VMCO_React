@@ -551,12 +551,13 @@ function Cart() {
                         line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
                         erp_line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
                         product_id: productId,
-                        erp_prod_id: item.erpProdId || item.erp_prod_id,
+                        erp_prod_id: item.erpProdId,
                         quantity: quantity,
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,
                         net_amount: netAmount,
-                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+                        sales_tax_rate: parseFloat(item.vatPercentage).toFixed(2),
+                        sugar_tax_price: parseFloat(item.sugarTaxPrice).toFixed(2) || '0.00'
                     });
                 }
             });

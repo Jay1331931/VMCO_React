@@ -195,7 +195,7 @@ function OrderDetails() {
       key: 'salesTaxRate',
       header: 'Tax (SAR)',
       render: (row) => {
-        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        const taxRate = parseFloat(row.sugarTaxPrice);
         return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
       },
       include: isV('salesTaxRateCol'),
@@ -204,17 +204,17 @@ function OrderDetails() {
       key: 'vatPercentage',
       header: 'Tax (VAT)',
       render: (row) => {
-        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        const taxRate = parseFloat(row.vatPercentage);
         return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
       },
-      include: isV('salesTaxRateCol'),
+      include: isV('vatPercentageCol'),
     },
     {
       key: 'netAmount',
       header: 'Net Amount (SAR)',
       render: (row) => {
-        const qty = parseFloat(row.quantity || 1);
-        const price = parseFloat(row.unitPrice || 0);
+        const qty = parseFloat(row.quantity);
+        const price = parseFloat(row.unitPrice);
         return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
       },
       include: isV('netAmountCol'),
@@ -428,9 +428,10 @@ function OrderDetails() {
           erp_prod_id: product.erpProdId || product.erp_prod_id || '',
           quantity: parseInt(product.quantity || 1, 10),
           unit: product.unit || '',
-          unit_price: parseFloat(product.unitPrice || 0),
-          net_amount: parseFloat(product.netAmount || 0),
-          sales_tax_rate: parseFloat(product.salesTaxRate || product.vatPercentage || 0)
+          unit_price: parseFloat(product.unitPrice),
+          net_amount: parseFloat(product.netAmount),
+          sugar_tax_price: parseFloat(product.sugarTaxPrice),
+          sales_tax_rate: parseFloat(product.vatPercentage),
         }));
 
         console.log('Submitting products payload:', productsPayload);
