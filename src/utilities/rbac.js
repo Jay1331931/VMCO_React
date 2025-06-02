@@ -433,7 +433,133 @@ class RbacManager {
           btnSave: { visible: true, editable: true }
         }
       },
-      // Define customer_primary permissions for all forms
+      custDetailsAdd: {
+        fields: {
+          companyNameEn: { visible: true, editable: false },
+          companyNameLc: { visible: true, editable: true },
+          crNumber: { visible: true, editable: true },
+          vatRegistrationNumber: { visible: true, editable: true },
+          baladeahLicense: { visible: true, editable: true },
+          companyType: { visible: true, editable: true },
+          businessType: { visible: true, editable: true },
+          businessTypeOther: { visible: true, editable: true },
+          assignedTo: { visible: false, editable: true },
+          assignedToEntityWise: { visible: false, editable: true },
+          interCompany: { visible: false, editable: false },
+          entity: { visible: false, editable: true },
+          deliveryLocations: { visible: true, editable: true },
+          brandName: { visible: true, editable: true },
+          brandNameArabic: { visible: true, editable: true },
+          company_logo: { visible: true, editable: true },
+          brand_logo: { visible: true, editable: true },
+          primaryContactName: { visible: true, editable: true },
+          primaryContactDesignation: { visible: true, editable: true },
+          primaryContactEmail: { visible: true, editable: true },
+          primaryContactPhone: { visible: true, editable: true },
+          businessHeadSameAsPrimary: { visible: true, editable: true },
+          businessHeadName: { visible: true, editable: true },
+          businessHeadDesignation: { visible: true, editable: true },
+          businessHeadEmail: { visible: true, editable: true },
+          businessHeadPhone: { visible: true, editable: true },
+          financeHeadName: { visible: true, editable: true },
+          financeHeadDesignation: { visible: true, editable: true },
+          financeHeadEmail: { visible: true, editable: true },
+          financeHeadPhone: { visible: true, editable: true },
+          purchasingHeadName: { visible: true, editable: true },
+          purchasingHeadDesignation: { visible: true, editable: true },
+          purchasingHeadEmail: { visible: true, editable: true },
+          purchasingHeadPhone: { visible: true, editable: true },
+          buildingName: { visible: true, editable: true },
+          street: { visible: true, editable: true },
+          district: { visible: true, editable: true },
+          city: { visible: true, editable: true },
+          region: { visible: true, editable: true },
+          zone: { visible: true, editable: true },
+          geolocation: { visible: true, editable: true },
+          pincode: { visible: true, editable: true },
+          dulySigned: { visible: true, editable: true },
+          crCertificate: { visible: true, editable: true },
+          vatCertificate: { visible: true, editable: true },
+          nationalID: { visible: true, editable: true },
+          bankLetter: { visible: true, editable: true },
+          nonTradingDocuments: { visible: true, editable: true },
+          bankName: { visible: true, editable: true },
+          accountNumber: { visible: true, editable: true },
+          ibanNumber: { visible: true, editable: true },
+          prePayment: { visible: true, editable: true },
+          partialPayment: { visible: true, editable: true },
+          advancePayment: { visible: true, editable: true },
+          COD: { visible: true, editable: true },
+          credit: { visible: true, editable: true },
+          creditLimit: { visible: true, editable: true },
+          creditPeriod: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnBlock: {visible: false, editable: true}
+        }
+      },
+      custDetailsEdit: {
+        fields: {
+          companyNameEn: { visible: true, editable: false },
+          companyNameLc: { visible: true, editable: true },
+          crNumber: { visible: true, editable: true },
+          vatRegistrationNumber: { visible: true, editable: true },
+          baladeahLicense: { visible: true, editable: true },
+          companyType: { visible: true, editable: true },
+          businessType: { visible: true, editable: true },
+          businessTypeOther: { visible: true, editable: true },
+          interCompany: { visible: false, editable: true },
+          entity: { visible: false, editable: true },
+          deliveryLocations: { visible: true, editable: true },
+          brandName: { visible: true, editable: true },
+          brandNameArabic: { visible: true, editable: true },
+          company_logo: { visible: true, editable: true },
+          brand_logo: { visible: true, editable: true },
+          primaryContactName: { visible: true, editable: true },
+          primaryContactDesignation: { visible: true, editable: true },
+          primaryContactEmail: { visible: true, editable: true },
+          primaryContactPhone: { visible: true, editable: true },
+          businessHeadSameAsPrimary: { visible: true, editable: true },
+          businessHeadName: { visible: true, editable: true },
+          businessHeadDesignation: { visible: true, editable: true },
+          businessHeadEmail: { visible: true, editable: true },
+          businessHeadPhone: { visible: true, editable: true },
+          financeHeadName: { visible: true, editable: true },
+          financeHeadDesignation: { visible: true, editable: true },
+          financeHeadEmail: { visible: true, editable: true },
+          financeHeadPhone: { visible: true, editable: true },
+          purchasingHeadName: { visible: true, editable: true },
+          purchasingHeadDesignation: { visible: true, editable: true },
+          purchasingHeadEmail: { visible: true, editable: true },
+          purchasingHeadPhone: { visible: true, editable: true },
+          buildingName: { visible: true, editable: true },
+          street: { visible: true, editable: true },
+          district: { visible: true, editable: true },
+          city: { visible: true, editable: true },
+          region: { visible: true, editable: true },
+          zone: { visible: true, editable: true },
+          geolocation: { visible: true, editable: true },
+          pincode: { visible: true, editable: true },
+          dulySigned: { visible: true, editable: true },
+          crCertificate: { visible: true, editable: true },
+          vatCertificate: { visible: true, editable: true },
+          nationalID: { visible: true, editable: true },
+          bankLetter: { visible: true, editable: true },
+          nonTradingDocuments: { visible: true, editable: true },
+          bankName: { visible: true, editable: true },
+          accountNumber: { visible: true, editable: true },
+          ibanNumber: { visible: true, editable: true },
+          prePayment: { visible: true, editable: true },
+          partialPayment: { visible: true, editable: true },
+          advancePayment: { visible: true, editable: true },
+          COD: { visible: true, editable: true },
+          credit: { visible: true, editable: true },
+          creditLimit: { visible: true, editable: true },
+          creditPeriod: { visible: true, editable: true },
+          assignedTo: { visible: false, editable: true },
+          assignedToEntityWise: { visible: false, editable: true },
+          customerSource: { visible: false, editable: true },
+        }
+      },
     },
 
     branch_primary: {
@@ -517,7 +643,7 @@ class RbacManager {
       },
     },
 
-    opsCordinator: {
+    operations_coordinator: {
       // Define opsCordinator permissions for all forms
       custDetailsAdd: {
         fields: {
@@ -577,7 +703,7 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: true, editable: true }
+          btnSave: { visible: true, editable: false },
         }
       },
       custDetailsEdit: {
@@ -638,6 +764,7 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
+          btnBlock: {visible: false, editable: true},
         }
       },
       
@@ -721,8 +848,6 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         }
       },
-    },
-
       // Define opsManager permissions for all forms
       custDetailsAdd: {
         fields: {
@@ -845,6 +970,9 @@ class RbacManager {
           creditPeriod: { visible: true, editable: true },
         }
       },
+    },
+
+      
     
     salesExecutive: {
       orderList: {
