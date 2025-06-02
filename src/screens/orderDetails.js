@@ -156,9 +156,22 @@ function OrderDetails() {
               }
             }}
           />
-          <span title={row.unit || ''}>
-            {row.unit && <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />}
-          </span>
+          {isV('stock') &&(<span>
+            <button
+              type="button"
+              style={{background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640', 
+                borderRadius: '4px',
+                fontSize: '12px',
+                padding: '2px 8px',
+                marginLeft: '6px',
+                cursor: 'pointer'
+              }}
+              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
+            >
+              Stock
+            </button>
+          </span>)}
         </div>
       ),
       include: isV('quantityCol'),
@@ -181,6 +194,15 @@ function OrderDetails() {
     {
       key: 'salesTaxRate',
       header: 'Tax (SAR)',
+      render: (row) => {
+        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
+      },
+      include: isV('salesTaxRateCol'),
+    },
+    {
+      key: 'vatPercentage',
+      header: 'Tax (VAT)',
       render: (row) => {
         const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
         return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);

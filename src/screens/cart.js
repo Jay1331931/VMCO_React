@@ -344,8 +344,15 @@ function Cart() {
         navigate(-1);
     };
 
+    const handleSelectPaymentMethod = (method) => {
+        setShowPaymentPopup(false);
+        setSelectedPaymentMethod(method);
+        console.log('selected payment:', method)
+        handlePlaceOrder(pendingOrderItems, pendingOrderCategory, method);
+    };
+
     // Handle place order button click
-    const handlePlaceOrder = async (categoryItems, categoryName) => {
+    const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
         if (categoryItems.length === 0) {
             alert(t('No items in this category to order.'));
             return;
@@ -425,8 +432,8 @@ function Cart() {
                 const updateLinesPayload = [];
                 categoryItems.forEach((item) => {
                     const productId = item.productId || item.id;
-                    const quantity = parseInt(quantities[item.id] || item.quantity || 1, 10);
-                    const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                    const quantity = parseInt(quantities[item.id]);
+                    const unitPrice = parseFloat(item.unitPrice);
                     if (existingProductMap[productId]) {
                         // Update existing line
                         const existingLine = existingProductMap[productId];
@@ -469,9 +476,9 @@ function Cart() {
             } else {
                 // Create a new sales order
                 const totalAmount = categoryItems.reduce((total, item) => {
-                    const price = parseFloat(item.price) || 0;
-                    const qty = quantities[item.id] || item.quantity || 1;
-                    return total + (price * qty);
+                    const price = parseFloat(item.price);
+                    const qty = quantities[item.id];
+                    return parseFloat(total + (price * qty)).toFixed(2);
                 }, 0);
 
                 const orderPayload = {
@@ -482,9 +489,10 @@ function Cart() {
                     entity: entity,
                     paymentMethod: selectedPaymentMethod,
                     totalAmount: totalAmount.toString(),
-                    paidAmount: '0',
+                    paidAmount: '0.00',
                     deliveryCharges: '0',
                     expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    paymentStatus:'Pending',
                     status: 'Open',
                 };
 
@@ -713,12 +721,7 @@ function Cart() {
         }
     };
 
-    const handleSelectPaymentMethod = (method) => {
-        setShowPaymentPopup(false);
-        setSelectedPaymentMethod(method);
-        // Call place order with the selected method
-        handlePlaceOrder(pendingOrderItems, pendingOrderCategory, method);
-    };
+    
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
