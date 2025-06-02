@@ -34,8 +34,6 @@ function Sidebar({ children, title }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
 
-  console.log('User Data:', user);
-  
   const isRTL = i18n.language === 'ar';
 
   const toggleLanguage = () => {

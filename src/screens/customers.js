@@ -375,7 +375,7 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
       if (result.status === 'Ok') {
         setCustomerContacts(result.data);
         let transformedCustomer = transformCustomerData(customer, result.data);
-  transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
+        transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
         console.log('Transformed Customer:', transformedCustomer);
         // Navigate to customer details with approval mode if applicable
         if (isApprovalMode) {
@@ -384,7 +384,7 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
         } else {
           transformedCustomer.isApprovalMode = false;
         }
-   navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit': 'add' } });
+        navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit': 'add' } });
 
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
