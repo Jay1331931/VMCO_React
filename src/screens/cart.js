@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -10,11 +10,31 @@ import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+// Helper function to determine entity from category name
+const getEntityFromCategory = (categoryName) => {
+    // Convert to lowercase for case-insensitive comparison
+    const category = categoryName.toLowerCase();
+    
+    if (category.includes('vmco')) {
+        return 'vmco';
+    } else if (category.includes('diyafa')) {
+        return 'diyafa';
+    } else if (category.includes('green mast')) {
+        return 'green mast';
+    } else if (category.includes('naqui')) {
+        return 'naqui';
+    }
+    
+    // Default to vmco if no match (though this shouldn't happen with your categories)
+    return 'vmco';
+};
+
 function Cart() {
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({});
+    const [selectedUserId, setSelectedUserId] = useState(''); // Initialize empty
     const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchId, setSelectedBranchId] = useState('');
@@ -32,24 +52,19 @@ function Cart() {
     const { token, user, isAuthenticated, logout } = useAuth();
     console.log('User data:', user);
 
-   const customerId = user?.customerId;
-       // Update selectedCustomerId whenever customerId changes
-       useEffect(() => {
-           if (customerId) {
-               setSelectedCustomerId(customerId);
-           }
-       }, [customerId]);
-   
-
+    const userId = user.userId;
+    const customerId = user?.customerId;
     // Fetch branch information from localStorage
     useEffect(() => {
-        // Fetch branch information from localStorage
         try {
+            // Set user and customer IDs from context
+            if (userId) {setSelectedUserId(userId);}
+            if (customerId) {setSelectedCustomerId(customerId);}
             const branchName = localStorage.getItem('selectedBranchName');
             const branchId = localStorage.getItem('selectedBranchId');
-            const branchErpId = localStorage.getItem('selectedBranchErpId');  // <-- Fixed key name here
+            const branchErpId = localStorage.getItem('selectedBranchErpId');
 
-            console.log('Retrieved branch info:', { branchName, branchId, branchErpId });
+            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId });
 
             if (!branchId || !branchName || branchName.trim() === '') {
                 console.warn('Branch selection is missing or incomplete');
@@ -60,14 +75,14 @@ function Cart() {
 
             setSelectedBranchName(branchName);
             setSelectedBranchId(branchId);
-            setSelectedBranchErpId(branchErpId);  // <-- Use the correct variable name
+            setSelectedBranchErpId(branchErpId);
 
         } catch (error) {
             console.error('Error retrieving branch info from localStorage:', error);
             alert(t('Error loading your branch information. Please select a branch again.'));
             navigate('/catalog');
         }
-    }, [navigate, t]);
+    }, [userId, customerId, navigate, t]);
 
     // Fetch cart items from the backend using fetch API
     useEffect(() => {
@@ -84,28 +99,39 @@ function Cart() {
                     sortOrder: 'asc'
                 });
 
-                // Create filters object and add it as a JSON string
+                // Create a single filters object with all required fields
                 const filters = {
+                    user_id: selectedUserId, // Make sure userId is defined, fallback to user.id if available
+                    customer_id: selectedCustomerId || customerId || '3',
                     branch_id: selectedBranchId
                 };
-                filters.customer_id = selectedCustomerId || '3'; // Use selected customer ID or default to '3'
+                
+                // Log the filters to ensure userId is included
+                console.log('Cart filters:', filters);
+
+                // Add filters as a single parameter with stringified JSON
                 params.append('filters', JSON.stringify(filters));
+
+                console.log('Fetching cart with params:', params.toString());
 
                 const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}` // Add authorization token if required
                     },
                     credentials: 'include' // Include cookies/auth tokens
                 });
 
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
                     throw new Error(`Error: ${response.status} ${response.statusText}`);
                 }
 
                 const result = await response.json();
-                console.log('Fetched cart data:', result);
+                console.log('Fetched cart data:',  result);
 
                 // Initialize arrays for each category
                 const vmcoMachines = [];
@@ -138,19 +164,19 @@ function Cart() {
                 const currentLanguage = i18n.language;
                 const isArabic = currentLanguage.startsWith('ar');
 
-                
+
 
                 // Process each product and categorize it correctly
                 cartProducts.forEach(product => {
 
                     // Choose the right product name based on language
-        let productName = product.productName || product.product_name;
-        
-        // If language is not English and we have a localized name, use it
-        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
-            productName = product.product_name_lc || product.productNameLc || productName;
-        }
-        
+                    let productName = product.productName || product.product_name;
+
+                    // If language is not English and we have a localized name, use it
+                    if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
+                        productName = product.product_name_lc || product.productNameLc || productName;
+                    }
+
                     // Format the product data for display
                     const formattedItem = {
                         id: product.id,
@@ -241,59 +267,59 @@ function Cart() {
     };
 
     // Add this function to the Cart component
-const handleRemoveItem = async (item) => {
-    if (!item || !item.id) {
-        console.error('Invalid item provided to handleRemoveItem');
-        return;
-    }
-
-    if (isPlacingOrder) {
-        alert(t('An order is being processed. Please wait.'));
-        return;
-    }
-
-    try {
-        setIsPlacingOrder(true); // Use the same state to prevent multiple actions
-        
-        // Build the URL for the delete request
-        const deleteUrl = new URL(`${API_BASE_URL}/cart?customer_id=${customerId || '3'}&branch_id=${selectedBranchId}&entity=${item.entity}&category=${item.category}&id=${item.id}`);
-
-        console.log(`Removing cart item with ID: ${item.id}`);
-
-        const deleteResponse = await fetch(deleteUrl, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
-        });
-
-        if (!deleteResponse.ok) {
-            const errorText = await deleteResponse.text();
-            console.error(`Error removing item: ${deleteResponse.status}`, errorText);
-            throw new Error(`Failed to remove item: ${deleteResponse.statusText}`);
+    const handleRemoveItem = async (item) => {
+        if (!item || !item.id) {
+            console.error('Invalid item provided to handleRemoveItem');
+            return;
         }
 
-        // Update the local cart state by filtering out the removed item
-        setCartItems(prevCartItems => 
-            prevCartItems.map(category => ({
-                ...category,
-                items: category.items.filter(cartItem => cartItem.id !== item.id)
-            }))
-        );
+        if (isPlacingOrder) {
+            alert(t('An order is being processed. Please wait.'));
+            return;
+        }
 
-        // Also remove the item from quantities state
-        setQuantities(prev => {
-            const newQuantities = { ...prev };
-            delete newQuantities[item.id];
-            return newQuantities;
-        });
+        try {
+            setIsPlacingOrder(true); // Use the same state to prevent multiple actions
 
-    } catch (err) {
-        console.error('Error removing item:', err);
-        alert(t(`Failed to remove item: ${err.message}`));
-    } finally {
-        setIsPlacingOrder(false);
-    }
-};
+            // Build the URL for the delete request
+            const deleteUrl = new URL(`${API_BASE_URL}/cart?customer_id=${customerId || '3'}&branch_id=${selectedBranchId}&entity=${item.entity}&category=${item.category}&id=${item.id}`);
+
+            console.log(`Removing cart item with ID: ${item.id}`);
+
+            const deleteResponse = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!deleteResponse.ok) {
+                const errorText = await deleteResponse.text();
+                console.error(`Error removing item: ${deleteResponse.status}`, errorText);
+                throw new Error(`Failed to remove item: ${deleteResponse.statusText}`);
+            }
+
+            // Update the local cart state by filtering out the removed item
+            setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                    items: category.items.filter(cartItem => cartItem.id !== item.id)
+                }))
+            );
+
+            // Also remove the item from quantities state
+            setQuantities(prev => {
+                const newQuantities = { ...prev };
+                delete newQuantities[item.id];
+                return newQuantities;
+            });
+
+        } catch (err) {
+            console.error('Error removing item:', err);
+            alert(t(`Failed to remove item: ${err.message}`));
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
 
     const handleQuantityChange = (itemId, delta) => {
         setQuantities(prev => ({
@@ -330,6 +356,7 @@ const handleRemoveItem = async (item) => {
         try {
             setIsPlacingOrder(true);
             setError(null);
+            
             // Calculate total amount for this category
             const totalAmount = categoryItems.reduce((total, item) => {
                 const price = parseFloat(item.price) || 0;
@@ -337,115 +364,215 @@ const handleRemoveItem = async (item) => {
                 return total + (price * qty);
             }, 0);
 
-            // Create sales order payload
-            const orderPayload = {
-                customerId: selectedCustomerId || '3', // Use selected customer ID
-                branchId: selectedBranchId, // Use selected branch ID
-                erpBranchId: selectedBranchErpId, // Use same as branch ID
-                orderBy: 'Customer', // Default value
-                entity: getEntityFromCategory(categoryName), // Use helper function to determine entity from category
-                paymentMethod: 'Online', // Default value
-                totalAmount: totalAmount.toString(),
-                paidAmount: '0', // Default value for now
-                deliveryCharges: '0', // Default value for now
-                expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
-                status: 'Pending', // Default status for new orders
-            };
-
-
-            // Helper function to determine entity based on category
-            function getEntityFromCategory(category) {
-                const categoryLower = category.toLowerCase();
-
-                if (categoryLower.includes('vmco')) {
-                    return 'vmco';
-                } else if (categoryLower.includes('diyafa') || categoryLower.includes('diyafa')) {
-                    return 'diyafa';
-                } else if (categoryLower.includes('green mast')) {
-                    return 'green mast';
-                } else if (categoryLower.includes('naqui')) {
-                    return 'naqui';
-                }
-
-                // Default fallback to the first word of category (original logic)
-                return category;
-            }
-
-            console.log('Creating order with payload:', orderPayload);
-
-            // Step 1: Create the sales order
-            const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
-                method: 'POST',
+            // Determine entity from category
+            const entity = getEntityFromCategory(categoryName);
+            
+            // Step 1: Check if there's an existing pending order for this customer+branch+entity
+            const orderFilters = new URLSearchParams({
+                customerId: selectedCustomerId || '3',
+                branchId: selectedBranchId,
+                entity: entity
+            });
+            
+            console.log(`Checking for existing orders with filters: ${orderFilters.toString()}`);
+            
+            const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters.toString()}`, {
+                method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderPayload),
                 credentials: 'include',
             });
-
-            if (!orderResponse.ok) {
-                const errorText = await orderResponse.text();
-                console.error('Server response:', errorText);
-                try {
-                    const errorData = JSON.parse(errorText);
-                    throw new Error(errorData.message || 'Failed to create order');
-                } catch (e) {
-                    throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText}`);
+            
+            if (!existingOrderResponse.ok) {
+                console.error(`Error checking existing orders: ${existingOrderResponse.status}`);
+                throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
+            }
+            
+            const existingOrderResult = await existingOrderResponse.json();
+            console.log('Existing order check result:', existingOrderResult);
+            
+            let orderId;
+            
+            // If we have an existing pending order, use it. Otherwise create a new one
+            if (existingOrderResult.data && existingOrderResult.data.length > 0) {
+                // Use the first pending order
+                orderId = existingOrderResult.data[0].id;
+                console.log(`Using existing order #${orderId}`);
+                
+                // Update the order total amount
+                const updateOrderPayload = {
+                    id: orderId,
+                    totalAmount: totalAmount.toString()
+                    // Keep other fields unchanged
+                };
+                
+                const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/${orderId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateOrderPayload),
+                    credentials: 'include',
+                });
+                
+                if (!updateOrderResponse.ok) {
+                    console.error(`Error updating order: ${updateOrderResponse.status}`);
+                    throw new Error(`Failed to update order: ${updateOrderResponse.statusText}`);
                 }
+                
+            } else {
+                // Create a new sales order
+                const orderPayload = {
+                    customerId: selectedCustomerId || '3',
+                    branchId: selectedBranchId,
+                    erpBranchId: selectedBranchErpId,
+                    orderBy: 'Customer',
+                    entity: entity,
+                    paymentMethod: 'Online',
+                    totalAmount: totalAmount.toString(),
+                    paidAmount: '0',
+                    deliveryCharges: '0',
+                    expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+                    status: 'Pending',
+                };
+
+                console.log('Creating new order with payload:', orderPayload);
+
+                const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderPayload),
+                    credentials: 'include',
+                });
+
+                if (!orderResponse.ok) {
+                    const errorText = await orderResponse.text();
+                    console.error('Server response:', errorText);
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        throw new Error(errorData.message || 'Failed to create order');
+                    } catch (e) {
+                        throw new Error(`Failed to create order: ${orderResponse.status} ${orderResponse.statusText}`);
+                    }
+                }
+
+                // Parse the response to get the order ID
+                const orderResult = await orderResponse.json();
+                console.log('Order creation result:', orderResult);
+
+                if (!orderResult.data || !orderResult.data.id) {
+                    throw new Error('Order ID not returned from API');
+                }
+
+                orderId = orderResult.data.id;
             }
 
-            // Parse the response to get the order ID
-            const orderResult = await orderResponse.json();
-            console.log('Order creation result:', orderResult);
-
-            if (!orderResult.data || !orderResult.data.id) {
-                throw new Error('Order ID not returned from API');
-            }
-
-            const orderId = orderResult.data.id;
-
-            // Step 2: Create sales order lines for each product
-            const productsPayload = categoryItems.map((item, index) => ({
-                order_id: orderId,
-                line_number: index + 1, // Generate sequential line numbers
-                erp_line_number: index + 1, // Using same as line_number
-                product_id: item.productId || item.id, // Use the proper product ID
-                erp_prod_id: item.erpProdId || item.erp_prod_id || '', // Use ERP product ID if available
-                quantity: parseInt(quantities[item.id] || item.quantity || 1, 10),
-                unit: item.unit || 'EA',
-                unit_price: parseFloat(item.unitPrice || item.price || 0),
-                net_amount: parseFloat(item.price || 0) * parseInt(quantities[item.id] || item.quantity || 1, 10),
-                sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
-            }));
-
-            console.log('Submitting products payload:', productsPayload);
-
-            // Add product lines to the order
-            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                method: 'POST',
+            // Step 2: Fetch existing order lines for this order
+            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?order_id=${orderId}`, {
+                method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(productsPayload),
                 credentials: 'include',
             });
-
+            
             if (!linesResponse.ok) {
-                const errorText = await linesResponse.text();
-                console.error('Server response for product lines:', errorText);
-                try {
-                    const errorData = JSON.parse(errorText);
-                    throw new Error(errorData.message || 'Failed to add products to order');
-                } catch (e) {
-                    throw new Error(`Failed to add products to order: ${linesResponse.status} ${linesResponse.statusText}`);
+                console.error(`Error fetching order lines: ${linesResponse.status}`);
+                throw new Error(`Failed to fetch order lines: ${linesResponse.statusText}`);
+            }
+            
+            const existingLines = await linesResponse.json();
+            console.log('Existing order lines:', existingLines.data || []);
+            
+            // Map existing product lines by product_id for easy lookup
+            const existingProductMap = {};
+            if (existingLines.data && Array.isArray(existingLines.data)) {
+                existingLines.data.forEach(line => {
+                    if (line.product_id) {
+                        existingProductMap[line.product_id] = line;
+                    }
+                });
+            }
+            
+            // Prepare payloads for new lines and updates to existing lines
+            const newLinesPayload = [];
+            const updateLinesPayload = [];
+            
+            // Process each product in our category
+            categoryItems.forEach((item, index) => {
+                const productId = item.productId || item.id;
+                const quantity = parseInt(quantities[item.id] || item.quantity || 1, 10);
+                const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                const netAmount = unitPrice * quantity;
+                
+                // Check if this product already exists in the order
+                if (existingProductMap[productId]) {
+                    // Update existing line
+                    const existingLine = existingProductMap[productId];
+                    const updatedQuantity = quantity; // Set to the new quantity value
+                    
+                    updateLinesPayload.push({
+                        id: existingLine.id,
+                        order_id: orderId,
+                        quantity: updatedQuantity,
+                        net_amount: unitPrice * updatedQuantity
+                        // Keep other fields unchanged
+                    });
+                } else {
+                    // Create new line
+                    newLinesPayload.push({
+                        order_id: orderId,
+                        line_number: index + 1, // Generate sequential line numbers
+                        erp_line_number: index + 1, // Using same as line_number
+                        product_id: productId,
+                        erp_prod_id: item.erpProdId || item.erp_prod_id || '',
+                        quantity: quantity,
+                        unit: item.unit || 'EA',
+                        unit_price: unitPrice,
+                        net_amount: netAmount,
+                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+                    });
+                }
+            });
+            
+            // Submit new order lines if any
+            if (newLinesPayload.length > 0) {
+                console.log('Creating new order lines:', newLinesPayload);
+                
+                const createLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newLinesPayload),
+                    credentials: 'include',
+                });
+                
+                if (!createLinesResponse.ok) {
+                    const errorText = await createLinesResponse.text();
+                    console.error('Server response for new lines:', errorText);
+                    throw new Error(`Failed to add products to order: ${createLinesResponse.status} ${createLinesResponse.statusText}`);
+                }
+            }
+            
+            // Update existing order lines if any
+            for (const line of updateLinesPayload) {
+                console.log(`Updating line ID ${line.id}:`, line);
+                
+                const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/id/${line.id}`, {
+                    method: 'PATCH', // Change from PUT to PATCH to match the API route
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(line),
+                    credentials: 'include',
+                });
+                
+                if (!updateLineResponse.ok) {
+                    const errorText = await updateLineResponse.text();
+                    console.error(`Server response for updating line ${line.id}:`, errorText);
+                    throw new Error(`Failed to update order line: ${updateLineResponse.status} ${updateLineResponse.statusText}`);
                 }
             }
 
             // Step 3: Remove items from cart using the batch deletion endpoint
             try {
-                // Get customer ID from localStorage or use a default
-
                 // Build the URL with query parameters
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3'); // Use selected customer ID or default to '3'
+                deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3');
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                deleteUrl.searchParams.append('entity', getEntityFromCategory(categoryName));
+                deleteUrl.searchParams.append('entity', entity);
                 deleteUrl.searchParams.append('category', categoryName);
 
                 console.log(`Deleting cart items with URL: ${deleteUrl}`);
@@ -465,10 +592,10 @@ const handleRemoveItem = async (item) => {
             }
 
             // Show success message
-            alert(t(`Order for ${categoryName} placed successfully! Order #${orderId}`));
+            //alert(t(`Order for ${categoryName} placed successfully! Order #${orderId}`));
 
             // Refresh cart items
-            window.location.reload();
+            //window.location.reload();
 
         } catch (err) {
             console.error('Error placing order:', err);
@@ -533,144 +660,144 @@ const handleRemoveItem = async (item) => {
             setIsPlacingOrder(false);
         }
 
-    // Helper function to create an order for a specific entity
-    async function createEntityOrder(entity, items) {
-        if (items.length === 0) return;
+        // Helper function to create an order for a specific entity
+        async function createEntityOrder(entity, items) {
+            if (items.length === 0) return;
 
-        // Calculate total amount for this entity
-        const totalAmount = items.reduce((total, item) => {
-            const price = parseFloat(item.price) || 0;
-            const qty = quantities[item.id] || item.quantity || 1;
-            return total + (price * qty);
-        }, 0);
+            // Calculate total amount for this entity
+            const totalAmount = items.reduce((total, item) => {
+                const price = parseFloat(item.price) || 0;
+                const qty = quantities[item.id] || item.quantity || 1;
+                return total + (price * qty);
+            }, 0);
 
-        // Create sales order payload
-        const orderPayload = {
-            customerId: selectedCustomerId || '3', //
-            branchId: selectedBranchId,
-            erpBranchId: selectedBranchErpId,
-            orderBy: 'Customer',
-            entity: entity,
-            paymentMethod: 'Online',
-            totalAmount: totalAmount.toString(),
-            paidAmount: '0',
-            deliveryCharges: '0',
-            expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
-            status: 'Pending',
-        };
+            // Create sales order payload
+            const orderPayload = {
+                customerId: selectedCustomerId || '3', //
+                branchId: selectedBranchId,
+                erpBranchId: selectedBranchErpId,
+                orderBy: 'Customer',
+                entity: entity,
+                paymentMethod: 'Online',
+                totalAmount: totalAmount.toString(),
+                paidAmount: '0',
+                deliveryCharges: '0',
+                expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 week from now
+                status: 'Pending',
+            };
 
-        console.log(`Creating ${entity} order with payload:`, orderPayload);
+            console.log(`Creating ${entity} order with payload:`, orderPayload);
 
-        // Step 1: Create the sales order
-        const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderPayload),
-            credentials: 'include',
-        });
+            // Step 1: Create the sales order
+            const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderPayload),
+                credentials: 'include',
+            });
 
-        if (!orderResponse.ok) {
-            const errorText = await orderResponse.text();
-            console.error('Server response:', errorText);
+            if (!orderResponse.ok) {
+                const errorText = await orderResponse.text();
+                console.error('Server response:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || `Failed to create ${entity} order`);
+                } catch (e) {
+                    throw new Error(`Failed to create ${entity} order: ${orderResponse.status} ${orderResponse.statusText}`);
+                }
+            }
+
+            // Parse the response to get the order ID
+            const orderResult = await orderResponse.json();
+            console.log(`${entity} order creation result:`, orderResult);
+
+            if (!orderResult.data || !orderResult.data.id) {
+                throw new Error(`Order ID not returned from API for ${entity}`);
+            }
+
+            const orderId = orderResult.data.id;
+
+            // Step 2: Create sales order lines for each product
+            const productsPayload = items.map((item, index) => ({
+                order_id: orderId,
+                line_number: index + 1,
+                erp_line_number: index + 1,
+                product_id: item.productId || item.id,
+                erp_prod_id: item.erpProdId || item.erp_prod_id || '',
+                quantity: parseInt(quantities[item.id] || item.quantity || 1, 10),
+                unit: item.unit || 'EA',
+                unit_price: parseFloat(item.unitPrice || item.price || 0),
+                net_amount: parseFloat(item.price || 0) * parseInt(quantities[item.id] || item.quantity || 1, 10),
+                sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+            }));
+
+            console.log(`Submitting ${entity} products payload:`, productsPayload);
+
+            // Add product lines to the order
+            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productsPayload),
+                credentials: 'include',
+            });
+
+            if (!linesResponse.ok) {
+                const errorText = await linesResponse.text();
+                console.error(`Server response for ${entity} product lines:`, errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || `Failed to add products to ${entity} order`);
+                } catch (e) {
+                    throw new Error(`Failed to add products to ${entity} order: ${linesResponse.status} ${linesResponse.statusText}`);
+                }
+            }
+
+            // Step 3: Remove items from cart
             try {
-                const errorData = JSON.parse(errorText);
-                throw new Error(errorData.message || `Failed to create ${entity} order`);
-            } catch (e) {
-                throw new Error(`Failed to create ${entity} order: ${orderResponse.status} ${orderResponse.statusText}`);
+                // For VMCO, we need to delete both machines and consumables
+                if (entity === 'vmco') {
+                    await deleteCartItems('vmco', t('VMCO Machines'));
+                    await deleteCartItems('vmco', t('VMCO Consumables'));
+                } else {
+                    // Map entity to category name
+                    let categoryName;
+                    if (entity === 'diyafa') categoryName = t('Diyafa');
+                    else if (entity === 'green mast') categoryName = t('Green Mast');
+                    else if (entity === 'naqui') categoryName = t('Naqui');
+
+                    await deleteCartItems(entity, categoryName);
+                }
+            } catch (err) {
+                console.error(`Error removing ${entity} cart items:`, err);
+                // Continue with the order process even if deletion fails
+            }
+
+            console.log(`Successfully placed order for ${entity}, Order #${orderId}`);
+        }
+
+        // Helper function to delete cart items
+        async function deleteCartItems(entity, categoryName) {
+            // Build the URL with query parameters
+            const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+            deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3'); // Use selected customer ID or default to '3'
+            deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            deleteUrl.searchParams.append('entity', entity);
+            deleteUrl.searchParams.append('category', categoryName);
+
+            console.log(`Deleting cart items with URL: ${deleteUrl}`);
+
+            const deleteResponse = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+
+            if (!deleteResponse.ok) {
+                console.error(`Error removing cart items: ${deleteResponse.status} ${deleteResponse.statusText}`);
+                // We don't throw here to allow the process to continue
             }
         }
-
-        // Parse the response to get the order ID
-        const orderResult = await orderResponse.json();
-        console.log(`${entity} order creation result:`, orderResult);
-
-        if (!orderResult.data || !orderResult.data.id) {
-            throw new Error(`Order ID not returned from API for ${entity}`);
-        }
-
-        const orderId = orderResult.data.id;
-
-        // Step 2: Create sales order lines for each product
-        const productsPayload = items.map((item, index) => ({
-            order_id: orderId,
-            line_number: index + 1,
-            erp_line_number: index + 1,
-            product_id: item.productId || item.id,
-            erp_prod_id: item.erpProdId || item.erp_prod_id || '',
-            quantity: parseInt(quantities[item.id] || item.quantity || 1, 10),
-            unit: item.unit || 'EA',
-            unit_price: parseFloat(item.unitPrice || item.price || 0),
-            net_amount: parseFloat(item.price || 0) * parseInt(quantities[item.id] || item.quantity || 1, 10),
-            sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
-        }));
-
-        console.log(`Submitting ${entity} products payload:`, productsPayload);
-
-        // Add product lines to the order
-        const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productsPayload),
-            credentials: 'include',
-        });
-
-        if (!linesResponse.ok) {
-            const errorText = await linesResponse.text();
-            console.error(`Server response for ${entity} product lines:`, errorText);
-            try {
-                const errorData = JSON.parse(errorText);
-                throw new Error(errorData.message || `Failed to add products to ${entity} order`);
-            } catch (e) {
-                throw new Error(`Failed to add products to ${entity} order: ${linesResponse.status} ${linesResponse.statusText}`);
-            }
-        }
-
-        // Step 3: Remove items from cart
-        try {
-            // For VMCO, we need to delete both machines and consumables
-            if (entity === 'vmco') {
-                await deleteCartItems('vmco', t('VMCO Machines'));
-                await deleteCartItems('vmco', t('VMCO Consumables'));
-            } else {
-                // Map entity to category name
-                let categoryName;
-                if (entity === 'diyafa') categoryName = t('Diyafa');
-                else if (entity === 'green mast') categoryName = t('Green Mast');
-                else if (entity === 'naqui') categoryName = t('Naqui');
-                
-                await deleteCartItems(entity, categoryName);
-            }
-        } catch (err) {
-            console.error(`Error removing ${entity} cart items:`, err);
-            // Continue with the order process even if deletion fails
-        }
-
-        console.log(`Successfully placed order for ${entity}, Order #${orderId}`);
-    }
-
-    // Helper function to delete cart items
-    async function deleteCartItems(entity, categoryName) {
-        // Build the URL with query parameters
-        const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-        deleteUrl.searchParams.append('customer_id', selectedCustomerId || '3'); // Use selected customer ID or default to '3'
-        deleteUrl.searchParams.append('branch_id', selectedBranchId);
-        deleteUrl.searchParams.append('entity', entity);
-        deleteUrl.searchParams.append('category', categoryName);
-
-        console.log(`Deleting cart items with URL: ${deleteUrl}`);
-
-        const deleteResponse = await fetch(deleteUrl, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-        });
-
-        if (!deleteResponse.ok) {
-            console.error(`Error removing cart items: ${deleteResponse.status} ${deleteResponse.statusText}`);
-            // We don't throw here to allow the process to continue
-        }
-    }
-};
+    };
     // Calculate total items for header and summary
     const totalItems = cartItems.reduce((sum, cat) => sum + cat.items.length, 0);
 
@@ -757,13 +884,13 @@ const handleRemoveItem = async (item) => {
                                                             Total: {parseInt(item.price) * (quantities[item.id] || item.quantity)}
                                                             <span className="sar-label">SAR</span>
                                                         </span>
-                                                         <button
-                                                    className="remove-btn"
-                                                    onClick={() => handleRemoveItem(item)} /* Fix: pass the current item, not category.item */
-                                                    disabled={isPlacingOrder}
-                                                >
-                                                    {isPlacingOrder ? t('Processing...') : t('Remove item')}
-                                                </button>
+                                                        <button
+                                                            className="remove-btn"
+                                                            onClick={() => handleRemoveItem(item)} /* Fix: pass the current item, not category.item */
+                                                            disabled={isPlacingOrder}
+                                                        >
+                                                            {isPlacingOrder ? t('Processing...') : t('Remove item')}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ))
