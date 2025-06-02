@@ -339,7 +339,7 @@ function Cart() {
         }));
     };
 
-   
+
     const handleContinueShopping = () => {
         navigate(-1);
     };
@@ -459,7 +459,7 @@ function Cart() {
 
                 const updateOrderPayload = {
                     id: orderId,
-                    paymentMethod:selectedPaymentMethod
+                    paymentMethod: selectedPaymentMethod
                 };
 
                 const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
@@ -492,7 +492,7 @@ function Cart() {
                     paidAmount: '0.00',
                     deliveryCharges: '0',
                     expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    paymentStatus:'Pending',
+                    paymentStatus: 'Pending',
                     status: 'Open',
                 };
 
@@ -529,47 +529,72 @@ function Cart() {
             const newLinesPayload = [];
             const updateLinesPayload = [];
 
-            categoryItems.forEach((item, index) => {
+            for (const item of categoryItems) {
                 const productId = item.productId || item.id;
                 const quantity = parseInt(quantities[item.id] || item.quantity || 1, 10);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const netAmount = unitPrice * quantity;
 
-                if (existingProductMap[productId]) {
-                    // Update existing line
-                    const existingLine = existingProductMap[productId];
-                    updateLinesPayload.push({
-                        id: existingLine.id,
-                        order_id: orderId,
-                        quantity: quantity,
-                        net_amount: netAmount
-                    });
-                } else {
-                    // Add as new line
-                    newLinesPayload.push({
-                        order_id: orderId,
-                        line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
-                        erp_line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
-                        product_id: productId,
-                        erp_prod_id: item.erpProdId,
-                        quantity: quantity,
-                        unit: item.unit || 'EA',
-                        unit_price: unitPrice,
-                        net_amount: netAmount,
-                        sales_tax_rate: parseFloat(item.vatPercentage).toFixed(2),
-                        sugar_tax_price: parseFloat(item.sugarTaxPrice).toFixed(2) || '0.00'
-                    });
-                }
-            });
-
-            // Submit new order lines if any
-            if (newLinesPayload.length > 0) {
-                await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                    method: 'POST',
+                // 1. Fetch sales order line for this product
+                const filters = encodeURIComponent(JSON.stringify({ orderId, productId }));
+                const fetchLineUrl = `${API_BASE_URL}/sales-order-lines/pagination?page=1&filters=${filters}`;
+                const lineResponse = await fetch(fetchLineUrl, {
+                    method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newLinesPayload),
                     credentials: 'include',
                 });
+
+                if (!lineResponse.ok) {
+                    console.error(`Error fetching sales order line for product ${productId}: ${lineResponse.status}`);
+                    continue; // Skip this product on error
+                }
+
+                const lineResult = await lineResponse.json();
+                const existingLine = lineResult.data && lineResult.data.data && lineResult.data.data.length > 0
+                    ? lineResult.data.data[0]
+                    : null;
+
+                if (existingLine) {
+                    // 2. Update the quantity using PATCH with orderId and productId
+                    const patchUrl = `${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`;
+                    const patchPayload = {
+                        quantity: quantity,
+                        net_amount: netAmount
+                    };
+                    const patchResponse = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(patchPayload),
+                        credentials: 'include',
+                    });
+
+                    if (!patchResponse.ok) {
+                        const errorText = await patchResponse.text();
+                        console.error(`Failed to update sales order line: ${patchResponse.status} ${errorText}`);
+                    }
+                } else {
+                    // 3. Insert new record (adjust payload as needed for your API)
+                    const newLinePayload = {
+                        order_id: orderId,
+                        product_id: productId,
+                        quantity: quantity,
+                        unit_price: unitPrice,
+                        net_amount: netAmount,
+                        // Add other required fields here
+                    };
+                    const createLineUrl = `${API_BASE_URL}/sales-order-lines`;
+                    const createResponse = await fetch(createLineUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newLinePayload),
+                        credentials: 'include',
+                    });
+
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error(`Failed to create sales order line: ${createResponse.status} ${errorText}`);
+                    }
+                }
             }
 
             // Update existing order lines if any
@@ -722,7 +747,7 @@ function Cart() {
         }
     };
 
-    
+
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
