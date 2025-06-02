@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -55,7 +55,7 @@ function Cart() {
         { category: t('Naqui'), items: [] }
     ]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-    const { token, user, isAuthenticated, logout } = useAuth();
+    const { token, user } = useAuth();
     console.log('User data:', user);
 
     const userId = user.userId;
@@ -258,7 +258,7 @@ function Cart() {
         };
 
         fetchCartItems();
-    }, [selectedBranchId, API_BASE_URL, i18n.language]); // Add i18n.language as a dependency
+    }, [selectedUserId, t, token, selectedCustomerId, selectedBranchId, i18n.language]); // Add i18n.language as a dependency
 
     const toggleCategory = (category) => {
         setCollapsedCategories(prev => {
@@ -339,15 +339,7 @@ function Cart() {
         }));
     };
 
-    const calculateTotal = () => {
-        return cartItems.reduce((total, category) => {
-            return total + category.items.reduce((catTotal, item) => {
-                const price = parseFloat(item.price) || 0;
-                return catTotal + price * (quantities[item.id] || item.quantity);
-            }, 0);
-        }, 0);
-    };
-
+   
     const handleContinueShopping = () => {
         navigate(-1);
     };
@@ -367,13 +359,6 @@ function Cart() {
         try {
             setIsPlacingOrder(true);
             setError(null);
-
-            // Calculate total amount for this category
-            const totalAmount = categoryItems.reduce((total, item) => {
-                const price = parseFloat(item.price) || 0;
-                const qty = quantities[item.id] || item.quantity || 1;
-                return total + (price * qty);
-            }, 0);
 
             // Determine entity from category
             const entity = getEntityFromCategory(categoryName);
@@ -442,8 +427,6 @@ function Cart() {
                     const productId = item.productId || item.id;
                     const quantity = parseInt(quantities[item.id] || item.quantity || 1, 10);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
-                    const netAmount = unitPrice * quantity;
-
                     if (existingProductMap[productId]) {
                         // Update existing line
                         const existingLine = existingProductMap[productId];
@@ -466,12 +449,6 @@ function Cart() {
                     });
                 }
 
-                // Now update the order itself
-                const totalAmount = categoryItems.reduce((total, item) => {
-                    const price = parseFloat(item.price) || 0;
-                    const qty = quantities[item.id] || item.quantity || 1;
-                    return total + (price * qty);
-                }, 0);
 
                 const updateOrderPayload = {
                     id: orderId,
