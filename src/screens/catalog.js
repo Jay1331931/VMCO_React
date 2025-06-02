@@ -50,7 +50,8 @@ function Catalog() {
     const productsPerPage = 60;
     const { token, user, isAuthenticated, logout } = useAuth();
     console.log('User Dataaaaa:', user);
-    // First filter products based on entity and other criteria
+    
+
     const [filteredProducts, setFilteredProducts] = useState([]);
 
 
@@ -66,11 +67,10 @@ function Catalog() {
     }));
 
     const customerId = user?.customerId;
-    // Update selectedCustomerId whenever customerId changes
+    const userId = user?.userId;
+    
     useEffect(() => {
-        if (customerId) {
-            setSelectedCustomerId(customerId);
-        }
+        if (customerId) {setSelectedCustomerId(customerId);}
     }, [customerId]);
 
 
@@ -493,7 +493,7 @@ function Catalog() {
             const sugarTaxPrice = product.sugarTaxPrice;
 
             // First check if this item already exists in the cart
-            const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"customer_id":3,"branch_id":${selectedLocation},"product_id":${productId}}`, {
+            const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":28, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -531,6 +531,7 @@ function Catalog() {
             else {
                 // Item doesn't exist in cart, add it as new
                 const cartItem = {
+                    userId: userId || '28', // Use user ID from auth context
                     customerId: selectedCustomerId || '3',
                     branchId: selectedLocation,
                     productId: product.id,
@@ -688,29 +689,127 @@ function Catalog() {
                             name="locationSelect"
                             value={selectedLocation}
                             onChange={(e) => {
-                                const selectedValue = e.target.value;
+                                const newBranchId = e.target.value;
+                                const currentBranchId = selectedLocation;
+                                
+                                // Don't do anything if selecting the same branch
+                                if (newBranchId === currentBranchId) return;
+                                
+                                const checkAndChangeBranch = async () => {
+                                    try {
+                                        // Only check for cart items if we already had a branch selected
+                                        if (currentBranchId) {
+                                            setIsLoading(true);
+                                            
+                                            // Set up parameters for pagination to check cart items
+                                            const params = new URLSearchParams({
+                                                page: 1,
+                                                pageSize: 100, // Large enough to capture all items
+                                                sortBy: 'id',
+                                                sortOrder: 'asc'
+                                            });
+                                            
+                                            // Create filters to check current cart
+                                            const filters = {
+                                                customer_id: selectedCustomerId || customerId || '3',
+                                                branch_id: currentBranchId
+                                            };
+                                            
+                                            console.log('Checking cart with filters:', filters);
+                                            
+                                            // Add filters as a single parameter with stringified JSON
+                                            params.append('filters', JSON.stringify(filters));
+                                            
+                                            // Fetch cart items for current branch
+                                            const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
+                                                method: 'GET',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json'
+                                                },
+                                                credentials: 'include'
+                                            });
+                                            
+                                            if (!response.ok) {
+                                                throw new Error(`Error checking cart: ${response.status} ${response.statusText}`);
+                                            }
+                                            
+                                            const result = await response.json();
+                                            console.log('Cart check result:', result);
+                                            
+                                            // Check if cart has items
+                                            const cartItems = result.data?.data || [];
+                                            const hasItems = cartItems.length > 0;
+                                            
+                                            if (hasItems) {
+                                                // Show confirmation dialog
+                                                const confirmChange = window.confirm(
+                                                    t("There are items in the cart. Do you want to discard the items?")
+                                                );
+                                                
+                                                if (!confirmChange) {
+                                                    // User canceled - don't change branch
+                                                    setIsLoading(false);
+                                                    return;
+                                                }
+                                                
+                                                // User confirmed, delete cart items before changing branch
+                                                console.log(`Deleting cart items for branch ${currentBranchId}...`);
 
-                                // Convert to string to ensure comparison works correctly
-                                const selectedBranch = branches.find(branch => String(branch.value) === String(selectedValue));
+                                                // Convert IDs to strings before adding them to the URL
+                                                const customerIdStr = String(selectedCustomerId || '3');
+                                                const branchIdStr = String(currentBranchId);
 
-                                // Save branch name to localStorage if found
-                                if (selectedBranch && selectedBranch.label) {
-                                    localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                    localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                    localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+                                                deleteUrl.searchParams.append('customer_id', customerIdStr);
+                                                deleteUrl.searchParams.append('branch_id', branchIdStr);
 
-                                    console.log('Selected branch:', selectedBranch.label);
-                                    console.log('Selected branch ID:', selectedBranch.value);
-                                    console.log('Selected branch ERP ID:', selectedBranch.erpBranchId);
-                                } else {
-                                    console.log('No branch found with id:', selectedValue);
-                                    console.log('Available branches:', branches);
-                                    console.log('Selected value type:', typeof selectedValue);
-                                    console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');
-                                }
+                                                const deleteResponse = await fetch(deleteUrl, {
+                                                    method: 'DELETE',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    credentials: 'include'
+                                                });
 
-                                // Update your local state
-                                setSelectedLocation(selectedValue);
+                                                if (!deleteResponse.ok) {
+                                                    console.error(`Warning: Failed to delete cart items: ${deleteResponse.status}`);
+                                                    // Continue with branch change anyway
+                                                } else {
+                                                    console.log('Successfully deleted cart items');
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Change branch selection
+                                        setSelectedLocation(newBranchId);
+                                        
+                                        // Find selected branch details
+                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
+                                        if (selectedBranch && selectedBranch.label) {
+                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                            console.log('Changed to branch:', selectedBranch.label);
+                                        }
+                                        
+                                    } catch (error) {
+                                        console.error('Error during branch change:', error);
+                                        alert(t("Error checking cart. Branch change may not work correctly."));
+                                        
+                                        // Still attempt to change branch despite error
+                                        setSelectedLocation(newBranchId);
+                                        
+                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
+                                        if (selectedBranch && selectedBranch.label) {
+                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                        }
+                                    } finally {
+                                        setIsLoading(false);
+                                    }
+                                };
+                                
+                                checkAndChangeBranch();
                             }}
                             options={branches}
                             className="location-select"

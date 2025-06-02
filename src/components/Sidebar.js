@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
-
+import { useAuth } from '../context/AuthContext';
 import {
   faChevronLeft,
   faChevronRight,
@@ -32,7 +32,10 @@ function Sidebar({ children, title }) {
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
+  const { token, user, isAuthenticated, logout } = useAuth();
 
+  console.log('User Data:', user);
+  
   const isRTL = i18n.language === 'ar';
 
   const toggleLanguage = () => {
@@ -87,6 +90,8 @@ function Sidebar({ children, title }) {
       case 'Catalog': navigate('/catalog'); break;
       case 'Support': navigate('/support'); break;
       case 'Maintenance Support': navigate('/maintenance'); break;
+      case 'Dashboard': navigate('/login'); break;
+      case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: user}}); break;
       default:
         // If no match is found, stay on current page
         break;

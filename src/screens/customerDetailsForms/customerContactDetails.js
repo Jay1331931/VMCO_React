@@ -10,7 +10,7 @@ export function getContactDetailsForm(t) {
       { type: 'text', name: 'primaryContactEmail', label: t('Email'), placeholder: t('Enter email'), required: true },
       { type: 'text', name: 'primaryContactPhone', label: t('Phone'), placeholder: t('Enter phone number'), required: true },
       { type: 'header', label: t('Business Head') },
-      { type: 'checkbox', name: 'businessHeadSameAsPrimary', label: '', options: [t('Same as Primary Contact Details')] },
+      { type: 'checkbox', name: 'businessHeadSameAsPrimary', label: '', options: [t('Same as Primary Contact Details')] , required: false },
       { type: 'empty'},
       { 
         type: 'text', 

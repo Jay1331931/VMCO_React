@@ -17,6 +17,9 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import Pagination from '../components/Pagination';
 import ApprovalDialog from '../components/ApprovalDialog';
+import RbacManager from '../utilities/rbac';
+import { useAuth } from '../context/AuthContext';
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -29,12 +32,12 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   const [defaultCenter] = useState([77.5946, 12.9716]);
   const [zoom] = useState(14);
   const [confirmedLocation, setConfirmedLocation] = useState(null);
-console.log('initialLat:', initialLat);
-    console.log('initialLng:', initialLng);
-    
+  console.log('initialLat:', initialLat);
+  console.log('initialLng:', initialLng);
+
   useEffect(() => {
     let mapInstance;
-    
+
     const initializeMap = async () => {
       mapInstance = new maplibregl.Map({
         container: mapContainer.current,
@@ -46,7 +49,7 @@ console.log('initialLat:', initialLat);
       mapInstance.on('load', async () => {
         setMap(mapInstance);
         try {
-          const position = initialLat && initialLng ? {coords: {latitude: initialLat, longitude: initialLng}} : await getCurrentPosition();
+          const position = initialLat && initialLng ? { coords: { latitude: initialLat, longitude: initialLng } } : await getCurrentPosition();
           console.log('Geolocation position:', position.coords);
           const { latitude, longitude } = position.coords;
           updateMarker(mapInstance, longitude, latitude);
@@ -154,6 +157,140 @@ console.log('initialLat:', initialLat);
   );
 };
 function CustomersDetails() {
+function transformCustomerData(customer, customerContacts) {
+
+    const contacts = Array.isArray(customerContacts)
+      ? customerContacts
+      : customerContacts ? [customerContacts] : [];
+
+    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+    const contactsMap = contacts.reduce((acc, contact) => {
+      acc[contact.contactType] = contact;
+      return acc;
+    }, {});
+
+    return {
+      ...customer,
+      // Contact details - each contact type is a separate row in DB
+      primaryContactName: contactsMap.primary?.name || '',
+      primaryContactDesignation: contactsMap.primary?.designation || '',
+      primaryContactEmail: contactsMap.primary?.email || '',
+      primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
+
+      businessHeadName: contactsMap.business?.name || '',
+      businessHeadDesignation: contactsMap.business?.designation || '',
+      businessHeadEmail: contactsMap.business?.email || '',
+      businessHeadMobile: contactsMap.business?.mobile || '',
+
+      financeHeadName: contactsMap.finance?.name || '',
+      financeHeadDesignation: contactsMap.finance?.designation || '',
+      financeHeadEmail: contactsMap.finance?.email || '',
+      financeHeadMobile: contactsMap.finance?.mobile || '',
+
+      purchasingHeadName: contactsMap.purchasing?.name || '',
+      purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+      purchasingHeadEmail: contactsMap.purchasing?.email || '',
+      purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
+
+      // Adding operations contact if needed
+      operationsHeadName: contactsMap.operations?.name || '',
+      operationsHeadDesignation: contactsMap.operations?.designation || '',
+      operationsHeadEmail: contactsMap.operations?.email || '',
+      operationsHeadMobile: contactsMap.operations?.mobile || '',
+    };
+  }
+
+  const fetchCustomerContacts = async (customerId, customer) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      if (result.status === 'Ok') {
+        setCustomer(transformCustomerData(customer, result.data));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customer contacts');
+      }
+    } catch (err) {
+      console.error('Error fetching customer contacts:', err);
+    }
+  };
+
+const fetchCustomer = async (customerId) => {
+  try {
+    // Fetch basic customer data
+    const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const result = await response.json();
+
+    if (result.status !== 'Ok') {
+      throw new Error(result.data?.message || 'Failed to fetch customer data');
+    }
+
+    let customerData = result.data;
+    console.log('Initial Customer Data:', customerData);
+
+    const [contactsResponse, paymentMethodsResponse] = await Promise.all([
+      fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      }),
+      fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      })
+    ]);
+
+    const contactsResult = await contactsResponse.json();
+    if (contactsResult.status === 'Ok') {
+      customerData = transformCustomerData(customerData, contactsResult.data);
+      console.log('Customer Data with Contacts:', customerData);
+    }
+
+    const paymentResult = await paymentMethodsResponse.json();
+    if (paymentResult.status === 'Ok') {
+      const paymentMethods = Array.isArray(paymentResult.data) 
+        ? paymentResult.data 
+        : [];
+      
+      customerData = {
+        ...customerData,
+        paymentMethods,
+        creditLimit: paymentMethods.find(m => m?.methodName === 'Credit')?.creditLimit || 0,
+        balance: paymentMethods.find(m => m?.methodName === 'Credit')?.balance || 0
+      };
+      console.log('Customer Data with Payment Methods:', customerData);
+    }
+    setCustomer(customerData);
+    setFormData(customerData)
+    return customerData;
+
+  } catch (err) {
+    console.error('Error in fetchCustomer:', err);
+    throw err;
+  }
+};
+const fetchCustomerPaymentMethods = async (customerId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const result = await response.json();
+    return result.status === 'Ok' ? result.data : null;
+  } catch (error) {
+    console.error('Error fetching payment methods:', error);
+    return null;
+  }
+};
   const contentRef = useRef(null);
   const [tabsHeight, setTabsHeight] = useState('auto');
 
@@ -165,10 +302,39 @@ function CustomersDetails() {
   const [branchesData, setBranchesData] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const { t, i18n } = useTranslation();
-const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
-const [approvalAction, setApprovalAction] = useState(null);
-  
-  // Define forms per tab
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [approvalAction, setApprovalAction] = useState(null);
+
+  const formMode = location.state?.mode;
+
+  const { token, user, isAuthenticated, logout } = useAuth();
+
+  useEffect(() => {
+  if (transformedCustomer?.customerId) {
+    fetchCustomer(transformedCustomer.customerId)
+      .then(fetchedCustomer => setCustomer(fetchedCustomer))
+      .catch(error => console.error('Error fetching customer:', error));
+  }
+}, [transformedCustomer?.customerId]);
+
+  let customerFormMode;
+  if (formMode === 'edit') {
+    customerFormMode = 'custDetailsEdit';
+  }
+  else {
+    if (transformedCustomer.customerStatus === 'New') {
+      customerFormMode = 'custDetailsAdd';
+    } else if (transformedCustomer.customerStatus === 'Approved') {
+      customerFormMode = 'custDetailsEdit';
+    } else {
+      customerFormMode = 'custDetailsEdit';
+    }
+  }
+
+  const rbacMgr = new RbacManager(user.userType == 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], customerFormMode);
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
     'Contact Details': getContactDetailsForm(t)['Contact Details'],
@@ -181,7 +347,6 @@ const [approvalAction, setApprovalAction] = useState(null);
     'Products & MoQ': [],
   }), [t]);
   const formDataByTab = useMemo(() => ({
-    // 'Business Details': getBusinessDetailsFormData(t)['Business Details'],
     'Business Details': getBusinessDetailsFormData(t, customer)['Business Details'],
     'Contact Details': getBusinessDetailsFormData(t, customer)['Contact Details'],
     'Financial Information': getBusinessDetailsFormData(t, customer)['Financial Information'],
@@ -195,7 +360,6 @@ const [approvalAction, setApprovalAction] = useState(null);
       const fields = formsByTab[tab];
 
       fields.forEach(field => {
-        // Only initialize if not already set (to prevent overwriting)
         if (!(field.name in allData)) {
           allData[field.name] = tabData[field.name] || (field.type === 'checkbox' ? [] : '');
         }
@@ -203,7 +367,7 @@ const [approvalAction, setApprovalAction] = useState(null);
     });
     return allData;
   }, [t, customer, formsByTab]);
-  // Arabic text checker
+
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
@@ -256,84 +420,162 @@ const [approvalAction, setApprovalAction] = useState(null);
       geolocation: { x: lat, y: lng }
     }));
     setChangedFields(prev => {
-    // Create a new Set from the previous state
-    const newSet = new Set(prev);
-    // Add the geolocation field name
-    newSet.add('geolocation');
-    return newSet;
-  });
+      const newSet = new Set(prev);
+      newSet.add('geolocation');
+      return newSet;
+    });
     setShowMap(false);
   };
-  const validateChangedFields = (action, checkRequired = false) => {
-    const errors = {};
-    changedFields.forEach((fieldName) => {
-      const field = formsByTab[activeTab].find(f => f.name === fieldName);
-      const value = formData[fieldName];
+  // const validateChangedFields = (action, changedFields, checkRequired = false) => {
+  //   const errors = {};
+  //   console.log('Validating changed fields:', changedFields);
+  //   changedFields.forEach((fieldName) => {
+  //     const field = formsByTab[activeTab].find(f => f.name === fieldName);
+  //     const value = formData[fieldName];
 
-      if(action === 'save changes' && field.required && !value) {
-        errors[fieldName] = t('This field is required.');
+  //     if (action === 'save changes' && field.required && !value) {
+  //       errors[fieldName] = t('This field is required.');
+  //     }
+
+  //     if (checkRequired && field?.type === 'text' && field.required && !value) {
+  //       errors[fieldName] = t('This field is required.');
+  //     }
+
+  //     if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
+  //       errors[fieldName] = t('Please enter Arabic text.');
+  //     }
+
+  //     if (fieldName.toLowerCase().includes('email')) {
+  //       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //       if (value && !emailRegex.test(value)) {
+  //         errors[fieldName] = t('Invalid email format');
+  //       }
+  //     }
+
+  //     if (fieldName.toLowerCase().includes('phone') || fieldName.toLowerCase().includes('number') || fieldName.toLowerCase().includes('#')) {
+  //       if (value && isNaN(value)) {
+  //         errors[fieldName] = t('Only numeric values are allowed');
+  //       }
+  //     }
+  //     if (activeTab === 'Contact Details') {
+  //       // Primary contact validations
+  //       if (checkRequired && fieldName === 'primaryContactName' && !formData[fieldName]) {
+  //         errors[fieldName] = t('Primary contact name is required');
+  //       }
+
+  //       if (checkRequired && fieldName === 'primaryContactEmail') {
+  //         if (!formData[fieldName]) {
+  //           errors[fieldName] = t('Primary contact email is required');
+  //         }
+  //       }
+
+  //       // Unique email validation for finance and purchasing heads
+  //       if (fieldName === 'financeHeadEmail' || fieldName === 'purchasingHeadEmail') {
+  //         const otherHeadEmail = fieldName === 'financeHeadEmail'
+  //           ? formData.purchasingHeadEmail
+  //           : formData.financeHeadEmail;
+
+  //         if (formData[fieldName] && formData[fieldName] === otherHeadEmail) {
+  //           errors[fieldName] = t('Finance and Purchasing heads must have unique emails');
+  //         }
+
+  //         // Check if they're using primary contact email
+  //         if (formData[fieldName] && formData[fieldName] === formData.primaryContactEmail) {
+  //           errors[fieldName] = t('This email is already used by primary contact');
+  //         }
+  //       }
+
+  //     }
+  //     // Add validation for nonTradingDocuments if needed
+  //     if (fieldName === 'nonTradingDocuments' && field.required && (!value || value.length === 0)) {
+  //       errors[fieldName] = t('At least one document is required');
+  //     }
+  //   });
+
+  //   setFormErrors(errors);
+  //   return Object.keys(errors).length === 0;
+  // };
+const validateChangedFields = (action, changedFields, checkRequired = false) => {
+  const errors = {};
+  console.log('Validating changed fields:', changedFields);
+
+  changedFields.forEach((fieldName) => {
+    // Find the field in all tabs if checkRequired, otherwise only in activeTab
+    let field;
+    if (checkRequired) {
+      for (const tab of Object.keys(formsByTab)) {
+        field = formsByTab[tab].find(f => f.name === fieldName);
+        if (field) break;
       }
+    } else {
+      field = formsByTab[activeTab].find(f => f.name === fieldName);
+    }
 
-      if (checkRequired && field?.type === 'text' && field.required && !value) {
-        errors[fieldName] = t('This field is required.');
+    // Skip if field is not found in any tab
+    if (!field) return;
+
+    const value = formData[fieldName];
+
+    if (action === 'save changes' && field.required && !value) {
+      errors[fieldName] = t('This field is required.');
+    }
+
+    if (checkRequired && field.type === 'text' && field.required && !value) {
+      errors[fieldName] = t('This field is required.');
+    }
+
+    if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
+      errors[fieldName] = t('Please enter Arabic text.');
+    }
+
+    if (fieldName.toLowerCase().includes('email')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailRegex.test(value)) {
+        errors[fieldName] = t('Invalid email format');
       }
+    }
 
-      if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
-        errors[fieldName] = t('Please enter Arabic text.');
+    if (
+      fieldName.toLowerCase().includes('phone') ||
+      fieldName.toLowerCase().includes('number') ||
+      fieldName.toLowerCase().includes('#')
+    ) {
+      if (value && isNaN(value)) {
+        errors[fieldName] = t('Only numeric values are allowed');
       }
+    }
 
-      if (fieldName.toLowerCase().includes('email')) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (value && !emailRegex.test(value)) {
-          errors[fieldName] = t('Invalid email format');
+    if (activeTab === 'Contact Details') {
+      if (checkRequired && fieldName === 'primaryContactName' && !formData[fieldName]) {
+        errors[fieldName] = t('Primary contact name is required');
+      }
+      if (checkRequired && fieldName === 'primaryContactEmail') {
+        if (!formData[fieldName]) {
+          errors[fieldName] = t('Primary contact email is required');
         }
       }
+      if (fieldName === 'financeHeadEmail' || fieldName === 'purchasingHeadEmail') {
+        const otherHeadEmail = fieldName === 'financeHeadEmail'
+          ? formData.purchasingHeadEmail
+          : formData.financeHeadEmail;
 
-      if (fieldName.toLowerCase().includes('phone') || fieldName.toLowerCase().includes('number') || fieldName.toLowerCase().includes('#')) {
-        if (value && isNaN(value)) {
-          errors[fieldName] = t('Only numeric values are allowed');
+        if (formData[fieldName] && formData[fieldName] === otherHeadEmail) {
+          errors[fieldName] = t('Finance and Purchasing heads must have unique emails');
+        }
+        if (formData[fieldName] && formData[fieldName] === formData.primaryContactEmail) {
+          errors[fieldName] = t('This email is already used by primary contact');
         }
       }
-      // Add other validation rules as needed (dropdowns, file size, etc.)
-      if (activeTab === 'Contact Details') {
-        // Primary contact validations
-        if (checkRequired && fieldName === 'primaryContactName' && !formData[fieldName]) {
-          errors[fieldName] = t('Primary contact name is required');
-        }
+    }
 
-        if (checkRequired && fieldName === 'primaryContactEmail') {
-          if (!formData[fieldName]) {
-            errors[fieldName] = t('Primary contact email is required');
-          }
-        }
+    if (fieldName === 'nonTradingDocuments' && field.required && (!value || value.length === 0)) {
+      errors[fieldName] = t('At least one document is required');
+    }
+  });
 
-        // Unique email validation for finance and purchasing heads
-        if (fieldName === 'financeHeadEmail' || fieldName === 'purchasingHeadEmail') {
-          const otherHeadEmail = fieldName === 'financeHeadEmail'
-            ? formData.purchasingHeadEmail
-            : formData.financeHeadEmail;
-
-          if (formData[fieldName] && formData[fieldName] === otherHeadEmail) {
-            errors[fieldName] = t('Finance and Purchasing heads must have unique emails');
-          }
-
-          // Check if they're using primary contact email
-          if (formData[fieldName] && formData[fieldName] === formData.primaryContactEmail) {
-            errors[fieldName] = t('This email is already used by primary contact');
-          }
-        }
-
-      }
-      // Add validation for nonTradingDocuments if needed
-      if (fieldName === 'nonTradingDocuments' && field.required && (!value || value.length === 0)) {
-        errors[fieldName] = t('At least one document is required');
-      }
-    });
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
+  setFormErrors(errors);
+  return Object.keys(errors).length === 0;
+};
   function transformCustomerData(customer, customerContacts) {
 
     const contacts = Array.isArray(customerContacts)
@@ -376,53 +618,53 @@ const [approvalAction, setApprovalAction] = useState(null);
       operationsHeadMobile: contactsMap.operations?.mobile || '',
     };
   }
-  const fetchCustomerContacts = async (customerId, customer) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      const result = await response.json();
-      if (result.status === 'Ok') {
-        setCustomer(transformCustomerData(customer, result.data));
-      } else {
-        throw new Error(response.data.message || 'Failed to fetch customer contacts');
-      }
-    } catch (err) {
-      console.error('Error fetching customer contacts:', err);
-    }
-  };
+  // const fetchCustomerContacts = async (customerId, customer) => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+  //       method: 'GET',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       credentials: 'include'
+  //     });
+  //     const result = await response.json();
+  //     if (result.status === 'Ok') {
+  //       setCustomer(transformCustomerData(customer, result.data));
+  //     } else {
+  //       throw new Error(response.data.message || 'Failed to fetch customer contacts');
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching customer contacts:', err);
+  //   }
+  // };
   const handleSave = async (action) => {
-switch (action) {
-    case 'save':
-    case 'save changes':
+    switch (action) {
+      case 'save':
+      case 'save changes':
 
-    if (activeTab === 'Contact Details') {
-      if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
-        formData.financeHeadEmail === formData.purchasingHeadEmail) {
-        alert(t('Finance and Purchasing heads must have unique emails'));
-        return;
-      }
+        if (activeTab === 'Contact Details') {
+          if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
+            formData.financeHeadEmail === formData.purchasingHeadEmail) {
+            alert(t('Finance and Purchasing heads must have unique emails'));
+            return;
+          }
 
-      if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
-        (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
-        alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
-        return;
-      }
+          if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
+            (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
+            alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
+            return;
+          }
+        }
+
+        if (!validateChangedFields(action, changedFields, false)) {
+          alert(t('Please correct errors before submitting.'));
+          return;
+        }
+
+        break;
+      case 'block':
+        formData.customerStatus = 'Blocked';
+        setChangedFields(prev => new Set(prev).add('customerStatus'));
+        break;
     }
-
-    if (!validateChangedFields(action, false)) {
-      alert(t('Please correct errors before submitting.'));
-      return;
-    }
-
-    break;
-    case 'block':
-      formData.customerStatus = 'Blocked';
-      setChangedFields(prev => new Set(prev).add('customerStatus'));
-    break;
-  }
 
     // Define contact detail fields
     const contactDetailFields = [
@@ -433,31 +675,33 @@ switch (action) {
     ];
 
     const paymentDetailFields = [
-      'prePayment','partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
+      'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
     ]
 
     const customerPayload = {};
     const contactCreatePayload = {};
     const contactUpdatePayload = {};
-    const paymentMethodPayload = {method_details: {
-      credit: {
-        isAllowed: formData.credit.isAllowed,
-        limit: formData.creditLimit,
-        period: formData.creditPeriod,
-        balance: formData.credit.balance
-      },
-      prePayment: {
-        isAllowed: formData.prePayment.isAllowed,
-      },
-      advancePayment: {
-        isAllowed: formData.advancePayment.isAllowed,
-        balance: formData.advancePayment.balance
-      },
-      COD: {
-        isAllowed: formData.COD.isAllowed,
-        limit: formData.COD.limit,
+    const paymentMethodPayload = {
+      method_details: {
+        credit: {
+          isAllowed: formData.credit.isAllowed,
+          limit: formData.creditLimit,
+          period: formData.creditPeriod,
+          balance: formData.credit.balance
+        },
+        prePayment: {
+          isAllowed: formData.prePayment.isAllowed,
+        },
+        advancePayment: {
+          isAllowed: formData.advancePayment.isAllowed,
+          balance: formData.advancePayment.balance
+        },
+        COD: {
+          isAllowed: formData.COD.isAllowed,
+          limit: formData.COD.limit,
+        }
       }
-    }};
+    };
     const customerData = customer || {};
 
     changedFields.forEach(fieldName => {
@@ -474,9 +718,9 @@ switch (action) {
             contactUpdatePayload[fieldName] = newValue;
           }
         } else if (paymentDetailFields.includes(fieldName)) {
-          
+
         }
-         else {
+        else {
           customerPayload[fieldName] = newValue;
         }
       }
@@ -603,132 +847,160 @@ switch (action) {
   const [dropdownOptions, setDropdownOptions] = useState({});
 
   const getOptionsFromBasicsMaster = async (fieldName) => {
-  const params = new URLSearchParams({
-    filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
-  });
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
+    const params = new URLSearchParams({
+      filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json(); // Don't forget 'await' here
+
+      const options = result.data.map(item => item.value);
+      return options;
+
+    } catch (err) {
+      console.error('Error fetching options:', err);
+      return []; // Return empty array on error
     }
+  };
 
-    const result = await response.json(); // Don't forget 'await' here
-    
-    const options = result.data.map(item => item.value);
-    return options;
+  const getOptionsFromEmployees = async (fieldName) => {
+    const params = new URLSearchParams({
+      filters: { designation: "sales executive" } // Properly stringify the filter
+    });
+    const supportStaffDesignation = "sales executive";
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const options = result.data.data.map(item => item.name);
+      return options;
+    } catch (err) {
+      console.error('Error fetching employee options:', err);
+      return [];
+    }
+  };
 
-  } catch (err) {
-    console.error('Error fetching options:', err);
-    return []; // Return empty array on error
-  }
-};
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       const options = {};
       // Find all dropdown fields and fetch their options
       const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown');
-      
+
       for (const field of dropdownFields) {
+
         try {
-          const data = await getOptionsFromBasicsMaster(field.name);
+          let data = await getOptionsFromBasicsMaster(field.name);
           // options[field.name] = data;
-          options[field.name] = data.map(opt => 
-          typeof opt === 'string' 
-            ? opt.charAt(0).toUpperCase() + opt.slice(1)
-            : opt // Fallback if not a string
-        );
+          if (field.name === 'assignedTo' || field.name === 'assignedToEntityWise') {
+            data = await getOptionsFromEmployees(field.name);
+          }
+          options[field.name] = data.map(opt =>
+            typeof opt === 'string'
+              ? opt.charAt(0).toUpperCase() + opt.slice(1)
+              : opt // Fallback if not a string
+          );
         } catch (err) {
           console.error(`Failed to fetch options for ${field.name}:`, err);
           options[field.name] = []; // Fallback to empty array
+
         }
       }
 
       setDropdownOptions(options);
-      console.log('dropdown options', dropdownOptions)
     };
 
     fetchDropdownOptions();
   }, [formsByTab, activeTab]);
   const [pendingFileUploads, setPendingFileUploads] = useState({});
 
-const handleFileUpload = async (e, fieldName) => {
-  const files = Array.from(e.target.files);
-  if (files.length === 0) return;
+  const handleFileUpload = async (e, fieldName) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-  try {
- // Special handling for logo upload
-    if (fieldName.includes('Logo')) {
-      const file = files[0];
-      const fileData = {
-        name: file.name,
-        file,
-        url: URL.createObjectURL(file),
-        isNew: true,
-      };
-      setUploadedFiles(prev => ({
-        ...prev,
-        [fieldName]: fileData, // Directly assign the object (no array spread)
-      }));
-      setPendingFileUploads(prev => ({
-        ...prev,
-        [fieldName]: fileData,
-      }));
-      return;
+    try {
+      // Special handling for logo upload
+      if (fieldName.includes('Logo')) {
+        const file = files[0];
+        const fileData = {
+          name: file.name,
+          file,
+          url: URL.createObjectURL(file),
+          isNew: true,
+        };
+        setUploadedFiles(prev => ({
+          ...prev,
+          [fieldName]: fileData, // Directly assign the object (no array spread)
+        }));
+        setPendingFileUploads(prev => ({
+          ...prev,
+          [fieldName]: fileData,
+        }));
+        return;
+      }
+
+      if (fieldName === 'nonTradingDocuments') {
+        // Multi-file upload (array)
+        const newFiles = files.map(file => ({
+          id: Date.now() + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          file,
+          url: URL.createObjectURL(file),
+          isNew: true,
+        }));
+
+        setUploadedFiles(prev => ({
+          ...prev,
+          [fieldName]: {
+            ...prev[fieldName], // Preserve existing object structure
+            name: [...(prev[fieldName]?.name || []), ...newFiles], // Update the `name` array
+          },
+        }));
+
+        setPendingFileUploads(prev => ({
+          ...prev,
+          [fieldName]: [...(prev[fieldName] || []), ...newFiles],
+        }));
+      } else {
+        // Single file upload (object)
+        const file = files[0];
+        const fileData = {
+          name: file.name,
+          file,
+          url: URL.createObjectURL(file),
+          isNew: true,
+        };
+
+        setUploadedFiles(prev => ({
+          ...prev,
+          [fieldName]: fileData, // Directly assign the object (no array spread)
+        }));
+
+        setPendingFileUploads(prev => ({
+          ...prev,
+          [fieldName]: fileData,
+        }));
+      }
+    } catch (error) {
+      console.error('Error handling file:', error);
+      alert(`Error handling file: ${error.message}`);
     }
-
-    if (fieldName === 'nonTradingDocuments') {
-      // Multi-file upload (array)
-      const newFiles = files.map(file => ({
-        id: Date.now() + Math.random().toString(36).substr(2, 9),
-        name: file.name,
-        file,
-        url: URL.createObjectURL(file),
-        isNew: true,
-      }));
-
-      setUploadedFiles(prev => ({
-        ...prev,
-        [fieldName]: {
-          ...prev[fieldName], // Preserve existing object structure
-          name: [...(prev[fieldName]?.name || []), ...newFiles], // Update the `name` array
-        },
-      }));
-
-      setPendingFileUploads(prev => ({
-        ...prev,
-        [fieldName]: [...(prev[fieldName] || []), ...newFiles],
-      }));
-    } else {
-      // Single file upload (object)
-      const file = files[0];
-      const fileData = {
-        name: file.name,
-        file,
-        url: URL.createObjectURL(file),
-        isNew: true,
-      };
-
-      setUploadedFiles(prev => ({
-        ...prev,
-        [fieldName]: fileData, // Directly assign the object (no array spread)
-      }));
-
-      setPendingFileUploads(prev => ({
-        ...prev,
-        [fieldName]: fileData,
-      }));
-    }
-  } catch (error) {
-    console.error('Error handling file:', error);
-    alert(`Error handling file: ${error.message}`);
-  }
-};
+  };
   const handleSaveFiles = async () => {
     try {
       const uploadPromises = [];
@@ -784,95 +1056,95 @@ const handleFileUpload = async (e, fieldName) => {
     }
   };
 
- const handleFileDelete = (fieldName, fileId = null) => {
-  if (fieldName === 'nonTradingDocuments' && fileId) {
-    // Handle deletion from nonTradingDocuments (multi-file upload)
-    setUploadedFiles(prev => {
-      // Ensure we're working with the correct structure { name: [...] }
-      const currentFiles = prev[fieldName]?.name || [];
-      
-      return {
+  const handleFileDelete = (fieldName, fileId = null) => {
+    if (fieldName === 'nonTradingDocuments' && fileId) {
+      // Handle deletion from nonTradingDocuments (multi-file upload)
+      setUploadedFiles(prev => {
+        // Ensure we're working with the correct structure { name: [...] }
+        const currentFiles = prev[fieldName]?.name || [];
+
+        return {
+          ...prev,
+          [fieldName]: {
+            ...prev[fieldName], // Preserve other properties if any
+            name: currentFiles.filter(file => file.id !== fileId), // Filter out the deleted file
+          },
+        };
+      });
+
+      // Update formData (if needed)
+      setFormData(prev => ({
         ...prev,
         [fieldName]: {
-          ...prev[fieldName], // Preserve other properties if any
-          name: currentFiles.filter(file => file.id !== fileId), // Filter out the deleted file
+          ...prev[fieldName],
+          name: (prev[fieldName]?.name || []).filter(file => file.id !== fileId),
         },
-      };
-    });
+      }));
 
-    // Update formData (if needed)
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: {
-        ...prev[fieldName],
-        name: (prev[fieldName]?.name || []).filter(file => file.id !== fileId),
-      },
-    }));
-
-    // Revoke object URL (cleanup)
-    const fileToDelete = uploadedFiles[fieldName]?.name?.find(file => file.id === fileId);
-    if (fileToDelete?.url) {
-      URL.revokeObjectURL(fileToDelete.url);
-    }
-
-  } else {
-    // Handle single file deletion (crCertificate, vatCertificate, etc.)
-    setUploadedFiles(prev => {
-      const newFiles = { ...prev };
-      delete newFiles[fieldName]; // Remove the entire field for single files
-      return newFiles;
-    });
-
-    setFormData(prev => {
-      // Revoke object URL if it exists
-      if (prev[fieldName]?.url?.startsWith('blob:')) {
-        URL.revokeObjectURL(prev[fieldName].url);
+      // Revoke object URL (cleanup)
+      const fileToDelete = uploadedFiles[fieldName]?.name?.find(file => file.id === fileId);
+      if (fileToDelete?.url) {
+        URL.revokeObjectURL(fileToDelete.url);
       }
-      return { ...prev, [fieldName]: null }; // Reset to null or empty object
-    });
-  }
-};
 
-const handleApprovalSubmit = async (action) => {
-  setApprovalAction(action);
-  setIsApprovalDialogOpen(true);
-};
+    } else {
+      // Handle single file deletion (crCertificate, vatCertificate, etc.)
+      setUploadedFiles(prev => {
+        const newFiles = { ...prev };
+        delete newFiles[fieldName]; // Remove the entire field for single files
+        return newFiles;
+      });
 
-const handleDialogSubmit = async (comment) => {
-  const payload = {
-    workflowData: customer.workflowData || {},
-    approvedStatus: approvalAction === 'approve' ? "Approved" : "Rejected",
-    comment: comment
+      setFormData(prev => {
+        // Revoke object URL if it exists
+        if (prev[fieldName]?.url?.startsWith('blob:')) {
+          URL.revokeObjectURL(prev[fieldName].url);
+        }
+        return { ...prev, [fieldName]: null }; // Reset to null or empty object
+      });
+    }
   };
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      credentials: 'include',
-    });
+  const handleApprovalSubmit = async (action) => {
+    setApprovalAction(action);
+    setIsApprovalDialogOpen(true);
+  };
 
-    if (response.ok) {
-      // Refresh customer data or navigate away
-      const result = await response.json();
-      // Handle success (maybe refresh the customer data)
-    } else {
-      throw new Error('Failed to submit approval');
+  const handleDialogSubmit = async (comment) => {
+    const payload = {
+      workflowData: customer.workflowData || {},
+      approvedStatus: approvalAction === 'approve' ? "Approved" : "Rejected",
+      comment: comment
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Refresh customer data or navigate away
+        const result = await response.json();
+        // Handle success (maybe refresh the customer data)
+      } else {
+        throw new Error('Failed to submit approval');
+      }
+    } catch (error) {
+      console.log('Error', error.message)
+      console.error(`Error ${approvalAction}ing customer:`, error);
+      alert(`Error ${approvalAction}ing customer: ${error.message}`);
     }
-  } catch (error) {
-    console.log('Error', error.message)
-    console.error(`Error ${approvalAction}ing customer:`, error);
-    alert(`Error ${approvalAction}ing customer: ${error.message}`);
-  }
-};
+  };
 
   const handleSubmit = (action) => {
-    if (!validateChangedFields(true)) {
+    if (!validateChangedFields('save changes', changedFields, true)) {
       alert(t('Please correct errors before submitting.'));
       return;
     }
-    if( action === 'approve') {
+    if (action === 'approve') {
       console.log('Approving customer:', customer);
       // Open dialog box where user can also add comments
       const comment = prompt(t('Please enter your comments for approval:'));
@@ -881,30 +1153,30 @@ const handleDialogSubmit = async (comment) => {
         workflowData: customer.workflowData || {},
         approvedStatus: "approved",
         comment: comment
-    }
-    try {
-    const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      credentials: 'include',
-    });
-    res.then(response => {
-      if (response.ok) {
-        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
       }
-    });
-  } catch (error) {
-    console.error('Error approving customer:', error);
-  alert(`Error approving customer: ${error.message}`);
-  }
-  }
+      try {
+        const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          credentials: 'include',
+        });
+        res.then(response => {
+          if (response.ok) {
+            // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
+          }
+        });
+      } catch (error) {
+        console.error('Error approving customer:', error);
+        alert(`Error approving customer: ${error.message}`);
+      }
+    }
 
-  if(action === 'reject') {
-    // Handle rejection logic
-    console.log('Rejecting customer:', customer);
+    if (action === 'reject') {
+      // Handle rejection logic
+      console.log('Rejecting customer:', customer);
       // Open dialog box where user can also add comments
       const comment = prompt(t('Please enter your comments for rejection:'));
       console.log('Rejection comment:', comment);
@@ -912,27 +1184,60 @@ const handleDialogSubmit = async (comment) => {
         workflowData: customer.workflowData || {},
         approvedStatus: "rejected",
         comment: comment
-    }
-    try {
-    const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      credentials: 'include',
-    });
-    res.then(response => {
-      if (response.ok) {
-        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
       }
-    });
-  } catch (error) {
-    console.error('Error rejecting customer:', error);
-  alert(`Error rejecting customer: ${error.message}`);
+      try {
+        const res = fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          credentials: 'include',
+        });
+        res.then(response => {
+          if (response.ok) {
+            // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} action triggered.`);
+          }
+        });
+      } catch (error) {
+        console.error('Error rejecting customer:', error);
+        alert(`Error rejecting customer: ${error.message}`);
+      }
+    }
+
+   if (action === 'submit') {
+  console.log('Submitting customer');
+  console.log('formData', formData);
+  
+  // 1. First update customer status (if using state, use proper setter)
+  const updatedCustomer = { ...customer, customerStatus: 'Pending' };
+  
+  // 2. Prepare all changed fields at once
+  const newChangedFields = new Set();
+  newChangedFields.add('customerStatus');
+  Object.keys(formData).forEach(field => newChangedFields.add(field));
+  
+  console.log('Prepared changedFields:', newChangedFields); // Debug
+  
+  // 3. Run validation against the PREPARED fields (not state)
+  if (!validateChangedFields('save changes', newChangedFields, true)) {
+    alert(t('Please correct errors before submitting.'));
+    return;
   }
-  }
-};
+  
+  // 4. Update state and handle save TOGETHER
+  setChangedFields(newChangedFields);
+  setCustomer(updatedCustomer); // If using state
+  
+  // 5. Now handle save with guaranteed updated values
+  handleSave('save changes');
+  
+  // Debug logs
+  console.log('State changedFields:', changedFields); // Will still be old value (async)
+  console.log('Current customer:', updatedCustomer);
+}
+
+  };
   // In your component
 
   const handleCheckboxChange = (e, fieldName) => {
@@ -954,9 +1259,9 @@ const handleDialogSubmit = async (comment) => {
         // Handle other checkboxes if needed
         let updatedValues = prev[fieldName] || {}
         if (checked) {
-          updatedValues = {...updatedValues, isAllowed: true};
+          updatedValues = { ...updatedValues, isAllowed: true };
         } else {
-          updatedValues = {...updatedValues, isAllowed: false};
+          updatedValues = { ...updatedValues, isAllowed: false };
         }
         updatedData[fieldName] = updatedValues;
         setChangedFields(prev => new Set(prev).add(fieldName));
@@ -989,35 +1294,35 @@ const handleDialogSubmit = async (comment) => {
 
     return elements;
   };
-const handleViewFile = async (customerId, fileName, fileType) => {
-  try {
-    if (fileType.includes('Logo')) {
-      const logoType = fileType.toLowerCase().includes('company') ? 'company' : 'brand';
-      const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          fileType, 
-          fileName: 'logo' // Can be undefined since we're using logoType
-        }),
-        credentials: 'include',
-      });
+  const handleViewFile = async (customerId, fileName, fileType) => {
+    try {
+      if (fileType.includes('Logo')) {
+        const logoType = fileType.toLowerCase().includes('company') ? 'company' : 'brand';
+        const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileType,
+            fileName: 'logo' // Can be undefined since we're using logoType
+          }),
+          credentials: 'include',
+        });
 
-      if (!response.ok) throw new Error('Failed to fetch logo');
-      
-      const blob = await response.blob();
-      // const blobUrl = URL.createObjectURL(blob);
-      
-      // // Open in new tab for viewing
-      // window.open(blobUrl, '_blank');
-      // Create object URL from the Blob
-    const imageUrl = URL.createObjectURL(blob);
-    
-    // Create a new window/tab with the image
-    const newWindow = window.open('', '_blank');
-    newWindow.document.write(`
+        if (!response.ok) throw new Error('Failed to fetch logo');
+
+        const blob = await response.blob();
+        // const blobUrl = URL.createObjectURL(blob);
+
+        // // Open in new tab for viewing
+        // window.open(blobUrl, '_blank');
+        // Create object URL from the Blob
+        const imageUrl = URL.createObjectURL(blob);
+
+        // Create a new window/tab with the image
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -1030,48 +1335,48 @@ const handleViewFile = async (customerId, fileName, fileType) => {
         </body>
       </html>
     `);
-    newWindow.document.close();
-      // Clean up after delay
-      setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
-      return;
+        newWindow.document.close();
+        // Clean up after delay
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileType, fileName }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch file');
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      if (fileType === 'nonTradingDocuments' || fileName.endsWith('.pdf')) {
+        window.open(blobUrl, '_blank');
+      } else {
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      // Clean up
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Error viewing file:', error);
+      alert('Failed to open file. Please try again.');
     }
+  };
 
-    const response = await fetch(`${API_BASE_URL}/customers/getfile/${customerId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ fileType, fileName }),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch file');
-    }
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    if (fileType === 'nonTradingDocuments' || fileName.endsWith('.pdf')) {
-      window.open(blobUrl, '_blank');
-    } else {
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    // Clean up
-    URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    console.error('Error viewing file:', error);
-    alert('Failed to open file. Please try again.');
-  }
-};
-  
-return (
+  return (
     <Sidebar>
       <div className='customers'>
         <div className={`customer-onboarding-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
@@ -1130,7 +1435,6 @@ return (
                       return acc; // skip next empty by NOT pushing it
                     }
 
-                    // Default push
                     acc.push(field);
                     return acc;
                   }, []).map((field) => {
@@ -1148,7 +1452,7 @@ return (
 
                         return (
                           <div className="form-group" key={field.name}>
-                            <label htmlFor={`${field.name}-input`}>
+                            <label htmlFor={`${field.name}-input`} hidden={!isV(field.name)}>
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
                             </label>
@@ -1179,10 +1483,11 @@ return (
                                 ? formData[`primaryContact${field.name.replace('businessHead', '')}`] || ''
                                 : formData[field.name] || ''}
                               onChange={handleInputChange}
-                              disabled={isDisabled}
+                              disabled={isDisabled || !isE(field.name)}
+                              hidden={!isV(field.name)}
                               placeholder={field.placeholder}
                               className={
-                                field.name.toLowerCase().includes('arabic')
+                                field.label.toLowerCase().includes('arabic')
                                   ? 'text-field arabic'
                                   : 'text-field small'
                               }
@@ -1219,7 +1524,7 @@ return (
                       case 'dropdown':
                         return (
                           <div className="form-group" key={field.name}>
-                            <label htmlFor={`${field.name}-select`}>
+                            <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
                             </label>
@@ -1228,7 +1533,8 @@ return (
                               name={field.name}
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
-                              onBlur={validateChangedFields}
+                              disabled={!isE(field.name)}
+                              hidden={!isV(field.name)}
                               className="dropdown"
                               placeholder="Value"
                               required
@@ -1237,12 +1543,12 @@ return (
                                 Value
                               </option>
                               {
-                                dropdownOptions[field.name]?dropdownOptions[field.name].map((opt, idx) =>(
+                                dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => (
                                   <option key={idx} value={opt}>
-                                  {t(opt)}
-                                </option>
-                                ) 
-                                ):[]
+                                    {t(opt)}
+                                  </option>
+                                )
+                                ) : []
                               }
                               {/* {field.options.map((opt, idx) => (
                                 <option key={idx} value={opt}>
@@ -1250,6 +1556,9 @@ return (
                                 </option>
                               ))} */}
                             </select>
+                            {formErrors[field.name] && (
+                              <div className="error">{formErrors[field.name]}</div>
+                            )}
                           </div>
                         );
                       case 'file':
@@ -1271,32 +1580,32 @@ return (
                                 {t('Upload')}
                               </label>
                               {uploadedFiles[field.name].isNew ? (
-          <span className="file-name">
-            <button
-              type="button"
-              className="file-link-button"
-            >
-              {uploadedFiles[field.name].name}
-            </button>
-            <button
-              type="button"
-              className="delete-file-button"
-              onClick={() => handleFileDelete(field.name)}
-            >
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-          </span>
-        ) : (
-          <span className="file-name">
-            <button
-              type="button"
-              className="view-file-button"
-              onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
-            >
-              <FontAwesomeIcon icon={faEye} />
-            </button>
-          </span>
-        )}
+                                <span className="file-name">
+                                  <button
+                                    type="button"
+                                    className="file-link-button"
+                                  >
+                                    {uploadedFiles[field.name].name}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="delete-file-button"
+                                    onClick={() => handleFileDelete(field.name)}
+                                  >
+                                    <FontAwesomeIcon icon={faXmark} />
+                                  </button>
+                                </span>
+                              ) : (
+                                <span className="file-name">
+                                  <button
+                                    type="button"
+                                    className="view-file-button"
+                                    onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+                                  >
+                                    <FontAwesomeIcon icon={faEye} />
+                                  </button>
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -1326,17 +1635,17 @@ return (
                                 accept=".pdf,application/pdf"
                                 id={`file-${field.name}`}
                                 onChange={(e) => {
-            const files = e.target.files;
-            if (files.length > 0) {
-              // Client-side validation
-              if (files[0].type !== 'application/pdf') {
-                alert('Please upload only PDF files');
-                e.target.value = ''; // Clear the input
-                return;
-              }
-              handleFileUpload(e, field.name);
-            }
-          }}
+                                  const files = e.target.files;
+                                  if (files.length > 0) {
+                                    // Client-side validation
+                                    if (files[0].type !== 'application/pdf') {
+                                      alert('Please upload only PDF files');
+                                      e.target.value = ''; // Clear the input
+                                      return;
+                                    }
+                                    handleFileUpload(e, field.name);
+                                  }
+                                }}
                                 className="hidden-file-input"
                               />
                               <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{
@@ -1351,172 +1660,172 @@ return (
                             {/* Third column - File display */}
                             <td className="file-display-cell">
                               {uploadedFiles[field.name] && (
-  <div className="file-display">
-    {Array.isArray(uploadedFiles[field.name]) ? (
-      uploadedFiles[field.name].map((fileObj, index) => (
-        <div key={fileObj.id || index} className="file-item">
-          {fileObj.isNew ? (
-            <span className="file-name">
-              <button
-                type="button"
-                className="file-link-button"
-              >
-                {fileObj.name}
-              </button>
-              <button
-                type="button"
-                className="delete-file-button"
-                onClick={() => handleFileDelete(field.name, fileObj.id)}
-              >
-                <FontAwesomeIcon icon={faXmark} />
-              </button>
-            </span>
-          ) : (
-            <span className='file-name'>
-              {fileObj.name}
-              <button
-                type="button"
-                className="view-file-button"
-                onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
-              >
-                View <FontAwesomeIcon icon={faEye} />
-              </button>
-            </span>
-          )}
-        </div>
-      ))
-    ) : (
-      <div className="file-item">
-        {uploadedFiles[field.name].isNew ? (
-          <span className="file-name">
-            <button
-              type="button"
-              className="file-link-button"
-            >
-              {uploadedFiles[field.name].name}
-            </button>
-            <button
-              type="button"
-              className="delete-file-button"
-              onClick={() => handleFileDelete(field.name)}
-            >
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-          </span>
-        ) : (
-          <span className="file-name">
-            <button
-              type="button"
-              className="view-file-button"
-              onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
-            >
-              <FontAwesomeIcon icon={faEye} />
-            </button>
-          </span>
-        )}
-      </div>
-    )}
-  </div>
-)}
+                                <div className="file-display">
+                                  {Array.isArray(uploadedFiles[field.name]) ? (
+                                    uploadedFiles[field.name].map((fileObj, index) => (
+                                      <div key={fileObj.id || index} className="file-item">
+                                        {fileObj.isNew ? (
+                                          <span className="file-name">
+                                            <button
+                                              type="button"
+                                              className="file-link-button"
+                                            >
+                                              {fileObj.name}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="delete-file-button"
+                                              onClick={() => handleFileDelete(field.name, fileObj.id)}
+                                            >
+                                              <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+                                          </span>
+                                        ) : (
+                                          <span className='file-name'>
+                                            {fileObj.name}
+                                            <button
+                                              type="button"
+                                              className="view-file-button"
+                                              onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
+                                            >
+                                              View <FontAwesomeIcon icon={faEye} />
+                                            </button>
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <div className="file-item">
+                                      {uploadedFiles[field.name].isNew ? (
+                                        <span className="file-name">
+                                          <button
+                                            type="button"
+                                            className="file-link-button"
+                                          >
+                                            {uploadedFiles[field.name].name}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="delete-file-button"
+                                            onClick={() => handleFileDelete(field.name)}
+                                          >
+                                            <FontAwesomeIcon icon={faXmark} />
+                                          </button>
+                                        </span>
+                                      ) : (
+                                        <span className="file-name">
+                                          <button
+                                            type="button"
+                                            className="view-file-button"
+                                            onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+                                          >
+                                            <FontAwesomeIcon icon={faEye} />
+                                          </button>
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </td>
                           </tr>
                         );
 
                       case 'multiDocument':
-  return (
-    <tr className="document-upload full-width" key={field.name}>
-      {/* Label */}
-      <td className="label-cell" style={{ whiteSpace: 'nowrap', paddingRight: '16px', verticalAlign: 'top' }}>
-        <label htmlFor={`file-${field.name}`}>
-          {field.label}
-          {field.required && <span className="required-field">*</span>}
-        </label>
-      </td>
+                        return (
+                          <tr className="document-upload full-width" key={field.name}>
+                            {/* Label */}
+                            <td className="label-cell" style={{ whiteSpace: 'nowrap', paddingRight: '16px', verticalAlign: 'top' }}>
+                              <label htmlFor={`file-${field.name}`}>
+                                {field.label}
+                                {field.required && <span className="required-field">*</span>}
+                              </label>
+                            </td>
 
-      {/* Upload Button */}
-      <td className="upload-cell" style={{ width: '100px', paddingRight: '16px', verticalAlign: 'top' }}>
-        <input
-          type="file"
-          accept="pdf/*"
-          id={`file-${field.name}`}
-          onChange={(e) => handleFileUpload(e, field.name)}
-          className="hidden-file-input"
-          multiple
-        />
-        <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{ display: 'inline-block', width: '100%', textAlign: 'center' }}>
-          {t('Upload')}
-        </label>
-      </td>
+                            {/* Upload Button */}
+                            <td className="upload-cell" style={{ width: '100px', paddingRight: '16px', verticalAlign: 'top' }}>
+                              <input
+                                type="file"
+                                accept="pdf/*"
+                                id={`file-${field.name}`}
+                                onChange={(e) => handleFileUpload(e, field.name)}
+                                className="hidden-file-input"
+                                multiple
+                              />
+                              <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{ display: 'inline-block', width: '100%', textAlign: 'center' }}>
+                                {t('Upload')}
+                              </label>
+                            </td>
 
-      {/* File Display */}
-      <td className="file-display-cell">
-        {uploadedFiles[field.name]?.name?.length > 0 && (
-  <div className="uploaded-files-list">
-    {uploadedFiles[field.name].name.map((file, index) => {
-  const fileObj = typeof file === 'string' ? { name: file } : file;
-  
-  return ( // <-- Add this return statement
-    <div
-      key={fileObj.id || index}
-      className={`file-display ${fileObj.isNew ? 'new-file' : 'existing-file'}`}
-    >
-      <span className="file-name">
-        {fileObj.isNew !== true && (
-          <button
-            type="button"
-            className="view-file-button"
-            onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
-            title={fileObj.name}
-          >
-            <FontAwesomeIcon icon={faEye} />
-          </button>
-        )}
-        {!fileObj.isNew && (
-        <span className='file-link-button' style={{ marginLeft: fileObj.isNew !== true ? '8px' : 0 }}>
-          {fileObj.name}
-        </span>
-        )}
-        {fileObj.isNew && (
-        <span className="file-name">
-            <button
-              type="button"
-              className="file-link-button"
-            >
-              {fileObj.name}
-            </button>
-            <button
-              type="button"
-              className="delete-file-button"
-              onClick={() => handleFileDelete(field.name, fileObj.id)}
-            >
-              <FontAwesomeIcon icon={faXmark} />
-            </button>
-          </span>
-        )}
-      </span>
-    </div>
-  );
-})}
-  </div>
-)}
+                            {/* File Display */}
+                            <td className="file-display-cell">
+                              {uploadedFiles[field.name]?.name?.length > 0 && (
+                                <div className="uploaded-files-list">
+                                  {uploadedFiles[field.name].name.map((file, index) => {
+                                    const fileObj = typeof file === 'string' ? { name: file } : file;
 
-      </td>
-    </tr>
-  );
+                                    return ( // <-- Add this return statement
+                                      <div
+                                        key={fileObj.id || index}
+                                        className={`file-display ${fileObj.isNew ? 'new-file' : 'existing-file'}`}
+                                      >
+                                        <span className="file-name">
+                                          {fileObj.isNew !== true && (
+                                            <button
+                                              type="button"
+                                              className="view-file-button"
+                                              onClick={() => handleViewFile(customer.id, fileObj.name, field.name)}
+                                              title={fileObj.name}
+                                            >
+                                              <FontAwesomeIcon icon={faEye} />
+                                            </button>
+                                          )}
+                                          {!fileObj.isNew && (
+                                            <span className='file-link-button' style={{ marginLeft: fileObj.isNew !== true ? '8px' : 0 }}>
+                                              {fileObj.name}
+                                            </span>
+                                          )}
+                                          {fileObj.isNew && (
+                                            <span className="file-name">
+                                              <button
+                                                type="button"
+                                                className="file-link-button"
+                                              >
+                                                {fileObj.name}
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="delete-file-button"
+                                                onClick={() => handleFileDelete(field.name, fileObj.id)}
+                                              >
+                                                <FontAwesomeIcon icon={faXmark} />
+                                              </button>
+                                            </span>
+                                          )}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
 
-                        case 'checkbox':
+                            </td>
+                          </tr>
+                        );
+
+                      case 'checkbox':
                         return (<>
                           <div className='form-header'>
-                            <span className="checkbox-group-label">
+                            <span className="checkbox-group-label" >
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
                             </span>
                           </div>
-                          <div className="form-group" key={field.name}>
+                          <div className="form-group" key={field.name} >
 
                             {field.options.map((option, idx) => (
                               <div key={idx} className="checkbox-option">
-                                <label htmlFor={`${field.name}-${idx}`}>
+                                <label htmlFor={`${field.name}-${idx}`} hidden={!isV(field.name)}>
                                   <input
                                     id={`${field.name}-${idx}`}
                                     type="checkbox"
@@ -1554,7 +1863,7 @@ return (
                         </button>
                         <h3>{t('Select Location')}</h3>
                         <LocationPicker onLocationSelect={handleLocationSelect} initialLat={formData.geolocation?.x}
-        initialLng={formData.geolocation?.y}/>
+                          initialLng={formData.geolocation?.y} />
                       </div>
                     </div>
                   )}
@@ -1563,8 +1872,9 @@ return (
             </div>
           </div>
           {/* Action Buttons */}
+          
           {activeTab === 'Products & MoQ' || activeTab === 'Branches' ?
-            [            ] :
+            [] :
             (
               <div className="customer-onboarding-form-actions">
                 <div className="status-text">
@@ -1572,29 +1882,29 @@ return (
                   <span className="status-badge">{t(customer.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
-                  <button className="save" onClick={() => handleSave('save')}>
+                  {isV('btnSave') && (transformedCustomer.customerStatus === 'New') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave')}>
                     {t('Save')}
-                  </button>
-                  <button className="save" onClick={() => handleSave('save changes')}>
+                  </button>}
+                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'New') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={!isE('btnSaveChanges')}>
                     {t('Save Changes')}
-                  </button>
-                  <button className="block" onClick={() => handleSubmit('submit')}>
+                  </button>}
+                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'New') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
                     {t('Submit')}
-                  </button>
-                  
-                  { customer.isApprovalMode && (
+                  </button>}
+
+                  {customer.isApprovalMode && (
                     <>
-                    <button className="block" onClick={() => handleSave('block')}>
-                    {t('Block')}
-                  </button>
-                  <button className="approve" onClick={() => handleApprovalSubmit('approve')}>
-                    {t('Approve')}
-                  </button>
-                  <button className="reject" onClick={() => handleApprovalSubmit('reject')}>
-                    {t('Reject')}
-                  </button>
-                  </>
-                )}
+                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock')}>
+                        {t('Block')}
+                      </button>}
+                      {isV('btnApprove') && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
+                        {t('Approve')}
+                      </button>}
+                      {isV('btnReject') && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
+                        {t('Reject')}
+                      </button>}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -1602,20 +1912,20 @@ return (
         {customer.isApprovalMode && (
           <>
             <div>
-              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={customer.approvalHistory ? customer.approvalHistory : []}/>
+              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={customer.approvalHistory ? customer.approvalHistory : []} />
             </div>
           </>
         )}
       </div>
       <ApprovalDialog
-  isOpen={isApprovalDialogOpen}
-  onClose={() => setIsApprovalDialogOpen(false)}
-  action={approvalAction}
-  onSubmit={handleDialogSubmit}
-  customerName={customer.customerName || 'this customer'}
-  title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
-  subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this customer?') : t('Are you sure you want to reject this customer?')}
-/>
+        isOpen={isApprovalDialogOpen}
+        onClose={() => setIsApprovalDialogOpen(false)}
+        action={approvalAction}
+        onSubmit={handleDialogSubmit}
+        customerName={customer.customerName || 'this customer'}
+        title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
+        subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this customer?') : t('Are you sure you want to reject this customer?')}
+      />
 
     </Sidebar>
 
