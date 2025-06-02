@@ -1,5 +1,3 @@
-import { str } from "ajv";
-
 // RBAC Manager class
 class RbacManager {
   constructor(role, form,inWF = null,isOwner = false) {
@@ -397,8 +395,7 @@ class RbacManager {
           quantityController: { visible: true, editable: true },
           addToCart: { visible: true, editable: true },
           goToCart: { visible: true, editable: true },
-          sort: { visible: true, editable: true },
-          search: { visible: true, editable: true }
+          sort: { visible: true, editable: true }
         }
       },
 
@@ -1292,7 +1289,7 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && (fieldInWF == true ? true : false);
+    return (access === null ? true : access.editable) && (this.itemInWF === null ? true : this.isUserOwner) && (fieldInWF === true ? true : false);
   }
 }
 
