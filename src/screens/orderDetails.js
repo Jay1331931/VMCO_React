@@ -156,9 +156,22 @@ function OrderDetails() {
               }
             }}
           />
-          <span title={row.unit || ''}>
-            {row.unit && <i className="fa fa-balance-scale" style={{ color: '#0a5640', fontSize: 18 }} />}
-          </span>
+          {isV('stock') &&(<span>
+            <button
+              type="button"
+              style={{background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640', 
+                borderRadius: '4px',
+                fontSize: '12px',
+                padding: '2px 8px',
+                marginLeft: '6px',
+                cursor: 'pointer'
+              }}
+              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
+            >
+              Stock
+            </button>
+          </span>)}
         </div>
       ),
       include: isV('quantityCol'),
@@ -182,17 +195,26 @@ function OrderDetails() {
       key: 'salesTaxRate',
       header: 'Tax (SAR)',
       render: (row) => {
-        const taxRate = parseFloat(row.salesTaxRate || row.vatPercentage || 0);
+        const taxRate = parseFloat(row.sugarTaxPrice);
         return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
       },
       include: isV('salesTaxRateCol'),
     },
     {
+      key: 'vatPercentage',
+      header: 'Tax (VAT)',
+      render: (row) => {
+        const taxRate = parseFloat(row.vatPercentage);
+        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
+      },
+      include: isV('vatPercentageCol'),
+    },
+    {
       key: 'netAmount',
       header: 'Net Amount (SAR)',
       render: (row) => {
-        const qty = parseFloat(row.quantity || 1);
-        const price = parseFloat(row.unitPrice || 0);
+        const qty = parseFloat(row.quantity);
+        const price = parseFloat(row.unitPrice);
         return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
       },
       include: isV('netAmountCol'),
@@ -406,9 +428,10 @@ function OrderDetails() {
           erp_prod_id: product.erpProdId || product.erp_prod_id || '',
           quantity: parseInt(product.quantity || 1, 10),
           unit: product.unit || '',
-          unit_price: parseFloat(product.unitPrice || 0),
-          net_amount: parseFloat(product.netAmount || 0),
-          sales_tax_rate: parseFloat(product.salesTaxRate || product.vatPercentage || 0)
+          unit_price: parseFloat(product.unitPrice),
+          net_amount: parseFloat(product.netAmount),
+          sugar_tax_price: parseFloat(product.sugarTaxPrice),
+          sales_tax_rate: parseFloat(product.vatPercentage),
         }));
 
         console.log('Submitting products payload:', productsPayload);
@@ -777,10 +800,10 @@ function OrderDetails() {
                             id="customerField"
                             name="selectedCustomerName"
                             value={formData.selectedCustomerName}
-                            onClick={() => isE('customerName') && setShowCustomerPopup(true)}
+                            onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
-                            disabled={!isE('customerName')}
+                            disabled={isE('customerName')}
                           />
                         </div>
                       ) : (
@@ -813,7 +836,7 @@ function OrderDetails() {
                             className="customer-input"
                             placeholder={t('Click to select branch')}
                             readOnly
-                            disabled={!isE('branchName')}
+                            disabled={isE('branchName')}
                           />
                         </div>
                       ) : (
@@ -835,7 +858,7 @@ function OrderDetails() {
                         name="orderBy"
                         value={formData.orderBy ?? ''}
                         onChange={handleInputChange}
-                        disabled={!isE('orderBy')}
+                        disabled={isE('orderBy')}
                       />
                     </div>
                   )}
@@ -847,7 +870,7 @@ function OrderDetails() {
                         name="erp"
                         value={formData.erp ?? ''}
                         onChange={handleInputChange}
-                        disabled={!isE('erpId')}
+                        disabled={isE('erpId')}
                         placeholder={t('ERP ID')}
                       />
                     </div>
@@ -862,7 +885,7 @@ function OrderDetails() {
                           value={formData.entity || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={!isE('entity')}
+                          disabled={isE('entity')}
                         >
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
@@ -890,7 +913,7 @@ function OrderDetails() {
                           value={formData.paymentMethod || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={!isE('paymentMethod')}
+                          disabled={isE('paymentMethod')}
                         >
                           <option value="">{t('Select Payment Method')}</option>
                           {paymentMethodOptions.map((paymentMethod, index) => (

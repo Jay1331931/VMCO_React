@@ -1,4 +1,4 @@
-import { str } from "ajv";
+import constants from '../constants';
 
 // RBAC Manager class
 class RbacManager {
@@ -9,9 +9,8 @@ class RbacManager {
     this.isUserOwner = isOwner;
   }
 
-  // Static roles definition
   static roleformfieldmap = {
-    admin: {
+    [constants.ROLES.SUPER_ADMIN]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -32,7 +31,7 @@ class RbacManager {
       },
       orderDetailAdd: {
         fields: {
-          orderDetails: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
           customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
@@ -51,6 +50,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
+          stock: { visible: true, editable: true},
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
@@ -62,7 +62,7 @@ class RbacManager {
       },
       orderDetailEdit: {
         fields: {
-          orderDetails: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
           customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
@@ -81,6 +81,7 @@ class RbacManager {
           addImages: { visible: true, editable: true },
           products: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
+          stock: { visible: true, editable: true},
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
@@ -309,7 +310,7 @@ class RbacManager {
       }
     },
 
-    customer_primary: {
+    [constants.ROLES.CUSTOMER_PRIMARY]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -331,13 +332,13 @@ class RbacManager {
       },
       orderDetailAdd: {
         fields: {
-          orderDetails: { visible: true, editable: false },
-          customerName: { visible: true, editable: false },
+          orderDetails: { visible: true, editable: true },
+          customerName: { visible: true, editable: true },
           branchName: { visible: true, editable: false },
           orderBy: { visible: true, editable: false },
           erpId: { visible: true, editable: false },
-          entity: { visible: true, editable: false },
-          paymentMethod: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
           totalAmount: { visible: true, editable: false },
           paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },
@@ -350,6 +351,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: false },
           orderFooter: { visible: true, editable: false },
+          stock: { visible: false, editable: false},
           btnSave: { visible: true, editable: false },
           btnCancel: { visible: true, editable: false },
           btnInvoice: { visible: true, editable: false },
@@ -380,6 +382,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
+          stock: { visible: false, editable: false},
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
@@ -397,8 +400,7 @@ class RbacManager {
           quantityController: { visible: true, editable: true },
           addToCart: { visible: true, editable: true },
           goToCart: { visible: true, editable: true },
-          sort: { visible: true, editable: true },
-          search: { visible: true, editable: true }
+          sort: { visible: true, editable: true }
         }
       },
 
@@ -565,7 +567,7 @@ class RbacManager {
       },
     },
 
-    branch_primary: {
+   [constants.ROLES.BRANCH_PRIMARY]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -605,6 +607,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: false },
           orderFooter: { visible: true, editable: false },
+          stock: { visible: false, editable: false},
           btnSave: { visible: true, editable: false },
           btnCancel: { visible: true, editable: false },
           btnInvoice: { visible: true, editable: false },
@@ -635,6 +638,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
+          stock: { visible: false, editable: false},
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
@@ -646,7 +650,7 @@ class RbacManager {
       },
     },
 
-    operations_coordinator: {
+    [constants.ROLES.OPS_COORDINATOR]: {
       // Define opsCordinator permissions for all forms
       custDetailsAdd: {
         fields: {
@@ -772,7 +776,8 @@ class RbacManager {
       },
       
     },
-    opsManager: {
+
+    [constants.ROLES.OPS_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -975,9 +980,7 @@ class RbacManager {
       },
     },
 
-      
-    
-    salesExecutive: {
+    [constants.ROLES.SALES_EXECUTIVE]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1058,7 +1061,7 @@ class RbacManager {
       },
     },
 
-    areaSalesManager: {
+    [constants.ROLES.AREA_SALES_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1139,7 +1142,7 @@ class RbacManager {
       },
     },
 
-    fieldEngineer: {
+    [constants.ROLES.FIELD_ENGINEER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1220,7 +1223,7 @@ class RbacManager {
       },
     },
 
-    maintenanceTechnician: {
+    [constants.ROLES.MAINTENANCE_TECHNICIAN]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1301,7 +1304,7 @@ class RbacManager {
       },
     },
 
-    driver: {
+    [constants.ROLES.DRIVER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1423,7 +1426,7 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
+    return (access === null ? true : access.editable) && (this.itemInWF === null ? true : this.isUserOwner) && (fieldInWF === true ? true : false);
   }
 }
 
