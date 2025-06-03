@@ -486,8 +486,9 @@ class RbacManager {
           bankLetter: { visible: true, editable: true },
           nonTradingDocuments: { visible: true, editable: true },
           bankName: { visible: true, editable: true },
-          accountNumber: { visible: true, editable: true },
-          ibanNumber: { visible: true, editable: true },
+          bankAccountNumber: { visible: true, editable: true },
+          iban: { visible: true, editable: true },
+          pricePlan: {visible: false, editable: true},
           prePayment: { visible: false, editable: true },
           partialPayment: { visible: false, editable: true },
           advancePayment: { visible: false, editable: true },
@@ -1426,7 +1427,7 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access === null ? true : access.editable) && (this.itemInWF === null ? true : this.isUserOwner) && (fieldInWF === true ? true : false);
+    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
   }
 }
 

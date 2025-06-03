@@ -1665,7 +1665,8 @@ const shouldShowDiv = customer?.isApprovalMode && customerFormMode === 'custDeta
               {console.log(isE(field.name))}
               {console.log("customer",customer)}
               {console.log("formdata",formData)} */}
-              {console.log("customer", customer)}
+              {/* {console.log("customer", customer)} */}
+              {console.log(formErrors)}
             </>
           )}
           {formErrors[field.name] && (
@@ -2077,13 +2078,13 @@ const shouldShowDiv = customer?.isApprovalMode && customerFormMode === 'custDeta
                   <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
-                  {isV('btnSave') && (transformedCustomer.customerStatus === 'New') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
+                  {isV('btnSave') && (transformedCustomer.customerStatus === 'new') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
                     {t('Save')}
                   </button>}
-                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'New') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
+                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'new') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
                     {t('Save Changes')}
                   </button>}
-                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'New') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
+                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'new') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}

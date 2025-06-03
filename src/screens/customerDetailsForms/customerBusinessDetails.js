@@ -19,7 +19,7 @@ export function getBusinessDetailsForm(t) {
         placeholder: t('Enter other business type'),
         showWhen: 'businessType',
         showValue: 'Others',
-        required: true
+        required: false
       },
 
       { type: 'dropdown', name: 'deliveryLocations', label: t('Delivery Locations'), options: ['Jeddah', 'Riyadh'], required: true },
@@ -28,8 +28,8 @@ export function getBusinessDetailsForm(t) {
       { type: 'text', name: 'brandNameAr', label: t('Brand Name (Arabic)'), placeholder: t('أدخل اسم العلامة التجارية'), required: false},
       { type: 'file', fileType: 'company_logo', name: 'companyLogo', label: t('Company Logo'), required: false },
       { type: 'file', fileType: 'brand_logo', name: 'brandLogo', label: t('Brand Logo'), required: false },
-      { type: 'dropdown', name: 'assignedTo', label: t('Assigned To'), options: ['Sales Team', 'Marketing Team', 'Support Team'], required: true },
-      { type: 'dropdown', name: 'entity', label: t('Entity'), options: ['Al Khaleej', 'Al Khaleej Trading'], required: true },
+      { type: 'dropdown', name: 'assignedTo', label: t('Assigned To'), options: ['Sales Team', 'Marketing Team', 'Support Team'], required: false },
+      { type: 'dropdown', name: 'entity', label: t('Entity'), options: ['Al Khaleej', 'Al Khaleej Trading'], required: false },
       { type: 'dropdown', name: 'assignedToEntityWise', label: t('Assigned To (Entity Wise)'), options: ['Al Khaleej', 'Al Khaleej Trading'], required: false },
       { type: 'text', name: 'customerSource', label: t('Customer Source'), placeholder: t('Enter customer source'), required: false },
       { type: 'checkbox', name: 'interCompany', label: t(''), options: [t('Inter-Company')], required: false },
@@ -90,8 +90,8 @@ export function getBusinessDetailsFormData(t, customer = null) {
       },
       'Financial Information': {
         bankName: customer.bankName || '',
-        accountNumber: customer.bankAccountNumber || '',
-        ibanNumber: customer.iban || '',
+        bankAccountNumber: customer.bankAccountNumber || '',
+        iban: customer.iban || '',
         prePayment: customer.prePayment || false,
         partialPayment: customer.partialPayment || false,
         advancePayment: customer.advancePayment || false,

@@ -190,8 +190,26 @@ function CustomersOnboarding() {
                     const result = await response.json();
 
                     console.log(result);
-                    const contactTypes = ['primary', 'finance', 'business', 'purchasing'];
+                    const contactTypesPrimary = ['primary']
+                    const contactTypes = ['finance', 'business', 'purchasing'];
+                    
+                    contactTypesPrimary.forEach(async (type) => {
+                         const res = await fetch('http://localhost:3000/api/customer-contacts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                customerId: result.data.id,
+                                contactType: type,
+                                email: formData.companyEmail,
+                                name: formData.leadName,
+                                mobile: formData.companyPhone
+                            }),
+                            credentials: 'include',
+                        });
+                    });
+
                     contactTypes.forEach(async (type) => {
+                        
                         const res = await fetch('http://localhost:3000/api/customer-contacts', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
