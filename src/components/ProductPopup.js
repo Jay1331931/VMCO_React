@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import QuantityController from './QuantityController';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
 
 function ProductPopup({
     product,
@@ -11,6 +13,16 @@ function ProductPopup({
     onAddToCart
 }) {
     const { t, i18n } = useTranslation();
+    const { user } = useAuth();
+    
+    // Initialize RBAC manager
+    const rbacMgr = new RbacManager(
+        user?.userType === 'employee' && user?.roles[0] !== 'admin' 
+            ? user?.designation 
+            : user?.roles?.[0], 
+        'catalog'
+    );
+    const isV = rbacMgr.isV.bind(rbacMgr);
 
     const mainImage = product.image || '';
     const additionalImages = Array.isArray(product.additionalImages) ? product.additionalImages : [];
@@ -76,21 +88,27 @@ function ProductPopup({
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
                         </p>
-                        <QuantityController
-                            itemId={product.id}
-                            quantity={quantities[product.id] || 0}
-                            onQuantityChange={onQuantityChange}
-                            onInputChange={onInputChange}
-                            stopPropagation={true}
-                        />
-                        <div className='addtocartbutton'>
-                            <button 
-                                className="add-to-cart-btn"
-                                onClick={handleAddToCart}
-                            >
-                                {t('Add to Cart')}
-                            </button>
-                        </div>
+                        {isV('quantityController') && (
+                            <QuantityController
+                                itemId={product.id}
+                                quantity={quantities[product.id] || 0}
+                                onQuantityChange={onQuantityChange}
+                                onInputChange={onInputChange}
+                                stopPropagation={true}
+                                minQuantity={Number(product.moq) || 0}
+                                moq={Number(product.moq) || 0}
+                            />
+                        )}
+                        {isV('addToCart') && (
+                            <div className='addtocartbutton'>
+                                <button 
+                                    className="add-to-cart-btn"
+                                    onClick={handleAddToCart}
+                                >
+                                    {t('Add to Cart')}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <style>{`

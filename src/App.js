@@ -25,7 +25,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Sidebar />} />
+        <Route path="/" element={<LoginScreen />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/catalog" element={<Catalog />} />

@@ -168,7 +168,7 @@ const LocationPicker = ({ onLocationSelect }) => {
     );
 };
 
-function Branches({ customer, setTabsHeight}) {
+function Branches({ customer, setTabsHeight }) {
     const location = useLocation();
     // const customer = location.state?.customer;
     const [branches, setBranches] = useState([]);
@@ -189,7 +189,7 @@ function Branches({ customer, setTabsHeight}) {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const contentRef = useRef();
     // const [branchChanges, setBranchChanges] = useState({});
-        function transformBranchData(branches, branchContacts) {
+    function transformBranchData(branches, branchContacts) {
         console.log('Branches:', branches);
         console.log('Branch Contacts:', branchContacts);
         const branchesArray = Array.isArray(branches) ? branches : [branches];
@@ -280,6 +280,7 @@ function Branches({ customer, setTabsHeight}) {
         // );
     };
 
+    
     // const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
     //     console.log(branch)
     //     const { t } = useTranslation();
@@ -412,149 +413,147 @@ function Branches({ customer, setTabsHeight}) {
     //     );
     // };
 
-const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
-    const { t } = useTranslation();
-    const [showMap, setShowMap] = useState(false);
-    const [selectedLocation, setSelectedLocation] = useState(null);
-    
-    // Get current values from branchChanges or fall back to branch data
-    const getFieldValue = (fieldName) => {
-        return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
-    };
 
-    // Handle checkbox changes
-    const [sameAsCustomer, setSameAsCustomer] = useState(
-        getFieldValue('sameAsCustomer') || false
-    );
-    const [approvalRequired, setApprovalRequired] = useState(
-        getFieldValue('approvalRequiredForOrdering') || false
-    );
+    const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
+        const { t } = useTranslation();
+        const [showMap, setShowMap] = useState(false);
+        const [selectedLocation, setSelectedLocation] = useState(null);
 
-    // Use useCallback to memoize the handler
-    const handleInputChange = useCallback((e) => {
-        const { name, value } = e.target;
-        handleBranchFieldChange(branch.id, name, value);
-    }, [branch.id, handleBranchFieldChange]);
+        const getFieldValue = (fieldName) => {
+            return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+        };
 
-    const handleCheckboxChange = useCallback((e) => {
-        const { name, checked } = e.target;
-        if (name === 'sameAsCustomer') {
-            setSameAsCustomer(checked);
-        } else if (name === 'approvalRequiredForOrdering') {
-            setApprovalRequired(checked);
-        }
-        handleBranchFieldChange(branch.id, name, checked);
-    }, [branch.id, handleBranchFieldChange]);
+        const [sameAsCustomer, setSameAsCustomer] = useState(
+            getFieldValue('sameAsCustomer') || false
+        );
+        const [approvalRequired, setApprovalRequired] = useState(
+            getFieldValue('approvalRequiredForOrdering') || false
+        );
 
-    const handleLocationSelect = useCallback((lat, lng) => {
-        setSelectedLocation({ lat, lng });
-        setShowMap(false);
-        handleBranchFieldChange(branch.id, 'geolocation', `${lat},${lng}`);
-    }, [branch.id, handleBranchFieldChange]);
+        const handleInputChange = useCallback((e) => {
+            const { name, value } = e.target;
+            handleBranchFieldChange(branch.id, name, value);
+        }, [branch.id, handleBranchFieldChange]);
 
-    const fields = useMemo(() => [
-        { label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
-        { label: 'Branch (Arabic)', name: 'branchNameLc', placeholder: 'Branch (Arabic)', required: true },
-        { label: 'Building Name', name: 'buildingName', placeholder: 'Building Name', required: true },
-        { label: 'Street', name: 'street', placeholder: 'Street', required: true },
-        { label: 'City', name: 'city', placeholder: 'City', required: true },
-        { label: 'Location Type', name: 'locationType', placeholder: 'Location Type', required: true },
-        {
-            label: 'Geolocation',
-            name: 'geolocation',
-            placeholder: 'Geolocation',
-            isLocation: true,
-            required: true
-        }
-    ], []);
+        const handleCheckboxChange = useCallback((e) => {
+            const { name, checked } = e.target;
+            if (name === 'sameAsCustomer') {
+                setSameAsCustomer(checked);
+            } else if (name === 'approvalRequiredForOrdering') {
+                setApprovalRequired(checked);
+            }
+            handleBranchFieldChange(branch.id, name, checked);
+        }, [branch.id, handleBranchFieldChange]);
 
-    return (
-        <div className="form-section">
-            <h3>{t('Branch Details')}</h3>
+        const handleLocationSelect = useCallback((lat, lng) => {
+            setSelectedLocation({ lat, lng });
+            setShowMap(false);
+            handleBranchFieldChange(branch.id, 'geolocation', `${lat},${lng}`);
+        }, [branch.id, handleBranchFieldChange]);
 
-            <div className="form-group">
-                <label>
-                    <input
-                        type="checkbox"
-                        name="sameAsCustomer"
-                        checked={sameAsCustomer}
-                        onChange={handleCheckboxChange}
-                    />
-                    {'\t' + t('Same as Customer Details')}
-                </label>
+        const fields = useMemo(() => [
+            { label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
+            { label: 'Branch (Arabic)', name: 'branchNameLc', placeholder: 'Branch (Arabic)', required: true },
+            { label: 'Building Name', name: 'buildingName', placeholder: 'Building Name', required: true },
+            { label: 'Street', name: 'street', placeholder: 'Street', required: true },
+            { label: 'City', name: 'city', placeholder: 'City', required: true },
+            { label: 'Location Type', name: 'locationType', placeholder: 'Location Type', required: true },
+            {
+                label: 'Geolocation',
+                name: 'geolocation',
+                placeholder: 'Geolocation',
+                isLocation: true,
+                required: true
+            }
+        ], []);
+
+        return (
+            <div className="form-section">
+                <h3>{t('Branch Details')}</h3>
+
                 <div className="form-group">
                     <label>
                         <input
                             type="checkbox"
-                            name="approvalRequiredForOrdering"
-                            checked={approvalRequired}
+                            name="sameAsCustomer"
+                            checked={sameAsCustomer}
                             onChange={handleCheckboxChange}
                         />
-                        {'\t' + t('Approval Required for Ordering')}
+                        {'\t' + t('Same as Customer Details')}
                     </label>
-                </div>
-            </div>
-
-            <div className="form-row">
-                {fields.map((field, index) => {
-                    const value = getFieldValue(field.name);
-                    const displayValue = field.isLocation && selectedLocation 
-                        ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}` 
-                        : value;
-
-                    return (
-                        <div className="form-group" key={index}>
-                            <label>
-                                {t(field.label)}
-                                {field.required && <span className="required-field">*</span>}
-                            </label>
-
-                            {field.isLocation ? (
-                                <div className="location-input-container">
-                                    <input
-                                        value={displayValue}
-                                        placeholder={t(field.placeholder)}
-                                        readOnly
-                                    />
-                                    <button
-                                        type="button"
-                                        className="location-picker-button"
-                                        onClick={() => setShowMap(true)}
-                                    >
-                                        <FontAwesomeIcon icon={faLocationDot} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <input 
-                                    type="text" 
-                                    name={field.name}
-                                    value={value}
-                                    placeholder={t(field.placeholder)}
-                                    onChange={handleInputChange}
-                                />
-                            )}
-                        </div>
-                    )
-                })}
-            </div>
-
-            {showMap && (
-                <div className="map-modal">
-                    <div className="map-modal-content">
-                        <button
-                            className="close-modal-button"
-                            onClick={() => setShowMap(false)}
-                        >
-                            <FontAwesomeIcon icon={faXmark} />
-                        </button>
-                        <h3>{t('Select Location')}</h3>
-                        <LocationPicker onLocationSelect={handleLocationSelect} />
+                    <div className="form-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="approvalRequiredForOrdering"
+                                checked={approvalRequired}
+                                onChange={handleCheckboxChange}
+                            />
+                            {'\t' + t('Approval Required for Ordering')}
+                        </label>
                     </div>
                 </div>
-            )}
-        </div>
-    );
-};
+
+                <div className="form-row">
+                    {fields.map((field, index) => {
+                        const value = getFieldValue(field.name);
+                        const displayValue = field.isLocation && selectedLocation
+                            ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`
+                            : value;
+
+                        return (
+                            <div className="form-group" key={index}>
+                                <label>
+                                    {t(field.label)}
+                                    {field.required && <span className="required-field">*</span>}
+                                </label>
+
+                                {field.isLocation ? (
+                                    <div className="location-input-container">
+                                        <input
+                                            value={displayValue}
+                                            placeholder={t(field.placeholder)}
+                                            readOnly
+                                        />
+                                        <button
+                                            type="button"
+                                            className="location-picker-button"
+                                            onClick={() => setShowMap(true)}
+                                        >
+                                            <FontAwesomeIcon icon={faLocationDot} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <input
+                                        type="text"
+                                        name={field.name}
+                                        value={value}
+                                        placeholder={t(field.placeholder)}
+                                        onChange={handleInputChange}
+                                    />
+                                )}
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {showMap && (
+                    <div className="map-modal">
+                        <div className="map-modal-content">
+                            <button
+                                className="close-modal-button"
+                                onClick={() => setShowMap(false)}
+                            >
+                                <FontAwesomeIcon icon={faXmark} />
+                            </button>
+                            <h3>{t('Select Location')}</h3>
+                            <LocationPicker onLocationSelect={handleLocationSelect} />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
     const ContactRow = ({ label, isRequired, onChange }) => {
         const { t } = useTranslation();
         return (
@@ -657,7 +656,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                         placeholder={t("Name")}
                                         value={fields.name}
                                         required={isRequired}
-                                    onChange={(e) => handleContactChange(type, 'name', e.target.value)}
+                                        onChange={(e) => handleContactChange(type, 'name', e.target.value)}
                                     />
                                 </div>
                                 <div className='form-group'>
@@ -665,7 +664,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                         placeholder={t("Designation")}
                                         value={fields.designation}
                                         required={isRequired}
-                                    onChange={(e) => handleContactChange(type, 'designation', e.target.value)}
+                                        onChange={(e) => handleContactChange(type, 'designation', e.target.value)}
                                     />
                                 </div>
                                 <div className='form-group'>
@@ -673,7 +672,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                         placeholder={t("Email")}
                                         value={fields.email}
                                         required={isRequired}
-                                    onChange={(e) => handleContactChange(type, 'email', e.target.value)}
+                                        onChange={(e) => handleContactChange(type, 'email', e.target.value)}
                                     />
                                 </div>
                                 <div className='form-group'>
@@ -681,7 +680,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                                         placeholder={t("Phone")}
                                         value={fields.phone}
                                         required={isRequired}
-                                    onChange={(e) => handleContactChange(type, 'mobile', e.target.value)}
+                                        onChange={(e) => handleContactChange(type, 'mobile', e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -930,32 +929,32 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
     //         fetchBranches();
     //     }
     // }, [customer]);
-const fetchBranches = useCallback(async () => {
-  try {
-    const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-    });
-    
-    if (!response.ok) throw new Error('Failed to fetch branches');
-    
-    const data = await response.json();
-    setBranches(data);
-    // onBranchesChange(data);
-  } catch (err) {
-    setError(err.message);
-  } finally {
-    setLoading(false);
-  }
-}, [customer.id]);
+    const fetchBranches = useCallback(async () => {
+        try {
+            const response = await fetch(`http://localhost:3000/api/customer-branches/cust-id/${customer.id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
 
-// Fetch immediately
-useMemo(() => {
-  if (customer?.id) {
-    fetchBranches();
-  }
-}, [customer?.id, fetchBranches]);
+            if (!response.ok) throw new Error('Failed to fetch branches');
+
+            const data = await response.json();
+            setBranches(data);
+            // onBranchesChange(data);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [customer.id]);
+
+    // Fetch immediately
+    useMemo(() => {
+        if (customer?.id) {
+            fetchBranches();
+        }
+    }, [customer?.id, fetchBranches]);
     useEffect(() => {
         const baseRowHeight = 80;
         const collapsedExtraHeight = 40;
@@ -1053,7 +1052,7 @@ useMemo(() => {
                                 <div className="branch-expanded">
                                     <BranchDetailsForm
                                         branch={branch}
-                                         />
+                                    />
                                     <ContactSection branch={branch} />
                                     <OperatingHours hoursData={branch.hours} branchId={branch.id} />
                                 </div>
@@ -1123,7 +1122,7 @@ useMemo(() => {
                                                 <div className="expanded-form-container">
                                                     <BranchDetailsForm
                                                         branch={branch}
-                                                         />
+                                                    />
                                                     <ContactSection branch={transformedBranches[0]} />
                                                     <OperatingHours hoursData={branch.hours} branchId={branch.id} />
                                                 </div>

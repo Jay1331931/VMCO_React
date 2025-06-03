@@ -208,8 +208,12 @@
   border: 1px solid #ccc;
 }
 
+.customers .dropdown:disabled {
+  background-color: rgba(0, 0, 0, 0.1);
+}
 .dropdown option[value=""]:disabled {
     color: #aaa; 
+    background-color: #aaa;
   }
 
   .dropdown option {
@@ -218,6 +222,7 @@
   
   .dropdown option:disabled {
     color: #aaa; 
+    background-color: #aaa;
   }
 
 .dropdown::placeholder {
@@ -234,6 +239,10 @@
     
   }
 
+  .customers .text-field.small:disabled{
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+
   .customers .text-field.arabic {
     font-size: 12px;
     padding: 4px 8px;
@@ -243,7 +252,9 @@
     width: 250px; 
     text-align: end;
   }
-
+ .customers .text-field.arabic:disabled {
+    background-color: rgba(0, 0, 0, 0.1);
+ }
   [dir="rtl"] .customers .text-field.arabic {
     text-align:right;
   }
@@ -328,16 +339,39 @@
   
   
   /* Individual styles */
-  .customers .save {
+  .customers .save 
+  {
     color: black;
     background-color: white;
     border: 1px solid black;
   }
+
+  .customers .save:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   
+  .customers .savechanges {
+    color: black;
+    background-color: white;
+    border: 1px solid black;
+  }
+
+  .customers .savechanges:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   .customers .block {
     color: black;
     background-color: white;
     border: 1px solid black;
+  }
+  .customers .block:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
   }
   
   .customers .approve {
@@ -345,11 +379,20 @@
     color: white;
     border: none;
   }
-  
+  .customers .approve:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
+  }
   .customers .reject {
     background-color: darkorange; /* Orange */
     color: white;
     border: none;
+  }
+  .customers .reject:disabled {
+    background-color: lightgray;
+    color: black;
+    cursor: not-allowed;
   }
   
   .hidden-file-input {
@@ -1293,6 +1336,32 @@ td.file-display-cell {
 /* Make sure buttons align properly */
 .custom-file-button, .view-file-button, .delete-file-button {
   vertical-align: middle;
+}
+
+/* Highlight for pending update fields */
+.pending-update {
+  border-left: 3px solid #ffc107;
+  padding-left: 8px;
+}
+
+.update-badge {
+  background-color: #ffc107;
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.update-field {
+  background-color: #fff8e1;
+}
+
+.current-value {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 4px;
+  font-style: italic;
 }
 
 

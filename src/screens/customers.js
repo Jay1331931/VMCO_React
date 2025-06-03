@@ -66,45 +66,89 @@ const toggleApprovalMode = () => {
     alert('Invite sent successfully!');
   };
 
-  const handleSearch = (searchTerm) => {
+  // const handleSearch = (searchTerm) => {
+  //   if (activeTab === 'customers') {
+  //     const filtered = filteredCustomers.filter((customer) =>
+  //       Object.values(customer).some((value) =>
+  //         typeof value === 'object'
+  //           ? Object.values(value).some(v => 
+  //               v.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //             )
+  //           : value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       )
+  //     );
+  //     setFilteredCustomers(filtered);
+  //   } else {
+  //     const filtered = filteredInvites.filter((invite) =>
+  //       Object.values(invite).some((value) =>
+  //         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       )
+  //     );
+  //     setFilteredInvites(filtered);
+  //   }
+  // };
+const handleSearch = (searchTerm) => {
+  if (!searchTerm) {
+    // Reset filters if search term is empty
     if (activeTab === 'customers') {
-      const filtered = filteredCustomers.filter((customer) =>
-        Object.values(customer).some((value) =>
-          typeof value === 'object'
-            ? Object.values(value).some(v => 
-                v.toString().toLowerCase().includes(searchTerm.toLowerCase())
-              )
-            : value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setFilteredCustomers(filtered);
+      fetchCustomers();
+      // setFilteredCustomers(filteredCustomers);
     } else {
-      const filtered = filteredInvites.filter((invite) =>
-        Object.values(invite).some((value) =>
-          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-      setFilteredInvites(filtered);
+      fetchInvites();
+      // setFilteredInvites(filteredInvites);
     }
-  };
+    return;
+  }
+
+  const searchLower = searchTerm.toLowerCase();
+
+  if (activeTab === 'customers') {
+    const filtered = filteredCustomers.filter((customer) => {
+      if (!customer) return false; // Skip null/undefined customers
+      
+      return Object.values(customer).some((value) => {
+        if (value === null || value === undefined) return false;
+        
+        if (typeof value === 'object') {
+          const nestedValues = Object.values(value || {});
+          return nestedValues.some(v => 
+            v?.toString().toLowerCase().includes(searchLower)
+          );
+        }
+        
+        return value?.toString().toLowerCase().includes(searchLower);
+      });
+    });
+    setFilteredCustomers(filtered);
+  } else {
+    const filtered = filteredInvites.filter((invite) => {
+      if (!invite) return false; // Skip null/undefined invites
+      
+      return Object.values(invite).some((value) => 
+        value?.toString().toLowerCase().includes(searchLower)
+      );
+    });
+    setFilteredInvites(filtered);
+  }
+};
 
   const customerColumns = [
+    { key: 'id', header: 'Portal ID' },
+    { key: 'erp_cust_id', header: 'Registration ID' },
     { key: 'companyNameEn', header: 'Company' },
-    { key: 'primaryContact', header: 'Primary Contact' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
-    { key: 'city', header: 'Delivery Location' },
     { key: 'customerStatus', header: 'Status' }
   ];
 
    const approvalColumns = [
+    { key: 'id', header: 'Portal ID' },
+     { key: 'erp_cust_id', header: 'Registration ID' },
     { key: 'companyNameEn', header: 'Company' },
-    { key: 'primaryContact', header: 'Primary Contact' },
+    { key: 'name', header: 'Workflow Name' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
-    { key: 'city', header: 'Delivery Location' },
-    { key: 'customerStatus', header: 'Status' },
-    { key: 'name', header: 'Workflow Name' }
+    { key: 'customerStatus', header: 'Status' }  
   ];
   const inviteColumns = [
     { key: 'date', header: 'Date' },
@@ -137,7 +181,6 @@ const toggleApprovalMode = () => {
       credentials: 'include'
     });
 const result = await response.json();
-      console.log('API Response:', result);
       if (result.status === 'Ok') {
         setFilteredCustomers(result.data.data);
         setPagination(prev => ({
@@ -332,7 +375,7 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
       if (result.status === 'Ok') {
         setCustomerContacts(result.data);
         let transformedCustomer = transformCustomerData(customer, result.data);
-  transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
+        transformedCustomer = await fetchCustomerPaymentMethods(customerId, transformedCustomer);
         console.log('Transformed Customer:', transformedCustomer);
         // Navigate to customer details with approval mode if applicable
         if (isApprovalMode) {
@@ -341,7 +384,7 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
         } else {
           transformedCustomer.isApprovalMode = false;
         }
-   navigate(`/customersDetails`, { state: { transformedCustomer } });
+        navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit': 'add' } });
 
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
@@ -431,8 +474,6 @@ const handleRowClick = (customer) => {
   ];
 
   const renderContent = () => {
-    console.log('Filtered Approvals:', filteredApprovals);
-    console.log('Paginated Approvals:', paginatedApprovals);
     switch (activeTab) {
       case t('customers'):
         const customerColumnsToUse = isApprovalMode ? approvalColumns : customerColumns;

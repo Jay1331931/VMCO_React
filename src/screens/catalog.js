@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +12,7 @@ import Tabs from '../components/Tabs';
 import ProductPopup from '../components/ProductPopup';
 import SearchInput from '../components/SearchInput';
 import { useAuth } from '../context/AuthContext';
+import RbacManager from '../utilities/rbac';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -26,6 +27,7 @@ const categories = [
 ];
 
 function Catalog() {
+    const location = useLocation();
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [activeCategory, setActiveCategory] = useState(categories[0].value);
@@ -48,44 +50,50 @@ function Catalog() {
     const productsPerPage = 60;
     const { token, user, isAuthenticated, logout } = useAuth();
     console.log('User Dataaaaa:', user);
-    // First filter products based on entity and other criteria
+    
+
     const [filteredProducts, setFilteredProducts] = useState([]);
 
-    
+
+    //RBAC
+    //use formMode to decide if it is editform or add form
+    const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'catalog');
+    const isV = rbacMgr.isV.bind(rbacMgr);
+
+
     const categoryTabs = categories.map(category => ({
         value: category.value,
         label: category.label
     }));
 
     const customerId = user?.customerId;
-    // Update selectedCustomerId whenever customerId changes
+    const userId = user?.userId;
+    
     useEffect(() => {
-        if (customerId) {
-            setSelectedCustomerId(customerId);
-        }
+        if (customerId) {setSelectedCustomerId(customerId);}
     }, [customerId]);
 
-       
+
     // Map product fields from backend to component props
     const mapProductToCardProps = useCallback((product) => {
         const currentLanguage = i18n.language;
-        
+
         // Choose the right product name based on language
         let productName = product.productName || product.product_name;
-        
+
         // If language is not English and we have a localized name, use it
         if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
             productName = product.product_name_lc || product.productNameLc || productName;
         }
-        
+
         // Choose the right product description based on language
         let productDescription = product.description;
-        
+
         // If language is not English and we have a localized description, use it
         if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
             productDescription = product.description_lc || product.descriptionLc;
         }
-        
+
         return {
             id: product.id,
             name: productName, // Language-aware
@@ -102,7 +110,7 @@ function Catalog() {
             ...product
         };
     }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
-    
+
     // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
         const fetchAllPages = async () => {
@@ -112,7 +120,7 @@ function Catalog() {
             } else {
                 setIsLoadingMore(true);
             }
-            
+
             try {
                 // Determine which pages we need to fetch
                 const pagesToFetch = [];
@@ -121,14 +129,14 @@ function Catalog() {
                         pagesToFetch.push(i);
                     }
                 }
-                
+
                 if (pagesToFetch.length === 0) {
                     // All needed pages are already loaded
                     setIsLoading(false);
                     setIsLoadingMore(false);
                     return;
                 }
-                
+
                 // Create a function to fetch a single page
                 const fetchPage = async (pageNumber) => {
                     const params = new URLSearchParams({
@@ -137,11 +145,11 @@ function Catalog() {
                         sortBy: 'id',
                         sortOrder: 'asc',
                     });
-                    
+
                     // Handle entity filtering
                     const selectedCategory = categories.find(cat => cat.value === activeCategory);
                     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-                    
+
                     if (entityToFilter) {
                         params.append('entity', entityToFilter);
                     }
@@ -156,11 +164,11 @@ function Catalog() {
                     } else if (activeCategory === 'Naqui') {
                         params.append('entity', 'Naqui');
                     }
-                    
+
                     // Add category and subcategory filters
                     if (categoryFilter) params.append('category', categoryFilter);
                     if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
-                    
+
                     // Add search query
                     if (searchQuery) {
                         params.append('search', searchQuery);
@@ -172,43 +180,42 @@ function Catalog() {
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
                     });
-                    
+
                     const result = await response.json();
                     console.log(`Fetched page ${pageNumber} products:`, result);
                     // Extract the new products from the response
                     let pageProducts = [];
                     let totalCount = 0;
 
-                    if(result.status === 'Ok')
-                    {
+                    if (result.status === 'Ok') {
                         pageProducts = result.data.data;
                         totalCount = result.data.totalRecords
                     }
-                    
+
                     if (Array.isArray(result.data)) {
                         pageProducts = result.data.data;
                         totalCount = result.length;
                     } else if (result.status === 'Ok' && Array.isArray(result.data.data)) {
                         pageProducts = result.data.data;
-                        totalCount = 
+                        totalCount =
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
                             result.data.length;
                     } else if (result && Array.isArray(result.data.data)) {
                         pageProducts = result.data.data;
-                        totalCount = 
+                        totalCount =
                             (result.total !== undefined && Number(result.total)) ||
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
                             result.data.length;
                     }
-                    
+
                     return { pageProducts, totalCount, pageNumber };
                 };
-                
+
                 // Key fix: Handle the reset products case differently
                 let allProducts = [];
                 let newLoadedPages = [];
-                
+
                 // Reset products if we're starting fresh
                 if (pagesToFetch.includes(1)) {
                     // Just prepare to reset - don't call setState yet
@@ -219,31 +226,31 @@ function Catalog() {
                     allProducts = [...products];
                     newLoadedPages = [...loadedPages];
                 }
-                
+
                 // Fetch all pages in sequence
                 let maxTotalCount = 0;
-                
+
                 for (const page of pagesToFetch) {
                     const { pageProducts, totalCount } = await fetchPage(page);
-                    
+
                     // Add these products to our collection
                     allProducts = [...allProducts, ...pageProducts];
                     maxTotalCount = Math.max(maxTotalCount, totalCount);
-                    
+
                     // Add to our new loaded pages array
                     newLoadedPages.push(page);
                 }
-                
+
                 // Set all products and loaded pages at once after we've loaded everything
                 setProducts(allProducts);
                 setTotalProducts(maxTotalCount);
                 setLoadedPages(newLoadedPages);
-                
+
                 // Determine if there are more products to load
                 const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
                 const moreAvailable = loadedProductsCount < maxTotalCount;
                 setHasMore(moreAvailable);
-                
+
             } catch (err) {
                 console.error('Error fetching products:', err);
                 setHasMore(false);
@@ -252,7 +259,7 @@ function Catalog() {
                 setIsLoadingMore(false);
             }
         };
-        
+
         fetchAllPages();
     }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
     // Filter products based on tab, category, and subcategory
@@ -262,19 +269,19 @@ function Catalog() {
         // Get the entity value for the selected category tab
         const selectedCategory = categories.find(cat => cat.value === activeCategory);
         const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-        
+
         let filtered = [...products]; // Create a copy of products array for filtering
-        
+
         // Filter by entity first
         if (entityToFilter) {
             filtered = filtered.filter(product => {
                 const productEntity = (product.entity || '').toLowerCase();
                 return productEntity === entityToFilter.toLowerCase();
             });
-            
+
             // No special handling for VMCO entities anymore
         }
-        
+
         // Apply search filter on product name
         if (searchQuery && searchQuery.trim() !== '') {
             const searchLower = searchQuery.toLowerCase().trim();
@@ -284,22 +291,22 @@ function Catalog() {
                 const productCode = (product.erpProdId || product.erp_prod_id || '').toLowerCase();
                 const productDescription = (product.description || '').toLowerCase();
                 const localizedDescription = (product.description_lc || product.descriptionLc || '').toLowerCase();
-                
-                return productName.includes(searchLower) || 
-                       localizedName.includes(searchLower) ||
-                       productCode.includes(searchLower) ||
-                       productDescription.includes(searchLower) ||
-                       localizedDescription.includes(searchLower);
+
+                return productName.includes(searchLower) ||
+                    localizedName.includes(searchLower) ||
+                    productCode.includes(searchLower) ||
+                    productDescription.includes(searchLower) ||
+                    localizedDescription.includes(searchLower);
             });
         }
-        
+
         // Apply category filter
         if (categoryFilter && categoryFilter.trim() !== '') {
-            filtered = filtered.filter(product => 
+            filtered = filtered.filter(product =>
                 (product.category || '').toLowerCase() === categoryFilter.toLowerCase()
             );
         }
-        
+
         // Apply subcategory filter
         if (subCategoryFilter && subCategoryFilter.trim() !== '') {
             filtered = filtered.filter(product => {
@@ -307,20 +314,20 @@ function Catalog() {
                 return subCategory === subCategoryFilter.toLowerCase();
             });
         }
-        
+
         setFilteredProducts(filtered);
         setDisplayedProducts(filtered);
-        
+
     }, [products, activeCategory, searchQuery, categoryFilter, subCategoryFilter]);
-      // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
+    // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
     useEffect(() => {
         let timeoutId = null;
-        
+
         // Function to handle automatic loading of more pages
         const loadMorePagesWithDelay = () => {
             if (hasMore && !isLoading && !isLoadingMore) {
                 setIsLoadingMore(true);
-                
+
                 // Wait for 3 seconds before loading the next page set
                 timeoutId = setTimeout(() => {
                     // Increment the max page to load - this will trigger loading all pages up to this number
@@ -328,13 +335,13 @@ function Catalog() {
                 }, 3000); // 3 seconds delay
             }
         };
-        
+
         // After products are loaded and we're not in a loading state, set up the next load
         // Only continue if we haven't reached page 3 yet
         if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && currentPage < 3) {
             loadMorePagesWithDelay();
         }
-        
+
         // Clean up the timeout if the component unmounts or dependencies change
         return () => {
             if (timeoutId) {
@@ -358,23 +365,23 @@ function Catalog() {
 
     // Update the handleQuantityChange function
 
-const handleQuantityChange = (productId, value) => {
-    // Find the product to get its MOQ
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    
-    const moq = Number(product.moq || 0);
-    
-    // Calculate the new quantity ensuring it doesn't go below MOQ
-    const currentQuantity = quantities[productId] || 0;
-    const newQuantity = Math.max(moq, currentQuantity + value);
-    
-    // Update local state only for immediate UI feedback
-    setQuantities(prev => ({
-        ...prev,
-        [productId]: newQuantity
-    }));
-};
+    const handleQuantityChange = (productId, value) => {
+        // Find the product to get its MOQ
+        const product = products.find(p => p.id === productId);
+        if (!product) return;
+
+        const moq = Number(product.moq || 0);
+
+        // Calculate the new quantity ensuring it doesn't go below MOQ
+        const currentQuantity = quantities[productId] || 0;
+        const newQuantity = Math.max(moq, currentQuantity + value);
+
+        // Update local state only for immediate UI feedback
+        setQuantities(prev => ({
+            ...prev,
+            [productId]: newQuantity
+        }));
+    };
 
     const handleGoToCart = () => {
         navigate('/Cart');
@@ -382,280 +389,282 @@ const handleQuantityChange = (productId, value) => {
 
     const catalogId = React.useId();
 
-// Get unique categories and subcategories for dropdowns
-const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
-const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
+    // Get unique categories and subcategories for dropdowns
+    const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
+    const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
 
-// NEW: Branch selection functionality moved here (before add to cart function)
-// This useEffect fetches customer branches using the customer_id from the auth token
-useEffect(() => {
-    const fetchBranches = async () => {
+    // NEW: Branch selection functionality moved here (before add to cart function)
+    // This useEffect fetches customer branches using the customer_id from the auth token
+    useEffect(() => {
+        const fetchBranches = async () => {
+            try {
+                setIsLoading(true); // Show loading state while fetching
+
+                // The API endpoint already reads the customer_id from the JWT token
+                const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include' // This includes the auth token/cookies
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
+                }
+
+                const result = await response.json();
+                let branchData = [];
+
+                // Handle response structure with better validation
+                if (Array.isArray(result)) {
+                    branchData = result;
+                } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+                    branchData = result.data;
+                } else if (result && Array.isArray(result.data)) {
+                    branchData = result.data;
+                } else {
+                    console.warn('Unexpected branch data format:', result);
+                    branchData = [];
+                }
+
+                // Map branches to dropdown format with proper field validation
+                const branchOptions = branchData.map(branch => ({
+                    value: String(branch.id || branch.branch_id), // Ensure IDs are strings
+                    label: i18n.language === 'en' ?
+                        (branch.branch_name_en || branch.branchNameEn) :
+                        (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
+                    erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
+                    // Keep additional data for reference if needed
+                    raw: branch
+                }));
+
+                setBranches(branchOptions);
+
+                // Add additional logging to see the actual data structure
+                console.log('Fetched branch data:', branchData);
+
+            } catch (error) {
+                console.error('Error fetching branches:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchBranches();
+    }, [API_BASE_URL, i18n.language]); // Keep i18n.language as dependency to refresh branches on language change
+
+    //  Add to cart functionality
+    const handleAddToCart = async (productId) => {
+        console.log('Adding product to cart:', productId);
         try {
-            setIsLoading(true); // Show loading state while fetching
-            
-            // The API endpoint already reads the customer_id from the JWT token
-            const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
-                method: 'GET',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'include' // This includes the auth token/cookies
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
+            // Check if a branch is selected
+            if (!selectedLocation) {
+                alert(t('Please select a delivery branch first'));
+                return;
             }
-            
-            const result = await response.json();
-            let branchData = [];
-            
-            // Handle response structure with better validation
-            if (Array.isArray(result)) {
-                branchData = result;
-            } else if (result.status === 'Ok' && Array.isArray(result.data)) {
-                branchData = result.data;
-            } else if (result && Array.isArray(result.data)) {
-                branchData = result.data;
-            } else {
-                console.warn('Unexpected branch data format:', result);
-                branchData = [];
-            }
-            
-            // Map branches to dropdown format with proper field validation
-            const branchOptions = branchData.map(branch => ({
-                value: String(branch.id || branch.branch_id), // Ensure IDs are strings
-                label: i18n.language === 'en' ? 
-                    (branch.branch_name_en || branch.branchNameEn) : 
-                    (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
-                erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
-                // Keep additional data for reference if needed
-                raw: branch
-            }));
-            
-            setBranches(branchOptions);
-            
-            // Add additional logging to see the actual data structure
-            console.log('Fetched branch data:', branchData);
-            
-        } catch (error) {
-            console.error('Error fetching branches:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    fetchBranches();
-}, [API_BASE_URL, i18n.language]); // Keep i18n.language as dependency to refresh branches on language change
 
-//  Add to cart functionality
-const handleAddToCart = async (productId) => {
-    console.log('Adding product to cart:', productId);
-    try {
-        // Check if a branch is selected
-        if (!selectedLocation) {
-            alert(t('Please select a delivery branch first'));
-            return;
-        }
-        
-        // Find the product being added
-        const product = products.find(p => p.id === productId);
-        if (!product) return;
-        
-        // Get MOQ and ensure quantity meets it
-        const moq = Number(product.moq);
-        let quantity = quantities[productId];
-        
-        // If quantity is less than MOQ, set it to MOQ
-        if (quantity < moq) {
-            quantity = moq;
-            // Update the quantities state
+            // Find the product being added
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            // Get MOQ and ensure quantity meets it
+            const moq = Number(product.moq);
+            let quantity = quantities[productId];
+
+            // If quantity is less than MOQ, set it to MOQ
+            if (quantity < moq) {
+                quantity = moq;
+                // Update the quantities state
+                setQuantities(prev => ({
+                    ...prev,
+                    [productId]: moq
+                }));
+            }
+
+            // Ensure quantity is at least 1
+            quantity = Math.max(1, quantity);
+
+            // Calculate needed values
+            const unitPrice = product.unitPrice || 1;
+            const netAmount = unitPrice * quantity;
+            const sugarTaxPrice = product.sugarTaxPrice;
+
+            // First check if this item already exists in the cart
+            const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":${user.userId}, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Send along auth cookies/JWT
+            });
+
+            const checkResult = await checkResponse.json();
+            console.log('Check cart response:', checkResult);
+
+            if (checkResult.data.data && checkResult.data.data.length > 0) {
+                // Item exists in cart, update the quantity
+                const existingItem = checkResult.data.data[0];
+                const updatedQuantity = parseInt(existingItem.quantityOrdered) + parseInt(quantity);
+                
+                const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        quantityOrdered: updatedQuantity,
+                        netAmount: unitPrice * updatedQuantity
+                    })
+                });
+
+                if (!updateResponse.ok) {
+                    const errorData = await updateResponse.json().catch(() => ({}));
+                    throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
+                }
+
+                alert(t('Product quantity updated in cart successfully'));
+            }
+            else {
+                // Item doesn't exist in cart, add it as new
+                const cartItem = {
+                    userId: userId, // Use user ID from auth context
+                    customerId: selectedCustomerId,
+                    branchId: selectedLocation,
+                    productId: product.id,
+                    productName: product.productName || product.product_name,
+                    productNameLc: product.productNameLc || product.product_name_lc,
+                    erpProdId: product.erpProdId || product.erp_prod_id || '',
+                    entity: product.entity, // Keep original case
+                    category: product.category, // Keep original case
+                    unit: product.unit || 'EA',
+                    unitPrice: unitPrice,
+                    quantityOrdered: parseInt(quantity),
+                    netAmount: netAmount,
+                    sugarTaxPrice: parseFloat(product.sugarTaxPrice).toFixed(2) || '0.00',
+                    salesTaxRate:parseFloat(product.vatPercentage).toFixed(2)
+                };
+
+                console.log('Adding new item to cart:', cartItem);
+
+                const response = await fetch(`${API_BASE_URL}/cart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(cartItem)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
+                }
+
+                alert(t('Product added to cart successfully'));
+            }
+
+            // Reset quantity after successful add/update
             setQuantities(prev => ({
                 ...prev,
-                [productId]: moq
+                [productId]: 0
             }));
+
+        } catch (error) {
+            console.error('Error handling product cart action:', error);
+            alert(t('Failed to update cart. Please try again.'));
         }
-        
-        // Ensure quantity is at least 1
-        quantity = Math.max(1, quantity);
-        
-        // Calculate needed values
-        const unitPrice = product.unitPrice || 1;
-        const netAmount = unitPrice * quantity;
-        const sugarTaxPrice = product.sugarTaxPrice;
+    };
 
-        // First check if this item already exists in the cart
-        const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"customer_id":3,"branch_id":${selectedLocation},"product_id":${productId}}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include', // Send along auth cookies/JWT
-        });
+    // Get unique categories filtered by the current entity tab
+    const getFilteredCategories = () => {
+        // Get the entity for the current active tab
+        const selectedCategory = categories.find(cat => cat.value === activeCategory);
+        const entityToFilter = selectedCategory ? selectedCategory.entity : null;
 
-        const checkResult = await checkResponse.json();
-        console.log('Check cart response:', checkResult);
+        if (!entityToFilter) return [];
 
-        if (checkResult.data.data && checkResult.data.data.length > 0) {
-            // Item exists in cart, update the quantity
-            const existingItem = checkResult.data.data[0];
-            const updatedQuantity = existingItem.quantityOrdered + quantity;
-            
-            const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({
-                    quantityOrdered: updatedQuantity,
-                    netAmount: unitPrice * updatedQuantity
-                })
-            });
-            
-            if (!updateResponse.ok) {
-                const errorData = await updateResponse.json().catch(() => ({}));
-                throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
-            }
-            
-            alert(t('Product quantity updated in cart successfully'));
-        } 
-        else {
-            // Item doesn't exist in cart, add it as new
-            const cartItem = {
-                customerId: selectedCustomerId || '3',
-                branchId: selectedLocation,
-                productId: product.id,
-                productName: product.productName || product.product_name,
-                productNameLc: product.productNameLc || product.product_name_lc,
-                erpProdId: product.erpProdId || product.erp_prod_id || '',
-                entity: product.entity, // Keep original case
-                category: product.category, // Keep original case
-                unit: product.unit || 'EA',
-                unitPrice: unitPrice,
-                quantityOrdered: quantity,
-                netAmount: netAmount,
-                sugarTaxPrice: sugarTaxPrice,
-            };
-            
-            console.log('Adding new item to cart:', cartItem);
-            
-            const response = await fetch(`${API_BASE_URL}/cart`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(cartItem)
-            });
-            
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
-            }
-            
-            alert(t('Product added to cart successfully'));
-        }
-        
-        // Reset quantity after successful add/update
-        setQuantities(prev => ({
-            ...prev,
-            [productId]: 0
-        }));
-        
-    } catch (error) {
-        console.error('Error handling product cart action:', error);
-        alert(t('Failed to update cart. Please try again.'));
-    }
-};
-
-// Get unique categories filtered by the current entity tab
-const getFilteredCategories = () => {
-    // Get the entity for the current active tab
-    const selectedCategory = categories.find(cat => cat.value === activeCategory);
-    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-    
-    if (!entityToFilter) return [];
-    
-    // First filter by entity
-    let filteredProductsByEntity = products.filter(p => 
-        (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
-    );
-    
-    // Additional filtering for VMCO tabs
-    if (activeCategory === 'VMCO Machines') {
-        // For VMCO Machines tab, exclude categories that have "consumable" in their name
-        return Array.from(new Set(
-            filteredProductsByEntity
-                .map(p => p.category)
-                .filter(Boolean)
-                .filter(category => 
-                    !(category.toLowerCase().includes('consumable') || 
-                      category.toLowerCase().includes('supply') ||
-                      category.toLowerCase().includes('accessory'))
-                )
-        ));
-    } else if (activeCategory === 'VMCO Consumables') {
-        // For VMCO Consumables tab, exclude categories that have "machine" in their name
-        return Array.from(new Set(
-            filteredProductsByEntity
-                .map(p => p.category)
-                .filter(Boolean)
-                .filter(category => 
-                    !(category.toLowerCase().includes('machine') || 
-                      category.toLowerCase().includes('equipment') ||
-                      category.toLowerCase().includes('device'))
-                )
-        ));
-    } else {
-        // For all other tabs, just filter by entity without special handling
-        return Array.from(new Set(
-            filteredProductsByEntity
-                .map(p => p.category)
-                .filter(Boolean)
-        ));
-    }
-};
-
-// Get unique subcategories filtered by the current entity tab and selected category
-const getFilteredSubcategories = () => {
-    // Get the entity for the current active tab
-    const selectedCategory = categories.find(cat => cat.value === activeCategory);
-    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-    
-    if (!entityToFilter) return [];
-    
-    let filteredProducts = products;
-    
-    // Filter by entity first
-    filteredProducts = filteredProducts.filter(
-        p => (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
-    );
-    
-    // No special handling for VMCO entities anymore
-    
-    // If a category is selected, filter by that category
-    if (categoryFilter) {
-        filteredProducts = filteredProducts.filter(
-            p => (p.category || '').toLowerCase() === categoryFilter.toLowerCase()
+        // First filter by entity
+        let filteredProductsByEntity = products.filter(p =>
+            (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
         );
-    }
-    
-    // Return unique subcategories from the filtered products
-    return Array.from(new Set(
-        filteredProducts
-            .map(p => p.subCategory || p.sub_category)
-            .filter(Boolean)
-    ));
-};
+
+        // Additional filtering for VMCO tabs
+        if (activeCategory === 'VMCO Machines') {
+            // For VMCO Machines tab, exclude categories that have "consumable" in their name
+            return Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('consumable') ||
+                            category.toLowerCase().includes('supply') ||
+                            category.toLowerCase().includes('accessory'))
+                    )
+            ));
+        } else if (activeCategory === 'VMCO Consumables') {
+            // For VMCO Consumables tab, exclude categories that have "machine" in their name
+            return Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('machine') ||
+                            category.toLowerCase().includes('equipment') ||
+                            category.toLowerCase().includes('device'))
+                    )
+            ));
+        } else {
+            // For all other tabs, just filter by entity without special handling
+            return Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+            ));
+        }
+    };
+
+    // Get unique subcategories filtered by the current entity tab and selected category
+    const getFilteredSubcategories = () => {
+        // Get the entity for the current active tab
+        const selectedCategory = categories.find(cat => cat.value === activeCategory);
+        const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+
+        if (!entityToFilter) return [];
+
+        let filteredProducts = products;
+
+        // Filter by entity first
+        filteredProducts = filteredProducts.filter(
+            p => (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
+        );
+
+        // No special handling for VMCO entities anymore
+
+        // If a category is selected, filter by that category
+        if (categoryFilter) {
+            filteredProducts = filteredProducts.filter(
+                p => (p.category || '').toLowerCase() === categoryFilter.toLowerCase()
+            );
+        }
+
+        // Return unique subcategories from the filtered products
+        return Array.from(new Set(
+            filteredProducts
+                .map(p => p.subCategory || p.sub_category)
+                .filter(Boolean)
+        ));
+    };
 
     // Initialize quantities with MOQ values when products are loaded
     useEffect(() => {
         if (products.length > 0) {
-            let initialQuantities = {...quantities};
+            let initialQuantities = { ...quantities };
             let hasChanges = false;
-            
+
             products.forEach(product => {
                 // Only set MOQ for products without quantity or with 0 quantity
                 if (product.moq && (!initialQuantities[product.id] || initialQuantities[product.id] === 0)) {
@@ -663,7 +672,7 @@ const getFilteredSubcategories = () => {
                     hasChanges = true;
                 }
             });
-            
+
             // Only update state if there were changes
             if (hasChanges) {
                 setQuantities(initialQuantities);
@@ -674,36 +683,134 @@ const getFilteredSubcategories = () => {
     return (
         <Sidebar title={t('Catalog')}>
             <div className="catalog-content">
-                <div className="catalog-header">
+                {isV('selectBranch') && <div className="catalog-header">
                     <div className="location-selector">
                         <Dropdown
                             id={`location-select-${catalogId}`}
                             name="locationSelect"
                             value={selectedLocation}
                             onChange={(e) => {
-                                const selectedValue = e.target.value;
+                                const newBranchId = e.target.value;
+                                const currentBranchId = selectedLocation;
                                 
-                                // Convert to string to ensure comparison works correctly
-                                const selectedBranch = branches.find(branch => String(branch.value) === String(selectedValue));
+                                // Don't do anything if selecting the same branch
+                                if (newBranchId === currentBranchId) return;
                                 
-                                // Save branch name to localStorage if found
-                                if (selectedBranch && selectedBranch.label) {
-                                    localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                    localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                    localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
-                                    
-                                    console.log('Selected branch:', selectedBranch.label);
-                                    console.log('Selected branch ID:', selectedBranch.value);
-                                    console.log('Selected branch ERP ID:', selectedBranch.erpBranchId);
-                                } else {
-                                    console.log('No branch found with id:', selectedValue);
-                                    console.log('Available branches:', branches);
-                                    console.log('Selected value type:', typeof selectedValue);
-                                    console.log('First branch value type:', branches.length > 0 ? typeof branches[0].value : 'No branches');
-                                }
+                                const checkAndChangeBranch = async () => {
+                                    try {
+                                        // Only check for cart items if we already had a branch selected
+                                        if (currentBranchId) {
+                                            setIsLoading(true);
+                                            
+                                            // Set up parameters for pagination to check cart items
+                                            const params = new URLSearchParams({
+                                                page: 1,
+                                                pageSize: 100, // Large enough to capture all items
+                                                sortBy: 'id',
+                                                sortOrder: 'asc'
+                                            });
+                                            
+                                            // Create filters to check current cart
+                                            const filters = {
+                                                customer_id: selectedCustomerId || customerId || '3',
+                                                branch_id: currentBranchId
+                                            };
+                                            
+                                            console.log('Checking cart with filters:', filters);
+                                            
+                                            // Add filters as a single parameter with stringified JSON
+                                            params.append('filters', JSON.stringify(filters));
+                                            
+                                            // Fetch cart items for current branch
+                                            const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
+                                                method: 'GET',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Accept': 'application/json'
+                                                },
+                                                credentials: 'include'
+                                            });
+                                            
+                                            if (!response.ok) {
+                                                throw new Error(`Error checking cart: ${response.status} ${response.statusText}`);
+                                            }
+                                            
+                                            const result = await response.json();
+                                            console.log('Cart check result:', result);
+                                            
+                                            // Check if cart has items
+                                            const cartItems = result.data?.data || [];
+                                            const hasItems = cartItems.length > 0;
+                                            
+                                            if (hasItems) {
+                                                // Show confirmation dialog
+                                                const confirmChange = window.confirm(
+                                                    t("There are items in the cart. Do you want to discard the items?")
+                                                );
+                                                
+                                                if (!confirmChange) {
+                                                    // User canceled - don't change branch
+                                                    setIsLoading(false);
+                                                    return;
+                                                }
+                                                
+                                                // User confirmed, delete cart items before changing branch
+                                                console.log(`Deleting cart items for branch ${currentBranchId}...`);
+
+                                                // Convert IDs to strings before adding them to the URL
+                                                const customerIdStr = String(selectedCustomerId || '3');
+                                                const branchIdStr = String(currentBranchId);
+
+                                                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+                                                deleteUrl.searchParams.append('customer_id', customerIdStr);
+                                                deleteUrl.searchParams.append('branch_id', branchIdStr);
+
+                                                const deleteResponse = await fetch(deleteUrl, {
+                                                    method: 'DELETE',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    credentials: 'include'
+                                                });
+
+                                                if (!deleteResponse.ok) {
+                                                    console.error(`Warning: Failed to delete cart items: ${deleteResponse.status}`);
+                                                    // Continue with branch change anyway
+                                                } else {
+                                                    console.log('Successfully deleted cart items');
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Change branch selection
+                                        setSelectedLocation(newBranchId);
+                                        
+                                        // Find selected branch details
+                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
+                                        if (selectedBranch && selectedBranch.label) {
+                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                            console.log('Changed to branch:', selectedBranch.label);
+                                        }
+                                        
+                                    } catch (error) {
+                                        console.error('Error during branch change:', error);
+                                        alert(t("Error checking cart. Branch change may not work correctly."));
+                                        
+                                        // Still attempt to change branch despite error
+                                        setSelectedLocation(newBranchId);
+                                        
+                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
+                                        if (selectedBranch && selectedBranch.label) {
+                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
+                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
+                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                        }
+                                    } finally {
+                                        setIsLoading(false);
+                                    }
+                                };
                                 
-                                // Update your local state
-                                setSelectedLocation(selectedValue);
+                                checkAndChangeBranch();
                             }}
                             options={branches}
                             className="location-select"
@@ -724,7 +831,7 @@ const getFilteredSubcategories = () => {
                             </div>
                         )}
                     </div>
-                </div>
+                </div>}
                 <div className="filter-section">
                     <Tabs
                         tabs={categoryTabs}
@@ -741,26 +848,27 @@ const getFilteredSubcategories = () => {
                         }}
                         variant="category"
                     />
-                    <button 
+                    {isV('goToCart') && <button
                         className={`go-to-cart-btn ${!selectedLocation ? 'disabled' : ''}`}
-                        style={{opacity: !selectedLocation ? 0.6 : 1, cursor: !selectedLocation ? 'not-allowed' : 'pointer',
+                        style={{
+                            opacity: !selectedLocation ? 0.6 : 1, cursor: !selectedLocation ? 'not-allowed' : 'pointer',
                         }}
                         onClick={handleGoToCart}
                         disabled={!selectedLocation}
                     >
                         <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
                         <span>{t('Go to Cart')}</span>
-                    </button>
+                    </button>}
                 </div>                <div className="search-section">
                     <div className="search-container">
-                        <SearchInput 
+                       {isV('search') && ( <SearchInput
                             onSearch={(searchTerm) => {
                                 setSearchQuery(searchTerm);
                                 setCurrentPage(1); // Reset to page 1 when searching
                             }}
                             debounceTime={500} // Increased debounce time for better performance
                             className="product-search-input"
-                        />                        
+                        />)}
                         <Dropdown
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
@@ -819,10 +927,10 @@ const getFilteredSubcategories = () => {
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />
                         <span className="loading-more-text">
-                            {currentPage === 1 ? 
-                                t('Loading page 2...') : 
-                                currentPage === 2 ? 
-                                    t('Loading page 3...') : 
+                            {currentPage === 1 ?
+                                t('Loading page 2...') :
+                                currentPage === 2 ?
+                                    t('Loading page 3...') :
                                     t('Loading more products...')}
                         </span>
                     </div>
@@ -849,7 +957,9 @@ const getFilteredSubcategories = () => {
                         onClose={handleClosePopup}
                     />
                 )}
-            </div>            <style jsx="true">{`
+            </div>           
+            
+             <style jsx="true">{`
                 .no-products-message {
                     width: 100%;
                     text-align: center;
