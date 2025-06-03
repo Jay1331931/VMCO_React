@@ -4,20 +4,36 @@ const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
+// Add your API call here
+const fetchUser = async (token) => {
+  //console.log('Fetching user with token:', token);
+  const API_SERVER_URL = process.env.REACT_APP_API_BASE_URL;
+
+  const response = await fetch(`${API_SERVER_URL}/auth/me`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+  });
+
+  //console.log('Response received:', response);
+  
+  if (!response.ok) throw new Error('Failed to fetch user');
+  
+  // Get the response JSON
+  const userData = await response.json();
+  //console.log('Response json:', JSON.stringify(userData.data));
+  if (userData.data) {
+    const { iat, exp, ...cleanedData } = userData.data;
+    return cleanedData;
+  }
+  return userData.data;
+};
+
 export const AuthProvider = ({ children }) => {
+  //console.log('........... IN AUTH PROVIDER');
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Initialize from cookie on mount
-  useEffect(() => {
-    const tokenFromCookie = getCookie('token');
-    if (tokenFromCookie) {
-      setToken(tokenFromCookie);
-      setIsAuthenticated(true);
-      // You could decode JWT here to get user info if needed
-    }
-  }, []);
 
   const getCookie = (name) => {
     const cookies = document.cookie
@@ -28,9 +44,25 @@ export const AuthProvider = ({ children }) => {
         acc[key] = decodeURIComponent(value);
         return acc;
       }, {});
-      
     return cookies[name] || null;
   };
+
+  useEffect(() => {
+    const tokenFromCookie = getCookie('token');
+    if (tokenFromCookie) {
+      //console.log('Token found in cookie:', tokenFromCookie);
+      setToken(tokenFromCookie);
+      setIsAuthenticated(true);
+      // Fetch user info using the token
+      fetchUser(tokenFromCookie)
+        .then(userData => setUser(userData))
+        .catch(() => {
+          setUser(null);
+          setIsAuthenticated(false);
+          setToken(null);
+        });
+    }
+  }, []);
 
   const login = (tokenValue, userData) => {
     setToken(tokenValue);
@@ -42,7 +74,6 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    // You might want to clear the cookie here too
     document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 

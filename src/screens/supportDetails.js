@@ -41,18 +41,10 @@ function SupportDetails() {
   const formMode = location.state?.mode;
   const { token, user, isAuthenticated, logout } = useAuth();
 
-  //RBAC
-  //use formMode to decide if it is editform or add form
-  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
-  const isV = rbacMgr.isV.bind(rbacMgr);
-  const isE = rbacMgr.isE.bind(rbacMgr);
-
-
   const ticketRcvd = location.state?.ticket || {};
   const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
   // State for branches dropdown
-  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
-  const [branches, setBranches] = useState([]);
+   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(
     currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc
@@ -64,8 +56,50 @@ function SupportDetails() {
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
   
   const [isEditing, setIsEditing] = useState(true);
- 
-  
+  const [popupImage, setPopupImage] = useState(null);
+  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  // Images state (allow dynamic add)
+  const [images, setImages] = useState(
+    Array.isArray(ticket.images) && ticket.images.length > 0
+      ? ticket.images.filter(Boolean)
+      : []
+  );
+  // File input ref
+  const fileInputRef = useRef(null);
+
+ // State for video popup
+  const [popupVideo, setPopupVideo] = useState(null);
+
+  // Videos state (allow dynamic add)
+  const [videos, setVideos] = useState([]);
+
+  // File input ref for videos
+  const videoInputRef = useRef(null);
+
+ //NOTE: For fetching the user again after browser refersh - start
+   useEffect(() => {
+    if (user) {
+      fetchEmployees();
+      fetchBranches();
+    }
+  }, [user]);
+
+  if (!user) {
+    return (
+      <Sidebar title="Loading...">
+        <div className="support-details-container">
+          <div className="loading-indicator">Loading user information...</div>
+        </div>
+      </Sidebar>
+    );
+  }
+  //For fetching the user again after browser refersh - End
+
+  //Rbac and other access based on user object to follow below lik this
+  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
+  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
@@ -132,11 +166,7 @@ function SupportDetails() {
   };
 
   // Fetch employees on component mount
-  useEffect(() => {
-    fetchEmployees();
-    fetchBranches();
-  
-  }, []);
+ 
 
 
  
@@ -147,18 +177,8 @@ function SupportDetails() {
 
   // Rest of your existing state variables...
   // State for image popup
-  const [popupImage, setPopupImage] = useState(null);
-  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
 
-  // Images state (allow dynamic add)
-  const [images, setImages] = useState(
-    Array.isArray(ticket.images) && ticket.images.length > 0
-      ? ticket.images.filter(Boolean)
-      : []
-  );
 
-  // File input ref
-  const fileInputRef = useRef(null);
 
   // Handle image add
   const handleAddImage = (e) => {
@@ -179,15 +199,7 @@ function SupportDetails() {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  // State for video popup
-  const [popupVideo, setPopupVideo] = useState(null);
-
-  // Videos state (allow dynamic add)
-  const [videos, setVideos] = useState([]);
-
-  // File input ref for videos
-  const videoInputRef = useRef(null);
-
+  
   // Handle video add
   const handleAddVideo = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -280,6 +292,7 @@ function SupportDetails() {
     }
   };
 
+
   return (
     <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="support-details-container">
@@ -290,7 +303,7 @@ function SupportDetails() {
             <div className="support-details-field">
               <label>Customer Name</label>
               <input 
-                value={companyNameToShow} 
+                value={companyNameToShow}
                 disabled={true} 
               />
             </div>

@@ -178,29 +178,42 @@ class RbacManager {
       },
       maintList: {
         fields: {
-          equipmentId: { visible: true, editable: true },
-          lastService: { visible: true, editable: true },
-          nextService: { visible: true, editable: true },
-          status: { visible: true, editable: true },
-          assignedTo: { visible: true, editable: true }
+          btnAdd: { visible: false, editable: false },
         }
       },
       maintDetailAdd: {
         fields: {
-          equipmentId: { visible: true, editable: true },
-          serviceType: { visible: true, editable: true },
-          scheduleDate: { visible: true, editable: true },
-          assignTo: { visible: true, editable: true },
-          notes: { visible: true, editable: true }
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          machineSrialNumber:{ visible: true, editable: true },
+          warrantyEndDate: { visible: true, editable: false },
+          maintenanceCharges: { visible: false, editable: true },
+          issueDetails: { visible: true, editable: true },
+          videos: { visible: true, editable: true },  
+          images: { visible: true, editable: true },
+          status: { visible: false, editable: true },
+          assignedTeamMember: { visible: true, editable: true },
+
         }
       },
       maintDetailEdit: {
         fields: {
-          equipmentId: { visible: true, editable: true },
-          serviceType: { visible: true, editable: true },
-          scheduleDate: { visible: true, editable: true },
-          assignTo: { visible: true, editable: true },
-          notes: { visible: true, editable: true }
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: false },
+          issueType: { visible: true, editable:false },
+          issueName: { visible: true, editable: false },
+          createdDate: { visible: true, editable: false },
+          machineSrialNumber:{ visible: true, editable: false },
+          warrantyEndDate: { visible: true, editable: false },
+          maintenanceCharges: { visible:true, editable: true },
+          issueDetails: { visible: true, editable:false },
+          videos: { visible: true, editable:false },  
+          images: { visible: true, editable: false },
+          status: { visible:true, editable: true },
+          assignedTeamMember: { visible: true, editable: true },
         }
       },
       catelog: {
