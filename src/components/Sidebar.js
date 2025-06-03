@@ -205,7 +205,6 @@ function Sidebar({ children, title }) {
           </button>
           <div className="header-title">{t(activeMenu)}</div>
           {/* Saudi time next to language switch */}
-          <SaudiTime />
           <button className="lang-switch-btn" onClick={toggleLanguage}>
             <FontAwesomeIcon icon={faLanguage} />
             <span>{isRTL ? 'EN' : 'عربى'}</span>

@@ -41,6 +41,7 @@ function Cart() {
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
+    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [showPaymentPopup, setShowPaymentPopup] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
@@ -69,8 +70,9 @@ function Cart() {
             const branchName = localStorage.getItem('selectedBranchName');
             const branchId = localStorage.getItem('selectedBranchId');
             const branchErpId = localStorage.getItem('selectedBranchErpId');
+            const branchRegion = localStorage.getItem('selectedBranchRegion');
 
-            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId });
+            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId, branchRegion });
 
             if (!branchId || !branchName || branchName.trim() === '') {
                 console.warn('Branch selection is missing or incomplete');
@@ -82,6 +84,7 @@ function Cart() {
             setSelectedBranchName(branchName);
             setSelectedBranchId(branchId);
             setSelectedBranchErpId(branchErpId);
+            setSelectedBranchRegion(branchRegion);
 
         } catch (error) {
             console.error('Error retrieving branch info from localStorage:', error);
@@ -369,12 +372,14 @@ function Cart() {
 
             // Determine entity from category
             const entity = getEntityFromCategory(categoryName);
+            const category = categoryName;
 
             // Step 1: Check if there's an existing pending order for this customer+branch+entity
             const orderFiltersObj = {
                 customerId: selectedCustomerId,
                 branchId: selectedBranchId,
                 entity: entity,
+                category: category,
                 status: 'Open'
             };
             const orderFilters = new URLSearchParams({
@@ -485,6 +490,7 @@ function Cart() {
                     customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     erpBranchId: selectedBranchErpId,
+                    branchRegion: selectedBranchRegion,
                     orderBy: 'Customer',
                     entity: entity,
                     paymentMethod: selectedPaymentMethod,
@@ -668,7 +674,8 @@ function Cart() {
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,
                         net_amount: netAmount,
-                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0),
+                        sugar_tax_price: parseFloat(item.sugarTaxPrice)
                     });
                 }
             });
@@ -854,7 +861,7 @@ function Cart() {
                                                     {t('Total for this category')}:
                                                     {category.items.reduce((total, item) => {
                                                         const price = parseFloat(item.price) || 0;
-                                                        return total + price * (quantities[item.id] || item.quantity);
+                                                        return (total + price * (quantities[item.id] || item.quantity)).toFixed(2);
                                                     }, 0)}
                                                     <span className="sar-label" style={{ margin: '5px' }}>SAR</span>
                                                 </span>
@@ -877,21 +884,6 @@ function Cart() {
                         ))}
                     </div>
                 )}
-                {/* <div className="cart-summary-panel">
-                    <div className="total-amount">
-                        <h3 className="summary-title">
-                            {t('Total Amount')} ({totalItems} Items)
-                        </h3>
-                        <span className="summary-amount">{calculateTotal()} <span className="sar-label">SAR</span></span>
-                        <button
-                            className="checkout-all-btn"
-                            onClick={handlePlaceAllOrders}
-                            disabled={isPlacingOrder || totalItems === 0}
-                        >
-                            {isPlacingOrder ? t('Processing...') : t('Place all orders')}
-                        </button>
-                    </div>
-                </div> */}
             </div>
             <div className="cart-footer">
                 <button className="continue-shopping" onClick={handleContinueShopping}>
@@ -905,6 +897,7 @@ function Cart() {
                 onSelectPaymentMethod={handleSelectPaymentMethod}
                 API_BASE_URL={API_BASE_URL}
                 t={t}
+                category={pendingOrderCategory} // Pass the current category for filtering
             />
 
 

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
-function GetPaymentMethods({ open, onClose, onSelectPaymentMethod, API_BASE_URL, t = (x) => x }) {
+function GetPaymentMethods({
+  open,
+  onClose,
+  onSelectPaymentMethod,
+  API_BASE_URL,
+  t = (x) => x,
+  category // <-- Add category prop
+}) {
   const [methods, setMethods] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,17 +26,36 @@ function GetPaymentMethods({ open, onClose, onSelectPaymentMethod, API_BASE_URL,
         return res.json();
       })
       .then(result => {
+        let paymentMethods = [];
         if (result.status === 'Ok' && result.data) {
-          setMethods(result.data.map(item => item.value));
+          paymentMethods = result.data.map(item => item.value);
         } else if (result.data && Array.isArray(result.data)) {
-          setMethods(result.data.map(item => item.value));
+          paymentMethods = result.data.map(item => item.value);
         } else {
           throw new Error('Unexpected response format for payment method options');
         }
+
+        // Filter payment methods based on category
+        let allowedMethods = paymentMethods;
+        if (category === 'VMCO Machines') {
+          allowedMethods = paymentMethods.filter(
+            m => m === 'Pre Payment' || m === 'Partial Payment'
+          );
+        } else if (
+          category === 'VMCO Consumables' ||
+          category === 'Diyafa' ||
+          category === 'Green Mast' ||
+          category === 'Naqui'
+        ) {
+          allowedMethods = paymentMethods.filter(
+            m => m === 'Pre Payment' || m === 'Credit' || m === 'Cash on Delivery'
+          );
+        }
+        setMethods(allowedMethods);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [open, API_BASE_URL]);
+  }, [open, API_BASE_URL, category]);
 
   if (!open) return null;
 
@@ -53,6 +79,7 @@ function GetPaymentMethods({ open, onClose, onSelectPaymentMethod, API_BASE_URL,
               <thead>
                 <tr>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Payment Method')}</th>
+                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Balance')}</th>
                   <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
@@ -64,6 +91,7 @@ function GetPaymentMethods({ open, onClose, onSelectPaymentMethod, API_BASE_URL,
                 ) : (
                   methods.map((method, idx) => (
                     <tr key={idx}>
+                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
                       <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
                       <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                         <button
