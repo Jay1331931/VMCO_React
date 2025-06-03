@@ -435,7 +435,7 @@ class RbacManager {
       },
       custDetailsAdd: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },
@@ -486,20 +486,22 @@ class RbacManager {
           bankName: { visible: true, editable: true },
           accountNumber: { visible: true, editable: true },
           ibanNumber: { visible: true, editable: true },
-          prePayment: { visible: true, editable: true },
-          partialPayment: { visible: true, editable: true },
-          advancePayment: { visible: true, editable: true },
-          COD: { visible: true, editable: true },
-          credit: { visible: true, editable: true },
-          creditLimit: { visible: true, editable: true },
-          creditPeriod: { visible: true, editable: true },
+          prePayment: { visible: false, editable: true },
+          partialPayment: { visible: false, editable: true },
+          advancePayment: { visible: false, editable: true },
+          COD: { visible: false, editable: true },
+          credit: { visible: false, editable: true },
+          creditLimit: { visible: false, editable: true },
+          creditPeriod: { visible: false, editable: true },
           btnSave: { visible: true, editable: true },
-          btnBlock: {visible: false, editable: true}
+          btnBlock: {visible: false, editable: true},
+          customerSource: { visible: false, editable: true },
+          deliveryCost: {visible: false, editable: true},
         }
       },
       custDetailsEdit: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },
@@ -548,17 +550,18 @@ class RbacManager {
           bankName: { visible: true, editable: true },
           accountNumber: { visible: true, editable: true },
           ibanNumber: { visible: true, editable: true },
-          prePayment: { visible: true, editable: true },
-          partialPayment: { visible: true, editable: true },
-          advancePayment: { visible: true, editable: true },
-          COD: { visible: true, editable: true },
-          credit: { visible: true, editable: true },
-          creditLimit: { visible: true, editable: true },
-          creditPeriod: { visible: true, editable: true },
+          prePayment: { visible: false, editable: true },
+          partialPayment: { visible: false, editable: true },
+          advancePayment: { visible: false, editable: true },
+          COD: { visible: false, editable: true },
+          credit: { visible: false, editable: true },
+          creditLimit: { visible: false, editable: true },
+          creditPeriod: { visible: false, editable: true },
           assignedTo: { visible: false, editable: true },
           assignedToEntityWise: { visible: false, editable: true },
           customerSource: { visible: false, editable: true },
-        }
+          deliveryCost: {visible: false, editable: true},
+          }
       },
     },
 
@@ -647,7 +650,7 @@ class RbacManager {
       // Define opsCordinator permissions for all forms
       custDetailsAdd: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },
@@ -703,12 +706,12 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: true, editable: false },
+          btnSave: { visible: true, editable: true },
         }
       },
       custDetailsEdit: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },
