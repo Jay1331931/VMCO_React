@@ -454,10 +454,10 @@ class RbacManager {
           brandNameArabic: { visible: true, editable: true },
           company_logo: { visible: true, editable: true },
           brand_logo: { visible: true, editable: true },
-          primaryContactName: { visible: true, editable: true },
-          primaryContactDesignation: { visible: true, editable: true },
-          primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactName: { visible: true, editable: false },
+          primaryContactDesignation: { visible: true, editable: false },
+          primaryContactEmail: { visible: true, editable: false },
+          primaryContactPhone: { visible: true, editable: false },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
@@ -519,10 +519,10 @@ class RbacManager {
           brandNameArabic: { visible: true, editable: true },
           company_logo: { visible: true, editable: true },
           brand_logo: { visible: true, editable: true },
-          primaryContactName: { visible: true, editable: true },
-          primaryContactDesignation: { visible: true, editable: true },
-          primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactName: { visible: true, editable: false },
+          primaryContactDesignation: { visible: true, editable: false },
+          primaryContactEmail: { visible: true, editable: false },
+          primaryContactPhone: { visible: true, editable: false },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
@@ -1423,12 +1423,23 @@ class RbacManager {
    * @param {string} field - The field name
    * @returns {boolean} True if the field is editable, false otherwise
    */
+  // isE(field, approvalWF = false, fieldInWF = false) {
+  //   //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
+  //   const access = this.getFieldAccess(field);
+  //   //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
+  //   {console.log(access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);}
+  //   return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
+  // }
   isE(field, approvalWF = false, fieldInWF = false) {
-    //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
-    //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
-  }
+    const result = (access == null ? true : access.editable) && 
+                  (this.itemInWF == null ? true : this.isUserOwner) && 
+                  ((approvalWF == true && fieldInWF == true) ? true : 
+                   (approvalWF == true && fieldInWF == false) ? false : true);
+    
+    console.log(`Field ${field} editable check:`, result);
+    return result;
+}
 }
 
 // Example usage
