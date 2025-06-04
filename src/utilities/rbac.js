@@ -1427,7 +1427,7 @@ class RbacManager {
     //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
     const access = this.getFieldAccess(field);
     //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
-    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
+    return (access === null ? true : access.editable) && (this.itemInWF === null ? true : this.isUserOwner) && ((approvalWF === true && fieldInWF === true) ? true : (approvalWF === true && fieldInWF === false) ? false : true);
   }
 }
 

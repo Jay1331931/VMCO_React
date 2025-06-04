@@ -79,28 +79,39 @@ function Catalog() {
     const mapProductToCardProps = useCallback((product) => {
         const currentLanguage = i18n.language;
 
+        // Parse images JSON and extract URLs
+        let imageUrls = [];
+        if (product.images) {
+            try {
+                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                if (Array.isArray(parsed)) {
+                    imageUrls = parsed;
+                }
+            } catch (e) {
+                // fallback: treat as single image string
+                imageUrls = [product.images];
+            }
+        }
+
         // Choose the right product name based on language
         let productName = product.productName || product.product_name;
-
-        // If language is not English and we have a localized name, use it
         if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
             productName = product.product_name_lc || product.productNameLc || productName;
         }
 
         // Choose the right product description based on language
         let productDescription = product.description;
-
-        // If language is not English and we have a localized description, use it
         if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
             productDescription = product.description_lc || product.descriptionLc;
         }
 
         return {
             id: product.id,
-            name: productName, // Language-aware
+            name: productName,
             code: product.erpProdId || product.erp_prod_id || "No ID",
-            image: product.image,
-            description: productDescription, // Now language-aware
+            image: imageUrls[0] || '', // Use first image for ProductCard
+            images: imageUrls,         // Pass all images for ProductPopup
+            description: productDescription,
             category: product.category,
             subCategory: product.sub_category || product.subCategory,
             entity: product.entity,
@@ -108,7 +119,6 @@ function Catalog() {
             vat: product.vatPercentage || product.VAT_percentage,
             sugarTaxPrice: product.sugarTaxPrice,
             moq: product.moq || product.minimumOrderQuantity || 0,
-            // Keep the original data too for use in other places
             ...product
         };
     }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
@@ -444,7 +454,7 @@ function Catalog() {
                 }));
                 setBranches(branchOptions);
 
-                console.log('Branch options are ',branchOptions);
+                console.log('Branch options are ', branchOptions);
 
                 // Add additional logging to see the actual data structure
                 console.log('Fetched branch data:', branchData);

@@ -102,8 +102,8 @@ function Cart() {
             try {
                 // Set up parameters for pagination
                 const params = new URLSearchParams({
-                    page: 1,
-                    pageSize: 200, // Fetch a large number to get all cart items
+                    //page: 1,
+                    //pageSize: 200, // Fetch a large number to get all cart items
                     sortBy: 'id',
                     sortOrder: 'asc'
                 });
