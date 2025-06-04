@@ -157,8 +157,8 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   );
 };
 function CustomersDetails() {
-function transformCustomerData(customer, customerContacts) {
-
+const transformCustomerData = async (customer, customerContacts) => {
+  console.log("Inside transform customer data")
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts ? [customerContacts] : [];
@@ -168,7 +168,28 @@ function transformCustomerData(customer, customerContacts) {
       acc[contact.contactType] = contact;
       return acc;
     }, {});
-
+      let isAppMode = false;
+  
+  try {
+    const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id/${customer?.id}/module/customer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    console.log(res)
+    if (res.ok) {
+      const responseText = await res.text(); // Get raw response text ('t' or 'f')
+      console.log(responseText)
+      const data = responseText ? JSON.parse(responseText) : {};
+      isAppMode = data?.exists === 't'; // Convert to boolean
+      console.log("is approval mode", isAppMode)
+      console.log(`Workflow check result for customer ${customer?.id}:`, isAppMode);
+    } else {
+      console.log(`Workflow check failed for customer ${customer?.id}:`, res.status);
+    }
+  } catch (err) {
+    console.error('Error fetching workflow instance:', err);
+  }
     return {
       ...customer,
       // Contact details - each contact type is a separate row in DB
@@ -197,8 +218,10 @@ function transformCustomerData(customer, customerContacts) {
       operationsHeadDesignation: contactsMap.operations?.designation || '',
       operationsHeadEmail: contactsMap.operations?.email || '',
       operationsHeadMobile: contactsMap.operations?.mobile || '',
+
+      isApprovalMode : isAppMode,
     };
-  }
+}
 
   const fetchCustomerContacts = async (customerId, customer) => {
     try {
@@ -209,7 +232,13 @@ function transformCustomerData(customer, customerContacts) {
       });
       const result = await response.json();
       if (result.status === 'Ok') {
-        setCustomer(transformCustomerData(customer, result.data));
+        const transformedData = await transformCustomerData(customer, result.data); 
+      console.log("transformedData",transformedData)
+      console.log("transformedData",transformedData)
+      console.log("transformedData",transformedData)
+      console.log("transformedData",transformedData)
+      console.log("transformedData",transformedData)
+        setCustomer(transformedData);
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
       }
@@ -218,67 +247,6 @@ function transformCustomerData(customer, customerContacts) {
     }
   };
 
-const fetchCustomer = async (customerId) => {
-  try {
-    // Fetch basic customer data
-    const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-    });
-    const result = await response.json();
-
-    if (result.status !== 'Ok') {
-      throw new Error(result.data?.message || 'Failed to fetch customer data');
-    }
-
-    let customerData = result.data;
-    console.log('Initial Customer Data:', customerData);
-
-    const [contactsResponse, paymentMethodsResponse] = await Promise.all([
-      fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      }),
-      fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      })
-    ]);
-
-    const contactsResult = await contactsResponse.json();
-    if (contactsResult.status === 'Ok') {
-      customerData = transformCustomerData(customerData, contactsResult.data);
-      console.log('Customer Data with Contacts:', customerData);
-    }
-
-    const paymentResult = await paymentMethodsResponse.json();
-    if (paymentResult.status === 'Ok') {
-      const paymentMethods = Array.isArray(paymentResult.data) 
-        ? paymentResult.data 
-        : [];
-      
-      customerData = {
-        ...customerData,
-        paymentMethods,
-        creditLimit: paymentMethods.find(m => m?.methodName === 'Credit')?.creditLimit || 0,
-        balance: paymentMethods.find(m => m?.methodName === 'Credit')?.balance || 0
-      };
-      console.log('Customer Data with Payment Methods:', customerData);
-    }
-    // setCustomer(customerData);
-    // setApprovedCustomer(customerData);
-
-    setFormData(customerData)
-    return customerData;
-
-  } catch (err) {
-    console.error('Error in fetchCustomer:', err);
-    throw err;
-  }
-};
 
 const fetchApprovedCustomer = async (transformedCustomer) => {
 console.log("Fetch Approved Customer Called")
@@ -298,7 +266,7 @@ console.log("Fetch Approved Customer Called")
 
     let customerData = result.data;
     // console.log('Initial Customer Data:', customerData);
-
+    fetchCustomerContacts(customerId, customerData)
     const [contactsResponse, paymentMethodsResponse] = await  Promise.all([
       fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
         method: 'GET',
@@ -378,8 +346,6 @@ console.log("Fetch Approved Customer Called")
       return newFormData;
     });
   }
-} else {
-  setFormData(customerData)
 }
 console.log("Approved Customer Data", customerData);
 setApprovedCustomer(customerData);
@@ -751,48 +717,48 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
   setFormErrors(errors);
   return Object.keys(errors).length === 0;
 };
-  function transformCustomerData(customer, customerContacts) {
+  // function transformCustomerData(customer, customerContacts) {
 
-    const contacts = Array.isArray(customerContacts)
-      ? customerContacts
-      : customerContacts ? [customerContacts] : [];
+  //   const contacts = Array.isArray(customerContacts)
+  //     ? customerContacts
+  //     : customerContacts ? [customerContacts] : [];
 
-    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
-    const contactsMap = contacts.reduce((acc, contact) => {
-      acc[contact.contactType] = contact;
-      return acc;
-    }, {});
+  //   // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+  //   const contactsMap = contacts.reduce((acc, contact) => {
+  //     acc[contact.contactType] = contact;
+  //     return acc;
+  //   }, {});
 
-    return {
-      ...customer,
-      // Contact details - each contact type is a separate row in DB
-      primaryContactName: contactsMap.primary?.name || '',
-      primaryContactDesignation: contactsMap.primary?.designation || '',
-      primaryContactEmail: contactsMap.primary?.email || '',
-      primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
+  //   return {
+  //     ...customer,
+  //     // Contact details - each contact type is a separate row in DB
+  //     primaryContactName: contactsMap.primary?.name || '',
+  //     primaryContactDesignation: contactsMap.primary?.designation || '',
+  //     primaryContactEmail: contactsMap.primary?.email || '',
+  //     primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
 
-      businessHeadName: contactsMap.business?.name || '',
-      businessHeadDesignation: contactsMap.business?.designation || '',
-      businessHeadEmail: contactsMap.business?.email || '',
-      businessHeadMobile: contactsMap.business?.mobile || '',
+  //     businessHeadName: contactsMap.business?.name || '',
+  //     businessHeadDesignation: contactsMap.business?.designation || '',
+  //     businessHeadEmail: contactsMap.business?.email || '',
+  //     businessHeadMobile: contactsMap.business?.mobile || '',
 
-      financeHeadName: contactsMap.finance?.name || '',
-      financeHeadDesignation: contactsMap.finance?.designation || '',
-      financeHeadEmail: contactsMap.finance?.email || '',
-      financeHeadMobile: contactsMap.finance?.mobile || '',
+  //     financeHeadName: contactsMap.finance?.name || '',
+  //     financeHeadDesignation: contactsMap.finance?.designation || '',
+  //     financeHeadEmail: contactsMap.finance?.email || '',
+  //     financeHeadMobile: contactsMap.finance?.mobile || '',
 
-      purchasingHeadName: contactsMap.purchasing?.name || '',
-      purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
-      purchasingHeadEmail: contactsMap.purchasing?.email || '',
-      purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
+  //     purchasingHeadName: contactsMap.purchasing?.name || '',
+  //     purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+  //     purchasingHeadEmail: contactsMap.purchasing?.email || '',
+  //     purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
 
-      // Adding operations contact if needed
-      operationsHeadName: contactsMap.operations?.name || '',
-      operationsHeadDesignation: contactsMap.operations?.designation || '',
-      operationsHeadEmail: contactsMap.operations?.email || '',
-      operationsHeadMobile: contactsMap.operations?.mobile || '',
-    };
-  }
+  //     // Adding operations contact if needed
+  //     operationsHeadName: contactsMap.operations?.name || '',
+  //     operationsHeadDesignation: contactsMap.operations?.designation || '',
+  //     operationsHeadEmail: contactsMap.operations?.email || '',
+  //     operationsHeadMobile: contactsMap.operations?.mobile || '',
+  //   };
+  // }
   // const fetchCustomerContacts = async (customerId, customer) => {
   //   try {
   //     const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
@@ -1551,7 +1517,7 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
       alert('Failed to open file. Please try again.');
     }
   };
-
+const shouldShowDiv = customer?.isApprovalMode && customerFormMode === 'custDetailsAdd';
   return (
     <Sidebar>
       <div className='customers'>
@@ -1589,7 +1555,14 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                 />
 
               ) : (
+                
+
+
+
+
+
                 <div className="customer-onboarding-form-grid" ref={contentRef}>
+                  {shouldShowDiv && <>{t('This form is currently under approval')}</>}
                   <div className="form-main-header">
                     <a href="#">{t('Customer Approval Checklist')}</a>
                   </div>
@@ -1614,11 +1587,11 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                     acc.push(field);
                     return acc;
                   }, []).map((field) => {
-                  const hasUpdate = customer.isApprovalMode && 
-                   customer.workflowData?.updates && 
-                   field.name in customer.workflowData.updates;
-  const currentValue = formData.current?.[field.name] || formData[field.name] || '';
-  const proposedValue = hasUpdate ? customer.workflowData.updates[field.name] : null;
+                  const hasUpdate = transformedCustomer.isApprovalMode && 
+                   transformedCustomer?.workflowData?.updates && 
+                   field.name in transformedCustomer.workflowData.updates;
+  const currentValue = customer?.[field.name] || '';
+  const proposedValue = hasUpdate ? transformedCustomer.workflowData.updates[field.name] : null;
                     switch (field.type) {
                       case 'text':
                         const isBusinessHeadField = [
@@ -1650,8 +1623,12 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                                   className="text-field small"
                                   readOnly
                                 />
+                                
                                 <button
                                   className="location-picker-button"
+                                  disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                                   onClick={() => setShowMap(true)}
                                 >
                                   <FontAwesomeIcon icon={faLocationDot} />
@@ -1668,7 +1645,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                         ? formData[`primaryContact${field.name.replace('businessHead', '')}`] || ''
                         : formData[field.name] || '')}
                 onChange={handleInputChange}
-                disabled={isDisabled || isE(field.name)}
+                disabled={isDisabled || !isE(field.name, customer?.isApprovalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd')
+              ? field.name in transformedCustomer.workflowData.updates 
+              : false)}
                 hidden={!isV(field.name)}
                 placeholder={field.placeholder}
                 className={
@@ -1681,9 +1660,13 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                   Current: {currentValue || '(empty)'}
                 </div>
               )}
-              {console.log(field.name)}
+              {/* {console.log(field.name)}
               {console.log(isV(field.name))}
               {console.log(isE(field.name))}
+              {console.log("customer",customer)}
+              {console.log("formdata",formData)} */}
+              {/* {console.log("customer", customer)} */}
+              {console.log(formErrors)}
             </>
           )}
           {formErrors[field.name] && (
@@ -1709,6 +1692,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                               onChange={handleInputChange}
                               placeholder={field.placeholder}
                               className="text-field small"
+                              disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                             />
                             {formErrors[field.name] && (
                               <div className="error">{formErrors[field.name]}</div>
@@ -1727,7 +1713,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                               name={field.name}
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
-                              disabled={isE(field.name)}
+                              disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                 hidden={!isV(field.name)}
                               className="dropdown"
                               placeholder="Value"
@@ -1769,15 +1757,19 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                                 id={`file-${field.name}`}
                                 onChange={(e) => handleFileUpload(e, field.name)}
                                 className="hidden-file-input"
+                                disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                               />
                               <label htmlFor={`file-${field.name}`} className="custom-file-button">
                                 {t('Upload')}
                               </label>
-                              {uploadedFiles[field.name].isNew ? (
+                              {uploadedFiles[field.name]?.isNew ? (
                                 <span className="file-name">
                                   <button
                                     type="button"
                                     className="file-link-button"
+                                    
                                   >
                                     {uploadedFiles[field.name].name}
                                   </button>
@@ -1841,6 +1833,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                                   }
                                 }}
                                 className="hidden-file-input"
+                                disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                               />
                               <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{
                                 display: 'inline-block',
@@ -1944,6 +1939,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                                 id={`file-${field.name}`}
                                 onChange={(e) => handleFileUpload(e, field.name)}
                                 className="hidden-file-input"
+                                disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                                 multiple
                               />
                               <label htmlFor={`file-${field.name}`} className="custom-file-button" style={{ display: 'inline-block', width: '100%', textAlign: 'center' }}>
@@ -2027,7 +2025,9 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                                     value={option}
                                     checked={formData[field.name]?.isAllowed}
                                     onChange={(e) => handleCheckboxChange(e, field.name)}
-                                    disabled={isE(field.name)}
+                                    disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates 
+              ? field.name in customer.workflowData.updates 
+              : false)}
                                   />
                                   {option}
                                 </label>
@@ -2039,7 +2039,7 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                         return <div key={field.name}></div>;
                       case 'header':
                         return (
-                          <div className="form-header" key={field.label}>
+                          <div className="form-header" key={field.label} hidden={isV(field.label)}>
                             {renderHeaderWithLinks(field.label)}
                           </div>
                         );
@@ -2053,6 +2053,7 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                         <button
                           className="close-modal-button"
                           onClick={() => setShowMap(false)}
+                          
                         >
                           <FontAwesomeIcon icon={faXmark} />
                         </button>
@@ -2077,26 +2078,26 @@ const validateChangedFields = (action, changedFields, checkRequired = false) => 
                   <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
-                  {isV('btnSave') && (transformedCustomer.customerStatus === 'New') && <button className="save" onClick={() => handleSave('save')} disabled={isE('btnSave')}>
+                  {isV('btnSave') && (transformedCustomer.customerStatus === 'new') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
                     {t('Save')}
                   </button>}
-                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'New') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={isE('btnSaveChanges')}>
+                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'new') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
                     {t('Save Changes')}
                   </button>}
-                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'New') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
+                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'new') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}
                   {console.log(customer.isApprovalMode)}
                   {(
                     <>
-                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={isE('btnBlock')}>
+                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)}>
                         {t('Block')}
                       </button>}
-                      {customer.isApprovalMode && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={isE('btnApprove')}>
+                      {customer.isApprovalMode && user.userType !== 'customer' && customerFormMode!=='custDetailsAdd' && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
                         {t('Approve')}
                       </button>}
-                      {customer.isApprovalMode && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={isE('btnReject')}>
+                      {customer.isApprovalMode && user.userType !== 'customer' && customerFormMode!=='custDetailsAdd' && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
                         {t('Reject')}
                       </button>}
                     </>

@@ -42,7 +42,197 @@ function Sidebar({ children, title }) {
     i18n.changeLanguage(newLang);
     document.body.dir = newLang === 'ar' ? 'rtl' : 'ltr';
   };
+const [customer, setCustomer] = useState();
+let transformedCustomer;
+const [formData, setFormData] = useState();
+const [approvedCustomer, setApprovedCustomer] = useState();
+  function transformCustomerData(customer, customerContacts) {
 
+    const contacts = Array.isArray(customerContacts)
+      ? customerContacts
+      : customerContacts ? [customerContacts] : [];
+
+    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+    const contactsMap = contacts.reduce((acc, contact) => {
+      acc[contact.contactType] = contact;
+      return acc;
+    }, {});
+      let isApprovalMode;
+      try {
+      const res =  fetch(`${API_BASE_URL}/workflow-instance/check/id/${transformedCustomer?.id}/module/${'customer'}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (res.ok) {
+        isApprovalMode = true;
+      }
+    } catch (err) {
+      console.error('Error fetching workflow instance:', err);
+    }
+    return {
+      ...customer,
+      // Contact details - each contact type is a separate row in DB
+      primaryContactName: contactsMap.primary?.name || '',
+      primaryContactDesignation: contactsMap.primary?.designation || '',
+      primaryContactEmail: contactsMap.primary?.email || '',
+      primaryContactMobile: contactsMap.primary?.mobile || '',  // Changed from phone to mobile
+
+      businessHeadName: contactsMap.business?.name || '',
+      businessHeadDesignation: contactsMap.business?.designation || '',
+      businessHeadEmail: contactsMap.business?.email || '',
+      businessHeadMobile: contactsMap.business?.mobile || '',
+
+      financeHeadName: contactsMap.finance?.name || '',
+      financeHeadDesignation: contactsMap.finance?.designation || '',
+      financeHeadEmail: contactsMap.finance?.email || '',
+      financeHeadMobile: contactsMap.finance?.mobile || '',
+
+      purchasingHeadName: contactsMap.purchasing?.name || '',
+      purchasingHeadDesignation: contactsMap.purchasing?.designation || '',
+      purchasingHeadEmail: contactsMap.purchasing?.email || '',
+      purchasingHeadMobile: contactsMap.purchasing?.mobile || '',
+
+      // Adding operations contact if needed
+      operationsHeadName: contactsMap.operations?.name || '',
+      operationsHeadDesignation: contactsMap.operations?.designation || '',
+      operationsHeadEmail: contactsMap.operations?.email || '',
+      operationsHeadMobile: contactsMap.operations?.mobile || '',
+
+      isApprovalMode: isApprovalMode,
+    };
+  }
+
+  const fetchCustomerContacts = async (customerId, customer) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      if (result.status === 'Ok') {
+        setCustomer(transformCustomerData(customer, result.data));
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch customer contacts');
+      }
+    } catch (err) {
+      console.error('Error fetching customer contacts:', err);
+    }
+  };
+const fetchApprovedCustomer = async (transformedCustomer) => {
+console.log("Fetch Approved Customer Called")
+  const customerId = transformedCustomer?.id || transformedCustomer?.customerId;
+  try {
+    // Fetch basic customer data
+    const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    const result = await response.json();
+
+    if (result.status !== 'Ok') {
+      throw new Error(result.data?.message || 'Failed to fetch customer data');
+    }
+
+    let customerData = result.data;
+    // console.log('Initial Customer Data:', customerData);
+
+    const [contactsResponse, paymentMethodsResponse] = await  Promise.all([
+      fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      }),
+      fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      })
+    ]);
+
+    const contactsResult = await contactsResponse.json();
+    if (contactsResult.status === 'Ok') {
+      customerData = transformCustomerData(customerData, contactsResult.data);
+      console.log('Customer Data with Contacts:', customerData);
+    }
+
+    const paymentResult = await paymentMethodsResponse.json();
+    if (paymentResult.status === 'Ok') {
+      const paymentMethods = Array.isArray(paymentResult.data) 
+        ? paymentResult.data 
+        : [];
+      
+      customerData = {
+        ...customerData,
+        paymentMethods,
+        creditLimit: paymentMethods.find(m => m?.methodName === 'Credit')?.creditLimit || 0,
+        balance: paymentMethods.find(m => m?.methodName === 'Credit')?.balance || 0
+      };
+      // console.log('Customer Data with Payment Methods:', customerData);
+    }
+    // setCustomer(customerData);
+    // if(transformedCustomer.isApprovalMode)
+    // {
+    // // setApprovedCustomer(customerData);
+    // if (transformedCustomer.workflowData?.updates) {
+    //     // First set all the customer data
+    //     setFormData(prevFormData => ({
+    //       ...prevFormData,
+    //       ...customerData
+    //     }));
+        
+    //     // Then individually set each update field
+    //     Object.entries(transformedCustomer.workflowData.updates).forEach(([key, value]) => {
+    //       setFormData(prevFormData => ({
+    //         ...prevFormData,
+    //         [key]: value
+    //       }));
+    //     });
+    //   }
+    // }
+    if (transformedCustomer.isApprovalMode) {
+    if (transformedCustomer.workflowData?.updates) {
+    // First, set all customer data while preserving current values
+    setFormData(prevFormData => {
+      const newFormData = { ...prevFormData, ...customerData };
+
+      // If 'current' doesn't exist, initialize it with the current values
+      if (!newFormData.current) {
+        newFormData.current = { ...prevFormData };
+      }
+
+      // Apply updates while preserving current values
+      Object.entries(transformedCustomer.workflowData.updates).forEach(([key, value]) => {
+        if (newFormData[key] !== undefined) {
+          // Store the current value if not already stored
+          if (!newFormData.current[key]) {
+            newFormData.current[key] = newFormData[key];
+          }
+          // Apply the update
+          newFormData[key] = value;
+        }
+      });
+
+      return newFormData;
+    });
+  }
+}
+console.log("Approved Customer Data", customerData);
+setApprovedCustomer(customerData);
+
+return customerData;
+    // console.log("Approved Customer Data", customerData)
+    // setApprovedCustomer(customerData)
+    // setFormData(customerData)
+    // return customerData;
+
+  } catch (err) {
+    console.error('Error in fetchCustomer:', err);
+    throw err;
+  }
+}
   useEffect(() => {
     document.body.dir = isRTL ? 'rtl' : 'ltr';
 
@@ -78,7 +268,7 @@ function Sidebar({ children, title }) {
     setSidebarExpanded(!isSidebarExpanded);
   };
 
-  const handleMenuClick = (label) => {
+  const handleMenuClick = async (label) => {
     setActiveMenu(label);
     if (window.innerWidth <= 768) setSidebarExpanded(false);
 
@@ -90,7 +280,20 @@ function Sidebar({ children, title }) {
       case 'Support': navigate('/support'); break;
       case 'Maintenance Support': navigate('/maintenance'); break;
       case 'Dashboard': navigate('/login'); break;
-      case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: user}}); break;
+      // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
+      case 'Company Profile': 
+      try {
+        const customerData = await fetchApprovedCustomer(user);
+        navigate('/customersDetails', { 
+          state: { 
+            transformedCustomer: JSON.parse(JSON.stringify(customerData)) 
+          }
+        });
+      } catch (err) {
+        console.error("Failed to fetch customer:", err);
+        // Handle error (e.g., show toast notification)
+      }
+      break;
       default:
         // If no match is found, stay on current page
         break;

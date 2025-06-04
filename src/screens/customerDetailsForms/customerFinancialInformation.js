@@ -7,11 +7,11 @@ export function getFinancialInformationForm(t) {
     'Financial Information': [
       { type: 'header', label: t('Bank Details') },
       { type: 'text', name: 'bankName', label: t('Bank Name'), placeholder: t('Enter bank name'), required: true },
-      { type: 'text', name: 'accountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
-      { type: 'text', name: 'ibanNumber', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
+      { type: 'text', name: 'bankAccountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
+      { type: 'text', name: 'iban', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
       { type: 'empty' },
       // { type: 'header', label: t('Price Plan')},
-      { type: 'dropdown', name: 'pricePlan', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: true },
+      { type: 'dropdown', name: 'pricePlan', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
       { type: 'checkbox', name: 'deliveryCost', label: '', options: [t('Delivery Cost')], required: false },
 
       { type: 'header', label: '' },
