@@ -505,6 +505,19 @@ function Catalog() {
             const netAmount = unitPrice * quantity;
             const sugarTaxPrice = product.sugarTaxPrice;
 
+            // Parse images JSON and extract URLs
+            let imageUrls = [];
+            if (product.images) {
+                try {
+                    const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                    if (Array.isArray(parsed)) {
+                        imageUrls = parsed;
+                    }
+                } catch (e) {
+                    imageUrls = [product.images];
+                }
+            }
+
             // First check if this item already exists in the cart
             const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":${user.userId}, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
                 method: 'GET',
@@ -559,7 +572,8 @@ function Catalog() {
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
                     sugarTaxPrice: parseFloat(product.sugarTaxPrice).toFixed(2) || '0.00',
-                    salesTaxRate: parseFloat(product.vatPercentage).toFixed(2)
+                    salesTaxRate: parseFloat(product.vatPercentage).toFixed(2),
+                    images: JSON.stringify(imageUrls) // <-- Add images as JSONB
                 };
 
                 console.log('Adding new item to cart:', cartItem);

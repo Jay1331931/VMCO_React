@@ -187,6 +187,19 @@ function Cart() {
                     }
 
                     // Format the product data for display
+                    let imageUrls = [];
+                    if (product.images) {
+                        try {
+                            const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                            if (Array.isArray(parsed)) {
+                                imageUrls = parsed;
+                            }
+                        } catch (e) {
+                            imageUrls = [product.images];
+                        }
+                    }
+
+                    // Format the product data for display
                     const formattedItem = {
                         id: product.id,
                         name: productName, // Language-aware
@@ -194,7 +207,7 @@ function Cart() {
                         price: product.unitPrice,
                         quantity: product.quantityOrdered,
                         delivery: product.estimatedDelivery || product.delivery || '15 Apr 2025',
-                        imageUrl: product.image,
+                        imageUrl: imageUrls[0], // <-- Use first image URL
                         productCode: product.erpProdId || product.product_id || product.code,
                         // Include all original properties
                         ...product
@@ -798,18 +811,15 @@ function Cart() {
                                             category.items.map((item, idx) => (
                                                 <div key={item.id + '-' + idx} className="cart-item">
                                                     <div className="item-image">
-                                                        {item.imageUrl ? (
-                                                            <img
-                                                                src={item.imageUrl}
-                                                                alt={item.name}
-                                                                onError={(e) => {
-                                                                    e.target.onerror = null;
-                                                                    e.target.src = '/placeholder-image.png';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="image-placeholder" style={{ backgroundColor: '#cccccc', height: '100%', width: '100%' }}></div>
-                                                        )}
+                                                        <img
+                                                            src={item.imageUrl || '/placeholder-image.png'}
+                                                            alt={item.name}
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = '/placeholder-image.png';
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                                                        />
                                                     </div>
                                                     <div className="item-details">
                                                         <h4 className="item-name">{item.name}</h4>
@@ -892,14 +902,14 @@ function Cart() {
             </div>
 
             <GetPaymentMethods
-  open={showPaymentPopup}
-  onClose={() => setShowPaymentPopup(false)}
-  onSelectPaymentMethod={handleSelectPaymentMethod}
-  API_BASE_URL={API_BASE_URL}
-  t={t}
-  category={pendingOrderCategory}
-  customerId={selectedCustomerId} // <-- Add this line
-/>
+                open={showPaymentPopup}
+                onClose={() => setShowPaymentPopup(false)}
+                onSelectPaymentMethod={handleSelectPaymentMethod}
+                API_BASE_URL={API_BASE_URL}
+                t={t}
+                category={pendingOrderCategory}
+                customerId={selectedCustomerId} // <-- Add this line
+            />
 
 
             <style jsx="true">{`
