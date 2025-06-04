@@ -892,13 +892,14 @@ function Cart() {
             </div>
 
             <GetPaymentMethods
-                open={showPaymentPopup}
-                onClose={() => setShowPaymentPopup(false)}
-                onSelectPaymentMethod={handleSelectPaymentMethod}
-                API_BASE_URL={API_BASE_URL}
-                t={t}
-                category={pendingOrderCategory} // Pass the current category for filtering
-            />
+  open={showPaymentPopup}
+  onClose={() => setShowPaymentPopup(false)}
+  onSelectPaymentMethod={handleSelectPaymentMethod}
+  API_BASE_URL={API_BASE_URL}
+  t={t}
+  category={pendingOrderCategory}
+  customerId={selectedCustomerId} // <-- Add this line
+/>
 
 
             <style jsx="true">{`
