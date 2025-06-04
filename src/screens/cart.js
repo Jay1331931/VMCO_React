@@ -41,6 +41,7 @@ function Cart() {
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
+    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [showPaymentPopup, setShowPaymentPopup] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
@@ -69,8 +70,9 @@ function Cart() {
             const branchName = localStorage.getItem('selectedBranchName');
             const branchId = localStorage.getItem('selectedBranchId');
             const branchErpId = localStorage.getItem('selectedBranchErpId');
+            const branchRegion = localStorage.getItem('selectedBranchRegion');
 
-            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId });
+            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId, branchRegion });
 
             if (!branchId || !branchName || branchName.trim() === '') {
                 console.warn('Branch selection is missing or incomplete');
@@ -82,6 +84,7 @@ function Cart() {
             setSelectedBranchName(branchName);
             setSelectedBranchId(branchId);
             setSelectedBranchErpId(branchErpId);
+            setSelectedBranchRegion(branchRegion);
 
         } catch (error) {
             console.error('Error retrieving branch info from localStorage:', error);
@@ -99,8 +102,8 @@ function Cart() {
             try {
                 // Set up parameters for pagination
                 const params = new URLSearchParams({
-                    page: 1,
-                    pageSize: 200, // Fetch a large number to get all cart items
+                    //page: 1,
+                    //pageSize: 200, // Fetch a large number to get all cart items
                     sortBy: 'id',
                     sortOrder: 'asc'
                 });
@@ -184,6 +187,19 @@ function Cart() {
                     }
 
                     // Format the product data for display
+                    let imageUrls = [];
+                    if (product.images) {
+                        try {
+                            const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                            if (Array.isArray(parsed)) {
+                                imageUrls = parsed;
+                            }
+                        } catch (e) {
+                            imageUrls = [product.images];
+                        }
+                    }
+
+                    // Format the product data for display
                     const formattedItem = {
                         id: product.id,
                         name: productName, // Language-aware
@@ -191,7 +207,7 @@ function Cart() {
                         price: product.unitPrice,
                         quantity: product.quantityOrdered,
                         delivery: product.estimatedDelivery || product.delivery || '15 Apr 2025',
-                        imageUrl: product.image,
+                        imageUrl: imageUrls[0], // <-- Use first image URL
                         productCode: product.erpProdId || product.product_id || product.code,
                         // Include all original properties
                         ...product
@@ -339,7 +355,7 @@ function Cart() {
         }));
     };
 
-   
+
     const handleContinueShopping = () => {
         navigate(-1);
     };
@@ -369,12 +385,14 @@ function Cart() {
 
             // Determine entity from category
             const entity = getEntityFromCategory(categoryName);
+            const category = categoryName;
 
             // Step 1: Check if there's an existing pending order for this customer+branch+entity
             const orderFiltersObj = {
                 customerId: selectedCustomerId,
                 branchId: selectedBranchId,
                 entity: entity,
+                category: category,
                 status: 'Open'
             };
             const orderFilters = new URLSearchParams({
@@ -459,7 +477,7 @@ function Cart() {
 
                 const updateOrderPayload = {
                     id: orderId,
-                    paymentMethod:selectedPaymentMethod
+                    paymentMethod: selectedPaymentMethod
                 };
 
                 const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
@@ -485,6 +503,7 @@ function Cart() {
                     customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     erpBranchId: selectedBranchErpId,
+                    branchRegion: selectedBranchRegion,
                     orderBy: 'Customer',
                     entity: entity,
                     paymentMethod: selectedPaymentMethod,
@@ -492,7 +511,7 @@ function Cart() {
                     paidAmount: '0.00',
                     deliveryCharges: '0',
                     expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    paymentStatus:'Pending',
+                    paymentStatus: 'Pending',
                     status: 'Open',
                 };
 
@@ -529,47 +548,72 @@ function Cart() {
             const newLinesPayload = [];
             const updateLinesPayload = [];
 
-            categoryItems.forEach((item, index) => {
+            for (const item of categoryItems) {
                 const productId = item.productId || item.id;
                 const quantity = parseInt(quantities[item.id] || item.quantity || 1, 10);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const netAmount = unitPrice * quantity;
 
-                if (existingProductMap[productId]) {
-                    // Update existing line
-                    const existingLine = existingProductMap[productId];
-                    updateLinesPayload.push({
-                        id: existingLine.id,
-                        order_id: orderId,
-                        quantity: quantity,
-                        net_amount: netAmount
-                    });
-                } else {
-                    // Add as new line
-                    newLinesPayload.push({
-                        order_id: orderId,
-                        line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
-                        erp_line_number: (existingLines.data?.length || 0) + newLinesPayload.length + 1,
-                        product_id: productId,
-                        erp_prod_id: item.erpProdId,
-                        quantity: quantity,
-                        unit: item.unit || 'EA',
-                        unit_price: unitPrice,
-                        net_amount: netAmount,
-                        sales_tax_rate: parseFloat(item.vatPercentage).toFixed(2),
-                        sugar_tax_price: parseFloat(item.sugarTaxPrice).toFixed(2) || '0.00'
-                    });
-                }
-            });
-
-            // Submit new order lines if any
-            if (newLinesPayload.length > 0) {
-                await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                    method: 'POST',
+                // 1. Fetch sales order line for this product
+                const filters = encodeURIComponent(JSON.stringify({ orderId, productId }));
+                const fetchLineUrl = `${API_BASE_URL}/sales-order-lines/pagination?page=1&filters=${filters}`;
+                const lineResponse = await fetch(fetchLineUrl, {
+                    method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(newLinesPayload),
                     credentials: 'include',
                 });
+
+                if (!lineResponse.ok) {
+                    console.error(`Error fetching sales order line for product ${productId}: ${lineResponse.status}`);
+                    continue; // Skip this product on error
+                }
+
+                const lineResult = await lineResponse.json();
+                const existingLine = lineResult.data && lineResult.data.data && lineResult.data.data.length > 0
+                    ? lineResult.data.data[0]
+                    : null;
+
+                if (existingLine) {
+                    // 2. Update the quantity using PATCH with orderId and productId
+                    const patchUrl = `${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`;
+                    const patchPayload = {
+                        quantity: quantity,
+                        net_amount: netAmount
+                    };
+                    const patchResponse = await fetch(patchUrl, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(patchPayload),
+                        credentials: 'include',
+                    });
+
+                    if (!patchResponse.ok) {
+                        const errorText = await patchResponse.text();
+                        console.error(`Failed to update sales order line: ${patchResponse.status} ${errorText}`);
+                    }
+                } else {
+                    // 3. Insert new record (adjust payload as needed for your API)
+                    const newLinePayload = {
+                        order_id: orderId,
+                        product_id: productId,
+                        quantity: quantity,
+                        unit_price: unitPrice,
+                        net_amount: netAmount,
+                        // Add other required fields here
+                    };
+                    const createLineUrl = `${API_BASE_URL}/sales-order-lines`;
+                    const createResponse = await fetch(createLineUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newLinePayload),
+                        credentials: 'include',
+                    });
+
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error(`Failed to create sales order line: ${createResponse.status} ${errorText}`);
+                    }
+                }
             }
 
             // Update existing order lines if any
@@ -643,7 +687,8 @@ function Cart() {
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,
                         net_amount: netAmount,
-                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0)
+                        sales_tax_rate: parseFloat(item.vatPercentage || item.vat || item.salesTaxRate || 0),
+                        sugar_tax_price: parseFloat(item.sugarTaxPrice)
                     });
                 }
             });
@@ -722,7 +767,7 @@ function Cart() {
         }
     };
 
-    
+
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
@@ -766,18 +811,15 @@ function Cart() {
                                             category.items.map((item, idx) => (
                                                 <div key={item.id + '-' + idx} className="cart-item">
                                                     <div className="item-image">
-                                                        {item.imageUrl ? (
-                                                            <img
-                                                                src={item.imageUrl}
-                                                                alt={item.name}
-                                                                onError={(e) => {
-                                                                    e.target.onerror = null;
-                                                                    e.target.src = '/placeholder-image.png';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="image-placeholder" style={{ backgroundColor: '#cccccc', height: '100%', width: '100%' }}></div>
-                                                        )}
+                                                        <img
+                                                            src={item.imageUrl || '/placeholder-image.png'}
+                                                            alt={item.name}
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = '/placeholder-image.png';
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                                                        />
                                                     </div>
                                                     <div className="item-details">
                                                         <h4 className="item-name">{item.name}</h4>
@@ -829,7 +871,7 @@ function Cart() {
                                                     {t('Total for this category')}:
                                                     {category.items.reduce((total, item) => {
                                                         const price = parseFloat(item.price) || 0;
-                                                        return total + price * (quantities[item.id] || item.quantity);
+                                                        return (total + price * (quantities[item.id] || item.quantity)).toFixed(2);
                                                     }, 0)}
                                                     <span className="sar-label" style={{ margin: '5px' }}>SAR</span>
                                                 </span>
@@ -852,21 +894,6 @@ function Cart() {
                         ))}
                     </div>
                 )}
-                {/* <div className="cart-summary-panel">
-                    <div className="total-amount">
-                        <h3 className="summary-title">
-                            {t('Total Amount')} ({totalItems} Items)
-                        </h3>
-                        <span className="summary-amount">{calculateTotal()} <span className="sar-label">SAR</span></span>
-                        <button
-                            className="checkout-all-btn"
-                            onClick={handlePlaceAllOrders}
-                            disabled={isPlacingOrder || totalItems === 0}
-                        >
-                            {isPlacingOrder ? t('Processing...') : t('Place all orders')}
-                        </button>
-                    </div>
-                </div> */}
             </div>
             <div className="cart-footer">
                 <button className="continue-shopping" onClick={handleContinueShopping}>
@@ -880,6 +907,8 @@ function Cart() {
                 onSelectPaymentMethod={handleSelectPaymentMethod}
                 API_BASE_URL={API_BASE_URL}
                 t={t}
+                category={pendingOrderCategory}
+                customerId={selectedCustomerId} // <-- Add this line
             />
 
 

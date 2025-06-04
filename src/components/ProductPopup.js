@@ -24,10 +24,8 @@ function ProductPopup({
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
 
-    const mainImage = product.image || '';
-    const additionalImages = Array.isArray(product.additionalImages) ? product.additionalImages : [];
-    const images = [mainImage, ...additionalImages];
-
+    const images = Array.isArray(product.images) ? product.images : [];
+    const mainImage = images[0] || '';
     const [selectedImage, setSelectedImage] = useState(mainImage);
 
     // Add handler for add to cart button
@@ -75,7 +73,7 @@ function ProductPopup({
                                 />
                             ))}
                         </div>
-                    </div>                    
+                    </div>             
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
                         {product.entity && <div className="popup-product-entity">{product.entity}</div>}

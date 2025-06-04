@@ -1432,14 +1432,9 @@ class RbacManager {
   // }
   isE(field, approvalWF = false, fieldInWF = false) {
     const access = this.getFieldAccess(field);
-    const result = (access == null ? true : access.editable) && 
-                  (this.itemInWF == null ? true : this.isUserOwner) && 
-                  ((approvalWF == true && fieldInWF == true) ? true : 
-                   (approvalWF == true && fieldInWF == false) ? false : true);
-    
-    console.log(`Field ${field} editable check:`, result);
-    return result;
-}
+    //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);  
+    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
+  }
 }
 
 // Example usage

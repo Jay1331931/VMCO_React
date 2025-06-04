@@ -123,7 +123,7 @@ function OrderDetails() {
     {
       key: 'productName',
       header: 'Product Name',
-      render: (row) => row.productName || row.erpProdId || 'Unknown Product',
+      render: (row) => row.productName,
       include: isV('productNameCol'),
     },
     {
@@ -156,10 +156,11 @@ function OrderDetails() {
               }
             }}
           />
-          {isV('stock') &&(<span>
+          {isV('stock') && (<span>
             <button
               type="button"
-              style={{background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640', 
+              style={{
+                background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
                 borderRadius: '4px',
                 fontSize: '12px',
                 padding: '2px 8px',
@@ -179,34 +180,28 @@ function OrderDetails() {
     {
       key: 'unit',
       header: 'Unit',
-      render: (row) => row.unit || '',
+      render: (row) => row.unit,
       include: isV('unitCol'),
     },
     {
       key: 'unitPrice',
       header: 'Unit Price (SAR)',
       render: (row) => {
-        const price = parseFloat(row.unitPrice || 0);
-        return isNaN(price) ? '0.00' : price.toFixed(2);
+        const price = parseFloat(row.unitPrice);
+        return price.toFixed(2);
       },
       include: isV('unitPriceCol'),
     },
     {
       key: 'salesTaxRate',
       header: 'Tax (SAR)',
-      render: (row) => {
-        const taxRate = parseFloat(row.sugarTaxPrice);
-        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
-      },
+      render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
       include: isV('salesTaxRateCol'),
     },
     {
       key: 'vatPercentage',
       header: 'Tax (VAT)',
-      render: (row) => {
-        const taxRate = parseFloat(row.vatPercentage);
-        return isNaN(taxRate) ? '0.00' : taxRate.toFixed(2);
-      },
+      render: (row) => parseFloat(row.salesTaxRate).toFixed(2),
       include: isV('vatPercentageCol'),
     },
     {
@@ -215,7 +210,7 @@ function OrderDetails() {
       render: (row) => {
         const qty = parseFloat(row.quantity);
         const price = parseFloat(row.unitPrice);
-        return isNaN(qty) || isNaN(price) ? '0.00' : (qty * price).toFixed(2);
+        return (qty * price).toFixed(2);
       },
       include: isV('netAmountCol'),
     },
@@ -249,7 +244,7 @@ function OrderDetails() {
         if (result.status === 'Ok' && result.data) {
           setFormData({
             ...result.data,
-            products: result.data.products || []
+            products: result.data.products
           });
         } else {
           throw new Error(result.message || 'Order not found');
@@ -605,9 +600,9 @@ function OrderDetails() {
   // Add selected product to products table
   const handleSelectProduct = (product) => {
     // Ensure we have proper numeric values for calculations
-    const unitPrice = parseFloat(product.unitPrice || 0);
+    const unitPrice = parseFloat(product.unitPrice);
     const quantity = 1; // Default to 1 when adding a product
-    const vatRate = parseFloat(product.vatPercentage || 0);
+    const vatPercentage = parseFloat(product.salesTaxRate);
 
     // Calculate net amount (unit price * quantity)
     const netAmount = (unitPrice * quantity).toFixed(2);
@@ -619,13 +614,14 @@ function OrderDetails() {
         {
           id: product.id, // Product ID for identifying the product
           product_id: product.id, // Duplicate for compatibility with different naming conventions
-          productName: product.productName || product.product_name || product.name || 'Unknown Product',
+          productName: product.productName,
           erpProdId: product.erpProdId || product.erp_prod_id || '', // ERP product ID
           quantity: quantity,
-          unit: product.unit || '',
+          unit: product.unit,
           unitPrice: unitPrice.toFixed(2),
           netAmount: netAmount,
-          salesTaxRate: vatRate.toFixed(2),
+          salesTaxRate: product.sugarTaxPrice.toFixed(2),
+          vatPercentage: product.vatPercentage.toFixed(2)
           // Include any other properties needed for display/calculations
         }
       ]
