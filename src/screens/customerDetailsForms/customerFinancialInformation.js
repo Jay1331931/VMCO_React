@@ -20,7 +20,6 @@ export function getFinancialInformationForm(t) {
       { type: 'empty' },
       // { type: 'checkbox', name: 'paymentMethodPrePayment', label: '', options: [t('Pre-Payment')] },
       { type: 'checkbox', name: 'partialPayment', label: '', options: [t('Partial Payment')], required: false },
-      { type: 'checkbox', name: 'advancePayment', label: '', options: [t('Advance Payment')], required: false },
       { type: 'checkbox', name: 'COD', label: '', options: [t('Cash on Delivery (COD)')], required: false },
       { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
       { type: 'text', name: 'creditLimit', label: '', placeholder: t('Enter credit limit'), required: false },
