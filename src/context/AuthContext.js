@@ -30,10 +30,10 @@ const fetchUser = async (token) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  //console.log('........... IN AUTH PROVIDER');
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true); // Add loading state
 
   const getCookie = (name) => {
     const cookies = document.cookie
@@ -50,17 +50,23 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const tokenFromCookie = getCookie('token');
     if (tokenFromCookie) {
-      //console.log('Token found in cookie:', tokenFromCookie);
       setToken(tokenFromCookie);
       setIsAuthenticated(true);
-      // Fetch user info using the token
+      setLoading(true); // Set loading to true while fetching
+      
       fetchUser(tokenFromCookie)
-        .then(userData => setUser(userData))
+        .then(userData => {
+          setUser(userData);
+          setLoading(false); // Done loading
+        })
         .catch(() => {
           setUser(null);
           setIsAuthenticated(false);
           setToken(null);
+          setLoading(false); // Done loading
         });
+    } else {
+      setLoading(false); // No token, so not loading
     }
   }, []);
 
@@ -78,7 +84,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isAuthenticated, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

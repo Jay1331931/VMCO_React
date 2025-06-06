@@ -154,7 +154,8 @@
     "Machine Serial Number": "Machine Serial Number",
     "Videos": "Videos",
     "Status:": "Status:",
-    "Assign To:": "Assign To:"
+    "Assign To:": "Assign To:",
+    "msgLoadingUserInfo": "Loading user information..."
 
     
 }

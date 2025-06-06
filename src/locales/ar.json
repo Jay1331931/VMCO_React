@@ -221,6 +221,7 @@
     "Machine Serial Number": "رقم السيريال للآلة",
     "Videos": "فيديوهات",
     "Status:": "الحالة:",
-    "Assign To:": "تعيين إلى:"
+    "Assign To:": "تعيين إلى:",
+    "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم..."
 
   }

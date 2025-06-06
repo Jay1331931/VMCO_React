@@ -7,14 +7,17 @@ import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import { useNavigate } from 'react-router-dom';
 
 function MaintenanceDetails() {
   // All hooks at the top
-  const { token, user, isAuthenticated, logout } = useAuth();
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const location = useLocation();
   const formMode = location.state?.mode;
+  const navigate = useNavigate();
+  
 
   const defaultTicket = {
     "id": null,
@@ -68,16 +71,18 @@ function MaintenanceDetails() {
     }
   }, [user]);
 
-  // Loading state
-  if (!user) {
-    return (
-      <Sidebar title="Loading...">
-        <div className="maintenance-details-container">
-          <div className="loading-indicator">Loading user information...</div>
-        </div>
-      </Sidebar>
-    );
+  // Check loading state first
+  if (loading) {
+    return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
   }
+
+  if (!user) {
+    console.log("$$$$$$$$$$$ logging out");
+    logout();
+    navigate('/login');
+    return null;
+  }
+  
   const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
 
   // RBAC - only after we confirm user exists
@@ -86,18 +91,18 @@ function MaintenanceDetails() {
     user.userType === 'employee' && user.roles[0] !== 'admin' 
       ? user.designation 
       : user.roles[0], 
-    formMode === 'add' ? 'supDetailAdd' : 'supDetailEdit'
+    formMode === 'add' ? 'maintDetailAdd' : 'maintDetailEdit'
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
+  console.log("9090909090909 ",rbacMgr.currentRole);
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
     if (branches.length > 0) return; // Don't fetch if we already have branches
     
     setLoadingBranches(true);
     try {
-      // Replace with your actual API endpoint URL
       const apiUrl = process.env.REACT_APP_API_BASE_URL 
         ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId? ticket.customerId : user.customerId}`
         : 'http://localhost:3000/api/branches';
@@ -322,7 +327,7 @@ function MaintenanceDetails() {
                 id="branchId"
                 name="branchId"
                 value={ticket.branchId}
-                disabled={false}
+                disabled={!isE('branch')}
                 onChange={handleInputChange}
               >
                 <option value="">{t('Select Branch')}</option>
@@ -343,7 +348,13 @@ function MaintenanceDetails() {
             </div>
             <div className="maintenance-details-field">
               <label htmlFor="issueType">{t('Issue Type')} *</label>
-              <select id='category' name='category' onChange={handleInputChange} value={ticket.category} > {/* TODO:Issue types to be read and populaated from basic masters */}
+              <select 
+                id='category' 
+                name='category' 
+                onChange={handleInputChange} 
+                value={ticket.category}
+                disabled={!isE('issueType')}
+              > 
                 <option value="">{t('Select Issue Type')}</option>
                 <option>Payment</option>
                 <option>Delivery</option>
@@ -352,28 +363,61 @@ function MaintenanceDetails() {
             </div>
             <div className="maintenance-details-field">
               <label htmlFor="issueName">{t('Issue Name')} *</label>
-              <input id='issueName' name='issueName' onChange={handleInputChange} value={ticket.issueName}/>
+              <input 
+                id='issueName' 
+                name='issueName' 
+                onChange={handleInputChange} 
+                value={ticket.issueName}
+                disabled={!isE('issueName')}
+              />
             </div>
-            <div className="maintenance-details-field">
-              <label htmlFor="createdDate">{t('Created Date')} *</label>
-              <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')}  />
-            </div>
+            {isV('createdDate') && (           
+               <div className="maintenance-details-field">
+                <label htmlFor="createdDate">{t('Created Date')} *</label>
+                <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')} disabled />
+              </div>
+          )}
             <div className="maintenance-details-field">
               <label htmlFor="machineSerialNumber">{t('Machine Serial Number')} </label>
-              <input id='machineSerialNumber' name='machineSerialNumber' onChange={handleInputChange} value={ticket.machineSerialNumber}/>
+              <input 
+                id='machineSerialNumber' 
+                name='machineSerialNumber' 
+                onChange={handleInputChange} 
+                value={ticket.machineSerialNumber}
+                disabled={!isE('machineSerialNumber')}
+              />
             </div>
-            <div className="maintenance-details-field">
-              <label>{t('Warranty Date')} *</label>
-              <input value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')}  />
-            </div>
-            <div className="maintenance-details-field">
-              <label>{t('Maintenance Charges')} *</label>
-              <input id='maintenanceCharges' name='maintenanceCharges' onChange={handleInputChange} value={ticket.chargers?.maintenance}  />
-            </div>
+            {isV('warrantyEndDate') &&(
+              <div className="maintenance-details-field">
+                <label>{t('Warranty Date')} *</label>
+                <input 
+                  value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')}
+                  disabled 
+                />
+              </div>
+            )}
+            {isV('maintenanceCharges') && (
+              <div className="maintenance-details-field">
+                <label>{t('Maintenance Charges')} *</label>
+                <input 
+                  id='maintenanceCharges' 
+                  name='maintenanceCharges' 
+                  onChange={handleInputChange} 
+                  value={ticket.chargers?.maintenance}
+                  disabled={!isE('maintenanceCharges')}
+                />
+              </div>
+            )}
           </div>
           <div className="maintenance-details-field maintenance-details-textarea">
             <label>{t('Issue Details')}</label>
-            <textarea id='issueDetails' name='issueDetails' onChange={handleInputChange} value={ticket.issueDetails}  />
+            <textarea 
+              id='issueDetails' 
+              name='issueDetails' 
+              onChange={handleInputChange} 
+              value={ticket.issueDetails}
+              disabled={!isE('issueDetails')}
+            />
           </div>
           <div className='attachments'>
           <div className="maintenance-details-images">
@@ -395,6 +439,7 @@ function MaintenanceDetails() {
                 className="maintenance-add-image-btn"
                 onClick={openFileDialog}
                 title="Add Image"
+                disabled={!isE('btnAddimages')}
               >
                 +
               </button>
@@ -404,6 +449,7 @@ function MaintenanceDetails() {
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAddImage}
+                disabled={false}
               />
             </div>
           </div>
@@ -426,6 +472,7 @@ function MaintenanceDetails() {
                 className="maintenance-add-image-btn"
                 onClick={openVideoDialog}
                 title={t("Add Video")}
+                disabled={!isE('btnAddvideos')}
               >
                 +
               </button>
@@ -435,6 +482,7 @@ function MaintenanceDetails() {
                 ref={videoInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAddVideo}
+                disabled={!isE('videos')}
               />
             </div>
           </div>
@@ -442,36 +490,40 @@ function MaintenanceDetails() {
         </div>
       </div>
       <div className="support-details-footer">
-        <div className="support-status">
-          <span>{t('Status')}:</span>
-          <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
-        </div>
-        <div className="support-assign">
-          <span>{t('Assign To')}:</span>
-          <select
-            id="assignedTo"
-            name="assignedTo"
-            value={selectedEmployee} 
-            onChange={handleInputChange}
-            disabled={!isEditing}
-          >
-            <option value="">{t('Select Assignee')}</option>
-            {loadingEmployees ? (
-              <option>{t('Loading employees...')}</option>
-            ) : employees.length > 0 ? (
-              employees.map(employee => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))
-            ) : (
-              <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
-            )}
-          </select>
-        </div>
+        {isV('status') && (
+          <div className="support-status">
+            <span>{t('Status')}:</span>
+            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
+          </div>
+        )}
+        {isV('assignedTo') &&(
+          <div className="support-assign">
+            <span>{t('Assign To')}:</span>
+            <select
+              id="assignedTo"
+              name="assignedTo"
+              value={selectedEmployee} 
+              onChange={handleInputChange}
+              disabled={!isE('assignedTo')}
+            >
+              <option value="">{t('Select Assignee')}</option>
+              {loadingEmployees ? (
+                <option>{t('Loading employees...')}</option>
+              ) : employees.length > 0 ? (
+                employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))
+              ) : (
+                <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+              )}
+            </select>
+          </div>
+        )}
         <div className="support-details-actions">
-          <button className="support-action-btn save" onClick={handleSave}>Save</button>
-          <button className="support-action-btn differ">Differ</button>
+          {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave} disabled={!isE('btnSave')}>Save</button>}
+          {isV('btnDiffer') && <button className="support-action-btn differ" disabled={!isE('btnDiffer')}>Differ</button>}
         </div>
       </div>
       {popupImage && (

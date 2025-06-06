@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter'; // Import the date formatter
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -39,7 +39,8 @@ function SupportDetails() {
   const currentLanguage = i18n.language;
   const location = useLocation();
   const formMode = location.state?.mode;
-  const { token, user, isAuthenticated, logout } = useAuth();
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
+  const navigate = useNavigate();  
 
   const ticketRcvd = location.state?.ticket || {};
   const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
@@ -84,14 +85,17 @@ function SupportDetails() {
     }
   }, [user]);
 
+  // Check loading state first
+  if (loading) {
+    return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
+  }
+
   if (!user) {
-    return (
-      <Sidebar title="Loading...">
-        <div className="support-details-container">
-          <div className="loading-indicator">Loading user information...</div>
-        </div>
-      </Sidebar>
-    );
+    console.log("$$$$$$$$$$$ logging out");
+    // Logout instead of showing loading message
+    logout();
+    navigate('/login');
+    return null; // Return null while logout is processing
   }
   //For fetching the user again after browser refersh - End
 
