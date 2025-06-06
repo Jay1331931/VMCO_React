@@ -14,20 +14,18 @@ function ProductPopup({
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-    
+
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
-        user?.userType === 'employee' && user?.roles[0] !== 'admin' 
-            ? user?.designation 
-            : user?.roles?.[0], 
+        user?.userType === 'employee' && user?.roles[0] !== 'admin'
+            ? user?.designation
+            : user?.roles?.[0],
         'catalog'
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
 
-    const mainImage = product.image || '';
-    const additionalImages = Array.isArray(product.additionalImages) ? product.additionalImages : [];
-    const images = [mainImage, ...additionalImages];
-
+    const images = Array.isArray(product.images) ? product.images : [];
+    const mainImage = images[0] || '';
     const [selectedImage, setSelectedImage] = useState(mainImage);
 
     // Add handler for add to cart button
@@ -75,7 +73,7 @@ function ProductPopup({
                                 />
                             ))}
                         </div>
-                    </div>                    
+                    </div>
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
                         {product.entity && <div className="popup-product-entity">{product.entity}</div>}
@@ -88,6 +86,8 @@ function ProductPopup({
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
                         </p>
+
+                        <h4 className="unit-price">Price: {(product.unitPrice).toFixed(2)} SAR</h4>
                         {isV('quantityController') && (
                             <QuantityController
                                 itemId={product.id}
@@ -101,7 +101,7 @@ function ProductPopup({
                         )}
                         {isV('addToCart') && (
                             <div className='addtocartbutton'>
-                                <button 
+                                <button
                                     className="add-to-cart-btn"
                                     onClick={handleAddToCart}
                                 >

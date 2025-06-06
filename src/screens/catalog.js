@@ -19,11 +19,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Define categories with their corresponding entity values
 const categories = [
-    { value: 'VMCO Machines', entity: 'VMCO', label: 'VMCO Machines' },
-    { value: 'VMCO Consumables', entity: 'VMCO', label: 'VMCO Consumables' },
-    { value: 'Diyafa', entity: 'Diyafa', label: 'Diyafa' },
-    { value: 'Green Mast', entity: 'Green Mast', label: 'Green Mast' },
-    { value: 'Naqui', entity: 'Naqui', label: 'Naqui' }
+    { value: 'VMCO Machines', entity: 'vmco', label: 'VMCO Machines' },
+    { value: 'VMCO Consumables', entity: 'vmco', label: 'VMCO Consumables' },
+    { value: 'Diyafa', entity: 'diyafa', label: 'Diyafa' },
+    { value: 'Green Mast', entity: 'green mast', label: 'Green Mast' },
+    { value: 'Naqui', entity: 'naqui', label: 'Naqui' }
 ];
 
 function Catalog() {
@@ -34,6 +34,7 @@ function Catalog() {
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [branches, setBranches] = useState([]);
+    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [quantities, setQuantities] = useState({});
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [products, setProducts] = useState([]);
@@ -50,7 +51,7 @@ function Catalog() {
     const productsPerPage = 60;
     const { token, user, isAuthenticated, logout } = useAuth();
     console.log('User Dataaaaa:', user);
-    
+
 
     const [filteredProducts, setFilteredProducts] = useState([]);
 
@@ -68,9 +69,9 @@ function Catalog() {
 
     const customerId = user?.customerId;
     const userId = user?.userId;
-    
+
     useEffect(() => {
-        if (customerId) {setSelectedCustomerId(customerId);}
+        if (customerId) { setSelectedCustomerId(customerId); }
     }, [customerId]);
 
 
@@ -78,35 +79,46 @@ function Catalog() {
     const mapProductToCardProps = useCallback((product) => {
         const currentLanguage = i18n.language;
 
+        // Parse images JSON and extract URLs
+        let imageUrls = [];
+        if (product.images) {
+            try {
+                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                if (Array.isArray(parsed)) {
+                    imageUrls = parsed;
+                }
+            } catch (e) {
+                // fallback: treat as single image string
+                imageUrls = [product.images];
+            }
+        }
+
         // Choose the right product name based on language
         let productName = product.productName || product.product_name;
-
-        // If language is not English and we have a localized name, use it
         if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
             productName = product.product_name_lc || product.productNameLc || productName;
         }
 
         // Choose the right product description based on language
         let productDescription = product.description;
-
-        // If language is not English and we have a localized description, use it
         if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
             productDescription = product.description_lc || product.descriptionLc;
         }
 
         return {
             id: product.id,
-            name: productName, // Language-aware
+            name: productName,
             code: product.erpProdId || product.erp_prod_id || "No ID",
-            image: product.image,
-            description: productDescription, // Now language-aware
+            image: imageUrls[0] || '', // Use first image for ProductCard
+            images: imageUrls,         // Pass all images for ProductPopup
+            description: productDescription,
             category: product.category,
             subCategory: product.sub_category || product.subCategory,
             entity: product.entity,
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
+            sugarTaxPrice: product.sugarTaxPrice,
             moq: product.moq || product.minimumOrderQuantity || 0,
-            // Keep the original data too for use in other places
             ...product
         };
     }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
@@ -156,13 +168,13 @@ function Catalog() {
 
                     // For all tabs, just filter by entity without special handling
                     if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
-                        params.append('entity', 'VMCO');
+                        params.append('entity', 'vmco');
                     } else if (activeCategory === 'Diyafa') {
-                        params.append('entity', 'Diyafa');
+                        params.append('entity', 'diyafa');
                     } else if (activeCategory === 'Green Mast') {
-                        params.append('entity', 'Green Mast');
+                        params.append('entity', 'green mast');
                     } else if (activeCategory === 'Naqui') {
-                        params.append('entity', 'Naqui');
+                        params.append('entity', 'naqui');
                     }
 
                     // Add category and subcategory filters
@@ -432,16 +444,17 @@ function Catalog() {
 
                 // Map branches to dropdown format with proper field validation
                 const branchOptions = branchData.map(branch => ({
-                    value: String(branch.id || branch.branch_id), // Ensure IDs are strings
-                    label: i18n.language === 'en' ?
-                        (branch.branch_name_en || branch.branchNameEn) :
-                        (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
-                    erpBranchId: branch.erpBranchId || branch.erp_branch_id, // Use snake_case for ERP ID
-                    // Keep additional data for reference if needed
+                    value: String(branch.id || branch.branch_id),
+                    label: i18n.language === 'en'
+                        ? (branch.branch_name_en || branch.branchNameEn)
+                        : (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
+                    erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+                    branchRegion: branch.region || branch.region, // <-- Map branchRegion to region
                     raw: branch
                 }));
-
                 setBranches(branchOptions);
+
+                console.log('Branch options are ', branchOptions);
 
                 // Add additional logging to see the actual data structure
                 console.log('Fetched branch data:', branchData);
@@ -488,9 +501,28 @@ function Catalog() {
             quantity = Math.max(1, quantity);
 
             // Calculate needed values
-            const unitPrice = product.unitPrice || 1;
+            const unitPrice = product.unitPrice;
             const netAmount = unitPrice * quantity;
-            const sugarTaxPrice = product.sugarTaxPrice;
+            const vatPercentage = parseFloat(product.vatPercentage) || 0;
+            const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
+
+            // Calculate VAT and sugar tax
+            const vatAmount = netAmount * (vatPercentage / 100);
+            const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+
+
+            // Parse images JSON and extract URLs
+            let imageUrls = [];
+            if (product.images) {
+                try {
+                    const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                    if (Array.isArray(parsed)) {
+                        imageUrls = parsed;
+                    }
+                } catch (e) {
+                    imageUrls = [product.images];
+                }
+            }
 
             // First check if this item already exists in the cart
             const checkResponse = await fetch(`${API_BASE_URL}/cart/pagination?filters={"user_id":${user.userId}, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`, {
@@ -508,7 +540,7 @@ function Catalog() {
                 // Item exists in cart, update the quantity
                 const existingItem = checkResult.data.data[0];
                 const updatedQuantity = parseInt(existingItem.quantityOrdered) + parseInt(quantity);
-                
+
                 const updateResponse = await fetch(`${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`, {
                     method: 'PATCH',
                     headers: {
@@ -534,6 +566,7 @@ function Catalog() {
                     userId: userId, // Use user ID from auth context
                     customerId: selectedCustomerId,
                     branchId: selectedLocation,
+                    branchRegion: selectedBranchRegion,
                     productId: product.id,
                     productName: product.productName || product.product_name,
                     productNameLc: product.productNameLc || product.product_name_lc,
@@ -544,8 +577,9 @@ function Catalog() {
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: parseFloat(product.sugarTaxPrice).toFixed(2) || '0.00',
-                    salesTaxRate:parseFloat(product.vatPercentage).toFixed(2)
+                    sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
+                    vatPercentage: vatPercentage.toFixed(2),
+                    images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
 
                 console.log('Adding new item to cart:', cartItem);
@@ -692,16 +726,16 @@ function Catalog() {
                             onChange={(e) => {
                                 const newBranchId = e.target.value;
                                 const currentBranchId = selectedLocation;
-                                
+
                                 // Don't do anything if selecting the same branch
                                 if (newBranchId === currentBranchId) return;
-                                
+
                                 const checkAndChangeBranch = async () => {
                                     try {
                                         // Only check for cart items if we already had a branch selected
                                         if (currentBranchId) {
                                             setIsLoading(true);
-                                            
+
                                             // Set up parameters for pagination to check cart items
                                             const params = new URLSearchParams({
                                                 page: 1,
@@ -709,18 +743,18 @@ function Catalog() {
                                                 sortBy: 'id',
                                                 sortOrder: 'asc'
                                             });
-                                            
+
                                             // Create filters to check current cart
                                             const filters = {
                                                 customer_id: selectedCustomerId || customerId || '3',
                                                 branch_id: currentBranchId
                                             };
-                                            
+
                                             console.log('Checking cart with filters:', filters);
-                                            
+
                                             // Add filters as a single parameter with stringified JSON
                                             params.append('filters', JSON.stringify(filters));
-                                            
+
                                             // Fetch cart items for current branch
                                             const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
                                                 method: 'GET',
@@ -730,30 +764,30 @@ function Catalog() {
                                                 },
                                                 credentials: 'include'
                                             });
-                                            
+
                                             if (!response.ok) {
                                                 throw new Error(`Error checking cart: ${response.status} ${response.statusText}`);
                                             }
-                                            
+
                                             const result = await response.json();
                                             console.log('Cart check result:', result);
-                                            
+
                                             // Check if cart has items
                                             const cartItems = result.data?.data || [];
                                             const hasItems = cartItems.length > 0;
-                                            
+
                                             if (hasItems) {
                                                 // Show confirmation dialog
                                                 const confirmChange = window.confirm(
                                                     t("There are items in the cart. Do you want to discard the items?")
                                                 );
-                                                
+
                                                 if (!confirmChange) {
                                                     // User canceled - don't change branch
                                                     setIsLoading(false);
                                                     return;
                                                 }
-                                                
+
                                                 // User confirmed, delete cart items before changing branch
                                                 console.log(`Deleting cart items for branch ${currentBranchId}...`);
 
@@ -779,37 +813,41 @@ function Catalog() {
                                                 }
                                             }
                                         }
-                                        
+
                                         // Change branch selection
                                         setSelectedLocation(newBranchId);
-                                        
+
                                         // Find selected branch details
                                         const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
                                         if (selectedBranch && selectedBranch.label) {
                                             localStorage.setItem('selectedBranchName', selectedBranch.label);
                                             localStorage.setItem('selectedBranchId', selectedBranch.value);
                                             localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
+                                            setSelectedBranchRegion(selectedBranch.branchRegion);
                                             console.log('Changed to branch:', selectedBranch.label);
+                                            console.log('Changed to branchRegion:', selectedBranch.branchRegion);
                                         }
-                                        
+
                                     } catch (error) {
                                         console.error('Error during branch change:', error);
                                         alert(t("Error checking cart. Branch change may not work correctly."));
-                                        
+
                                         // Still attempt to change branch despite error
                                         setSelectedLocation(newBranchId);
-                                        
+
                                         const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
                                         if (selectedBranch && selectedBranch.label) {
                                             localStorage.setItem('selectedBranchName', selectedBranch.label);
                                             localStorage.setItem('selectedBranchId', selectedBranch.value);
                                             localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
+                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
                                         }
                                     } finally {
                                         setIsLoading(false);
                                     }
                                 };
-                                
+
                                 checkAndChangeBranch();
                             }}
                             options={branches}
@@ -861,7 +899,7 @@ function Catalog() {
                     </button>}
                 </div>                <div className="search-section">
                     <div className="search-container">
-                       {isV('search') && ( <SearchInput
+                        {isV('search') && (<SearchInput
                             onSearch={(searchTerm) => {
                                 setSearchQuery(searchTerm);
                                 setCurrentPage(1); // Reset to page 1 when searching
@@ -957,9 +995,9 @@ function Catalog() {
                         onClose={handleClosePopup}
                     />
                 )}
-            </div>           
-            
-             <style jsx="true">{`
+            </div>
+
+            <style jsx="true">{`
                 .no-products-message {
                     width: 100%;
                     text-align: center;

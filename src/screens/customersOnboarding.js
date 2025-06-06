@@ -226,7 +226,7 @@ function CustomersOnboarding() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: {prePayment:{isAllowed:true}, advancePayment:{isAllowed:false, balance: "2000"}, COD:{isAllowed:false, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}, partialPayment:{isAllowed:false}},
+                            methodDetails: {prePayment:{isAllowed:true}, advancePayment:{isAllowed:false, balance: "2000"}, COD:{isAllowed:true, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}, partialPayment:{isAllowed:true}},
                         }),
                         credentials: 'include',
                     });

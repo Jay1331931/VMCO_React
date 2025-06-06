@@ -71,6 +71,7 @@ const ProductCard = ({
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
+                <h4 className="unit-price">Price: {(product.unitPrice).toFixed(2)} SAR</h4>
                 <div className="quantity-controls">
                     {isV('quantityController') && (
                         <QuantityController
@@ -179,6 +180,7 @@ const ProductCard = ({
 .quantity-controls {
   display: flex;
   gap: 10px;
+  margin-top: 15px;
   margin-bottom: 15px;
 }
 

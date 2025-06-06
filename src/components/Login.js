@@ -47,7 +47,8 @@ function Login({ title, userType }) {
         login(cookie, data.data);
 
         if (!res.ok) {
-            setError(data.message || 'Login failed');
+            // setError(data.message || 'Login failed');
+            setError('Email or password is invalid')
             return;
         }
         navigate('/catalog');

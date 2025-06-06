@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV, faChevronDown, faChevronRight, faLocationDot, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { faToggleOff, faToggleOn, faCheck } from '@fortawesome/free-solid-svg-icons';
 import Pagination from '../../components/Pagination';
+import ApprovalDialog from '../../components/ApprovalDialog';
 import '../../styles/pagination.css';
 import '../../styles/forms.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -23,6 +24,8 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [temporaryBranches, setTemporaryBranches] = useState([]);
+    const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+    const [approvalAction, setApprovalAction] = useState(null);
     const [nextTempId, setNextTempId] = useState(-1);
     const isMobile = false;
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -120,9 +123,10 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const fetchBranches = useCallback(async () => {
         setLoading(true);
         setError(null);
-
+        console.log(customer)
         const filters = {
             customer_id: customer.id,
+            id: customer?.workflowData?.id,
         };
 
         const query = new URLSearchParams({
@@ -252,6 +256,59 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         return Object.keys(errors).length === 0;
     };
 
+    const handleApprovalSubmit = async (action) => {
+    setApprovalAction(action);
+    setIsApprovalDialogOpen(true);
+  };
+
+const handleDialogSubmit = async (comment) => {
+//     const branchId = customer.workflowData.id;
+//    branchChanges[branchId]?.forEach((fieldName) => {
+//   if (fieldName in customer.workflowData.updates) {
+//     customer.workflowData.updates[fieldName] = branchChanges[branchId].fieldName;
+//   }
+// });
+//     const payload = {
+//       workflowData: customer.workflowData || {},
+//       approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
+//       comment: comment
+//     };
+const branchId = customer.workflowData.id;
+const branchUpdates = branchChanges[branchId];
+
+// Check if branchUpdates exists and is iterable
+if (branchUpdates && typeof branchUpdates === 'object') {
+  Object.keys(branchUpdates).forEach((fieldName) => {
+    if (fieldName in customer.workflowData.updates) {
+      customer.workflowData.updates[fieldName] = branchUpdates[fieldName];
+    }
+  });
+}
+
+const payload = {
+  workflowData: customer.workflowData || {},
+  approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
+  comment: comment
+};
+    try {
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+      } else {
+        throw new Error('Failed to submit approval');
+      }
+    } catch (error) {
+      console.log('Error', error.message)
+      console.error(`Error ${approvalAction}ing customer:`, error);
+      alert(`Error ${approvalAction}ing customer: ${error.message}`);
+    }
+  };
 
     const handleSave = async (id) => {
         const isNewBranch = id < 0; // Negative IDs are temporary
@@ -280,7 +337,11 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                 branchPayload[fieldName] = branchData[fieldName];
             }
         });
-
+        contactDetailFields.forEach((fieldName) => {
+            if (!Object.keys(branchData).includes(fieldName)) {
+                contactPayload[fieldName] = '';
+            }
+        })
         try {
             if (isNewBranch) {
                 // CREATE new branch
@@ -304,13 +365,13 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                         )
                     );
                     setTemporaryBranches(prev => prev.filter(b => b.id !== id));
-
+                    console.log(contactPayload)
                     // If there are contacts to save
                     if (Object.keys(contactPayload).length > 0) {
-                        await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${result.data.id}`, {
+                        await fetch(`${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(contactPayload),
+                            body: JSON.stringify({ ...contactPayload, customer_id: customer.id, branch_id: result.data.id }),
                             credentials: 'include'
                         });
                     }
@@ -351,19 +412,37 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         }
     };
 
+    const handleSubmit = async (id, branchData) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...branchData,
+                    branchStatus: 'pending'
+                }),
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+        } catch (error) {
+            console.error('Error saving branch:', error);
+        }
+    };
+
 
     return (
         <div className="branches-content" ref={contentRef}>
+
             <div className="form-main-header">
                 <a href="#">{t('Customer Approval Checklist')}</a>
             </div>
             <div className="branches-page-header">
+
                 <div className="branches-header-controls">
                     <input type="text" placeholder={t('Search...')} className="branches-search-input" />
                     <div className="branches-action-buttons">
-                        <button className='branches-approve-button'>{t('Approve')}</button>
-                        <button className='branches-reject-button'>{t('Reject')}</button>
-                        <button className="branches-add-button" onClick={handleAddBranch}>{t('+ Add')}</button>
+                        {(!customer?.isApprovalMode) && <button className="branches-add-button" onClick={handleAddBranch}>{t('+ Add')}</button>}
                         <div className="action-menu-container" ref={actionMenuRef}>
                             <FontAwesomeIcon icon={faEllipsisV} className="action-menu-icon" onClick={() => setActionMenuOpen(!isActionMenuOpen)} />
                             {isActionMenuOpen && (
@@ -421,6 +500,9 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                                             <button className="block" >
                                                 {t('Block')}
                                             </button>
+
+
+
                                         </div>
                                     </div>
 
@@ -492,6 +574,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                                                 <div className="expanded-form-container">
                                                     <BranchDetailsForm
                                                         branch={branch}
+                                                        customer={customer}
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
                                                     />
@@ -505,26 +588,46 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                                                         branchId={branch.id}
                                                         handleBranchFieldChange={handleBranchFieldChange}
                                                     />
+                                                    {console.log(branch)}
                                                     <div className='expanded-form-container-footer'>
                                                         <div className='customer-onboarding-form-actions'>
                                                             <div className="action-buttons">
                                                                 <button className="save" onClick={() => handleSave(branch.id)}>
                                                                     {t('Save')}
                                                                 </button>
+                                                                <button className="save" onClick={() => handleSubmit(branch.id, branch)}>
+                                                                    {t('Submit')}
+                                                                </button>
                                                                 <button className="block" >
                                                                     {t('Block')}
                                                                 </button>
+                                                                <div className="branches-action-buttons">
+                                                                    <button className='branches-approve-button' onClick={() => handleApprovalSubmit('approve')}>{t('Approve')}</button>
+                                                                    <button className='branches-reject-button' onClick={() => handleApprovalSubmit('reject')}>{t('Reject')}</button>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
+                                                    <ApprovalDialog
+                                                            isOpen={isApprovalDialogOpen}
+                                                            onClose={() => setIsApprovalDialogOpen(false)}
+                                                            action={approvalAction}
+                                                            onSubmit={handleDialogSubmit}
+                                                            customerName={customer.customerName || 'this customer'}
+                                                            title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
+                                                            subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this branch?') : t('Are you sure you want to reject this branch?')}
+                                                          />
                                                 </div>
                                             </td>
                                         </tr>
                                     )}
+                                    
                                 </React.Fragment>
                             ))}
                         </tbody>
                     </table>
+                    
                     <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}
@@ -538,73 +641,74 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                     />
                 </div>
             )}
+            
         </div>
     );
 };
-const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) => {
+const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldChange }) => {
     const { t } = useTranslation();
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     // LocationPicker component
-    
-      const [dropdownOptions, setDropdownOptions] = useState({});
-    
-      const getOptionsFromBasicsMaster = async (fieldName) => {
-      const params = new URLSearchParams({
-        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
-      });
-    
-      try {
-        const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+
+    const [dropdownOptions, setDropdownOptions] = useState({});
+
+    const getOptionsFromBasicsMaster = async (fieldName) => {
+        const params = new URLSearchParams({
+            filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
         });
-    
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    
-        const result = await response.json(); // Don't forget 'await' here
-        
-        const options = result.data.map(item => item.value);
-      
-        return options;
-    
-      } catch (err) {
-        console.error('Error fetching options:', err);
-        return []; // Return empty array on error
-      }
-    };
-      useEffect(() => {
-        const fetchDropdownOptions = async () => {
-          const options = {};
-          console.log('branch', branch)
-          // Find all dropdown fields and fetch their options
-          const dropdownFields = ['city', 'locationType']
-          console.log('dropdownFields', dropdownFields)
-          for (const field of dropdownFields) {
-            try {
-              const data = await getOptionsFromBasicsMaster(field);
-              // options[field.name] = data;
-              options[field] = data.map(opt =>
-                typeof opt === 'string'
-                ? opt.charAt(0).toUpperCase() + opt.slice(1).toLowerCase()
-                : opt // Fallback if not a string
-            );
-            } catch (err) {
-              console.error(`Failed to fetch options for ${field}:`, err);
-              options[field] = []; // Fallback to empty array
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-          }
-    
-          setDropdownOptions(options);
-          console.log('dropdown options', dropdownOptions)
+
+            const result = await response.json(); // Don't forget 'await' here
+
+            const options = result.data.map(item => item.value);
+
+            return options;
+
+        } catch (err) {
+            console.error('Error fetching options:', err);
+            return []; // Return empty array on error
+        }
+    };
+    useEffect(() => {
+        const fetchDropdownOptions = async () => {
+            const options = {};
+            console.log('branch', branch)
+            // Find all dropdown fields and fetch their options
+            const dropdownFields = ['city', 'locationType']
+            console.log('dropdownFields', dropdownFields)
+            for (const field of dropdownFields) {
+                try {
+                    const data = await getOptionsFromBasicsMaster(field);
+                    // options[field.name] = data;
+                    options[field] = data.map(opt =>
+                        typeof opt === 'string'
+                            ? opt.charAt(0).toUpperCase() + opt.slice(1).toLowerCase()
+                            : opt // Fallback if not a string
+                    );
+                } catch (err) {
+                    console.error(`Failed to fetch options for ${field}:`, err);
+                    options[field] = []; // Fallback to empty array
+                }
+            }
+
+            setDropdownOptions(options);
+            console.log('dropdown options', dropdownOptions)
         };
-    
+
         fetchDropdownOptions();
-      }, [branch]);
+    }, [branch]);
     const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
         const mapContainer = useRef(null);
         const markerRef = useRef(null); // Using ref instead of state for the marker
@@ -631,7 +735,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                 mapInstance.on('load', async () => {
                     setMap(mapInstance);
                     try {
-                        const position = initialLat && initialLng ? {coords: {latitude: initialLat, longitude: initialLng}} : await getCurrentPosition();
+                        const position = initialLat && initialLng ? { coords: { latitude: initialLat, longitude: initialLng } } : await getCurrentPosition();
                         const { latitude, longitude } = position.coords;
                         updateMarker(mapInstance, longitude, latitude);
                     } catch (error) {
@@ -773,22 +877,22 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
         // Store as object for display but convert to string for backend
         handleBranchFieldChange(branch.id, 'geolocation', { x: lat, y: lng });
     }, [branch.id, handleBranchFieldChange]);
+   
     const getLocationDisplay = (location) => {
-        if (!location) return 'Select Location';
+  if (!location) return 'Select Location';
 
-        // Handle both string format "lat,lng" and object {x,y} format
-        if (typeof location === 'string') {
-            const [lat, lng] = location.split(',');
-            return `${parseFloat(lat).toFixed(6)}, ${parseFloat(lng).toFixed(6)}`;
-        }
+  if (typeof location === 'object' && location.x !== undefined && location.y !== undefined) {
+    const x = parseFloat(location.x);
+    const y = parseFloat(location.y);
 
-        // Handle object format
-        if (location.x && location.y) {
-            return `${location.y.toFixed(6)}, ${location.x.toFixed(6)}`;
-        }
+    if (!isNaN(x) && !isNaN(y)) {
+      return `${x.toFixed(6)}, ${y.toFixed(6)}`;
+    }
+  }
 
-        return 'Select Location';
-    };
+  return 'Select Location';
+};
+
     const fields = useMemo(() => [
         { type: 'text', label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
         { type: 'text', label: 'Branch (Arabic)', name: 'branchNameLc', placeholder: 'Branch (Arabic)', required: true },
@@ -820,7 +924,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                     />
                     {'\t' + t('Same as Customer Details')}
                 </label>
-                
+
                 <div className="form-group">
                     <label>
                         <input
@@ -836,73 +940,99 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
 
             <div className="form-row">
                 {fields.map((field, index) => {
-                    const value = getFieldValue(field.name);
-                    const displayValue = field.isLocation && selectedLocation
-                        ? `${selectedLocation.lat.toFixed(6)}, ${selectedLocation.lng.toFixed(6)}`
-                        : value;
+                    
+                    const hasUpdate = customer.isApprovalMode && customer.module === 'branch' &&
+                        customer?.workflowData?.updates &&
+                        field.name in customer.workflowData.updates;
+                    const currentValue = branch?.[field.name] || '';
+                    const value = hasUpdate ? customer?.workflowData?.updates[field.name] : getFieldValue(field.name);
+console.log('Branch field value:', branch[field.name], typeof branch[field.name]);
 
                     return (
-                        <div className="form-group" key={index}>
-        <label>
-            {t(field.label)}
-            {field.required && <span className="required-field">*</span>}
-        </label>
+                        <div className={`form-group ${hasUpdate ? 'pending-update' : ''}`} key={index}>
+                            <label>
+                                {t(field.label)}
+                                {field.required && <span className="required-field">*</span>}
+                            </label>
 
-        {field.isLocation ? (
-            <div className="location-input-container">
-                <input
-                    value={getLocationDisplay(value)}
-                    onChange={handleLocationSelect}
-                    placeholder={t(field.placeholder)}
-                    readOnly
-                />
-                <button
-                    type="button"
-                    className="location-picker-button"
-                    onClick={() => setShowMap(true)}
-                >
-                    <FontAwesomeIcon icon={faLocationDot} />
-                </button>
-            </div>
-        ) : (
-            <div className='form-row'>
-                {(() => {
-                    switch (field.type) {
-                        case 'text':
-                            return (
-                                <input
-                                    type="text"
-                                    name={field.name}
-                                    value={value}
-                                    placeholder={t(field.placeholder)}
-                                    onChange={handleInputChange}
-                                />
-                            );
-                        case 'dropdown':
-                            return (
-                                <select
-                                    name={field.name}
-                                    value={value}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="">{t(field.placeholder)}</option>
-                                    {
-                                dropdownOptions[field.name]?dropdownOptions[field.name].map((opt, idx) =>(
-                                  <option key={idx} value={opt}>
-                                  {t(opt)}
-                                </option>
-                                ) 
-                                ):[]
-                              }
-                                </select>
-                            );
-                        default:
-                            return null;
-                    }
-                })()}
-            </div>
-        )}
-    </div>
+                            {field.isLocation ? (
+                                                          <div className="location-input-container">
+                                                            <input
+                                                            //   value={
+                                                            //     branch[field.name]
+                                                            //       ? `${branch[field.name].x.toFixed(6)}, ${branch[field.name].y.toFixed(6)}`
+                                                            //       : 'Select Location'
+                                                            //   }
+                                                            value={getLocationDisplay(branch[field.name])}
+                                                              placeholder={t(field.placeholder)}
+                                                              readOnly
+                                                            />
+                            
+                                                            <button
+                                                              className="location-picker-button"
+                                                            //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
+                                                            //     ? field.name in customer.workflowData.updates
+                                                            //     : false)}
+                                                              onClick={() => setShowMap(true)}
+                                                            >
+                                                              <FontAwesomeIcon icon={faLocationDot} />
+                                                            </button>
+                                                          </div>
+                                                        ) : (
+                                <div className='form-row'>
+                                    {(() => {
+
+                                        switch (field.type) {
+
+                                            case 'text':
+                                                return (
+                                                    <input
+                                                        type="text"
+                                                        name={field.name}
+                                                        value={value}
+                                                        placeholder={t(field.placeholder)}
+                                                        onChange={handleInputChange}
+                                                        style={hasUpdate ? {
+                                                            backgroundColor: '#fff8e1',
+                                                        } : {}}
+                                                    />
+
+                                                );
+                                            case 'dropdown':
+                                                return (
+                                                    <select
+                                                        name={field.name}
+                                                        value={value}
+                                                        onChange={handleInputChange}
+                                                    >
+                                                        <option value="">{t(field.placeholder)}</option>
+                                                        {
+                                                            dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => (
+                                                                <option key={idx} value={opt}>
+                                                                    {t(opt)}
+                                                                </option>
+                                                            )
+                                                            ) : []
+                                                        }
+                                                    </select>
+                                                );
+                                            default:
+                                                return null;
+                                        }
+
+                                    })()}
+
+                                </div>
+                            )}
+                            {hasUpdate && (
+  <div className="current-value">
+    Current:{' '}
+    {field.isLocation
+      ? getLocationDisplay(currentValue)
+      : currentValue || '(empty)'}
+  </div>
+)}
+                        </div>
                     );
                 })}
             </div>
@@ -918,7 +1048,7 @@ const BranchDetailsForm = ({ branch, branchChanges, handleBranchFieldChange }) =
                         </button>
                         <h3>{t('Select Location')}</h3>
                         <LocationPicker onLocationSelect={handleLocationSelect} initialLat={getFieldValue('geolocation')?.x}
-        initialLng={getFieldValue('geolocation')?.y}/>
+                            initialLng={getFieldValue('geolocation')?.y} />
                     </div>
                 </div>
             )}

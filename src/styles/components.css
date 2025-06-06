@@ -823,8 +823,8 @@
 
 .category-header {
   display: flex;
-  justify-content: flex-start;
-  gap: 20px;
+  justify-content: stretch;
+  gap: auto;
   align-items: center;
   padding: 16px 24px;
   background-color: #f8f9fa;
@@ -842,9 +842,10 @@
 }
 
 .category-count {
+  justify-self: right;
   color: #6D787D;
   font-size: 1rem;
-  margin-left: 16px;
+  margin-left: auto;
 }
 
 .category-items {
