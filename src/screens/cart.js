@@ -433,6 +433,7 @@ function Cart() {
             }
 
         } else {
+            let deliveryCharges = 0.00; // Initialize deliveryCharges before use
             // Fetch customer to check delivery charge applicability
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
@@ -445,6 +446,7 @@ function Cart() {
             }
 
             const customerData = await customerResponse.json();
+            console.log('Customer data:', customerData);
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
 
             // Create new order with 0 totalAmount for now
@@ -558,7 +560,7 @@ function Cart() {
         }, 0);
 
         // Calculate delivery charges again now
-        const isDeliveryChargesApplicable = categoryItems.some(item => item.entity === 'VMCO') // fallback if customer not fetched earlier
+        const isDeliveryChargesApplicable = categoryItems.some(item => item.entity === 'vmco') // fallback if customer not fetched earlier
             ? false
             : true;
 
@@ -587,7 +589,7 @@ function Cart() {
             throw new Error(`Failed to update order with final amounts`);
         }
 
-        const updatedOrderResponse= await updateOrderPayload.json();
+        const updatedOrderResponse= await updateOrderResponse.json();
         console.log('Updated the order:', updatedOrderResponse);
 
         // Delete cart items
