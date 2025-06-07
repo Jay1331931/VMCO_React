@@ -363,6 +363,25 @@ function OrderDetails() {
       let attempt = 0;
       let maxAttempts = 2;
       let lastError = null;
+      // Step 0: If user is employee, fetch empId from employees table using email
+      let empId = '0000';
+      if (user.userType === 'employee' && user.email) {
+        try {
+          const empRes = await fetch(`${API_BASE_URL}/employees/email/${encodeURIComponent(user.email)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+          if (empRes.ok) {
+            const empResult = await empRes.json();
+            if (empResult.status === 'Ok' && empResult.data && empResult.data.empId) {
+              empId = empResult.data.empId;
+            }
+          }
+        } catch (empErr) {
+          console.warn('Could not fetch empId for employee:', empErr);
+        }
+      }
       while (attempt < maxAttempts) {
         // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
         const payload = {
@@ -377,6 +396,8 @@ function OrderDetails() {
           branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
           orderBy: formData.orderBy || '',
           paymentMethod: formData.paymentMethod || '',
+          status: 'Open',
+          sales_executive: user.employeeId,
           paymentStatus: 'Pending',
           entity: formData.entity || '',
           deliveryCharges: formData.deliveryCharges || '0',
@@ -442,20 +463,22 @@ function OrderDetails() {
             throw new Error('Order ID not returned from API');
           }
 
-
-
+          // Prepare products payload, set sales_executive to empId if user is employee
           const productsPayload = formData.products.map((product, index) => ({
             order_id: result.data.id,
             line_number: index + 1, // Generate sequential line numbers
             erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
             product_id: product.id || product.product_id,
+            product_name: product.productName || product.product_name_en,
+            product_name_lc: product.productNameLc,
             erp_prod_id: product.erpProdId || product.erp_prod_id || '',
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || '',
             unit_price: parseFloat(product.unitPrice),
             net_amount: parseFloat(product.netAmount),
-            sugar_tax_price: parseFloat(product.sugarTaxPrice),
-            sales_tax_rate: parseFloat(product.vatPercentage),
+            sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
+            sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
+            status:'Open'
           }));
 
           console.log('Submitting products payload:', productsPayload);
@@ -928,7 +951,7 @@ function OrderDetails() {
             <div className="order-details-body">
               <h2 className="order-details-title">
                 {formMode === 'add'
-                  ? `${t('New Order')} #${nextOrderId}`
+                  ? `${t('New Order')}`
                   : `${t('Order #')} ${formData.id}`}
               </h2>
               <div className="order-details-section">
@@ -1298,8 +1321,8 @@ function OrderDetails() {
                 {isV('orderStatus') && (
                   <div className="order-status">
                     <span className="status-label">{t('Status')}:</span>
-                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'pending'}`}>
-                      {t(formData.status) || t('Pending')}
+                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                      {t(formData.status) || t('Open')}
                     </span>
                   </div>
                 )}

@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-import Constants from '../constants';
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -28,7 +28,7 @@ const getStatusClass = (status) => {
 };
 
 function Orders() {
-  const { user } = useAuth();
+  const {  user } = useAuth();
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,9 +40,6 @@ function Orders() {
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const [assignedCustomerIds, setAssignedCustomerIds] = useState([]);
-  const [assignedBranchIds, setAssignedBranchIds] = useState([]);
-
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -53,119 +50,31 @@ function Orders() {
   const isV = rbacMgr.isV.bind(rbacMgr);
 
   const toggleApprovalMode = () => {
-    setApprovalMode(!isApprovalMode);
+    setApprovalMode((prev) => {
+      const newMode = !prev;
+      if (newMode) {
+        fetchApprovals(page, searchQuery);
+      } else {
+        fetchOrders(page, searchQuery);
+      }
+      return newMode;
+    });
   };
-
-  // Fetch assigned customers/branches for the logged-in user
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      if (!user) return;
-      // Sales Executive: fetch assigned customers
-      if (
-        user.designation?.toLowerCase() === 'sales executive' ||
-        user.roles?.includes('sales executive')
-      ) {
-        try {
-          const params = new URLSearchParams({
-            page: 1,
-            pageSize: 1000,
-            sortBy: 'id',
-            sortOrder: 'asc',
-            filters: JSON.stringify({ assignedTo: user.name || user.username || user.id })
-          });
-          const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          const result = await response.json();
-          if (result.status === 'Ok') {
-            setAssignedCustomerIds(result.data.data.map(c => c.id));
-          } else {
-            setAssignedCustomerIds([]);
-          }
-        } catch {
-          setAssignedCustomerIds([]);
-        }
-      }
-      // Branch Primary: fetch assigned branches
-      else if (
-        user.designation?.toLowerCase() === 'branch primary' ||
-        user.roles?.includes('branch_primary')
-      ) {
-        try {
-          const params = new URLSearchParams({
-            page: 1,
-            pageSize: 1000,
-            sortBy: 'id',
-            sortOrder: 'asc',
-            filters: JSON.stringify({ assignedTo: user.name || user.username || user.id })
-          });
-          const response = await fetch(`${API_BASE_URL}/customer-branches/pagination?${params.toString()}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          const result = await response.json();
-          if (result.status === 'Ok') {
-            setAssignedBranchIds(result.data.data.map(b => b.id));
-          } else {
-            setAssignedBranchIds([]);
-          }
-        } catch {
-          setAssignedBranchIds([]);
-        }
-      }
-    };
-    fetchAssignments();
-    // eslint-disable-next-line
-  }, [user]);
 
   // Fetch orders from API
   const fetchOrders = async (page = 1, searchTerm = '') => {
     setLoading(true);
     setError(null);
     try {
-      let filters = {};
-      // Sales Executive: filter by assigned customers
-      if (
-        user &&
-        (user.designation?.toLowerCase() === 'sales executive' ||
-          user.roles?.includes('sales executive'))
-      ) {
-        if (assignedCustomerIds.length > 0) {
-          filters.customerId = assignedCustomerIds;
-        } else {
-          setFilteredOrders([]);
-          setTotal(0);
-          setLoading(false);
-          return;
-        }
-      }
-      // Branch Primary: filter by assigned branches
-      else if (
-        user &&
-        (user.designation?.toLowerCase() === 'branch primary' ||
-          user.roles?.includes('branch_primary'))
-      ) {
-        if (assignedBranchIds.length > 0) {
-          filters.branchId = assignedBranchIds;
-        } else {
-          setFilteredOrders([]);
-          setTotal(0);
-          setLoading(false);
-          return;
-        }
-      }
-      // Admin or other: no filter (see all)
       const params = new URLSearchParams({
         page,
         pageSize,
         search: searchTerm,
         sortBy: 'id',
         sortOrder: 'asc',
-        filters: JSON.stringify(filters)
+        filters: '{}'
       });
+
       const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -183,6 +92,39 @@ function Orders() {
         setTotal(result.data.totalRecords);
       } else {
         throw new Error(result.message || 'Failed to fetch orders');
+      }
+    } catch (err) {
+      setError(err.message);
+      setFilteredOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch approvals for orders (similar to customers page)
+  const fetchApprovals = async (page = 1, searchTerm = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page,
+        pageSize,
+        search: searchTerm,
+        sortBy: 'id',
+        sortOrder: 'asc',
+        filters: '{}'
+      });
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      if (result.status === 'Ok') {
+        setFilteredOrders(result.data.data);
+        setTotal(result.data.totalRecords);
+      } else {
+        throw new Error(result.message || 'Failed to fetch order approvals');
       }
     } catch (err) {
       setError(err.message);
@@ -268,7 +210,9 @@ function Orders() {
   ];
 
   // Paginate the filtered orders
-  const paginatedOrders = filteredOrders.slice(0, pageSize);
+  const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 ? Math.ceil(total / pageSize) : 1;
+  // Always pass totalPages as a string to Pagination to avoid NaN warning
+  const paginatedOrders = Array.isArray(filteredOrders) ? filteredOrders.slice(0, pageSize) : [];
 
   return (
     <Sidebar title={t('Orders')}>
@@ -296,7 +240,7 @@ function Orders() {
         />)}
         {isV('ordersPagination') && (<Pagination
           currentPage={page}
-          totalPages={Math.ceil(total / pageSize)}
+          totalPages={String(totalPages)}
           onPageChange={setPage}
         />)}
         {loading && <div>Loading...</div>}
