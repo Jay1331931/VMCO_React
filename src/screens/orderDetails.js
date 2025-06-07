@@ -193,25 +193,21 @@ function OrderDetails() {
       include: isV('unitPriceCol'),
     },
     {
-      key: 'salesTaxRate',
-      header: 'Tax (SAR)',
+      key: 'sugarTaxPrice',
+      header: 'Sugar Tax',
       render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
-      include: isV('salesTaxRateCol'),
+      include: isV('sugarTaxPriceCol'),
     },
     {
       key: 'vatPercentage',
-      header: 'Tax (VAT)',
-      render: (row) => parseFloat(row.salesTaxRate).toFixed(2),
+      header: 'VAT',
+      render: (row) => parseFloat(row.vatPercentage).toFixed(2)+"%",
       include: isV('vatPercentageCol'),
     },
     {
       key: 'netAmount',
       header: 'Net Amount (SAR)',
-      render: (row) => {
-        const qty = parseFloat(row.quantity);
-        const price = parseFloat(row.unitPrice);
-        return (qty * price).toFixed(2);
-      },
+      render: (row) => parseFloat(row.netAmount).toFixed(2),
       include: isV('netAmountCol'),
     },
     ...(isE('products') ? [{ key: 'actions', header: 'Actions' }] : [])
@@ -373,7 +369,7 @@ function OrderDetails() {
         erp: formData.erp || '',
         entity: formData.entity || '',
         paymentMethod: formData.paymentMethod || '',
-        totalAmount: formData.totalAmount || '0',
+        totalAmount: formData.totalAmount,
         paidAmount: formData.paidAmount || '0',
         deliveryCharges: formData.deliveryCharges || '0',
         expectedDeliveryDate: formData.expectedDeliveryDate || new Date().toISOString().split('T')[0],
@@ -558,6 +554,9 @@ function OrderDetails() {
     // Add your logic here
   };
 
+  const handleCheckout = (order) => {
+    navigate('/checkout', { state: { order } });
+  };
 
 
   // Images state (allow dynamic add)
@@ -602,7 +601,8 @@ function OrderDetails() {
     // Ensure we have proper numeric values for calculations
     const unitPrice = parseFloat(product.unitPrice);
     const quantity = 1; // Default to 1 when adding a product
-    const vatPercentage = parseFloat(product.salesTaxRate);
+    const sugarTaxPrice =parseFloat(product.sugarTaxPrice);
+    const vatPercentage = parseFloat(product.vatPercentage);
 
     // Calculate net amount (unit price * quantity)
     const netAmount = (unitPrice * quantity).toFixed(2);
@@ -620,8 +620,8 @@ function OrderDetails() {
           unit: product.unit,
           unitPrice: unitPrice.toFixed(2),
           netAmount: netAmount,
-          salesTaxRate: product.sugarTaxPrice.toFixed(2),
-          vatPercentage: product.vatPercentage.toFixed(2)
+          sugarTaxPrice: sugarTaxPrice,
+          vatPercentage:vatPercentage
           // Include any other properties needed for display/calculations
         }
       ]
@@ -799,7 +799,7 @@ function OrderDetails() {
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
-                            disabled={isE('customerName')}
+                            disabled={!isE('customerName')}
                           />
                         </div>
                       ) : (
@@ -807,7 +807,8 @@ function OrderDetails() {
                           id="erpCustIdField"
                           name="erpCustId"
                           value={formData.erpCustId ?? ''}
-                          disabled={!isE('customerName')}
+                          disabled={isE('customerName')}
+                          readOnly
                         />
                       )}
                     </div>
@@ -832,7 +833,7 @@ function OrderDetails() {
                             className="customer-input"
                             placeholder={t('Click to select branch')}
                             readOnly
-                            disabled={isE('branchName')}
+                            disabled={!isE('branchName')}
                           />
                         </div>
                       ) : (
@@ -854,7 +855,7 @@ function OrderDetails() {
                         name="orderBy"
                         value={formData.orderBy ?? ''}
                         onChange={handleInputChange}
-                        disabled={isE('orderBy')}
+                        disabled={!isE('orderBy')}
                       />
                     </div>
                   )}
@@ -866,7 +867,7 @@ function OrderDetails() {
                         name="erp"
                         value={formData.erp ?? ''}
                         onChange={handleInputChange}
-                        disabled={isE('erpId')}
+                        disabled={!isE('erpId')}
                         placeholder={t('ERP ID')}
                       />
                     </div>
@@ -881,7 +882,7 @@ function OrderDetails() {
                           value={formData.entity || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={isE('entity')}
+                          disabled={!isE('entity')}
                         >
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
@@ -909,7 +910,7 @@ function OrderDetails() {
                           value={formData.paymentMethod || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={isE('paymentMethod')}
+                          disabled={!isE('paymentMethod')}
                         >
                           <option value="">{t('Select Payment Method')}</option>
                           {paymentMethodOptions.map((paymentMethod, index) => (
@@ -1068,7 +1069,20 @@ function OrderDetails() {
                     <button
                       type="button"
                       className="order-action-btn approve"
-                      onClick={() => setShowProductPopup(true)}
+                      onClick={() => {
+                              if (!formData.erpCustId) {
+                                alert(t('Please select a customer first'));
+                                return;
+                              }
+                              else if (!formData.erpBranchId) {
+                                alert(t('Please select a Branch'));
+                                return;
+                              }
+                              else if (!formData.entity) {
+                                alert(t('Please select Entity'));
+                                return;
+                              }
+                        setShowProductPopup(true)}}
                       style={{ marginBottom: 8 }}
                     >
                       {t('Add products')}
@@ -1079,7 +1093,7 @@ function OrderDetails() {
                     <Table
                       columns={columns}
                       data={formData.products.filter(
-                        p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.netAmount || p.salesTaxRate
+                        p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.sugarTaxPrice || p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
                         formMode === 'add' && isE('products')
@@ -1130,6 +1144,12 @@ function OrderDetails() {
                 {isV('btnInvoice') && isE('btnInvoice') && (
                   <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
                     {t('Download Invoice')}
+                  </button>
+                )}
+
+                {isV('btnPay') && isE('btnPay') && (
+                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor:'#005932', color: 'white' }}>
+                    {t('Checkout')}
                   </button>
                 )}
 

@@ -82,7 +82,7 @@ function Maintenance() {
     )
   );
   const handleAdd = () => {
-    navigate('/maintenanceDetails', { state: { ticket: {}, mode: 'add' } });
+    navigate('/maintenanceDetails', { state: { ticket:null, mode: 'add' } });
   }
 
   // Handle row click to navigate to Maintenance details page with ticket details

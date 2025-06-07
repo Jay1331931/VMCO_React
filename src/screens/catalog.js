@@ -19,11 +19,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Define categories with their corresponding entity values
 const categories = [
-    { value: 'VMCO Machines', entity: 'VMCO', label: 'VMCO Machines' },
-    { value: 'VMCO Consumables', entity: 'VMCO', label: 'VMCO Consumables' },
-    { value: 'Diyafa', entity: 'Diyafa', label: 'Diyafa' },
-    { value: 'Green Mast', entity: 'Green Mast', label: 'Green Mast' },
-    { value: 'Naqui', entity: 'Naqui', label: 'Naqui' }
+    { value: 'VMCO Machines', entity: 'vmco', label: 'VMCO Machines' },
+    { value: 'VMCO Consumables', entity: 'vmco', label: 'VMCO Consumables' },
+    { value: 'Diyafa', entity: 'diyafa', label: 'Diyafa' },
+    { value: 'Green Mast', entity: 'green mast', label: 'Green Mast' },
+    { value: 'Naqui', entity: 'naqui', label: 'Naqui' }
 ];
 
 function Catalog() {
@@ -168,13 +168,13 @@ function Catalog() {
 
                     // For all tabs, just filter by entity without special handling
                     if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
-                        params.append('entity', 'VMCO');
+                        params.append('entity', 'vmco');
                     } else if (activeCategory === 'Diyafa') {
-                        params.append('entity', 'Diyafa');
+                        params.append('entity', 'diyafa');
                     } else if (activeCategory === 'Green Mast') {
-                        params.append('entity', 'Green Mast');
+                        params.append('entity', 'green mast');
                     } else if (activeCategory === 'Naqui') {
-                        params.append('entity', 'Naqui');
+                        params.append('entity', 'naqui');
                     }
 
                     // Add category and subcategory filters
@@ -501,9 +501,15 @@ function Catalog() {
             quantity = Math.max(1, quantity);
 
             // Calculate needed values
-            const unitPrice = product.unitPrice || 1;
+            const unitPrice = product.unitPrice;
             const netAmount = unitPrice * quantity;
-            const sugarTaxPrice = product.sugarTaxPrice;
+            const vatPercentage = parseFloat(product.vatPercentage) || 0;
+            const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
+
+            // Calculate VAT and sugar tax
+            const vatAmount = netAmount * (vatPercentage / 100);
+            const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+
 
             // Parse images JSON and extract URLs
             let imageUrls = [];
@@ -571,9 +577,9 @@ function Catalog() {
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: parseFloat(product.sugarTaxPrice).toFixed(2) || '0.00',
-                    salesTaxRate: parseFloat(product.vatPercentage).toFixed(2),
-                    images: JSON.stringify(imageUrls) // <-- Add images as JSONB
+                    sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
+                    vatPercentage: vatPercentage.toFixed(2),
+                    images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
 
                 console.log('Adding new item to cart:', cartItem);

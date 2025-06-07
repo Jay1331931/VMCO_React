@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter'; // Import the date formatter
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-
+import { useNavigate } from 'react-router-dom';
 
 
 
@@ -39,22 +39,13 @@ function SupportDetails() {
   const currentLanguage = i18n.language;
   const location = useLocation();
   const formMode = location.state?.mode;
-  console.log("^^^^ Mode ^^^^ :"+formMode);
-  const { token, user, isAuthenticated, logout } = useAuth();
-
-  //RBAC
-  //use formMode to decide if it is editform or add form
-  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
-  const isV = rbacMgr.isV.bind(rbacMgr);
-  const isE = rbacMgr.isE.bind(rbacMgr);
-
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
+  const navigate = useNavigate();  
 
   const ticketRcvd = location.state?.ticket || {};
   const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
-  //console.log(JSON.stringify(ticket));
   // State for branches dropdown
-  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
-  const [branches, setBranches] = useState([]);
+   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(
     currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameLc
@@ -66,12 +57,56 @@ function SupportDetails() {
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
   
   const [isEditing, setIsEditing] = useState(true);
- 
-  
+  const [popupImage, setPopupImage] = useState(null);
+  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  // Images state (allow dynamic add)
+  const [images, setImages] = useState(
+    Array.isArray(ticket.images) && ticket.images.length > 0
+      ? ticket.images.filter(Boolean)
+      : []
+  );
+  // File input ref
+  const fileInputRef = useRef(null);
+
+ // State for video popup
+  const [popupVideo, setPopupVideo] = useState(null);
+
+  // Videos state (allow dynamic add)
+  const [videos, setVideos] = useState([]);
+
+  // File input ref for videos
+  const videoInputRef = useRef(null);
+
+ //NOTE: For fetching the user again after browser refersh - start
+   useEffect(() => {
+    if (user) {
+      fetchEmployees();
+      fetchBranches();
+    }
+  }, [user]);
+
+  // Check loading state first
+  if (loading) {
+    return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
+  }
+
+  if (!user) {
+    console.log("$$$$$$$$$$$ logging out");
+    // Logout instead of showing loading message
+    logout();
+    navigate('/login');
+    return null; // Return null while logout is processing
+  }
+  //For fetching the user again after browser refersh - End
+
+  //Rbac and other access based on user object to follow below lik this
+  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
+  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
-    console.log('Fetching size...'+branches.length);
     if (branches.length > 0) return; // Don't fetch if we already have branches
     
     setLoadingBranches(true);
@@ -92,7 +127,6 @@ function SupportDetails() {
       }
       
       const data = await response.json();
-      console.log('Fetched branches:', data);
       //iterate data object to collect branchNameEn vles in array
 
       const branchNames = data;
@@ -127,7 +161,6 @@ function SupportDetails() {
       }
       
       const resp = await response.json();
-      console.log('Fetched employees:', resp.data.data);
       setEmployees(resp.data.data || []);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
@@ -137,11 +170,7 @@ function SupportDetails() {
   };
 
   // Fetch employees on component mount
-  useEffect(() => {
-    fetchEmployees();
-    fetchBranches();
-  
-  }, []);
+ 
 
 
  
@@ -152,18 +181,8 @@ function SupportDetails() {
 
   // Rest of your existing state variables...
   // State for image popup
-  const [popupImage, setPopupImage] = useState(null);
-  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
 
-  // Images state (allow dynamic add)
-  const [images, setImages] = useState(
-    Array.isArray(ticket.images) && ticket.images.length > 0
-      ? ticket.images.filter(Boolean)
-      : []
-  );
 
-  // File input ref
-  const fileInputRef = useRef(null);
 
   // Handle image add
   const handleAddImage = (e) => {
@@ -184,15 +203,7 @@ function SupportDetails() {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
-  // State for video popup
-  const [popupVideo, setPopupVideo] = useState(null);
-
-  // Videos state (allow dynamic add)
-  const [videos, setVideos] = useState([]);
-
-  // File input ref for videos
-  const videoInputRef = useRef(null);
-
+  
   // Handle video add
   const handleAddVideo = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -217,12 +228,12 @@ function SupportDetails() {
     //TODO: onSave validaations
 
     setIsEditing(false);
-    ticket.customerId=user.customerId;
-    ticket.dateOfComplaint = new Date().toISOString();
-    ticket.attachment='none';//TODO: in DB is is not null. Need to be nullaable
-    ticket.comments='[]';//assign an empty array
-    console.log('Saving ticket with selected branch:', selectedBranch);
-    console.log('Assigned to employee:', selectedEmployee);
+    if(formMode=='add' && !ticket.id){
+      ticket.customerId=user.customerId;
+      ticket.dateOfComplaint = new Date().toISOString();
+      ticket.attachment='none';//TODO: in DB is is not null. Need to be nullaable
+      ticket.comments='[]';//assign an empty array
+    }
     try{
 
       const endPoint = formMode=='add'? '/grievances': '/grievances/id/'+ticket.id;
@@ -231,7 +242,6 @@ function SupportDetails() {
       const apiUrl = process.env.REACT_APP_API_BASE_URL
         ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
         : null;
-      console.log("the url:"+apiUrl+"\n emthod:"+method);
       const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -242,7 +252,6 @@ function SupportDetails() {
       if (!response.ok) {
 
         const errorText = await response.text();
-        console.log(`Error ${response.status}: ${response.statusText}. Details: ${errorText}`);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
@@ -250,10 +259,7 @@ function SupportDetails() {
     }
   }
 
-  const handleCommentClick = async () => {
-    //TODO: implement API call to add comment
-    console.log("~~~~~~~~~~ Comment Added");
-    console.log("~~~~~~~~~~ ticket comments", ticket); 
+  const handleAddComment = async () => {
     try{
 
       const endPoint = '/grievances/id/'+ticket.id;
@@ -262,7 +268,6 @@ function SupportDetails() {
       const apiUrl = process.env.REACT_APP_API_BASE_URL
         ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
         : null;
-      console.log("the url:"+apiUrl);
       const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
@@ -282,7 +287,6 @@ function SupportDetails() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setTicket(prev => ({ ...prev, [name]: value }));
-    console.log("The ticket after change:\n"+JSON.stringify(ticket));
     
     // Special handling for customer selection
     if (name === 'customerId' && value) {
@@ -291,6 +295,7 @@ function SupportDetails() {
       setTicket(prev => ({ ...prev, branchId: '' }));
     }
   };
+
 
   return (
     <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
@@ -302,7 +307,7 @@ function SupportDetails() {
             <div className="support-details-field">
               <label>Customer Name</label>
               <input 
-                value={companyNameToShow} 
+                value={companyNameToShow}
                 disabled={true} 
               />
             </div>
@@ -515,7 +520,7 @@ function SupportDetails() {
         </div>
       )}
       {/*TODO: part of params like currentUser Details must be dynamic */}
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleCommentClick} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:user.userName, userId:user.userId}}   /> 
+      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} onAddComment={handleAddComment} showCommentForm={true} externalComments={ticket.comments} currentUser={{userName:user.userName, userId:user.userId}}   /> 
     </Sidebar>
   );
 }

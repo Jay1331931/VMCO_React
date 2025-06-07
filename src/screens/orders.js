@@ -8,7 +8,6 @@ import Pagination from '../components/Pagination';
 import '../styles/components.css';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
 
@@ -30,8 +29,6 @@ const getStatusClass = (status) => {
 
 function Orders() {
   const {  user } = useAuth();
-  const location = useLocation();
-  const formMode = location.state?.mode;
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -164,7 +161,7 @@ function Orders() {
     { key: 'entity', header: 'Entity', include: isV( 'entity') },
     { key: 'paymentMethod', header: 'Payment Method', include: isV( 'paymentMethod') },
     { key: 'deliveryDate', header: 'Delivery Date', include: isV( 'expectedDeliveryDate') },
-    {key: 'totalAmount', header: 'Total Amount', include: isV( 'totalAmount') },
+    { key: 'totalAmount', header: 'Total Amount', include: isV( 'totalAmount') },
     { key: 'paidAmount', header: 'Paid Amount', include: isV( 'paidAmount') },
     { key: 'paymentStatus', header: 'Payment Status', include: isV( 'paymentStatus') },
     { key: 'status', header: 'Status', include: isV( 'status') },
@@ -176,7 +173,7 @@ function Orders() {
 
   return (
     <Sidebar title={t('Orders')}>
-      <div className="orders-content">
+      {isV('ordersContent') && (<div className="orders-content">
         <div className="page-header">
           <div className="header-controls">
             <SearchInput onSearch={handleSearch} />
@@ -188,24 +185,24 @@ function Orders() {
               onToggle={toggleApprovalMode}
             />}
             {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
-            <ActionButton menuItems={orderMenuItems} />
+            {isV ('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
         </div>
-        <Table
+        {isV ('ordersTable') && (<Table
           columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}
           onCheckout={handleCheckout}
-        />
-        <Pagination
+        />)}
+        {isV('ordersPagination') && (<Pagination
           currentPage={page}
           totalPages={Math.ceil(total / pageSize)}
           onPageChange={setPage}
-        />
+        />)}
         {loading && <div>Loading...</div>}
         {error && <div className="error">{error}</div>}
-      </div>
+      </div>)}
     </Sidebar>
   );
 }
