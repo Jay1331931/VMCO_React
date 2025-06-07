@@ -334,6 +334,14 @@ class RbacManager {
           settings: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
+
     },
 
     [constants.ROLES.CUSTOMER_PRIMARY]: {
@@ -996,7 +1004,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1223,7 +1231,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1323,7 +1331,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1410,7 +1418,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1509,7 +1517,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1608,7 +1616,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }

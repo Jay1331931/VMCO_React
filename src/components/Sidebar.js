@@ -285,7 +285,7 @@ return customerData;
       case 'Maintenance': navigate('/maintenance'); break;
       case 'Dashboard': navigate('/login'); break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
-      case 'CompanyProfile': 
+      case 'Company': 
       try {
         const customerData = await fetchApprovedCustomer(user);
         navigate('/customersDetails', { 
@@ -324,7 +324,7 @@ return customerData;
     { icon: faUsers, label: 'Customers' },
     { icon: faHeadset, label: 'Support' },
     { icon: faTools, label: 'Maintenance' },
-    { icon: faBuilding, label: 'CompanyProfile' },
+    { icon: faBuilding, label: 'Company' },
     { icon: faCog, label: 'Settings' },
   ];
 
