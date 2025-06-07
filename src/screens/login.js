@@ -14,7 +14,7 @@ function LoginScreen() {
     }, [t]);
     const isRTL = i18n.language === 'ar';
   const path = location.pathname;
-  const isCustomerLogin = path === '/login';
+  const isCustomerLogin = path === '/login' || path === '/';
 
   const title = isCustomerLogin ? t('Customer Login') : t('Employee Login');
   const userType = isCustomerLogin ? 'customer' : null;
