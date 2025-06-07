@@ -1505,7 +1505,7 @@ class RbacManager {
           goToCart: { visible: false, editable: false },
           sort: { visible: false, editable: false }
         }
-      }
+      },
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
@@ -1604,7 +1604,7 @@ class RbacManager {
           goToCart: { visible: false, editable: false },
           sort: { visible: false, editable: false }
         }
-      }
+      },
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
