@@ -1357,6 +1357,10 @@ td.file-display-cell {
   background-color: #fff8e1;
 }
 
+.hidden-label {
+  display: none;
+}
+
 .current-value {
   font-size: 0.8em;
   color: #666;

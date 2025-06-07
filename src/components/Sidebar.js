@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
 import { useAuth } from '../context/AuthContext';
 import SaudiTime from '../components/Time';
+import RbacManager from '../utilities/rbac';
 import {
   faChevronLeft,
   faChevronRight,
@@ -34,6 +35,9 @@ function Sidebar({ children, title }) {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
+  const rbacMgr = new RbacManager(user.userType == 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'SidebarList');
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   const isRTL = i18n.language === 'ar';
 
@@ -278,10 +282,10 @@ return customerData;
       case 'Customers': navigate('/customers'); break;
       case 'Catalog': navigate('/catalog'); break;
       case 'Support': navigate('/support'); break;
-      case 'Maintenance Support': navigate('/maintenance'); break;
+      case 'MaintenanceSupport': navigate('/maintenance'); break;
       case 'Dashboard': navigate('/login'); break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
-      case 'Company Profile': 
+      case 'CompanyProfile': 
       try {
         const customerData = await fetchApprovedCustomer(user);
         navigate('/customersDetails', { 
@@ -319,8 +323,8 @@ return customerData;
     { icon: faShoppingCart, label: 'Orders' },
     { icon: faUsers, label: 'Customers' },
     { icon: faHeadset, label: 'Support' },
-    { icon: faTools, label: 'Maintenance Support' },
-    { icon: faBuilding, label: 'Company Profile' },
+    { icon: faTools, label: 'MaintenanceSupport' },
+    { icon: faBuilding, label: 'CompanyProfile' },
     { icon: faCog, label: 'Settings' },
   ];
 
@@ -341,6 +345,7 @@ return customerData;
                 key={label}
                 className={`menu-item ${activeMenu === label ? 'active' : ''}`}
                 onClick={() => handleMenuClick(label)}
+                style={{display: isV(label)? 'flex': 'none'}}
               >
                 <FontAwesomeIcon icon={icon} />
                 <span>{t(label)}</span>
@@ -353,6 +358,7 @@ return customerData;
                 key={label}
                 className={`menu-item ${activeMenu === label ? 'active' : ''}`}
                 onClick={() => handleMenuClick(label)}
+                style={{display: isV(label)? 'flex': 'none'}}
               >
                 <FontAwesomeIcon icon={icon} />
                 <span>{t(label)}</span>

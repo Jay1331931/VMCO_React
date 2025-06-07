@@ -82,9 +82,6 @@ function Support() {
     { key: 'status', header: 'Status' }
   ];
 
-  const handleAdd = () => {
-    navigate("/supportDetails")
-  }
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -123,9 +120,8 @@ function Support() {
       <div className="support-content">
         <div className="support-header">
           <SearchInput onSearch={setSearchQuery} />
-          <button className="support-add-button" onClick={handleAdd} >{t('+ Add')}</button>
+          {isV('btnAdd') && <button className="support-add-button" onClick={handleAddTicket} >{t('+ Add')}</button>}  
         </div>
-        {isV('btnAdd') && <button className="add-button" onClick={handleAddTicket}>{t('+ Add')}</button>}
         {/* <ActionButton menuItems={supportMenuItems} /> */}
         <Table
           columns={columns}

@@ -4,11 +4,20 @@ import '../styles/components.css';
 import CommentPopup from '../components/commentPanel';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import formatDate from '../utilities/dateFormatter'; // Import the date formatter
+import formatDate from '../utilities/dateFormatter';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import { useNavigate } from 'react-router-dom';
 
 function MaintenanceDetails() {
+  // All hooks at the top
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
+  const { t, i18n } = useTranslation();
+  const currentLanguage = i18n.language;
+  const location = useLocation();
+  const formMode = location.state?.mode;
+  const navigate = useNavigate();
+  
 
   const defaultTicket = {
     "id": null,
@@ -30,44 +39,72 @@ function MaintenanceDetails() {
     "customerRegion": null,
     "branchRegion": null,
   };
-            
-  const { t, i18n } = useTranslation();
-  const currentLanguage = i18n.language;
-  const location = useLocation();
-  const formMode = location.state?.mode;
-  const { token, user, isAuthenticated, logout } = useAuth();
 
-    //RBAC
-  //use formMode to decide if it is editform or add form
-  const rbacMgr = new RbacManager( user.userType=='employee'&& user.roles[0] !== 'admin'?user.designation:user.roles[0], formMode=='add'?'supDetailAdd':'supDetailEdit');
-  const isV = rbacMgr.isV.bind(rbacMgr);
-  const isE = rbacMgr.isE.bind(rbacMgr);
-
+  // All useState hooks
   const [ticket, setTicket] = useState(location.state?.ticket || defaultTicket);
-  
-  // State for branches dropdown
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(
     currentLanguage === 'en' ? ticket.branchNameEn : ticket.branchNameAr
   );
-  
-  // State for employees dropdown
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || '');
-  
   const [isEditing, setIsEditing] = useState(true);
+  const [popupImage, setPopupImage] = useState(null);
+  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
+  const [images, setImages] = useState(
+    Array.isArray(ticket.images) && ticket.images.length > 0
+      ? ticket.images.filter(Boolean)
+      : []
+  );
+  const fileInputRef = useRef(null);
+  const [popupVideo, setPopupVideo] = useState(null);
+  const [videos, setVideos] = useState([]);
+  const videoInputRef = useRef(null);
 
+  // Use useEffect for fetching data
+  useEffect(() => {
+    if (user) {
+      fetchEmployees();
+      fetchBranches();
+    }
+  }, [user]);
+
+  // Check loading state first
+  if (loading) {
+    return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
+  }
+
+  if (!user) {
+    console.log("$$$$$$$$$$$ logging out");
+    logout();
+    navigate('/login');
+    return null;
+  }
+  
+  const companyNameToShow = currentLanguage === 'en' ? (ticket.companyNameEn ? ticket.companyNameEn : user.customerCompanyNameEn) : (ticket.companyNameAr ? ticket.companyNameAr : user.customerCompanyNameLc);
+
+  // RBAC - only after we confirm user exists
+  console.log("RRRRRRRRR:",JSON.stringify(user));
+  const rbacMgr = new RbacManager(
+    user.userType === 'employee' && user.roles[0] !== 'admin' 
+      ? user.designation 
+      : user.roles[0], 
+    formMode === 'add' ? 'maintDetailAdd' : 'maintDetailEdit'
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+  console.log("9090909090909 ",rbacMgr.currentRole);
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
     if (branches.length > 0) return; // Don't fetch if we already have branches
     
     setLoadingBranches(true);
     try {
-      // Replace with your actual API endpoint URL
       const apiUrl = process.env.REACT_APP_API_BASE_URL 
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId? ticket.customerId : user.customerId}/pagination?page=1&pageSize=10&sortBy=branch_name&sortOrder=asc`
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId? ticket.customerId : user.customerId}`
         : 'http://localhost:3000/api/branches';
         
       const response = await fetch(apiUrl,{
@@ -124,47 +161,39 @@ function MaintenanceDetails() {
     }
   };
 
-  // Fetch employees on component mount
-  useEffect(() => {
-    fetchEmployees();
-    fetchBranches();
-  }, []);
-
   // Handle branch click to load options
   const handleBranchClick = () => {
     if (isEditing) {
-      fetchBranches();
+      //fetchBranches();
     }
   };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTicket(prev => ({ ...prev, [name]: value }));
+    
+    // Special handling for customer selection
+    if (name === 'customerId' && value) {
+      fetchBranches(value);
+      // Reset branch when customer changes
+      setTicket(prev => ({ ...prev, branchId: '' }));
+    }
 
+    console.log("The ticket :", JSON.stringify(ticket));
+  };
   // Handle branch selection
-  const handleBranchChange = (e) => {
-    setSelectedBranch(e.target.value);
-  };
+  // const handleBranchChange = (e) => {
+  //   setSelectedBranch(e.target.value);
+  // };
 
-  // Handle employee selection
-  const handleEmployeeChange = (e) => {
-    setSelectedEmployee(e.target.value);
-  };
+  // // Handle employee selection
+  // const handleEmployeeChange = (e) => {
+  //   setSelectedEmployee(e.target.value);
+  // };
 
   // Toggle edit mode
   const toggleEditMode = () => {
     setIsEditing(!isEditing);
   };
-
-  // State for image popup
-  const [popupImage, setPopupImage] = useState(null);
-  const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
-
-  // Images state (allow dynamic add)
-  const [images, setImages] = useState(
-    Array.isArray(ticket.images) && ticket.images.length > 0
-      ? ticket.images.filter(Boolean)
-      : []
-  );
-
-  // File input ref
-  const fileInputRef = useRef(null);
 
   // Handle image add
   const handleAddImage = (e) => {
@@ -186,16 +215,7 @@ function MaintenanceDetails() {
   };
 
 
- // State for video popup
-  const [popupVideo, setPopupVideo] = useState(null);
-
-  // Videos state (allow dynamic add)
-  const [videos, setVideos] = useState([]);
-
-  // File input ref for videos
-  const videoInputRef = useRef(null);
-
-  // Handle video add
+ // Handle video add
   const handleAddVideo = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
@@ -214,18 +234,84 @@ function MaintenanceDetails() {
     if (videoInputRef.current) videoInputRef.current.click();
   };
 
-  // Handle save
-  const handleSave = () => {
-    // Implement save functionality here
-    // This would typically involve an API call to update the ticket
+  // Handle save functionality
+  const handleSave = async () => {
     setIsEditing(false);
-    console.log('Saving maintenance ticket with selected branch:', selectedBranch);
-    console.log('Assigned to employee:', selectedEmployee);
-    // After successful save, you might want to refresh the data
+    if(formMode=='add' && !ticket.id){
+      ticket.customerId = user.customerId;
+      ticket.attachment = 'none'; // TODO: in DB is is not null. Need to be nullaable
+      ticket.comments = '[]'; // assign an empty array
+    }
+    
+    // Update ticket with selected employee and branch
+    const updatedTicket = {
+      ...ticket,
+      //assignedTo: selectedEmployee,
+      //branchId: selectedBranch
+    };
+    
+    try {
+      const endPoint = formMode=='add' ? '/maintenance' : '/maintenance/id/'+ticket.id;
+      const method = formMode=='add' ? 'POST' : 'PATCH';
+
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
+        : null;
+      console.log("~~~~~~~ the url+"+apiUrl);
+      console.log("~~~~~~~ the updated ticket+"+JSON.stringify(updatedTicket));
+      const response = await fetch(apiUrl, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updatedTicket)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      // Update local state with saved ticket data
+      const savedTicket = await response.json();
+      setTicket(savedTicket);
+      
+    } catch (error) {
+      console.error('Error saving maintenance ticket:', error);
+    }
+  };
+
+  // Handle comment updates
+  const handleAddComment = async () => {
+    try {
+      const endPoint = '/maintenance/id/'+ticket.id;
+      const method = 'PATCH';
+
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
+        : null;
+      
+      const response = await fetch(apiUrl, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(ticket)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      // Update local state with the updated ticket that includes new comments
+      const updatedTicket = await response.json();
+      setTicket(updatedTicket);
+      
+    } catch (error) {
+      console.error('Error updating ticket comments:', error);
+    }
   };
 
   return (
-    <Sidebar title={`Ticket#${ticket.id}`}>
+    <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="maintenance-details-container">
         <h2 className="maintenance-details-title">{`Ticket#${ticket.id}`}</h2>
         <div className="maintenance-details-section">
@@ -233,24 +319,23 @@ function MaintenanceDetails() {
           <div className="maintenance-details-grid">
             <div className="maintenance-details-field">
               <label>Customer Name</label>
-              <input value={currentLanguage === 'en' ? ticket.companyNameEn : ticket.companyNameAr} disabled />
+              <input value={companyNameToShow} disabled />
             </div>
             <div className="maintenance-details-field">
-              <label>Branch</label>
-              <select 
-                value={selectedBranch} 
-                disabled={false}
-                onChange={handleBranchChange}
-                onClick={handleBranchClick}
+              <label htmlFor="branchId">{t('Branch')} *</label>
+              <select
+                id="branchId"
+                name="branchId"
+                value={ticket.branchId}
+                disabled={!isE('branch')}
+                onChange={handleInputChange}
               >
+                <option value="">{t('Select Branch')}</option>
                 {loadingBranches ? (
-                  <option>Loading branches...</option>
+                  <option disabled>{t('loading')}</option>
                 ) : branches.length > 0 ? (
                   branches.map(branch => (
-                    <option 
-                      key={branch.id} 
-                      value={currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
-                    >
+                    <option key={branch.id} value={branch.id}>
                       {currentLanguage === 'en' ? branch.branchNameEn : branch.branchNameLc}
                     </option>
                   ))
@@ -262,42 +347,81 @@ function MaintenanceDetails() {
               </select>
             </div>
             <div className="maintenance-details-field">
-              <label>Issue Type</label>
-              <select value={ticket.category} > {/* TODO:Issue types to be read and populaated from basic masters */}
-                <option>Issue Type</option>
+              <label htmlFor="issueType">{t('Issue Type')} *</label>
+              <select 
+                id='category' 
+                name='category' 
+                onChange={handleInputChange} 
+                value={ticket.category}
+                disabled={!isE('issueType')}
+              > 
+                <option value="">{t('Select Issue Type')}</option>
                 <option>Payment</option>
                 <option>Delivery</option>
                 <option>Product</option>
               </select>
             </div>
             <div className="maintenance-details-field">
-              <label>Issue Name</label>
-              <input value={ticket.issueName}/>
+              <label htmlFor="issueName">{t('Issue Name')} *</label>
+              <input 
+                id='issueName' 
+                name='issueName' 
+                onChange={handleInputChange} 
+                value={ticket.issueName}
+                disabled={!isE('issueName')}
+              />
             </div>
+            {isV('createdDate') && (           
+               <div className="maintenance-details-field">
+                <label htmlFor="createdDate">{t('Created Date')} *</label>
+                <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')} disabled />
+              </div>
+          )}
             <div className="maintenance-details-field">
-              <label>Created Date</label>
-              <input value={formatDate(ticket.createdAt,'YYYY-MM-DD HH:MM')}  />
+              <label htmlFor="machineSerialNumber">{t('Machine Serial Number')} </label>
+              <input 
+                id='machineSerialNumber' 
+                name='machineSerialNumber' 
+                onChange={handleInputChange} 
+                value={ticket.machineSerialNumber}
+                disabled={!isE('machineSerialNumber')}
+              />
             </div>
-            <div className="maintenance-details-field">
-              <label>Machine Serial Number</label>
-              <input value={ticket.machineSerialNumber}  />
-            </div>
-            <div className="maintenance-details-field">
-              <label>Warranty Date</label>
-              <input value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')}  />
-            </div>
-            <div className="maintenance-details-field">
-              <label>Maitenance Charges</label>
-              <input value={ticket.chargers?.maintenance}  />
-            </div>
+            {isV('warrantyEndDate') &&(
+              <div className="maintenance-details-field">
+                <label>{t('Warranty Date')} *</label>
+                <input 
+                  value={formatDate(ticket.warrantyEndDate,'YYYY-MM-DD')}
+                  disabled 
+                />
+              </div>
+            )}
+            {isV('maintenanceCharges') && (
+              <div className="maintenance-details-field">
+                <label>{t('Maintenance Charges')} *</label>
+                <input 
+                  id='maintenanceCharges' 
+                  name='maintenanceCharges' 
+                  onChange={handleInputChange} 
+                  value={ticket.chargers?.maintenance}
+                  disabled={!isE('maintenanceCharges')}
+                />
+              </div>
+            )}
           </div>
           <div className="maintenance-details-field maintenance-details-textarea">
-            <label>Issue Details</label>
-            <textarea value={ticket.issueDetails}  />
+            <label>{t('Issue Details')}</label>
+            <textarea 
+              id='issueDetails' 
+              name='issueDetails' 
+              onChange={handleInputChange} 
+              value={ticket.issueDetails}
+              disabled={!isE('issueDetails')}
+            />
           </div>
           <div className='attachments'>
           <div className="maintenance-details-images">
-            <label>Images</label>
+            <label>{t('Images')}</label>
             <div className="maintenance-images-list">
               {images.map((img, idx) => (
                 <div
@@ -315,6 +439,7 @@ function MaintenanceDetails() {
                 className="maintenance-add-image-btn"
                 onClick={openFileDialog}
                 title="Add Image"
+                disabled={!isE('btnAddimages')}
               >
                 +
               </button>
@@ -324,11 +449,12 @@ function MaintenanceDetails() {
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAddImage}
+                disabled={false}
               />
             </div>
           </div>
           <div className="maintenance-details-videos">
-            <label>Videos</label>
+            <label>{t('Videos')}</label>
             <div className="maintenance-videos-list">
               {videos.map((vid, idx) => (
                 <div
@@ -345,7 +471,8 @@ function MaintenanceDetails() {
                 type="button"
                 className="maintenance-add-image-btn"
                 onClick={openVideoDialog}
-                title="Add Video"
+                title={t("Add Video")}
+                disabled={!isE('btnAddvideos')}
               >
                 +
               </button>
@@ -355,6 +482,7 @@ function MaintenanceDetails() {
                 ref={videoInputRef}
                 style={{ display: 'none' }}
                 onChange={handleAddVideo}
+                disabled={!isE('videos')}
               />
             </div>
           </div>
@@ -362,33 +490,40 @@ function MaintenanceDetails() {
         </div>
       </div>
       <div className="support-details-footer">
-        <div className="support-status">
-          <span>Order Status:</span>
-          <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
-        </div>
-        <div className="support-assign">
-          <span>Assign to:</span>
-          <select 
-            value={selectedEmployee} 
-            onChange={handleEmployeeChange}
-            disabled={!isEditing}
-          >
-            {loadingEmployees ? (
-              <option>Loading employees...</option>
-            ) : employees.length > 0 ? (
-              employees.map(employee => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))
-            ) : (
-              <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
-            )}
-          </select>
-        </div>
+        {isV('status') && (
+          <div className="support-status">
+            <span>{t('Status')}:</span>
+            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
+          </div>
+        )}
+        {isV('assignedTo') &&(
+          <div className="support-assign">
+            <span>{t('Assign To')}:</span>
+            <select
+              id="assignedTo"
+              name="assignedTo"
+              value={selectedEmployee} 
+              onChange={handleInputChange}
+              disabled={!isE('assignedTo')}
+            >
+              <option value="">{t('Select Assignee')}</option>
+              {loadingEmployees ? (
+                <option>{t('Loading employees...')}</option>
+              ) : employees.length > 0 ? (
+                employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))
+              ) : (
+                <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+              )}
+            </select>
+          </div>
+        )}
         <div className="support-details-actions">
-          <button className="support-action-btn save" onClick={handleSave}>Save</button>
-          <button className="support-action-btn differ">Differ</button>
+          {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave} disabled={!isE('btnSave')}>Save</button>}
+          {isV('btnDiffer') && <button className="support-action-btn differ" disabled={!isE('btnDiffer')}>Differ</button>}
         </div>
       </div>
       {popupImage && (
@@ -399,7 +534,14 @@ function MaintenanceDetails() {
           </div>
         </div>
       )}
-      <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+      <CommentPopup 
+        isOpen={isCommentPanelOpen} 
+        setIsOpen={setIsCommentPanelOpen} 
+        onAddComment={handleAddComment}
+        showCommentForm={true}
+        externalComments={ticket.comments}
+        currentUser={{userName:user.userName, userId:user.userId}}
+      />
     </Sidebar>
   );
 }

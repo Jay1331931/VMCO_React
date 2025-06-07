@@ -26,6 +26,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const [temporaryBranches, setTemporaryBranches] = useState([]);
     const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
     const [approvalAction, setApprovalAction] = useState(null);
+    let isApprovalMode = false;
     const [nextTempId, setNextTempId] = useState(-1);
     const isMobile = false;
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -79,6 +80,35 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
             };
         });
     };
+
+    const checkApproval = async (branchId) => {
+        console.log("Branch Id", branchId)
+        console.log("check approval called")
+        let isAppMode = false;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id/${branchId}/module/branch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      console.log(res)
+      if (res.ok) {
+        const responseText = await res.text(); // Get raw response text ('t' or 'f')
+        console.log(responseText)
+        const data = responseText ? JSON.parse(responseText) : {};
+        isAppMode = data?.exists === 't'; // Convert to boolean
+        console.log(isAppMode)
+        return isAppMode;
+        console.log("is approval mode", isAppMode)
+        console.log(`Workflow check result for customer ${customer?.id}:`, isAppMode);
+      } else {
+        console.log(`Workflow check failed`, res.status);
+      }
+    } catch (err) {
+      console.error('Error fetching workflow instance:', err);
+    }
+    }
 
     // Fetch contacts for a specific branch
     const fetchBranchContacts = async (branchId) => {
@@ -166,6 +196,8 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         setExpandedRows((prev) =>
             prev.includes(branchId) ? [] : [branchId]
         );
+        // setIsApprovalMode(checkApproval(branchId));
+        isApprovalMode = checkApproval(branchId);
     };
 
     // Get the current branch data (merged with transformed data if available)
@@ -494,9 +526,9 @@ const payload = {
 
                                     <div className='customer-onboarding-form-actions'>
                                         <div className="action-buttons">
-                                            <button className="save" onClick={() => handleSave(branch.id)} >
+                                            {(!isApprovalMode) && <button className="save" onClick={() => handleSave(branch.id)} >
                                                 {t('Save')}
-                                            </button>
+                                            </button>}
                                             <button className="block" >
                                                 {t('Block')}
                                             </button>
@@ -577,6 +609,7 @@ const payload = {
                                                         customer={customer}
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
+                                                        isUnderApproval = {checkApproval(branch.id)}
                                                     />
                                                     <ContactSection
                                                         branch={branch}
@@ -645,7 +678,7 @@ const payload = {
         </div>
     );
 };
-const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldChange }) => {
+const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldChange, isUnderApproval }) => {
     const { t } = useTranslation();
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -911,6 +944,8 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
 
     return (
         <div className="form-section">
+            {console.log(isUnderApproval)}
+            {(isUnderApproval) && <h2>{t('Branch is currently under Approval')}</h2>}
             <h3>{t('Branch Details')}</h3>
 
             <div className="form-group">

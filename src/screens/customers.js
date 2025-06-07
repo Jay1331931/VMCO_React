@@ -29,18 +29,16 @@ function Customers() {
   const [filteredApprovals, setFilteredApprovals] = useState([]);
   const [customerContacts, setCustomerContacts] = useState({});
   const [filteredInvites, setFilteredInvites] = useState([]);
-  const [page, setPage] = useState(1);
-  const pageSize = 5;
-  const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+  
+    const [searchQuery, setSearchQuery] = useState('');
 const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-  const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 10,
-    total: 0
-  });
+     const [page, setPage] = useState(1);
+     const [pageSize] = useState(5);
+     const [total, setTotal] = useState(0);
+
   const customerTabs = [
     { value: 'customers', label: 'Customers' },
     { value: 'invites', label: 'Invites' }
@@ -88,6 +86,8 @@ const toggleApprovalMode = () => {
   //   }
   // };
 const handleSearch = (searchTerm) => {
+  setSearchQuery(searchTerm);
+    setPage(1);
   if (!searchTerm) {
     // Reset filters if search term is empty
     if (activeTab === 'customers') {
@@ -162,13 +162,16 @@ const handleSearch = (searchTerm) => {
     { key: 'status', header: 'Status' },
     { key: 'actions', header: '' }
   ];
+  //  const handlePageChange = (newPage) => {
+  //   setPagination(prev => ({ ...prev, page: newPage }));
+  // };
  const fetchCustomers = async (page = 1, searchTerm = '') => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({
       page,
-      pageSize: pagination.pageSize,
+      pageSize,
       search: searchTerm,
       sortBy: 'id',
       sortOrder: 'asc',
@@ -183,11 +186,12 @@ const handleSearch = (searchTerm) => {
 const result = await response.json();
       if (result.status === 'Ok') {
         setFilteredCustomers(result.data.data);
-        setPagination(prev => ({
-          ...prev,
-          page,
-          total: result.data.data.length
-        }));
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   // total: result.data.data.length
+        // }));
+        setTotal(result.data.totalRecords);
       } else {
         throw new Error(response.data.message || 'Failed to fetch customers');
       }
@@ -205,7 +209,7 @@ const result = await response.json();
     try {
       const params = new URLSearchParams({
       page,
-      pageSize: pagination.pageSize,
+      pageSize,
       search: searchTerm,
       sortBy: 'id',
       sortOrder: 'asc',
@@ -220,11 +224,12 @@ const result = await response.json();
       console.log('API Response:', result);
       if (result.status === 'Ok') {
         setFilteredApprovals(result.data.data);
-        setPagination(prev => ({
-          ...prev,
-          page,
-          total: result.data.data.length
-        }));
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   total: result.data.data.length
+        // }));
+        setTotal(result.data.totalRecords);
       } else {
         throw new Error(response.data.message || 'Failed to fetch approvals');
       }
@@ -242,7 +247,7 @@ const result = await response.json();
     try {
       const params = new URLSearchParams({
       page,
-      pageSize: pagination.pageSize,
+      pageSize,
       search: searchTerm,
       sortBy: 'id',
       sortOrder: 'asc',
@@ -258,11 +263,11 @@ const result = await response.json();
       console.log('API Response:', result);
       if (result.status === 'Ok') {
         setFilteredInvites(result.data.data);
-        setPagination(prev => ({
-          ...prev,
-          page,
-          total: result.data.data.length
-        }));
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   total: result.data.data.length
+        // }));
       } else {
         throw new Error(response.data.message || 'Failed to fetch invites');
       }
@@ -398,18 +403,17 @@ const fetchCustomerPaymentMethods = async (customerId, customer) => {
   };
 
   
-  useEffect(() => {
-    if (activeTab === 'customers') {
-      fetchCustomers();
+useEffect(() => {
+  if (activeTab === 'customers') {
+    if (isApprovalMode) {
+      fetchApprovals(page, searchQuery);
+    } else {
+      fetchCustomers(page, searchQuery);
     }
-    else if (activeTab === 'customers' && isApprovalMode) {
-      fetchApprovals();
-    }
-    if (activeTab === 'invites') {
-      fetchInvites();
-    }
-    
-  }, [activeTab]);
+  } else if (activeTab === 'invites') {
+    fetchInvites(page, searchQuery);
+  }
+}, [activeTab, isApprovalMode, page, searchQuery]);
 
 const handleRowClick = (customer) => {
    fetchCustomerContacts(customer.id, customer);
@@ -501,8 +505,11 @@ const handleRowClick = (customer) => {
     }
   };
 // Paginate the filtered orders
-  const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
-  const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
+  // const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
+  // const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
+const paginatedCustomers = filteredCustomers;
+const paginatedApprovals = filteredApprovals;
+
   return (
     <Sidebar title={t('Customers')}>
       <div className="page-content">
@@ -538,7 +545,8 @@ const handleRowClick = (customer) => {
         </div>
         <Pagination
           currentPage={page}
-          totalPages={totalPages}
+         totalPages={Math.ceil(total / pageSize)}
+          // onPageChange={setPage}
           onPageChange={setPage}
         />
       </div>

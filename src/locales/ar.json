@@ -215,5 +215,13 @@
     "Trading": "تجاري",
     "Non-trading": "غير تجاري",
     "Riyadh": "الرياض",
-    "Jeddah": "جدة"
+    "Jeddah": "جدة",
+    "Maintenance Charges": "رسوم الصيانة",
+    "Warranty Date": "تاريخ الضمان",
+    "Machine Serial Number": "رقم السيريال للآلة",
+    "Videos": "فيديوهات",
+    "Status:": "الحالة:",
+    "Assign To:": "تعيين إلى:",
+    "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم..."
+
   }
