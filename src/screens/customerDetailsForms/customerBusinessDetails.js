@@ -38,6 +38,7 @@ export function getBusinessDetailsForm(t) {
 }
 
 export function getBusinessDetailsFormData(t, customer = null) {
+  console.log('getBusinessDetailsFormData called with customer:', customer);
   if (customer) {
     return {
       'Business Details': {
@@ -101,17 +102,20 @@ export function getBusinessDetailsFormData(t, customer = null) {
         creditBalance: customer.creditBalance || '',
         pricingPolicy: customer.pricingPolicy || '',
       },
-      'Documents': {
-        crCertificate: { name: customer.crCertificate } || '',
-        vatCertificate: { name: customer.vatCertificate } || '',
-        bankLetter: { name: customer.bankLetter } || '',
-        nationalId: { name: customer.nationalId } || '',
-        nationalAddress: { name: customer.nationalAddress } || '',
-        contractAgreement: { name: customer.contractAgreement } || '',
-        creditApplication: { name: customer.creditApplication } || '',
-        acknowledgementSignature: { name: customer.acknowledgementSignature } || '',
-        nonTradingDocuments: { name: customer.nonTradingDocuments } || '',
-      }
+      'Documents': customer?.companyType?.toLowerCase() === 'trading' ? {
+  crCertificate: customer.crCertificate ? { name: customer.crCertificate } : '',
+  vatCertificate: customer.vatCertificate ? { name: customer.vatCertificate } : '',
+  bankLetter: customer.bankLetter ? { name: customer.bankLetter } : '',
+  nationalId: customer.nationalId ? { name: customer.nationalId } : '',
+  nationalAddress: customer.nationalAddress ? { name: customer.nationalAddress } : '',
+  contractAgreement: customer.contractAgreement ? { name: customer.contractAgreement } : '',
+  creditApplication: customer.creditApplication ? { name: customer.creditApplication } : '',
+  acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
+  nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
+} : {
+  acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
+  nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
+}
     }
 
     // Default data if no customer provided

@@ -19,6 +19,7 @@ import Pagination from '../components/Pagination';
 import ApprovalDialog from '../components/ApprovalDialog';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -449,12 +450,12 @@ function CustomersDetails() {
   const rbacMgr = new RbacManager(user.userType == 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], customerFormMode);
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
+  const navigate = useNavigate();
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
     'Contact Details': getContactDetailsForm(t)['Contact Details'],
     'Financial Information': getFinancialInformationForm(t)['Financial Information'],
-    'Documents': getDocumentsForm(t)['Documents'],
+    'Documents': getDocumentsForm(t, customer)['Documents'],
     'Branches': [
       { type: 'text', name: 'branchName', label: t('Branch Name'), placeholder: t('Enter branch name') },
       { type: 'text', name: 'branchLocation', label: t('Branch Location'), placeholder: t('Enter location') },
@@ -575,8 +576,12 @@ function CustomersDetails() {
         errors[fieldName] = t('This field is required.');
       }
 
-      if (checkRequired && field.type === 'text' && field.required && !value) {
+      if (checkRequired && field.type === 'text'  && field.required && !value) {
         errors[fieldName] = t('This field is required.');
+      }
+
+      if (checkRequired &&  field.type === 'document' && field.required && !value?.name) {
+        errors[fieldName] = t('This document is required.');
       }
 
       if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
@@ -652,7 +657,7 @@ function CustomersDetails() {
         }
         if(action !== 'submit'){
         if (!validateChangedFields(action, changedFields, false)) {
-          alert(t('Please correct errors before submitting.'));
+          alert(t('Please correct the errors before saving'));
           return;
         }
       } else {
@@ -797,23 +802,30 @@ const paymentMethodPayload = (() => {
     try {
       // 1. Update customer table if needed
       if (Object.keys(customerPayload).length > 0) {
+        
         console.log("Customer Payload", customerPayload)
-        await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+        try {
+        const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(customerPayload),
           credentials: 'include',
         });
+        console.log("Response", response)
+      } catch (error) {
+        console.error('Error updating customer:', error.message);
+        
+      }
       }
 
-      if (Object.keys(paymentMethodPayload.method_details).length > 0) {
+      if (!(transformedCustomer?.customerStatus === 'new') && Object.keys(paymentMethodPayload.method_details).length > 0) {
         // console.log(paymentMethodPayload)
-        // await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify(paymentMethodPayload),
-        //   credentials: 'include',
-        // });
+        await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(paymentMethodPayload),
+          credentials: 'include',
+        });
       }
 
       //   // 2. Create new contact details if needed
@@ -1052,6 +1064,7 @@ const paymentMethodPayload = (() => {
           [fieldName]: fileData,
         }));
       }
+      setChangedFields(prev => new Set(prev).add(fieldName));
     } catch (error) {
       console.error('Error handling file:', error);
       alert(`Error handling file: ${error.message}`);
@@ -1250,6 +1263,7 @@ const handleDialogSubmit = async (comment) => {
 
     if (response.ok) {
       const result = await response.json();
+      navigate('/customers');
       // Handle success
     } else {
       throw new Error('Failed to submit approval');
@@ -1261,7 +1275,7 @@ const handleDialogSubmit = async (comment) => {
 };
   const handleSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please correct errors before submitting.'));
+      alert(t('Please fill all required fields'));
       return;
     }
     if (action === 'approve') {
@@ -1284,6 +1298,7 @@ const handleDialogSubmit = async (comment) => {
         });
         res.then(response => {
           if (response.ok) {
+            navigate('/customers');
           }
         });
       } catch (error) {
@@ -1312,6 +1327,7 @@ const handleDialogSubmit = async (comment) => {
         });
         res.then(response => {
           if (response.ok) {
+            navigate('/customers');
           }
         });
       } catch (error) {
@@ -1333,10 +1349,10 @@ const handleDialogSubmit = async (comment) => {
 
       console.log('Prepared changedFields:', newChangedFields);
 
-      // if (!validateChangedFields('save changes', newChangedFields, true)) {
-      //   alert(t('Please correct errors before submitting.'));
-      //   return;
-      // }
+      if (!validateChangedFields('save changes', newChangedFields, true)) {
+        alert(t('Please fill all required fields'));    
+        return;
+      }
 
 
       // setChangedFields(newChangedFields);
@@ -1347,10 +1363,10 @@ const handleDialogSubmit = async (comment) => {
       console.log('State changedFields:', changedFields); // Will still be old value (async)
       console.log('Current customer:', updatedCustomer);
       const contactDetailFields = [
-      'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactPhone',
-      'financeHeadName', 'financeHeadDesignation', 'financeHeadEmail', 'financeHeadPhone',
-      'businessHeadName', 'businessHeadDesignation', 'businessHeadEmail', 'businessHeadPhone',
-      'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadPhone'
+      'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactMobile',
+      'financeHeadName', 'financeHeadDesignation', 'financeHeadEmail', 'financeHeadMobile',
+      'businessHeadName', 'businessHeadDesignation', 'businessHeadEmail', 'businessHeadMobile',
+      'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadMobile'
     ];
 
     const paymentDetailFields = [
@@ -1371,13 +1387,16 @@ const handleDialogSubmit = async (comment) => {
         prePayment: {
           isAllowed: formData?.prePayment?.isAllowed,
         },
-        advancePayment: {
-          isAllowed: formData?.advancePayment?.isAllowed,
-          balance: formData?.advancePayment?.balance
-        },
+        // advancePayment: {
+        //   isAllowed: formData?.advancePayment?.isAllowed,
+        //   balance: formData?.advancePayment?.balance
+        // },
         COD: {
           isAllowed: formData?.COD?.isAllowed,
           limit: formData?.COD?.limit,
+        },
+        partialPayment: {
+          isAllowed: formData?.partialPayment?.isAllowed
         }
       }
     };
@@ -1422,16 +1441,19 @@ const handleDialogSubmit = async (comment) => {
     try {
       // 1. Update customer table if needed
       if (Object.keys(customerPayload).length > 0) {
-        console.log("Customer Payload", customerPayload)
-        await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(customerPayload),
-          credentials: 'include',
-        });
-      }
+  // Destructure to remove pricingPolicy
+  const { pricingPolicy, ...payloadToSend } = customerPayload;
+  
+  console.log("Customer Payload", payloadToSend);
+  await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payloadToSend),
+    credentials: 'include',
+  });
+}
 
-      if (Object.keys(paymentMethodPayload).length > 0) {
+      if ((!customer?.customerStatus === 'new') && Object.keys(paymentMethodPayload).length > 0) {
         await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1494,9 +1516,11 @@ const handleDialogSubmit = async (comment) => {
           })
         );
       }
-      handleSaveFiles();
+      // handleSaveFiles();
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
+      navigate('/catalog')
+      
     } catch (error) {
       console.error('Update error:', error);
       setFormErrors(error.message || 'Unable to connect to server');
@@ -1993,6 +2017,9 @@ const handleDialogSubmit = async (comment) => {
                                 {field.label}
                                 {field.required && <span className="required-field">*</span>}
                               </label>
+                              {formErrors[field.name] && (
+                              <div className="error">{formErrors[field.name]}</div>
+                            )}
                             </td>
 
                             {/* Second column - Upload button */}
@@ -2028,6 +2055,7 @@ const handleDialogSubmit = async (comment) => {
                               }}>
                                 {t('Upload')}
                               </label>
+                              
                             </td>
 
                             {/* Third column - File display */}
@@ -2103,6 +2131,7 @@ const handleDialogSubmit = async (comment) => {
                             </td>
                           </tr>
                         );
+                      
 
                       case 'multiDocument':
                         return (

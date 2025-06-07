@@ -282,7 +282,7 @@ return customerData;
       case 'Customers': navigate('/customers'); break;
       case 'Catalog': navigate('/catalog'); break;
       case 'Support': navigate('/support'); break;
-      case 'MaintenanceSupport': navigate('/maintenance'); break;
+      case 'Maintenance': navigate('/maintenance'); break;
       case 'Dashboard': navigate('/login'); break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
       case 'CompanyProfile': 
@@ -323,7 +323,7 @@ return customerData;
     { icon: faShoppingCart, label: 'Orders' },
     { icon: faUsers, label: 'Customers' },
     { icon: faHeadset, label: 'Support' },
-    { icon: faTools, label: 'MaintenanceSupport' },
+    { icon: faTools, label: 'Maintenance' },
     { icon: faBuilding, label: 'CompanyProfile' },
     { icon: faCog, label: 'Settings' },
   ];
@@ -375,8 +375,8 @@ return customerData;
                   <FontAwesomeIcon icon={faUser} />
                 </div>
                 <div className="user-text">
-                  <div className="user-name">{t('Customer')}</div>
-                  <div className="user-email">{t('customer@consumer')}</div>
+                  <div className="user-name">{user.userName}</div>
+                  <div className="user-email">{user.email}</div>
                 </div>
               </div>
               <div className="logout-icon" onClick={handleLogout}>

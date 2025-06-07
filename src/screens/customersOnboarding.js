@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLanguage, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function CustomersOnboarding() {
     const { id } = useParams();
@@ -23,7 +24,7 @@ function CustomersOnboarding() {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
-
+    const navigate = useNavigate();
     const toggleLanguage = () => {
         const newLang = isRTL ? 'en' : 'ar';
         i18n.changeLanguage(newLang);
@@ -227,7 +228,7 @@ function CustomersOnboarding() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: {prePayment:{isAllowed:true}, advancePayment:{isAllowed:false, balance: "2000"}, COD:{isAllowed:true, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}, partialPayment:{isAllowed:true}},
+                            methodDetails: {prePayment:{isAllowed:true}, COD:{isAllowed:true, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}, partialPayment:{isAllowed:true}},
                         }),
                         credentials: 'include',
                     });
@@ -266,6 +267,7 @@ function CustomersOnboarding() {
                         });
                         const result = await response.json();
                         console.log(result);
+                        navigate('/login');
                     } catch (error) {
                         console.error('Error during registration:', error);
                     }

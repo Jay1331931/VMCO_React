@@ -493,23 +493,23 @@ class RbacManager {
           brandNameArabic: { visible: true, editable: true },
           company_logo: { visible: true, editable: true },
           brand_logo: { visible: true, editable: true },
-          primaryContactName: { visible: true, editable: false },
-          primaryContactDesignation: { visible: true, editable: false },
+          primaryContactName: { visible: true, editable: true },
+          primaryContactDesignation: { visible: true, editable: true },
           primaryContactEmail: { visible: true, editable: false },
-          primaryContactPhone: { visible: true, editable: false },
+          primaryContactMobile: { visible: true, editable: true },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -563,20 +563,20 @@ class RbacManager {
           primaryContactName: { visible: true, editable: false },
           primaryContactDesignation: { visible: true, editable: false },
           primaryContactEmail: { visible: true, editable: false },
-          primaryContactPhone: { visible: true, editable: false },
+          primaryContactMobile: { visible: true, editable: false },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -744,7 +744,7 @@ class RbacManager {
       }
     },
 
-    [constants.ROLES.OPS_COORDINATOR]: {
+    [constants.DESIGNATIONS.OPS_COORDINATOR]: {
       // Define opsCordinator permissions for all forms
       custDetailsAdd: {
         fields: {
@@ -766,20 +766,20 @@ class RbacManager {
           primaryContactName: { visible: true, editable: true },
           primaryContactDesignation: { visible: true, editable: true },
           primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactMobile: { visible: true, editable: true },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -804,7 +804,8 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: true, editable: true },
+          btnSave: { visible: false, editable: true },
+          btnSubmit: {visible: false, editable: true},
         },
       },
       custDetailsEdit: {
@@ -827,20 +828,20 @@ class RbacManager {
           primaryContactName: { visible: true, editable: true },
           primaryContactDesignation: { visible: true, editable: true },
           primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactMobile: { visible: true, editable: true },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -868,7 +869,7 @@ class RbacManager {
           btnBlock: {visible: false, editable: true},
           btnUnblock: {visible: false, editable: true},
           assignedTo: {visible: true, editable: true},
-
+          btnSaveChanges: { visible: false, editable: true },
         }
       },
       SidebarList: {
@@ -880,7 +881,7 @@ class RbacManager {
       }
     },
 
-    [constants.ROLES.OPS_MANAGER]: {
+    [constants.DESIGNATIONS.OPS_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -979,20 +980,20 @@ class RbacManager {
           primaryContactName: { visible: true, editable: true },
           primaryContactDesignation: { visible: true, editable: true },
           primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactMobile: { visible: true, editable: true },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -1017,9 +1018,10 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: true, editable: true },
+          btnSave: { visible: false, editable: true },
           btnBlock: { visible: true, editable: true},
-          btnUnblock: {visible: true, editable: true}
+          btnUnblock: {visible: true, editable: true},
+          btnSubmit: {visible: false, editable: true},
         }
       },
       custDetailsEdit: {
@@ -1042,20 +1044,20 @@ class RbacManager {
           primaryContactName: { visible: true, editable: true },
           primaryContactDesignation: { visible: true, editable: true },
           primaryContactEmail: { visible: true, editable: true },
-          primaryContactPhone: { visible: true, editable: true },
+          primaryContactMobile: { visible: true, editable: true },
           businessHeadSameAsPrimary: { visible: true, editable: true },
           businessHeadName: { visible: true, editable: true },
           businessHeadDesignation: { visible: true, editable: true },
           businessHeadEmail: { visible: true, editable: true },
-          businessHeadPhone: { visible: true, editable: true },
+          businessHeadMobile: { visible: true, editable: true },
           financeHeadName: { visible: true, editable: true },
           financeHeadDesignation: { visible: true, editable: true },
           financeHeadEmail: { visible: true, editable: true },
-          financeHeadPhone: { visible: true, editable: true },
+          financeHeadMobile: { visible: true, editable: true },
           purchasingHeadName: { visible: true, editable: true },
           purchasingHeadDesignation: { visible: true, editable: true },
           purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadPhone: { visible: true, editable: true },
+          purchasingHeadMobile: { visible: true, editable: true },
           buildingName: { visible: true, editable: true },
           street: { visible: true, editable: true },
           district: { visible: true, editable: true },
@@ -1081,12 +1083,20 @@ class RbacManager {
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
           btnBlock: { visible: false, editable: true},
-          btnUnblock: {visible: false, editable: true}
+          btnUnblock: {visible: false, editable: true},
+          btnSaveChanges: {visible: false, editable: true},
         }
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
-    [constants.ROLES.SALES_EXECUTIVE]: {
+    [constants.DESIGNATIONS.SALES_EXECUTIVE]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1164,9 +1174,16 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
-    [constants.ROLES.AREA_SALES_MANAGER]: {
+    [constants.DESIGNATIONS.AREA_SALES_MANAGER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1244,9 +1261,16 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
-    [constants.ROLES.FIELD_ENGINEER]: {
+    [constants.DESIGNATIONS.FIELD_ENGINEER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1324,9 +1348,16 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
-    [constants.ROLES.MAINTENANCE_TECHNICIAN]: {
+    [constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1404,9 +1435,16 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
-    [constants.ROLES.DRIVER]: {
+    [constants.DESIGNATIONS.DRIVER]: {
       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
@@ -1484,6 +1522,13 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
   };
 
