@@ -81,28 +81,24 @@ function OrderDetails() {
   useEffect(() => {
     const fetchNextOrderId = async () => {
       if (formMode !== 'add') return;
-
       try {
-        const params = new URLSearchParams({
-          page: 1,
-          pageSize: 1,
-          sortBy: 'id',
-          sortOrder: 'desc'
-        });
-
-        const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
+        // Fetch all sales order ids (only ids, not full data)
+        console.log('Fetching next order ID...');
+        const response = await fetch(`${API_BASE_URL}/sales-order/pagination`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
         });
-
         const result = await response.json();
-        let newOrderId = 1;
-
-        if (result.status === 'Ok' && result.data.data.length > 0) {
-          newOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
+        console.log('Orders', result);
+        let newOrderId = 0;
+        if (result.status === 'Ok' && result.data && Array.isArray(result.data.data) && result.data.data.length > 0) {
+          // Find the max id from the list
+          const ids = result.data.data.map(order => parseInt(order.id, 10));
+          const maxId = Math.max(...ids);
+          console.log('Max order ID found:', maxId);
+          newOrderId = maxId + 1;
         }
-
         setNextOrderId(newOrderId.toString());
         setFormData(prev => ({
           ...prev,
@@ -113,7 +109,6 @@ function OrderDetails() {
         setError('Failed to get next order number');
       }
     };
-
     fetchNextOrderId();
   }, [formMode]);
 
@@ -134,6 +129,8 @@ function OrderDetails() {
           <QuantityController
             itemId={row.id || row.product_id}
             quantity={row.quantity}
+            moq={Number(row.moq) || 1}
+            minQuantity={Number(row.moq) || 1}
             disabled={!isE('products')}
             onQuantityChange={(_, delta) => {
               if (!isE('products')) return;
@@ -142,8 +139,9 @@ function OrderDetails() {
               );
               if (idx !== -1) {
                 const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
-                const newQty = currentQty + parseInt(delta, 10);
-                handleQuantityChange(idx, Math.max(1, newQty));
+                const moq = Number(formData.products[idx].moq) || 1;
+                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
+                handleQuantityChange(idx, newQty);
               }
             }}
             onInputChange={(_, value) => {
@@ -152,7 +150,8 @@ function OrderDetails() {
                 p => (p.id || p.product_id) === (row.id || row.product_id)
               );
               if (idx !== -1) {
-                handleQuantityChange(idx, Math.max(1, parseInt(value, 10) || 1));
+                const moq = Number(formData.products[idx].moq) || 1;
+                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
               }
             }}
           />
@@ -201,7 +200,7 @@ function OrderDetails() {
     {
       key: 'vatPercentage',
       header: 'VAT',
-      render: (row) => parseFloat(row.vatPercentage).toFixed(2)+"%",
+      render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
       include: isV('vatPercentageCol'),
     },
     {
@@ -361,121 +360,152 @@ function OrderDetails() {
         return;
       }
 
-      // Prepare payload for backend - correctly map database IDs and ERP IDs
-      const payload = {
-        erpCustId: formData.erp, // Include the ERP customer ID
-        erpBranchId: formData.erpBranchIdValue || '', // Include the ERP branch ID if available
-        orderBy: formData.orderBy || '',
-        erp: formData.erp || '',
-        entity: formData.entity || '',
-        paymentMethod: formData.paymentMethod || '',
-        totalAmount: formData.totalAmount,
-        paidAmount: formData.paidAmount || '0',
-        deliveryCharges: formData.deliveryCharges || '0',
-        expectedDeliveryDate: formData.expectedDeliveryDate || new Date().toISOString().split('T')[0],
-        driver: formData.driver || '',
-        vehicleNumber: formData.vehicleNumber || '',
-        status: 'Pending', // Explicitly set status to Pending for new orders
-      };
-
-      try {
-        setLoading(true);
-        console.log('Submitting order payload:', payload);
-
-        // Step 1: Create the order first
-        const response = await fetch(`${API_BASE_URL}/sales-order`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Server response:', errorText);
-          try {
-            const errorData = JSON.parse(errorText);
-            throw new Error(errorData.message || 'Failed to create order');
-          } catch (e) {
-            throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
-          }
-        }
-
-        // Parse the response as JSON to get the inserted row's id
-        const result = await response.json();
-        console.log('Order creation result:', result);
-
-        if (!result.data || !result.data.id) {
-          throw new Error('Order ID not returned from API');
-        }
-
-
-
-        const productsPayload = formData.products.map((product, index) => ({
-          order_id: result.data.id,
-          line_number: index + 1, // Generate sequential line numbers
-          erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
-          product_id: product.id || product.product_id,
-          erp_prod_id: product.erpProdId || product.erp_prod_id || '',
-          quantity: parseInt(product.quantity || 1, 10),
-          unit: product.unit || '',
-          unit_price: parseFloat(product.unitPrice),
-          net_amount: parseFloat(product.netAmount),
-          sugar_tax_price: parseFloat(product.sugarTaxPrice),
-          sales_tax_rate: parseFloat(product.vatPercentage),
-        }));
-
-        console.log('Submitting products payload:', productsPayload);
-
-        if (productsPayload.length === 0) {
-          console.warn('No valid products to submit');
-          alert(t('Order created successfully, but no products were added.'));
-          navigate('/orders');
-          return;
-        }
-
+      let attempt = 0;
+      let maxAttempts = 2;
+      let lastError = null;
+      while (attempt < maxAttempts) {
+        // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
+        const payload = {
+          erpOrderId: `SO00${formData.id || nextOrderId}`,
+          customerId: formData.customerId || '',
+          companyNameEn: formData.selectedCustomerName || formData.companyNameEn || '',
+          companyNameAr: formData.companyNameAr || '',
+          erpCustId: formData.erpCustId || '',
+          branchId: formData.erpBranchId || '',
+          erpBranchId: formData.erpBranchIdValue || '',
+          branchNameEn: formData.selectedBranchName || formData.branchNameEn || '',
+          branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
+          orderBy: formData.orderBy || '',
+          paymentMethod: formData.paymentMethod || '',
+          paymentStatus: 'Pending',
+          entity: formData.entity || '',
+          deliveryCharges: formData.deliveryCharges || '0',
+          totalAmount: formData.totalAmount || '0',
+          pricingPolicy: formData.pricingPolicy || '',
+          customerRegion: formData.customerRegion || ''
+        };
         try {
-          const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+          setLoading(true);
+          console.log('Submitting order payload:', payload);
+
+          // Step 1: Create the order first
+          const response = await fetch(`${API_BASE_URL}/sales-order`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productsPayload),
+            body: JSON.stringify(payload),
             credentials: 'include',
           });
-
-          if (!linesResponse.ok) {
-            // Handle HTTP error response
-            const errorText = await linesResponse.text();
-            console.error('Server response for product lines:', errorText);
+          if (!response.ok) {
+            const errorText = await response.text();
+            if (errorText.includes('duplicate key value violates unique constraint')) {
+              // Duplicate erpOrderId, fetch latest max id and retry
+              attempt++;
+              // Fetch latest max id
+              const params = new URLSearchParams({
+                page: 1,
+                pageSize: 1,
+                sortBy: 'id',
+                sortOrder: 'desc',
+                fields: 'id'
+              });
+              const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+              });
+              const idResult = await idRes.json();
+              let newOrderId = 1;
+              if (idResult.status === 'Ok' && idResult.data && Array.isArray(idResult.data.data) && idResult.data.data.length > 0) {
+                const ids = idResult.data.data.map(order => parseInt(order.id, 10)).filter(Boolean);
+                const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+                newOrderId = maxId + 1;
+              }
+              setNextOrderId(newOrderId.toString());
+              setFormData(prev => ({ ...prev, id: newOrderId.toString() }));
+              continue; // Retry
+            }
+            // Handle other errors
+            console.error('Server response:', errorText);
             try {
               const errorData = JSON.parse(errorText);
-              throw new Error(errorData.message || 'Failed to save product lines');
+              throw new Error(errorData.message || 'Failed to create order');
             } catch (e) {
-              throw new Error(`Failed to save product lines: ${linesResponse.status} ${linesResponse.statusText}`);
+              throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
             }
           }
 
-          // If we get here, both order and products were saved successfully
-          alert(t('Order and products created successfully!'));
-          navigate('/orders');
-        } catch (err) {
-          console.error('Error saving product lines:', err);
-          // Even if product lines failed, the order was created successfully
-          alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
-          navigate('/orders');
-        }
-      } catch (err) {
-        console.error('Error creating order:', err);
+          // Parse the response as JSON to get the inserted row's id
+          const result = await response.json();
+          console.log('Order creation result:', result);
 
-        // Don't treat success messages as errors
-        if (err.message && err.message.toLowerCase().includes('successfully')) {
-          alert(t('Order created successfully'));
-          navigate('/orders');
-        } else {
-          setError(err.message);
-          alert(t(err.message));
+          if (!result.data || !result.data.id) {
+            throw new Error('Order ID not returned from API');
+          }
+
+
+
+          const productsPayload = formData.products.map((product, index) => ({
+            order_id: result.data.id,
+            line_number: index + 1, // Generate sequential line numbers
+            erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
+            product_id: product.id || product.product_id,
+            erp_prod_id: product.erpProdId || product.erp_prod_id || '',
+            quantity: parseInt(product.quantity || 1, 10),
+            unit: product.unit || '',
+            unit_price: parseFloat(product.unitPrice),
+            net_amount: parseFloat(product.netAmount),
+            sugar_tax_price: parseFloat(product.sugarTaxPrice),
+            sales_tax_rate: parseFloat(product.vatPercentage),
+          }));
+
+          console.log('Submitting products payload:', productsPayload);
+
+          if (productsPayload.length === 0) {
+            console.warn('No valid products to submit');
+            alert(t('Order created successfully, but no products were added.'));
+            navigate('/orders');
+            return;
+          }
+
+          try {
+            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(productsPayload),
+              credentials: 'include',
+            });
+
+            if (!linesResponse.ok) {
+              // Handle HTTP error response
+              const errorText = await linesResponse.text();
+              console.error('Server response for product lines:', errorText);
+              try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.message || 'Failed to save product lines');
+              } catch (e) {
+                throw new Error(`Failed to save product lines: ${linesResponse.status} ${linesResponse.statusText}`);
+              }
+            }
+
+            // If we get here, both order and products were saved successfully
+            alert(t('Order and products created successfully!'));
+            navigate('/orders');
+          } catch (err) {
+            console.error('Error saving product lines:', err);
+            // Even if product lines failed, the order was created successfully
+            alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
+            navigate('/orders');
+          }
+        } catch (err) {
+          lastError = err;
+          if (attempt >= maxAttempts - 1) {
+            setError(err.message);
+            alert(t(err.message));
+          }
+        } finally {
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
+        attempt++;
       }
     } else {
       // Update existing order
@@ -488,7 +518,7 @@ function OrderDetails() {
         // Only add fields that are editable and have values
         ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
           'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
-          'expectedDeliveryDate', 'driver', 'vehicleNumber'].forEach(field => {
+          'driver', 'vehicleNumber'].forEach(field => {
             if (formData[field] !== undefined && formData[field] !== null) {
               payload[field] = formData[field];
             }
@@ -548,6 +578,49 @@ function OrderDetails() {
     }
   };
 
+  // cancel handler
+  const handleCancelOrder = async () => {
+    if (!formData.id) {
+      alert(t('Order ID is missing.'));
+      return;
+    }
+
+    const payload = {
+      status: 'Cancelled'
+    };
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.message || 'Failed to cancel order');
+        } catch (e) {
+          throw new Error(`Failed to cancel order: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      alert(t('Order status updated to Cancelled!'));
+      navigate('/orders'); // or refresh the current view if needed
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      setError(err.message);
+      alert(t(err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // cancel/Approve/Reject handler
   const handleSubmit = (action) => {
     alert(`${t(action.charAt(0).toUpperCase() + action.slice(1))} action triggered.`);
@@ -598,45 +671,74 @@ function OrderDetails() {
 
   // Add selected product to products table
   const handleSelectProduct = (product) => {
-    // Ensure we have proper numeric values for calculations
+    // Use MOQ for the product, default to 1 if not set
+    const moq = Number(product.moq) || 1;
     const unitPrice = parseFloat(product.unitPrice);
-    const quantity = 1; // Default to 1 when adding a product
-    const sugarTaxPrice =parseFloat(product.sugarTaxPrice);
+    const sugarTaxPrice = parseFloat(product.sugarTaxPrice);
     const vatPercentage = parseFloat(product.vatPercentage);
 
-    // Calculate net amount (unit price * quantity)
-    const netAmount = (unitPrice * quantity).toFixed(2);
-
-    setFormData(prev => ({
-      ...prev,
-      products: [
-        ...prev.products,
-        {
-          id: product.id, // Product ID for identifying the product
-          product_id: product.id, // Duplicate for compatibility with different naming conventions
-          productName: product.productName,
-          erpProdId: product.erpProdId || product.erp_prod_id || '', // ERP product ID
-          quantity: quantity,
-          unit: product.unit,
-          unitPrice: unitPrice.toFixed(2),
-          netAmount: netAmount,
-          sugarTaxPrice: sugarTaxPrice,
-          vatPercentage:vatPercentage
-          // Include any other properties needed for display/calculations
-        }
-      ]
-    }));
+    setFormData(prev => {
+      // Check if product already exists in the table
+      const existingIdx = prev.products.findIndex(
+        p => (p.id || p.product_id) === (product.id || product.product_id)
+      );
+      if (existingIdx !== -1) {
+        // Product exists, increment quantity and update netAmount
+        const updatedProducts = [...prev.products];
+        const existingProduct = updatedProducts[existingIdx];
+        const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + 1;
+        const newNetAmount = ((unitPrice * newQuantity) + (sugarTaxPrice ? sugarTaxPrice : 0) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+        updatedProducts[existingIdx] = {
+          ...existingProduct,
+          quantity: newQuantity,
+          netAmount: newNetAmount,
+          moq: moq // Always keep MOQ for this product
+        };
+        return {
+          ...prev,
+          products: updatedProducts
+        };
+      } else {
+        // Product does not exist, add as new row with MOQ as quantity
+        const netAmount = ((unitPrice * moq) + (sugarTaxPrice ? sugarTaxPrice : 0) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
+        return {
+          ...prev,
+          products: [
+            ...prev.products,
+            {
+              id: product.id, // Product ID for identifying the product
+              product_id: product.id, // Duplicate for compatibility
+              productName: product.productName,
+              erpProdId: product.erpProdId || product.erp_prod_id || '',
+              quantity: moq,
+              unit: product.unit,
+              unitPrice: unitPrice.toFixed(2),
+              netAmount: netAmount,
+              sugarTaxPrice: sugarTaxPrice,
+              vatPercentage: vatPercentage,
+              moq: moq // Store MOQ for this product
+            }
+          ]
+        };
+      }
+    });
     setShowProductPopup(false);
   };
 
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
+    console.log('Selected customer:', customer);
+    // Ensure the pricing policy is one of the allowed options and never undefined
+    let customerPricingPolicy = customer.pricingPolicy;
+    if (!pricingPolicyOptions.includes(customerPricingPolicy)) {
+      customerPricingPolicy = '';
+    }
     setFormData(prev => ({
       ...prev,
       erpCustId: customer.erpCustId,
       customerId: customer.id, // Use the database ID for the customer
-      selectedCustomerName: customer.company_name_en || customer.companyNameEn || '',
-      // Populate the ERP# field with the customer's erp_cust_id
+      selectedCustomerName: customer.company_name_en || customer.companyNameEn,
+      pricingPolicy: customerPricingPolicy,
 
     }));
     setShowCustomerPopup(false);
@@ -771,8 +873,52 @@ function OrderDetails() {
     fetchPaymentMethodOptions();
   }, []);
 
+  // Calculate totalAmount as the sum of netAmount of all products
+  useEffect(() => {
+    if (Array.isArray(formData.products) && formData.products.length > 0) {
+      const total = formData.products.reduce((sum, p) => {
+        const net = parseFloat(p.netAmount) || 0;
+        return sum + net;
+      }, 0);
+      if (formData.totalAmount !== total.toFixed(2)) {
+        setFormData(prev => ({ ...prev, totalAmount: total.toFixed(2) }));
+      }
+    } else if (formData.totalAmount !== '0.00') {
+      setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
+    }
+  }, [formData.products]);
+
+  // Calculate deliveryCharges and totalAmount based on entity and products
+  useEffect(() => {
+    let deliveryCharges = '0.00';
+    let total = 0;
+    if (Array.isArray(formData.products) && formData.products.length > 0) {
+      total = formData.products.reduce((sum, p) => {
+        const net = parseFloat(p.netAmount) || 0;
+        return sum + net;
+      }, 0);
+      // Delivery charges logic
+      if (formData.entity && formData.entity.toLowerCase() !== 'vmco') {
+        if (total > 150) {
+          deliveryCharges = '20.00';
+        }
+      }
+    }
+    // Only update if values have changed
+    if (formData.deliveryCharges !== deliveryCharges || formData.totalAmount !== (total + parseFloat(deliveryCharges)).toFixed(2)) {
+      setFormData(prev => ({
+        ...prev,
+        deliveryCharges,
+        totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
+      }));
+    }
+  }, [formData.products, formData.entity]);
+
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
+
+  // Pricing policy options
+  const pricingPolicyOptions = ['Price A', 'Price B', 'Price C', 'Price D'];
 
   return (
     <Sidebar>
@@ -882,7 +1028,7 @@ function OrderDetails() {
                           value={formData.entity || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
-                          disabled={!isE('entity')}
+                          disabled={!isE('entity') || (formData.products && formData.products.length > 0)}
                         >
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
@@ -935,8 +1081,8 @@ function OrderDetails() {
                       <input
                         name="totalAmount"
                         value={formData.totalAmount ?? ''}
-                        onChange={handleInputChange}
-                        disabled={!isE('totalAmount')}
+                        disabled
+                        readOnly
                       />
                     </div>
                   )}
@@ -959,8 +1105,8 @@ function OrderDetails() {
                       <input
                         name="deliveryCharges"
                         value={formData.deliveryCharges ?? ''}
-                        onChange={handleInputChange}
-                        disabled={!isE('deliveryCharges')}
+                        disabled
+                        readOnly
                       />
                     </div>
                   )}
@@ -974,6 +1120,34 @@ function OrderDetails() {
                         onChange={handleInputChange}
                         disabled={!isE('expectedDeliveryDate')}
                       />
+                    </div>
+                  )}
+
+                  {isV('pricingPolicy') && (
+                    <div className="order-details-field">
+                      <label>{t('Pricing Policy')}</label>
+                      {formMode === 'add' ? (
+                        <select
+                          name="pricingPolicy"
+                          value={formData.pricingPolicy || ''}
+                          onChange={handleInputChange}
+                          className="entity-dropdown"
+                          disabled={!isE('pricingPolicy')}
+                        >
+                          <option value="">{t('Select Pricing Policy')}</option>
+                          {pricingPolicyOptions.map((pricingPolicy, index) => (
+                            <option key={index} value={pricingPolicy}>
+                              {pricingPolicy}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          name="pricingPolicy"
+                          value={formData.pricingPolicy || ''}
+                          disabled
+                        />
+                      )}
                     </div>
                   )}
 
@@ -1070,19 +1244,20 @@ function OrderDetails() {
                       type="button"
                       className="order-action-btn approve"
                       onClick={() => {
-                              if (!formData.erpCustId) {
-                                alert(t('Please select a customer first'));
-                                return;
-                              }
-                              else if (!formData.erpBranchId) {
-                                alert(t('Please select a Branch'));
-                                return;
-                              }
-                              else if (!formData.entity) {
-                                alert(t('Please select Entity'));
-                                return;
-                              }
-                        setShowProductPopup(true)}}
+                        if (!formData.erpCustId) {
+                          alert(t('Please select a customer first'));
+                          return;
+                        }
+                        else if (!formData.erpBranchId) {
+                          alert(t('Please select a Branch'));
+                          return;
+                        }
+                        else if (!formData.entity) {
+                          alert(t('Please select Entity'));
+                          return;
+                        }
+                        setShowProductPopup(true)
+                      }}
                       style={{ marginBottom: 8 }}
                     >
                       {t('Add products')}
@@ -1136,7 +1311,7 @@ function OrderDetails() {
                 )}
 
                 {isV('btnCancel') && isE('btnCancel') && (
-                  <button className="order-action-btn" onClick={() => handleSubmit('cancel order')}>
+                  <button className="order-action-btn" onClick={() => handleCancelOrder('cancel order')}>
                     {t('Cancel Order')}
                   </button>
                 )}
@@ -1147,15 +1322,15 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnPay') && isE('btnPay') && (
-                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor:'#005932', color: 'white' }}>
-                    {t('Checkout')}
-                  </button>
-                )}
-
                 {isV('btnInventory') && isE('btnInventory') && (
                   <button className="order-action-btn" onClick={() => setShowInventory(true)}>
                     {t('Get Inventory')}
+                  </button>
+                )}
+
+                {isV('btnPay') && isE('btnPay') && (
+                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                    {t('Checkout')}
                   </button>
                 )}
 
