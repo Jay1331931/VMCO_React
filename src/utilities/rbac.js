@@ -1400,7 +1400,7 @@ class RbacManager {
           CompanyProfile: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
-      }
+      },
       catalog: {
         fields: {
           selectBranch: { visible: false, editable: false },
