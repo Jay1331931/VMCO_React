@@ -1,3 +1,4 @@
+import Sidebar from '../components/Sidebar';
 import constants from '../constants';
 
 // RBAC Manager class
@@ -488,7 +489,7 @@ class RbacManager {
           bankName: { visible: true, editable: true },
           bankAccountNumber: { visible: true, editable: true },
           iban: { visible: true, editable: true },
-          pricePlan: {visible: false, editable: true},
+          pricingPolicy: {visible: false, editable: true},
           prePayment: { visible: false, editable: true },
           partialPayment: { visible: false, editable: true },
           advancePayment: { visible: false, editable: true },
@@ -498,8 +499,10 @@ class RbacManager {
           creditPeriod: { visible: false, editable: true },
           btnSave: { visible: true, editable: true },
           btnBlock: {visible: false, editable: true},
+          btnUnblock: {visible: false, editable: true},
           customerSource: { visible: false, editable: true },
           deliveryCost: {visible: false, editable: true},
+          
         }
       },
       custDetailsEdit: {
@@ -566,6 +569,13 @@ class RbacManager {
           deliveryCost: {visible: false, editable: true},
           }
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          Customers: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
    [constants.ROLES.BRANCH_PRIMARY]: {
@@ -649,6 +659,13 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
         }
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          Customers: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
     [constants.ROLES.OPS_COORDINATOR]: {
@@ -724,7 +741,7 @@ class RbacManager {
           companyType: { visible: true, editable: true },
           businessType: { visible: true, editable: true },
           businessTypeOther: { visible: true, editable: true },
-          interCompany: { visible: true, editable: true },
+          interCompany: { visible: true, editable: false },
           entity: { visible: true, editable: true },
           deliveryLocations: { visible: true, editable: true },
           brandName: { visible: true, editable: true },
@@ -773,9 +790,18 @@ class RbacManager {
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
           btnBlock: {visible: false, editable: true},
+          btnUnblock: {visible: false, editable: true},
+          assignedTo: {visible: true, editable: true},
+
         }
       },
-      
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          CompanyProfile: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
     },
 
     [constants.ROLES.OPS_MANAGER]: {
@@ -916,7 +942,9 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: true, editable: true }
+          btnSave: { visible: true, editable: true },
+          btnBlock: { visible: true, editable: true},
+          btnUnblock: {visible: true, editable: true}
         }
       },
       custDetailsEdit: {
@@ -977,6 +1005,8 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
+          btnBlock: { visible: false, editable: true},
+          btnUnblock: {visible: false, editable: true}
         }
       },
     },
@@ -1414,7 +1444,9 @@ class RbacManager {
    * @returns {boolean} True if the field is visible, false otherwise
    */
   isV(field) {
+    console.log(field)
     const access = this.getFieldAccess(field);
+    console.log(access)
     return (access == null ? true : access.visible);
   }
 

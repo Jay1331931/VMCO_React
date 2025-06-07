@@ -151,6 +151,7 @@ function CustomersOnboarding() {
                         email: formData.companyEmail,
                         password: formData.password,
                         userType: 'customer',
+                        roles: ['customer_primary'],
                     }),
                     credentials: 'include',
                 });

@@ -8,7 +8,7 @@ export function getContactDetailsForm(t) {
       { type: 'text', name: 'primaryContactName', label: t('Primary Contact Name'), placeholder: t('Enter name'), required: true },
       { type: 'text', name: 'primaryContactDesignation', label: t('Designation'), placeholder: t('Enter designation'), required: true },
       { type: 'text', name: 'primaryContactEmail', label: t('Email'), placeholder: t('Enter email'), required: true },
-      { type: 'text', name: 'primaryContactPhone', label: t('Phone'), placeholder: t('Enter phone number'), required: true },
+      { type: 'text', name: 'primaryContactMobile', label: t('Mobile'), placeholder: t('Enter Mobile number'), required: true },
       { type: 'header', label: t('Business Head') },
       { type: 'checkbox', name: 'businessHeadSameAsPrimary', label: '', options: [t('Same as Primary Contact Details')] , required: false },
       { type: 'empty'},
@@ -35,13 +35,13 @@ export function getContactDetailsForm(t) {
       },
       { 
         type: 'text', 
-        name: 'businessHeadPhone', 
-        label: t('Phone'), 
-        placeholder: t('Enter phone number'),
+        name: 'businessHeadMobile', 
+        label: t('Mobile'), 
+        placeholder: t('Enter Mobile number'),
         required: true
       },
       
-      { type: 'empty' },
+      
       { type: 'header', label: t('Finance Head') },
       { 
         type: 'text', 
@@ -66,12 +66,12 @@ export function getContactDetailsForm(t) {
       },
       { 
         type: 'text', 
-        name: 'financeHeadPhone', 
-        label: t('Phone'), 
-        placeholder: t('Enter phone number'),
+        name: 'financeHeadMobile', 
+        label: t('Mobile'), 
+        placeholder: t('Enter Mobile number'),
         required: true
       },
-      { type: 'empty' },
+   
       { type: 'header', label: t('Purchasing Head') },
       { 
         type: 'text', 
@@ -96,12 +96,12 @@ export function getContactDetailsForm(t) {
       },
       { 
         type: 'text', 
-        name: 'purchasingHeadPhone', 
-        label: t('Phone'), 
-        placeholder: t('Enter phone number'),
+        name: 'purchasingHeadMobile', 
+        label: t('Mobile'), 
+        placeholder: t('Enter Mobile number'),
         required: true
       },
-      { type: 'empty' },
+     
       { type: 'header', label: t('Business Address') },
       { type: 'text', name: 'buildingName', label: t('Building Name'), placeholder: t('Enter building name'), required: true },
       { type: 'text', name: 'street', label: t('Street'), placeholder: t('Enter street'), required: true },
