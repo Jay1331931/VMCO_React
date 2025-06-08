@@ -84,11 +84,15 @@ function Orders() {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('API did not return JSON. Check API URL and server.');
-      }
-
-      const result = await response.json();
+      }      const result = await response.json();
       if (result.status === 'Ok') {
-        setFilteredOrders(result.data.data);
+        // Ensure we have the companyNameEn field for each order
+        const processedOrders = result.data.data.map(order => ({
+          ...order,
+          // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
+          companyNameEn: order.companyNameEn || order.company_name_en || order.selectedCustomerName || order.erpCustId || ''
+        }));
+        setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
       } else {
         throw new Error(result.message || 'Failed to fetch orders');
@@ -118,10 +122,15 @@ function Orders() {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
-      });
-      const result = await response.json();
+      });      const result = await response.json();
       if (result.status === 'Ok') {
-        setFilteredOrders(result.data.data);
+        // Ensure we have the companyNameEn field for each order in approvals
+        const processedOrders = result.data.data.map(order => ({
+          ...order,
+          // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
+          companyNameEn: order.companyNameEn || order.company_name_en || order.selectedCustomerName || order.erpCustId || ''
+        }));
+        setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
       } else {
         throw new Error(result.message || 'Failed to fetch order approvals');
@@ -174,6 +183,7 @@ function Orders() {
   };
 
   const handleRowClick = (order) => {
+    console.log('Row clicked, navigating to order details with:', order);
     navigate('/orderDetails', { state: { order, mode: 'edit' } });
   };
 
@@ -194,10 +204,9 @@ function Orders() {
       onClick: () => alert('Custom Orders clicked')
     }
   ];
-
   const columns = [
     { key: 'id', header: 'Order #', include: isV('orderNumber') },
-    { key: 'erpCustId', header: 'Customer', include: isV( 'companyName') },
+    { key: 'companyNameEn', header: 'Customer', include: isV( 'companyName') },
     { key: 'erpBranchId', header: 'Branch', include: isV( 'branchName') },
     { key: 'entity', header: 'Entity', include: isV( 'entity') },
     { key: 'paymentMethod', header: 'Payment Method', include: isV( 'paymentMethod') },
@@ -231,11 +240,14 @@ function Orders() {
             {isV ('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
         </div>
-        {isV ('ordersTable') && (<Table
+    {isV ('ordersTable') && (<Table
           columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
-          onRowClick={handleRowClick}
+          onRowClick={(order) => {
+            console.log('Table row clicked, calling handleRowClick with:', order);
+            handleRowClick(order);
+          }}
           onCheckout={handleCheckout}
         />)}
         {isV('ordersPagination') && (<Pagination

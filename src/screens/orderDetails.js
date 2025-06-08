@@ -57,7 +57,6 @@ function OrderDetails() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   // Initialize form data
   const [formData, setFormData] = useState({
     ...defaultOrder,
@@ -76,6 +75,9 @@ function OrderDetails() {
   const [showBranchPopup, setShowBranchPopup] = useState(false);
   const [popupImage, setPopupImage] = useState(null);
   const [nextOrderId, setNextOrderId] = useState('');
+  const [saving, setSaving] = useState(false); // New saving state
+  const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
+  const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -254,7 +256,6 @@ function OrderDetails() {
     fetchOrderDetails();
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode]);
-
   // Fetch order product details
   useEffect(() => {
     if (formMode === 'add') return;
@@ -297,7 +298,10 @@ function OrderDetails() {
             ...prev,
             products: processedProducts
           }));
-          console.log('Processed order products:', processedProducts);
+          
+          // Store the original product list for comparison when saving
+          setOriginalProducts(processedProducts);
+          console.log('Stored original products for comparison:', processedProducts);
         } else {
           throw new Error(result.message || 'Failed to fetch order products');
         }
@@ -350,254 +354,366 @@ function OrderDetails() {
     alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
   };
+  // Function to handle form submission
+  const handleSave = async (action) => {
+    // Disable save button to prevent multiple submissions
+    setSaving(true);
 
-  // Save handler
-  const handleSave = async () => {
-    if (formMode === 'add') {
-      // Validation - check if essential fields are filled
-      if (!formData.erpCustId || !formData.erpBranchId) {
-        alert(t('Customer and Branch are required fields.'));
+    try {
+      // Perform validation before saving
+      if (!formData.customerId) {
+        alert(t('Please select a customer'));
+        setSaving(false);
         return;
       }
 
-      let attempt = 0;
-      let maxAttempts = 2;
-      let lastError = null;
-      // Step 0: If user is employee, fetch empId from employees table using email
-      let empId = '0000';
-      if (user.userType === 'employee' && user.email) {
-        try {
-          const empRes = await fetch(`${API_BASE_URL}/employees/email/${encodeURIComponent(user.email)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (empRes.ok) {
-            const empResult = await empRes.json();
-            if (empResult.status === 'Ok' && empResult.data && empResult.data.empId) {
-              empId = empResult.data.empId;
-            }
-          }
-        } catch (empErr) {
-          console.warn('Could not fetch empId for employee:', empErr);
-        }
-      }
-      while (attempt < maxAttempts) {
-        // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
-        const payload = {
-          erpOrderId: `SO00${formData.id || nextOrderId}`,
-          customerId: formData.customerId || '',
-          companyNameEn: formData.selectedCustomerName || formData.companyNameEn || '',
-          companyNameAr: formData.companyNameAr || '',
-          erpCustId: formData.erpCustId || '',
-          branchId: formData.erpBranchId || '',
-          erpBranchId: formData.erpBranchIdValue || '',
-          branchNameEn: formData.selectedBranchName || formData.branchNameEn || '',
-          branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
-          orderBy: formData.orderBy || '',
-          paymentMethod: formData.paymentMethod || '',
-          status: 'Open',
-          sales_executive: user.employeeId,
-          paymentStatus: 'Pending',
-          entity: formData.entity || '',
-          deliveryCharges: formData.deliveryCharges || '0',
-          totalAmount: formData.totalAmount || '0',
-          pricingPolicy: formData.pricingPolicy || '',
-          customerRegion: formData.customerRegion || ''
-        };
-        try {
-          setLoading(true);
-          console.log('Submitting order payload:', payload);
-
-          // Step 1: Create the order first
-          const response = await fetch(`${API_BASE_URL}/sales-order`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            credentials: 'include',
-          });
-          if (!response.ok) {
-            const errorText = await response.text();
-            if (errorText.includes('duplicate key value violates unique constraint')) {
-              // Duplicate erpOrderId, fetch latest max id and retry
-              attempt++;
-              // Fetch latest max id
-              const params = new URLSearchParams({
-                page: 1,
-                pageSize: 1,
-                sortBy: 'id',
-                sortOrder: 'desc',
-                fields: 'id'
-              });
-              const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include'
-              });
-              const idResult = await idRes.json();
-              let newOrderId = 1;
-              if (idResult.status === 'Ok' && idResult.data && Array.isArray(idResult.data.data) && idResult.data.data.length > 0) {
-                const ids = idResult.data.data.map(order => parseInt(order.id, 10)).filter(Boolean);
-                const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-                newOrderId = maxId + 1;
-              }
-              setNextOrderId(newOrderId.toString());
-              setFormData(prev => ({ ...prev, id: newOrderId.toString() }));
-              continue; // Retry
-            }
-            // Handle other errors
-            console.error('Server response:', errorText);
-            try {
-              const errorData = JSON.parse(errorText);
-              throw new Error(errorData.message || 'Failed to create order');
-            } catch (e) {
-              throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
-            }
-          }
-
-          // Parse the response as JSON to get the inserted row's id
-          const result = await response.json();
-          console.log('Order creation result:', result);
-
-          if (!result.data || !result.data.id) {
-            throw new Error('Order ID not returned from API');
-          }
-
-          // Prepare products payload, set sales_executive to empId if user is employee
-          const productsPayload = formData.products.map((product, index) => ({
-            order_id: result.data.id,
-            line_number: index + 1, // Generate sequential line numbers
-            erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
-            product_id: product.id || product.product_id,
-            product_name: product.productName || product.product_name_en,
-            product_name_lc: product.productNameLc,
-            erp_prod_id: product.erpProdId || product.erp_prod_id || '',
-            quantity: parseInt(product.quantity || 1, 10),
-            unit: product.unit || '',
-            unit_price: parseFloat(product.unitPrice),
-            net_amount: parseFloat(product.netAmount),
-            sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
-            sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
-            status:'Open'
-          }));
-
-          console.log('Submitting products payload:', productsPayload);
-
-          if (productsPayload.length === 0) {
-            console.warn('No valid products to submit');
-            alert(t('Order created successfully, but no products were added.'));
-            navigate('/orders');
-            return;
-          }
-
-          try {
-            const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(productsPayload),
-              credentials: 'include',
-            });
-
-            if (!linesResponse.ok) {
-              // Handle HTTP error response
-              const errorText = await linesResponse.text();
-              console.error('Server response for product lines:', errorText);
-              try {
-                const errorData = JSON.parse(errorText);
-                throw new Error(errorData.message || 'Failed to save product lines');
-              } catch (e) {
-                throw new Error(`Failed to save product lines: ${linesResponse.status} ${linesResponse.statusText}`);
-              }
-            }
-
-            // If we get here, both order and products were saved successfully
-            alert(t('Order and products created successfully!'));
-            navigate('/orders');
-          } catch (err) {
-            console.error('Error saving product lines:', err);
-            // Even if product lines failed, the order was created successfully
-            alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
-            navigate('/orders');
-          }
-        } catch (err) {
-          lastError = err;
-          if (attempt >= maxAttempts - 1) {
-            setError(err.message);
-            alert(t(err.message));
-          }
-        } finally {
-          setLoading(false);
-        }
-        attempt++;
-      }
-    } else {
-      // Update existing order
-      try {
-        setLoading(true);
-
-        // For updating existing orders, only update the fields that have changed
+      if (!formData.products || formData.products.length === 0) {
+        alert(t('Please add at least one product'));
+        setSaving(false);
+        return;
+      }      // Check if we're editing an existing order or creating a new one
+      if (formData.id && isEditMode) {
+        // Update existing order
         const payload = {};
-
-        // Only add fields that are editable and have values
+        
+        // Include all fields that might need updating
         ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
-          'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
-          'driver', 'vehicleNumber'].forEach(field => {
-            if (formData[field] !== undefined && formData[field] !== null) {
-              payload[field] = formData[field];
-            }
-          });
+         'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
+         'driver', 'vehicleNumber', 'pricingPolicy'].forEach(field => {
+          if (formData[field] !== undefined && formData[field] !== null) {
+            payload[field] = formData[field];
+          }
+        });
 
-        if (Object.keys(payload).length === 0) {
-          alert(t('No changes detected to save.'));
-          return;
-        }
-
-        console.log('Updating order with payload:', payload);
-
-        const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
-          method: 'POST', // Assuming your API uses POST for updates
+        // First update the sales order
+        const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           credentials: 'include',
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
+        if (!orderResponse.ok) {
+          const errorText = await orderResponse.text();
           console.error('Server response:', errorText);
-          try {
-            const errorData = JSON.parse(errorText);
-            throw new Error(errorData.message || 'Failed to update order');
-          } catch (e) {
-            throw new Error(`Failed to update order: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to update order: ${orderResponse.statusText}`);
+        }
+        
+        // Now check for existing order lines and fetch them
+        let existingProductMap = {};
+        try {
+          const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: formData.id }))}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+
+          if (!linesResponse.ok) {
+            console.warn(`Failed to fetch order lines: ${linesResponse.statusText}`);
+          } else {
+            const existingLines = await linesResponse.json();
+            if (existingLines.data?.data) {
+              // Filter to ensure we only get lines for this specific order
+              const orderLines = existingLines.data.data.filter(line => line.orderId === formData.id);
+              console.log(`Existing order lines for orderId ${formData.id}:`, orderLines);
+              
+              orderLines.forEach(line => {
+                if (line.productId) {
+                  existingProductMap[line.productId] = line;
+                  console.log(`Mapped existing line for product ID ${line.productId} to line ID ${line.id}`);
+                } else {
+                  console.warn(`Found order line without product_id:`, line);
+                }
+              });
+            }
           }
+        } catch (err) {
+          console.error('Error fetching existing order lines:', err);
+        }
+        
+        // Now update each product line
+        if (formData.products && formData.products.length > 0) {
+          console.log('Updating sales order lines');
+          
+          const updatePromises = formData.products.map(product => {
+            // Extract product data
+            const productId = product.id || product.productId;
+            const unitPrice = parseFloat(product.unitPrice);
+            const quantity = parseInt(product.quantity, 10);
+            const netAmount = parseFloat(product.netAmount);
+            const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
+            const vatPercentage = parseFloat(product.vatPercentage || 0);
+            
+            // Check if product already exists in the order
+            const existingLine = existingProductMap[productId];
+            
+            if (existingLine) {
+              console.log(`Found existing line for product ID ${productId}, updating quantity and amounts`);
+              // Update existing line
+              return updateSalesOrderLine(
+                formData.id,
+                productId,
+                unitPrice,
+                quantity,
+                netAmount,
+                sugarTaxPrice,
+                vatPercentage
+              );
+            } 
+            // Existing products with salesOrderLineId but not found in existingProductMap
+            else if (product.salesOrderLineId) {
+              console.log(`Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`);
+              return updateSalesOrderLine(
+                formData.id,
+                productId,
+                unitPrice,
+                quantity,
+                netAmount,
+                sugarTaxPrice,
+                vatPercentage
+              );
+            } 
+            // New products need to be added
+            else {
+              console.log(`Creating new line for product ID ${productId}`);
+              return createSalesOrderLine(
+                formData.id, 
+                productId, 
+                unitPrice, 
+                quantity,
+                netAmount,
+                sugarTaxPrice,
+                vatPercentage
+              );
+            }
+          });
+          
+          // Wait for all product line updates to complete
+          await Promise.all(updatePromises);
         }
 
-        alert(t('Order updated successfully!'));
-
-        // Refresh order details
-        const id = formData.id;
-        const refreshResponse = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-
-        if (refreshResponse.ok) {
-          const result = await refreshResponse.json();
-          if (result.status === 'Ok' && result.data) {
-            setFormData({
-              ...result.data,
-              products: result.data.products || []
+        // Check for deleted products by comparing originalProducts with current products
+        if (originalProducts && originalProducts.length > 0) {
+          console.log('Checking for deleted products...');
+          
+          // Create a map of current products for easy lookup
+          const currentProductsMap = {};
+          formData.products.forEach(product => {
+            const productId = product.id || product.productId;
+            if (productId) {
+              currentProductsMap[productId] = true;
+            }
+          });
+          
+          // Find products that were in originalProducts but are no longer in formData.products
+          const deletePromises = originalProducts
+            .filter(product => {
+              const productId = product.id || product.productId;
+              return productId && !currentProductsMap[productId];
+            })
+            .map(product => {
+              const productId = product.id || product.productId;
+              console.log(`Deleting removed product ID ${productId} from order`);
+              return deleteSalesOrderLine(formData.id, productId);
             });
+          
+          // Wait for all delete operations to complete
+          if (deletePromises.length > 0) {
+            console.log(`Found ${deletePromises.length} products to delete`);
+            await Promise.all(deletePromises);
+          } else {
+            console.log('No products were removed from the order');
           }
         }
-      } catch (err) {
-        console.error('Error updating order:', err);
-        setError(err.message);
-        alert(t(err.message));
-      } finally {
-        setLoading(false);
-      }
+        
+        // Refresh order details after update
+        await getOrderById(formData.id);
+        setIsEditMode(false);
+        alert(t('Order updated successfully!'));
+      } else {
+        // Create a new order
+        // Validation - check if essential fields are filled
+        if (!formData.erpCustId || !formData.erpBranchId) {
+          alert(t('Customer and Branch are required fields.'));
+          setSaving(false);
+          return;
+        }
+
+        let attempt = 0;
+        let maxAttempts = 2;
+        let lastError = null;
+        // Step 0: If user is employee, fetch empId from employees table using email
+        let empId = '0000';
+        if (user.userType === 'employee' && user.email) {
+          try {
+            const empRes = await fetch(`${API_BASE_URL}/employees/email/${encodeURIComponent(user.email)}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+            });
+            if (empRes.ok) {
+              const empResult = await empRes.json();
+              if (empResult.status === 'Ok' && empResult.data && empResult.data.empId) {
+                empId = empResult.data.empId;
+              }
+            }
+          } catch (empErr) {
+            console.warn('Could not fetch empId for employee:', empErr);
+          }
+        }
+        while (attempt < maxAttempts) {
+          // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
+          const payload = {
+            erpOrderId: `SO00${formData.id || nextOrderId}`,
+            customerId: formData.customerId || '',
+            companyNameEn: formData.selectedCustomerName || formData.companyNameEn || '',
+            companyNameAr: formData.companyNameAr || '',
+            erpCustId: formData.erpCustId || '',
+            branchId: formData.erpBranchId || '',
+            erpBranchId: formData.erpBranchIdValue || '',
+            branchNameEn: formData.selectedBranchName || formData.branchNameEn || '',
+            branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
+            orderBy: formData.orderBy || '',
+            paymentMethod: formData.paymentMethod || '',
+            status: 'Open',
+            sales_executive: user.employeeId,
+            paymentStatus: 'Pending',
+            entity: formData.entity || '',
+            deliveryCharges: formData.deliveryCharges || '0',
+            totalAmount: formData.totalAmount || '0',
+            pricingPolicy: formData.pricingPolicy || '',
+            customerRegion: formData.customerRegion || ''
+          };
+          try {
+            setLoading(true);
+            console.log('Submitting order payload:', payload);
+
+            // Step 1: Create the order first
+            const response = await fetch(`${API_BASE_URL}/sales-order`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'include',
+            });
+            if (!response.ok) {
+              const errorText = await response.text();
+              if (errorText.includes('duplicate key value violates unique constraint')) {
+                // Duplicate erpOrderId, fetch latest max id and retry
+                attempt++;
+                // Fetch latest max id
+                const params = new URLSearchParams({
+                  page: 1,
+                  pageSize: 1,
+                  sortBy: 'id',
+                  sortOrder: 'desc',
+                  fields: 'id'
+                });
+                const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
+                  method: 'GET',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include'
+                });
+                const idResult = await idRes.json();
+                let newOrderId = 1;
+                if (idResult.status === 'Ok' && idResult.data && Array.isArray(idResult.data.data) && idResult.data.data.length > 0) {
+                  const ids = idResult.data.data.map(order => parseInt(order.id, 10)).filter(Boolean);
+                  const maxId = ids.length > 0 ? Math.max(...ids) : 0;
+                  newOrderId = maxId + 1;
+                }
+                setNextOrderId(newOrderId.toString());
+                setFormData(prev => ({ ...prev, id: newOrderId.toString() }));
+                continue; // Retry
+              }
+              // Handle other errors
+              console.error('Server response:', errorText);
+              try {
+                const errorData = JSON.parse(errorText);
+                throw new Error(errorData.message || 'Failed to create order');
+              } catch (e) {
+                throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
+              }
+            }
+
+            // Parse the response as JSON to get the inserted row's id
+            const result = await response.json();
+            console.log('Order creation result:', result);
+
+            if (!result.data || !result.data.id) {
+              throw new Error('Order ID not returned from API');
+            }
+
+            // Prepare products payload, set sales_executive to empId if user is employee
+            const productsPayload = formData.products.map((product, index) => ({
+              order_id: result.data.id,
+              line_number: index + 1, // Generate sequential line numbers
+              erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
+              product_id: product.id || product.product_id,
+              product_name: product.productName || product.product_name_en,
+              product_name_lc: product.productNameLc,
+              erp_prod_id: product.erpProdId || product.erp_prod_id || '',
+              quantity: parseInt(product.quantity || 1, 10),
+              unit: product.unit || '',
+              unit_price: parseFloat(product.unitPrice),
+              net_amount: parseFloat(product.netAmount),
+              sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
+              sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
+            }));
+
+            console.log('Submitting products payload:', productsPayload);
+
+            if (productsPayload.length === 0) {
+              console.warn('No valid products to submit');
+              alert(t('Order created successfully, but no products were added.'));
+              navigate('/orders');
+              return;
+            }
+
+            try {
+              const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productsPayload),
+                credentials: 'include',
+              });
+
+              if (!linesResponse.ok) {
+                // Handle HTTP error response
+                const errorText = await linesResponse.text();
+                console.error('Server response for product lines:', errorText);
+                try {
+                  const errorData = JSON.parse(errorText);
+                  throw new Error(errorData.message || 'Failed to save product lines');
+                } catch (e) {
+                  throw new Error(`Failed to save product lines: ${linesResponse.status} ${linesResponse.statusText}`);
+                }
+              }
+
+              // If we get here, both order and products were saved successfully
+              alert(t('Order and products created successfully!'));
+              navigate('/orders');
+            } catch (err) {
+              console.error('Error saving product lines:', err);
+              // Even if product lines failed, the order was created successfully
+              alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
+              navigate('/orders');
+            }
+            break; // Exit the loop on success
+          } catch (err) {
+            lastError = err;
+            if (attempt >= maxAttempts - 1) {
+              setError(err.message);
+              alert(t(err.message));
+            }
+          } finally {
+            setLoading(false);
+          }          attempt++;
+        }
+      } // Close the else block from line 458
+    } catch (error) {
+      console.error('Error saving order:', error);
+      alert(t('Failed to save order. Please try again.'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -682,7 +798,6 @@ function OrderDetails() {
   const openFileDialog = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
-
   // Handler for input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -690,6 +805,152 @@ function OrderDetails() {
       ...prev,
       [name]: value
     }));
+
+    // If pricing policy changes, update product prices
+    if (name === 'pricingPolicy' && formData.customerId) {
+      updateProductPricesForPricingPolicy(value);
+    }
+  };
+
+  // Function to update product prices when pricing policy changes
+  const updateProductPricesForPricingPolicy = async (pricingPolicy) => {
+    if (!formData.products || !formData.products.length || !pricingPolicy || !formData.customerId) {
+      return;
+    }
+
+    try {
+      // For each product in the list
+      const updatedProducts = [...formData.products];
+      const updatePromises = formData.products.map(async (product, index) => {
+        // Call API to get updated price for this product with new pricing policy
+        const response = await fetch(`${API_BASE_URL}/product/price`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            productId: product.id,
+            customerId: formData.customerId,
+            pricingPolicy: pricingPolicy.toLowerCase()
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.status === 'Ok' && result.data) {
+            // Update product with new price information
+            const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
+            const quantity = parseInt(product.quantity, 10);
+            const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
+            const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
+            
+            // Calculate new net amount with updated price
+            const netAmount = ((unitPrice * quantity) + sugarTaxPrice + (vatPercentage / 100 * (unitPrice * quantity))).toFixed(2);
+            
+            // Update product in array
+            updatedProducts[index] = {
+              ...product,
+              unitPrice: unitPrice.toFixed(2),
+              sugarTaxPrice,
+              vatPercentage,
+              netAmount
+            };
+            
+            // In edit mode, we don't immediately update the sales order line in the database
+            // We'll only do that when the Save button is clicked
+          }
+        }
+      });
+
+      // Wait for all product updates to complete
+      await Promise.all(updatePromises);
+
+      // Update form data with updated products
+      setFormData(prev => ({
+        ...prev,
+        products: updatedProducts
+      }));
+
+    } catch (error) {
+      console.error('Error updating product prices:', error);
+      alert(t('Failed to update prices. Please try again.'));
+    }
+  };
+  // Function to update sales order line
+  const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, sugarTaxPrice, vatPercentage) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          quantity,
+          unitPrice,
+          net_amount: netAmount.toFixed(2),
+          sugarTaxPrice: sugarTaxPrice.toFixed(2),
+          vatPercentage: vatPercentage.toFixed(2)
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to update sales order line');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+      } else {
+        const updatedLine = await response.json();
+        console.log('Successfully updated sales order line:', updatedLine);
+      }
+    } catch (error) {
+      console.error('Error updating sales order line:', error);
+    }
+  };
+  
+  // Function to delete sales order line
+  const deleteSalesOrderLine = async (orderId, productId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to delete sales order line for product ID ${productId}`);
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+      } else {
+        console.log(`Successfully deleted sales order line for product ID ${productId}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting sales order line for product ID ${productId}:`, error);
+    }
+  };
+
+  // Function to create a new sales order line
+  const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, sugarTaxPrice, vatPercentage) => {
+    try {
+      const payload = {
+        order_id: orderId,
+        product_id: productId,
+        quantity: parseInt(quantity, 10),
+        unit_price: parseFloat(unitPrice),
+        net_amount: parseFloat(netAmount),
+        sugar_tax_price: parseFloat(sugarTaxPrice || 0),
+        sales_tax_rate: parseFloat(vatPercentage || 0)
+      };
+      
+      const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to create sales order line');
+      }
+    } catch (error) {
+      console.error('Error creating sales order line:', error);
+    }
   };
 
   // Add selected product to products table
@@ -703,7 +964,7 @@ function OrderDetails() {
     setFormData(prev => {
       // Check if product already exists in the table
       const existingIdx = prev.products.findIndex(
-        p => (p.id || p.product_id) === (product.id || product.product_id)
+        p => (p.id || p.product_id) === (product.id || p.product_id)
       );
       if (existingIdx !== -1) {
         // Product exists, increment quantity and update netAmount
@@ -747,7 +1008,6 @@ function OrderDetails() {
     });
     setShowProductPopup(false);
   };
-
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
     console.log('Selected customer:', customer);
@@ -758,11 +1018,10 @@ function OrderDetails() {
     }
     setFormData(prev => ({
       ...prev,
-      erpCustId: customer.erpCustId,
+      erpCustId: customer.erp_cust_id || customer.erpCustId || '', // Handle both property naming formats
       customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: customer.company_name_en || customer.companyNameEn,
       pricingPolicy: customerPricingPolicy,
-
     }));
     setShowCustomerPopup(false);
   };
@@ -937,6 +1196,84 @@ function OrderDetails() {
     }
   }, [formData.products, formData.entity]);
 
+  // Function to get order details by ID
+  const getOrderById = async (id) => {
+    if (!id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch order details');
+      
+      const result = await response.json();
+      if (result.status === 'Ok' && result.data) {
+        setFormData({
+          ...result.data,
+          products: result.data.products || []
+        });
+        
+        // Also fetch the order lines
+        await fetchOrderProducts(id);
+      } else {
+        throw new Error(result.message || 'Order not found');
+      }
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      setError(err.message);
+    }
+  };
+  
+  // Function to fetch order products
+  const fetchOrderProducts = async (orderId) => {
+    if (!orderId) return;
+    
+    try {
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 100,
+        search: '',
+        sortBy: 'id',
+        sortOrder: 'asc',
+        filters: JSON.stringify({ order_id: orderId })
+      });
+
+      const url = `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch order products');
+
+      const result = await response.json();
+      if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
+        // Map the product data to ensure we use productName instead of erpProdId
+        const processedProducts = result.data.data.map(product => ({
+          ...product,
+          id: product.productId,
+          productName: product.productName || product.product_name || product.erp_prod_id,
+          quantity: product.quantity,
+        }));
+
+        setFormData(prev => ({
+          ...prev,
+          products: processedProducts
+        }));
+        
+        // Store the original product list for comparison when saving
+        setOriginalProducts(processedProducts);
+        console.log('Stored original products for comparison:', processedProducts);
+      }
+    } catch (err) {
+      console.error('Error fetching order products:', err);
+    }
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
   if (error) return <div className="error">{t(error)}</div>;
 
@@ -970,12 +1307,11 @@ function OrderDetails() {
                             placeholder={t('Click to select customer')}
                             disabled={!isE('customerName')}
                           />
-                        </div>
-                      ) : (
+                        </div>                      ) : (
                         <input
-                          id="erpCustIdField"
-                          name="erpCustId"
-                          value={formData.erpCustId ?? ''}
+                          id="customerField"
+                          name="selectedCustomerName"
+                          value={formData.companyNameEn || formData.selectedCustomerName || ''}
                           disabled={isE('customerName')}
                           readOnly
                         />
@@ -1148,9 +1484,7 @@ function OrderDetails() {
 
                   {isV('pricingPolicy') && (
                     <div className="order-details-field">
-                      <label>{t('Pricing Policy')}</label>
-                      {formMode === 'add' ? (
-                        <select
+                      <label>{t('Pricing Policy')}</label>                      <select
                           name="pricingPolicy"
                           value={formData.pricingPolicy || ''}
                           onChange={handleInputChange}
@@ -1164,13 +1498,6 @@ function OrderDetails() {
                             </option>
                           ))}
                         </select>
-                      ) : (
-                        <input
-                          name="pricingPolicy"
-                          value={formData.pricingPolicy || ''}
-                          disabled
-                        />
-                      )}
                     </div>
                   )}
 
@@ -1286,16 +1613,15 @@ function OrderDetails() {
                       {t('Add products')}
                     </button>
                   )}
-                  {/* Hide table in add mode until products are selected */}
-                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
+                  {/* Hide table in add mode until products are selected */}                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
                     <Table
                       columns={columns}
                       data={formData.products.filter(
                         p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.sugarTaxPrice || p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
-                        formMode === 'add' && isE('products')
-                          ? (row) => (
+                        (row) => (
+                          isV('deleteButton') && isE('products') && (
                             <button
                               className="order-action-btn reject"
                               style={{ padding: '4px 10px', fontSize: 14 }}
@@ -1304,11 +1630,12 @@ function OrderDetails() {
                                 handleDeleteProductRow(formData.products.indexOf(row));
                               }}
                               type="button"
+                              disabled={!isE('deleteButton')}
                             >
                               {t('Delete')}
                             </button>
                           )
-                          : undefined
+                        )
                       }
                     />
                   )}
