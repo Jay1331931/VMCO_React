@@ -932,7 +932,7 @@ class RbacManager {
           companyType: { visible: true, editable: true },
           businessType: { visible: true, editable: true },
           businessTypeOther: { visible: true, editable: true },
-          interCompany: { visible: true, editable: false },
+          interCompany: { visible: true, editable: true },
           entity: { visible: true, editable: true },
           deliveryLocations: { visible: true, editable: true },
           brandName: { visible: true, editable: true },
@@ -1088,7 +1088,7 @@ class RbacManager {
       },
       custDetailsAdd: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },
@@ -1152,7 +1152,7 @@ class RbacManager {
       },
       custDetailsEdit: {
         fields: {
-          companyNameEn: { visible: true, editable: false },
+          companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
           vatRegistrationNumber: { visible: true, editable: true },

@@ -249,19 +249,19 @@ function CustomersDetails() {
   };
 
   function transformWorkflowData(workflowData) {
-  const { methodDetails, ...otherUpdates } = workflowData.updates;
-  
-  return {
-    ...workflowData, // Keep original ID and other properties
-    updates: {
-      ...otherUpdates,  // Preserve non-methodDetails updates
-      ...methodDetails,  // Spread payment methods directly
-      creditLimit: methodDetails?.credit?.limit,
-      creditPeriod: methodDetails?.credit?.period,
-      creditBalance: methodDetails?.credit?.balance,
-    }
-  };
-}
+    const { methodDetails, ...otherUpdates } = workflowData.updates;
+
+    return {
+      ...workflowData, // Keep original ID and other properties
+      updates: {
+        ...otherUpdates,  // Preserve non-methodDetails updates
+        ...methodDetails,  // Spread payment methods directly
+        creditLimit: methodDetails?.credit?.limit,
+        creditPeriod: methodDetails?.credit?.period,
+        creditBalance: methodDetails?.credit?.balance,
+      }
+    };
+  }
 
   const fetchApprovedCustomer = async (transformedCustomer) => {
     console.log("Fetch Approved Customer Called")
@@ -316,8 +316,8 @@ function CustomersDetails() {
         // console.log('Customer Data with Payment Methods:', customerData);
       }
 
-      if(transformedCustomer?.workflowData?.updates?.methodDetails){
-        transformedCustomer.workflowData =  transformWorkflowData(transformedCustomer?.workflowData)
+      if (transformedCustomer?.workflowData?.updates?.methodDetails) {
+        transformedCustomer.workflowData = transformWorkflowData(transformedCustomer?.workflowData)
       }
 
       if (transformedCustomer.isApprovalMode) {
@@ -411,7 +411,7 @@ function CustomersDetails() {
 
   const formMode = location.state?.mode;
 
-  const { token, user, isAuthenticated, logout } = useAuth();
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   //   useEffect(() => {
   //   if (transformedCustomer?.customerId) {
@@ -422,14 +422,66 @@ function CustomersDetails() {
   //   }
 
   // }, [transformedCustomer.customerId]);
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      await fetchApprovedCustomer(transformedCustomer);
-    };
+  const navigate = useNavigate();
+  // useEffect(() => {
+  //   if (user) {
+  //     const fetchData = async () => {
+  //       await fetchApprovedCustomer(transformedCustomer);
+  //     };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  //   }
+
+  //   if (loading) {
+  //       return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
+  //     }
+
+  //     if (!user || !user.userType) {
+  //   console.log("$$$$$$$$$$$ logging out");
+  //   // Logout instead of showing loading message
+  //   logout();
+  //   navigate('/login');
+  //   return null; // Return null while logout is processing
+  // }
+  // }, [user]);
+
+  useEffect(() => {
+    if (loading) {
+      return; // Wait while loading
+    }
+
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out - no user");
+      logout();
+      navigate('/login');
+      return;
+    }
+
+    if (user && !user.userType) {
+      console.log("$$$$$$$$$$$ logging out - no userType");
+      logout();
+      navigate('/login');
+      return;
+    }
+
+    // Only fetch data if user is valid
+    if (user && user.userType) {
+      const fetchData = async () => {
+        await fetchApprovedCustomer(transformedCustomer);
+      };
+      fetchData();
+    }
+  }, [user, loading]);
+
+  // Render loading state if needed
+  // if (loading) {
+  //   return <div>{t('msgLoadingUserInfo')}</div>;
+  // }
+
+  // // Check user in render phase too
+  // if (!user || !user.userType) {
+  //   return null; // The useEffect will handle the logout and navigation
+  // }
 
 
   let customerFormMode;
@@ -448,10 +500,10 @@ function CustomersDetails() {
     }
   }
 
-  const rbacMgr = new RbacManager(user.userType == 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], customerFormMode);
+  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-  const navigate = useNavigate();
+
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
     'Contact Details': getContactDetailsForm(t)['Contact Details'],
@@ -474,15 +526,15 @@ function CustomersDetails() {
     const allTabs = Object.keys(formsByTab);
     // Remove 'Branches' tab if module is 'branch'
 
-    if(customerFormMode === 'custDetailsAdd') {
-      if(transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending') {
+    if (customerFormMode === 'custDetailsAdd') {
+      if (transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending') {
         return allTabs.filter(tab => tab !== 'Branches' && tab !== 'Products & MoQ');
       } else {
         return allTabs;
       }
     }
-    if(customerFormMode === 'custDetailsEdit') {
-      if(transformedCustomer?.customerStatus === 'approved' && transformedCustomer?.module === 'branch') {
+    if (customerFormMode === 'custDetailsEdit') {
+      if (transformedCustomer?.customerStatus === 'approved' && transformedCustomer?.module === 'branch') {
         return allTabs;
       } else {
         return allTabs.filter(tab => tab !== 'Branches' && tab !== 'Products & MoQ');
@@ -525,7 +577,7 @@ function CustomersDetails() {
     const newFormData = { ...existingData };
     fields.forEach(field => {
       if (!(field.name in newFormData)) {
-        newFormData[field.name] = field.type === 'checkbox' ? [] : '';
+        newFormData[field.name] = field.type === 'checkbox' ? false : '';
       }
     });
 
@@ -545,6 +597,19 @@ function CustomersDetails() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    const conditionalDropdowns = ['diyafa', 'naqi', 'greenMart', 'dar'];
+    if (conditionalDropdowns.includes(name)) {
+      setFormData(prev => ({
+        ...prev,
+        ['assignedToEntityWise']: {
+          ...prev['assignedToEntityWise'],
+          [name]: value
+        }
+      }));
+      setChangedFields(prev => new Set(prev).add('assignedToEntityWise'));
+      return;
+    }
     const inputVal = type === 'checkbox' ? checked : value;
     setChangedFields(prev => new Set(prev).add(name));
     setFormData(prev => ({ ...prev, [name]: inputVal }));
@@ -585,15 +650,15 @@ function CustomersDetails() {
 
       const value = formData[fieldName];
 
-      if (action === 'save changes' && field.required && !value) {
+      if (action === 'save changes' && field.required && !value && fieldName !== 'nonTradingDocuments') {
         errors[fieldName] = t('This field is required.');
       }
 
-      if (checkRequired && field.type === 'text'  && field.required && !value) {
+      if (checkRequired && field.type === 'text' && field.required && !value) {
         errors[fieldName] = t('This field is required.');
       }
 
-      if (checkRequired &&  field.type === 'document' && field.required && !value?.name) {
+      if (checkRequired && field.type === 'document' && field.required && !value?.name) {
         errors[fieldName] = t('This document is required.');
       }
 
@@ -641,7 +706,8 @@ function CustomersDetails() {
         }
       }
 
-      if (fieldName === 'nonTradingDocuments' && field.required && (!value || value.length === 0)) {
+      if (checkRequired && fieldName === 'nonTradingDocuments' && (pendingFileUploads[fieldName]?.length === 0 || transformedCustomer?.[fieldName]?.length === 0)) {
+        // console.log("Non trading documents", pendingFileUploads[fieldName]?.length)
         errors[fieldName] = t('At least one document is required');
       }
     });
@@ -668,22 +734,22 @@ function CustomersDetails() {
             return;
           }
         }
-        if(action !== 'submit'){
-        if (!validateChangedFields(action, changedFields, false)) {
-          alert(t('Please correct the errors before saving'));
-          return;
+        if (action !== 'submit') {
+          if (!validateChangedFields(action, changedFields, false)) {
+            alert(t('Please correct the errors before saving'));
+            return;
+          }
+        } else {
+          console.log('Changed fields in submit', changedFields)
         }
-      } else {
-        console.log('Changed fields in submit',changedFields)
-      }
 
         break;
       case 'block':
-        case 'unblock':
-    // Simulate checkbox change for isBlocked
-    setChangedFields(new Set())
-    break;
-    } 
+      case 'unblock':
+        // Simulate checkbox change for isBlocked
+        setChangedFields(new Set())
+        break;
+    }
 
     // Define contact detail fields
     const contactDetailFields = [
@@ -721,51 +787,51 @@ function CustomersDetails() {
     //     }
     //   }
     // };
-const paymentMethodPayload = (() => {
-  // Check if any payment-related fields actually changed
-  const hasPaymentChanges = paymentDetailFields.some(field => {
-    const newVal = formData[field] ?? formData[field.split('.')[0]]?.[field.split('.')[1]];
-    const oldVal = transformedCustomer[field] ?? transformedCustomer[field.split('.')[0]]?.[field.split('.')[1]];
-    if(JSON.stringify(newVal) !== JSON.stringify(oldVal)){
-      console.log("New Value", newVal, "field", field)
-      console.log("Old Value", oldVal, "field", field)
-    }
-    return JSON.stringify(newVal) !== JSON.stringify(oldVal);
-  });
+    const paymentMethodPayload = (() => {
+      // Check if any payment-related fields actually changed
+      const hasPaymentChanges = paymentDetailFields.some(field => {
+        const newVal = formData[field] ?? formData[field.split('.')[0]]?.[field.split('.')[1]];
+        const oldVal = transformedCustomer[field] ?? transformedCustomer[field.split('.')[0]]?.[field.split('.')[1]];
+        if (JSON.stringify(newVal) !== JSON.stringify(oldVal)) {
+          console.log("New Value", newVal, "field", field)
+          console.log("Old Value", oldVal, "field", field)
+        }
+        return JSON.stringify(newVal) !== JSON.stringify(oldVal);
+      });
 
-  if (!hasPaymentChanges) return { method_details: {} };
+      if (!hasPaymentChanges) return { method_details: {} };
 
-  return {
-    method_details: {
-      credit: {
-        isAllowed: formData?.credit?.isAllowed,
-        limit: formData?.creditLimit,
-        period: formData?.creditPeriod,
-        balance: formData?.credit?.balance
-      },
-      prePayment: {
-        isAllowed: formData?.prePayment?.isAllowed,
-      },
-      // advancePayment: {
-      //   isAllowed: formData?.advancePayment?.isAllowed,
-      //   balance: formData?.advancePayment?.balance
-      // },
-      COD: {
-        isAllowed: formData?.COD?.isAllowed,
-        limit: formData?.COD?.limit,
-      },
-      partialPayment: {
-        isAllowed: formData?.partialPayment?.isAllowed
-      }
-    }
-  };
-})();
+      return {
+        method_details: {
+          credit: {
+            isAllowed: formData?.credit?.isAllowed,
+            limit: formData?.creditLimit,
+            period: formData?.creditPeriod,
+            balance: formData?.credit?.balance
+          },
+          prePayment: {
+            isAllowed: formData?.prePayment?.isAllowed,
+          },
+          // advancePayment: {
+          //   isAllowed: formData?.advancePayment?.isAllowed,
+          //   balance: formData?.advancePayment?.balance
+          // },
+          COD: {
+            isAllowed: formData?.COD?.isAllowed,
+            limit: formData?.COD?.limit,
+          },
+          partialPayment: {
+            isAllowed: formData?.partialPayment?.isAllowed
+          }
+        }
+      };
+    })();
 
-    if(action === 'block') {
+    if (action === 'block') {
       customerPayload['customerStatus'] = 'blocked';
       customerPayload['isBlocked'] = true;
     }
-    if(action === 'unblock') {
+    if (action === 'unblock') {
       customerPayload['customerStatus'] = 'approved';
       customerPayload['isBlocked'] = false;
     }
@@ -779,20 +845,20 @@ const paymentMethodPayload = (() => {
       const newValue = formData[fieldName];
       const oldValue = customerData[fieldName];
 
-      if ((newValue !== oldValue) || (action === 'submit'))  {
+      if ((newValue !== oldValue) || (action === 'submit')) {
 
         if (contactDetailFields.includes(fieldName)) {
           // if (oldValue === undefined || oldValue === null || oldValue === '' ) {
           //   contactCreatePayload[fieldName] = newValue;
           // } else {
-            contactUpdatePayload[fieldName] = newValue;
+          contactUpdatePayload[fieldName] = newValue;
           // }
         } else if (paymentDetailFields.includes(fieldName)) {
 
         }
         else {
           if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
-          customerPayload[fieldName] = newValue;
+            customerPayload[fieldName] = newValue;
           customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
           // if(formData.customerStatus === 'new'){
           //   customerPayload['customerStatus'] = 'pending';
@@ -802,7 +868,7 @@ const paymentMethodPayload = (() => {
     });
     console.log("Form Data", formData)
     console.log("Contact Create Payload", contactCreatePayload)
-    console.log("Contact Update Payload",contactUpdatePayload)
+    console.log("Contact Update Payload", contactUpdatePayload)
     // Early return if no changes
     if (Object.keys(customerPayload).length === 0 &&
       Object.keys(contactCreatePayload).length === 0 &&
@@ -815,22 +881,22 @@ const paymentMethodPayload = (() => {
     try {
       // 1. Update customer table if needed
       if (Object.keys(customerPayload).length > 0) {
-        if(action === 'save'){
+        if (action === 'save') {
           customerPayload['customerStatus'] = 'new';
         }
         console.log("Customer Payload", customerPayload)
         try {
-        const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(customerPayload),
-          credentials: 'include',
-        });
-        console.log("Response", response)
-      } catch (error) {
-        console.error('Error updating customer:', error.message);
-        
-      }
+          const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(customerPayload),
+            credentials: 'include',
+          });
+          console.log("Response", response)
+        } catch (error) {
+          console.error('Error updating customer:', error.message);
+
+        }
       }
 
       if (!(transformedCustomer?.customerStatus === 'new') && Object.keys(paymentMethodPayload.method_details).length > 0) {
@@ -958,6 +1024,24 @@ const paymentMethodPayload = (() => {
     }
   };
 
+  const getManagerFromEmployees = async (region) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees/random`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ designation: "area sales manager", region: region }),
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const result = await response.json();
+        return result.data.employeeId;
+      }
+    } catch (err) {
+      console.error('Error fetching manager:', err);
+    }
+  }
+
+
   const getOptionsFromEmployees = async (fieldName) => {
     const params = new URLSearchParams({
       filters: { designation: "sales executive" } // Properly stringify the filter
@@ -984,15 +1068,16 @@ const paymentMethodPayload = (() => {
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       const options = {};
-      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown');
-
+      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown' || field.type === 'conditionalDropdown');
+      console.log("Dropdown Fields", dropdownFields)
       for (const field of dropdownFields) {
 
         try {
           let data = await getOptionsFromBasicsMaster(field.name);
-          if (field.name === 'assignedTo' || field.name === 'assignedToEntityWise') {
+          if (field.name === 'assignedTo' || field.name === 'naqi' || field.name === 'diyafa' || field.name === 'dar' || field.name === 'greenMart') {
             data = await getOptionsFromEmployees(field.name);
           }
+          console.log("Data for field", field.name, data);
           options[field.name] = data.map(opt =>
             typeof opt === 'string'
               ? opt.charAt(0).toUpperCase() + opt.slice(1)
@@ -1180,6 +1265,10 @@ const paymentMethodPayload = (() => {
   };
 
   const handleApprovalSubmit = async (action) => {
+    if (!validateChangedFields('save changes', changedFields, true)) {
+      alert(t('Please fill all required fields. Please Save files before submitting.'));
+      return;
+    }
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
   };
@@ -1215,79 +1304,82 @@ const paymentMethodPayload = (() => {
   //     alert(`Error ${approvalAction}ing customer: ${error.message}`);
   //   }
   // };
-const handleDialogSubmit = async (comment) => {
-  // Create a copy of the workflowData updates
-  let updates = { ...transformedCustomer.workflowData?.updates || {} };
-  
-  // If this is a payment methods workflow, restructure the updates
-  if (transformedCustomer?.name === 'payment methods') {
-    const paymentMethodFields = ['COD', 'credit', 'prePayment', 'partialPayment'];
-    const methodDetails = {};
-    
-    // Extract payment method fields from updates
-    paymentMethodFields.forEach(method => {
-      if (updates[method]) {
-        methodDetails[method] = updates[method];
-        delete updates[method];
+  const handleDialogSubmit = async (comment) => {
+    // Create a copy of the workflowData updates
+    let updates = { ...transformedCustomer.workflowData?.updates || {} };
+
+    // If this is a payment methods workflow, restructure the updates
+    if (transformedCustomer?.name === 'payment methods') {
+      const paymentMethodFields = ['COD', 'credit', 'prePayment', 'partialPayment'];
+      const methodDetails = {};
+
+      // Extract payment method fields from updates
+      paymentMethodFields.forEach(method => {
+        if (updates[method]) {
+          methodDetails[method] = updates[method];
+          delete updates[method];
+        }
+      });
+
+      // Add flat credit fields to credit object if they exist
+      if (updates.creditLimit || updates.creditPeriod || updates.creditBalance) {
+        methodDetails.credit = methodDetails.credit || {};
+        methodDetails.credit.limit = updates.creditLimit || methodDetails.credit?.limit;
+        methodDetails.credit.period = updates.creditPeriod || methodDetails.credit?.period;
+        methodDetails.credit.balance = updates.creditBalance || methodDetails.credit?.balance;
+
+        delete updates.creditLimit;
+        delete updates.creditPeriod;
+        delete updates.creditBalance;
+      }
+
+      // Only add methodDetails if we found payment method fields
+      if (Object.keys(methodDetails).length > 0) {
+        updates.methodDetails = methodDetails;
+      }
+    }
+
+    // Update any changed fields
+    changedFields.forEach((fieldName) => {
+      if (fieldName in formData) {
+        updates[fieldName] = formData[fieldName];
+      }
+      if (fieldName === 'interCompany') {
+        updates['interCompany'] = formData['interCompany']?.isAllowed;
       }
     });
-    
-    // Add flat credit fields to credit object if they exist
-    if (updates.creditLimit || updates.creditPeriod || updates.creditBalance) {
-      methodDetails.credit = methodDetails.credit || {};
-      methodDetails.credit.limit = updates.creditLimit || methodDetails.credit?.limit;
-      methodDetails.credit.period = updates.creditPeriod || methodDetails.credit?.period;
-      methodDetails.credit.balance = updates.creditBalance || methodDetails.credit?.balance;
-      
-      delete updates.creditLimit;
-      delete updates.creditPeriod;
-      delete updates.creditBalance;
-    }
-    
-    // Only add methodDetails if we found payment method fields
-    if (Object.keys(methodDetails).length > 0) {
-      updates.methodDetails = methodDetails;
-    }
-  }
-  
-  // Update any changed fields
-  changedFields.forEach((fieldName) => {
-    if (fieldName in formData) {
-      updates[fieldName] = formData[fieldName];
-    }
-  });
-  
-  const payload = {
-    workflowData: {
-      ...transformedCustomer.workflowData,
-      updates
-    },
-    approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
-    comment: comment
-  };
-  
-  console.log('Final payload:', payload);
-  
-  try {
-    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${transformedCustomer.workflowInstanceId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      credentials: 'include',
-    });
 
-    if (response.ok) {
-      const result = await response.json();
-      navigate('/customers');
-      // Handle success
-    } else {
-      throw new Error('Failed to submit approval');
+    const payload = {
+      workflowData: {
+        ...transformedCustomer.workflowData,
+        updates
+      },
+      approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
+      comment: comment
+    };
+
+    console.log('Final payload:', payload);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${transformedCustomer.workflowInstanceId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        navigate('/customers');
+        // Handle success
+      } else {
+        throw new Error('Failed to submit approval');
+      }
+    } catch (error) {
+      console.error(`Error ${approvalAction}ing customer:`, error);
+      alert(`Error ${approvalAction}ing customer: ${error.message}`);
     }
-  } catch (error) {
-    console.error(`Error ${approvalAction}ing customer:`, error);
-    alert(`Error ${approvalAction}ing customer: ${error.message}`);
-  }
-};
+  };
   const handleSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
       alert(t('Please fill all required fields. Please Save files before submitting.'));
@@ -1365,7 +1457,7 @@ const handleDialogSubmit = async (comment) => {
       console.log('Prepared changedFields:', newChangedFields);
 
       if (!validateChangedFields('save changes', newChangedFields, true)) {
-        alert(t('Please fill all required fields. Please Save files before submitting.'));    
+        alert(t('Please fill all required fields. Please Save files before submitting.'));
         return;
       }
 
@@ -1378,183 +1470,199 @@ const handleDialogSubmit = async (comment) => {
       console.log('State changedFields:', changedFields); // Will still be old value (async)
       console.log('Current customer:', updatedCustomer);
       const contactDetailFields = [
-      'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactMobile',
-      'financeHeadName', 'financeHeadDesignation', 'financeHeadEmail', 'financeHeadMobile',
-      'businessHeadName', 'businessHeadDesignation', 'businessHeadEmail', 'businessHeadMobile',
-      'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadMobile'
-    ];
+        'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactMobile',
+        'financeHeadName', 'financeHeadDesignation', 'financeHeadEmail', 'financeHeadMobile',
+        'businessHeadName', 'businessHeadDesignation', 'businessHeadEmail', 'businessHeadMobile',
+        'purchasingHeadName', 'purchasingHeadDesignation', 'purchasingHeadEmail', 'purchasingHeadMobile'
+      ];
 
-    const paymentDetailFields = [
-      'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
-    ]
-
-    const customerPayload = {};
-    const contactCreatePayload = {};
-    const contactUpdatePayload = {};
-    const paymentMethodPayload = {
-      method_details: {
-        credit: {
-          isAllowed: formData?.credit?.isAllowed,
-          limit: formData?.creditLimit,
-          period: formData?.creditPeriod,
-          balance: formData?.credit.balance
-        },
-        prePayment: {
-          isAllowed: formData?.prePayment?.isAllowed,
-        },
-        // advancePayment: {
-        //   isAllowed: formData?.advancePayment?.isAllowed,
-        //   balance: formData?.advancePayment?.balance
-        // },
-        COD: {
-          isAllowed: formData?.COD?.isAllowed,
-          limit: formData?.COD?.limit,
-        },
-        partialPayment: {
-          isAllowed: formData?.partialPayment?.isAllowed
-        }
-      }
-    };
-    const customerData = customer || {};
-    console.log("Changed fields in Save", changedFields)
-    newChangedFields.forEach(fieldName => {
-      if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation') return;
-
-      const newValue = formData[fieldName];
-      const oldValue = customerData[fieldName];
-
-      if ((newValue !== oldValue) || (action === 'submit'))  {
-        if (contactDetailFields.includes(fieldName)) {
-          if (oldValue === undefined || oldValue === null || oldValue === '') {
-            contactCreatePayload[fieldName] = newValue;
-          } else {
-            contactUpdatePayload[fieldName] = newValue;
+      const paymentDetailFields = [
+        'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
+      ]
+      const areaSalesManager = getManagerFromEmployees(formData?.region) || '';
+      const customerPayload = {};
+      const contactCreatePayload = {};
+      const contactUpdatePayload = {};
+      const paymentMethodPayload = {
+        method_details: {
+          credit: {
+            isAllowed: formData?.credit?.isAllowed,
+            limit: formData?.creditLimit,
+            period: formData?.creditPeriod,
+            balance: formData?.credit.balance
+          },
+          prePayment: {
+            isAllowed: formData?.prePayment?.isAllowed,
+          },
+          // advancePayment: {
+          //   isAllowed: formData?.advancePayment?.isAllowed,
+          //   balance: formData?.advancePayment?.balance
+          // },
+          COD: {
+            isAllowed: formData?.COD?.isAllowed,
+            limit: formData?.COD?.limit,
+          },
+          partialPayment: {
+            isAllowed: formData?.partialPayment?.isAllowed
           }
-        } else if (paymentDetailFields.includes(fieldName)) {
-
         }
-        else {
-          if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
-            customerPayload[fieldName] = newValue;
-          customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
-          // if(formData.customerStatus === 'new'){
-          //   customerPayload['customerStatus'] = 'pending';
-          // }
+      };
+      const customerData = customer || {};
+      console.log("Changed fields in Save", changedFields)
+      newChangedFields.forEach(fieldName => {
+        if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'diyafa' || fieldName === 'naqi' || fieldName === 'greenMart' || fieldName === 'dar') return;
+
+        const newValue = formData[fieldName];
+        const oldValue = customerData[fieldName];
+
+        if ((newValue !== oldValue) || (action === 'submit')) {
+          if (contactDetailFields.includes(fieldName)) {
+            if (oldValue === undefined || oldValue === null || oldValue === '') {
+              contactCreatePayload[fieldName] = newValue;
+            } else {
+              contactUpdatePayload[fieldName] = newValue;
+            }
+          } else if (paymentDetailFields.includes(fieldName)) {
+
+          }
+          else {
+            if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
+              customerPayload[fieldName] = newValue;
+            customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
+            customerPayload['interCompany'] = true;
+            customerPayload['assignedToEntityWise'] = {
+              'diyafa': areaSalesManager,
+              'dar': areaSalesManager,
+              'naqi': areaSalesManager,
+              'greenMart': areaSalesManager,
+            }
+            if(customerPayload['nonTradingDocuments']?.length === 0){
+              customerPayload['nonTradingDocuments'] = {};
+            }
+            // if(formData.customerStatus === 'new'){
+            //   customerPayload['customerStatus'] = 'pending';
+            // }
+          }
         }
-      }
-    });
-
-    // Early return if no changes
-    if (Object.keys(customerPayload).length === 0 &&
-      Object.keys(contactCreatePayload).length === 0 &&
-      Object.keys(contactUpdatePayload).length === 0 &&
-      uploadedFiles.length === 0) {
-      alert(t('No changes detected to save'));
-      return;
-    }
-
-    try {
-      // 1. Update customer table if needed
-      if (Object.keys(customerPayload).length > 0) {
-  // Destructure to remove pricingPolicy
-  const { pricingPolicy, ...payloadToSend } = customerPayload;
-  
-  console.log("Customer Payload", payloadToSend);
-  await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payloadToSend),
-    credentials: 'include',
-  });
-}
-
-      if ((!customer?.customerStatus === 'new') && Object.keys(paymentMethodPayload).length > 0) {
-        await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(paymentMethodPayload),
-          credentials: 'include',
-        });
-      }
-
-      //   // 2. Create new contact details if needed
-      //   if (Object.keys(contactCreatePayload).length > 0) {
-      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify(contactCreatePayload),
-      //       credentials: 'include',
-      //     });
-      //   }
-
-      // 3. Update existing contact details if needed
-      if (Object.keys(contactUpdatePayload).length > 0) {
-        await fetch(`${API_BASE_URL}/customer-contacts/${customer.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(contactUpdatePayload),
-          credentials: 'include',
-        });
-      }
-
-      //   // Update UI state
-      //   setSavedData(prev => ({
-      //     ...prev,
-      //     [activeTab]: {
-      //       ...prev[activeTab],
-      //       ...customerPayload,
-      //       ...contactCreatePayload,
-      //       ...contactUpdatePayload
-      //     }
-      //   }));
-
-      //   // Clear changed fields
-      //   setChangedFields(prev => {
-      //     const newSet = new Set(prev);
-      //     [
-      //       ...Object.keys(customerPayload),
-      //       ...Object.keys(contactCreatePayload),
-      //       ...Object.keys(contactUpdatePayload)
-      //     ].forEach(field => newSet.delete(field));
-      //     return newSet;
-      //   });
-      if (Object.keys(branchChanges).length > 0) {
-        await Promise.all(
-          Object.entries(branchChanges).map(async ([branchId, changes]) => {
-            const response = await fetch(`${API_BASE_URL}/customer-branches/${branchId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(changes),
-              credentials: 'include',
-            });
-            return response.json();
-          })
-        );
-      }
-      handleSaveFiles();
-      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
-
-      //navigate('/catalog')
-      window.location.reload();
-      
-    } catch (error) {
-      console.error('Update error:', error);
-      setFormErrors(error.message || 'Unable to connect to server');
-    }
-
-    try {
-
-      const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
       });
-      const result = await response.json();
-      setCustomer(result.data)
-      fetchCustomerContacts(customer.id, customer)
-    } catch (err) {
-      console.error('Error fetching customer:', err);
-    }
+
+      // Early return if no changes
+      if (Object.keys(customerPayload).length === 0 &&
+        Object.keys(contactCreatePayload).length === 0 &&
+        Object.keys(contactUpdatePayload).length === 0 &&
+        uploadedFiles.length === 0) {
+        alert(t('No changes detected to save'));
+        return;
+      }
+
+      try {
+        // 1. Update customer table if needed
+        if (Object.keys(customerPayload).length > 0) {
+          // Destructure to remove pricingPolicy
+          const { pricingPolicy, ...payloadToSend } = customerPayload;
+
+          console.log("Customer Payload", payloadToSend);
+          await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payloadToSend),
+            credentials: 'include',
+          });
+        }
+
+        if ((!customer?.customerStatus === 'new') && Object.keys(paymentMethodPayload).length > 0) {
+          await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(paymentMethodPayload),
+            credentials: 'include',
+          });
+        }
+
+        //   // 2. Create new contact details if needed
+        //   if (Object.keys(contactCreatePayload).length > 0) {
+        //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
+        //       method: 'POST',
+        //       headers: { 'Content-Type': 'application/json' },
+        //       body: JSON.stringify(contactCreatePayload),
+        //       credentials: 'include',
+        //     });
+        //   }
+
+        // 3. Update existing contact details if needed
+        if (Object.keys(contactUpdatePayload).length > 0) {
+          await fetch(`${API_BASE_URL}/customer-contacts/${customer.id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(contactUpdatePayload),
+            credentials: 'include',
+          });
+        }
+
+        //   // Update UI state
+        //   setSavedData(prev => ({
+        //     ...prev,
+        //     [activeTab]: {
+        //       ...prev[activeTab],
+        //       ...customerPayload,
+        //       ...contactCreatePayload,
+        //       ...contactUpdatePayload
+        //     }
+        //   }));
+
+        //   // Clear changed fields
+        //   setChangedFields(prev => {
+        //     const newSet = new Set(prev);
+        //     [
+        //       ...Object.keys(customerPayload),
+        //       ...Object.keys(contactCreatePayload),
+        //       ...Object.keys(contactUpdatePayload)
+        //     ].forEach(field => newSet.delete(field));
+        //     return newSet;
+        //   });
+        if (Object.keys(branchChanges).length > 0) {
+          await Promise.all(
+            Object.entries(branchChanges).map(async ([branchId, changes]) => {
+              const response = await fetch(`${API_BASE_URL}/customer-branches/${branchId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(changes),
+                credentials: 'include',
+              });
+              return response.json();
+            })
+          );
+        }
+        handleSaveFiles();
+        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+
+        // navigate('/catalog')
+        // window.location.reload();
+        document.body.innerHTML = '<div style="padding: 20px;">Updating... Page will refresh in 3 seconds</div>';
+
+        setTimeout(() => {
+          window.location.reload(true); // true forces a hard reload from server
+          // navigate('/customersDetails', { state: { transformedCustomer, mode: 'custDetailsAdd' }  })
+        }, 3000);
+
+      } catch (error) {
+        console.error('Update error:', error);
+        setFormErrors(error.message || 'Unable to connect to server');
+      }
+
+      try {
+
+        const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        const result = await response.json();
+        setCustomer(result.data)
+        fetchCustomerContacts(customer.id, customer)
+      } catch (err) {
+        console.error('Error fetching customer:', err);
+      }
     }
 
   };
@@ -1578,7 +1686,7 @@ const handleDialogSubmit = async (comment) => {
         setChangedFields(prev => new Set(prev).add('businessHeadEmail'));
         setChangedFields(prev => new Set(prev).add('businessHeadMobile'));
       } else {
-        let updatedValues = prev[fieldName] || {}
+        let updatedValues = prev[fieldName] || false;
         if (checked) {
           updatedValues = { ...updatedValues, isAllowed: true };
         } else {
@@ -1696,7 +1804,7 @@ const handleDialogSubmit = async (comment) => {
       alert('Failed to open file. Please try again.');
     }
   };
-  const shouldShowDiv = (transformedCustomer?.isApprovalMode || customer?.isApprovalMode )&& customerFormMode === 'custDetailsAdd' && transformedCustomer.customerStatus !== 'new';
+  const shouldShowDiv = (transformedCustomer?.isApprovalMode || customer?.isApprovalMode) && customerFormMode === 'custDetailsAdd' && (transformedCustomer.customerStatus !== 'new' || customer?.customerStatus === 'pending');
   return (
     <Sidebar>
       <div className='customers'>
@@ -1758,7 +1866,7 @@ const handleDialogSubmit = async (comment) => {
                     return acc;
                   }, []).map((field) => {
                     { console.log(transformedCustomer.module) }
-                    const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new');
+                    const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new') || customer?.customerStatus === 'pending';
                     const hasUpdate = approvalMode && transformedCustomer.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
                       field.name in transformedCustomer.workflowData.updates;
@@ -1874,55 +1982,49 @@ const handleDialogSubmit = async (comment) => {
                             )}
                           </div>
                         );
-                      // case 'dropdown':
-                        // return (
-                        //   <div className="form-group" key={field.name}>
-                        //     <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
-                        //       {field.label}
-                        //       {field.required && <span className="required-field">*</span>}
-                        //     </label>
-                        //     <select
-                        //       id={`${field.name}-select`}
-                        //       name={field.name}
-                        //       value={formData[field.name] || ''}
-                        //       onChange={handleInputChange}
-                        //       disabled={!isE(field.name, customer?.isApprovalMode, customer?.workflowData?.updates
-                        //         ? field.name in customer.workflowData.updates
-                        //         : false)}
-                        //       hidden={!isV(field.name)}
-                        //       className="dropdown"
-                        //       placeholder="Value"
-                        //       required
-                        //     >
-                        //       <option value="" disabled hidden>
-                        //         Value
-                        //       </option>
-                        //       {
-                        //         dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => (
-                        //           <option key={idx} value={opt}>
-                        //             {t(opt)}
-                        //           </option>
-                        //         )
-                        //         ) : []
-                        //       }
-                        //       {/* {field.options.map((opt, idx) => (
-                        //         <option key={idx} value={opt}>
-                        //           {opt}
-                        //         </option>
-                        //       ))} */}
-                        //     </select>
-                        //     {formErrors[field.name] && (
-                        //       <div className="error">{formErrors[field.name]}</div>
-                        //     )}
-                        //   </div>
-                        // );
+
+                      case 'conditionalDropdown':
+                        const shouldShowDropdown = formData[field.showWhen]?.isAllowed === field.showValue;
+                        if (!shouldShowDropdown) return null;
+                        return (
+                          <div className='form-group' key={field.name}>
+                            <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
+                              {field.label}
+                              {field.required && <span className="required-field">*</span>}
+                            </label>
+                            <select
+                              id={`${field.name}-select`}
+                              name={field.name}
+                              value={formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.assignedToEntityWise?.[field.name] || transformedCustomer?.workflowData?.updates?.assignedToEntityWise?.[field.name] || ''}
+                              onChange={handleInputChange}
+                              // disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates) ? field.name in transformedCustomer?.workflowData?.updates?.assignedToEntityWise
+                              //   : false)}
+                              hidden={!isV(field.name)}
+                              className="dropdown"
+                              placeholder="Value"
+                            >
+                              <option value="" disabled hidden>
+                                Value
+                              </option>
+                              {
+                                dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => (
+                                  <option key={idx} value={opt}>
+                                    {t(opt)}
+                                  </option>
+                                )
+                                ) : []
+                              }
+                            </select>
+                          </div>
+                        );
+
                       case 'dropdown':
                         return (
                           <div className={`form-group ${hasUpdate ? 'pending-update' : ''}`} key={field.name}>
                             <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
-			      {hasUpdate && <span className="update-badge">Pending Update</span>}
+                              {hasUpdate && <span className="update-badge">Pending Update</span>}
                             </label>
                             <select
                               id={`${field.name}-select`}
@@ -1930,12 +2032,12 @@ const handleDialogSubmit = async (comment) => {
                               value={formData[field.name] || ''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? field.name in transformedCustomer.workflowData.updates
-                                    : false)}
+                                : false)}
                               hidden={!isV(field.name)}
                               className={
-                                    `dropdown
+                                `dropdown
                   ${hasUpdate ? 'update-field' : ''}`
-                                  }
+                              }
                               placeholder="Value"
                               required
                             >
@@ -1956,11 +2058,11 @@ const handleDialogSubmit = async (comment) => {
                                 </option>
                               ))} */}
                             </select>
-                                {hasUpdate && (
-                                  <div className="current-value">
-                                    Current: {currentValue || '(empty)'}
-                                  </div>
-                                )}
+                            {hasUpdate && (
+                              <div className="current-value">
+                                Current: {currentValue || '(empty)'}
+                              </div>
+                            )}
 
                             {formErrors[field.name] && (
                               <div className="error">{formErrors[field.name]}</div>
@@ -2034,8 +2136,8 @@ const handleDialogSubmit = async (comment) => {
                                 {field.required && <span className="required-field">*</span>}
                               </label>
                               {formErrors[field.name] && (
-                              <div className="error">{formErrors[field.name]}</div>
-                            )}
+                                <div className="error">{formErrors[field.name]}</div>
+                              )}
                             </td>
 
                             {/* Second column - Upload button */}
@@ -2071,7 +2173,7 @@ const handleDialogSubmit = async (comment) => {
                               }}>
                                 {t('Upload')}
                               </label>
-                              
+
                             </td>
 
                             {/* Third column - File display */}
@@ -2147,9 +2249,10 @@ const handleDialogSubmit = async (comment) => {
                             </td>
                           </tr>
                         );
-                      
+
 
                       case 'multiDocument':
+                        const multiUploads = uploadedFiles?.[field.name] || transformedCustomer?.[field.name] || { name: [] };    
                         return (
                           <tr className="document-upload full-width" key={field.name}>
                             {/* Label */}
@@ -2158,6 +2261,9 @@ const handleDialogSubmit = async (comment) => {
                                 {field.label}
                                 {field.required && <span className="required-field">*</span>}
                               </label>
+                              {formErrors[field.name] && (
+                                <div className="error">{formErrors[field.name]}</div>
+                              )}
                             </td>
 
                             {/* Upload Button */}
@@ -2180,9 +2286,9 @@ const handleDialogSubmit = async (comment) => {
 
                             {/* File Display */}
                             <td className="file-display-cell">
-                              {uploadedFiles[field.name]?.name?.length > 0 && (
+                              {multiUploads?.name?.length > 0 && (
                                 <div className="uploaded-files-list">
-                                  {uploadedFiles[field.name].name.map((file, index) => {
+                                  {multiUploads?.name.map((file, index) => {
                                     const fileObj = typeof file === 'string' ? { name: file } : file;
 
                                     return ( // <-- Add this return statement
@@ -2237,13 +2343,13 @@ const handleDialogSubmit = async (comment) => {
                       case 'checkbox':
                         return (<>
                           {field.label && user.userType === 'employee' && (
-      <div className='form-header'>
-        <span className="checkbox-group-label">
-          {field.label}
-          {field.required && <span className="required-field">*</span>}
-        </span>
-      </div>
-    )}
+                            <div className='form-header'>
+                              <span className="checkbox-group-label">
+                                {field.label}
+                                {field.required && <span className="required-field">*</span>}
+                              </span>
+                            </div>
+                          )}
                           <div className="form-group" key={field.name} >
 
                             {field.options.map((option, idx) => (
@@ -2309,13 +2415,13 @@ const handleDialogSubmit = async (comment) => {
                   <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
-                  {isV('btnSave') && (transformedCustomer.customerStatus === 'new') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && transformedCustomer?.isApprovalMode)}>
+                  {isV('btnSave') && (transformedCustomer.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && transformedCustomer?.isApprovalMode)}>
                     {t('Save')}
                   </button>}
                   {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'new') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={(!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)) || transformedCustomer?.isBlocked}>
                     {t('Save Changes')}
                   </button>}
-                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'new') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
+                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}
@@ -2326,13 +2432,13 @@ const handleDialogSubmit = async (comment) => {
                       {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>
                         {t('Block')}
                       </button>}
-                      {(isV('btnUnblock') && transformedCustomer?.isBlocked  && customerFormMode !== 'custDetailsEdit') && <button className="block" onClick={() => handleSave('unblock')} >
+                      {(isV('btnUnblock') && transformedCustomer?.isBlocked && customerFormMode !== 'custDetailsEdit') && <button className="block" onClick={() => handleSave('unblock')} >
                         {t('Unblock')}
                       </button>}
-                      {customer.isApprovalMode && user.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
+                      {customer.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
                         {t('Approve')}
                       </button>}
-                      {customer.isApprovalMode && user.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
+                      {customer.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
                         {t('Reject')}
                       </button>}
                     </>
