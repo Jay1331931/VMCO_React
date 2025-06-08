@@ -448,10 +448,16 @@ function Cart() {
             const customerData = await customerResponse.json();
             console.log('Customer data:', customerData);
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
+            const companyNameEn = customerData?.data?.companyNameEn;
+            const companyNameAr = customerData?.data?.companyNameAr;
+            const pricingPolicy = customerData?.data?.pricingPolicy;
 
+            const assignedTo = customerData?.data?.assignedTo;
             // Create new order with 0 totalAmount for now
             const orderPayload = {
                 customerId: selectedCustomerId,
+                companyNameEn: companyNameEn,
+                companyNameAr: companyNameAr,
                 branchId: selectedBranchId,
                 erpBranchId: selectedBranchErpId,
                 branchRegion: selectedBranchRegion,
@@ -463,6 +469,8 @@ function Cart() {
                 deliveryCharges: deliveryCharges,
                 paymentStatus: 'Pending',
                 status: 'Open',
+                pricingPolicy: pricingPolicy,
+                salesExecutive: assignedTo,
             };
 
             const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
@@ -517,6 +525,7 @@ function Cart() {
                 const newLinePayload = {
                     order_id: orderId,
                     product_id: productId,
+                    productName: item.productName,
                     quantity: newQuantity,
                     unit: item.unit,
                     unit_price: unitPrice,

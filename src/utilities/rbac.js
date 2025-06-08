@@ -334,6 +334,14 @@ class RbacManager {
           settings: { visible: true, editable: true },
         },
       },
+      SidebarList: {
+        fields: {
+          Dashboard: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
+          Settings: {visible: false, editable: true}
+        }
+      }
+
     },
 
     [constants.ROLES.CUSTOMER_PRIMARY]: {
@@ -762,14 +770,8 @@ class RbacManager {
 
     [constants.DESIGNATIONS.OPS_COORDINATOR]: {
       // Define opsCordinator permissions for all forms
-       orderList: {
+        orderList: {
         fields: {
-          ordersContent: { visible: true, editable: true },
-          approvalButton: { visible: true, editable: true },
-          addButton: { visible: true, editable: true },
-          actionMenu: { visible: true, editable: true },
-          ordersTable: { visible: true, editable: true },
-          ordersPagination: { visible: true, editable: true },
           orderNumber: { visible: true, editable: true },
           companyName: { visible: true, editable: true },
           branchName: { visible: true, editable: true },
@@ -777,83 +779,74 @@ class RbacManager {
           paymentMethod: { visible: true, editable: true },
           expectedDeliveryDate: { visible: true, editable: true },
           paymentStatus: { visible: true, editable: true },
-          toyalAmount: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
+          action: { visible: false, editable: true },
+          addButton: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
-
-        }
+        },
       },
       orderDetailAdd: {
         fields: {
           orderDetails: { visible: true, editable: false },
-          customerName: { visible: true, editable: false },
-          branchName: { visible: true, editable: false },
-          orderBy: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
           erpId: { visible: true, editable: false },
-          entity: { visible: true, editable: false },
-          paymentMethod: { visible: true, editable: false },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
           totalAmount: { visible: true, editable: false },
-          paidAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },
-          expectedDeliveryDate: { visible: true, editable: false },
-          pricingPolicy: { visible: false, editable: false },
-          createdDate: { visible: false, editable: false },
-          updatedDate: { visible: false, editable: false },
-          driver: { visible: true, editable: false },
-          vehicleNumber: { visible: true, editable: false },
-          images: { visible: true, editable: true },
-          addImages: { visible: false, editable: false },
-          products: { visible: false, editable: false },
-          productIdCol: { visible: true, editable: false },
-          quantityCol: { visible: true, editable: false },
-          unitCol: { visible: true, editable: false },
-          unitPriceCol: { visible: true, editable: false },
-          sugarTaxPriceCol: { visible: true, editable: false },
-          vatPercentageCol: { visible: true, editable: false },
-          netAmountCol: { visible: true, editable: false },
-          orderFooter: { visible: true, editable: false },
-          stock: { visible: true, editable: false},
-          btnSave: { visible: true, editable: false },
-          btnCancel: { visible: true, editable: false },
-          btnInvoice: { visible: true, editable: false },
-          btnInventory: { visible: true, editable: false },
-          actionButtons: { visible: true, editable: false },
-          btnApprove: { visible: false, editable: false },
-          btnReject: { visible: false, editable: false },
-        }
-      },
-      orderDetailEdit: {
-        fields: {
-          orderDetails: { visible: true, editable: false },
-          customerName: { visible: true, editable: false },
-          branchName: { visible: true, editable: false },
-          orderBy: { visible: true, editable: false },
-          erpId: { visible: true, editable: false },
-          entity: { visible: true, editable: false },
-          paymentMethod: { visible: true, editable: false },
-          totalAmount: { visible: true, editable: false },
-          paidAmount: { visible: true, editable: false },
-          deliveryCharges: { visible: true, editable: false },
-          expectedDeliveryDate: { visible: true, editable: false },
-          pricingPolicy: { visible: false, editable: false },
+          expectedDeliveryDate: { visible: true, editable: true },
+          pricingPolicy: { visible: true, editable: true },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
           driver: { visible: false, editable: false },
           vehicleNumber: { visible: false, editable: false },
-          images: { visible: false, editable: false },
+          images: { visible: true, editable: true },
           addImages: { visible: false, editable: false },
-          products: { visible: false, editable: false },
-          orderFooter: { visible: true, editable: false },
-          stock: { visible: false, editable: false},
-          btnSave: { visible: false, editable: false },
-          btnCancel: { visible: true, editable: false },
-          btnInvoice: { visible: false, editable: false },
-          btnInventory: { visible: false, editable: false },
-          actionButtons: { visible: false, editable: false },
-          btnApprove: { visible: false, editable: false },
-          btnReject: { visible: false, editable: false },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnPay: { visible: false, editable: false },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
+        },
+      },
+      orderDetailEdit: {
+        fields: {
+          orderDetails: { visible: true, editable: false },
+          customerName: { visible: true, editable: true },
+          branchName: { visible: true, editable: true },
+          orderBy: { visible: true, editable: true },
+          erpId: { visible: true, editable: true },
+          entity: { visible: true, editable: true },
+          paymentMethod: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
+          paidAmount: { visible: true, editable: true },
+          deliveryCharges: { visible: true, editable: true },
+          expectedDeliveryDate: { visible: true, editable: true },
+          createdDate: { visible: true, editable: true },
+          updatedDate: { visible: true, editable: true },
+          driver: { visible: true, editable: true },
+          vehicleNumber: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          addImages: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          orderFooter: { visible: true, editable: true },
+          btnSave: { visible: true, editable: true },
+          btnCancel: { visible: true, editable: true },
+          btnInvoice: { visible: true, editable: true },
+          btnInventory: { visible: true, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
         }
       },
       catalog: {
@@ -996,7 +989,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1012,10 +1005,10 @@ class RbacManager {
           paymentMethod: { visible: true, editable: true },
           expectedDeliveryDate: { visible: true, editable: true },
           paymentStatus: { visible: true, editable: true },
-          toyalAmount: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
+          action: { visible: false, editable: true },
           addButton: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
         },
@@ -1029,15 +1022,15 @@ class RbacManager {
           erpId: { visible: true, editable: false },
           entity: { visible: true, editable: true },
           paymentMethod: { visible: true, editable: true },
-          totalAmount: { visible: true, editable: true },
-          paidAmount: { visible: true, editable: true },
-          deliveryCharges: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
+          deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: true },
-          pricingPolicy: { visible: false, editable: false },
+          pricingPolicy: { visible: true, editable: true },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
-          driver: { visible: true, editable: true },
-          vehicleNumber: { visible: true, editable: true },
+          driver: { visible: false, editable: false },
+          vehicleNumber: { visible: false, editable: false },
           images: { visible: true, editable: true },
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
@@ -1045,6 +1038,7 @@ class RbacManager {
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
+          btnPay: { visible: false, editable: false },
           btnInventory: { visible: true, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
@@ -1066,7 +1060,6 @@ class RbacManager {
           expectedDeliveryDate: { visible: true, editable: true },
           createdDate: { visible: true, editable: true },
           updatedDate: { visible: true, editable: true },
-          pricingPolicy: { visible: false, editable: false },
           driver: { visible: true, editable: true },
           vehicleNumber: { visible: true, editable: true },
           images: { visible: true, editable: true },
@@ -1223,7 +1216,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1242,7 +1235,7 @@ class RbacManager {
           totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
+          action: { visible: false, editable: true },
           addButton: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
         },
@@ -1323,7 +1316,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1339,10 +1332,10 @@ class RbacManager {
           paymentMethod: { visible: true, editable: true },
           expectedDeliveryDate: { visible: true, editable: true },
           paymentStatus: { visible: true, editable: true },
-          toyalAmount: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
+          action: { visible: false, editable: true },
           addButton: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
         },
@@ -1356,14 +1349,15 @@ class RbacManager {
           erpId: { visible: true, editable: false },
           entity: { visible: true, editable: true },
           paymentMethod: { visible: true, editable: true },
-          totalAmount: { visible: true, editable: true },
-          paidAmount: { visible: true, editable: true },
-          deliveryCharges: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
+          deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: true },
+          pricingPolicy: { visible: true, editable: true },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
-          driver: { visible: true, editable: true },
-          vehicleNumber: { visible: true, editable: true },
+          driver: { visible: false, editable: false },
+          vehicleNumber: { visible: false, editable: false },
           images: { visible: true, editable: true },
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
@@ -1371,6 +1365,7 @@ class RbacManager {
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
+          btnPay: { visible: false, editable: false },
           btnInventory: { visible: true, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
@@ -1410,14 +1405,25 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
-      }
+      },
+      catalog: {
+        fields: {
+          selectBranch: { visible: false, editable: false },
+          search: { visible: true, editable: true },
+          products: { visible: true, editable: true },
+          quantityController: { visible: false, editable: false },
+          addToCart: { visible: false, editable: false },
+          goToCart: { visible: false, editable: false },
+          sort: { visible: false, editable: false }
+        }
+      },
     },
 
     [constants.DESIGNATIONS.FIELD_ENGINEER]: {
-      orderList: {
+       orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
           companyName: { visible: true, editable: true },
@@ -1429,7 +1435,7 @@ class RbacManager {
           totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
+          action: { visible: false, editable: true },
           addButton: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
         },
@@ -1443,14 +1449,15 @@ class RbacManager {
           erpId: { visible: true, editable: false },
           entity: { visible: true, editable: true },
           paymentMethod: { visible: true, editable: true },
-          totalAmount: { visible: true, editable: true },
-          paidAmount: { visible: true, editable: true },
-          deliveryCharges: { visible: true, editable: true },
+          totalAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
+          deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: true },
+          pricingPolicy: { visible: true, editable: true },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
-          driver: { visible: true, editable: true },
-          vehicleNumber: { visible: true, editable: true },
+          driver: { visible: false, editable: false },
+          vehicleNumber: { visible: false, editable: false },
           images: { visible: true, editable: true },
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
@@ -1458,6 +1465,7 @@ class RbacManager {
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
           btnInvoice: { visible: true, editable: true },
+          btnPay: { visible: false, editable: false },
           btnInventory: { visible: true, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
@@ -1494,8 +1502,7 @@ class RbacManager {
           btnReject: { visible: true, editable: true },
         }
       },
-
-       catalog: {
+      catalog: {
         fields: {
           selectBranch: { visible: false, editable: false },
           search: { visible: true, editable: true },
@@ -1509,7 +1516,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1608,7 +1615,7 @@ class RbacManager {
       SidebarList: {
         fields: {
           Dashboard: {visible: false, editable: true},
-          CompanyProfile: {visible: false, editable: true},
+          Company: {visible: false, editable: true},
           Settings: {visible: false, editable: true}
         }
       }
@@ -1733,7 +1740,7 @@ class RbacManager {
    * @returns {boolean} True if the field is visible, false otherwise
    */
   isV(field) {
-    console.log(field)
+    //console.log(field)
     const access = this.getFieldAccess(field);
     return access == null ? true : access.visible;
   }
