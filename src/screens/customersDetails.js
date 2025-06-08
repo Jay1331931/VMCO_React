@@ -1519,7 +1519,8 @@ const handleDialogSubmit = async (comment) => {
       // handleSaveFiles();
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
-      navigate('/catalog')
+      //navigate('/catalog')
+      window.location.reload();
       
     } catch (error) {
       console.error('Update error:', error);
