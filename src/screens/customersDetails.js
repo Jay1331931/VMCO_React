@@ -422,6 +422,7 @@ function CustomersDetails() {
   //   }
 
   // }, [transformedCustomer.customerId]);
+  
   useEffect(() => {
     const fetchData = async () => {
       await fetchApprovedCustomer(transformedCustomer);
@@ -472,9 +473,21 @@ function CustomersDetails() {
   const tabs = useMemo(() => {
     const allTabs = Object.keys(formsByTab);
     // Remove 'Branches' tab if module is 'branch'
-    return transformedCustomer?.module === 'branch' || (customerFormMode !== 'custDetailsAdd' || transformedCustomer?.customerStatus !== 'approved')
-      ? (transformedCustomer?.module === 'branch' && customerFormMode !== 'custDetailsEdit')?allTabs.filter(tab => tab !== 'Branches')
-      : allTabs : allTabs;
+
+    if(customerFormMode === 'custDetailsAdd') {
+      if(transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending') {
+        return allTabs.filter(tab => tab !== 'Branches' && tab !== 'Products & MoQ');
+      } else {
+        return allTabs;
+      }
+    }
+    if(customerFormMode === 'custDetailsEdit') {
+      if(transformedCustomer?.customerStatus === 'approved' && transformedCustomer?.module === 'branch') {
+        return allTabs;
+      } else {
+        return allTabs.filter(tab => tab !== 'Branches' && tab !== 'Products & MoQ');
+      }
+    }
   }, [formsByTab, transformedCustomer?.module]);
 
   const initialFormData = useMemo(() => {
@@ -761,7 +774,7 @@ const paymentMethodPayload = (() => {
 
 
     changedFields.forEach(fieldName => {
-      if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName == 'acknowledgementSignature') return;
+      if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost') return;
 
       const newValue = formData[fieldName];
       const oldValue = customerData[fieldName];
@@ -802,7 +815,9 @@ const paymentMethodPayload = (() => {
     try {
       // 1. Update customer table if needed
       if (Object.keys(customerPayload).length > 0) {
-        
+        if(action === 'save'){
+          customerPayload['customerStatus'] = 'new';
+        }
         console.log("Customer Payload", customerPayload)
         try {
         const response = await fetch(`${API_BASE_URL}/customers/id/${customer.id}`, {
@@ -1275,7 +1290,7 @@ const handleDialogSubmit = async (comment) => {
 };
   const handleSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please fill all required fields'));
+      alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     if (action === 'approve') {
@@ -1350,7 +1365,7 @@ const handleDialogSubmit = async (comment) => {
       console.log('Prepared changedFields:', newChangedFields);
 
       if (!validateChangedFields('save changes', newChangedFields, true)) {
-        alert(t('Please fill all required fields'));    
+        alert(t('Please fill all required fields. Please Save files before submitting.'));    
         return;
       }
 
@@ -1403,7 +1418,7 @@ const handleDialogSubmit = async (comment) => {
     const customerData = customer || {};
     console.log("Changed fields in Save", changedFields)
     newChangedFields.forEach(fieldName => {
-      if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName == 'acknowledgementSignature') return;
+      if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation') return;
 
       const newValue = formData[fieldName];
       const oldValue = customerData[fieldName];
@@ -1516,10 +1531,11 @@ const handleDialogSubmit = async (comment) => {
           })
         );
       }
-      // handleSaveFiles();
+      handleSaveFiles();
       alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
-      navigate('/catalog')
+      //navigate('/catalog')
+      window.location.reload();
       
     } catch (error) {
       console.error('Update error:', error);
@@ -1554,13 +1570,13 @@ const handleDialogSubmit = async (comment) => {
           updatedData.businessHeadName = prev.primaryContactName;
           updatedData.businessHeadDesignation = prev.primaryContactDesignation;
           updatedData.businessHeadEmail = prev.primaryContactEmail;
-          updatedData.businessHeadPhone = prev.primaryContactPhone;
+          updatedData.businessHeadMobile = prev.primaryContactMobile;
         }
         updatedData[fieldName] = checked ? [value] : [];
         setChangedFields(prev => new Set(prev).add('businessHeadName'));
         setChangedFields(prev => new Set(prev).add('businessHeadDesignation'));
         setChangedFields(prev => new Set(prev).add('businessHeadEmail'));
-        setChangedFields(prev => new Set(prev).add('businessHeadPhone'));
+        setChangedFields(prev => new Set(prev).add('businessHeadMobile'));
       } else {
         let updatedValues = prev[fieldName] || {}
         if (checked) {
@@ -2307,7 +2323,7 @@ const handleDialogSubmit = async (comment) => {
                   {console.log(customer.isApprovalMode)}
                   {(
                     <>
-                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked}>
+                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>
                         {t('Block')}
                       </button>}
                       {(isV('btnUnblock') && transformedCustomer?.isBlocked  && customerFormMode !== 'custDetailsEdit') && <button className="block" onClick={() => handleSave('unblock')} >

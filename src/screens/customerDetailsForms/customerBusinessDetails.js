@@ -14,7 +14,7 @@ export function getBusinessDetailsForm(t) {
       { type: 'dropdown', name: 'typeOfBusiness', label: t('Type of Business'), options: ['Restaurant', 'Coffee Shop', 'Supermarket', 'E-commerce', 'Quick Commerce', 'Hospital', 'Labor Camp', 'Others'], required: true },
       {
         type: 'conditionalText',
-        name: 'businessTypeOther',
+        name: 'typeOfBusinessOther',
         label: t('Type of Business (Other)'),
         placeholder: t('Enter other business type'),
         showWhen: 'businessType',
@@ -50,7 +50,7 @@ export function getBusinessDetailsFormData(t, customer = null) {
         baladeahLicenseNumber: customer.baladeahLicenseNumber || '',
         companyType: customer.companyType || '',
         typeOfBusiness: customer.typeOfBusiness || '',
-        businessTypeOther: customer.businessTypeOther || '',
+        typeOfBusinessOther: customer.typeOfBusinessOther || '',
         deliveryLocations: customer.deliveryLocations || '',
         brandNameEn: customer.brandNameEn || '',
         brandNameAr: customer.brandNameAr || '',
@@ -111,9 +111,10 @@ export function getBusinessDetailsFormData(t, customer = null) {
   contractAgreement: customer.contractAgreement ? { name: customer.contractAgreement } : '',
   creditApplication: customer.creditApplication ? { name: customer.creditApplication } : '',
   acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
-  nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
-} : {
+  } : {
   acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
+  contractAgreement: customer.contractAgreement ? { name: customer.contractAgreement } : '',
+  creditApplication: customer.creditApplication ? { name: customer.creditApplication } : '',
   nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
 }
     }
