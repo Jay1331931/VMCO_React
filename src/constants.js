@@ -13,7 +13,11 @@ const Constants = {
         FIELD_ENGINEER: 'field engineer',
         MAINTENANCE_TECHNICIAN: 'maintenance technician',
         DRIVER: 'driver',
-    }
+    },
+    ENTITY:{
+        
+    },
+    
 };
 
 export default Constants;
