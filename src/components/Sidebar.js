@@ -35,7 +35,7 @@ function Sidebar({ children, title }) {
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout } = useAuth();
-  const rbacMgr = new RbacManager(user.userType == 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'SidebarList');
+  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'SidebarList');
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
@@ -375,8 +375,8 @@ return customerData;
                   <FontAwesomeIcon icon={faUser} />
                 </div>
                 <div className="user-text">
-                  <div className="user-name">{user.userName}</div>
-                  <div className="user-email">{user.email}</div>
+                  <div className="user-name">{user?.userName}</div>
+                  <div className="user-email">{user?.email}</div>
                 </div>
               </div>
               <div className="logout-icon" onClick={handleLogout}>
