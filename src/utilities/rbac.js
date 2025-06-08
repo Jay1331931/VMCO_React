@@ -347,7 +347,7 @@ class RbacManager {
     [constants.ROLES.CUSTOMER_PRIMARY]: {
       orderList: {
         fields: {
-          orderNumber: { visible: true, editable: true },
+          orderNumber: { visible: true, editable: false },
           companyName: { visible: false, editable: true },
           branchName: { visible: true, editable: true },
           entity: { visible: true, editable: true },
@@ -1285,12 +1285,12 @@ class RbacManager {
           paidAmount: { visible: true, editable: true },
           deliveryCharges: { visible: true, editable: true },
           expectedDeliveryDate: { visible: true, editable: true },
-          createdDate: { visible: true, editable: true },
-          updatedDate: { visible: true, editable: true },
-          driver: { visible: true, editable: true },
-          vehicleNumber: { visible: true, editable: true },
+          createdDate: { visible: false, editable: true },
+          updatedDate: { visible: false, editable: true },
+          driver: { visible: false, editable: true },
+          vehicleNumber: { visible: false, editable: true },
           images: { visible: true, editable: true },
-          addImages: { visible: true, editable: true },
+          addImages: { visible: false, editable: true },
           products: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
           btnSave: { visible: true, editable: true },
