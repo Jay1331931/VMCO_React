@@ -1181,7 +1181,7 @@ function OrderDetails() {
       }, 0);
       // Delivery charges logic
       if (formData.entity && formData.entity.toLowerCase() !== 'vmco') {
-        if (total > 150) {
+        if (total <= 150) {
           deliveryCharges = '20.00';
         }
       }

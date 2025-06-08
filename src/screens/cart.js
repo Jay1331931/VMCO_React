@@ -484,9 +484,7 @@ function Cart() {
                 }
                 // Calculate delivery charges based on initial total amount
                 let deliveryCharges = 0.00;
-                const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
-
-                // Updated delivery charges logic according to requirements
+                const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');                // Updated delivery charges logic according to requirements
                 if (isDeliveryChargesApplicable) {
                     // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
 
@@ -696,9 +694,7 @@ function Cart() {
             // Get existing delivery charges if updating an order
             let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;        // Calculate delivery charges based on recalculated line totals
             let deliveryCharges = 0.00;
-            const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
-
-            // Updated delivery charges logic according to requirements
+            const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');            // Updated delivery charges logic according to requirements
             if (isDeliveryChargesApplicable) {
                 // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
 
