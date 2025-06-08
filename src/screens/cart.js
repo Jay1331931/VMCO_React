@@ -452,6 +452,8 @@ function Cart() {
             const companyNameAr = customerData?.data?.companyNameAr;
             const pricingPolicy = customerData?.data?.pricingPolicy;
 
+            console.log(companyNameEn, companyNameAr, pricingPolicy, isDeliveryChargesApplicable);
+
             const assignedTo = customerData?.data?.assignedTo;
             // Create new order with 0 totalAmount for now
             const orderPayload = {
