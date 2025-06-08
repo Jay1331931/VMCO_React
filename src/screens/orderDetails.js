@@ -57,7 +57,6 @@ function OrderDetails() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   // Initialize form data
   const [formData, setFormData] = useState({
     ...defaultOrder,
@@ -78,6 +77,7 @@ function OrderDetails() {
   const [nextOrderId, setNextOrderId] = useState('');
   const [saving, setSaving] = useState(false); // New saving state
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
+  const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -256,7 +256,6 @@ function OrderDetails() {
     fetchOrderDetails();
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode]);
-
   // Fetch order product details
   useEffect(() => {
     if (formMode === 'add') return;
@@ -299,7 +298,10 @@ function OrderDetails() {
             ...prev,
             products: processedProducts
           }));
-          console.log('Processed order products:', processedProducts);
+          
+          // Store the original product list for comparison when saving
+          setOriginalProducts(processedProducts);
+          console.log('Stored original products for comparison:', processedProducts);
         } else {
           throw new Error(result.message || 'Failed to fetch order products');
         }
@@ -352,7 +354,6 @@ function OrderDetails() {
     alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
   };
-
   // Function to handle form submission
   const handleSave = async (action) => {
     // Disable save button to prevent multiple submissions
@@ -398,6 +399,38 @@ function OrderDetails() {
           throw new Error(`Failed to update order: ${orderResponse.statusText}`);
         }
         
+        // Now check for existing order lines and fetch them
+        let existingProductMap = {};
+        try {
+          const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: formData.id }))}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+
+          if (!linesResponse.ok) {
+            console.warn(`Failed to fetch order lines: ${linesResponse.statusText}`);
+          } else {
+            const existingLines = await linesResponse.json();
+            if (existingLines.data?.data) {
+              // Filter to ensure we only get lines for this specific order
+              const orderLines = existingLines.data.data.filter(line => line.orderId === formData.id);
+              console.log(`Existing order lines for orderId ${formData.id}:`, orderLines);
+              
+              orderLines.forEach(line => {
+                if (line.productId) {
+                  existingProductMap[line.productId] = line;
+                  console.log(`Mapped existing line for product ID ${line.productId} to line ID ${line.id}`);
+                } else {
+                  console.warn(`Found order line without product_id:`, line);
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching existing order lines:', err);
+        }
+        
         // Now update each product line
         if (formData.products && formData.products.length > 0) {
           console.log('Updating sales order lines');
@@ -411,11 +444,14 @@ function OrderDetails() {
             const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
             
-            // Existing products with salesOrderLineId should be updated
-            if (product.salesOrderLineId) {
+            // Check if product already exists in the order
+            const existingLine = existingProductMap[productId];
+            
+            if (existingLine) {
+              console.log(`Found existing line for product ID ${productId}, updating quantity and amounts`);
+              // Update existing line
               return updateSalesOrderLine(
                 formData.id,
-                product.salesOrderLineId,
                 productId,
                 unitPrice,
                 quantity,
@@ -424,8 +460,22 @@ function OrderDetails() {
                 vatPercentage
               );
             } 
-            // New products (without salesOrderLineId) need to be added
+            // Existing products with salesOrderLineId but not found in existingProductMap
+            else if (product.salesOrderLineId) {
+              console.log(`Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`);
+              return updateSalesOrderLine(
+                formData.id,
+                productId,
+                unitPrice,
+                quantity,
+                netAmount,
+                sugarTaxPrice,
+                vatPercentage
+              );
+            } 
+            // New products need to be added
             else {
+              console.log(`Creating new line for product ID ${productId}`);
               return createSalesOrderLine(
                 formData.id, 
                 productId, 
@@ -440,6 +490,40 @@ function OrderDetails() {
           
           // Wait for all product line updates to complete
           await Promise.all(updatePromises);
+        }
+
+        // Check for deleted products by comparing originalProducts with current products
+        if (originalProducts && originalProducts.length > 0) {
+          console.log('Checking for deleted products...');
+          
+          // Create a map of current products for easy lookup
+          const currentProductsMap = {};
+          formData.products.forEach(product => {
+            const productId = product.id || product.productId;
+            if (productId) {
+              currentProductsMap[productId] = true;
+            }
+          });
+          
+          // Find products that were in originalProducts but are no longer in formData.products
+          const deletePromises = originalProducts
+            .filter(product => {
+              const productId = product.id || product.productId;
+              return productId && !currentProductsMap[productId];
+            })
+            .map(product => {
+              const productId = product.id || product.productId;
+              console.log(`Deleting removed product ID ${productId} from order`);
+              return deleteSalesOrderLine(formData.id, productId);
+            });
+          
+          // Wait for all delete operations to complete
+          if (deletePromises.length > 0) {
+            console.log(`Found ${deletePromises.length} products to delete`);
+            await Promise.all(deletePromises);
+          } else {
+            console.log('No products were removed from the order');
+          }
         }
         
         // Refresh order details after update
@@ -791,7 +875,6 @@ function OrderDetails() {
       alert(t('Failed to update prices. Please try again.'));
     }
   };
-
   // Function to update sales order line
   const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, sugarTaxPrice, vatPercentage) => {
     try {
@@ -800,19 +883,45 @@ function OrderDetails() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          unitPrice,
           quantity,
-          netAmount,
-          sugarTaxPrice,
-          vatPercentage
+          unitPrice,
+          net_amount: netAmount.toFixed(2),
+          sugarTaxPrice: sugarTaxPrice.toFixed(2),
+          vatPercentage: vatPercentage.toFixed(2)
         })
       });
 
       if (!response.ok) {
         console.error('Failed to update sales order line');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+      } else {
+        const updatedLine = await response.json();
+        console.log('Successfully updated sales order line:', updatedLine);
       }
     } catch (error) {
       console.error('Error updating sales order line:', error);
+    }
+  };
+  
+  // Function to delete sales order line
+  const deleteSalesOrderLine = async (orderId, productId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error(`Failed to delete sales order line for product ID ${productId}`);
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+      } else {
+        console.log(`Successfully deleted sales order line for product ID ${productId}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting sales order line for product ID ${productId}:`, error);
     }
   };
 
@@ -855,7 +964,7 @@ function OrderDetails() {
     setFormData(prev => {
       // Check if product already exists in the table
       const existingIdx = prev.products.findIndex(
-        p => (p.id || p.product_id) === (product.id || product.product_id)
+        p => (p.id || p.product_id) === (product.id || p.product_id)
       );
       if (existingIdx !== -1) {
         // Product exists, increment quantity and update netAmount
@@ -1155,6 +1264,10 @@ function OrderDetails() {
           ...prev,
           products: processedProducts
         }));
+        
+        // Store the original product list for comparison when saving
+        setOriginalProducts(processedProducts);
+        console.log('Stored original products for comparison:', processedProducts);
       }
     } catch (err) {
       console.error('Error fetching order products:', err);
@@ -1371,9 +1484,7 @@ function OrderDetails() {
 
                   {isV('pricingPolicy') && (
                     <div className="order-details-field">
-                      <label>{t('Pricing Policy')}</label>
-                      {formMode === 'add' ? (
-                        <select
+                      <label>{t('Pricing Policy')}</label>                      <select
                           name="pricingPolicy"
                           value={formData.pricingPolicy || ''}
                           onChange={handleInputChange}
@@ -1387,13 +1498,6 @@ function OrderDetails() {
                             </option>
                           ))}
                         </select>
-                      ) : (
-                        <input
-                          name="pricingPolicy"
-                          value={formData.pricingPolicy || ''}
-                          disabled
-                        />
-                      )}
                     </div>
                   )}
 
@@ -1509,16 +1613,15 @@ function OrderDetails() {
                       {t('Add products')}
                     </button>
                   )}
-                  {/* Hide table in add mode until products are selected */}
-                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
+                  {/* Hide table in add mode until products are selected */}                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
                     <Table
                       columns={columns}
                       data={formData.products.filter(
                         p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.sugarTaxPrice || p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
-                        formMode === 'add' && isE('products')
-                          ? (row) => (
+                        (row) => (
+                          isV('deleteButton') && isE('products') && (
                             <button
                               className="order-action-btn reject"
                               style={{ padding: '4px 10px', fontSize: 14 }}
@@ -1527,11 +1630,12 @@ function OrderDetails() {
                                 handleDeleteProductRow(formData.products.indexOf(row));
                               }}
                               type="button"
+                              disabled={!isE('deleteButton')}
                             >
                               {t('Delete')}
                             </button>
                           )
-                          : undefined
+                        )
                       }
                     />
                   )}

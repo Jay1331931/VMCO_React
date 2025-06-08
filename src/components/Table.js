@@ -45,13 +45,13 @@ const Table = ({
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
-        
-        // Handle checkout button
+          // Handle checkout button
         if (column.key === 'checkout' && onCheckout) {
             return (
                 <button 
                     className="action-button checkout"
                     onClick={(e) => {
+                        console.log('Checkout button clicked for item:', item);
                         e.stopPropagation(); // Prevent row click event
                         onCheckout(item);
                     }}
@@ -80,10 +80,14 @@ const Table = ({
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, index) => (
-                        <tr
+                    {data.map((row, index) => (                        <tr
                             key={index}
-                            onClick={() => onRowClick && onRowClick(row)}
+                            onClick={(e) => {
+                                if (onRowClick) {
+                                    console.log('Table component: row clicked', row);
+                                    onRowClick(row);
+                                }
+                            }}
                             style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                         >
                             {columns.map((column) => (

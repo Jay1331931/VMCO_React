@@ -183,6 +183,7 @@ function Orders() {
   };
 
   const handleRowClick = (order) => {
+    console.log('Row clicked, navigating to order details with:', order);
     navigate('/orderDetails', { state: { order, mode: 'edit' } });
   };
 
@@ -239,11 +240,14 @@ function Orders() {
             {isV ('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
         </div>
-        {isV ('ordersTable') && (<Table
+    {isV ('ordersTable') && (<Table
           columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
-          onRowClick={handleRowClick}
+          onRowClick={(order) => {
+            console.log('Table row clicked, calling handleRowClick with:', order);
+            handleRowClick(order);
+          }}
           onCheckout={handleCheckout}
         />)}
         {isV('ordersPagination') && (<Pagination
