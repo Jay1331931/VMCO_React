@@ -478,7 +478,6 @@ function OrderDetails() {
             net_amount: parseFloat(product.netAmount),
             sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
             sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
-            status:'Open'
           }));
 
           console.log('Submitting products payload:', productsPayload);
@@ -747,7 +746,6 @@ function OrderDetails() {
     });
     setShowProductPopup(false);
   };
-
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
     console.log('Selected customer:', customer);
@@ -758,11 +756,10 @@ function OrderDetails() {
     }
     setFormData(prev => ({
       ...prev,
-      erpCustId: customer.erpCustId,
+      erpCustId: customer.erp_cust_id || customer.erpCustId || '', // Handle both property naming formats
       customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: customer.company_name_en || customer.companyNameEn,
       pricingPolicy: customerPricingPolicy,
-
     }));
     setShowCustomerPopup(false);
   };
@@ -970,12 +967,11 @@ function OrderDetails() {
                             placeholder={t('Click to select customer')}
                             disabled={!isE('customerName')}
                           />
-                        </div>
-                      ) : (
+                        </div>                      ) : (
                         <input
-                          id="erpCustIdField"
-                          name="erpCustId"
-                          value={formData.erpCustId ?? ''}
+                          id="customerField"
+                          name="selectedCustomerName"
+                          value={formData.companyNameEn || formData.selectedCustomerName || ''}
                           disabled={isE('customerName')}
                           readOnly
                         />
