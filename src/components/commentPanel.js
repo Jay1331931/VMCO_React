@@ -4,7 +4,8 @@ import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { faMessage } from '@fortawesome/free-regular-svg-icons';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
-import formatDate from '../utilities/dateFormatter'; // Import the date formatter
+import formatDate from '../utilities/dateFormatter';
+import RbacManager from '../utilities/rbac';
 
 /**
  * comment object structure
@@ -24,6 +25,14 @@ const CommentPopup = ({
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState(externalComments);
   const [count, setCount] = useState(externalComments?.length);
+
+    //RBAC
+    //use formMode to decide if it is editform or add form
+    const rbacMgr = new RbacManager(currentUser.userType === 'employee' && currentUser.roles[0] !== 'admin' ? currentUser.designation : currentUser.roles,'commentPanel');
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
+
+  
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -58,7 +67,7 @@ const CommentPopup = ({
     <>
       <button onClick={() => setIsOpen(!isOpen)} className="comment-button">
         <div className="icon-wrapper">
-          <FontAwesomeIcon icon={faMessage} className="message-icon" />
+          {isV('commentIcon') && isE('commentIcon')&&(<FontAwesomeIcon icon={faMessage} className="message-icon" />)}
           {count > 0 && <span className="badge">{count}</span>}
         </div>
       </button>

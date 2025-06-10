@@ -71,11 +71,13 @@ const Table = ({
  
     return (
         <div className="table-container">
-            <table className="data-table">
-                <thead>
+            <table className="data-table">                <thead>
                     <tr>
-                        {columns.map((column) => (
-                            <th key={column.key}>{column.header}</th>
+                        {columns.map((column) => (                            <th key={column.key}>
+                                {typeof column.header === 'function' 
+                                    ? column.header() 
+                                    : t(column.header)}
+                            </th>
                         ))}
                     </tr>
                 </thead>

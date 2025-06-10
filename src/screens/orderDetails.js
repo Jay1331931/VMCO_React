@@ -116,16 +116,16 @@ function OrderDetails() {
 
   // Table columns
   const columns = [
-    { key: 'id', header: 'Product ID', include: isV('productIdCol') },
+    { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
     {
       key: 'productName',
-      header: 'Product Name',
+      header: () => t('Product Name'),
       render: (row) => row.productName,
       include: isV('productNameCol'),
     },
     {
       key: 'quantity',
-      header: 'Quantity',
+      header: () => t('Quantity'),
       render: (row) => (
         <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
@@ -166,12 +166,13 @@ function OrderDetails() {
                 fontSize: '12px',
                 padding: '2px 8px',
                 marginLeft: '6px',
+                marginRight: '6px',
                 cursor: 'pointer'
               }}
               title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
               onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
             >
-              Stock
+              {t('Stock')}
             </button>
           </span>)}
         </div>
@@ -180,13 +181,13 @@ function OrderDetails() {
     },
     {
       key: 'unit',
-      header: 'Unit',
+      header: () => t('Unit'),
       render: (row) => row.unit,
       include: isV('unitCol'),
     },
     {
       key: 'unitPrice',
-      header: 'Unit Price (SAR)',
+      header: () => t('Unit Price (SAR)'),
       render: (row) => {
         const price = parseFloat(row.unitPrice);
         return price.toFixed(2);
@@ -195,23 +196,23 @@ function OrderDetails() {
     },
     {
       key: 'sugarTaxPrice',
-      header: 'Sugar Tax',
+      header: () => t('Sugar Tax'),
       render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
       include: isV('sugarTaxPriceCol'),
     },
     {
       key: 'vatPercentage',
-      header: 'VAT',
+      header: () => t('VAT'),
       render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
       include: isV('vatPercentageCol'),
     },
     {
       key: 'netAmount',
-      header: 'Net Amount (SAR)',
+      header: () => t('Net Amount (SAR)'),
       render: (row) => parseFloat(row.netAmount).toFixed(2),
       include: isV('netAmountCol'),
     },
-    ...(isE('products') ? [{ key: 'actions', header: 'Actions' }] : [])
+    ...(isE('products') ? [{ key: 'actions', header: () => t('Actions') }] : [])
   ];
 
   // Fetch order details from backend
@@ -1622,15 +1623,14 @@ function OrderDetails() {
                       actionButtons={
                         (row) => (
                           isV('deleteButton') && isE('products') && (
-                            <button
-                              className="order-action-btn reject"
+                            <button                              className="order-action-btn reject"
                               style={{ padding: '4px 10px', fontSize: 14 }}
                               onClick={e => {
                                 e.stopPropagation();
                                 handleDeleteProductRow(formData.products.indexOf(row));
                               }}
                               type="button"
-                              disabled={!isE('deleteButton')}
+                              disabled={!isE('deleteButton') || (formData.status && formData.status.toLowerCase() !== 'open')}
                             >
                               {t('Delete')}
                             </button>
@@ -1655,13 +1655,21 @@ function OrderDetails() {
                 )}
 
                 {isV('btnSave') && isE('btnSave') && (
-                  <button className="order-action-btn" onClick={() => handleSave('save')}>
+                  <button 
+                    className="order-action-btn" 
+                    onClick={() => handleSave('save')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
                     {t('Save Changes')}
                   </button>
                 )}
 
                 {isV('btnCancel') && isE('btnCancel') && (
-                  <button className="order-action-btn" onClick={() => handleCancelOrder('cancel order')}>
+                  <button 
+                    className="order-action-btn" 
+                    onClick={() => handleCancelOrder('cancel order')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
                     {t('Cancel Order')}
                   </button>
                 )}
@@ -1712,9 +1720,9 @@ function OrderDetails() {
           </div>
 
           {/* Rest of the component with modals and popups */}
-          <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />
+         {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
-          <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} />
+          <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} currentUser={user ? { userName: user.userName, userId: user.userId } : undefined} />
 
           {/* Product Popup */}
           {showProductPopup && (
