@@ -458,6 +458,14 @@ function Catalog() {
         const newBranchId = e.target.value;
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
+        const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
+        // Save selected branch info to localStorage
+        if (selectedBranch) {
+            localStorage.setItem('selectedBranchId', selectedBranch.value);
+            localStorage.setItem('selectedBranchName', selectedBranch.label);
+            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId || '');
+            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion || '');
+        }
         try {
             setIsLoading(true);
             // Fetch cart items for the user

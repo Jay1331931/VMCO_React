@@ -389,134 +389,120 @@ function Cart() {
             return;
         }
 
+        // Remove special handling for VMCO: always place order for the selected category only
+        setIsPlacingOrder(true);
+        setError(null);
         try {
-            setIsPlacingOrder(true);
-            setError(null);
+            await placeOrderForCategory(categoryItems, categoryName, selectedPaymentMethod);
+        } catch (err) {
+            setError(err.message);
+            alert(t(`Failed to place order: ${err.message}`));
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
 
+    // Helper function to place order for a single category
+    const placeOrderForCategory = async (categoryItems, categoryName, selectedPaymentMethod) => {
+        // Copy the original handlePlaceOrder logic here, but add productCategory to orderPayload
+        if (categoryItems.length === 0) {
+            alert(t('No items in this category to order.'));
+            return;
+        }
+        try {
             const entity = getEntityFromCategory(categoryName);
             const category = categoryName;
-
+            // Add productCategory to the filters for existing order check
             const orderFilters = new URLSearchParams({
                 filters: JSON.stringify({
                     customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     entity,
-                    category,
-                    status: 'Open'
+                    status: 'Open',
+                    productCategory: categoryName // Ensure productCategory is included
                 })
             });
-
             const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
             });
-
             if (!existingOrderResponse.ok) {
                 throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
             }
-
             const existingOrderResult = await existingOrderResponse.json();
             let orderId;
             let existingProductMap = {};
             let existingOrderData = null;
-
             // Fetch customer data for delivery charge calculation - do this once up front
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
             });
-
             if (!customerResponse.ok) {
                 throw new Error('Failed to fetch customer data for delivery charge evaluation');
             }
-
             const customerData = await customerResponse.json();
-            console.log('Customer data:', customerData);
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
             const pricingPolicy = customerData?.data?.pricingPolicy;
             const customerRegion = customerData.data?.region;
-            const assignedTo = customerData?.data?.assignedTo;
-
+            const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
+            let assignedTo = customerData?.data?.assignedTo;
+            if (assignedToEntityWiseRaw) {
+                try {
+                    const assignedToEntityWise = typeof assignedToEntityWiseRaw === 'string' ? JSON.parse(assignedToEntityWiseRaw) : assignedToEntityWiseRaw;
+                    if (entity && assignedToEntityWise[entity.toLowerCase()]) {
+                        assignedTo = assignedToEntityWise[entity.toLowerCase()];
+                    }
+                } catch (e) {
+                    console.error('Error parsing assignedToEntityWise:', e);
+                }
+            }
             if (existingOrderResult.data?.data?.length > 0) {
                 existingOrderData = existingOrderResult.data.data[0];
                 orderId = existingOrderData.id;
-                console.log('Found existing order:', existingOrderData);                const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
+                const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
-
                 if (!linesResponse.ok) {
                     throw new Error(`Failed to fetch order lines: ${linesResponse.statusText}`);
-                }                
+                }
                 const existingLines = await linesResponse.json();
                 if (existingLines.data?.data) {
-                    // Filter to ensure we only get lines for this specific order
                     const orderLines = existingLines.data.data.filter(line => line.orderId === orderId);
-                    console.log(`Existing order lines for orderId ${orderId}:`, orderLines);
-                    
                     orderLines.forEach(line => {
                         if (line.productId) {
                             existingProductMap[line.productId] = line;
-                            console.log(`Mapped existing line for product ID ${line.productId} to line ID ${line.id}`, {
-                                line_details: {
-                                    line_id: line.id,
-                                    product_id: line.productId,
-                                    quantity: line.quantity,
-                                    net_amount: line.net_amount
-                                }
-                            });
-                        } else {
-                            console.warn(`Found order line without product_id:`, line);
                         }
                     });
                 }
-
             } else {
                 // First calculate the initial totalAmount from cart items
-                let initialTotalAmount = 0;                for (const item of categoryItems) {
+                let initialTotalAmount = 0;
+                for (const item of categoryItems) {
                     const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
                     const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
-
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
                     const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
                     const netAmount = baseAmount + vatAmount + sugarTaxAmount;
-
                     initialTotalAmount += netAmount;
                 }
-                // Calculate delivery charges based on initial total amount
                 let deliveryCharges = 0.00;
-                const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');                // Updated delivery charges logic according to requirements
+                const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
                 if (isDeliveryChargesApplicable) {
-                    // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
-
-                    // For VMCO Consumables, Diyafa, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
                     if (!isVmcoMachine && initialTotalAmount <= 150) {
                         deliveryCharges = 20.00;
                     }
                 }
-
-                // Include delivery charges in the initial total amount
                 const finalTotalAmount = initialTotalAmount + deliveryCharges;
-                console.log('Initial total calculation:', {
-                    itemsTotal: initialTotalAmount,
-                    deliveryCharges,
-                    finalTotal: finalTotalAmount,
-                    details: {
-                        isVmcoMachine,
-                        isDeliveryChargesApplicable,
-                        categoryName
-                    }
-                });
-
-                // Create new order with calculated totalAmount
                 const orderPayload = {
                     customerId: selectedCustomerId,
                     companyNameEn: companyNameEn,
@@ -535,23 +521,22 @@ function Cart() {
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,
                     customerRegion: customerRegion,
+                    productCategory: categoryName // <-- Add this field
                 };
-
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderPayload),
                     credentials: 'include',
                 });
-
                 if (!orderResponse.ok) {
                     const errorText = await orderResponse.text();
                     throw new Error(JSON.parse(errorText)?.message || 'Failed to create order');
                 }
-
                 const orderResult = await orderResponse.json();
                 orderId = orderResult.data.id;
-            }            // Create or Update Order Lines
+            }
+            // Create or Update Order Lines
             for (const item of categoryItems) {
                 // Make sure we properly identify the product ID - check all possible fields in priority order
                 const productId = item.product_id || item.productId || item.id;
@@ -749,44 +734,49 @@ function Cart() {
             if (!updateOrderResponse.ok) {
                 throw new Error(`Failed to update order with final amounts`);
             }            const updatedOrderResponse = await updateOrderResponse.json();
-            console.log('Updated the order:', updatedOrderResponse);
+        console.log('Updated the order:', updatedOrderResponse);
 
-            // Show order confirmation alert with order number
-            alert(t(`Order placed successfully! Order #${orderId}`));
+        // Show order confirmation alert with order number
+        alert(t(`Order placed successfully! Order #${orderId}`));
 
-            // Delete cart items
-            try {
-                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', selectedCustomerId);
-                deleteUrl.searchParams.append('branch_id', selectedBranchId);
+        // Delete cart items
+        try {
+            const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+            deleteUrl.searchParams.append('customer_id', selectedCustomerId);
+            deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            // Fix: For Naqui, always use lowercase 'naqui' for both entity and category
+            if (entity && entity.toLowerCase() === 'naqui') {
+                deleteUrl.searchParams.append('entity', 'naqui');
+                deleteUrl.searchParams.append('category', 'naqui');
+            } else if (categoryName && categoryName.toLowerCase() === 'naqui') {
+                deleteUrl.searchParams.append('entity', 'naqui');
+                deleteUrl.searchParams.append('category', 'naqui');
+            } else {
                 deleteUrl.searchParams.append('entity', entity);
                 deleteUrl.searchParams.append('category', categoryName);
-
-                const deleteResponse = await fetch(deleteUrl, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                });
-
-                if (!deleteResponse.ok) {
-                    console.error(`Error removing cart items: ${deleteResponse.statusText}`);
-                }
-            } catch (err) {
-                console.error('Error during cart cleanup:', err);
             }
 
+            const deleteResponse = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+
+            if (!deleteResponse.ok) {
+                console.error(`Error removing cart items: ${deleteResponse.statusText}`);
+            }
         } catch (err) {
-            console.error('Error placing order:', err);
-            setError(err.message);
-            alert(t(`Failed to place order: ${err.message}`));
-        } finally {
-            setIsPlacingOrder(false);
+            console.error('Error during cart cleanup:', err);
         }
-    };
 
-
-
-
+    } catch (err) {
+        console.error('Error placing order:', err);
+        setError(err.message);
+        alert(t(`Failed to place order: ${err.message}`));
+    } finally {
+        setIsPlacingOrder(false);
+    }
+};
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>

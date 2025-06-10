@@ -14,6 +14,7 @@ import GetCustomers from '../components/GetCustomers';
 import GetBranches from '../components/GetBranches';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac'; // Add this import
+import formatDate from '../utilities/dateFormatter';
 
 const defaultOrder = {
   id: '',
@@ -49,6 +50,8 @@ function OrderDetails() {
   // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
+  // Detect if coming from approval mode
+  const fromApproval = location.state?.fromApproval || false;
 
   // Initialize RBAC manager
   const rbacMgr = new RbacManager(
@@ -1476,7 +1479,7 @@ function OrderDetails() {
                       <label>{t('Delivery Date')}</label>
                       <input
                         name="expectedDeliveryDate"
-                        value={formData.expectedDeliveryDate ?? ''}
+                        value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate) : ''}
                         onChange={handleInputChange}
                         disabled={!isE('expectedDeliveryDate')}
                       />
@@ -1722,8 +1725,6 @@ function OrderDetails() {
           {/* Rest of the component with modals and popups */}
          {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
-          <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} currentUser={user ? { userName: user.userName, userId: user.userId } : undefined} />
-
           {/* Product Popup */}
           {showProductPopup && (
             <GetProducts

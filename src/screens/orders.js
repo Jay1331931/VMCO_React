@@ -115,11 +115,14 @@ function Orders() {
         sortOrder: 'asc',
         filters: '{}'
       });
+      console.log('Fetching approvals with params:', params.toString());
       const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
-      }); const result = await response.json();
+      });
+      const result = await response.json();
+      console.log('API Response:', result);
       if (result.status === 'Ok') {
         // Ensure we have the companyNameEn field for each order in approvals
         const processedOrders = result.data.data.map(order => ({
