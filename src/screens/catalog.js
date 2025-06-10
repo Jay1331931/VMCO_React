@@ -68,11 +68,11 @@ function Catalog() {
     }));
 
     const customerId = user?.customerId;
-    const userId = user?.userId;
-
-    useEffect(() => {
+    const userId = user?.userId;    useEffect(() => {
         if (customerId) { setSelectedCustomerId(customerId); }
     }, [customerId]);
+    
+    // Initial setup when component loads - for default tab
 
 
     // Map product fields from backend to component props
@@ -571,9 +571,10 @@ function Catalog() {
                     productName: product.productName || product.product_name,
                     productNameLc: product.productNameLc || product.product_name_lc,
                     erpProdId: product.erpProdId || product.erp_prod_id || '',
+                    moq: product.moq || product.minimumOrderQuantity,
                     entity: product.entity, // Keep original case
                     category: product.category, // Keep original case
-                    unit: product.unit || 'EA',
+                    unit: product.unit,
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
@@ -712,11 +713,69 @@ function Catalog() {
                 setQuantities(initialQuantities);
             }
         }
-    }, [products]); // Only depends on products changing
+    }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
+    useEffect(() => {
+        // Skip if no products, not a VMCO tab, or if category is already set
+        if (!products.length || !['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) || categoryFilter) {
+            return;
+        }
+
+        // Get the entity for the current active tab
+        const selectedCategoryTab = categories.find(cat => cat.value === activeCategory);
+        const entityToFilter = selectedCategoryTab ? selectedCategoryTab.entity : null;
+
+        if (!entityToFilter) return;
+
+        // Filter products by entity
+        let filteredProductsByEntity = products.filter(p =>
+            (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
+        );
+
+        // Apply additional filtering based on tab
+        let availableCategories = [];
+        if (activeCategory === 'VMCO Machines') {
+            // For VMCO Machines tab, exclude categories that have "consumable" in their name
+            availableCategories = Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('consumable') ||
+                          category.toLowerCase().includes('supply') ||
+                          category.toLowerCase().includes('accessory'))
+                    )
+            ));
+        } else if (activeCategory === 'VMCO Consumables') {
+            // For VMCO Consumables tab, exclude categories that have "machine" in their name
+            availableCategories = Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('machine') ||
+                          category.toLowerCase().includes('equipment') ||
+                          category.toLowerCase().includes('device'))
+                    )
+            ));
+        }
+        
+        if (availableCategories.length > 0) {
+            // Set default category when products are loaded for VMCO tabs
+            setCategoryFilter(availableCategories[0]);
+        }
+    }, [products, activeCategory, categoryFilter, categories]);
+
+    // Determine direction and alignment
+    const dir = i18n.dir();
+    const isRTL = dir === 'rtl';
 
     return (
         <Sidebar title={t('Catalog')}>
-            <div className="catalog-content">
+            <div
+                className={`catalog-content${isRTL ? ' rtl' : ''}`}
+                style={{ direction: dir, textAlign: isRTL ? 'right' : 'left' }}
+                dir={dir}
+            >
                 {isV('selectBranch') && <div className="catalog-header">
                     <div className="location-selector">
                         <Dropdown
@@ -746,7 +805,7 @@ function Catalog() {
 
                                             // Create filters to check current cart
                                             const filters = {
-                                                customer_id: selectedCustomerId || customerId || '3',
+                                                customer_id: selectedCustomerId || customerId,
                                                 branch_id: currentBranchId
                                             };
 
@@ -873,16 +932,16 @@ function Catalog() {
                 <div className="filter-section">
                     <Tabs
                         tabs={categoryTabs}
-                        activeTab={activeCategory}
-                        onTabChange={(newCategory) => {
+                        activeTab={activeCategory}                        onTabChange={(newCategory) => {
                             setActiveCategory(newCategory);
-                            // Reset other filters when changing entity
-                            setCategoryFilter('');
-                            setSubCategoryFilter('');
                             setSearchQuery('');
                             setCurrentPage(1);
                             setLoadedPages([]);
                             setHasMore(true);
+                            
+                            // Reset filters - our useEffect will set the appropriate category once products load
+                            setSubCategoryFilter('');
+                            setCategoryFilter('');
                         }}
                         variant="category"
                     />
@@ -906,12 +965,11 @@ function Catalog() {
                             }}
                             debounceTime={500} // Increased debounce time for better performance
                             className="product-search-input"
-                        />)}
-                        <Dropdown
+                        />)}                        <Dropdown
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
                             options={getFilteredCategories().map(cat => ({ value: cat, label: cat }))}
-                            className="category-filter"
+                            className={`category-filter ${['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) ? 'tab-linked-filter' : ''}`}
                             placeholder="Category"
                             value={categoryFilter}
                             onChange={e => {

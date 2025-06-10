@@ -77,17 +77,12 @@ function ProductPopup({
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
                         {product.entity && <div className="popup-product-entity">{product.entity}</div>}
-                        <div className="popup-product-price-row">
-                            <span className="popup-product-price">{product.price} <span className="popup-product-currency">SAR</span></span>
-                        </div><div className="popup-product-unit-row">
-                            <span className="popup-product-unit-label">{t('Unit Price')}:</span>
-                            <span className="popup-product-unit-value">{product.unitPrice} <span className="popup-product-currency">SAR</span></span>
-                        </div>
+                        
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
                         </p>
 
-                        <h4 className="unit-price">Price: {(product.unitPrice).toFixed(2)} SAR</h4>
+                        <h4 className="unit-price">{(t('Unit Price: '))}{(product.unitPrice).toFixed(2)} SAR</h4>
                         {isV('quantityController') && (
                             <QuantityController
                                 itemId={product.id}
@@ -258,6 +253,13 @@ function ProductPopup({
                         color: #222;
                         margin-right: 4px;
                     }
+                    .unit-price {
+                        font-size: 1.1rem;
+                    }
+                    [dir="rtl"].unit-price {
+                        text-align: right;
+                    }
+
                     .popup-product-unit-value {
                         color: #222;
                         font-weight: 500;

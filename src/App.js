@@ -19,7 +19,6 @@ import MaintenanceDetails from './screens/maintenanceDetails';
 import Logout from './screens/logout';
 import RbacEditor from './screens/rbacEditor';
 
-// Remove unused import: import CommentPopup from './screens/commentPanel';
 
 function App() {
   return (

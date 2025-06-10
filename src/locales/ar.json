@@ -159,6 +159,7 @@
     "Category": "الفئة",
     "Sub category": "الفئة الفرعية",
     "ADD TO CART": "أضف إلى السلة",
+    "Unit Price:": "سعر الوحدة:",
     "VMCO Machines": "آلات VMCO",
     "VMCO Consumables": "VMCO مستهلكات",
     "VMCO": "في إم سي أو",
@@ -222,6 +223,14 @@
     "Videos": "فيديوهات",
     "Status:": "الحالة:",
     "Assign To:": "تعيين إلى:",
-    "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم..."
+    "msgLoadingUserInfo": "جارٍ تحميل معلومات المستخدم...",
+    "Stock": "المخزون",
+    "Pricing Policy": "سياسة التسعير",
+    "Delivery Charges": "رسوم التوصيل",
+    "Delivery images": "صور التوصيل",
+    "Add Products": "إضافة منتجات",
+    "Cancel Order": "إلغاء الطلب",
+    "Product ID": "معرف المنتج",
+    "Delete": "حذف"
 
   }

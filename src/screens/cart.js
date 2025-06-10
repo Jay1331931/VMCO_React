@@ -203,6 +203,7 @@ function Cart() {
                         product_id: product.product_id, // Ensure product_id is explicitly preserved
                         productId: product.product_id, // Add productId for consistent access
                         name: productName, // Language-aware
+                        moq: Number(product.moq || product.minimumOrderQuantity || 1), // Store MOQ with the item as a number
                         description: isArabic && product.descriptionLc ? product.descriptionLc : product.description,
                         price: product.unitPrice,
                         quantity: product.quantityOrdered,
@@ -211,10 +212,11 @@ function Cart() {
                         productCode: product.erpProdId || product.product_id || product.code,
                         // Include all original properties
                         ...product
-                    };
-
-                    // Store initial quantities
-                    initialQuantities[formattedItem.id] = formattedItem.quantity;
+                    };                    // Store initial quantities, ensuring we respect MOQ
+                    const moq = Number(formattedItem.moq) || 1;
+                    const currentQuantity = Number(formattedItem.quantity) || 0;
+                    // Ensure quantity is at least MOQ
+                    initialQuantities[formattedItem.id] = Math.max(moq, currentQuantity);
 
                     // Categorize based on entity and product type
                     const entity = (product.entity || '').toLowerCase();
@@ -346,13 +348,21 @@ function Cart() {
         } finally {
             setIsPlacingOrder(false);
         }
-    };
-
-    const handleQuantityChange = (itemId, delta) => {
-        setQuantities(prev => ({
-            ...prev,
-            [itemId]: Math.max(1, (prev[itemId] || 1) + delta)
-        }));
+    };    const handleQuantityChange = (itemId, delta) => {
+        // Find the item in any category to get its MOQ
+        const item = cartItems.flatMap(category => category.items).find(item => item.id === itemId);
+        const moq = item ? Number(item.moq) || 1 : 1;
+        
+        setQuantities(prev => {
+            // Ensure we're working with numbers, not strings
+            const currentQty = Number(prev[itemId] || item?.quantity || 1);
+            // Ensure we don't go below MOQ
+            const newQty = Math.max(moq, currentQty + Number(delta));
+            return {
+                ...prev,
+                [itemId]: newQty
+            };
+        });
     };
 
 
@@ -468,9 +478,8 @@ function Cart() {
 
             } else {
                 // First calculate the initial totalAmount from cart items
-                let initialTotalAmount = 0;
-                for (const item of categoryItems) {
-                    const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
+                let initialTotalAmount = 0;                for (const item of categoryItems) {
+                    const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
                     const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
@@ -739,10 +748,11 @@ function Cart() {
 
             if (!updateOrderResponse.ok) {
                 throw new Error(`Failed to update order with final amounts`);
-            }
-
-            const updatedOrderResponse = await updateOrderResponse.json();
+            }            const updatedOrderResponse = await updateOrderResponse.json();
             console.log('Updated the order:', updatedOrderResponse);
+
+            // Show order confirmation alert with order number
+            alert(t(`Order placed successfully! Order #${orderId}`));
 
             // Delete cart items
             try {
@@ -834,29 +844,37 @@ function Cart() {
                                                         <h4 className="item-name">{item.name}</h4>
                                                         <p className="item-code">{item.productCode}</p>
                                                         {item.description && <p className="item-description">{item.description}</p>}
-                                                        <p className="delivery-date">Delivery By {item.delivery}</p>
-                                                        <QuantityController
+                                                        <p className="delivery-date">Delivery By {item.delivery}</p>                                                        <QuantityController
                                                             itemId={item.id}
-                                                            quantity={quantities[item.id] || item.quantity}
+                                                            quantity={Number(quantities[item.id] || item.quantity || 1)}
                                                             onQuantityChange={handleQuantityChange}
                                                             onInputChange={(itemId, value) => {
-                                                                const numValue = parseInt(value) || 1;
-                                                                setQuantities({
-                                                                    ...quantities,
-                                                                    [itemId]: Math.max(1, numValue)
-                                                                });
+                                                                // Find the item to get its MOQ
+                                                                const item = cartItems.flatMap(category => category.items).find(item => item.id === itemId);
+                                                                const moq = item ? Number(item.moq) || 1 : 1;
+                                                                
+                                                                // Ensure value is treated as a number, not a string
+                                                                const numValue = value === '' ? moq : Number(value);
+                                                                
+                                                                // Ensure we don't go below MOQ
+                                                                setQuantities(prev => ({
+                                                                    ...prev,
+                                                                    [itemId]: Math.max(moq, numValue)
+                                                                }));
                                                             }}
+                                                            moq={item.moq ? Number(item.moq) : 1}
+                                                            minQuantity={item.moq ? Number(item.moq) : 1}
                                                         />
                                                     </div>
-                                                    <div className="item-price-panel">
-                                                        <span className="item-price">
-                                                            {parseInt(item.price * item.quantity)}
-                                                            <span className="sar-label">SAR</span>
+                                                    <div className="item-price-panel">                                                        <span className="item-price">
+                                                            {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
+                                                            <span className="sar-label"> SAR</span>
                                                         </span>
 
-                                                        <span className="tax-row">VAT:{item.vatPercentage}%</span>
+                                                        <span className="tax-row">VAT:{Number(item.vatPercentage)}%</span>
                                                         <span className="item-total-price">
-                                                            Net Amount: {(parseInt((item.price * item.quantity) + (((item.price * item.quantity) / 100) * item.vatPercentage)))} SAR
+                                                            Net Amount: {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) + 
+                                                             (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} SAR
                                                         </span>
                                                         <button
                                                             className="remove-btn"
@@ -881,9 +899,8 @@ function Cart() {
                                                     {t('Total for this category')}:
                                                     {(() => {
                                                         // Calculate total for category including VAT and sugar tax
-                                                        let categoryTotal = 0;
-                                                        category.items.forEach(item => {
-                                                            const quantity = quantities[item.id] || item.quantity || 1;
+                                                        let categoryTotal = 0;                                                        category.items.forEach(item => {
+                                                            const quantity = Number(quantities[item.id] || item.quantity || 1);
                                                             const unitPrice = parseFloat(item.price) || 0;
                                                             const vatPercentage = parseFloat(item.vatPercentage) || 0;
                                                             const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
