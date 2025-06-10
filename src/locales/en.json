@@ -104,10 +104,18 @@
     "Delivery Location": "Delivery Location",
     "Comments": "Comments",
     "Products & MoQ": "Products & MoQ",
+    "Pricing Policy": "Pricing Policy",
+    "Delivery Charges": "Delivery Charges",
+    "Delivery images": "Delivery images",
     "Products": "Products",
     "Product #": "Product #",
     "Product Name": "Product Name",
     "Quantity": "Quantity",
+    "Stock": "Stock",
+    "Add Products": "Add Products",
+    "Cancel Order": "Cancel Order",
+    "Product ID": "Product ID",
+    "Delete": "Delete",
     "Unit": "Unit",
     "Unit Price (SAR)": "Unit Price (SAR)",
     "Net Amount (SAR)": "Net Amount (SAR)",
@@ -136,6 +144,7 @@
     "Assigned To": "Assigned To",
     "Support - Tickets": "Support - Tickets",
     "Download": "Download",
+    "Unit Price:": "Unit Price:",
     "Cart": "Cart",
     "items": "items",
     "Delivering to": "Delivering to",
@@ -156,6 +165,8 @@
     "Status:": "Status:",
     "Assign To:": "Assign To:",
     "msgLoadingUserInfo": "Loading user information..."
-
+    
+    
+    
     
 }

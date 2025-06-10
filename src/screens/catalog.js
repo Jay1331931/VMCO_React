@@ -68,11 +68,11 @@ function Catalog() {
     }));
 
     const customerId = user?.customerId;
-    const userId = user?.userId;
-
-    useEffect(() => {
+    const userId = user?.userId;    useEffect(() => {
         if (customerId) { setSelectedCustomerId(customerId); }
     }, [customerId]);
+    
+    // Initial setup when component loads - for default tab
 
 
     // Map product fields from backend to component props
@@ -410,27 +410,21 @@ function Catalog() {
     useEffect(() => {
         const fetchBranches = async () => {
             try {
-                setIsLoading(true); // Show loading state while fetching
-
-                // The API endpoint already reads the customer_id from the JWT token
+                setIsLoading(true);
                 const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    credentials: 'include' // This includes the auth token/cookies
+                    credentials: 'include'
                 });
-
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
                 }
-
                 const result = await response.json();
                 let branchData = [];
-
-                // Handle response structure with better validation
                 if (Array.isArray(result)) {
                     branchData = result;
                 } else if (result.status === 'Ok' && Array.isArray(result.data)) {
@@ -438,36 +432,95 @@ function Catalog() {
                 } else if (result && Array.isArray(result.data)) {
                     branchData = result.data;
                 } else {
-                    console.warn('Unexpected branch data format:', result);
                     branchData = [];
                 }
-
-                // Map branches to dropdown format with proper field validation
                 const branchOptions = branchData.map(branch => ({
                     value: String(branch.id || branch.branch_id),
                     label: i18n.language === 'en'
                         ? (branch.branch_name_en || branch.branchNameEn)
                         : (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
                     erpBranchId: branch.erpBranchId || branch.erp_branch_id,
-                    branchRegion: branch.region || branch.region, // <-- Map branchRegion to region
+                    branchRegion: branch.region || branch.region,
                     raw: branch
                 }));
                 setBranches(branchOptions);
-
-                console.log('Branch options are ', branchOptions);
-
-                // Add additional logging to see the actual data structure
-                console.log('Fetched branch data:', branchData);
-
             } catch (error) {
                 console.error('Error fetching branches:', error);
             } finally {
                 setIsLoading(false);
             }
         };
-
         fetchBranches();
-    }, [API_BASE_URL, i18n.language]); // Keep i18n.language as dependency to refresh branches on language change
+    }, [API_BASE_URL, i18n.language]);
+
+    // Handler for branch selection with cart check
+    const handleBranchSelect = async (e) => {
+        const newBranchId = e.target.value;
+        const currentBranchId = selectedLocation;
+        if (newBranchId === currentBranchId) return;
+        try {
+            setIsLoading(true);
+            // Fetch cart items for the user
+            const params = new URLSearchParams({
+                page: 1,
+                pageSize: 100,
+                sortBy: 'id',
+                sortOrder: 'asc',
+                filters: JSON.stringify({ user_id: userId, customer_id: selectedCustomerId || customerId })
+            });
+            const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to fetch cart items');
+            const result = await response.json();
+            const cartItems = result?.data?.data || [];
+            // Find all unique branchIds in the cart
+            const cartBranchIds = [...new Set(cartItems.map(item => String(item.branch_id || item.branchId)))];
+            if (cartBranchIds.length === 0) {
+                // No items in cart, allow any branch selection
+                setSelectedLocation(newBranchId);
+                return;
+            }
+            if (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId) {
+                // Only items for this branch, allow selection
+                setSelectedLocation(newBranchId);
+                return;
+            }
+            // If there are items for a different branch, alert the user
+            const otherBranchId = cartBranchIds.find(id => id !== newBranchId);
+            if (otherBranchId) {
+                const otherBranch = branches.find(branch => String(branch.value) === String(otherBranchId));
+                const otherBranchLabel = otherBranch ? otherBranch.label : otherBranchId;
+                if (window.confirm(`There are items in the cart for branch ${otherBranchLabel}. Do you want to discard it?`)) {
+                    // Delete all cart items for the other branch for this user using the provided API
+                    try {
+                        await fetch(`${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId}&branch_id=${otherBranchId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            credentials: 'include'
+                        });
+                        setSelectedLocation(newBranchId);
+                        alert(`Items discarded from the cart for branch ${otherBranchLabel}`);
+                    } catch (deleteError) {
+                        alert('Failed to discard items from the cart. Please try again.');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error during branch change:', error);
+            alert('Error checking cart. Branch change may not work correctly.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     //  Add to cart functionality
     const handleAddToCart = async (productId) => {
@@ -571,9 +624,10 @@ function Catalog() {
                     productName: product.productName || product.product_name,
                     productNameLc: product.productNameLc || product.product_name_lc,
                     erpProdId: product.erpProdId || product.erp_prod_id || '',
+                    moq: product.moq || product.minimumOrderQuantity,
                     entity: product.entity, // Keep original case
                     category: product.category, // Keep original case
-                    unit: product.unit || 'EA',
+                    unit: product.unit,
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
@@ -712,149 +766,81 @@ function Catalog() {
                 setQuantities(initialQuantities);
             }
         }
-    }, [products]); // Only depends on products changing
+    }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
+    useEffect(() => {
+        // Skip if no products, not a VMCO tab, or if category is already set
+        if (!products.length || !['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) || categoryFilter) {
+            return;
+        }
+
+        // Get the entity for the current active tab
+        const selectedCategoryTab = categories.find(cat => cat.value === activeCategory);
+        const entityToFilter = selectedCategoryTab ? selectedCategoryTab.entity : null;
+
+        if (!entityToFilter) return;
+
+        // Filter products by entity
+        let filteredProductsByEntity = products.filter(p =>
+            (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
+        );
+
+        // Apply additional filtering based on tab
+        let availableCategories = [];
+        if (activeCategory === 'VMCO Machines') {
+            // For VMCO Machines tab, exclude categories that have "consumable" in their name
+            availableCategories = Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('consumable') ||
+                          category.toLowerCase().includes('supply') ||
+                          category.toLowerCase().includes('accessory'))
+                    )
+            ));
+        } else if (activeCategory === 'VMCO Consumables') {
+            // For VMCO Consumables tab, exclude categories that have "machine" in their name
+            availableCategories = Array.from(new Set(
+                filteredProductsByEntity
+                    .map(p => p.category)
+                    .filter(Boolean)
+                    .filter(category =>
+                        !(category.toLowerCase().includes('machine') ||
+                          category.toLowerCase().includes('equipment') ||
+                          category.toLowerCase().includes('device'))
+                    )
+            ));
+        }
+        
+        if (availableCategories.length > 0) {
+            // Set default category when products are loaded for VMCO tabs
+            setCategoryFilter(availableCategories[0]);
+        }
+    }, [products, activeCategory, categoryFilter, categories]);
+
+    // Determine direction and alignment
+    const dir = i18n.dir();
+    const isRTL = dir === 'rtl';
 
     return (
         <Sidebar title={t('Catalog')}>
-            <div className="catalog-content">
+            <div
+                className={`catalog-content${isRTL ? ' rtl' : ''}`}
+                style={{ direction: dir, textAlign: isRTL ? 'right' : 'left' }}
+                dir={dir}
+            >
                 {isV('selectBranch') && <div className="catalog-header">
                     <div className="location-selector">
                         <Dropdown
                             id={`location-select-${catalogId}`}
                             name="locationSelect"
                             value={selectedLocation}
-                            onChange={(e) => {
-                                const newBranchId = e.target.value;
-                                const currentBranchId = selectedLocation;
-
-                                // Don't do anything if selecting the same branch
-                                if (newBranchId === currentBranchId) return;
-
-                                const checkAndChangeBranch = async () => {
-                                    try {
-                                        // Only check for cart items if we already had a branch selected
-                                        if (currentBranchId) {
-                                            setIsLoading(true);
-
-                                            // Set up parameters for pagination to check cart items
-                                            const params = new URLSearchParams({
-                                                page: 1,
-                                                pageSize: 100, // Large enough to capture all items
-                                                sortBy: 'id',
-                                                sortOrder: 'asc'
-                                            });
-
-                                            // Create filters to check current cart
-                                            const filters = {
-                                                customer_id: selectedCustomerId || customerId || '3',
-                                                branch_id: currentBranchId
-                                            };
-
-                                            console.log('Checking cart with filters:', filters);
-
-                                            // Add filters as a single parameter with stringified JSON
-                                            params.append('filters', JSON.stringify(filters));
-
-                                            // Fetch cart items for current branch
-                                            const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
-                                                method: 'GET',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Accept': 'application/json'
-                                                },
-                                                credentials: 'include'
-                                            });
-
-                                            if (!response.ok) {
-                                                throw new Error(`Error checking cart: ${response.status} ${response.statusText}`);
-                                            }
-
-                                            const result = await response.json();
-                                            console.log('Cart check result:', result);
-
-                                            // Check if cart has items
-                                            const cartItems = result.data?.data || [];
-                                            const hasItems = cartItems.length > 0;
-
-                                            if (hasItems) {
-                                                // Show confirmation dialog
-                                                const confirmChange = window.confirm(
-                                                    t("There are items in the cart. Do you want to discard the items?")
-                                                );
-
-                                                if (!confirmChange) {
-                                                    // User canceled - don't change branch
-                                                    setIsLoading(false);
-                                                    return;
-                                                }
-
-                                                // User confirmed, delete cart items before changing branch
-                                                console.log(`Deleting cart items for branch ${currentBranchId}...`);
-
-                                                // Convert IDs to strings before adding them to the URL
-                                                const customerIdStr = String(selectedCustomerId || '3');
-                                                const branchIdStr = String(currentBranchId);
-
-                                                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                                                deleteUrl.searchParams.append('customer_id', customerIdStr);
-                                                deleteUrl.searchParams.append('branch_id', branchIdStr);
-
-                                                const deleteResponse = await fetch(deleteUrl, {
-                                                    method: 'DELETE',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    credentials: 'include'
-                                                });
-
-                                                if (!deleteResponse.ok) {
-                                                    console.error(`Warning: Failed to delete cart items: ${deleteResponse.status}`);
-                                                    // Continue with branch change anyway
-                                                } else {
-                                                    console.log('Successfully deleted cart items');
-                                                }
-                                            }
-                                        }
-
-                                        // Change branch selection
-                                        setSelectedLocation(newBranchId);
-
-                                        // Find selected branch details
-                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
-                                        if (selectedBranch && selectedBranch.label) {
-                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
-                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
-                                            setSelectedBranchRegion(selectedBranch.branchRegion);
-                                            console.log('Changed to branch:', selectedBranch.label);
-                                            console.log('Changed to branchRegion:', selectedBranch.branchRegion);
-                                        }
-
-                                    } catch (error) {
-                                        console.error('Error during branch change:', error);
-                                        alert(t("Error checking cart. Branch change may not work correctly."));
-
-                                        // Still attempt to change branch despite error
-                                        setSelectedLocation(newBranchId);
-
-                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
-                                        if (selectedBranch && selectedBranch.label) {
-                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
-                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
-                                        }
-                                    } finally {
-                                        setIsLoading(false);
-                                    }
-                                };
-
-                                checkAndChangeBranch();
-                            }}
+                            onChange={handleBranchSelect}
                             options={branches}
                             className="location-select"
                             label={t("Delivery to:")}
-                            placeholder={t("Select Branch")} // Add a placeholder
-                            disabled={isLoading || branches.length === 0} // Disable when loading or no branches
+                            placeholder={t("Select Branch")}
+                            disabled={isLoading || branches.length === 0}
                         />
                         {/* Add a loading indicator within the location selector */}
                         {isLoading && branches.length === 0 && (
@@ -873,16 +859,16 @@ function Catalog() {
                 <div className="filter-section">
                     <Tabs
                         tabs={categoryTabs}
-                        activeTab={activeCategory}
-                        onTabChange={(newCategory) => {
+                        activeTab={activeCategory}                        onTabChange={(newCategory) => {
                             setActiveCategory(newCategory);
-                            // Reset other filters when changing entity
-                            setCategoryFilter('');
-                            setSubCategoryFilter('');
                             setSearchQuery('');
                             setCurrentPage(1);
                             setLoadedPages([]);
                             setHasMore(true);
+                            
+                            // Reset filters - our useEffect will set the appropriate category once products load
+                            setSubCategoryFilter('');
+                            setCategoryFilter('');
                         }}
                         variant="category"
                     />
@@ -906,12 +892,11 @@ function Catalog() {
                             }}
                             debounceTime={500} // Increased debounce time for better performance
                             className="product-search-input"
-                        />)}
-                        <Dropdown
+                        />)}                        <Dropdown
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
                             options={getFilteredCategories().map(cat => ({ value: cat, label: cat }))}
-                            className="category-filter"
+                            className={`category-filter ${['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) ? 'tab-linked-filter' : ''}`}
                             placeholder="Category"
                             value={categoryFilter}
                             onChange={e => {

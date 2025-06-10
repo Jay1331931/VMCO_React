@@ -12,7 +12,7 @@ const ProductCard = ({
     setQuantities,
     onAddToCart // Destructure onAddToCart prop
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     
     // Initialize RBAC manager
@@ -50,11 +50,16 @@ const ProductCard = ({
         onAddToCart(product.id); // Call the parent component's onAddToCart function
     }
 
+    // Determine direction and alignment
+    const dir = i18n.dir();
+    const isRTL = dir === 'rtl';
+
     return (
         <div
-            className="product-card"
+            className={`product-card${isRTL ? ' rtl' : ''}`}
             onClick={() => onProductClick(product)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
+            dir={dir}
         >
             <div className="product-image">
                 {product.image ? (
@@ -71,7 +76,7 @@ const ProductCard = ({
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
-                <h4 className="unit-price">Price: {(product.unitPrice).toFixed(2)} SAR</h4>
+                <h4 className="unit-price">{t('Price: ')}{(product.unitPrice).toFixed(2)} {t('SAR')}</h4>
                 <div className="quantity-controls">
                     {isV('quantityController') && (
                         <QuantityController
@@ -226,7 +231,7 @@ const ProductCard = ({
   background-color: #001845;
 }
 
-* Specifically target Firefox */
+/* Specifically target Firefox */
 .quantity-input::-webkit-outer-spin-button,
 .quantity-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -253,6 +258,10 @@ const ProductCard = ({
                         font-size: 0.97rem;
                         padding: 7px 12px;
                     }
+                }
+                .product-card.rtl {
+                  direction: rtl;
+                  text-align: right;
                 }
             `}</style>
         </div>

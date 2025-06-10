@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
   //get the status from the order
-  
+
   switch (status) {
     case 'Approved':
       return 'status-approved';
@@ -28,7 +28,7 @@ const getStatusClass = (status) => {
 };
 
 function Orders() {
-  const {  user } = useAuth();
+  // const { user } = useAuth();
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,12 +42,9 @@ function Orders() {
 
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { token, user, isAuthenticated, logout, loadingPage } = useAuth();
 
 
-  //RBAC
-  //use formMode to decide if it is editform or add form
-  const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'orderList');
-  const isV = rbacMgr.isV.bind(rbacMgr);
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -84,7 +81,7 @@ function Orders() {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         throw new Error('API did not return JSON. Check API URL and server.');
-      }      const result = await response.json();
+      } const result = await response.json();
       if (result.status === 'Ok') {
         // Ensure we have the companyNameEn field for each order
         const processedOrders = result.data.data.map(order => ({
@@ -122,7 +119,7 @@ function Orders() {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
-      });      const result = await response.json();
+      }); const result = await response.json();
       if (result.status === 'Ok') {
         // Ensure we have the companyNameEn field for each order in approvals
         const processedOrders = result.data.data.map(order => ({
@@ -143,10 +140,33 @@ function Orders() {
     }
   };
 
+  //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
-    fetchOrders(page, searchQuery);
-    // eslint-disable-next-line
-  }, [page, searchQuery]);
+    if (user) {
+      fetchOrders(page, searchQuery);
+      // eslint-disable-next-line
+    }
+  }, [page, searchQuery, user]);
+
+  console.log("$$$$$$$$$$$ user in orders page", user);
+
+  // Check loading state first
+  if (loading) {
+      return; // Wait while loading
+    }
+
+  if (!user) {
+    console.log("$$$$$$$$$$$ logging out");
+    // Logout instead of showing loading message
+    // logout();
+    // navigate('/login');
+    return null; // Return null while logout is processing
+  }
+  //For fetching the user again after browser refersh - End
+  //RBAC
+  //use formMode to decide if it is editform or add form
+  const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'orderList');
+  const isV = rbacMgr.isV.bind(rbacMgr);
 
   const handleSearch = (searchTerm) => {
     setSearchQuery(searchTerm);
@@ -183,6 +203,7 @@ function Orders() {
   };
 
   const handleRowClick = (order) => {
+    console.log('Row clicked, navigating to order details with:', order);
     navigate('/orderDetails', { state: { order, mode: 'edit' } });
   };
 
@@ -202,19 +223,18 @@ function Orders() {
       label: 'Custom Orders',
       onClick: () => alert('Custom Orders clicked')
     }
-  ];
-  const columns = [
-    { key: 'id', header: 'Order #', include: isV('orderNumber') },
-    { key: 'companyNameEn', header: 'Customer', include: isV( 'companyName') },
-    { key: 'erpBranchId', header: 'Branch', include: isV( 'branchName') },
-    { key: 'entity', header: 'Entity', include: isV( 'entity') },
-    { key: 'paymentMethod', header: 'Payment Method', include: isV( 'paymentMethod') },
-    { key: 'deliveryDate', header: 'Delivery Date', include: isV( 'expectedDeliveryDate') },
-    { key: 'totalAmount', header: 'Total Amount', include: isV( 'totalAmount') },
-    { key: 'paidAmount', header: 'Paid Amount', include: isV( 'paidAmount') },
-    { key: 'paymentStatus', header: 'Payment Status', include: isV( 'paymentStatus') },
-    { key: 'status', header: 'Status', include: isV( 'status') },
-    { key: 'checkout', header: 'Checkout', include: isV( 'action') }
+  ]; const columns = [
+    { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
+    { key: 'companyNameEn', header: () => t('Customer'), include: isV('companyName') },
+    { key: 'erpBranchId', header: () => t('Branch'), include: isV('branchName') },
+    { key: 'entity', header: () => t('Entity'), include: isV('entity') },
+    { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
+    { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
+    { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
+    { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
+    { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
+    { key: 'status', header: () => t('Status'), include: isV('status') },
+    { key: 'checkout', header: () => t('Checkout'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
@@ -231,19 +251,22 @@ function Orders() {
           </div>
           <div className="header-actions">
             {isV('approvalButton') && <ToggleButton
-            className="toggle-button"
+              className="toggle-button"
               isToggled={isApprovalMode}
               onToggle={toggleApprovalMode}
             />}
             {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
-            {isV ('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
+            {isV('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
         </div>
-        {isV ('ordersTable') && (<Table
+        {isV('ordersTable') && (<Table
           columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
-          onRowClick={handleRowClick}
+          onRowClick={(order) => {
+            console.log('Table row clicked, calling handleRowClick with:', order);
+            handleRowClick(order);
+          }}
           onCheckout={handleCheckout}
         />)}
         {isV('ordersPagination') && (<Pagination
