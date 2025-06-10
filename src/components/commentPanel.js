@@ -69,7 +69,7 @@ const CommentPopup = ({
           <button onClick={() => setIsOpen(false)} className="close-btn">✕</button>
         </div>
         <div className="comment-panel-body">
-          {showCommentForm && (
+          {/* {showCommentForm && (
             <div className="comment-form">
               <textarea
                 value={commentText}
@@ -86,7 +86,7 @@ const CommentPopup = ({
                 {t('Add Comment')}
               </button>
             </div>
-          )}
+          )} */}
           
           {comments.length > 0 ? (
             comments.map((comment, index) => (

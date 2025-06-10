@@ -6,11 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV, faChevronDown, faChevronRight, faLocationDot, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { faToggleOff, faToggleOn, faCheck } from '@fortawesome/free-solid-svg-icons';
+// import Pagination from '../../components/Pagination';
 import Pagination from '../../components/Pagination';
 import ApprovalDialog from '../../components/ApprovalDialog';
-import '../../styles/pagination.css';
+import RbacManager from '../../utilities/rbac';
+import '../../styles/components.css';
 import '../../styles/forms.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 const CustomerBranches = ({ customer, setTabsHeight }) => {
     const { t } = useTranslation();
     const contentRef = useRef(null);
@@ -26,14 +30,23 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const [temporaryBranches, setTemporaryBranches] = useState([]);
     const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
     const [approvalAction, setApprovalAction] = useState(null);
-    let isApprovalMode = false;
+    // let isApprovalMode = false;
+    const [isApprovalMode, setIsApprovalMode] = useState(false);
     const [nextTempId, setNextTempId] = useState(-1);
     const isMobile = false;
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    const { token, user, isAuthenticated, logout } = useAuth();
+    const navigate = useNavigate();
+    let customerFormMode;
+    if (customer?.isApprovalMode) {
+        customerFormMode = 'custDetailsEdit';
+    } else {
+        customerFormMode = 'custDetailsAdd';
+    }
     const handleAddBranch = () => {
         const tempId = nextTempId;
         setNextTempId(prev => prev - 1); // Decrement for next temporary ID
-
+        setIsApprovalMode(false); // Reset approval mode when adding a new branch
         const newBranch = {
             id: tempId,
             erp_branch_id: `TEMP_${Math.abs(tempId)}`,
@@ -49,7 +62,9 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         setBranches(prev => [newBranch, ...prev]);
         setExpandedRows(prev => [tempId]);
     };
-
+    const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
     // Transform branch data with contacts
     const transformBranchData = (branches, branchContacts) => {
         const branchesArray = Array.isArray(branches) ? branches : [branches];
@@ -86,28 +101,28 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         console.log("check approval called")
         let isAppMode = false;
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id/${branchId}/module/branch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      console.log(res)
-      if (res.ok) {
-        const responseText = await res.text(); // Get raw response text ('t' or 'f')
-        console.log(responseText)
-        const data = responseText ? JSON.parse(responseText) : {};
-        isAppMode = data?.exists === 't'; // Convert to boolean
-        console.log(isAppMode)
-        return isAppMode;
-        console.log("is approval mode", isAppMode)
-        console.log(`Workflow check result for customer ${customer?.id}:`, isAppMode);
-      } else {
-        console.log(`Workflow check failed`, res.status);
-      }
-    } catch (err) {
-      console.error('Error fetching workflow instance:', err);
-    }
+        try {
+            const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id/${branchId}/module/branch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            console.log(res)
+            if (res.ok) {
+                const responseText = await res.text(); // Get raw response text ('t' or 'f')
+                console.log(responseText)
+                const data = responseText ? JSON.parse(responseText) : {};
+                isAppMode = data?.exists === 't'; // Convert to boolean
+                console.log(isAppMode)
+                return isAppMode;
+                console.log("is approval mode", isAppMode)
+                console.log(`Workflow check result for customer ${customer?.id}:`, isAppMode);
+            } else {
+                console.log(`Workflow check failed`, res.status);
+            }
+        } catch (err) {
+            console.error('Error fetching workflow instance:', err);
+        }
     }
 
     // Fetch contacts for a specific branch
@@ -197,7 +212,9 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
             prev.includes(branchId) ? [] : [branchId]
         );
         // setIsApprovalMode(checkApproval(branchId));
-        isApprovalMode = checkApproval(branchId);
+        // isApprovalMode = await checkApproval(branchId);
+        const isAppMode = await checkApproval(branchId);
+        setIsApprovalMode(isAppMode);
     };
 
     // Get the current branch data (merged with transformed data if available)
@@ -225,7 +242,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     }, [customer?.id, fetchBranches]);
 
     // Pagination variables
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
     const totalPages = Math.ceil(branches.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -250,6 +267,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
                 [fieldName]: value
             }
         }));
+
         console.log('Branch changes:', branchChanges);
     };
     const isArabicText = (text) => {
@@ -257,6 +275,8 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     };
     const validateChangedFields = (branchData, checkRequired = false) => {
         const errors = {};
+        const mandatoryFields = ['branchNameEn', 'branchNameLc', 'buildingName', 'street', 'city', 'locationType',
+            'primaryContactName', 'primaryContactEmail', 'primaryContactDesignation', 'primaryContactMobile', 'secondaryContactName', 'secondaryContactEmail', 'secondaryContactDesignation', 'secondaryContactMobile'];
         Object.keys(branchData).forEach((fieldName) => {
             //   const field = formsByTab[activeTab].find(f => f.name === fieldName);
             const value = branchData[fieldName];
@@ -264,7 +284,9 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
             //   if (checkRequired && field?.type === 'text' && field.required && !value) {
             //     errors[fieldName] = t('This field is required.');
             //   }
-
+            if (checkRequired && mandatoryFields.includes(fieldName) && !value) {
+                errors[fieldName] = t('This field is required.');
+            }
             if (fieldName.toLowerCase().includes('arabic') && value && !isArabicText(value)) {
                 errors[fieldName] = t('Please enter Arabic text.');
             }
@@ -289,66 +311,87 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     };
 
     const handleApprovalSubmit = async (action) => {
-    setApprovalAction(action);
-    setIsApprovalDialogOpen(true);
-  };
+        setApprovalAction(action);
+        setIsApprovalDialogOpen(true);
+    };
 
-const handleDialogSubmit = async (comment) => {
-//     const branchId = customer.workflowData.id;
-//    branchChanges[branchId]?.forEach((fieldName) => {
-//   if (fieldName in customer.workflowData.updates) {
-//     customer.workflowData.updates[fieldName] = branchChanges[branchId].fieldName;
-//   }
-// });
-//     const payload = {
-//       workflowData: customer.workflowData || {},
-//       approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
-//       comment: comment
-//     };
-const branchId = customer.workflowData.id;
-const branchUpdates = branchChanges[branchId];
+    const handleDialogSubmit = async (comment) => {
+        //     const branchId = customer.workflowData.id;
+        //    branchChanges[branchId]?.forEach((fieldName) => {
+        //   if (fieldName in customer.workflowData.updates) {
+        //     customer.workflowData.updates[fieldName] = branchChanges[branchId].fieldName;
+        //   }
+        // });
+        //     const payload = {
+        //       workflowData: customer.workflowData || {},
+        //       approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
+        //       comment: comment
+        //     };
+        const branchId = customer.workflowData.id;
+        const branchUpdates = branchChanges[branchId];
 
-// Check if branchUpdates exists and is iterable
-if (branchUpdates && typeof branchUpdates === 'object') {
-  Object.keys(branchUpdates).forEach((fieldName) => {
-    if (fieldName in customer.workflowData.updates) {
-      customer.workflowData.updates[fieldName] = branchUpdates[fieldName];
-    }
-  });
-}
+        // Check if branchUpdates exists and is iterable
+        if (branchUpdates && typeof branchUpdates === 'object') {
+            Object.keys(branchUpdates).forEach((fieldName) => {
+                if (fieldName in customer.workflowData.updates) {
+                    customer.workflowData.updates[fieldName] = branchUpdates[fieldName];
+                }
+            });
+        }
 
-const payload = {
-  workflowData: customer.workflowData || {},
-  approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
-  comment: comment
-};
-    try {
-      const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'include',
-      });
+        const payload = {
+            workflowData: customer.workflowData || {},
+            approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
+            comment: comment
+        };
+        try {
+            const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                credentials: 'include',
+            });
 
-      if (response.ok) {
-        const result = await response.json();
-      } else {
-        throw new Error('Failed to submit approval');
-      }
-    } catch (error) {
-      console.log('Error', error.message)
-      console.error(`Error ${approvalAction}ing customer:`, error);
-      alert(`Error ${approvalAction}ing customer: ${error.message}`);
-    }
-  };
+            if (response.ok) {
+                const result = await response.json();
+                navigate('/customers');
+            } else {
+                throw new Error('Failed to submit approval');
+            }
+        } catch (error) {
+            console.log('Error', error.message)
+            console.error(`Error ${approvalAction}ing customer:`, error);
+            alert(`Error ${approvalAction}ing customer: ${error.message}`);
+        }
+    };
 
-    const handleSave = async (id) => {
+    const handleSave = async (id, branch, action) => {
         const isNewBranch = id < 0; // Negative IDs are temporary
         const branchData = branchChanges[id] || {};
         console.log('Branch data to save:', branchData);
-        if (!validateChangedFields(branchData, false)) {
-            alert(t('Please correct errors before submitting.'));
-            return;
+        if (action === 'save') {
+            if (!validateChangedFields(branchData, false)) {
+                alert(t('Please correct errors before saving.'));
+                return;
+            }
+        }
+        if (action === 'save changes') {
+            if (!validateChangedFields(branchData, true)) {
+                alert(t('Please fill all required fields before saving changes.'));
+                return;
+            }
+        }
+
+        const branchPayload = {};
+        const contactPayload = {};
+        if (action === 'block') {
+            branchPayload['branchStatus'] = 'blocked';
+            branchPayload['isBlocked'] = true;
+
+        }
+        if (action === 'unblock') {
+          branchPayload['branchStatus'] = 'approved';
+          branchPayload['isBlocked'] = false;
         }
 
         // Define contact detail fields
@@ -359,36 +402,42 @@ const payload = {
         ];
 
         // Prepare payloads
-        const branchPayload = {};
-        const contactPayload = {};
-
+        
+if(action === 'save' || action === 'save changes') {
         Object.keys(branchData).forEach((fieldName) => {
             if (contactDetailFields.includes(fieldName)) {
                 contactPayload[fieldName] = branchData[fieldName];
             } else {
                 branchPayload[fieldName] = branchData[fieldName];
+                // branchPayload['branchStatus'] = branchData['branchStatus'];
+                // add branchStatus to branchPayload by default
+                branchPayload['branchStatus'] = branch['branchStatus'];
+                // branchPayload['customerId'] = customer.id;
+
             }
         });
-        contactDetailFields.forEach((fieldName) => {
-            if (!Object.keys(branchData).includes(fieldName)) {
-                contactPayload[fieldName] = '';
-            }
-        })
+    }
         try {
             if (isNewBranch) {
                 // CREATE new branch
+                contactDetailFields.forEach((fieldName) => {
+            if (!Object.keys(branchData).includes(fieldName)) {
+                contactPayload[fieldName] = '';
+            }
+        });
                 const response = await fetch(`${API_BASE_URL}/customer-branches`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         ...branchPayload,
-                        customer_id: customer.id
+                        customer_id: customer.id,
+                         isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable
                     }),
                     credentials: 'include'
                 });
 
                 const result = await response.json();
-
+                
                 if (response.ok) {
                     // Update local state with real ID from server
                     setBranches(prev =>
@@ -410,15 +459,16 @@ const payload = {
                 }
             } else {
                 // UPDATE existing branch
+                console.log('branchPayload:', branchPayload);
                 if (Object.keys(branchPayload).length > 0) {
                     await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(branchPayload),
+                        body: JSON.stringify({ ...branchPayload, customerId: customer.id }),
                         credentials: 'include'
                     });
                 }
-
+                console.log('Contact payload:', contactPayload);
                 if (Object.keys(contactPayload).length > 0) {
                     await fetch(`${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`, {
                         method: 'POST',
@@ -430,14 +480,14 @@ const payload = {
             }
 
             // Clear changes for this branch
-            setBranchChanges(prev => {
-                const newChanges = { ...prev };
-                delete newChanges[id];
-                return newChanges;
-            });
+            // setBranchChanges(prev => {
+            //     const newChanges = { ...prev };
+            //     delete newChanges[id];
+            //     return newChanges;
+            // });
 
             // Refresh data
-            await fetchBranches();
+            // await fetchBranches();
 
         } catch (error) {
             console.error('Error saving branch:', error);
@@ -445,18 +495,80 @@ const payload = {
     };
 
     const handleSubmit = async (id, branchData) => {
+        handleSave(id, branchChanges?.[id]);
+        if (!validateChangedFields(branchData, true)) {
+            alert(t('Please fill all required fields before submitting.'));
+            return;
+        }
+
+
+        console.log('Submitting branch data:', branchData);
+        console.log('Branch Changes:', branchChanges);
+        // Branch Payload
+        const branchPayload = {};
+        const contactPayload = {};
+        const contactDetailFields = [
+            'primaryContactName', 'primaryContactDesignation', 'primaryContactEmail', 'primaryContactMobile',
+            'secondaryContactName', 'secondaryContactDesignation', 'secondaryContactEmail', 'secondaryContactMobile',
+            'supervisorContactName', 'supervisorContactDesignation', 'supervisorContactEmail', 'supervisorContactMobile'
+        ];
+        Object.keys(branchData).forEach((fieldName) => {
+            if (contactDetailFields.includes(fieldName)) {
+                contactPayload[fieldName] = branchData[fieldName];
+            } else {
+                if (fieldName === 'allContacts' || fieldName === 'updatedAt') {
+
+                } else {
+                    branchPayload[fieldName] = branchData[fieldName];
+                }
+            }
+        });
         try {
             const response = await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...branchData,
+                    ...branchPayload,
                     branchStatus: 'pending'
                 }),
                 credentials: 'include'
             });
 
             const result = await response.json();
+            function showLoadingScreen(message) {
+  document.body.innerHTML = `
+    <div class="loading-more-container" style="
+      padding: 20px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    ">
+      <div class="loading-spinner" style="
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      "></div>
+      <div class="loading-more-text">${message}</div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+}
+
+// Usage:
+showLoadingScreen('Updating...');
+setTimeout(() => window.location.reload(true), 3000);
         } catch (error) {
             console.error('Error saving branch:', error);
         }
@@ -474,7 +586,7 @@ const payload = {
                 <div className="branches-header-controls">
                     <input type="text" placeholder={t('Search...')} className="branches-search-input" />
                     <div className="branches-action-buttons">
-                        {(!customer?.isApprovalMode) && <button className="branches-add-button" onClick={handleAddBranch}>{t('+ Add')}</button>}
+                        {(isV('btnBranchAdd')) && <button className="branches-add-button" onClick={handleAddBranch}>{t('+ Add')}</button>}
                         <div className="action-menu-container" ref={actionMenuRef}>
                             <FontAwesomeIcon icon={faEllipsisV} className="action-menu-icon" onClick={() => setActionMenuOpen(!isActionMenuOpen)} />
                             {isActionMenuOpen && (
@@ -543,17 +655,6 @@ const payload = {
                             )}
                         </div>
                     ))}
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => {
-                            setCurrentPage(page);
-                            setExpandedRows([]);
-                        }}
-                        startIndex={startIndex}
-                        endIndex={Math.min(endIndex, branches.length)}
-                        totalItems={branches.length}
-                    />
                 </div>
             ) : (
                 <div className="branches-table-container">
@@ -604,20 +705,23 @@ const payload = {
                                         <tr className="expanded-row">
                                             <td colSpan="6">
                                                 <div className="expanded-form-container">
+                                                    {(isApprovalMode && customerFormMode === 'custDetailsAdd') && <h3>{t('Branch is currently under approval')}</h3>}
                                                     <BranchDetailsForm
                                                         branch={branch}
                                                         customer={customer}
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
-                                                        isUnderApproval = {checkApproval(branch.id)}
+                                                        isUnderApproval={checkApproval(branch.id)}
                                                     />
                                                     <ContactSection
                                                         branch={branch}
+                                                        customer={customer}
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
                                                     />
                                                     <OperatingHours
                                                         hoursData={branch.hours}
+                                                        customer={customer}
                                                         branchId={branch.id}
                                                         handleBranchFieldChange={handleBranchFieldChange}
                                                     />
@@ -625,55 +729,63 @@ const payload = {
                                                     <div className='expanded-form-container-footer'>
                                                         <div className='customer-onboarding-form-actions'>
                                                             <div className="action-buttons">
-                                                                <button className="save" onClick={() => handleSave(branch.id)}>
+                                                                {isV('btnBranchSave') && (branch?.branchStatus === 'new' || branch.isNew) && <button className="save" onClick={() => handleSave(branch.id, branch, 'save')}>
                                                                     {t('Save')}
-                                                                </button>
-                                                                <button className="save" onClick={() => handleSubmit(branch.id, branch)}>
+                                                                </button>}
+                                                                {isV('btnBranchSubmit') && (branch?.branchStatus === 'new' || branch.isNew) && <button className="save" onClick={() => handleSubmit(branch.id, branch)} disabled={branch.id < 0}>
                                                                     {t('Submit')}
-                                                                </button>
-                                                                <button className="block" >
+                                                                </button>}
+                                                                {isV('btnBranchSaveChanges') && (branch?.branchStatus !== 'new' && branch?.branchStatus !== 'pending') && (!branch?.isNew) && <button className="save changes" onClick={() => handleSave(branch.id, branch, 'save changes')} disabled={isApprovalMode || branch?.branchStatus === 'blocked'}>
+                                                                    {t('Save Changes')}
+                                                                </button>}
+                                                                {isV('btnBranchBlock') && (branch?.branchStatus !== 'new' && branch?.branchStatus !== 'pending' && branch?.branchStatus !== 'blocked') && (!branch?.isNew) && <button className="block" disabled={isApprovalMode} onClick={() => handleSave(branch.id, branch, 'block')}>
                                                                     {t('Block')}
-                                                                </button>
+                                                                </button>}
+                                                                {isV('btnBranchUnblock') && (branch?.branchStatus !== 'new' && branch?.branchStatus !== 'pending' && branch?.branchStatus === 'blocked') && (!branch?.isNew) && <button className="block" disabled={isApprovalMode} onClick={() => handleSave(branch.id, branch, 'unblock')}>
+                                                                    {t('Unblock')}
+                                                                </button>}
                                                                 <div className="branches-action-buttons">
-                                                                    <button className='branches-approve-button' onClick={() => handleApprovalSubmit('approve')}>{t('Approve')}</button>
-                                                                    <button className='branches-reject-button' onClick={() => handleApprovalSubmit('reject')}>{t('Reject')}</button>
+                                                                    {isV('btnBranchApprove') && <button className='branches-approve-button' onClick={() => handleApprovalSubmit('approve')}>{t('Approve')}</button>}
+                                                                    {isV('btnBranchReject') && <button className='branches-reject-button' onClick={() => handleApprovalSubmit('reject')}>{t('Reject')}</button>}
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <ApprovalDialog
-                                                            isOpen={isApprovalDialogOpen}
-                                                            onClose={() => setIsApprovalDialogOpen(false)}
-                                                            action={approvalAction}
-                                                            onSubmit={handleDialogSubmit}
-                                                            customerName={customer.customerName || 'this customer'}
-                                                            title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
-                                                            subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this branch?') : t('Are you sure you want to reject this branch?')}
-                                                          />
+                                                        isOpen={isApprovalDialogOpen}
+                                                        onClose={() => setIsApprovalDialogOpen(false)}
+                                                        action={approvalAction}
+                                                        onSubmit={handleDialogSubmit}
+                                                        customerName={customer.customerName || 'this customer'}
+                                                        title={approvalAction === 'approve' ? t('Approve Branch') : t('Reject Branch')}
+                                                        subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this branch?') : t('Are you sure you want to reject this branch?')}
+                                                    />
                                                 </div>
                                             </td>
                                         </tr>
                                     )}
-                                    
+
                                 </React.Fragment>
                             ))}
                         </tbody>
                     </table>
-                    
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        onPageChange={(page) => {
-                            setExpandedRows([]);
-                            setCurrentPage(page);
-                        }}
-                        startIndex={startIndex}
-                        endIndex={Math.min(endIndex, branches.length)}
-                        totalItems={branches.length}
-                    />
-                </div>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => {
+                                setExpandedRows([]);
+                                setCurrentPage(page);
+                            }}
+                            startIndex={startIndex}
+                            endIndex={Math.min(endIndex, branches.length)}
+                            totalItems={branches.length}
+                        />
+                    </div>
+
+                
             )}
+
             
         </div>
     );
@@ -684,7 +796,16 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
     const [selectedLocation, setSelectedLocation] = useState(null);
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
     // LocationPicker component
-
+    const { token, user, isAuthenticated, logout } = useAuth();
+    let customerFormMode;
+    if (customer?.isApprovalMode) {
+        customerFormMode = 'custDetailsEdit';
+    } else {
+        customerFormMode = 'custDetailsAdd';
+    }
+    const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
     const [dropdownOptions, setDropdownOptions] = useState({});
 
     const getOptionsFromBasicsMaster = async (fieldName) => {
@@ -875,8 +996,22 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
         );
     };
     // Get current values from branchChanges or fall back to branch data
+    // const getFieldValue = (fieldName) => {
+    //     // return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+    //     return branchChanges?.[branch.id]?.[fieldName] ? branchChanges[branch.id][fieldName] : branch[fieldName];
+    // };
     const getFieldValue = (fieldName) => {
-        return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+        if (fieldName === 'isDeliveryChargesApplicable') {
+            if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
+                return branchChanges[branch.id][fieldName];
+            } else {
+                return branch?.[fieldName];
+            }
+        }
+        if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
+            return branchChanges[branch.id][fieldName];
+        }
+        return branch[fieldName] ?? '';
     };
 
     // Handle checkbox changes
@@ -910,21 +1045,21 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
         // Store as object for display but convert to string for backend
         handleBranchFieldChange(branch.id, 'geolocation', { x: lat, y: lng });
     }, [branch.id, handleBranchFieldChange]);
-   
+
     const getLocationDisplay = (location) => {
-  if (!location) return 'Select Location';
+        if (!location) return 'Select Location';
 
-  if (typeof location === 'object' && location.x !== undefined && location.y !== undefined) {
-    const x = parseFloat(location.x);
-    const y = parseFloat(location.y);
+        if (typeof location === 'object' && location.x !== undefined && location.y !== undefined) {
+            const x = parseFloat(location.x);
+            const y = parseFloat(location.y);
 
-    if (!isNaN(x) && !isNaN(y)) {
-      return `${x.toFixed(6)}, ${y.toFixed(6)}`;
-    }
-  }
+            if (!isNaN(x) && !isNaN(y)) {
+                return `${x.toFixed(6)}, ${y.toFixed(6)}`;
+            }
+        }
 
-  return 'Select Location';
-};
+        return 'Select Location';
+    };
 
     const fields = useMemo(() => [
         { type: 'text', label: 'Branch', name: 'branchNameEn', placeholder: 'Branch', required: true },
@@ -941,16 +1076,19 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
             required: true
         }
     ], []);
-
+    console.log('customer', customer);
+const hasCheckboxUpdate = customer.isApprovalMode && customer.module === 'branch' &&
+                        customer?.workflowData?.updates &&
+                        'isDeliveryChargesApplicable' in customer.workflowData.updates;
     return (
         <div className="form-section">
             {console.log(isUnderApproval)}
-            {(isUnderApproval) && <h2>{t('Branch is currently under Approval')}</h2>}
+            {/* {(isUnderApproval) && <h2>{t('Branch is currently under Approval')}</h2>} */}
             <h3>{t('Branch Details')}</h3>
 
             <div className="form-group">
 
-                <label>
+                {/* <label>
                     <input
                         type="checkbox"
                         name="sameAsCustomer"
@@ -958,62 +1096,69 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
                         onChange={handleCheckboxChange}
                     />
                     {'\t' + t('Same as Customer Details')}
-                </label>
+                </label> */}
 
-                <div className="form-group">
+                {isV('isDeliveryChargesApplicable') && (<div className="form-group">
                     <label>
                         <input
                             type="checkbox"
-                            name="approvalRequiredForOrdering"
-                            checked={approvalRequired}
+                            name="isDeliveryChargesApplicable"
+                            checked={getFieldValue('isDeliveryChargesApplicable') || false}
                             onChange={handleCheckboxChange}
+                            disabled={customerFormMode === 'custDetailsEdit' && !hasCheckboxUpdate}
+                        // hidden={!isV('isDeliveryChargesApplicable')}
                         />
-                        {'\t' + t('Delivery Cost')}
+                        {'\t' + t('Is Delivery Charges Applicable')}
+                        {hasCheckboxUpdate && <span className="update-badge"> Pending Update</span>}
                     </label>
-                </div>
+                </div>)}
             </div>
 
             <div className="form-row">
                 {fields.map((field, index) => {
-                    
+
                     const hasUpdate = customer.isApprovalMode && customer.module === 'branch' &&
                         customer?.workflowData?.updates &&
                         field.name in customer.workflowData.updates;
                     const currentValue = branch?.[field.name] || '';
                     const value = hasUpdate ? customer?.workflowData?.updates[field.name] : getFieldValue(field.name);
-console.log('Branch field value:', branch[field.name], typeof branch[field.name]);
+                    console.log('Branch field value:', branch[field.name], typeof branch[field.name]);
 
                     return (
                         <div className={`form-group ${hasUpdate ? 'pending-update' : ''}`} key={index}>
+                            
+                            
                             <label>
                                 {t(field.label)}
                                 {field.required && <span className="required-field">*</span>}
                             </label>
 
                             {field.isLocation ? (
-                                                          <div className="location-input-container">
-                                                            <input
-                                                            //   value={
-                                                            //     branch[field.name]
-                                                            //       ? `${branch[field.name].x.toFixed(6)}, ${branch[field.name].y.toFixed(6)}`
-                                                            //       : 'Select Location'
-                                                            //   }
-                                                            value={getLocationDisplay(branch[field.name])}
-                                                              placeholder={t(field.placeholder)}
-                                                              readOnly
-                                                            />
-                            
-                                                            <button
-                                                              className="location-picker-button"
-                                                            //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
-                                                            //     ? field.name in customer.workflowData.updates
-                                                            //     : false)}
-                                                              onClick={() => setShowMap(true)}
-                                                            >
-                                                              <FontAwesomeIcon icon={faLocationDot} />
-                                                            </button>
-                                                          </div>
-                                                        ) : (
+                                <div className="location-input-container">
+                                    <input
+                                          value={
+                                            value
+                                              ? `${value.x.toFixed(6)}, ${value.y.toFixed(6)}`
+                                              : 'Select Location'
+                                          }
+                                        // value={getLocationDisplay(branch[field.name])}
+                                        placeholder={t(field.placeholder)}
+                                        disabled={customerFormMode === 'custDetailsEdit' && !hasUpdate}
+                                        readOnly
+                                    />
+
+                                    <button
+                                        className="location-picker-button"
+                                        //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
+                                        //     ? field.name in customer.workflowData.updates
+                                        //     : false)}
+                                        disabled={customerFormMode === 'custDetailsEdit' && !hasUpdate}
+                                        onClick={() => setShowMap(true)}
+                                    >
+                                        <FontAwesomeIcon icon={faLocationDot} />
+                                    </button>
+                                </div>
+                            ) : (
                                 <div className='form-row'>
                                     {(() => {
 
@@ -1030,6 +1175,7 @@ console.log('Branch field value:', branch[field.name], typeof branch[field.name]
                                                         style={hasUpdate ? {
                                                             backgroundColor: '#fff8e1',
                                                         } : {}}
+                                                        disabled={customerFormMode==='custDetailsEdit' && !hasUpdate}
                                                     />
 
                                                 );
@@ -1039,6 +1185,7 @@ console.log('Branch field value:', branch[field.name], typeof branch[field.name]
                                                         name={field.name}
                                                         value={value}
                                                         onChange={handleInputChange}
+                                                        disabled={customerFormMode==='custDetailsEdit' && !hasUpdate}
                                                     >
                                                         <option value="">{t(field.placeholder)}</option>
                                                         {
@@ -1060,13 +1207,13 @@ console.log('Branch field value:', branch[field.name], typeof branch[field.name]
                                 </div>
                             )}
                             {hasUpdate && (
-  <div className="current-value">
-    Current:{' '}
-    {field.isLocation
-      ? getLocationDisplay(currentValue)
-      : currentValue || '(empty)'}
-  </div>
-)}
+                                <div className="current-value">
+                                    Current:{' '}
+                                    {field.isLocation
+                                        ? getLocationDisplay(currentValue)
+                                        : currentValue || '(empty)'}
+                                </div>
+                            )}
                         </div>
                     );
                 })}
@@ -1130,13 +1277,24 @@ const ContactRow = ({ label, isRequired, onChange }) => {
     );
 };
 
-const ContactSection = ({ branch, branchChanges, handleBranchFieldChange }) => {
+const ContactSection = ({ branch, customer, branchChanges, handleBranchFieldChange }) => {
     const { t } = useTranslation();
-
+let customerFormMode;
+    if (customer?.isApprovalMode) {
+        customerFormMode = 'custDetailsEdit';
+    } else {
+        customerFormMode = 'custDetailsAdd';
+    }
     // Get current values from branchChanges or fall back to branch data
+    // const getFieldValue = (fieldName) => {
+    //     return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
+    // };
     const getFieldValue = (fieldName) => {
-        return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
-    };
+        if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
+            return branchChanges[branch.id][fieldName];
+        }
+        return branch[fieldName] ?? '';
+    }
 
     // Contact types we want to display
     const contactTypes = [
@@ -1197,6 +1355,7 @@ const ContactSection = ({ branch, branchChanges, handleBranchFieldChange }) => {
                                         value={getFieldValue(field)}
                                         required={isRequired}
                                         onChange={(e) => handleContactChange(field, e.target.value)}
+                                        disabled={customerFormMode === 'custDetailsEdit'}
                                     />
                                 </div>
                             ))}
@@ -1214,10 +1373,15 @@ const parseTimeRange = (timeRange) => {
     const [from, to] = timeRange.split('-');
     return { from, to };
 };
-const OperatingHours = ({ hoursData, branchId, handleBranchFieldChange }) => {
+const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange }) => {
     const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const { t } = useTranslation();
-
+let customerFormMode;
+    if (customer?.isApprovalMode) {
+        customerFormMode = 'custDetailsEdit';
+    } else {
+        customerFormMode = 'custDetailsAdd';
+    }
     // Helper function to parse time range strings
     const parseTimeRange = (timeRange) => {
         if (!timeRange) return { from: '09:00', to: '18:00' };
@@ -1368,6 +1532,7 @@ const OperatingHours = ({ hoursData, branchId, handleBranchFieldChange }) => {
                                         }));
                                     }}
                                     onApplyAll={() => applyAllHours(day, 'operating')}
+                                    customerFormMode={customerFormMode}
                                 />
                             </td>
 
@@ -1388,6 +1553,7 @@ const OperatingHours = ({ hoursData, branchId, handleBranchFieldChange }) => {
                                         }));
                                     }}
                                     onApplyAll={() => applyAllHours(day, 'delivery')}
+                                    customerFormMode={customerFormMode}
                                 />
                             </td>
                         </tr>
@@ -1397,7 +1563,7 @@ const OperatingHours = ({ hoursData, branchId, handleBranchFieldChange }) => {
         </div>
     );
 };
-const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFocus, onApplyAll }) => {
+const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFocus, onApplyAll, customerFormMode }) => {
     return (
         <div className={`time-input-group ${day === 'friday' ? 'friday-time-input-group' : ''}`}>
             <input
@@ -1406,6 +1572,7 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
                 onChange={(e) => onChange(day, type, 'from', e.target.value)}
                 onFocus={() => onFocus('from', time.from)}
                 onBlur={() => { }}
+                 disabled={customerFormMode === 'custDetailsEdit'}
             />
             <span>-</span>
             <input
@@ -1414,6 +1581,7 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
                 onChange={(e) => onChange(day, type, 'to', e.target.value)}
                 onFocus={() => onFocus('to', time.to)}
                 onBlur={() => { }}
+                disabled={customerFormMode === 'custDetailsEdit'}
             />
 
             {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (

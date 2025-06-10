@@ -185,7 +185,8 @@ function CustomersOnboarding() {
                         body: JSON.stringify({
                             companyNameEn: formData.companyName,
                             region: formData.region,
-                            customerStatus: 'new'
+                            customerStatus: 'new',
+                            pricingPolicy: 'Price A',
                         }),
                         credentials: 'include',
                     });
