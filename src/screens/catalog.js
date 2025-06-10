@@ -68,88 +68,75 @@ function Catalog() {
     }));
 
     const customerId = user?.customerId;
-    const userId = user?.userId;    useEffect(() => {
-        if (customerId) { setSelectedCustomerId(customerId); }
-    }, [customerId]);
-    
-    // Initial setup when component loads - for default tab
+    const userId = user?.userId;
 
-
-    // Map product fields from backend to component props
-    const mapProductToCardProps = useCallback((product) => {
-        const currentLanguage = i18n.language;
-
-        // Parse images JSON and extract URLs
-        let imageUrls = [];
-        if (product.images) {
-            try {
-                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-                if (Array.isArray(parsed)) {
-                    imageUrls = parsed;
-                }
-            } catch (e) {
-                // fallback: treat as single image string
-                imageUrls = [product.images];
-            }
-        }
-
-        // Choose the right product name based on language
-        let productName = product.productName || product.product_name;
-        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
-            productName = product.product_name_lc || product.productNameLc || productName;
-        }
-
-        // Choose the right product description based on language
-        let productDescription = product.description;
-        if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
-            productDescription = product.description_lc || product.descriptionLc;
-        }
-
-        return {
-            id: product.id,
-            name: productName,
-            code: product.erpProdId || product.erp_prod_id || "No ID",
-            image: imageUrls[0] || '', // Use first image for ProductCard
-            images: imageUrls,         // Pass all images for ProductPopup
-            description: productDescription,
-            category: product.category,
-            subCategory: product.sub_category || product.subCategory,
-            entity: product.entity,
-            unit: product.unit,
-            vat: product.vatPercentage || product.VAT_percentage,
-            sugarTaxPrice: product.sugarTaxPrice,
-            moq: product.moq || product.minimumOrderQuantity || 0,
-            ...product
-        };
-    }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
-
-    // Fetch products from backend - now loads all pages from 1 to currentPage
     useEffect(() => {
+        let timeoutId = null;
+        let isMounted = true;
+
+        // --- Helper: Set selected customerId from user context ---
+        if (customerId && selectedCustomerId !== customerId) {
+            setSelectedCustomerId(customerId);
+        }
+
+        // --- Helper: Fetch Branches ---
+        const fetchBranches = async () => {
+            try {
+                setIsLoading(true);
+                const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
+                }
+                const result = await response.json();
+                console.log('Branches fetched:', result);
+                let branchData = [];
+                if (Array.isArray(result)) {
+                    branchData = result;
+                } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+                    branchData = result.data;
+                } else if (result && Array.isArray(result.data)) {
+                    branchData = result.data;
+                } else {
+                    branchData = [];
+                }
+                const branchOptions = branchData.map(branch => ({
+                    value: String(branch.id || branch.branch_id),
+                    label: i18n.language === 'en'
+                        ? (branch.branch_name_en || branch.branchNameEn)
+                        : (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
+                    erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+                    branchRegion: branch.region || branch.region,
+                    raw: branch
+                }));
+                if (isMounted) setBranches(branchOptions);
+            } catch (error) {
+                if (isMounted) console.error('Error fetching branches:', error);
+            } finally {
+                if (isMounted) setIsLoading(false);
+            }
+        };
+
+        // --- Helper: Fetch Products (with pagination) ---
         const fetchAllPages = async () => {
-            // Show loading state
             if (currentPage === 1) {
                 setIsLoading(true);
             } else {
                 setIsLoadingMore(true);
             }
-
             try {
-                // Determine which pages we need to fetch
                 const pagesToFetch = [];
                 for (let i = 1; i <= currentPage; i++) {
-                    if (!loadedPages.includes(i)) {
-                        pagesToFetch.push(i);
-                    }
+                    if (!loadedPages.includes(i)) pagesToFetch.push(i);
                 }
-
-                if (pagesToFetch.length === 0) {
-                    // All needed pages are already loaded
-                    setIsLoading(false);
-                    setIsLoadingMore(false);
-                    return;
-                }
-
-                // Create a function to fetch a single page
+                if (pagesToFetch.length === 0) return;
                 const fetchPage = async (pageNumber) => {
                     const params = new URLSearchParams({
                         page: pageNumber,
@@ -157,16 +144,11 @@ function Catalog() {
                         sortBy: 'id',
                         sortOrder: 'asc',
                     });
-
-                    // Handle entity filtering
                     const selectedCategory = categories.find(cat => cat.value === activeCategory);
                     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
                     if (entityToFilter) {
                         params.append('entity', entityToFilter);
                     }
-
-                    // For all tabs, just filter by entity without special handling
                     if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
                         params.append('entity', 'vmco');
                     } else if (activeCategory === 'Diyafa') {
@@ -176,34 +158,24 @@ function Catalog() {
                     } else if (activeCategory === 'Naqui') {
                         params.append('entity', 'naqui');
                     }
-
-                    // Add category and subcategory filters
                     if (categoryFilter) params.append('category', categoryFilter);
                     if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
-
-                    // Add search query
                     if (searchQuery) {
                         params.append('search', searchQuery);
                         params.append('searchFields', 'productName,product_name,product_name_lc,productNameLc');
                     }
-
                     const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include'
                     });
-
                     const result = await response.json();
-                    console.log(`Fetched page ${pageNumber} products:`, result);
-                    // Extract the new products from the response
                     let pageProducts = [];
                     let totalCount = 0;
-
                     if (result.status === 'Ok') {
                         pageProducts = result.data.data;
                         totalCount = result.data.totalRecords
                     }
-
                     if (Array.isArray(result.data)) {
                         pageProducts = result.data.data;
                         totalCount = result.length;
@@ -220,152 +192,171 @@ function Catalog() {
                             (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
                             result.data.length;
                     }
-
                     return { pageProducts, totalCount, pageNumber };
                 };
-
-                // Key fix: Handle the reset products case differently
                 let allProducts = [];
                 let newLoadedPages = [];
-
-                // Reset products if we're starting fresh
                 if (pagesToFetch.includes(1)) {
-                    // Just prepare to reset - don't call setState yet
                     allProducts = [];
                     newLoadedPages = [];
                 } else {
-                    // If not resetting, start with existing data
                     allProducts = [...products];
                     newLoadedPages = [...loadedPages];
                 }
-
-                // Fetch all pages in sequence
                 let maxTotalCount = 0;
-
                 for (const page of pagesToFetch) {
                     const { pageProducts, totalCount } = await fetchPage(page);
-
-                    // Add these products to our collection
                     allProducts = [...allProducts, ...pageProducts];
                     maxTotalCount = Math.max(maxTotalCount, totalCount);
-
-                    // Add to our new loaded pages array
                     newLoadedPages.push(page);
                 }
-
-                // Set all products and loaded pages at once after we've loaded everything
-                setProducts(allProducts);
-                setTotalProducts(maxTotalCount);
-                setLoadedPages(newLoadedPages);
-
-                // Determine if there are more products to load
-                const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
-                const moreAvailable = loadedProductsCount < maxTotalCount;
-                setHasMore(moreAvailable);
-
+                if (isMounted) {
+                    setProducts(allProducts);
+                    setTotalProducts(maxTotalCount);
+                    setLoadedPages(newLoadedPages);
+                    const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
+                    const moreAvailable = loadedProductsCount < maxTotalCount;
+                    setHasMore(moreAvailable);
+                }
             } catch (err) {
-                console.error('Error fetching products:', err);
-                setHasMore(false);
+                if (isMounted) {
+                    console.error('Error fetching products:', err);
+                    setHasMore(false);
+                }
             } finally {
-                setIsLoading(false);
-                setIsLoadingMore(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                    setIsLoadingMore(false);
+                }
             }
         };
 
-        fetchAllPages();
-    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
-    // Filter products based on tab, category, and subcategory
-    useEffect(() => {
-        // We're already filtering server-side via API params, but we also handle client-side filtering
-        // for better UX while waiting for API responses
-        // Get the entity value for the selected category tab
-        const selectedCategory = categories.find(cat => cat.value === activeCategory);
-        const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+        // --- Helper: Filter Products ---
+        const filterProducts = () => {
+            const selectedCategory = categories.find(cat => cat.value === activeCategory);
+            const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+            let filtered = [...products];
+            if (entityToFilter) {
+                filtered = filtered.filter(product => {
+                    const productEntity = (product.entity || '').toLowerCase();
+                    return productEntity === entityToFilter.toLowerCase();
+                });
+            }
+            if (searchQuery && searchQuery.trim() !== '') {
+                const searchLower = searchQuery.toLowerCase().trim();
+                filtered = filtered.filter(product => {
+                    const productName = (product.productName || product.product_name || '').toLowerCase();
+                    const localizedName = (product.product_name_lc || product.productNameLc || '').toLowerCase();
+                    const productCode = (product.erpProdId || product.erp_prod_id || '').toLowerCase();
+                    const productDescription = (product.description || '').toLowerCase();
+                    const localizedDescription = (product.description_lc || product.descriptionLc || '').toLowerCase();
+                    return productName.includes(searchLower) ||
+                        localizedName.includes(searchLower) ||
+                        productCode.includes(searchLower) ||
+                        productDescription.includes(searchLower) ||
+                        localizedDescription.includes(searchLower);
+                });
+            }
+            if (categoryFilter && categoryFilter.trim() !== '') {
+                filtered = filtered.filter(product =>
+                    (product.category || '').toLowerCase() === categoryFilter.toLowerCase()
+                );
+            }
+            if (subCategoryFilter && subCategoryFilter.trim() !== '') {
+                filtered = filtered.filter(product => {
+                    const subCategory = (product.subCategory || product.sub_category || '').toLowerCase();
+                    return subCategory === subCategoryFilter.toLowerCase();
+                });
+            }
+            if (isMounted) {
+                setFilteredProducts(filtered);
+                setDisplayedProducts(filtered);
+            }
+        };
 
-        let filtered = [...products]; // Create a copy of products array for filtering
+        // --- Helper: Initialize Quantities with MOQ ---
+        const initializeQuantities = () => {
+            if (products.length > 0) {
+                let initialQuantities = { ...quantities };
+                let hasChanges = false;
+                products.forEach(product => {
+                    if (product.moq && (!initialQuantities[product.id] || initialQuantities[product.id] === 0)) {
+                        initialQuantities[product.id] = Number(product.moq);
+                        hasChanges = true;
+                    }
+                });
+                if (hasChanges && isMounted) {
+                    setQuantities(initialQuantities);
+                }
+            }
+        };
 
-        // Filter by entity first
-        if (entityToFilter) {
-            filtered = filtered.filter(product => {
-                const productEntity = (product.entity || '').toLowerCase();
-                return productEntity === entityToFilter.toLowerCase();
-            });
-
-            // No special handling for VMCO entities anymore
-        }
-
-        // Apply search filter on product name
-        if (searchQuery && searchQuery.trim() !== '') {
-            const searchLower = searchQuery.toLowerCase().trim();
-            filtered = filtered.filter(product => {
-                const productName = (product.productName || product.product_name || '').toLowerCase();
-                const localizedName = (product.product_name_lc || product.productNameLc || '').toLowerCase();
-                const productCode = (product.erpProdId || product.erp_prod_id || '').toLowerCase();
-                const productDescription = (product.description || '').toLowerCase();
-                const localizedDescription = (product.description_lc || product.descriptionLc || '').toLowerCase();
-
-                return productName.includes(searchLower) ||
-                    localizedName.includes(searchLower) ||
-                    productCode.includes(searchLower) ||
-                    productDescription.includes(searchLower) ||
-                    localizedDescription.includes(searchLower);
-            });
-        }
-
-        // Apply category filter
-        if (categoryFilter && categoryFilter.trim() !== '') {
-            filtered = filtered.filter(product =>
-                (product.category || '').toLowerCase() === categoryFilter.toLowerCase()
+        // --- Helper: Auto-select category for VMCO tabs ---
+        const autoSelectCategory = () => {
+            if (!products.length || !['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) || categoryFilter) {
+                return;
+            }
+            const selectedCategoryTab = categories.find(cat => cat.value === activeCategory);
+            const entityToFilter = selectedCategoryTab ? selectedCategoryTab.entity : null;
+            if (!entityToFilter) return;
+            let filteredProductsByEntity = products.filter(p =>
+                (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
             );
-        }
+            let availableCategories = [];
+            if (activeCategory === 'VMCO Machines') {
+                availableCategories = Array.from(new Set(
+                    filteredProductsByEntity
+                        .map(p => p.category)
+                        .filter(Boolean)
+                        .filter(category =>
+                            !(category.toLowerCase().includes('consumable') ||
+                              category.toLowerCase().includes('supply') ||
+                              category.toLowerCase().includes('accessory'))
+                        )
+                ));
+            } else if (activeCategory === 'VMCO Consumables') {
+                availableCategories = Array.from(new Set(
+                    filteredProductsByEntity
+                        .map(p => p.category)
+                        .filter(Boolean)
+                        .filter(category =>
+                            !(category.toLowerCase().includes('machine') ||
+                              category.toLowerCase().includes('equipment') ||
+                              category.toLowerCase().includes('device'))
+                        )
+                ));
+            }
+            if (availableCategories.length > 0 && isMounted) {
+                setCategoryFilter(availableCategories[0]);
+            }
+        };
 
-        // Apply subcategory filter
-        if (subCategoryFilter && subCategoryFilter.trim() !== '') {
-            filtered = filtered.filter(product => {
-                const subCategory = (product.subCategory || product.sub_category || '').toLowerCase();
-                return subCategory === subCategoryFilter.toLowerCase();
-            });
-        }
-
-        setFilteredProducts(filtered);
-        setDisplayedProducts(filtered);
-
-    }, [products, activeCategory, searchQuery, categoryFilter, subCategoryFilter]);
-    // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
-    useEffect(() => {
-        let timeoutId = null;
-
-        // Function to handle automatic loading of more pages
+        // --- Helper: Auto-load more pages with delay (infinite scroll) ---
         const loadMorePagesWithDelay = () => {
             if (hasMore && !isLoading && !isLoadingMore) {
                 setIsLoadingMore(true);
-
-                // Wait for 3 seconds before loading the next page set
                 timeoutId = setTimeout(() => {
-                    // Increment the max page to load - this will trigger loading all pages up to this number
-                    setCurrentPage(prev => Math.min(prev + 1, 3)); // Don't go beyond page 3
-                }, 3000); // 3 seconds delay
+                    if (isMounted) setCurrentPage(prev => Math.min(prev + 1, 3));
+                }, 3000);
             }
         };
 
-        // After products are loaded and we're not in a loading state, set up the next load
-        // Only continue if we haven't reached page 3 yet
-        if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && currentPage < 3) {
+        // --- Main effect logic ---
+        fetchBranches();
+        fetchAllPages();
+        filterProducts();
+        initializeQuantities();
+        autoSelectCategory();
+        if (!isLoading && !isLoadingMore && displayedProducts.length > 0 && hasMore && currentPage < 3) {
             loadMorePagesWithDelay();
         }
 
-        // Clean up the timeout if the component unmounts or dependencies change
+        // --- Cleanup ---
         return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
+            isMounted = false;
+            if (timeoutId) clearTimeout(timeoutId);
         };
-    }, [currentPage, hasMore, isLoading, isLoadingMore, products.length]);    // Reset page when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-        setLoadedPages([]);
-        setHasMore(true); // Reset hasMore when filters change to ensure new data is fetched
-    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery]);
+    }, [API_BASE_URL, i18n.language, activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, loadedPages, hasMore, isLoading, isLoadingMore, quantities, categories, customerId, selectedCustomerId, displayedProducts.length]);
 
     const handleProductClick = (product) => {
         setSelectedProduct(product);
@@ -404,70 +395,6 @@ function Catalog() {
     // Get unique categories and subcategories for dropdowns
     const uniqueCategories = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
     const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
-
-    // NEW: Branch selection functionality moved here (before add to cart function)
-    // This useEffect fetches customer branches using the customer_id from the auth token
-    useEffect(() => {
-        const fetchBranches = async () => {
-            try {
-                setIsLoading(true); // Show loading state while fetching
-
-                // The API endpoint already reads the customer_id from the JWT token
-                const response = await fetch(`${API_BASE_URL}/customer-branches/pagination`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include' // This includes the auth token/cookies
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`Failed to fetch branches: ${errorData.message || response.statusText}`);
-                }
-
-                const result = await response.json();
-                let branchData = [];
-
-                // Handle response structure with better validation
-                if (Array.isArray(result)) {
-                    branchData = result;
-                } else if (result.status === 'Ok' && Array.isArray(result.data)) {
-                    branchData = result.data;
-                } else if (result && Array.isArray(result.data)) {
-                    branchData = result.data;
-                } else {
-                    console.warn('Unexpected branch data format:', result);
-                    branchData = [];
-                }
-
-                // Map branches to dropdown format with proper field validation
-                const branchOptions = branchData.map(branch => ({
-                    value: String(branch.id || branch.branch_id),
-                    label: i18n.language === 'en'
-                        ? (branch.branch_name_en || branch.branchNameEn)
-                        : (branch.branch_name_lc || branch.branchNameLc || branch.branch_name_en || branch.branchNameEn),
-                    erpBranchId: branch.erpBranchId || branch.erp_branch_id,
-                    branchRegion: branch.region || branch.region, // <-- Map branchRegion to region
-                    raw: branch
-                }));
-                setBranches(branchOptions);
-
-                console.log('Branch options are ', branchOptions);
-
-                // Add additional logging to see the actual data structure
-                console.log('Fetched branch data:', branchData);
-
-            } catch (error) {
-                console.error('Error fetching branches:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchBranches();
-    }, [API_BASE_URL, i18n.language]); // Keep i18n.language as dependency to refresh branches on language change
 
     //  Add to cart functionality
     const handleAddToCart = async (productId) => {
@@ -769,6 +696,46 @@ function Catalog() {
     const dir = i18n.dir();
     const isRTL = dir === 'rtl';
 
+    // Move this block above the return statement and before any usage in JSX
+    const mapProductToCardProps = useCallback((product) => {
+        const currentLanguage = i18n.language;
+        let imageUrls = [];
+        if (product.images) {
+            try {
+                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                if (Array.isArray(parsed)) {
+                    imageUrls = parsed;
+                }
+            } catch (e) {
+                imageUrls = [product.images];
+            }
+        }
+        let productName = product.productName || product.product_name;
+        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
+            productName = product.product_name_lc || product.productNameLc || productName;
+        }
+        let productDescription = product.description;
+        if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
+            productDescription = product.description_lc || product.descriptionLc;
+        }
+        return {
+            id: product.id,
+            name: productName,
+            code: product.erpProdId || product.erp_prod_id || "No ID",
+            image: imageUrls[0] || '',
+            images: imageUrls,
+            description: productDescription,
+            category: product.category,
+            subCategory: product.sub_category || product.subCategory,
+            entity: product.entity,
+            unit: product.unit,
+            vat: product.vatPercentage || product.VAT_percentage,
+            sugarTaxPrice: product.sugarTaxPrice,
+            moq: product.moq || product.minimumOrderQuantity || 0,
+            ...product
+        };
+    }, [i18n.language]);
+
     return (
         <Sidebar title={t('Catalog')}>
             <div
@@ -782,137 +749,75 @@ function Catalog() {
                             id={`location-select-${catalogId}`}
                             name="locationSelect"
                             value={selectedLocation}
-                            onChange={(e) => {
+                            onChange={async (e) => {
                                 const newBranchId = e.target.value;
                                 const currentBranchId = selectedLocation;
-
-                                // Don't do anything if selecting the same branch
                                 if (newBranchId === currentBranchId) return;
 
-                                const checkAndChangeBranch = async () => {
-                                    try {
-                                        // Only check for cart items if we already had a branch selected
-                                        if (currentBranchId) {
-                                            setIsLoading(true);
-
-                                            // Set up parameters for pagination to check cart items
-                                            const params = new URLSearchParams({
-                                                page: 1,
-                                                pageSize: 100, // Large enough to capture all items
-                                                sortBy: 'id',
-                                                sortOrder: 'asc'
-                                            });
-
-                                            // Create filters to check current cart
-                                            const filters = {
-                                                customer_id: selectedCustomerId || customerId,
-                                                branch_id: currentBranchId
-                                            };
-
-                                            console.log('Checking cart with filters:', filters);
-
-                                            // Add filters as a single parameter with stringified JSON
-                                            params.append('filters', JSON.stringify(filters));
-
-                                            // Fetch cart items for current branch
-                                            const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
-                                                method: 'GET',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    'Accept': 'application/json'
-                                                },
-                                                credentials: 'include'
-                                            });
-
-                                            if (!response.ok) {
-                                                throw new Error(`Error checking cart: ${response.status} ${response.statusText}`);
-                                            }
-
-                                            const result = await response.json();
-                                            console.log('Cart check result:', result);
-
-                                            // Check if cart has items
-                                            const cartItems = result.data?.data || [];
-                                            const hasItems = cartItems.length > 0;
-
-                                            if (hasItems) {
-                                                // Show confirmation dialog
-                                                const confirmChange = window.confirm(
-                                                    t("There are items in the cart. Do you want to discard the items?")
-                                                );
-
-                                                if (!confirmChange) {
-                                                    // User canceled - don't change branch
-                                                    setIsLoading(false);
-                                                    return;
-                                                }
-
-                                                // User confirmed, delete cart items before changing branch
-                                                console.log(`Deleting cart items for branch ${currentBranchId}...`);
-
-                                                // Convert IDs to strings before adding them to the URL
-                                                const customerIdStr = String(selectedCustomerId || '3');
-                                                const branchIdStr = String(currentBranchId);
-
-                                                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                                                deleteUrl.searchParams.append('customer_id', customerIdStr);
-                                                deleteUrl.searchParams.append('branch_id', branchIdStr);
-
-                                                const deleteResponse = await fetch(deleteUrl, {
-                                                    method: 'DELETE',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    credentials: 'include'
-                                                });
-
-                                                if (!deleteResponse.ok) {
-                                                    console.error(`Warning: Failed to delete cart items: ${deleteResponse.status}`);
-                                                    // Continue with branch change anyway
-                                                } else {
-                                                    console.log('Successfully deleted cart items');
-                                                }
-                                            }
-                                        }
-
-                                        // Change branch selection
+                                // Fetch all cart items for the user
+                                try {
+                                    setIsLoading(true);
+                                    const params = new URLSearchParams({
+                                        page: 1,
+                                        pageSize: 100,
+                                        sortBy: 'id',
+                                        sortOrder: 'asc',
+                                        filters: JSON.stringify({ user_id: userId, customer_id: selectedCustomerId || customerId })
+                                    });
+                                    const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json'
+                                        },
+                                        credentials: 'include'
+                                    });
+                                    if (!response.ok) throw new Error('Failed to fetch cart items');
+                                    const result = await response.json();
+                                    const cartItems = result?.data?.data || [];
+                                    // Find all unique branchIds in the cart
+                                    const cartBranchIds = [...new Set(cartItems.map(item => String(item.branch_id || item.branchId)))];
+                                    // If cart is empty or only for the selected branch, allow change
+                                    if (cartBranchIds.length === 0 || (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId)) {
                                         setSelectedLocation(newBranchId);
-
-                                        // Find selected branch details
+                                        // Define selectedBranch here
                                         const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
-                                        if (selectedBranch && selectedBranch.label) {
-                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
-                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
+                                        if (selectedBranch && selectedBranch.branchRegion) {
                                             setSelectedBranchRegion(selectedBranch.branchRegion);
-                                            console.log('Changed to branch:', selectedBranch.label);
-                                            console.log('Changed to branchRegion:', selectedBranch.branchRegion);
                                         }
-
-                                    } catch (error) {
-                                        console.error('Error during branch change:', error);
-                                        alert(t("Error checking cart. Branch change may not work correctly."));
-
-                                        // Still attempt to change branch despite error
-                                        setSelectedLocation(newBranchId);
-
-                                        const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
-                                        if (selectedBranch && selectedBranch.label) {
-                                            localStorage.setItem('selectedBranchName', selectedBranch.label);
-                                            localStorage.setItem('selectedBranchId', selectedBranch.value);
-                                            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId);
-                                            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion);
-                                        }
-                                    } finally {
                                         setIsLoading(false);
+                                        return;
                                     }
-                                };
-
-                                checkAndChangeBranch();
+                                    // If there are items for a different branch, alert the user
+                                    const otherBranchId = cartBranchIds.find(id => id !== newBranchId);
+                                    if (otherBranchId) {
+                                        // Find the branch label for the other branch
+                                        const otherBranch = branches.find(branch => String(branch.value) === String(otherBranchId));
+                                        const otherBranchLabel = otherBranch ? otherBranch.label : otherBranchId;
+                                        const confirmChange = window.confirm(
+                                            `There are items in the cart for branch ${otherBranchLabel}. Do you want to discard those items?`
+                                        );
+                                        if (confirmChange) {
+                                            // Define selectedBranch here as well
+                                            const selectedBranch = branches.find(branch => String(branch.value) === String(newBranchId));
+                                            setSelectedLocation(newBranchId);
+                                            if (selectedBranch && selectedBranch.branchRegion) {
+                                                setSelectedBranchRegion(selectedBranch.branchRegion);
+                                            }
+                                        }
+                                        // If not confirmed, do not change branch
+                                    }
+                                } catch (error) {
+                                    console.error('Error during branch change:', error);
+                                    alert('Error checking cart. Branch change may not work correctly.');
+                                } finally {
+                                    setIsLoading(false);
+                                }
                             }}
                             options={branches}
                             className="location-select"
                             label={t("Delivery to:")}
-                            placeholder={t("Select Branch")} // Add a placeholder
+                            placeholder={t("Select Branch")}
                             disabled={isLoading || branches.length === 0} // Disable when loading or no branches
                         />
                         {/* Add a loading indicator within the location selector */}
@@ -938,8 +843,6 @@ function Catalog() {
                             setCurrentPage(1);
                             setLoadedPages([]);
                             setHasMore(true);
-                            
-                            // Reset filters - our useEffect will set the appropriate category once products load
                             setSubCategoryFilter('');
                             setCategoryFilter('');
                         }}

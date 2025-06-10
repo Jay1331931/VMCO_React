@@ -151,9 +151,9 @@ function Orders() {
   console.log("$$$$$$$$$$$ user in orders page", user);
 
   // Check loading state first
-  if (loadingPage) {
-    return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
-  }
+  if (loading) {
+      return; // Wait while loading
+    }
 
   if (!user) {
     console.log("$$$$$$$$$$$ logging out");

@@ -71,7 +71,8 @@ const Table = ({
  
     return (
         <div className="table-container">
-            <table className="data-table">                <thead>
+            <table className="data-table">               
+                 <thead>
                     <tr>
                         {columns.map((column) => (                            <th key={column.key}>
                                 {typeof column.header === 'function' 
