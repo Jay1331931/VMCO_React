@@ -1760,10 +1760,10 @@ class RbacManager {
    * @param {string} field - The field name
    * @returns {boolean} True if the field is visible, false otherwise
    */
-  isV(field) {
+  isV(field, approvalWF = false, fieldInWF = false) {
     //console.log(field)
     const access = this.getFieldAccess(field);
-    return access == null ? true : access.visible;
+    return (access == null ? true : access.visible) && (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true);
   }
 
   /**
