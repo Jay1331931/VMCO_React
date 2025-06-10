@@ -20,7 +20,7 @@ import ApprovalDialog from '../components/ApprovalDialog';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
+import LoadingSpinner from '../components/LoadingSpinner';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -503,12 +503,13 @@ function CustomersDetails() {
   const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
+  const [companyType, setCompanyType] = useState(transformedCustomer?.companyType?.toLowerCase() || '');
+  console.log("Company Type", companyType);
   const formsByTab = useMemo(() => ({
     'Business Details': getBusinessDetailsForm(t)['Business Details'],
     'Contact Details': getContactDetailsForm(t)['Contact Details'],
     'Financial Information': getFinancialInformationForm(t)['Financial Information'],
-    'Documents': getDocumentsForm(t, customer)['Documents'],
+    'Documents': getDocumentsForm(t, companyType)['Documents'],
     'Branches': [
       { type: 'text', name: 'branchName', label: t('Branch Name'), placeholder: t('Enter branch name') },
       { type: 'text', name: 'branchLocation', label: t('Branch Location'), placeholder: t('Enter location') },
@@ -519,7 +520,7 @@ function CustomersDetails() {
     'Business Details': getBusinessDetailsFormData(t, customer)['Business Details'],
     'Contact Details': getBusinessDetailsFormData(t, customer)['Contact Details'],
     'Financial Information': getBusinessDetailsFormData(t, customer)['Financial Information'],
-    'Documents': getBusinessDetailsFormData(t, customer)['Documents'],
+    'Documents': getBusinessDetailsFormData(t, customer, companyType)['Documents'],
   }), [t]);
 
   const tabs = useMemo(() => {
@@ -596,9 +597,14 @@ function CustomersDetails() {
 
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    const conditionalDropdowns = ['diyafa', 'naqi', 'greenMart', 'dar'];
+    const { name, value, type, checked } = e.target;  
+    console.log('Input change:', name, value, type, checked);
+    if(name === 'companyType') {
+      setCompanyType(value.toLowerCase());
+      formsByTab['Documents'] = getDocumentsForm(t, value.toLowerCase())['Documents'];
+      formDataByTab['Documents'] = getBusinessDetailsFormData(t, customer, value.toLowerCase())['Documents'];
+    }
+    const conditionalDropdowns = ['diyafa', 'naqi', 'greenMart', 'dar', 'vmco'];
     if (conditionalDropdowns.includes(name)) {
       setFormData(prev => ({
         ...prev,
@@ -860,6 +866,9 @@ function CustomersDetails() {
           if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
             customerPayload[fieldName] = newValue;
           customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
+          if(fieldName === 'interCompany' || fieldName === 'isDeliveryChargesApplicable'){
+            customerPayload[fieldName] = newValue?.isAllowed
+          }
           // if(formData.customerStatus === 'new'){
           //   customerPayload['customerStatus'] = 'pending';
           // }
@@ -1034,6 +1043,7 @@ function CustomersDetails() {
       });
       if (response.ok) {
         const result = await response.json();
+        console.log("Manager Result", result.data)
         return result.data.employeeId;
       }
     } catch (err) {
@@ -1074,7 +1084,7 @@ function CustomersDetails() {
 
         try {
           let data = await getOptionsFromBasicsMaster(field.name);
-          if (field.name === 'assignedTo' || field.name === 'naqi' || field.name === 'diyafa' || field.name === 'dar' || field.name === 'greenMart') {
+          if (field.name === 'assignedTo' || field.name === 'naqi' || field.name === 'diyafa' || field.name === 'dar' || field.name === 'greenMart' || field.name === 'vmco') {
             data = await getOptionsFromEmployees(field.name);
           }
           console.log("Data for field", field.name, data);
@@ -1344,8 +1354,8 @@ function CustomersDetails() {
       if (fieldName in formData) {
         updates[fieldName] = formData[fieldName];
       }
-      if (fieldName === 'interCompany') {
-        updates['interCompany'] = formData['interCompany']?.isAllowed;
+      if (fieldName === 'interCompany' || fieldName === 'isDeliveryChargesApplicable') {
+        updates[fieldName] = formData[fieldName]?.isAllowed;
       }
     });
 
@@ -1479,7 +1489,8 @@ function CustomersDetails() {
       const paymentDetailFields = [
         'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
       ]
-      const areaSalesManager = getManagerFromEmployees(formData?.region) || '';
+      const areaSalesManager = await getManagerFromEmployees(formData?.region) || '';
+      console.log('Area Sales Manager:', areaSalesManager);
       const customerPayload = {};
       const contactCreatePayload = {};
       const contactUpdatePayload = {};
@@ -1510,7 +1521,7 @@ function CustomersDetails() {
       const customerData = customer || {};
       console.log("Changed fields in Save", changedFields)
       newChangedFields.forEach(fieldName => {
-        if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'diyafa' || fieldName === 'naqi' || fieldName === 'greenMart' || fieldName === 'dar') return;
+        if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'pricingPolicy') return;
 
         const newValue = formData[fieldName];
         const oldValue = customerData[fieldName];
@@ -1526,11 +1537,15 @@ function CustomersDetails() {
 
           }
           else {
+            if(fieldName === 'crCertificate' || fieldName === 'vatCertificate' || fieldName === 'nationalId' || fieldName === 'bankLetter' || fieldName === 'nationalAddress' || fieldName === 'contractAgreement' || fieldName === 'creditApplication' || fieldName === 'acknacknowledgementSignature') {
+              customerPayload[fieldName] = newValue?.name || '';
+            }
             if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
-              customerPayload[fieldName] = newValue;
+            customerPayload[fieldName] = newValue;
             customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
-            customerPayload['interCompany'] = true;
+            customerPayload['interCompany'] = false;
             customerPayload['assignedToEntityWise'] = {
+              'vmco': areaSalesManager,
               'diyafa': areaSalesManager,
               'dar': areaSalesManager,
               'naqi': areaSalesManager,
@@ -1538,6 +1553,8 @@ function CustomersDetails() {
             }
             if(customerPayload['nonTradingDocuments']?.length === 0){
               customerPayload['nonTradingDocuments'] = {};
+            } else {
+              customerPayload['nonTradingDocuments'] = formData.nonTradingDocuments?.name || [];
             }
             // if(formData.customerStatus === 'new'){
             //   customerPayload['customerStatus'] = 'pending';
@@ -1636,14 +1653,41 @@ function CustomersDetails() {
         handleSaveFiles();
         alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
-        // navigate('/catalog')
-        // window.location.reload();
-        document.body.innerHTML = '<div style="padding: 20px;">Updating... Page will refresh in 3 seconds</div>';
 
-        setTimeout(() => {
-          window.location.reload(true); // true forces a hard reload from server
-          // navigate('/customersDetails', { state: { transformedCustomer, mode: 'custDetailsAdd' }  })
-        }, 3000);
+        function showLoadingScreen(message) {
+  document.body.innerHTML = `
+    <div class="loading-more-container" style="
+      padding: 20px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    ">
+      <div class="loading-spinner" style="
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      "></div>
+      <div class="loading-more-text">${message}</div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+}
+
+// Usage:
+showLoadingScreen('Updating...');
+setTimeout(() => window.location.reload(true), 3000);
 
       } catch (error) {
         console.error('Update error:', error);
@@ -1685,7 +1729,8 @@ function CustomersDetails() {
         setChangedFields(prev => new Set(prev).add('businessHeadDesignation'));
         setChangedFields(prev => new Set(prev).add('businessHeadEmail'));
         setChangedFields(prev => new Set(prev).add('businessHeadMobile'));
-      } else {
+      }
+      else {
         let updatedValues = prev[fieldName] || false;
         if (checked) {
           updatedValues = { ...updatedValues, isAllowed: true };
@@ -1801,10 +1846,11 @@ function CustomersDetails() {
       URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('Error viewing file:', error);
-      alert('Failed to open file. Please try again.');
+      // alert('Failed to open file. Please try again.');
     }
   };
   const shouldShowDiv = (transformedCustomer?.isApprovalMode || customer?.isApprovalMode) && customerFormMode === 'custDetailsAdd' && (transformedCustomer.customerStatus !== 'new' || customer?.customerStatus === 'pending');
+  const shouldShowBlock = (customerFormMode === 'custDetailsEdit' && transformedCustomer?.name === 'customer block/unblock' )
   return (
     <Sidebar>
       <div className='customers'>
@@ -1844,6 +1890,8 @@ function CustomersDetails() {
               ) : (
                 <div className="customer-onboarding-form-grid" ref={contentRef}>
                   {shouldShowDiv && <>{t('This form is currently under approval')}</>}
+                  {shouldShowBlock && transformedCustomer?.customerStatus === 'approved' && <>{t('Customer Approval for Blocking Customer')}</>}
+                  {shouldShowBlock && transformedCustomer?.customerStatus === 'blocked' && <>{t('Customer Approval for Unblocking Customer')}</>}
                   <div className="form-main-header">
                     <a href="#">{t('Customer Approval Checklist')}</a>
                   </div>
@@ -1870,7 +1918,7 @@ function CustomersDetails() {
                     const hasUpdate = approvalMode && transformedCustomer.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
                       field.name in transformedCustomer.workflowData.updates;
-                    console.log(hasUpdate)
+                    console.log('HasUpdate', hasUpdate);
                     const currentValue = customer?.[field.name] || '';
                     const proposedValue = hasUpdate ? transformedCustomer?.workflowData?.updates[field.name] : null;
                     switch (field.type) {
@@ -1984,7 +2032,7 @@ function CustomersDetails() {
                         );
 
                       case 'conditionalDropdown':
-                        const shouldShowDropdown = formData[field.showWhen]?.isAllowed === field.showValue;
+                        const shouldShowDropdown = formData?.[field.showWhen]?.isAllowed === field.showValue;
                         if (!shouldShowDropdown) return null;
                         return (
                           <div className='form-group' key={field.name}>
@@ -1995,7 +2043,7 @@ function CustomersDetails() {
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.assignedToEntityWise?.[field.name] || transformedCustomer?.workflowData?.updates?.assignedToEntityWise?.[field.name] || ''}
+                              value={formData?.[field.name] || transformedCustomer?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || ''}
                               onChange={handleInputChange}
                               // disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates) ? field.name in transformedCustomer?.workflowData?.updates?.assignedToEntityWise
                               //   : false)}
@@ -2029,7 +2077,7 @@ function CustomersDetails() {
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData[field.name] || ''}
+                              value={formData[field.name] || formData?.['assignedToEntityWise']?.[field.name] || ''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? field.name in transformedCustomer.workflowData.updates
                                 : false)}
@@ -2360,13 +2408,13 @@ function CustomersDetails() {
                                     type="checkbox"
                                     name={field.name}
                                     value={option}
-                                    checked={formData[field.name]?.isAllowed}
+                                    checked={formData[field.name]?.isAllowed || formData[field.name] === true}
                                     onChange={(e) => handleCheckboxChange(e, field.name)}
                                     disabled={!isE(field.name, approvalMode, transformedCustomer?.workflowData?.updates
                                       ? field.name in transformedCustomer.workflowData.updates
                                       : false)}
                                   />
-                                  {option}
+                                  {option} {hasUpdate && <span className="update-badge">Pending Update</span>}
                                 </label>
                               </div>
                             ))}

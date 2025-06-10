@@ -155,8 +155,8 @@ function Customers() {
   };
 
   const customerColumns = [
-    { key: 'id', header: 'Portal ID' },
-    { key: 'erp_cust_id', header: 'Registration ID' },
+    { key: 'id', header: 'Registration ID' },
+    { key: 'erp_cust_id', header: 'ERP ID' },
     { key: 'companyNameEn', header: 'Company' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
@@ -164,8 +164,8 @@ function Customers() {
   ];
 
   const approvalColumns = [
-    { key: 'id', header: 'Portal ID' },
-    { key: 'erp_cust_id', header: 'Registration ID' },
+    { key: 'id', header: 'Registration ID' },
+    { key: 'erp_cust_id', header: 'ERP ID' },
     { key: 'companyNameEn', header: 'Company' },
     { key: 'name', header: 'Workflow Name' },
     { key: 'companyType', header: 'Company Type' },

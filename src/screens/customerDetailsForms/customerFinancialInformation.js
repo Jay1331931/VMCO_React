@@ -12,7 +12,8 @@ export function getFinancialInformationForm(t) {
       { type: 'empty' },
       // { type: 'header', label: t('Price Plan')},
       { type: 'dropdown', name: 'pricingPolicy', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
-      { type: 'checkbox', name: 'deliveryCost', label: '', options: [t('Delivery Cost')], required: false },
+      { type: 'empty' },
+      { type: 'checkbox', name: 'isDeliveryChargesApplicable', label: '', options: [t('Is delivery charges applicable')], required: false },
 
       { type: 'header', label: '' },
       // { type: 'header', label: t('Payment Method (Post Approval)') },
@@ -20,11 +21,13 @@ export function getFinancialInformationForm(t) {
       { type: 'empty' },
       // { type: 'checkbox', name: 'paymentMethodPrePayment', label: '', options: [t('Pre-Payment')] },
       { type: 'checkbox', name: 'partialPayment', label: '', options: [t('Partial Payment')], required: false },
-      { type: 'checkbox', name: 'COD', label: '', options: [t('Cash on Delivery (COD)')], required: false },
-      { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
-      { type: 'text', name: 'creditLimit', label: '', placeholder: t('Enter credit limit'), required: false },
       { type: 'empty' },
-      { type: 'text', name: 'creditPeriod', label: '', placeholder: t('Enter credit period'), required: false },
+      { type: 'checkbox', name: 'COD', label: '', options: [t('Cash on Delivery (COD)')], required: false },
+      { type: 'empty' },
+      { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
+      { type: 'text', name: 'creditLimit', label: 'Credit Limit', placeholder: t('Enter credit limit'), required: false },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriod', label: 'Credit Period', placeholder: t('Enter credit period'), required: false },
     ],
   };
 }
