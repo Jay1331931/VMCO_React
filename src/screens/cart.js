@@ -440,15 +440,28 @@ function Cart() {
         try {
             const entity = getEntityFromCategory(categoryName);
             const category = categoryName;
-            // Add productCategory to the filters for existing order check
-            const orderFilters = new URLSearchParams({
-                filters: JSON.stringify({
+            // Build filters for existing order check based on entity
+            let orderFiltersObj;
+            if (entity && entity.toLowerCase() === 'vmco') {
+                // For vmco, include productCategory
+                orderFiltersObj = {
                     customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     entity,
                     status: 'Open',
-                    productCategory: categoryName // Ensure productCategory is included
-                })
+                    productCategory: categoryName
+                };
+            } else {
+                // For other entities, do not include productCategory
+                orderFiltersObj = {
+                    customerId: selectedCustomerId,
+                    branchId: selectedBranchId,
+                    entity,
+                    status: 'Open'
+                };
+            }
+            const orderFilters = new URLSearchParams({
+                filters: JSON.stringify(orderFiltersObj)
             });
             const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                 method: 'GET',
@@ -516,11 +529,11 @@ function Cart() {
                     const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
-                    const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
+                    //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                    const netAmount = baseAmount + vatAmount + sugarTaxAmount;
+                    //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
+                    const netAmount = baseAmount + vatAmount; // + sugarTaxAmount;
                     initialTotalAmount += netAmount;
                 }
                 let deliveryCharges = 0.00;
@@ -582,7 +595,7 @@ function Cart() {
                 const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
-                const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
+                //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
 
                 // Check if this product already exists in the order
                 const existingLine = existingProductMap[productId];
@@ -596,8 +609,8 @@ function Cart() {
                 const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
                 const baseAmount = unitPrice * totalQuantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
-                const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                const netAmount = baseAmount + vatAmount + sugarTaxAmount; if (existingLine) {
+                //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
+                const netAmount = baseAmount + vatAmount; if (existingLine) {
                     // Update existing line with new quantity and recalculated net amount
                     const patchPayload = {
                         quantity: totalQuantity,
@@ -646,7 +659,7 @@ function Cart() {
                         unit: item.unit || 'EA', // Default to EA if unit is not provided
                         unit_price: unitPrice,
                         vat_percentage: vatPercentage || 0,
-                        sugar_tax_price: sugarTaxPrice || 0,
+                        //sugar_tax_price: sugarTaxPrice || 0,
                         net_amount: netAmount.toFixed(2), // Ensure proper format with 2 decimal places
                         erp_line_number: item.erp_line_number || 1,
                         erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
@@ -923,13 +936,13 @@ function Cart() {
                                                             const quantity = Number(quantities[item.id] || item.quantity || 1);
                                                             const unitPrice = parseFloat(item.price) || 0;
                                                             const vatPercentage = parseFloat(item.vatPercentage) || 0;
-                                                            const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
+                                                            //const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
 
                                                             const baseAmount = unitPrice * quantity;
                                                             const vatAmount = (baseAmount * vatPercentage) / 100;
-                                                            const sugarTaxAmount = sugarTaxPrice ? (baseAmount * sugarTaxPrice) / 100 : 0;
+                                                            //const sugarTaxAmount = sugarTaxPrice ? (baseAmount * sugarTaxPrice) / 100 : 0;
 
-                                                            const totalAmount = baseAmount + vatAmount + sugarTaxAmount;
+                                                            const totalAmount = baseAmount + vatAmount; // + sugarTaxAmount
                                                             categoryTotal += totalAmount;
                                                         });
                                                         return (
@@ -970,7 +983,21 @@ function Cart() {
                 API_BASE_URL={API_BASE_URL}
                 t={t}
                 category={pendingOrderCategory}
-                customerId={selectedCustomerId} // <-- Add this line
+                customerId={selectedCustomerId}
+                totalAmount={(() => {
+                    // Calculate totalAmount for the pending order category
+                    if (!pendingOrderCategory || !pendingOrderItems || pendingOrderItems.length === 0) return 0;
+                    let sum = 0;
+                    pendingOrderItems.forEach(item => {
+                        const qty = Number(quantities[item.id] || item.quantity || 1);
+                        const price = Number(item.price || item.unitPrice || 0);
+                        const vat = Number(item.vatPercentage || 0);
+                        const base = price * qty;
+                        const vatAmount = (base * vat) / 100;
+                        sum += base + vatAmount;
+                    });
+                    return sum;
+                })()}
             />
 
 

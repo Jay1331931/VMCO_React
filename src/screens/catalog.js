@@ -287,7 +287,7 @@ function Catalog() {
             entity: product.entity,
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
-            sugarTaxPrice: product.sugarTaxPrice,
+            //sugarTaxPrice: product.sugarTaxPrice,
             moq: product.moq || product.minimumOrderQuantity || 0,
             ...product
         };
@@ -588,11 +588,11 @@ function Catalog() {
             const unitPrice = product.unitPrice;
             const netAmount = unitPrice * quantity;
             const vatPercentage = parseFloat(product.vatPercentage) || 0;
-            const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
+            //const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
 
             // Calculate VAT and sugar tax
             const vatAmount = netAmount * (vatPercentage / 100);
-            const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+            //const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
 
 
             // Parse images JSON and extract URLs
@@ -662,7 +662,7 @@ function Catalog() {
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
+                    //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
                     vatPercentage: vatPercentage.toFixed(2),
                     images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };

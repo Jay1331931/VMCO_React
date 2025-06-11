@@ -116,12 +116,12 @@ function OrderDetails() {
     setLoading(true);
     setError(null);
     try {
-      const id = orderFromNav.id || orderFromNav.id;
-      if (!id) {
-        setError('Order ID not found.');
+      // Only fetch if not in add mode and id exists
+      if (formMode === 'add' || !orderFromNav.id) {
         setLoading(false);
         return;
       }
+      const id = orderFromNav.id;
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
@@ -337,7 +337,7 @@ function OrderDetails() {
             const unitPrice = parseFloat(product.unitPrice);
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
-            const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
+            //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
 
             // Check if product already exists in the order
@@ -352,7 +352,7 @@ function OrderDetails() {
                 unitPrice,
                 quantity,
                 netAmount,
-                sugarTaxPrice,
+                //sugarTaxPrice,
                 vatPercentage
               );
             }
@@ -365,7 +365,7 @@ function OrderDetails() {
                 unitPrice,
                 quantity,
                 netAmount,
-                sugarTaxPrice,
+                //sugarTaxPrice,
                 vatPercentage
               );
             }
@@ -378,7 +378,7 @@ function OrderDetails() {
                 unitPrice,
                 quantity,
                 netAmount,
-                sugarTaxPrice,
+                //sugarTaxPrice,
                 vatPercentage
               );
             }
@@ -551,7 +551,7 @@ function OrderDetails() {
               unit: product.unit || '',
               unit_price: parseFloat(product.unitPrice),
               net_amount: parseFloat(product.netAmount),
-              sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
+              //sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
               sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
             }));
 
@@ -736,17 +736,17 @@ function OrderDetails() {
             // Update product with new price information
             const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
             const quantity = parseInt(product.quantity, 10);
-            const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
+            //const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
 
             // Calculate new net amount with updated price
-            const netAmount = ((unitPrice * quantity) + sugarTaxPrice + (vatPercentage / 100 * (unitPrice * quantity))).toFixed(2);
+            const netAmount = ((unitPrice * quantity) + (vatPercentage / 100 * (unitPrice * quantity))).toFixed(2);
 
             // Update product in array
             updatedProducts[index] = {
               ...product,
               unitPrice: unitPrice.toFixed(2),
-              sugarTaxPrice,
+              //sugarTaxPrice,
               vatPercentage,
               netAmount
             };
@@ -772,7 +772,7 @@ function OrderDetails() {
     }
   };
   // Function to update sales order line
-  const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, sugarTaxPrice, vatPercentage) => {
+  const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
     try {
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
@@ -782,7 +782,7 @@ function OrderDetails() {
           quantity,
           unitPrice,
           net_amount: netAmount.toFixed(2),
-          sugarTaxPrice: sugarTaxPrice.toFixed(2),
+          //sugarTaxPrice: sugarTaxPrice.toFixed(2),
           vatPercentage: vatPercentage.toFixed(2)
         })
       });
@@ -822,7 +822,7 @@ function OrderDetails() {
   };
 
   // Function to create a new sales order line
-  const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, sugarTaxPrice, vatPercentage) => {
+  const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
     try {
       const payload = {
         order_id: orderId,
@@ -830,7 +830,7 @@ function OrderDetails() {
         quantity: parseInt(quantity, 10),
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
-        sugar_tax_price: parseFloat(sugarTaxPrice || 0),
+        //sugar_tax_price: parseFloat(sugarTaxPrice || 0),
         sales_tax_rate: parseFloat(vatPercentage || 0)
       };
 
@@ -854,7 +854,7 @@ function OrderDetails() {
     // Use MOQ for the product, default to 1 if not set
     const moq = Number(product.moq) || 1;
     const unitPrice = parseFloat(product.unitPrice);
-    const sugarTaxPrice = parseFloat(product.sugarTaxPrice);
+    //const sugarTaxPrice = parseFloat(product.sugarTaxPrice);
     const vatPercentage = parseFloat(product.vatPercentage);
 
     setFormData(prev => {
@@ -867,7 +867,7 @@ function OrderDetails() {
         const updatedProducts = [...prev.products];
         const existingProduct = updatedProducts[existingIdx];
         const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + 1;
-        const newNetAmount = ((unitPrice * newQuantity) + (sugarTaxPrice ? sugarTaxPrice : 0) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+        const newNetAmount = ((unitPrice * newQuantity) + /*(sugarTaxPrice ? sugarTaxPrice : 0) + */(vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
         updatedProducts[existingIdx] = {
           ...existingProduct,
           quantity: newQuantity,
@@ -880,7 +880,7 @@ function OrderDetails() {
         };
       } else {
         // Product does not exist, add as new row with MOQ as quantity
-        const netAmount = ((unitPrice * moq) + (sugarTaxPrice ? sugarTaxPrice : 0) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
+        const netAmount = ((unitPrice * moq) +/* (sugarTaxPrice ? sugarTaxPrice : 0) + */(vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
         return {
           ...prev,
           products: [
@@ -894,7 +894,7 @@ function OrderDetails() {
               unit: product.unit,
               unitPrice: unitPrice.toFixed(2),
               netAmount: netAmount,
-              sugarTaxPrice: sugarTaxPrice,
+              //sugarTaxPrice: sugarTaxPrice,
               vatPercentage: vatPercentage,
               moq: moq // Store MOQ for this product
             }
@@ -1054,12 +1054,12 @@ function OrderDetails() {
       },
       include: isV('unitPriceCol'),
     },
-    {
-      key: 'sugarTaxPrice',
-      header: () => t('Sugar Tax'),
-      render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
-      include: isV('sugarTaxPriceCol'),
-    },
+    // {
+    //   key: 'sugarTaxPrice',
+    //   header: () => t('Sugar Tax'),
+    //   render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
+    //   include: isV('sugarTaxPriceCol'),
+    // },
     {
       key: 'vatPercentage',
       header: () => t('VAT'),
@@ -1653,7 +1653,7 @@ function OrderDetails() {
                     <Table
                       columns={columns}
                       data={formData.products.filter(
-                        p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.sugarTaxPrice || p.netAmount || p.vatPercentage
+                        p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || /*p.sugarTaxPrice || */p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
                         (row) => (
@@ -1754,6 +1754,16 @@ function OrderDetails() {
             )}
           </div>
 
+          {/* Comment Panel Popup */}
+          <div>
+            <CommentPopup 
+              isOpen={isCommentPanelOpen} 
+              setIsOpen={setIsCommentPanelOpen} 
+              externalComments={formData.approvalHistory ? formData.approvalHistory : []} 
+              currentUser={user}
+              isVisible={fromApproval}
+            />
+          </div>
           {/* Rest of the component with modals and popups */}
           {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />

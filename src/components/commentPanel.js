@@ -19,7 +19,8 @@ const CommentPopup = ({
   onAddComment, 
   showCommentForm = true,
   externalComments = [],
-  currentUser  
+  currentUser,  
+  isVisible = false
 }) => {
   const { t } = useTranslation();
   const [commentText, setCommentText] = useState('');
@@ -62,6 +63,7 @@ const CommentPopup = ({
   };
 
   // Helper function to format date as DD MMM YYYY
+  if (!isVisible) return null;
 
   return (
     <>
