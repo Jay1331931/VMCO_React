@@ -28,7 +28,7 @@ const CommentPopup = ({
 
     //RBAC
     //use formMode to decide if it is editform or add form
-    const rbacMgr = new RbacManager(currentUser.userType === 'employee' && currentUser.roles[0] !== 'admin' ? currentUser.designation : currentUser.roles,'commentPanel');
+    const rbacMgr = new RbacManager(currentUser?.userType === 'employee' && currentUser?.roles[0] !== 'admin' ? currentUser?.designation : currentUser?.roles,'commentPanel');
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
 
@@ -78,7 +78,7 @@ const CommentPopup = ({
           <button onClick={() => setIsOpen(false)} className="close-btn">✕</button>
         </div>
         <div className="comment-panel-body">
-          {/* {showCommentForm && (
+          {showCommentForm && (
             <div className="comment-form">
               <textarea
                 value={commentText}
@@ -95,7 +95,7 @@ const CommentPopup = ({
                 {t('Add Comment')}
               </button>
             </div>
-          )} */}
+          )}
           
           {comments.length > 0 ? (
             comments.map((comment, index) => (
