@@ -45,7 +45,7 @@ function OrderDetails() {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token, logout } = useAuth();
 
   // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || 'view';
@@ -53,13 +53,7 @@ function OrderDetails() {
   // Detect if coming from approval mode
   const fromApproval = location.state?.fromApproval || false;
 
-  // Initialize RBAC manager
-  const rbacMgr = new RbacManager(
-    user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0],
-    formMode === 'add' ? 'orderDetailAdd' : 'orderDetailEdit'
-  );
-  const isV = rbacMgr.isV.bind(rbacMgr);
-  const isE = rbacMgr.isE.bind(rbacMgr);
+
   // Initialize form data
   const [formData, setFormData] = useState({
     ...defaultOrder,
@@ -117,145 +111,43 @@ function OrderDetails() {
     fetchNextOrderId();
   }, [formMode]);
 
-  // Table columns
-  const columns = [
-    { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
-    {
-      key: 'productName',
-      header: () => t('Product Name'),
-      render: (row) => row.productName,
-      include: isV('productNameCol'),
-    },
-    {
-      key: 'quantity',
-      header: () => t('Quantity'),
-      render: (row) => (
-        <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <QuantityController
-            itemId={row.id || row.product_id}
-            quantity={row.quantity}
-            moq={Number(row.moq) || 1}
-            minQuantity={Number(row.moq) || 1}
-            disabled={!isE('products')}
-            onQuantityChange={(_, delta) => {
-              if (!isE('products')) return;
-              const idx = formData.products.findIndex(
-                p => (p.id || p.product_id) === (row.id || row.product_id)
-              );
-              if (idx !== -1) {
-                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
-                const moq = Number(formData.products[idx].moq) || 1;
-                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
-                handleQuantityChange(idx, newQty);
-              }
-            }}
-            onInputChange={(_, value) => {
-              if (!isE('products')) return;
-              const idx = formData.products.findIndex(
-                p => (p.id || p.product_id) === (row.id || row.product_id)
-              );
-              if (idx !== -1) {
-                const moq = Number(formData.products[idx].moq) || 1;
-                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
-              }
-            }}
-          />
-          {isV('stock') && (<span>
-            <button
-              type="button"
-              style={{
-                background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
-                borderRadius: '4px',
-                fontSize: '12px',
-                padding: '2px 8px',
-                marginLeft: '6px',
-                marginRight: '6px',
-                cursor: 'pointer'
-              }}
-              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
-            >
-              {t('Stock')}
-            </button>
-          </span>)}
-        </div>
-      ),
-      include: isV('quantityCol'),
-    },
-    {
-      key: 'unit',
-      header: () => t('Unit'),
-      render: (row) => row.unit,
-      include: isV('unitCol'),
-    },
-    {
-      key: 'unitPrice',
-      header: () => t('Unit Price (SAR)'),
-      render: (row) => {
-        const price = parseFloat(row.unitPrice);
-        return price.toFixed(2);
-      },
-      include: isV('unitPriceCol'),
-    },
-    {
-      key: 'sugarTaxPrice',
-      header: () => t('Sugar Tax'),
-      render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
-      include: isV('sugarTaxPriceCol'),
-    },
-    {
-      key: 'vatPercentage',
-      header: () => t('VAT'),
-      render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
-      include: isV('vatPercentageCol'),
-    },
-    {
-      key: 'netAmount',
-      header: () => t('Net Amount (SAR)'),
-      render: (row) => parseFloat(row.netAmount).toFixed(2),
-      include: isV('netAmountCol'),
-    },
-    ...(isE('products') ? [{ key: 'actions', header: () => t('Actions') }] : [])
-  ];
-
   // Fetch order details from backend
-  useEffect(() => {
-    if (formMode === 'add') {
-      setLoading(false);
-      return;
-    }
-
-    const fetchOrderDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const id = orderFromNav.id || orderFromNav.id;
-        if (!id) {
-          setError('Order ID not found.');
-          setLoading(false);
-          return;
-        }
-        const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        if (!response.ok) throw new Error('Failed to fetch order details');
-        const result = await response.json();
-        if (result.status === 'Ok' && result.data) {
-          setFormData({
-            ...result.data,
-            products: result.data.products
-          });
-        } else {
-          throw new Error(result.message || 'Order not found');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
+  const fetchOrderDetails = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const id = orderFromNav.id || orderFromNav.id;
+      if (!id) {
+        setError('Order ID not found.');
         setLoading(false);
+        return;
       }
-    };
+      const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch order details');
+      const result = await response.json();
+      if (result.status === 'Ok' && result.data) {
+        setFormData({
+          ...result.data,
+          products: result.data.products
+        });
+      } else {
+        throw new Error(result.message || 'Order not found');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+
+
+
 
     fetchOrderDetails();
     // eslint-disable-next-line
@@ -302,7 +194,7 @@ function OrderDetails() {
             ...prev,
             products: processedProducts
           }));
-          
+
           // Store the original product list for comparison when saving
           setOriginalProducts(processedProducts);
           console.log('Stored original products for comparison:', processedProducts);
@@ -379,15 +271,15 @@ function OrderDetails() {
       if (formData.id && isEditMode) {
         // Update existing order
         const payload = {};
-        
+
         // Include all fields that might need updating
         ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
-         'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
-         'driver', 'vehicleNumber', 'pricingPolicy'].forEach(field => {
-          if (formData[field] !== undefined && formData[field] !== null) {
-            payload[field] = formData[field];
-          }
-        });
+          'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
+          'driver', 'vehicleNumber', 'pricingPolicy'].forEach(field => {
+            if (formData[field] !== undefined && formData[field] !== null) {
+              payload[field] = formData[field];
+            }
+          });
 
         // First update the sales order
         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
@@ -402,7 +294,7 @@ function OrderDetails() {
           console.error('Server response:', errorText);
           throw new Error(`Failed to update order: ${orderResponse.statusText}`);
         }
-        
+
         // Now check for existing order lines and fetch them
         let existingProductMap = {};
         try {
@@ -420,7 +312,7 @@ function OrderDetails() {
               // Filter to ensure we only get lines for this specific order
               const orderLines = existingLines.data.data.filter(line => line.orderId === formData.id);
               console.log(`Existing order lines for orderId ${formData.id}:`, orderLines);
-              
+
               orderLines.forEach(line => {
                 if (line.productId) {
                   existingProductMap[line.productId] = line;
@@ -434,11 +326,11 @@ function OrderDetails() {
         } catch (err) {
           console.error('Error fetching existing order lines:', err);
         }
-        
+
         // Now update each product line
         if (formData.products && formData.products.length > 0) {
           console.log('Updating sales order lines');
-          
+
           const updatePromises = formData.products.map(product => {
             // Extract product data
             const productId = product.id || product.productId;
@@ -447,10 +339,10 @@ function OrderDetails() {
             const netAmount = parseFloat(product.netAmount);
             const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
-            
+
             // Check if product already exists in the order
             const existingLine = existingProductMap[productId];
-            
+
             if (existingLine) {
               console.log(`Found existing line for product ID ${productId}, updating quantity and amounts`);
               // Update existing line
@@ -463,7 +355,7 @@ function OrderDetails() {
                 sugarTaxPrice,
                 vatPercentage
               );
-            } 
+            }
             // Existing products with salesOrderLineId but not found in existingProductMap
             else if (product.salesOrderLineId) {
               console.log(`Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`);
@@ -476,14 +368,14 @@ function OrderDetails() {
                 sugarTaxPrice,
                 vatPercentage
               );
-            } 
+            }
             // New products need to be added
             else {
               console.log(`Creating new line for product ID ${productId}`);
               return createSalesOrderLine(
-                formData.id, 
-                productId, 
-                unitPrice, 
+                formData.id,
+                productId,
+                unitPrice,
                 quantity,
                 netAmount,
                 sugarTaxPrice,
@@ -491,7 +383,7 @@ function OrderDetails() {
               );
             }
           });
-          
+
           // Wait for all product line updates to complete
           await Promise.all(updatePromises);
         }
@@ -499,7 +391,7 @@ function OrderDetails() {
         // Check for deleted products by comparing originalProducts with current products
         if (originalProducts && originalProducts.length > 0) {
           console.log('Checking for deleted products...');
-          
+
           // Create a map of current products for easy lookup
           const currentProductsMap = {};
           formData.products.forEach(product => {
@@ -508,7 +400,7 @@ function OrderDetails() {
               currentProductsMap[productId] = true;
             }
           });
-          
+
           // Find products that were in originalProducts but are no longer in formData.products
           const deletePromises = originalProducts
             .filter(product => {
@@ -520,7 +412,7 @@ function OrderDetails() {
               console.log(`Deleting removed product ID ${productId} from order`);
               return deleteSalesOrderLine(formData.id, productId);
             });
-          
+
           // Wait for all delete operations to complete
           if (deletePromises.length > 0) {
             console.log(`Found ${deletePromises.length} products to delete`);
@@ -529,7 +421,7 @@ function OrderDetails() {
             console.log('No products were removed from the order');
           }
         }
-        
+
         // Refresh order details after update
         await getOrderById(formData.id);
         setIsEditMode(false);
@@ -710,7 +602,7 @@ function OrderDetails() {
             }
           } finally {
             setLoading(false);
-          }          attempt++;
+          } attempt++;
         }
       } // Close the else block from line 458
     } catch (error) {
@@ -846,10 +738,10 @@ function OrderDetails() {
             const quantity = parseInt(product.quantity, 10);
             const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
-            
+
             // Calculate new net amount with updated price
             const netAmount = ((unitPrice * quantity) + sugarTaxPrice + (vatPercentage / 100 * (unitPrice * quantity))).toFixed(2);
-            
+
             // Update product in array
             updatedProducts[index] = {
               ...product,
@@ -858,7 +750,7 @@ function OrderDetails() {
               vatPercentage,
               netAmount
             };
-            
+
             // In edit mode, we don't immediately update the sales order line in the database
             // We'll only do that when the Save button is clicked
           }
@@ -907,7 +799,7 @@ function OrderDetails() {
       console.error('Error updating sales order line:', error);
     }
   };
-  
+
   // Function to delete sales order line
   const deleteSalesOrderLine = async (orderId, productId) => {
     try {
@@ -941,14 +833,14 @@ function OrderDetails() {
         sugar_tax_price: parseFloat(sugarTaxPrice || 0),
         sales_tax_rate: parseFloat(vatPercentage || 0)
       };
-      
+
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(payload)
       });
-      
+
       if (!response.ok) {
         console.error('Failed to create sales order line');
       }
@@ -1044,6 +936,144 @@ function OrderDetails() {
   // Add this to your existing state declarations
   const [entityOptions, setEntityOptions] = useState([]);
   const [paymentMethodOptions, setPaymentMethodOptions] = useState([]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
+      // Logout instead of showing loading message
+      logout();
+      navigate('/login');
+      return; // Return while logout is processing
+    }
+
+    if (user && user.userType) {
+      const fetchData = async () => {
+        if (formMode === 'add') {
+          setLoading(false);
+          return;
+        }
+        await fetchOrderDetails();
+        await fetchOrderProducts();
+      };
+      fetchData();
+    }
+  }, [user, t, token, i18n.language, orderFromNav.id, formMode]
+  );
+
+
+  // Initialize RBAC manager
+  const rbacMgr = new RbacManager(
+    user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0],
+    formMode === 'add' ? 'orderDetailAdd' : 'orderDetailEdit'
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+  
+  // Table columns
+  const columns = [
+    { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
+    {
+      key: 'productName',
+      header: () => t('Product Name'),
+      render: (row) => row.productName,
+      include: isV('productNameCol'),
+    },
+    {
+      key: 'quantity',
+      header: () => t('Quantity'),
+      render: (row) => (
+        <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <QuantityController
+            itemId={row.id || row.product_id}
+            quantity={row.quantity}
+            moq={Number(row.moq) || 1}
+            minQuantity={Number(row.moq) || 1}
+            disabled={!isE('products')}
+            onQuantityChange={(_, delta) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
+                const moq = Number(formData.products[idx].moq) || 1;
+                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
+                handleQuantityChange(idx, newQty);
+              }
+            }}
+            onInputChange={(_, value) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const moq = Number(formData.products[idx].moq) || 1;
+                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
+              }
+            }}
+          />
+          {isV('stock') && (<span>
+            <button
+              type="button"
+              style={{
+                background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
+                borderRadius: '4px',
+                fontSize: '12px',
+                padding: '2px 8px',
+                marginLeft: '6px',
+                marginRight: '6px',
+                cursor: 'pointer'
+              }}
+              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
+            >
+              {t('Stock')}
+            </button>
+          </span>)}
+        </div>
+      ),
+      include: isV('quantityCol'),
+    },
+    {
+      key: 'unit',
+      header: () => t('Unit'),
+      render: (row) => row.unit,
+      include: isV('unitCol'),
+    },
+    {
+      key: 'unitPrice',
+      header: () => t('Unit Price (SAR)'),
+      render: (row) => {
+        const price = parseFloat(row.unitPrice);
+        return price.toFixed(2);
+      },
+      include: isV('unitPriceCol'),
+    },
+    {
+      key: 'sugarTaxPrice',
+      header: () => t('Sugar Tax'),
+      render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
+      include: isV('sugarTaxPriceCol'),
+    },
+    {
+      key: 'vatPercentage',
+      header: () => t('VAT'),
+      render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
+      include: isV('vatPercentageCol'),
+    },
+    {
+      key: 'netAmount',
+      header: () => t('Net Amount (SAR)'),
+      render: (row) => parseFloat(row.netAmount).toFixed(2),
+      include: isV('netAmountCol'),
+    },
+    ...(isE('products') ? [{ key: 'actions', header: () => t('Actions') }] : [])
+  ];
 
   // Add this useEffect to fetch entity options
   useEffect(() => {
@@ -1200,41 +1230,12 @@ function OrderDetails() {
     }
   }, [formData.products, formData.entity]);
 
-  // Function to get order details by ID
-  const getOrderById = async (id) => {
-    if (!id) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) throw new Error('Failed to fetch order details');
-      
-      const result = await response.json();
-      if (result.status === 'Ok' && result.data) {
-        setFormData({
-          ...result.data,
-          products: result.data.products || []
-        });
-        
-        // Also fetch the order lines
-        await fetchOrderProducts(id);
-      } else {
-        throw new Error(result.message || 'Order not found');
-      }
-    } catch (err) {
-      console.error('Error fetching order details:', err);
-      setError(err.message);
-    }
-  };
   
+
   // Function to fetch order products
   const fetchOrderProducts = async (orderId) => {
     if (!orderId) return;
-    
+
     try {
       const params = new URLSearchParams({
         page: 1,
@@ -1268,13 +1269,44 @@ function OrderDetails() {
           ...prev,
           products: processedProducts
         }));
-        
+
         // Store the original product list for comparison when saving
         setOriginalProducts(processedProducts);
         console.log('Stored original products for comparison:', processedProducts);
       }
     } catch (err) {
       console.error('Error fetching order products:', err);
+    }
+  };
+
+  // Function to get order details by ID
+  const getOrderById = async (id) => {
+    if (!id) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch order details');
+
+      const result = await response.json();
+      if (result.status === 'Ok' && result.data) {
+        setFormData({
+          ...result.data,
+          products: result.data.products || []
+        });
+
+        // Also fetch the order lines
+        await fetchOrderProducts(id);
+      } else {
+        throw new Error(result.message || 'Order not found');
+      }
+    } catch (err) {
+      console.error('Error fetching order details:', err);
+      setError(err.message);
     }
   };
 
@@ -1311,7 +1343,7 @@ function OrderDetails() {
                             placeholder={t('Click to select customer')}
                             disabled={!isE('customerName')}
                           />
-                        </div>                      ) : (
+                        </div>) : (
                         <input
                           id="customerField"
                           name="selectedCustomerName"
@@ -1489,19 +1521,19 @@ function OrderDetails() {
                   {isV('pricingPolicy') && (
                     <div className="order-details-field">
                       <label>{t('Pricing Policy')}</label>                      <select
-                          name="pricingPolicy"
-                          value={formData.pricingPolicy || ''}
-                          onChange={handleInputChange}
-                          className="entity-dropdown"
-                          disabled={!isE('pricingPolicy')}
-                        >
-                          <option value="">{t('Select Pricing Policy')}</option>
-                          {pricingPolicyOptions.map((pricingPolicy, index) => (
-                            <option key={index} value={pricingPolicy}>
-                              {pricingPolicy}
-                            </option>
-                          ))}
-                        </select>
+                        name="pricingPolicy"
+                        value={formData.pricingPolicy || ''}
+                        onChange={handleInputChange}
+                        className="entity-dropdown"
+                        disabled={!isE('pricingPolicy')}
+                      >
+                        <option value="">{t('Select Pricing Policy')}</option>
+                        {pricingPolicyOptions.map((pricingPolicy, index) => (
+                          <option key={index} value={pricingPolicy}>
+                            {pricingPolicy}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
@@ -1626,7 +1658,7 @@ function OrderDetails() {
                       actionButtons={
                         (row) => (
                           isV('deleteButton') && isE('products') && (
-                            <button                              className="order-action-btn reject"
+                            <button className="order-action-btn reject"
                               style={{ padding: '4px 10px', fontSize: 14 }}
                               onClick={e => {
                                 e.stopPropagation();
@@ -1658,8 +1690,8 @@ function OrderDetails() {
                 )}
 
                 {isV('btnSave') && isE('btnSave') && (
-                  <button 
-                    className="order-action-btn" 
+                  <button
+                    className="order-action-btn"
                     onClick={() => handleSave('save')}
                     disabled={formData.status && formData.status.toLowerCase() !== 'open'}
                   >
@@ -1668,8 +1700,8 @@ function OrderDetails() {
                 )}
 
                 {isV('btnCancel') && isE('btnCancel') && (
-                  <button 
-                    className="order-action-btn" 
+                  <button
+                    className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
                     disabled={formData.status && formData.status.toLowerCase() !== 'open'}
                   >
@@ -1723,7 +1755,7 @@ function OrderDetails() {
           </div>
 
           {/* Rest of the component with modals and popups */}
-         {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
+          {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
           {/* Product Popup */}
           {showProductPopup && (
