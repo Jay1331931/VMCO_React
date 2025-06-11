@@ -1475,9 +1475,9 @@ class RbacManager {
           btnInvoice: { visible: true, editable: true },
           btnPay: { visible: false, editable: false },
           btnInventory: { visible: false, editable: true },
-          actionButtons: { visible: false, editable: true },
-          btnApprove: { visible: false, editable: true },
-          btnReject: { visible: false, editable: true },
+          actionButtons: { visible: true, editable: true },
+          btnApprove: { visible: true, editable: true },
+          btnReject: { visible: true, editable: true },
         }
       },
       catalog: {

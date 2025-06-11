@@ -49,83 +49,13 @@ function Catalog() {
     const [subCategoryFilter, setSubCategoryFilter] = useState('');
     const [searchQuery, setSearchQuery] = useState("");
     const productsPerPage = 60;
-    const { token, user, isAuthenticated, logout } = useAuth();
+    const { token, user, isAuthenticated, loading, logout } = useAuth();
     console.log('User Dataaaaa:', user);
 
 
     const [filteredProducts, setFilteredProducts] = useState([]);
 
-
-    //RBAC
-    //use formMode to decide if it is editform or add form
-    const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'catalog');
-    const isV = rbacMgr.isV.bind(rbacMgr);
-
-
-    const categoryTabs = categories.map(category => ({
-        value: category.value,
-        label: category.label
-    }));
-
-    const customerId = user?.customerId;
-    const userId = user?.userId;    useEffect(() => {
-        if (customerId) { setSelectedCustomerId(customerId); }
-    }, [customerId]);
-    
-    // Initial setup when component loads - for default tab
-
-
-    // Map product fields from backend to component props
-    const mapProductToCardProps = useCallback((product) => {
-        const currentLanguage = i18n.language;
-
-        // Parse images JSON and extract URLs
-        let imageUrls = [];
-        if (product.images) {
-            try {
-                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
-                if (Array.isArray(parsed)) {
-                    imageUrls = parsed;
-                }
-            } catch (e) {
-                // fallback: treat as single image string
-                imageUrls = [product.images];
-            }
-        }
-
-        // Choose the right product name based on language
-        let productName = product.productName || product.product_name;
-        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
-            productName = product.product_name_lc || product.productNameLc || productName;
-        }
-
-        // Choose the right product description based on language
-        let productDescription = product.description;
-        if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
-            productDescription = product.description_lc || product.descriptionLc;
-        }
-
-        return {
-            id: product.id,
-            name: productName,
-            code: product.erpProdId || product.erp_prod_id || "No ID",
-            image: imageUrls[0] || '', // Use first image for ProductCard
-            images: imageUrls,         // Pass all images for ProductPopup
-            description: productDescription,
-            category: product.category,
-            subCategory: product.sub_category || product.subCategory,
-            entity: product.entity,
-            unit: product.unit,
-            vat: product.vatPercentage || product.VAT_percentage,
-            sugarTaxPrice: product.sugarTaxPrice,
-            moq: product.moq || product.minimumOrderQuantity || 0,
-            ...product
-        };
-    }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
-
-    // Fetch products from backend - now loads all pages from 1 to currentPage
-    useEffect(() => {
-        const fetchAllPages = async () => {
+     const fetchAllPages = async () => {
             // Show loading state
             if (currentPage === 1) {
                 setIsLoading(true);
@@ -272,9 +202,103 @@ function Catalog() {
             }
         };
 
-        fetchAllPages();
-    }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
-    // Filter products based on tab, category, and subcategory
+    //NOTE: For fetching the user again after browser refersh - start
+       useEffect(() => {
+        if (loading) {
+            return;
+        }
+
+        if (!user) {
+        console.log("$$$$$$$$$$$ logging out");
+        // Logout instead of showing loading message
+        logout();
+        navigate('/login');
+        return; // Return while logout is processing
+      }
+
+        if (user && user.userType) {
+            const fetchData = async () => {
+                await fetchAllPages();
+            };
+            fetchData();
+        }
+    }, [user, activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]
+    );
+    
+    //RBAC
+    //use formMode to decide if it is editform or add form
+    const rbacMgr = new RbacManager(user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'catalog');
+    const isV = rbacMgr.isV.bind(rbacMgr);
+
+
+    const categoryTabs = categories.map(category => ({
+        value: category.value,
+        label: category.label
+    }));
+
+    const customerId = user?.customerId;
+    const userId = user?.userId;    
+    useEffect(() => {
+        if (customerId) { setSelectedCustomerId(customerId); }
+    }, [customerId]);
+    
+    // Initial setup when component loads - for default tab
+
+
+    // Map product fields from backend to component props
+    const mapProductToCardProps = useCallback((product) => {
+        const currentLanguage = i18n.language;
+
+        // Parse images JSON and extract URLs
+        let imageUrls = [];
+        if (product.images) {
+            try {
+                const parsed = typeof product.images === 'string' ? JSON.parse(product.images) : product.images;
+                if (Array.isArray(parsed)) {
+                    imageUrls = parsed;
+                }
+            } catch (e) {
+                // fallback: treat as single image string
+                imageUrls = [product.images];
+            }
+        }
+
+        // Choose the right product name based on language
+        let productName = product.productName || product.product_name;
+        if (currentLanguage !== 'en' && (product.product_name_lc || product.productNameLc)) {
+            productName = product.product_name_lc || product.productNameLc || productName;
+        }
+
+        // Choose the right product description based on language
+        let productDescription = product.description;
+        if (currentLanguage !== 'en' && (product.description_lc || product.descriptionLc)) {
+            productDescription = product.description_lc || product.descriptionLc;
+        }
+
+        return {
+            id: product.id,
+            name: productName,
+            code: product.erpProdId || product.erp_prod_id || "No ID",
+            image: imageUrls[0] || '', // Use first image for ProductCard
+            images: imageUrls,         // Pass all images for ProductPopup
+            description: productDescription,
+            category: product.category,
+            subCategory: product.sub_category || product.subCategory,
+            entity: product.entity,
+            unit: product.unit,
+            vat: product.vatPercentage || product.VAT_percentage,
+            //sugarTaxPrice: product.sugarTaxPrice,
+            moq: product.moq || product.minimumOrderQuantity || 0,
+            ...product
+        };
+    }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
+
+    // Fetch products from backend - now loads all pages from 1 to currentPage
+       
+
+       // Filter products based on tab, category, and subcategory
+
+
     useEffect(() => {
         // We're already filtering server-side via API params, but we also handle client-side filtering
         // for better UX while waiting for API responses
@@ -406,8 +430,7 @@ function Catalog() {
     const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
 
     // NEW: Branch selection functionality moved here (before add to cart function)
-    // This useEffect fetches customer branches using the customer_id from the auth token
-    useEffect(() => {
+   useEffect(() => {
         const fetchBranches = async () => {
             try {
                 setIsLoading(true);
@@ -458,6 +481,14 @@ function Catalog() {
         const newBranchId = e.target.value;
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
+        const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
+        // Save selected branch info to localStorage
+        if (selectedBranch) {
+            localStorage.setItem('selectedBranchId', selectedBranch.value);
+            localStorage.setItem('selectedBranchName', selectedBranch.label);
+            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId || '');
+            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion || '');
+        }
         try {
             setIsLoading(true);
             // Fetch cart items for the user
@@ -557,11 +588,11 @@ function Catalog() {
             const unitPrice = product.unitPrice;
             const netAmount = unitPrice * quantity;
             const vatPercentage = parseFloat(product.vatPercentage) || 0;
-            const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
+            //const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
 
             // Calculate VAT and sugar tax
             const vatAmount = netAmount * (vatPercentage / 100);
-            const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+            //const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
 
 
             // Parse images JSON and extract URLs
@@ -631,7 +662,7 @@ function Catalog() {
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
+                    //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
                     vatPercentage: vatPercentage.toFixed(2),
                     images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
@@ -865,8 +896,6 @@ function Catalog() {
                             setCurrentPage(1);
                             setLoadedPages([]);
                             setHasMore(true);
-                            
-                            // Reset filters - our useEffect will set the appropriate category once products load
                             setSubCategoryFilter('');
                             setCategoryFilter('');
                         }}
