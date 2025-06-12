@@ -7,7 +7,8 @@ function GetPaymentMethods({
   API_BASE_URL,
   t = (x) => x,
   category,
-  customerId // <-- Add customerId prop
+  customerId, // <-- Add customerId prop
+  totalAmount = 0 // <-- Add totalAmount prop
 }) {
   const [methods, setMethods] = useState([]);
   const [balances, setBalances] = useState({});
@@ -121,22 +122,30 @@ function GetPaymentMethods({
                     <td colSpan="2" style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
                   </tr>
                 ) : (
-                  methods.map((method, idx) => (
-                    <tr key={idx}>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                        {balances[method] !== undefined ? balances[method] : '-'}
-                      </td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                        <button
-                          className="gp-product-btn"
-                          onClick={() => onSelectPaymentMethod(method)}
-                        >
-                          {t('Select')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  methods.map((method, idx) => {
+                    let isDisabled = false;
+                    if (method === 'Cash on Delivery' && balances['Cash on Delivery'] !== undefined) {
+                      // Disable if totalAmount >= COD limit
+                      isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
+                    }
+                    return (
+                      <tr key={idx}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          {balances[method] !== undefined ? balances[method] : '-'}
+                        </td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          <button
+                            className="gp-product-btn"
+                            onClick={() => onSelectPaymentMethod(method)}
+                            disabled={isDisabled}
+                          >
+                            {t('Select')}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

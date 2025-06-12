@@ -128,7 +128,9 @@ function Orders() {
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
-          companyNameEn: order.companyNameEn || order.company_name_en || order.selectedCustomerName || order.erpCustId || ''
+          companyNameEn: order.companyNameEn || order.company_name_en|| '',
+          workflowName: order.workflowName,
+          workflowInstanceId: order.workflowInstanceId
         }));
         setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
@@ -177,37 +179,22 @@ function Orders() {
   };
 
   const handleAddOrder = async () => {
-    setLoading(true);
-    try {
-      // Fetch latest order to determine next order number
-      const params = new URLSearchParams({
-        page: 1,
-        pageSize: 1,
-        sortBy: 'id',
-        sortOrder: 'desc'
-      });
-      const response = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      const result = await response.json();
-      let nextOrderId = 1;
-      if (result.status === 'Ok' && result.data.data.length > 0) {
-        nextOrderId = (parseInt(result.data.data[0].id, 10) || 0) + 1;
-      }
-      // Navigate to orderDetails with mode: 'add' and nextOrderId
-      navigate('/orderDetails', { state: { order: { id: nextOrderId }, mode: 'add' } });
-    } catch (err) {
-      setError('Failed to get next order number');
-    } finally {
-      setLoading(false);
-    }
+    // No need to fetch next orderId, just navigate to add mode
+    navigate('/orderDetails', { state: { mode: 'add' } });
   };
 
   const handleRowClick = (order) => {
     console.log('Row clicked, navigating to order details with:', order);
-    navigate('/orderDetails', { state: { order, mode: 'edit' } });
+    navigate('/orderDetails', {
+      state: {
+        order,
+        mode: 'edit',
+        fromApproval: isApprovalMode,
+        wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+        workflowName: isApprovalMode ? order.workflowName : undefined,
+        workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
+      }
+    });
   };
 
   const handleCheckout = (order) => {
@@ -237,7 +224,7 @@ function Orders() {
     { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'checkout', header: () => t('Checkout'), include: isV('action') }
+    { key: 'checkout', header: () => t('Pay'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
@@ -266,10 +253,7 @@ function Orders() {
           columns={columns.filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
-          onRowClick={(order) => {
-            console.log('Table row clicked, calling handleRowClick with:', order);
-            handleRowClick(order);
-          }}
+          onRowClick={handleRowClick}
           onCheckout={handleCheckout}
         />)}
         {isV('ordersPagination') && (<Pagination

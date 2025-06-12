@@ -313,7 +313,7 @@ function CustomersDetails() {
           creditLimit: paymentMethods.find(m => m?.methodName === 'Credit')?.creditLimit || 0,
           creditBalance: paymentMethods.find(m => m?.methodName === 'Credit')?.balance || 0
         };
-        // console.log('Customer Data with Payment Methods:', customerData);
+        console.log('Customer Data with Payment Methods:', customerData);
       }
 
       if (transformedCustomer?.workflowData?.updates?.methodDetails) {
@@ -385,20 +385,6 @@ function CustomersDetails() {
   const transformedCustomer = location.state?.transformedCustomer;
   console.log("location.state", location.state);
   console.log("transformedCustomer", transformedCustomer);
-  // Extract from location.state
-  // const rawTransformedCustomer = location.state?.transformedCustomer;
-
-  // // Clean it: remove numeric keys like 0,1,2,... that are probably workflow steps
-  // const transformedCustomer = useMemo(() => {
-  //   if (!rawTransformedCustomer || typeof rawTransformedCustomer !== 'object') return null;
-
-  //   return Object.fromEntries(
-  //     Object.entries(rawTransformedCustomer).filter(([key]) => isNaN(Number(key)))
-  //   );
-  // }, [rawTransformedCustomer]);
-
-  // const [customer, setCustomer] = useState(transformedCustomer);
-  // const [approvedCustomer, setApprovedCustomer] = useState(fetchApprovedCustomer(transformedCustomer));
   const [customer, setCustomer] = useState(transformedCustomer);
   const [approvedCustomer, setApprovedCustomer] = useState(null);
   // let approvedCustomer = fetchApprovedCustomer(transformedCustomer);
@@ -413,38 +399,8 @@ function CustomersDetails() {
 
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
-  //   useEffect(() => {
-  //   if (transformedCustomer?.customerId) {
-  //     const customerId = transformedCustomer?.customerId;
-  //     fetchCustomer(customerId)
-  //       .then(fetchedCustomer => setCustomer(fetchedCustomer))
-  //       .catch(error => console.error('Error fetching customer:', error));
-  //   }
-
-  // }, [transformedCustomer.customerId]);
   const navigate = useNavigate();
-  // useEffect(() => {
-  //   if (user) {
-  //     const fetchData = async () => {
-  //       await fetchApprovedCustomer(transformedCustomer);
-  //     };
-
-  //   fetchData();
-  //   }
-
-  //   if (loading) {
-  //       return <div>{t('msgLoadingUserInfo')}</div>; // Or your loading component
-  //     }
-
-  //     if (!user || !user.userType) {
-  //   console.log("$$$$$$$$$$$ logging out");
-  //   // Logout instead of showing loading message
-  //   logout();
-  //   navigate('/login');
-  //   return null; // Return null while logout is processing
-  // }
-  // }, [user]);
-
+ 
   useEffect(() => {
     if (loading) {
       return; // Wait while loading
@@ -473,15 +429,7 @@ function CustomersDetails() {
     }
   }, [user, loading]);
 
-  // Render loading state if needed
-  // if (loading) {
-  //   return <div>{t('msgLoadingUserInfo')}</div>;
-  // }
-
-  // // Check user in render phase too
-  // if (!user || !user.userType) {
-  //   return null; // The useEffect will handle the logout and navigation
-  // }
+  
 
 
   let customerFormMode;
@@ -772,27 +720,6 @@ function CustomersDetails() {
     const customerPayload = {};
     const contactCreatePayload = {};
     const contactUpdatePayload = {};
-    // const paymentMethodPayload = {
-    //   method_details: {
-    //     credit: {
-    //       isAllowed: formData?.credit?.isAllowed,
-    //       limit: formData?.creditLimit,
-    //       period: formData?.creditPeriod,
-    //       balance: formData?.credit.balance
-    //     },
-    //     prePayment: {
-    //       isAllowed: formData?.prePayment?.isAllowed,
-    //     },
-    //     advancePayment: {
-    //       isAllowed: formData?.advancePayment?.isAllowed,
-    //       balance: formData?.advancePayment?.balance
-    //     },
-    //     COD: {
-    //       isAllowed: formData?.COD?.isAllowed,
-    //       limit: formData?.COD?.limit,
-    //     }
-    //   }
-    // };
     const paymentMethodPayload = (() => {
       // Check if any payment-related fields actually changed
       const hasPaymentChanges = paymentDetailFields.some(field => {
@@ -938,27 +865,6 @@ function CustomersDetails() {
         });
       }
 
-      //   // Update UI state
-      //   setSavedData(prev => ({
-      //     ...prev,
-      //     [activeTab]: {
-      //       ...prev[activeTab],
-      //       ...customerPayload,
-      //       ...contactCreatePayload,
-      //       ...contactUpdatePayload
-      //     }
-      //   }));
-
-      //   // Clear changed fields
-      //   setChangedFields(prev => {
-      //     const newSet = new Set(prev);
-      //     [
-      //       ...Object.keys(customerPayload),
-      //       ...Object.keys(contactCreatePayload),
-      //       ...Object.keys(contactUpdatePayload)
-      //     ].forEach(field => newSet.delete(field));
-      //     return newSet;
-      //   });
       if (Object.keys(branchChanges).length > 0) {
         await Promise.all(
           Object.entries(branchChanges).map(async ([branchId, changes]) => {
@@ -1283,37 +1189,6 @@ function CustomersDetails() {
     setIsApprovalDialogOpen(true);
   };
 
-  // const handleDialogSubmit = async (comment) => {
-  //   changedFields.forEach((fieldName) => {
-  //     if (fieldName in transformedCustomer.workflowData.updates) {
-  //       transformedCustomer.workflowData.updates[fieldName] = formData[fieldName];
-  //     }
-  //   });
-  //   const payload = {
-  //     workflowData: transformedCustomer.workflowData || {},
-  //     approvedStatus: approvalAction === 'approve' ? "approved" : "rejected",
-  //     comment: comment
-  //   };
-  //   console.log(payload)
-  //   try {
-  //     const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${transformedCustomer.workflowInstanceId}`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify(payload),
-  //       credentials: 'include',
-  //     });
-
-  //     if (response.ok) {
-  //       const result = await response.json();
-  //     } else {
-  //       throw new Error('Failed to submit approval');
-  //     }
-  //   } catch (error) {
-  //     console.log('Error', error.message)
-  //     console.error(`Error ${approvalAction}ing customer:`, error);
-  //     alert(`Error ${approvalAction}ing customer: ${error.message}`);
-  //   }
-  // };
   const handleDialogSubmit = async (comment) => {
     // Create a copy of the workflowData updates
     let updates = { ...transformedCustomer.workflowData?.updates || {} };
@@ -1521,7 +1396,9 @@ function CustomersDetails() {
       const customerData = customer || {};
       console.log("Changed fields in Save", changedFields)
       newChangedFields.forEach(fieldName => {
-        if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'pricingPolicy') return;
+        if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'pricingPolicy'
+          || fieldName === 'vmco' || fieldName === 'diyafa' || fieldName === 'dar' || fieldName === 'naqi' || fieldName === 'greenMart' || fieldName === 'isDeliveryChargesApplicable'
+        ) return;
 
         const newValue = formData[fieldName];
         const oldValue = customerData[fieldName];
@@ -1917,7 +1794,7 @@ setTimeout(() => window.location.reload(true), 3000);
                     const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new') || customer?.customerStatus === 'pending';
                     const hasUpdate = approvalMode && transformedCustomer.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
-                      field.name in transformedCustomer.workflowData.updates;
+                      (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise);
                     console.log('HasUpdate', hasUpdate);
                     const currentValue = customer?.[field.name] || '';
                     const proposedValue = hasUpdate ? transformedCustomer?.workflowData?.updates[field.name] : null;
@@ -2079,7 +1956,7 @@ setTimeout(() => window.location.reload(true), 3000);
                               name={field.name}
                               value={formData[field.name] || formData?.['assignedToEntityWise']?.[field.name] || ''}
                               onChange={handleInputChange}
-                              disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? field.name in transformedCustomer.workflowData.updates
+                              disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
                                 : false)}
                               hidden={!isV(field.name)}
                               className={
