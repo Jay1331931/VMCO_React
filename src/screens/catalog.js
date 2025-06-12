@@ -483,7 +483,6 @@ function Catalog() {
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
         const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
-        // No localStorage usage here
         try {
             setIsLoading(true);
             // Fetch cart items for the user
@@ -657,11 +656,12 @@ function Catalog() {
                     entity: product.entity, // Keep original case
                     category: product.category, // Keep original case
                     unit: product.unit,
+                    
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
                     //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
-                    vatPercentage: vatPercentage.toFixed(2),
+                    vatPercentage: user.companyType === 'non trading' ? 0.00 : vatPercentage.toFixed(2),
                     images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
 

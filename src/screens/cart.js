@@ -763,16 +763,13 @@ function Cart() {
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
                 deleteUrl.searchParams.append('customer_id', selectedCustomerId);
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                // Fix: For Naqui, always use lowercase 'naqui' for both entity and category
-                if (entity && entity.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
-                } else if (categoryName && categoryName.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
+                // For VMCO entity, include both entity and category; for others, only entity
+                if (entity && entity.toLowerCase() === 'vmco') {
+                    deleteUrl.searchParams.append('entity', 'vmco');
+                    deleteUrl.searchParams.append('category', categoryName);
                 } else {
                     deleteUrl.searchParams.append('entity', entity);
-                    deleteUrl.searchParams.append('category', categoryName);
+                    // Do NOT include category for non-vmco entities
                 }
 
                 const deleteResponse = await fetch(deleteUrl, {

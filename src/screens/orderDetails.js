@@ -1356,6 +1356,42 @@ function OrderDetails() {
     let updates = { ...((location.state?.workflowData && location.state.workflowData.updates) || {}) };
     // If you need to add more update logic for orders, do it here
 
+    // --- BEGIN: PATCH order lines and order if approving in approval mode and status is pending ---
+    if (approvalAction === 'approve' && fromApproval && formData.status && formData.status.toLowerCase() === 'pending') {
+      try {
+        // 1. Update all sales order lines (quantity, netAmount)
+        for (const product of formData.products) {
+          const productId = product.id || product.product_id;
+          const unitPrice = parseFloat(product.unitPrice);
+          const quantity = parseInt(product.quantity, 10);
+          const netAmount = parseFloat(product.netAmount);
+          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              quantity,
+              unitPrice,
+              net_amount: netAmount.toFixed(2),
+              vatPercentage: vatPercentage.toFixed(2)
+            }),
+            credentials: 'include',
+          });
+        }
+        // 2. Update the sales order's totalAmount
+        await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ totalAmount: formData.totalAmount }),
+          credentials: 'include',
+        });
+      } catch (err) {
+        alert(t('Failed to update order or lines before approval: ') + (err.message || err));
+        return;
+      }
+    }
+    // --- END: PATCH order lines and order if approving in approval mode and status is pending ---
+
     const payload = {
       workflowData: {
         ...(location.state?.workflowData || {}),
@@ -1720,10 +1756,10 @@ function OrderDetails() {
                       {t('Add products')}
                     </button>
                   )}
-                  {/* Hide table in add mode until products are selected */}                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
+                  {/* Hide table in add mode until products are selected */}                  {((formMode !== 'add') || ((formData.products || []).length > 0)) && (
                     <Table
                       columns={columns}
-                      data={formData.products.filter(
+                      data={(formData.products || []).filter(
                         p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || /*p.sugarTaxPrice || */p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
@@ -1733,7 +1769,7 @@ function OrderDetails() {
                               style={{ padding: '4px 10px', fontSize: 14 }}
                               onClick={e => {
                                 e.stopPropagation();
-                                handleDeleteProductRow(formData.products.indexOf(row));
+                                handleDeleteProductRow((formData.products || []).indexOf(row));
                               }}
                               type="button"
                               disabled={!isE('deleteButton') || (formData.status && formData.status.toLowerCase() !== 'open')}
@@ -1760,7 +1796,7 @@ function OrderDetails() {
                   </div>
                 )}
 
-                {isV('btnSave') && isE('btnSave') && (
+                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave('save')}
@@ -1770,7 +1806,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnCancel') && isE('btnCancel') && (
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
@@ -1780,7 +1816,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice') && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
                   <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
                     {t('Download Invoice')}
                   </button>
