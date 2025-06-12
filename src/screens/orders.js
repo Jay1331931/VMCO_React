@@ -128,7 +128,9 @@ function Orders() {
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
-          companyNameEn: order.companyNameEn || order.company_name_en || order.selectedCustomerName || order.erpCustId || ''
+          companyNameEn: order.companyNameEn || order.company_name_en|| '',
+          workflowName: order.workflowName,
+          workflowInstanceId: order.workflowInstanceId
         }));
         setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
@@ -183,7 +185,15 @@ function Orders() {
 
   const handleRowClick = (order) => {
     console.log('Row clicked, navigating to order details with:', order);
-    navigate('/orderDetails', { state: { order, mode: 'edit', fromApproval: isApprovalMode } });
+    navigate('/orderDetails', {
+      state: {
+        order,
+        mode: 'edit',
+        fromApproval: isApprovalMode,
+        wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+        workflowName: isApprovalMode ? order.workflowName : undefined
+      }
+    });
   };
 
   const handleCheckout = (order) => {

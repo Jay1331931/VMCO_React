@@ -52,6 +52,7 @@ function OrderDetails() {
   const orderFromNav = location.state?.order || {};
   // Detect if coming from approval mode
   const fromApproval = location.state?.fromApproval || false;
+  const wfid = location.state?.wfid || null;
 
 
   // Initialize form data
@@ -1727,9 +1728,9 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('actionButtons') && (
+                {isV('actionButtons') && fromApproval && (
                   <div className="order-details-actions">
-                    {isV('btnApprove') && isE('btnApprove') && (
+                    {isV('btnApprove', fromApproval, true) && isE('btnApprove') && (
                       <button
                         className="order-action-btn approve"
                         onClick={() => handleSubmit('approve')}
@@ -1739,7 +1740,7 @@ function OrderDetails() {
                       </button>
                     )}
 
-                    {isV('btnReject') && isE('btnReject') && (
+                    {isV('btnReject', fromApproval, true) && isE('btnReject') && (
                       <button
                         className="order-action-btn reject"
                         onClick={() => handleSubmit('reject')}
@@ -1850,3 +1851,14 @@ function OrderDetails() {
 }
 
 export default OrderDetails;
+
+// Example usage for Approve/Reject buttons:
+// Place the following inside your JSX render/return block where you want the buttons to appear:
+/*
+{isV('approveButton', fromApproval, true) && (
+  <button onClick={() => handleSubmit('approve')}>Approve</button>
+)}
+{isV('rejectButton', fromApproval, true) && (
+  <button onClick={() => handleSubmit('reject')}>Reject</button>
+)}
+*/
