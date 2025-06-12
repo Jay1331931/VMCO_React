@@ -1472,7 +1472,7 @@ function OrderDetails() {
                           <input
                             id="customerField"
                             name="selectedCustomerName"
-                            value={formData.selectedCustomerName !== undefined && formData.selectedCustomerName !== null ? formData.selectedCustomerName : ''}
+                            value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
@@ -1483,7 +1483,7 @@ function OrderDetails() {
                         <input
                           id="customerField"
                           name="selectedCustomerName"
-                          value={formData.companyNameEn !== undefined && formData.companyNameEn !== null ? formData.companyNameEn : (formData.selectedCustomerName !== undefined && formData.selectedCustomerName !== null ? formData.selectedCustomerName : '')}
+                          value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                           disabled={isE('customerName')}
                           readOnly
                         />
