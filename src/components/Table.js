@@ -67,7 +67,7 @@ const Table = ({
 
 
     // If value is an object, stringify it
-   if (typeof value === 'object') {
+   if (typeof value === 'object' && value !== null) {
         // Try common date keys (for Sequelize, Postgres, etc.)
         if (value.hasOwnProperty('toISOString') && typeof value.toISOString === 'function') {
             return formatDate(value.toISOString(), 'YYYY-MM-DD');

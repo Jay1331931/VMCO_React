@@ -15,6 +15,7 @@ import GetBranches from '../components/GetBranches';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac'; // Add this import
 import formatDate from '../utilities/dateFormatter';
+import ApprovalDialog from '../components/ApprovalDialog';
 
 const defaultOrder = {
   id: '',
@@ -76,6 +77,8 @@ function OrderDetails() {
   const [saving, setSaving] = useState(false); // New saving state
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [approvalAction, setApprovalAction] = useState(null);
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -274,9 +277,7 @@ function OrderDetails() {
         const payload = {};
 
         // Include all fields that might need updating
-        ['erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
-          'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
-          'driver', 'vehicleNumber', 'pricingPolicy'].forEach(field => {
+        [].forEach(field => {
             if (formData[field] !== undefined && formData[field] !== null) {
               payload[field] = formData[field];
             }
@@ -658,9 +659,40 @@ function OrderDetails() {
   };
 
   // cancel/Approve/Reject handler
-  const handleSubmit = (action) => {
-    alert(`${t(action.charAt(0).toUpperCase() + action.slice(1))} action triggered.`);
-    // Add your logic here
+  const handleSubmit = async (action) => {
+    if (!fromApproval || !wfid) {
+      alert(t('Approval action not available.'));
+      return;
+    }
+    let comment = '';
+    if (action === 'approve') {
+      comment = prompt(t('Please enter your comments for approval:'));
+    } else if (action === 'reject') {
+      comment = prompt(t('Please enter your comments for rejection:'));
+    }
+    const payload = {
+      workflowData: (action === 'approve' || action === 'reject') ? (location.state?.workflowData || {}) : {},
+      approvedStatus: action === 'approve' ? 'approved' : 'rejected',
+      comment: comment
+    };
+    try {
+      const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+      if (res.ok) {
+        alert(t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`));
+        navigate('/orders');
+      } else {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to submit approval');
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing order:`, error);
+      alert(t(`Error ${action}ing order: ${error.message}`));
+    }
   };
 
   const handleCheckout = (order) => {
@@ -1317,6 +1349,48 @@ function OrderDetails() {
   // Pricing policy options
   const pricingPolicyOptions = ['Price A', 'Price B', 'Price C', 'Price D'];
 
+  const handleApprovalSubmit = (action) => {
+    setApprovalAction(action);
+    setIsApprovalDialogOpen(true);
+  };
+
+  // Handle dialog submit for order approval/rejection just like in customersDetails.js
+  const handleDialogSubmit = async (comment) => {
+    // Build workflowData payload (add updates if needed, similar to customersDetails)
+    let updates = { ...((location.state?.workflowData && location.state.workflowData.updates) || {}) };
+    // If you need to add more update logic for orders, do it here
+
+    const payload = {
+      workflowData: {
+        ...(location.state?.workflowData || {}),
+        updates
+      },
+      approvedStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
+      comment: comment
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include',
+      });
+      if (res.ok) {
+        alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
+        setIsApprovalDialogOpen(false);
+        navigate('/orders');
+      } else {
+        const errorText = await res.text();
+        throw new Error(errorText || 'Failed to submit approval');
+      }
+    } catch (error) {
+      console.error(`Error ${approvalAction}ing order:`, error);
+      alert(t(`Error ${approvalAction}ing order: ${error.message}`));
+      setIsApprovalDialogOpen(false);
+    }
+  };
+
   return (
     <Sidebar>
       {isV('orderDetails') && (
@@ -1733,7 +1807,7 @@ function OrderDetails() {
                     {isV('btnApprove', fromApproval, true) && isE('btnApprove') && (
                       <button
                         className="order-action-btn approve"
-                        onClick={() => handleSubmit('approve')}
+                        onClick={() => handleApprovalSubmit('approve')}
                         disabled={formData.status === 'approved'}
                       >
                         {t('Approve')}
@@ -1743,7 +1817,7 @@ function OrderDetails() {
                     {isV('btnReject', fromApproval, true) && isE('btnReject') && (
                       <button
                         className="order-action-btn reject"
-                        onClick={() => handleSubmit('reject')}
+                        onClick={() => handleApprovalSubmit('reject')}
                         disabled={formData.status === 'approved'}
                       >
                         {t('Reject')}
@@ -1844,6 +1918,16 @@ function OrderDetails() {
               </button>
             </div>
           )}
+
+          <ApprovalDialog
+            isOpen={isApprovalDialogOpen}
+            onClose={() => setIsApprovalDialogOpen(false)}
+            action={approvalAction}
+            onSubmit={handleDialogSubmit}
+            customerName={formData.selectedCustomerName || formData.companyNameEn || 'this order'}
+            title={approvalAction === 'approve' ? t('Approve Order') : t('Reject Order')}
+            subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this order?') : t('Are you sure you want to reject this order?')}
+          />
         </div>
       )}
     </Sidebar>

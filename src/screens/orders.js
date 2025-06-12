@@ -191,7 +191,8 @@ function Orders() {
         mode: 'edit',
         fromApproval: isApprovalMode,
         wfid: isApprovalMode ? order.workflowInstanceId : undefined,
-        workflowName: isApprovalMode ? order.workflowName : undefined
+        workflowName: isApprovalMode ? order.workflowName : undefined,
+        workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
       }
     });
   };
