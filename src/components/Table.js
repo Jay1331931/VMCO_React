@@ -69,21 +69,21 @@ const Table = ({
     // If value is an object, stringify it
    if (typeof value === 'object') {
         // Try common date keys (for Sequelize, Postgres, etc.)
-        if (value.hasOwnProperty('toISOString') && typeof value.toISOString === 'function') {
-            return formatDate(value.toISOString(), 'YYYY-MM-DD');
-        }
-        if (value.hasOwnProperty('date')) {
-            return formatDate(value.date, 'YYYY-MM-DD');
-        }
-        if (value.hasOwnProperty('value')) {
-            return formatDate(value.value, 'YYYY-MM-DD');
-        }
-        // Fallback: try to find a string value that looks like a date
-        for (const key in value) {
-            if (typeof value[key] === 'string' && !isNaN(Date.parse(value[key]))) {
-                return formatDate(value[key], 'YYYY-MM-DD');
-            }
-        }
+        // if (value.hasOwnProperty('toISOString') && typeof value.toISOString === 'function') {
+        //     return formatDate(value.toISOString(), 'YYYY-MM-DD');
+        // }
+        // if (value.hasOwnProperty('date')) {
+        //     return formatDate(value.date, 'YYYY-MM-DD');
+        // }
+        // if (value.hasOwnProperty('value')) {
+        //     return formatDate(value.value, 'YYYY-MM-DD');
+        // }
+        // // Fallback: try to find a string value that looks like a date
+        // for (const key in value) {
+        //     if (typeof value[key] === 'string' && !isNaN(Date.parse(value[key]))) {
+        //         return formatDate(value[key], 'YYYY-MM-DD');
+        //     }
+        // }
         // If nothing found, stringify the object
         return JSON.stringify(value);
     }

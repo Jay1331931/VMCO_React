@@ -694,6 +694,7 @@ class RbacManager {
           naqi: { visible: false, editable: true },
           greenMart: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
+          btnApplyAll: { visible: false, editable: true },
         }
       },
       custDetailsEdit: {
@@ -1071,7 +1072,7 @@ class RbacManager {
           btnBranchApprove: { visible: false, editable: true },
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true},
-
+          btnApplyAll: { visible: true, editable: true},
         },
       },
       custDetailsEdit: {
@@ -1316,6 +1317,7 @@ class RbacManager {
           btnBranchApprove: { visible: false, editable: true },
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true},
+          btnApplyAll: { visible: true, editable: true},
         }
       },
       custDetailsEdit: {
@@ -1559,6 +1561,7 @@ class RbacManager {
           btnSave: { visible: false, editable: true },
           btnSubmit: {visible: false, editable: true},
           pricingPolicy: {visible: true, editable: true},
+          btnApplyAll: { visible: true, editable: true},
         },
       },
       custDetailsEdit: {
