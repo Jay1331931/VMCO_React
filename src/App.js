@@ -34,8 +34,8 @@ function App() {
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/login/employee" element={<LoginScreen />} />
-        <Route path="/customersOnboarding" element={<CustomersOnboarding />} />
-        <Route path="/customersOnboarding/:id" element={<CustomersOnboarding />} />
+        <Route path="/customers/registration" element={<CustomersOnboarding />} />
+        <Route path="/customers/registration/:id" element={<CustomersOnboarding />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/orderDetails" element={<OrderDetails />} />

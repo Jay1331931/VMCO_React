@@ -8,8 +8,10 @@ import SearchInput from '../components/SearchInput';
 import Pagination from '../components/Pagination';
 import Table from '../components/Table';
 import Tabs from '../components/Tabs';
+import RbacManager from '../utilities/rbac';
 import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const getStatusClass = (status) => {
   switch (status) {
@@ -33,6 +35,7 @@ function Customers() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [page, setPage] = useState(1);
@@ -49,6 +52,8 @@ function Customers() {
     { value: 'invites', label: 'Invites' }
   ];
   const [isApprovalMode, setApprovalMode] = useState(false);
+  // const { token, user, isAuthenticated, logout } = useAuth();
+  
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
     console.log('Approval mode:', isApprovalMode);
@@ -58,17 +63,42 @@ function Customers() {
       fetchCustomers();
     }
   };
-
-  const handleResend = (invite) => {
+  //  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
+  //   const isV = rbacMgr.isV.bind(rbacMgr);
+  //   const isE = rbacMgr.isE.bind(rbacMgr);
+  const handleResend = async (invite) => {
     console.log('Resend invite:', invite);
-    alert('Invite resent successfully!');
+    try {
+      const response = await fetch(`${API_BASE_URL}/generate-registration-link`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          id: invite.id,
+        })
+      })
+      console.log('Response:', response);
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Invite resend link:', result);
+        alert('Invite resend link: ' + result.data);
+      }
+    } catch (err) {
+      // console.error('Error resending in  vite:', err);
+      console.log('Error resending invite:', err.message);
+      alert('Failed to resend invite. Please try again later.');
+      return;
+    }
+    // alert('Invite resent successfully!');
   };
 
   const handleInvite = () => {
     setIsInviteModalOpen(true);
   };
 
-  const handleInviteSubmit = () => {
+  const handleInviteSubmit = async () => {
     // Handle the invite submission here
     console.log('Invite data:', inviteData);
     if (!inviteData.email || !inviteData.name || !inviteData.company || !inviteData.mobile || !inviteData.source || !inviteData.region) {
@@ -76,6 +106,54 @@ function Customers() {
       return;
     }
     // Add your API call to send the invite
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/registration/staging', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyEmail: inviteData.email,
+          leadName: inviteData.name,
+          companyName: inviteData.company,
+          companyPhone: inviteData.mobile,
+          region: inviteData.region,
+          source: inviteData.source,
+          employeeId: user?.employeeId,
+          // submissionDate: new Date(),
+          comments: inviteData.comments || '',
+          registered: false
+        }),
+        credentials: 'include',
+      });
+      const result = await response.json();
+      console.log(result);
+      if (result.status === 'Ok') {
+        try {
+          const response = await fetch(`${API_BASE_URL}/generate-registration-link`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              id: result.lead.id,
+            })
+          })
+          console.log('Response:', response);
+          if (response.ok) {
+            const res = await response.json();
+            console.log('Invite link:', res);
+            alert('Invite link: ' + res.data);
+          }
+        } catch (err) {
+          // console.error('Error resending invite:', err);
+          console.log('Error sending invite:', err.message);
+          alert('Failed to send invite. Please try again later.');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Error during registration:', error);
+    }
     setIsInviteModalOpen(false);
   };
 
@@ -173,13 +251,13 @@ function Customers() {
     { key: 'customerStatus', header: 'Status' }
   ];
   const inviteColumns = [
-    { key: 'date', header: 'Date' },
+    { key: 'createdAt', header: 'Date' },
     { key: 'leadName', header: 'Customer Name' },
     { key: 'companyEmail', header: 'Email' },
     { key: 'companyPhone', header: 'Phone' },
     { key: 'companyName', header: 'Company Name' },
     { key: 'region', header: 'Region' },
-    { key: 'assignedTo', header: 'Assigned To' },
+    { key: 'employeeId', header: 'Assigned To' },
     { key: 'source', header: 'Source' },
     { key: 'actions', header: '' }
   ];
@@ -289,6 +367,7 @@ function Customers() {
         //   page,
         //   total: result.data.data.length
         // }));
+        setTotal(result.data.totalRecords);
       } else {
         throw new Error(response.data.message || 'Failed to fetch invites');
       }
@@ -456,7 +535,7 @@ function Customers() {
 
   const renderActionButtons = (invite) => (
     <div className="action-buttons">
-      {invite.registered && (
+      {!invite.registered && (
         <button
           className="action-button resend"
           onClick={() => handleResend(invite)}
@@ -464,14 +543,14 @@ function Customers() {
           {t('Resend')}
         </button>
       )}
-      {!invite.registered && (
+      {/* {!invite.registered && (
         <button
           className="action-button invite"
           onClick={() => handleInvite(invite)}
         >
           {t('Invite')}
         </button>
-      )}
+      )} */}
     </div>
   );
 
@@ -516,7 +595,7 @@ function Customers() {
         return (
           <Table
             columns={inviteColumns}
-            data={filteredInvites}
+            data={paginatedInvites}
             getStatusClass={getStatusClass}
             actionButtons={renderActionButtons}
           />
@@ -530,6 +609,7 @@ function Customers() {
   // const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
   const paginatedCustomers = filteredCustomers;
   const paginatedApprovals = filteredApprovals;
+  const paginatedInvites = filteredInvites;
 
   return (
     <Sidebar title={t('Customers')}>
@@ -557,7 +637,7 @@ function Customers() {
 
             {activeTab === t('invites') && (
               <>
-                <button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>
+                {<button className="add-button" onClick={handleInvite}>{t('+ Invite')}</button>}
                 <ActionButton menuItems={customerMenuItems} />
               </>
             )}
@@ -567,7 +647,7 @@ function Customers() {
                 <div className="modal-content">
                   <h2>{t('New Invite')}</h2>
                   <div className="onboarding-container">
-                    
+
                     <div className="form-group">
                       <label>{t('Customer Name')}</label>
                       <input
@@ -590,7 +670,7 @@ function Customers() {
                       />
                     </div>
 
-                    
+
                     <div className="form-group">
                       <label>{t('Company Name')}</label>
                       <input
@@ -630,18 +710,34 @@ function Customers() {
 
                     <div className="form-group">
                       <label>{t('Source')}</label>
-                      <input
-                        type="text"
+                      <select
                         name="source"
                         value={inviteData.source}
                         onChange={handleInputChange}
                         required
+                      >
+                        <option value="">{t('Select a source')}</option>
+                        <option value="portal">{t('Portal')}</option>
+                        <option value="crm">{t('CRM')}</option>
+                        <option value="salesexecutive">{t('Sales Executive')}</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label>{t('Comments')}</label>
+                      <textarea
+                        name="comments"
+                        value={inviteData.comments}
+                        onChange={handleInputChange}
+                        placeholder={t(' Comments...')}
+                        style={{ height: '50px', width: '205%' }}
                       />
                     </div>
+
+                    {/* Add more fields as needed */}
+
+
                   </div>
-
-                  {/* Add more fields as needed */}
-
                   <div className="modal-actions">
                     <button
                       className="cancel-button"
