@@ -4,37 +4,42 @@ import Pagination from '../../components/Pagination';
 import '../../styles/pagination.css';
 import '../../styles/components.css';
 import '../../styles/forms.css';
+import RbacManager from '../../utilities/rbac';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOff, faToggleOn, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import { debounce } from 'lodash';
-
-
+import { useAuth } from '../../context/AuthContext';
+import { debounce, set } from 'lodash';
 
 function Products(customer) {
     const [isApprovalMode, setApprovalMode] = useState(false);
-    const [currentItems, setCurrentItems] = useState([]);
-    const [products, setProducts] = useState(currentItems);
+    const [products, setProducts] = useState([]); // all products
+    const [currentItems, setCurrentItems] = useState([]); // products on current page
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
     const actionMenuRef = useRef(null);
     const { t } = useTranslation();
-    const categories = ['VMCO Machines', 'VMCO Other', 'Diayafa', 'Green Mart', 'Naqui'];
-    const [activeCategory, setActiveCategory] = useState('VMCO Machines');
+    const categories = ['VMCO', 'Diyafa', 'Green Mast', 'Naqui'];
+    const [activeCategory, setActiveCategory] = useState('VMCO');
     const [selectedItems, setSelectedItems] = useState([]);
     const [editingMoq, setEditingMoq] = useState(null);
 
     const [isInputFocused, setIsInputFocused] = useState(false);
-
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
-    const totalPages = Math.ceil(products.length / itemsPerPage);
+    // const totalPages = Math.ceil(currentItems.length / itemsPerPage);
+    const [totalPages, setTotalPages] = useState(0);
     const [pageInput, setPageInput] = useState('');
+    const [search, setSearch] = useState('');
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+        const { token, user, isAuthenticated, logout } = useAuth();
     // const currentItems = products.slice(startIndex, endIndex);
+    const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'custDetailsAdd');
+        const isV = rbacMgr.isV.bind(rbacMgr);
+        const isE = rbacMgr.isE.bind(rbacMgr);
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -47,9 +52,7 @@ function Products(customer) {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
-
-    useEffect(() => {
-        const fetchProducts = async () => {
+ const fetchProducts = async () => {
             setLoading(true);
             setError(null);
 
@@ -65,10 +68,11 @@ if(isApprovalMode) {
             }
             const query = new URLSearchParams({
                 page: currentPage,
-                pageSize: 20,
+                pageSize: itemsPerPage,
                 sortBy: "product_id",
                 sortOrder: "asc",
-                filters: JSON.stringify(filters)
+                filters: JSON.stringify(filters),
+                search: search
             });
 
             try {
@@ -83,23 +87,22 @@ if(isApprovalMode) {
                 }
 
                 const data = await response.json();
-                setCurrentItems(data.data.map(item => ({
-                    ...item,
-                    visible: item.visible || false,
-                    originalMoq: item.moq
-                })));
+                setProducts(data.data); 
+                setCurrentItems(data.data);
+                setTotalPages(data.totalPages);
             } catch (err) {
-                console.log(err);
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
 
+    useEffect(() => {
+       
         if (customer?.customer?.id && activeCategory) {
             fetchProducts();
         }
-    }, [customer, activeCategory, currentPage, isApprovalMode]);
+    }, [customer, activeCategory, currentPage, isApprovalMode, search]);
 
     const toggleApprovalMode = () => {
         setApprovalMode(!isApprovalMode);
@@ -238,6 +241,30 @@ if(isApprovalMode) {
         setIsInputFocused(false);
         setEditingMoq(null);
     };
+
+    // Apply All: only for current page
+    const handleApplyAll = () => {
+        const moqValue = document.querySelector('.product-text-input').value;
+        if (!moqValue) return;
+
+        const numericValue = parseInt(moqValue);
+        if (isNaN(numericValue)) return;
+
+        // Only update visible items on the current page
+        currentItems
+            .filter(item => item.visible)
+            .forEach(item => {
+                handleMoqChange(item.id, numericValue);
+                handleSaveMoq(item.id, numericValue);
+            });
+    };
+
+    // Debounced search handler
+    const handleSearchChange = debounce((e) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+    }, 400);
+
     return (
         <div className="products-content">
             <h3>Products & MoQ - Company Name</h3>
@@ -246,7 +273,7 @@ if(isApprovalMode) {
                     <button
                         key={category}
                         className={`category-tab ${activeCategory === category ? 'active' : ''}`}
-                        onClick={() => setActiveCategory(category)}
+                        onClick={() => {setActiveCategory(category); setCurrentPage(1); fetchProducts();}}
                     >
                         {category}
                     </button>
@@ -254,7 +281,12 @@ if(isApprovalMode) {
             </div>
             <div className="products-page-header">
                 <div className="products-header-controls">
-                    <input type="text" placeholder={t('Search...')} className="product-search-input" />
+                    <input
+                        type="text"
+                        placeholder={t('Search...')}
+                        className="product-search-input"
+                        onChange={handleSearchChange}
+                    />
                     <div className="toggle-container">
                         <label>{t('All')}</label>
                         <FontAwesomeIcon
@@ -266,25 +298,17 @@ if(isApprovalMode) {
                         <label>{t('Selected')}</label>
                     </div>
                     <div className='toggle-container'>
-                        <label>{t('MoQ')}</label>
-                        <input type='text' className='product-text-input' />
-                        <button className='branches-approve-button' disabled={currentItems.filter(item => item.visible).length < 2}
-                            onClick={() => {
-                                const moqValue = document.querySelector('.product-text-input').value;
-                                if (!moqValue) return;
-
-                                const numericValue = parseInt(moqValue);
-                                if (isNaN(numericValue)) return;
-
-                                // Update all visible items
-                                currentItems
-                                    .filter(item => item.visible)
-                                    .forEach(item => {
-                                        handleMoqChange(item.id, numericValue);
-                                        handleSaveMoq(item.id, numericValue);
-                                    });
-                            }}
-                        >Apply All</button>
+                        {isV('btnApplyAll') && <label>{t('MoQ')}</label>}
+                        {isV('btnApplyAll') && <input type='text' className='product-text-input' />}
+                        {isV('btnApplyAll') && (
+                            <button
+                                className='branches-approve-button'
+                                disabled={currentItems.filter(item => item.visible).length < 2}
+                                onClick={handleApplyAll}
+                            >
+                                Apply All
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -297,6 +321,7 @@ if(isApprovalMode) {
                                     type="checkbox"
                                     checked={isAllSelected}
                                     onChange={handleSelectAll}
+                                    disabled={isV('btnApplyAll')}
                                 />
                             </th>
                             <th>Name</th>
@@ -311,6 +336,7 @@ if(isApprovalMode) {
                                         type="checkbox"
                                         checked={product.visible}
                                         onChange={() => handleToggleVisibility(product.id)}
+                                        disabled={isV('btnApplyAll')}
                                     />
                                 </td>
                                 <td>{product.productName}</td>
@@ -331,6 +357,8 @@ if(isApprovalMode) {
                                                     setEditingMoq(null);
                                                 }, 200);
                                             }}
+                                            disabled={!isV('btnApplyAll')}
+                                            style={{ width: '80px' }}
                                         />
                                         {isInputFocused && (
                                             <>
@@ -344,16 +372,14 @@ if(isApprovalMode) {
                         ))}
                     </tbody>
                 </table>
-            </div>
-            {/* Pagination */}
+                {/* Pagination */}
             <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={(page) => setCurrentPage(page)}
-                startIndex={startIndex}
-                endIndex={Math.min(endIndex, products.length)}
-                totalItems={products.length}
+                onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
             />
+            </div>
+            
         </div>
     );
 }
