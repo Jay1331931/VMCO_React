@@ -4,7 +4,7 @@ import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import QuantityController from '../components/QuantityController';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +33,7 @@ const getEntityFromCategory = (categoryName) => {
 };
 
 function Cart() {
+    const location = useLocation();
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
@@ -63,36 +64,10 @@ function Cart() {
     const userId = user?.userId;
     const customerId = user?.customerId;
 
-    // Fetch branch information from localStorage
     useEffect(() => {
-        try {
-            // Set user and customer IDs from context
-            if (userId) { setSelectedUserId(userId); }
-            if (customerId) { setSelectedCustomerId(customerId); }
-            const branchName = localStorage.getItem('selectedBranchName');
-            const branchId = localStorage.getItem('selectedBranchId');
-            const branchErpId = localStorage.getItem('selectedBranchErpId');
-            const branchRegion = localStorage.getItem('selectedBranchRegion');
-
-            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId, branchRegion });
-
-            if (!branchId || !branchName || branchName.trim() === '') {
-                console.warn('Branch selection is missing or incomplete');
-                alert(t('Please select a branch before accessing your cart'));
-                navigate('/catalog');
-                return;
-            }
-
-            setSelectedBranchName(branchName);
-            setSelectedBranchId(branchId);
-            setSelectedBranchErpId(branchErpId);
-            setSelectedBranchRegion(branchRegion);
-
-        } catch (error) {
-            console.error('Error retrieving branch info from localStorage:', error);
-            alert(t('Error loading your branch information. Please select a branch again.'));
-            navigate('/catalog');
-        }
+        // Set user and customer IDs from context
+        if (userId) { setSelectedUserId(userId); }
+        if (customerId) { setSelectedCustomerId(customerId); }
     }, [userId, customerId, navigate, t]);
 
     // Get current language
@@ -823,6 +798,16 @@ function Cart() {
             setIsPlacingOrder(false);
         }
     };
+
+    // Initialize from navigation state if available
+    useEffect(() => {
+        const navState = location.state || {};
+        if (navState.selectedCustomerId) setSelectedCustomerId(navState.selectedCustomerId);
+        if (navState.selectedBranchId) setSelectedBranchId(navState.selectedBranchId);
+        if (navState.selectedBranchName) setSelectedBranchName(navState.selectedBranchName);
+        if (navState.selectedBranchErpId) setSelectedBranchErpId(navState.selectedBranchErpId);
+        if (navState.selectedBranchRegion) setSelectedBranchRegion(navState.selectedBranchRegion);
+    }, [location.state]);
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>

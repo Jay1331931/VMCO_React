@@ -413,7 +413,15 @@ function Catalog() {
     };
 
     const handleGoToCart = () => {
-        navigate('/Cart');
+        navigate('/Cart', {
+            state: {
+                selectedCustomerId,
+                selectedBranchId: selectedLocation,
+                selectedBranchName: branches.find(b => b.value === selectedLocation)?.label || '',
+                selectedBranchErpId: branches.find(b => b.value === selectedLocation)?.erpBranchId || '',
+                selectedBranchRegion
+            }
+        });
     };
 
     const catalogId = React.useId();
@@ -475,13 +483,7 @@ function Catalog() {
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
         const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
-        // Save selected branch info to localStorage
-        if (selectedBranch) {
-            localStorage.setItem('selectedBranchId', selectedBranch.value);
-            localStorage.setItem('selectedBranchName', selectedBranch.label);
-            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId || '');
-            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion || '');
-        }
+        // No localStorage usage here
         try {
             setIsLoading(true);
             // Fetch cart items for the user
@@ -508,11 +510,13 @@ function Catalog() {
             if (cartBranchIds.length === 0) {
                 // No items in cart, allow any branch selection
                 setSelectedLocation(newBranchId);
+                if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                 return;
             }
             if (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId) {
                 // Only items for this branch, allow selection
                 setSelectedLocation(newBranchId);
+                if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                 return;
             }
             // If there are items for a different branch, alert the user
@@ -532,6 +536,7 @@ function Catalog() {
                             credentials: 'include'
                         });
                         setSelectedLocation(newBranchId);
+                        if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                         alert(`Items discarded from the cart for branch ${otherBranchLabel}`);
                     } catch (deleteError) {
                         alert('Failed to discard items from the cart. Please try again.');
