@@ -128,7 +128,9 @@ function Orders() {
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
-          companyNameEn: order.companyNameEn || order.company_name_en || order.selectedCustomerName || order.erpCustId || ''
+          companyNameEn: order.companyNameEn || order.company_name_en|| '',
+          workflowName: order.workflowName,
+          workflowInstanceId: order.workflowInstanceId
         }));
         setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
@@ -183,7 +185,16 @@ function Orders() {
 
   const handleRowClick = (order) => {
     console.log('Row clicked, navigating to order details with:', order);
-    navigate('/orderDetails', { state: { order, mode: 'edit', fromApproval: isApprovalMode } });
+    navigate('/orderDetails', {
+      state: {
+        order,
+        mode: 'edit',
+        fromApproval: isApprovalMode,
+        wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+        workflowName: isApprovalMode ? order.workflowName : undefined,
+        workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
+      }
+    });
   };
 
   const handleCheckout = (order) => {
@@ -213,7 +224,7 @@ function Orders() {
     { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'checkout', header: () => t('Checkout'), include: isV('action') }
+    { key: 'checkout', header: () => t('Pay'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
