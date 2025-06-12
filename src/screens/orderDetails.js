@@ -1472,17 +1472,18 @@ function OrderDetails() {
                           <input
                             id="customerField"
                             name="selectedCustomerName"
-                            value={formData.selectedCustomerName}
+                            value={formData.selectedCustomerName !== undefined && formData.selectedCustomerName !== null ? formData.selectedCustomerName : ''}
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
                             disabled={!isE('customerName')}
+                            autoComplete="off"
                           />
                         </div>) : (
                         <input
                           id="customerField"
                           name="selectedCustomerName"
-                          value={formData.companyNameEn || formData.selectedCustomerName || ''}
+                          value={formData.companyNameEn !== undefined && formData.companyNameEn !== null ? formData.companyNameEn : (formData.selectedCustomerName !== undefined && formData.selectedCustomerName !== null ? formData.selectedCustomerName : '')}
                           disabled={isE('customerName')}
                           readOnly
                         />
@@ -1498,7 +1499,7 @@ function OrderDetails() {
                           <input
                             id="branchField"
                             name="selectedBranchName"
-                            value={formData.selectedBranchName || ''}
+                            value={formData.selectedBranchName !== undefined && formData.selectedBranchName !== null ? formData.selectedBranchName : ''}
                             onClick={() => {
                               if (!formData.erpCustId) {
                                 alert(t('Please select a customer first'));
@@ -1510,13 +1511,14 @@ function OrderDetails() {
                             placeholder={t('Click to select branch')}
                             readOnly
                             disabled={!isE('branchName')}
+                            autoComplete="off"
                           />
                         </div>
                       ) : (
                         <input
                           id="erpBranchIdField"
                           name="erpBranchId"
-                          value={formData.erpBranchId ?? ''}
+                          value={formData.erpBranchId !== undefined && formData.erpBranchId !== null ? formData.erpBranchId : ''}
                           disabled
                           readOnly
                         />
@@ -1529,7 +1531,7 @@ function OrderDetails() {
                       <label>{t('Order By')}</label>
                       <input
                         name="orderBy"
-                        value={formData.orderBy ?? ''}
+                        value={formData.orderBy !== undefined && formData.orderBy !== null ? formData.orderBy : ''}
                         onChange={handleInputChange}
                         disabled={!isE('orderBy')}
                       />
@@ -1541,7 +1543,7 @@ function OrderDetails() {
                       <label>{t('ERP#')}</label>
                       <input
                         name="erp"
-                        value={formData.erp ?? ''}
+                        value={formData.erp !== undefined && formData.erp !== null ? formData.erp : ''}
                         onChange={handleInputChange}
                         disabled={!isE('erpId')}
                         placeholder={t('ERP ID')}
