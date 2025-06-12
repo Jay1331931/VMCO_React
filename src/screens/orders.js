@@ -201,7 +201,7 @@ function Orders() {
         credentials: 'include'
       });
       const result = await response.json();
-      let salesOrderLines = [];
+      let salesOrderLines = result.data ? result.data.data : [];
       if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
         salesOrderLines = result.data.data;
       }
@@ -220,7 +220,7 @@ function Orders() {
       // Fallback: navigate without salesOrderLines if fetch fails
       navigate('/orderDetails', {
         state: {
-          order,
+          order, 
           mode: 'edit',
           fromApproval: isApprovalMode,
           wfid: isApprovalMode ? order.workflowInstanceId : undefined,
