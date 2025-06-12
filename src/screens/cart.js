@@ -651,10 +651,12 @@ function Cart() {
                 } else {
                     // Create a new line for this product
                     const productName = item.productName || item.name || 'Product';
+                    const productNameLc = item.productNameLc || item.nameLc || productName; // Use localized name if available
                     const newLinePayload = {
                         order_id: orderId,
                         product_id: productId,
                         productName: productName,
+                        productNameLc: productNameLc,
                         quantity: newQuantity,
                         unit: item.unit || 'EA', // Default to EA if unit is not provided
                         unit_price: unitPrice,
@@ -671,7 +673,8 @@ function Cart() {
                             id: item.id,
                             product_id: item.product_id,
                             productId: item.productId,
-                            name: item.name || item.productName
+                            name: item.name || item.productName,
+                            productNameLc: productNameLc
                         }
                     }); try {
                         const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {

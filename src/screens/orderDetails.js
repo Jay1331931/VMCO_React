@@ -149,10 +149,6 @@ function OrderDetails() {
   };
 
   useEffect(() => {
-
-
-
-
     fetchOrderDetails();
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode]);
@@ -949,7 +945,7 @@ function OrderDetails() {
       ...prev,
       erpCustId: customer.erp_cust_id || customer.erpCustId || '', // Handle both property naming formats
       customerId: customer.id, // Use the database ID for the customer
-      selectedCustomerName: customer.company_name_en || customer.companyNameEn,
+      selectedCustomerName: i18n.language === 'ar' ? (customer.company_name_ar || customer.companyNameAr) : (customer.company_name_en || customer.companyNameEn),
       pricingPolicy: customerPricingPolicy,
     }));
     setShowCustomerPopup(false);
@@ -989,8 +985,8 @@ function OrderDetails() {
           setLoading(false);
           return;
         }
-        await fetchOrderDetails();
-        await fetchOrderProducts();
+        // Always fetch order details by ID, which will also fetch products
+        await getOrderById(orderFromNav.id);
       };
       fetchData();
     }
@@ -1013,7 +1009,7 @@ function OrderDetails() {
     {
       key: 'productName',
       header: () => t('Product Name'),
-      render: (row) => row.productName,
+      render: (row) => i18n.language === 'ar' ? (row.productNameLc || row.product_name_lc || row.productName) : (row.productName || row.product_name_en || row.productNameLc),
       include: isV('productNameCol'),
     },
     {
@@ -1798,7 +1794,7 @@ function OrderDetails() {
 
                 {isV('btnPay') && isE('btnPay') && (
                   <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
-                    {t('Checkout')}
+                    {t('Pay')}
                   </button>
                 )}
 

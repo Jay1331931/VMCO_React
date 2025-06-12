@@ -224,7 +224,7 @@ function Orders() {
     { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'checkout', header: () => t('Checkout'), include: isV('action') }
+    { key: 'checkout', header: () => t('Pay'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
