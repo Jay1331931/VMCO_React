@@ -532,7 +532,7 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2),
                     paidAmount: '0.00',
                     deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: 'Pending',
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: 'Open',
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,

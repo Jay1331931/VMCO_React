@@ -255,7 +255,7 @@ function Orders() {
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
     { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
     { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
-    { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
+    //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
     { key: 'checkout', header: () => t('Pay'), include: isV('action') }

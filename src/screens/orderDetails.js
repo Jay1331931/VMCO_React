@@ -52,7 +52,7 @@ function OrderDetails() {
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
   // Detect if coming from approval mode
-  const fromApproval = location.state?.fromApproval || false;
+  const fromApproval = location.state?.fromApproval;
   const wfid = location.state?.wfid || null;
 
 
@@ -473,7 +473,7 @@ function OrderDetails() {
             paymentMethod: formData.paymentMethod || '',
             status: 'Open',
             sales_executive: user.employeeId,
-            paymentStatus: 'Pending',
+            paymentStatus: formData.paymentMethod==='Credit'? 'Paid' : 'Pending',
             entity: formData.entity || '',
             deliveryCharges: formData.deliveryCharges || '0',
             totalAmount: formData.totalAmount || '0',
@@ -1867,10 +1867,9 @@ function OrderDetails() {
                     {t('Pay')}
                   </button>
                 )}
-
                 {isV('actionButtons') && fromApproval && (
                   <div className="order-details-actions">
-                    {isV('btnApprove', fromApproval, true) && isE('btnApprove') && (
+                    {isV('btnApprove', fromApproval, true) && (
                       <button
                         className="order-action-btn approve"
                         onClick={() => handleApprovalSubmit('approve')}
@@ -1880,7 +1879,7 @@ function OrderDetails() {
                       </button>
                     )}
 
-                    {isV('btnReject', fromApproval, true) && isE('btnReject') && (
+                    {isV('btnReject', fromApproval, true) && (
                       <button
                         className="order-action-btn reject"
                         onClick={() => handleApprovalSubmit('reject')}
