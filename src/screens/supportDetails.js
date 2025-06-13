@@ -462,43 +462,45 @@ function SupportDetails() {
             {t(ticket.status)}
           </span>
         </div>
-        { isV('assignedTo') &&(
-          <div className="support-assign">
-            <span>{t("Assign to:")}</span>
-            <select 
-              id="assignedTeamMember"
-              name="assignedTeamMember"            
-              value={ticket.assignedTeamMember}
-              onChange={handleInputChange}
-              disabled={!isE('assignedTo')}
-            >
-              <option value="">{t('Select Assignee')}</option>
-              {loadingEmployees ? (
-                <option>{t("Loading employees...")}</option>
-              ) : employees.length > 0 ? (
-                employees.map(employee => (
-                  <option key={employee.id} value={employee.employeeId}>
-                    {employee.name}
-                  </option>
-                ))
+        <div className='support-details-container-right'>
+            { isV('assignedTo') &&(
+              <div className="support-assign">
+                <span>{t("Assign to:")}</span>
+                <select 
+                  id="assignedTeamMember"
+                  name="assignedTeamMember"            
+                  value={ticket.assignedTeamMember}
+                  onChange={handleInputChange}
+                  disabled={!isE('assignedTo')}
+                >
+                  <option value="">{t('Select Assignee')}</option>
+                  {loadingEmployees ? (
+                    <option>{t("Loading employees...")}</option>
+                  ) : employees.length > 0 ? (
+                    employees.map(employee => (
+                      <option key={employee.id} value={employee.employeeId}>
+                        {employee.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+                  )}
+                </select>
+              </div>
+            )}
+            <div className="support-details-actions">
+              {isEditing ? (
+                <>
+                  {isV('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
+                  <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>
+                </>
               ) : (
-                <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
+                <>
+                  <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>
+                  <button className="support-action-btn differ">{t("Differ")}</button>
+                </>
               )}
-            </select>
-          </div>
-      )}
-        <div className="support-details-actions">
-          {isEditing ? (
-            <>
-              {isV('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
-              <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>
-            </>
-          ) : (
-            <>
-              <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>
-              <button className="support-action-btn differ">{t("Differ")}</button>
-            </>
-          )}
+            </div>
         </div>
       </div>
       

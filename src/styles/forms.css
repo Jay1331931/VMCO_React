@@ -114,8 +114,8 @@
   }
 
   .customers .customer-onboarding-form-actions {
-    margin: 0 20px;
-    padding: 0px 20px;
+    /* margin: 0 20px;
+    padding: 0px 20px; */
     justify-content: space-between;
     display: flex;
     gap: 10px;
@@ -124,7 +124,7 @@
   .expanded-form-container-footer {
     display: flex;
     justify-content: right;
-    padding: 0px 20px;
+    /* padding: 0px 20px; */
   }
 
   .customers .status-text {
@@ -574,14 +574,14 @@
     margin-top: 5px;
   }
 
-  .product-search-input {
+  /* .product-search-input {
     padding: 8px 12px;
     width: 200px;
     border: 2px solid darkblue;
     border-radius: 4px;
     font-size: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+  } */
   .product-text-input {
     padding: 8px 12px;
     width: 75px;

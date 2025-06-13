@@ -43,6 +43,8 @@ export function getContactDetailsForm(t) {
       
       
       { type: 'header', label: t('Finance Head') },
+       { type: 'checkbox', name: 'FinanceHeadSameAsPrimary', label: '', options: [t('Same as Primary Contact Details')] , required: false },
+      { type: 'empty'},
       { 
         type: 'text', 
         name: 'financeHeadName', 
@@ -73,6 +75,8 @@ export function getContactDetailsForm(t) {
       },
    
       { type: 'header', label: t('Purchasing Head') },
+         { type: 'checkbox', name: 'PurchasingHeadSameAsPrimary', label: '', options: [t('Same as Primary Contact Details')] , required: false },
+      { type: 'empty'},
       { 
         type: 'text', 
         name: 'purchasingHeadName', 

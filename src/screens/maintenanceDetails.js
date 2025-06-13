@@ -496,6 +496,7 @@ function MaintenanceDetails() {
             <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{t(ticket.status)}</span>
           </div>
         )}
+        <div className='support-details-container-right'>
         {isV('assignedTo') &&(
           <div className="support-assign">
             <span>{t('Assign To')}:</span>
@@ -524,6 +525,7 @@ function MaintenanceDetails() {
         <div className="support-details-actions">
           {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave} disabled={!isE('btnSave')}>{t("Save")}</button>}
           {isV('btnDiffer') && <button className="support-action-btn differ" disabled={!isE('btnDiffer')}>{t("Differ")}</button>}
+        </div>
         </div>
       </div>
       {popupImage && (

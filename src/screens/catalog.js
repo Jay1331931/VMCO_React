@@ -1013,22 +1013,29 @@ function Catalog() {
                     grid-column: 1 / -1;
                 }
                 
-                .product-search-input {
-                    padding: 10px 15px;
-                    width: 300px;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    font-size: 1rem;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease;
-                    margin-right: 10px;
+               .product-search-input {
+                padding: 10px 15px;
+                width: 300px;
+                border: 2px solid #1d396d;
+                border-radius: 8px;
+                font-size: 1rem;
+                background-color: #fff;
+                box-shadow: 0 0 0 2px #E5E4E2; 
+                transition: all 0.2s ease;
+                margin-right: 10px;
+                box-sizing: border-box;
+                }
+
+                .product-search-input:focus {
+                border-color: #1d396d;     
+                box-shadow: 0 0 0 2px #E5E4E2; 
+                outline: none;
+                }
+                .product-search-input::placeholder {
+                color: #D3D3D3;
+                opacity: 1; 
                 }
                 
-                .product-search-input:focus {
-                    border-color: #0a5640;
-                    box-shadow: 0 2px 8px rgba(10, 86, 64, 0.15);
-                    width: 320px;
-                }
                   .loading-more-container {
                     display: flex;
                     flex-direction: column;
@@ -1059,9 +1066,9 @@ function Catalog() {
                     margin-top: 20px;
                 }
                   /* Style for the category filter to show it's linked to tabs */
-                .category-filter {
-                    background-color: #f5f5f5;
-                }
+                // .category-filter {
+                //     background-color: #f5f5f5;
+                // }
                 
                 
                 .tab-linked-filter::after {

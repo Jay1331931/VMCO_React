@@ -1829,7 +1829,7 @@ function OrderDetails() {
                     </span>
                   </div>
                 )}
-
+            <div className="" style={{display:"flex",gap:"10px"}}>
                 {isV('btnSave', fromApproval, false) && isE('btnSave') && (
                   <button
                     className="order-action-btn"
@@ -1889,9 +1889,11 @@ function OrderDetails() {
                         {t('Reject')}
                       </button>
                     )}
+                  
                   </div>
                 )}
               </div>
+            </div>
             )}
           </div>
 
