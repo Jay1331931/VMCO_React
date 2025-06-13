@@ -305,6 +305,7 @@ return customerData;
   };
 
   const handleLogout = async () => {
+    const userLoggedOut = user;
     const refreshResponse = await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -313,7 +314,12 @@ return customerData;
         
         if (refreshResponse.ok) {
           // Logout successful, redirect to login page
-          navigate('/login');
+          if( userLoggedOut?.userType === 'employee') {
+            navigate('/login/employee');
+          }
+          else {
+            navigate('/login');
+          }
         }
   };
 
