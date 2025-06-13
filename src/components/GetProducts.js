@@ -9,6 +9,7 @@ function GetProducts({
   token,
   customerId,
   entity,
+  category,
   t = (x) => x // fallback translation
 }) {  
   const [backendProducts, setBackendProducts] = useState([]);
@@ -37,14 +38,24 @@ function GetProducts({
   // Function to fetch products with pagination
   const fetchProducts = async () => {
     if (!open) return;
-    
+
     setProductLoading(true);
     try {
+      // Build filters object based on entity and category
+      const filters = {
+        customerId: parseInt(customerId),
+        entity: entity
+      };
+      // Only add category filter if entity is vmco and category is provided
+      if (entity && entity.toLowerCase() === "vmco" && category) {
+        filters.category = category;
+      }
+
       const params = new URLSearchParams({
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
-        filters: JSON.stringify({"customerId":parseInt(customerId), "entity":entity}),
+        filters: JSON.stringify(filters),
         sortBy: "id",
         sortOrder: "asc"
       });
@@ -69,8 +80,6 @@ function GetProducts({
         }));
       } else if (result && Array.isArray(result.data.data)) {
         setBackendProducts(result.data.data);
-        
-      
         setPagination(prev => ({
           ...prev,
           total: result.data.totalRecords

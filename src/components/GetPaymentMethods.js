@@ -7,8 +7,8 @@ function GetPaymentMethods({
   API_BASE_URL,
   t = (x) => x,
   category,
-  customerId, // <-- Add customerId prop
-  totalAmount = 0 // <-- Add totalAmount prop
+  customerId,
+  totalAmount
 }) {
   const [methods, setMethods] = useState([]);
   const [balances, setBalances] = useState({});
@@ -17,6 +17,7 @@ function GetPaymentMethods({
 
   // Fetch payment methods
   useEffect(() => {
+    console.log('Passed items:', category, customerId, totalAmount)
     if (!open) return;
     setLoading(true);
     setError(null);
@@ -39,18 +40,14 @@ function GetPaymentMethods({
           throw new Error('Unexpected response format for payment method options');
         }
 
-        // Filter payment methods based on category
+        // Filter payment methods based on category (match Cart logic)
         let allowedMethods = paymentMethods;
-        if (category === 'VMCO Machines') {
+        const cat = (category || '').toLowerCase();
+        if (cat.includes('vmco') && cat.includes('machines')) {
           allowedMethods = paymentMethods.filter(
             m => m === 'Pre Payment' || m === 'Partial Payment'
           );
-        } else if (
-          category === 'VMCO Consumables' ||
-          category === 'Diyafa' ||
-          category === 'Green Mast' ||
-          category === 'Naqui'
-        ) {
+        } else {
           allowedMethods = paymentMethods.filter(
             m => m === 'Pre Payment' || m === 'Credit' || m === 'Cash on Delivery'
           );
@@ -219,6 +216,12 @@ function GetPaymentMethods({
         .gp-product-btn:hover {
           background: #084532;
         }
+
+        .gp-product-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
         .gp-close-btn {
           padding: 7px 18px;
           border-radius: 6px;
