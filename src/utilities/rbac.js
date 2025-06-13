@@ -688,11 +688,11 @@ class RbacManager {
           btnBranchApprove: { visible: false, editable: true },
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: true, editable: true },
-          vmco: { visible: false, editable: true },
-          diyafa: { visible: false, editable: true },
-          dar: { visible: false, editable: true },
-          naqi: { visible: false, editable: true },
-          greenMart: { visible: false, editable: true },
+          [constants.ENTITY.VMCO]: { visible: false, editable: true },
+          [constants.ENTITY.DIYAFA]: { visible: false, editable: true },
+          [constants.ENTITY.DAR]: { visible: false, editable: true },
+          [constants.ENTITY.NAQI]: { visible: false, editable: true },
+          [constants.ENTITY.GREEN_MAST]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
         }
@@ -1075,6 +1075,11 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true},
           btnApplyAll: { visible: true, editable: true},
+          [constants.ENTITY.VMCO]: { visible: true, editable: true },
+          [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
+          [constants.ENTITY.DAR]: { visible: true, editable: true },
+          [constants.ENTITY.NAQI]: { visible: true, editable: true },
+          [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
         },
       },
       custDetailsEdit: {
@@ -1147,6 +1152,12 @@ class RbacManager {
           btnBranchApprove: { visible: true, editable: true },
           btnBranchReject: { visible: true, editable: true },
           btnBranchAdd: { visible: false, editable: true },
+          [constants.ENTITY.VMCO]: { visible: true, editable: true },
+          [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
+          [constants.ENTITY.DAR]: { visible: true, editable: true },
+          [constants.ENTITY.NAQI]: { visible: true, editable: true },
+          [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
+          customerSource: { visible: true, editable: false },
         }
       },
       SidebarList: {
@@ -1321,6 +1332,11 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true},
           btnApplyAll: { visible: true, editable: true},
+          [constants.ENTITY.VMCO]: { visible: true, editable: true },
+          [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
+          [constants.ENTITY.DAR]: { visible: true, editable: true },
+          [constants.ENTITY.NAQI]: { visible: true, editable: true },
+          [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
         }
       },
       custDetailsEdit: {
@@ -1392,6 +1408,8 @@ class RbacManager {
           btnBranchApprove: { visible: true, editable: true },
           btnBranchReject: { visible: true, editable: true },
           btnBranchAdd: { visible: false, editable: true },
+          [constants.ENTITY.GREEN_MAST]: {visible: true, editable: true},
+          customerSource: { visible: true, editable: false },
         }
       },
       SidebarList: {
