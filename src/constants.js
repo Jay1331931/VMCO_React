@@ -15,7 +15,11 @@ const Constants = {
         DRIVER: 'driver',
     },
     ENTITY:{
-        
+        VMCO: 'vmco',
+        DIYAFA: 'diyafa',
+        NAQI: 'naqi',
+        DAR: 'dar',
+        GREEN_MAST: 'green mast'
     },
     
 };
