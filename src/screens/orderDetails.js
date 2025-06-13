@@ -1628,7 +1628,7 @@ function OrderDetails() {
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
                             <option key={index} value={entity}>
-                              {entity}
+                              {t(entity)}
                             </option>
                           ))}
                         </select>
