@@ -28,8 +28,6 @@ const getEntityFromCategory = (categoryName) => {
         return 'naqui';
     }
 
-    // Default to vmco if no match (though this shouldn't happen with your categories)
-    return 'vmco';
 };
 
 function Cart() {

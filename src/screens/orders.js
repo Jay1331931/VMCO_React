@@ -147,30 +147,34 @@ function Orders() {
 
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
-    if (user) {
-      fetchOrders(page, searchQuery);
-      // eslint-disable-next-line
-    }
-  }, [page, searchQuery, user]);
 
-  console.log("$$$$$$$$$$$ user in orders page", user);
-
-  // Check loading state first
-  if (loading) {
+    if (loading) {
       return; // Wait while loading
     }
 
+      console.log("$$$$$$$$$$$ user in orders page", user);
+    if (user) {
+      fetchOrders(page, searchQuery);
+      // eslint-disable-next-line
+    }// Check loading state first
+  
   if (!user) {
     console.log("$$$$$$$$$$$ logging out");
     // Logout instead of showing loading message
-    // logout();
-    // navigate('/login');
-    return null; // Return null while logout is processing
+    //logout();
+    //navigate('/login');
+    //return null; // Return null while logout is processing
   }
+
+  }, [page, searchQuery, user]);
+
+
+
+  
   //For fetching the user again after browser refersh - End
   //RBAC
   //use formMode to decide if it is editform or add form
-  const rbacMgr = new RbacManager(user.userType === 'employee' && user.roles[0] !== 'admin' ? user.designation : user.roles[0], 'orderList');
+  const rbacMgr = new RbacManager(user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'orderList');
   const isV = rbacMgr.isV.bind(rbacMgr);
 
   const handleSearch = (searchTerm) => {
