@@ -277,7 +277,7 @@ function Orders() {
           totalPages={String(totalPages)}
           onPageChange={setPage}
         />)}
-        {loading && <div>Loading...</div>}
+        {loading && <div>{t("Loading...")}</div>}
         {error && <div className="error">{error}</div>}
       </div>)}
     </Sidebar>

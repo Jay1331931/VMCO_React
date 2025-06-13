@@ -25,9 +25,9 @@ export function getFinancialInformationForm(t) {
       { type: 'checkbox', name: 'COD', label: '', options: [t('Cash on Delivery (COD)')], required: false },
       { type: 'empty' },
       { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
-      { type: 'text', name: 'creditLimit', label: 'Credit Limit', placeholder: t('Enter credit limit'), required: false },
+      { type: 'text', name: 'creditLimit', label: t('Credit Limit'), placeholder: t('Enter credit limit'), required: false },
       { type: 'empty' },
-      { type: 'text', name: 'creditPeriod', label: 'Credit Period', placeholder: t('Enter credit period'), required: false },
+      { type: 'text', name: 'creditPeriod', label: t('Credit Period'), placeholder: t('Enter credit period'), required: false },
     ],
   };
 }

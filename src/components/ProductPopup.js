@@ -76,13 +76,13 @@ function ProductPopup({
                     </div>
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
-                        {product.entity && <div className="popup-product-entity">{product.entity}</div>}
+                        {product.entity && <div className="popup-product-entity">{t(product.entity)}</div>}
                         
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
                         </p>
 
-                        <h4 className="unit-price">{(t('Unit Price: '))}{(product.unitPrice).toFixed(2)} SAR</h4>
+                        <h4 className="unit-price">{(t('Unit Price: '))}{(product.unitPrice).toFixed(2)} {t('SAR')}</h4>
                         {isV('quantityController') && (
                             <QuantityController
                                 itemId={product.id}

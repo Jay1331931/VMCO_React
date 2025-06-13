@@ -100,7 +100,7 @@ const CommentPopup = ({
           {comments.length > 0 ? (
             comments.map((comment, index) => (
               <div className="comment-entry" key={index}>
-                <div className="user-info">
+                <div className="user-info-1">
                   <FontAwesomeIcon icon={faUserCircle} className="user-icon" />
                   <div className="user-name">{comment.userName || 'User'}</div>
                 </div>
@@ -229,7 +229,7 @@ const CommentPopup = ({
           left: auto;
           right: 1rem;
         }
-        .user-info {
+        .user-info-1 {
           display: flex;
           flex-direction: column;
           align-items: center;

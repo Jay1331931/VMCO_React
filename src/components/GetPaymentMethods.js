@@ -123,7 +123,7 @@ function GetPaymentMethods({
                 ) : (
                   methods.map((method, idx) => (
                     <tr key={idx}>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
+                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{t(method)}</td>
                       <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                         {balances[method] !== undefined ? balances[method] : '-'}
                       </td>

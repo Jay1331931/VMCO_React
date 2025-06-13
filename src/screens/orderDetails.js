@@ -1698,7 +1698,6 @@ function OrderDetails() {
                     {t('Save Changes')}
                   </button>
                 )}
-
                 {isV('btnCancel') && isE('btnCancel') && (
                   <button
                     className="order-action-btn"

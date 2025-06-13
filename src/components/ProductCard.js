@@ -75,7 +75,7 @@ const ProductCard = ({
             <div className="product-details">
                 <h3 className="product-name">{product.name}</h3>
                 <p className="product-code">{product.code}</p>
-                {product.entity && <p className="product-entity">{product.entity}</p>}
+                {product.entity && <p className="product-entity">{t(product.entity)}</p>}
                 <h4 className="unit-price">{t('Price: ')}{(product.unitPrice).toFixed(2)} {t('SAR')}</h4>
                 <div className="quantity-controls">
                     {isV('quantityController') && (
