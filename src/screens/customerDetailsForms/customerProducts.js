@@ -267,7 +267,7 @@ if(isApprovalMode) {
 
     return (
         <div className="products-content">
-            <h3>Products & MoQ - Company Name</h3>
+            <h3>{t("Products & MoQ - Company Name")}</h3>
             <div className="category-tabs">
                 {categories.map((category) => (
                     <button
@@ -275,7 +275,7 @@ if(isApprovalMode) {
                         className={`category-tab ${activeCategory === category ? 'active' : ''}`}
                         onClick={() => {setActiveCategory(category); setCurrentPage(1); fetchProducts();}}
                     >
-                        {category}
+                        {t(category)}
                     </button>
                 ))}
             </div>
@@ -324,8 +324,8 @@ if(isApprovalMode) {
                                     disabled={isV('btnApplyAll')}
                                 />
                             </th>
-                            <th>Name</th>
-                            <th>Minimum Order Quantity</th>
+                            <th>{t("Name")}</th>
+                            <th>{t("Minimum Order Quantity")}</th>
                         </tr>
                     </thead>
                     <tbody>

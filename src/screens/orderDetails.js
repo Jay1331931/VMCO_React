@@ -52,7 +52,7 @@ function OrderDetails() {
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
   // Detect if coming from approval mode
-  const fromApproval = location.state?.fromApproval || false;
+  const fromApproval = location.state?.fromApproval;
   const wfid = location.state?.wfid || null;
 
 
@@ -79,6 +79,8 @@ function OrderDetails() {
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
+  // Store companyType in state
+  const [companyType, setCompanyType] = useState('');
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -274,10 +276,10 @@ function OrderDetails() {
 
         // Include all fields that might need updating
         [].forEach(field => {
-            if (formData[field] !== undefined && formData[field] !== null) {
-              payload[field] = formData[field];
-            }
-          });
+          if (formData[field] !== undefined && formData[field] !== null) {
+            payload[field] = formData[field];
+          }
+        });
 
         // First update the sales order
         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
@@ -471,7 +473,7 @@ function OrderDetails() {
             paymentMethod: formData.paymentMethod || '',
             status: 'Open',
             sales_executive: user.employeeId,
-            paymentStatus: 'Pending',
+            paymentStatus: formData.paymentMethod==='Credit'? 'Paid' : 'Pending',
             entity: formData.entity || '',
             deliveryCharges: formData.deliveryCharges || '0',
             totalAmount: formData.totalAmount || '0',
@@ -537,21 +539,27 @@ function OrderDetails() {
             }
 
             // Prepare products payload, set sales_executive to empId if user is employee
-            const productsPayload = formData.products.map((product, index) => ({
-              order_id: result.data.id,
-              line_number: index + 1, // Generate sequential line numbers
-              erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
-              product_id: product.id || product.product_id,
-              product_name: product.productName || product.product_name_en,
-              product_name_lc: product.productNameLc,
-              erp_prod_id: product.erpProdId || product.erp_prod_id || '',
-              quantity: parseInt(product.quantity || 1, 10),
-              unit: product.unit || '',
-              unit_price: parseFloat(product.unitPrice),
-              net_amount: parseFloat(product.netAmount),
-              //sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
-              sales_tax_rate: parseFloat(product.vatPercentage).toFixed(2),
-            }));
+            const productsPayload = formData.products.map((product, index) => {
+              let vat = product.vatPercentage;
+              if (companyType && companyType.toLowerCase() === 'non trading') {
+                vat = 0.00;
+              }
+              return {
+                order_id: result.data.id,
+                line_number: index + 1, // Generate sequential line numbers
+                erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
+                product_id: product.id || product.product_id,
+                product_name: product.productName || product.product_name_en,
+                product_name_lc: product.productNameLc,
+                erp_prod_id: product.erpProdId || product.erp_prod_id || '',
+                quantity: parseInt(product.quantity || 1, 10),
+                unit: product.unit || '',
+                unit_price: parseFloat(product.unitPrice),
+                net_amount: parseFloat(product.netAmount),
+                //sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
+                vat_percentage: Number(vat).toFixed(2),
+              };
+            });
 
             console.log('Submitting products payload:', productsPayload);
 
@@ -803,6 +811,11 @@ function OrderDetails() {
   // Function to update sales order line
   const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
     try {
+      // Ensure vatPercentage is 0.00 (decimal) for non trading companies
+      let finalVat = vatPercentage;
+      if (companyType && companyType.toLowerCase() === 'non trading') {
+        finalVat = 0.00;
+      }
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -812,7 +825,7 @@ function OrderDetails() {
           unitPrice,
           net_amount: netAmount.toFixed(2),
           //sugarTaxPrice: sugarTaxPrice.toFixed(2),
-          vatPercentage: vatPercentage.toFixed(2)
+          vatPercentage: Number(finalVat).toFixed(2)
         })
       });
 
@@ -853,6 +866,11 @@ function OrderDetails() {
   // Function to create a new sales order line
   const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
     try {
+      // Ensure vatPercentage is 0.00 (decimal) for non trading companies
+      let finalVat = vatPercentage;
+      if (companyType && companyType.toLowerCase() === 'non trading') {
+        finalVat = 0.00;
+      }
       const payload = {
         order_id: orderId,
         product_id: productId,
@@ -860,7 +878,7 @@ function OrderDetails() {
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
         //sugar_tax_price: parseFloat(sugarTaxPrice || 0),
-        sales_tax_rate: parseFloat(vatPercentage || 0)
+        sales_tax_rate: Number(finalVat).toFixed(2)
       };
 
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
@@ -884,8 +902,11 @@ function OrderDetails() {
     const moq = Number(product.moq) || 1;
     const unitPrice = parseFloat(product.unitPrice);
     //const sugarTaxPrice = parseFloat(product.sugarTaxPrice);
-    const vatPercentage = parseFloat(product.vatPercentage);
-
+    // Determine VAT based on companyType
+    let vatPercentage = 0.00;
+    if (companyType && companyType.toLowerCase() === 'trading') {
+      vatPercentage = parseFloat(product.vatPercentage);
+    }
     setFormData(prev => {
       // Check if product already exists in the table
       const existingIdx = prev.products.findIndex(
@@ -896,39 +917,45 @@ function OrderDetails() {
         const updatedProducts = [...prev.products];
         const existingProduct = updatedProducts[existingIdx];
         const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + 1;
-        const newNetAmount = ((unitPrice * newQuantity) + /*(sugarTaxPrice ? sugarTaxPrice : 0) + */(vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+        const newNetAmount = ((unitPrice * newQuantity) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
         updatedProducts[existingIdx] = {
           ...existingProduct,
           quantity: newQuantity,
           netAmount: newNetAmount,
-          moq: moq // Always keep MOQ for this product
+          moq: moq, // Always keep MOQ for this product
+          vatPercentage: vatPercentage // Always update VAT based on companyType
         };
-        return {
+        const updatedFormData = {
           ...prev,
           products: updatedProducts
         };
+        console.log('Product selected and updated in order:', updatedFormData.products[existingIdx]);
+        return updatedFormData;
       } else {
         // Product does not exist, add as new row with MOQ as quantity
-        const netAmount = ((unitPrice * moq) +/* (sugarTaxPrice ? sugarTaxPrice : 0) + */(vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
-        return {
+        const netAmount = ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
+        const newProduct = {
+          id: product.id, // Product ID for identifying the product
+          product_id: product.id, // Duplicate for compatibility
+          productName: product.productName,
+          erpProdId: product.erpProdId || product.erp_prod_id || '',
+          quantity: moq,
+          unit: product.unit,
+          unitPrice: unitPrice.toFixed(2),
+          netAmount: netAmount,
+          //sugarTaxPrice: sugarTaxPrice,
+          vatPercentage: vatPercentage,
+          moq: moq // Store MOQ for this product
+        };
+        const updatedFormData = {
           ...prev,
           products: [
             ...prev.products,
-            {
-              id: product.id, // Product ID for identifying the product
-              product_id: product.id, // Duplicate for compatibility
-              productName: product.productName,
-              erpProdId: product.erpProdId || product.erp_prod_id || '',
-              quantity: moq,
-              unit: product.unit,
-              unitPrice: unitPrice.toFixed(2),
-              netAmount: netAmount,
-              //sugarTaxPrice: sugarTaxPrice,
-              vatPercentage: vatPercentage,
-              moq: moq // Store MOQ for this product
-            }
+            newProduct
           ]
         };
+        console.log('Product selected and added to order:', newProduct);
+        return updatedFormData;
       }
     });
     setShowProductPopup(false);
@@ -941,6 +968,7 @@ function OrderDetails() {
     if (!pricingPolicyOptions.includes(customerPricingPolicy)) {
       customerPricingPolicy = '';
     }
+    setCompanyType(customer.companyType || (customer.data && customer.data.companyType) || '');
     setFormData(prev => ({
       ...prev,
       erpCustId: customer.erp_cust_id || customer.erpCustId || '', // Handle both property naming formats
@@ -1002,7 +1030,7 @@ function OrderDetails() {
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-  
+
   // Table columns
   const columns = [
     { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
@@ -1259,7 +1287,7 @@ function OrderDetails() {
     }
   }, [formData.products, formData.entity]);
 
-  
+
 
   // Function to fetch order products
   const fetchOrderProducts = async (orderId) => {
@@ -1356,6 +1384,42 @@ function OrderDetails() {
     let updates = { ...((location.state?.workflowData && location.state.workflowData.updates) || {}) };
     // If you need to add more update logic for orders, do it here
 
+    // --- BEGIN: PATCH order lines and order if approving in approval mode and status is pending ---
+    if (approvalAction === 'approve' && fromApproval && formData.status && formData.status.toLowerCase() === 'pending') {
+      try {
+        // 1. Update all sales order lines (quantity, netAmount)
+        for (const product of formData.products) {
+          const productId = product.id || product.product_id;
+          const unitPrice = parseFloat(product.unitPrice);
+          const quantity = parseInt(product.quantity, 10);
+          const netAmount = parseFloat(product.netAmount);
+          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              quantity,
+              unitPrice,
+              net_amount: netAmount.toFixed(2),
+              vatPercentage: vatPercentage.toFixed(2)
+            }),
+            credentials: 'include',
+          });
+        }
+        // 2. Update the sales order's totalAmount
+        await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ totalAmount: formData.totalAmount }),
+          credentials: 'include',
+        });
+      } catch (err) {
+        alert(t('Failed to update order or lines before approval: ') + (err.message || err));
+        return;
+      }
+    }
+    // --- END: PATCH order lines and order if approving in approval mode and status is pending ---
+
     const payload = {
       workflowData: {
         ...(location.state?.workflowData || {}),
@@ -1408,17 +1472,18 @@ function OrderDetails() {
                           <input
                             id="customerField"
                             name="selectedCustomerName"
-                            value={formData.selectedCustomerName}
+                            value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
                             disabled={!isE('customerName')}
+                            autoComplete="off"
                           />
                         </div>) : (
                         <input
                           id="customerField"
                           name="selectedCustomerName"
-                          value={formData.companyNameEn || formData.selectedCustomerName || ''}
+                          value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                           disabled={isE('customerName')}
                           readOnly
                         />
@@ -1434,7 +1499,7 @@ function OrderDetails() {
                           <input
                             id="branchField"
                             name="selectedBranchName"
-                            value={formData.selectedBranchName || ''}
+                            value={formData.selectedBranchName !== undefined && formData.selectedBranchName !== null ? formData.selectedBranchName : ''}
                             onClick={() => {
                               if (!formData.erpCustId) {
                                 alert(t('Please select a customer first'));
@@ -1446,13 +1511,14 @@ function OrderDetails() {
                             placeholder={t('Click to select branch')}
                             readOnly
                             disabled={!isE('branchName')}
+                            autoComplete="off"
                           />
                         </div>
                       ) : (
                         <input
                           id="erpBranchIdField"
                           name="erpBranchId"
-                          value={formData.erpBranchId ?? ''}
+                          value={formData.erpBranchId !== undefined && formData.erpBranchId !== null ? formData.erpBranchId : ''}
                           disabled
                           readOnly
                         />
@@ -1465,7 +1531,7 @@ function OrderDetails() {
                       <label>{t('Order By')}</label>
                       <input
                         name="orderBy"
-                        value={formData.orderBy ?? ''}
+                        value={formData.orderBy !== undefined && formData.orderBy !== null ? formData.orderBy : ''}
                         onChange={handleInputChange}
                         disabled={!isE('orderBy')}
                       />
@@ -1477,7 +1543,7 @@ function OrderDetails() {
                       <label>{t('ERP#')}</label>
                       <input
                         name="erp"
-                        value={formData.erp ?? ''}
+                        value={formData.erp !== undefined && formData.erp !== null ? formData.erp : ''}
                         onChange={handleInputChange}
                         disabled={!isE('erpId')}
                         placeholder={t('ERP ID')}
@@ -1701,18 +1767,22 @@ function OrderDetails() {
                       type="button"
                       className="order-action-btn approve"
                       onClick={() => {
-                        if (!formData.erpCustId) {
-                          alert(t('Please select a customer first'));
-                          return;
+                        // In add mode, require customer, branch, and entity selection
+                        if (formMode === 'add') {
+                          if (!formData.erpCustId) {
+                            alert(t('Please select a customer first'));
+                            return;
+                          }
+                          else if (!formData.erpBranchId) {
+                            alert(t('Please select a Branch'));
+                            return;
+                          }
+                          else if (!formData.entity) {
+                            alert(t('Please select Entity'));
+                            return;
+                          }
                         }
-                        else if (!formData.erpBranchId) {
-                          alert(t('Please select a Branch'));
-                          return;
-                        }
-                        else if (!formData.entity) {
-                          alert(t('Please select Entity'));
-                          return;
-                        }
+                        // In edit mode, always use values from formData (order state)
                         setShowProductPopup(true)
                       }}
                       style={{ marginBottom: 8 }}
@@ -1720,10 +1790,10 @@ function OrderDetails() {
                       {t('Add products')}
                     </button>
                   )}
-                  {/* Hide table in add mode until products are selected */}                  {(!formMode === 'add' || (formData.products && formData.products.length > 0)) && (
+                  {/* Hide table in add mode until products are selected */}                  {((formMode !== 'add') || ((formData.products || []).length > 0)) && (
                     <Table
                       columns={columns}
-                      data={formData.products.filter(
+                      data={(formData.products || []).filter(
                         p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || /*p.sugarTaxPrice || */p.netAmount || p.vatPercentage
                       )}
                       actionButtons={
@@ -1733,7 +1803,7 @@ function OrderDetails() {
                               style={{ padding: '4px 10px', fontSize: 14 }}
                               onClick={e => {
                                 e.stopPropagation();
-                                handleDeleteProductRow(formData.products.indexOf(row));
+                                handleDeleteProductRow((formData.products || []).indexOf(row));
                               }}
                               type="button"
                               disabled={!isE('deleteButton') || (formData.status && formData.status.toLowerCase() !== 'open')}
@@ -1760,7 +1830,7 @@ function OrderDetails() {
                   </div>
                 )}
 
-                {isV('btnSave') && isE('btnSave') && (
+                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave('save')}
@@ -1770,7 +1840,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnCancel') && isE('btnCancel') && (
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
@@ -1780,7 +1850,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice') && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
                   <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
                     {t('Download Invoice')}
                   </button>
@@ -1797,10 +1867,9 @@ function OrderDetails() {
                     {t('Pay')}
                   </button>
                 )}
-
                 {isV('actionButtons') && fromApproval && (
                   <div className="order-details-actions">
-                    {isV('btnApprove', fromApproval, true) && isE('btnApprove') && (
+                    {isV('btnApprove', fromApproval, true) && (
                       <button
                         className="order-action-btn approve"
                         onClick={() => handleApprovalSubmit('approve')}
@@ -1810,7 +1879,7 @@ function OrderDetails() {
                       </button>
                     )}
 
-                    {isV('btnReject', fromApproval, true) && isE('btnReject') && (
+                    {isV('btnReject', fromApproval, true) && (
                       <button
                         className="order-action-btn reject"
                         onClick={() => handleApprovalSubmit('reject')}
@@ -1827,10 +1896,10 @@ function OrderDetails() {
 
           {/* Comment Panel Popup */}
           <div>
-            <CommentPopup 
-              isOpen={isCommentPanelOpen} 
-              setIsOpen={setIsCommentPanelOpen} 
-              externalComments={formData.approvalHistory ? formData.approvalHistory : []} 
+            <CommentPopup
+              isOpen={isCommentPanelOpen}
+              setIsOpen={setIsCommentPanelOpen}
+              externalComments={formData.approvalHistory ? formData.approvalHistory : []}
               currentUser={user}
               isVisible={fromApproval}
             />

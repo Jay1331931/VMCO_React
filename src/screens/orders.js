@@ -183,18 +183,52 @@ function Orders() {
     navigate('/orderDetails', { state: { mode: 'add' } });
   };
 
-  const handleRowClick = (order) => {
+  const handleRowClick = async (order) => {
     console.log('Row clicked, navigating to order details with:', order);
-    navigate('/orderDetails', {
-      state: {
-        order,
-        mode: 'edit',
-        fromApproval: isApprovalMode,
-        wfid: isApprovalMode ? order.workflowInstanceId : undefined,
-        workflowName: isApprovalMode ? order.workflowName : undefined,
-        workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
+    try {
+      // Fetch sales order lines for this order
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 100,
+        search: '',
+        sortBy: 'id',
+        sortOrder: 'asc',
+        filters: JSON.stringify({ order_id: order.id })
+      });
+      const response = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const result = await response.json();
+      let salesOrderLines = result.data ? result.data.data : [];
+      if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
+        salesOrderLines = result.data.data;
       }
-    });
+      navigate('/orderDetails', {
+        state: {
+          order: { ...order, salesOrderLines },
+          mode: 'edit',
+          fromApproval: isApprovalMode,
+          wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+          workflowName: isApprovalMode ? order.workflowName : undefined,
+          workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
+        }
+      });
+    } catch (err) {
+      console.error('Failed to fetch sales order lines:', err);
+      // Fallback: navigate without salesOrderLines if fetch fails
+      navigate('/orderDetails', {
+        state: {
+          order, 
+          mode: 'edit',
+          fromApproval: isApprovalMode,
+          wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+          workflowName: isApprovalMode ? order.workflowName : undefined,
+          workflowData: isApprovalMode ? order.workflowData : undefined
+        }
+      });
+    }
   };
 
   const handleCheckout = (order) => {
@@ -221,7 +255,7 @@ function Orders() {
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
     { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
     { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
-    { key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
+    //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
     { key: 'checkout', header: () => t('Pay'), include: isV('action') }
@@ -261,7 +295,7 @@ function Orders() {
           totalPages={String(totalPages)}
           onPageChange={setPage}
         />)}
-        {loading && <div>Loading...</div>}
+        {loading && <div>{t("Loading...")}</div>}
         {error && <div className="error">{error}</div>}
       </div>)}
     </Sidebar>

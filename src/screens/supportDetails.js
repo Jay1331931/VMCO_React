@@ -298,14 +298,14 @@ function SupportDetails() {
 
 
   return (
-    <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
+    <Sidebar title={`${t("Ticket#")}${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="support-details-container">
-        <h2 className="support-details-title">{`Ticket#${ticket.id}`}</h2>
+        <h2 className="support-details-title">{`${t("Ticket#")}${ticket.id}`}</h2>
         <div className="support-details-section">
-          <h3 className="support-details-subtitle">Ticket Details</h3>
+          <h3 className="support-details-subtitle">{t("Ticket Details")}</h3>
           <div className="support-details-grid">
             <div className="support-details-field">
-              <label>Customer Name</label>
+              <label>{t("Customer Name")}</label>
               <input 
                 value={companyNameToShow}
                 disabled={true} 
@@ -335,7 +335,7 @@ function SupportDetails() {
               </select>
             </div>            
             <div className="support-details-field">
-              <label>Issue Type</label>
+              <label>{t("Issue Type")}</label>
               <select
                 id="grievanceType"
                 name="grievanceType" 
@@ -356,7 +356,7 @@ function SupportDetails() {
               </select>
             </div>
             <div className="support-details-field">
-              <label>Issue Name</label>
+              <label>{t("Issue Name")}</label>
               <input 
               id='grievanceName'
               name='grievanceName' 
@@ -368,14 +368,14 @@ function SupportDetails() {
             {
               formMode == 'edit'?
              <div className="support-details-field">
-              <label>Created Date</label>
+              <label>{t("Created Date")}</label>
               <input value={formatDate(ticket.updatedAt,'YYYY-MM-DD HH:SS')} disabled />
             </div>
             : null
             }
           </div>
           <div className="support-details-field support-details-textarea">
-            <label>Issue Details</label>
+            <label>{t("Issue Details")}</label>
             <textarea 
               id='description'
               name='description' 
@@ -386,7 +386,7 @@ function SupportDetails() {
           
           <div className='attachments'>
             <div className="maintenance-details-images">
-              <label>Images</label>
+              <label>{t("Images")}</label>
               <div className="maintenance-images-list">
                 {/* Add Image Button */}
                 <button
@@ -422,7 +422,7 @@ function SupportDetails() {
               </div>
             </div>
             <div className="maintenance-details-videos">
-              <label>Videos</label>
+              <label>{t("Videos")}</label>
               <div className="maintenance-videos-list">
                 {/* Add Video Button */}
                 <button
@@ -457,14 +457,14 @@ function SupportDetails() {
       </div>
       <div className="support-details-footer">
         <div className="support-status">
-          <span>Order Status:</span>
+          <span>{t("Order Status:")}</span>
           <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>
-            {ticket.status}
+            {t(ticket.status)}
           </span>
         </div>
         { isV('assignedTo') &&(
           <div className="support-assign">
-            <span>Assign to:</span>
+            <span>{t("Assign to:")}</span>
             <select 
               id="assignedTeamMember"
               name="assignedTeamMember"            
@@ -474,7 +474,7 @@ function SupportDetails() {
             >
               <option value="">{t('Select Assignee')}</option>
               {loadingEmployees ? (
-                <option>Loading employees...</option>
+                <option>{t("Loading employees...")}</option>
               ) : employees.length > 0 ? (
                 employees.map(employee => (
                   <option key={employee.id} value={employee.employeeId}>
@@ -490,13 +490,13 @@ function SupportDetails() {
         <div className="support-details-actions">
           {isEditing ? (
             <>
-              {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave}>Save</button>}
-              <button className="support-action-btn cancel" onClick={toggleEditMode}>Cancel</button>
+              {isV('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
+              <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>
             </>
           ) : (
             <>
-              <button className="support-action-btn edit" onClick={toggleEditMode}>Edit</button>
-              <button className="support-action-btn differ">Differ</button>
+              <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>
+              <button className="support-action-btn differ">{t("Differ")}</button>
             </>
           )}
         </div>

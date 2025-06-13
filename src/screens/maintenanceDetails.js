@@ -311,14 +311,14 @@ function MaintenanceDetails() {
   };
 
   return (
-    <Sidebar title={`Ticket#${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
+    <Sidebar title={`${t("Ticket#")}${ticket.id}${isCommentPanelOpen ? 'collapsed' : ''}`}>
       <div className="maintenance-details-container">
-        <h2 className="maintenance-details-title">{`Ticket#${ticket.id}`}</h2>
+        <h2 className="maintenance-details-title">{`${t("Ticket#")}${ticket.id}`}</h2>
         <div className="maintenance-details-section">
-          <h3 className="maintenance-details-subtitle">Ticket Details</h3>
+          <h3 className="maintenance-details-subtitle">{t("Ticket Details")}</h3>
           <div className="maintenance-details-grid">
             <div className="maintenance-details-field">
-              <label>Customer Name</label>
+              <label>{t("Customer Name")}</label>
               <input value={companyNameToShow} disabled />
             </div>
             <div className="maintenance-details-field">
@@ -493,7 +493,7 @@ function MaintenanceDetails() {
         {isV('status') && (
           <div className="support-status">
             <span>{t('Status')}:</span>
-            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{ticket.status}</span>
+            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, '').toLowerCase()}`}>{t(ticket.status)}</span>
           </div>
         )}
         {isV('assignedTo') &&(
@@ -522,8 +522,8 @@ function MaintenanceDetails() {
           </div>
         )}
         <div className="support-details-actions">
-          {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave} disabled={!isE('btnSave')}>Save</button>}
-          {isV('btnDiffer') && <button className="support-action-btn differ" disabled={!isE('btnDiffer')}>Differ</button>}
+          {isV('btnSave') && <button className="support-action-btn save" onClick={handleSave} disabled={!isE('btnSave')}>{t("Save")}</button>}
+          {isV('btnDiffer') && <button className="support-action-btn differ" disabled={!isE('btnDiffer')}>{t("Differ")}</button>}
         </div>
       </div>
       {popupImage && (

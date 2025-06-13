@@ -532,7 +532,7 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2),
                     paidAmount: '0.00',
                     deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: 'Pending',
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: 'Open',
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,
@@ -763,16 +763,13 @@ function Cart() {
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
                 deleteUrl.searchParams.append('customer_id', selectedCustomerId);
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                // Fix: For Naqui, always use lowercase 'naqui' for both entity and category
-                if (entity && entity.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
-                } else if (categoryName && categoryName.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
+                // For VMCO entity, include both entity and category; for others, only entity
+                if (entity && entity.toLowerCase() === 'vmco') {
+                    deleteUrl.searchParams.append('entity', 'vmco');
+                    deleteUrl.searchParams.append('category', categoryName);
                 } else {
                     deleteUrl.searchParams.append('entity', entity);
-                    deleteUrl.searchParams.append('category', categoryName);
+                    // Do NOT include category for non-vmco entities
                 }
 
                 const deleteResponse = await fetch(deleteUrl, {
@@ -841,7 +838,7 @@ function Cart() {
                                         />
                                         <h3>{category.category}</h3>
                                     </div>
-                                    <span className="category-count">{category.items.length} Items</span>
+                                    <span className="category-count">{category.items.length} {t("Items")}</span>
                                 </div>
                                 {!collapsedCategories.has(category.category) && (
                                     <div className="category-items">
@@ -865,7 +862,7 @@ function Cart() {
                                                         <h4 className="item-name">{item.name}</h4>
                                                         <p className="item-code">{item.productCode}</p>
                                                         {item.description && <p className="item-description">{item.description}</p>}
-                                                        <p className="delivery-date">Delivery By {item.delivery}</p>                                                        <QuantityController
+                                                        <p className="delivery-date">{t("Delivery By")} {item.delivery}</p>                                                        <QuantityController
                                                             itemId={item.id}
                                                             quantity={Number(quantities[item.id] || item.quantity || 1)}
                                                             onQuantityChange={handleQuantityChange}
@@ -889,13 +886,13 @@ function Cart() {
                                                     </div>
                                                     <div className="item-price-panel">                                                        <span className="item-price">
                                                         {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
-                                                        <span className="sar-label"> SAR</span>
+                                                        <span className="sar-label"> {t("SAR")}</span>
                                                     </span>
 
-                                                        <span className="tax-row">VAT:{Number(item.vatPercentage)}%</span>
+                                                        <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
                                                         <span className="item-total-price">
-                                                            Net Amount: {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
-                                                                (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} SAR
+                                                            {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
+                                                                (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
                                                         </span>
                                                         <button
                                                             className="remove-btn"
@@ -909,9 +906,10 @@ function Cart() {
                                             ))
                                         )}
                                         {/* Show partial payment for VMCO Machines */}
-                                        {category.category === 'VMCO Machines' && category.items.length > 0 && (
+                                     
+                                        {(category.category === 'VMCO Machines'|| category.category === "آلات VMCO") && category.items.length > 0 && (
                                             <div className="partial-payment-row">
-                                                <span className="partial-payment-warning">Min. 30% Partial Payment required</span>
+                                                <span className="partial-payment-warning">{t("Min. 30% Partial Payment required")}</span>
                                             </div>
                                         )}
                                         {category.items.length > 0 && (
@@ -934,7 +932,7 @@ function Cart() {
                                                             categoryTotal += totalAmount;
                                                         });
                                                         return (
-                                                            <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>SAR</span></strong>
+                                                            <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>{t("SAR")}</span></strong>
                                                         );
                                                     })()}
                                                 </span>

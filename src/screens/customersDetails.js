@@ -2462,7 +2462,7 @@ const fetchDropdownOptions = async () => {
             [] :
             (
               <div className="customer-onboarding-form-actions">
-                <div className="status-text">
+                <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className="status-label">{t('Status')}:</span>
                   <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
                 </div>
