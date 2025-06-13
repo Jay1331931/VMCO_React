@@ -48,11 +48,17 @@ function CustomersOnboarding() {
                 try {
                     // const response = await axios.get(`/customer-registration-staging/onboarding/${id}`);
                     // const res = await fetch('https://vmcoservertest-cyf3gyg4hpb9h7ek.southindia-01.azurewebsites.net/api/user/email-password', {
-                    const response = await fetch(`http://localhost:3000/auth/registration/getById/${id}`, {
+                    const response = await fetch(`http://localhost:3000/api/auth/registration/getById/${id}`, {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                     });
+                    // Check if response is JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server did not return JSON. Check API endpoint and server logs.');
+        }
+
                     const result = await response.json();
                     console.log(response)
                     console.log(result)
@@ -78,6 +84,7 @@ function CustomersOnboarding() {
                     }
                     console.log(formData)
                 } catch (error) {
+                    console.log('Error fetching invitation data:', error.message);
                     console.error('Error fetching invitation data:', error);
                     // setInvitationValid(false);
                 } finally {
@@ -252,6 +259,7 @@ function CustomersOnboarding() {
                         if (result.status === "Ok") {
                             setIsRegistered(true);
                         }
+                        navigate('/login');
                     } catch (error) {
                         console.error('Error during registration:', error);
                     }
@@ -339,7 +347,7 @@ function CustomersOnboarding() {
                                             value={formData[field.name]}
                                             onChange={handleChange}
                                             className={errors[field.name] ? 'error' : ''}
-                                            disabled={isRegistered}
+                                            disabled={isRegistered || (field.name === 'companyEmail' && id)}
                                         />
                                         {errors[field.name] && <span className="error-message">{errors[field.name]}</span>}
                                     </>

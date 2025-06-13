@@ -83,7 +83,7 @@ const getCookie = (name) => {
 
     const handleRegister = (e) => {
         e.preventDefault();
-        navigate('/customersOnboarding');
+        navigate('/customers/registration');
     };
     return (
         <div className='login-screen'>

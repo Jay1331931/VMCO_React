@@ -287,7 +287,7 @@ function Catalog() {
             entity: product.entity,
             unit: product.unit,
             vat: product.vatPercentage || product.VAT_percentage,
-            sugarTaxPrice: product.sugarTaxPrice,
+            //sugarTaxPrice: product.sugarTaxPrice,
             moq: product.moq || product.minimumOrderQuantity || 0,
             ...product
         };
@@ -361,30 +361,23 @@ function Catalog() {
 
         // Function to handle automatic loading of more pages
         const loadMorePagesWithDelay = () => {
-            if (hasMore && !isLoading && !isLoadingMore) {
+            // Only load more if there are more products to fetch
+            if (hasMore && !isLoading && !isLoadingMore && displayedProducts.length < totalProducts) {
                 setIsLoadingMore(true);
-
-                // Wait for 3 seconds before loading the next page set
                 timeoutId = setTimeout(() => {
-                    // Increment the max page to load - this will trigger loading all pages up to this number
-                    setCurrentPage(prev => Math.min(prev + 1, 3)); // Don't go beyond page 3
-                }, 3000); // 3 seconds delay
+                    setCurrentPage(prev => prev + 1);
+                }, 3000);
             }
         };
 
-        // After products are loaded and we're not in a loading state, set up the next load
-        // Only continue if we haven't reached page 3 yet
-        if (!isLoading && !isLoadingMore && products.length > 0 && hasMore && currentPage < 3) {
+        if (!isLoading && !isLoadingMore && displayedProducts.length > 0 && hasMore && displayedProducts.length < totalProducts) {
             loadMorePagesWithDelay();
         }
 
-        // Clean up the timeout if the component unmounts or dependencies change
         return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
+            if (timeoutId) clearTimeout(timeoutId);
         };
-    }, [currentPage, hasMore, isLoading, isLoadingMore, products.length]);    // Reset page when filters change
+    }, [currentPage, hasMore, isLoading, isLoadingMore, displayedProducts.length, totalProducts]);    // Reset page when filters change
     useEffect(() => {
         setCurrentPage(1);
         setLoadedPages([]);
@@ -420,7 +413,15 @@ function Catalog() {
     };
 
     const handleGoToCart = () => {
-        navigate('/Cart');
+        navigate('/Cart', {
+            state: {
+                selectedCustomerId,
+                selectedBranchId: selectedLocation,
+                selectedBranchName: branches.find(b => b.value === selectedLocation)?.label || '',
+                selectedBranchErpId: branches.find(b => b.value === selectedLocation)?.erpBranchId || '',
+                selectedBranchRegion
+            }
+        });
     };
 
     const catalogId = React.useId();
@@ -482,13 +483,6 @@ function Catalog() {
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
         const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
-        // Save selected branch info to localStorage
-        if (selectedBranch) {
-            localStorage.setItem('selectedBranchId', selectedBranch.value);
-            localStorage.setItem('selectedBranchName', selectedBranch.label);
-            localStorage.setItem('selectedBranchErpId', selectedBranch.erpBranchId || '');
-            localStorage.setItem('selectedBranchRegion', selectedBranch.branchRegion || '');
-        }
         try {
             setIsLoading(true);
             // Fetch cart items for the user
@@ -515,11 +509,13 @@ function Catalog() {
             if (cartBranchIds.length === 0) {
                 // No items in cart, allow any branch selection
                 setSelectedLocation(newBranchId);
+                if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                 return;
             }
             if (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId) {
                 // Only items for this branch, allow selection
                 setSelectedLocation(newBranchId);
+                if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                 return;
             }
             // If there are items for a different branch, alert the user
@@ -539,6 +535,7 @@ function Catalog() {
                             credentials: 'include'
                         });
                         setSelectedLocation(newBranchId);
+                        if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
                         alert(`Items discarded from the cart for branch ${otherBranchLabel}`);
                     } catch (deleteError) {
                         alert('Failed to discard items from the cart. Please try again.');
@@ -588,11 +585,11 @@ function Catalog() {
             const unitPrice = product.unitPrice;
             const netAmount = unitPrice * quantity;
             const vatPercentage = parseFloat(product.vatPercentage) || 0;
-            const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
+            //const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
 
             // Calculate VAT and sugar tax
             const vatAmount = netAmount * (vatPercentage / 100);
-            const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+            //const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
 
 
             // Parse images JSON and extract URLs
@@ -659,11 +656,12 @@ function Catalog() {
                     entity: product.entity, // Keep original case
                     category: product.category, // Keep original case
                     unit: product.unit,
+                    
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
-                    sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
-                    vatPercentage: vatPercentage.toFixed(2),
+                    //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
+                    vatPercentage: user.companyType === 'non trading' ? 0.00 : vatPercentage.toFixed(2),
                     images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
 
@@ -975,21 +973,15 @@ function Catalog() {
                         </div>
                     )}
                 </div>                {/* Separate loading indicator at the bottom of the page */}
-                {isLoadingMore && (
+                {isLoadingMore && hasMore && displayedProducts.length < totalProducts && (
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />
-                        <span className="loading-more-text">
-                            {currentPage === 1 ?
-                                t('Loading page 2...') :
-                                currentPage === 2 ?
-                                    t('Loading page 3...') :
-                                    t('Loading more products...')}
-                        </span>
+                        <span className="loading-more-text">{t('Loading...')}</span>
                     </div>
                 )}
-                {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && currentPage >= 3 && (
+                {!hasMore && displayedProducts.length >= totalProducts && !isLoading && !isLoadingMore && (
                     <div className="end-of-results-message">
-                        <p>{t('All pages loaded. Showing pages 1-3.')}</p>
+                        <p>{t('All products loaded.')}</p>
                     </div>
                 )}
                 {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && currentPage < 3 && (

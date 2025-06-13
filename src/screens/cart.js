@@ -4,7 +4,7 @@ import '../styles/components.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import QuantityController from '../components/QuantityController';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +33,7 @@ const getEntityFromCategory = (categoryName) => {
 };
 
 function Cart() {
+    const location = useLocation();
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
@@ -63,36 +64,10 @@ function Cart() {
     const userId = user?.userId;
     const customerId = user?.customerId;
 
-    // Fetch branch information from localStorage
     useEffect(() => {
-        try {
-            // Set user and customer IDs from context
-            if (userId) { setSelectedUserId(userId); }
-            if (customerId) { setSelectedCustomerId(customerId); }
-            const branchName = localStorage.getItem('selectedBranchName');
-            const branchId = localStorage.getItem('selectedBranchId');
-            const branchErpId = localStorage.getItem('selectedBranchErpId');
-            const branchRegion = localStorage.getItem('selectedBranchRegion');
-
-            console.log('User details:', { userId, customerId }, 'Retrieved branch info:', { branchName, branchId, branchErpId, branchRegion });
-
-            if (!branchId || !branchName || branchName.trim() === '') {
-                console.warn('Branch selection is missing or incomplete');
-                alert(t('Please select a branch before accessing your cart'));
-                navigate('/catalog');
-                return;
-            }
-
-            setSelectedBranchName(branchName);
-            setSelectedBranchId(branchId);
-            setSelectedBranchErpId(branchErpId);
-            setSelectedBranchRegion(branchRegion);
-
-        } catch (error) {
-            console.error('Error retrieving branch info from localStorage:', error);
-            alert(t('Error loading your branch information. Please select a branch again.'));
-            navigate('/catalog');
-        }
+        // Set user and customer IDs from context
+        if (userId) { setSelectedUserId(userId); }
+        if (customerId) { setSelectedCustomerId(customerId); }
     }, [userId, customerId, navigate, t]);
 
     // Get current language
@@ -440,15 +415,28 @@ function Cart() {
         try {
             const entity = getEntityFromCategory(categoryName);
             const category = categoryName;
-            // Add productCategory to the filters for existing order check
-            const orderFilters = new URLSearchParams({
-                filters: JSON.stringify({
+            // Build filters for existing order check based on entity
+            let orderFiltersObj;
+            if (entity && entity.toLowerCase() === 'vmco') {
+                // For vmco, include productCategory
+                orderFiltersObj = {
                     customerId: selectedCustomerId,
                     branchId: selectedBranchId,
                     entity,
                     status: 'Open',
-                    productCategory: categoryName // Ensure productCategory is included
-                })
+                    productCategory: categoryName
+                };
+            } else {
+                // For other entities, do not include productCategory
+                orderFiltersObj = {
+                    customerId: selectedCustomerId,
+                    branchId: selectedBranchId,
+                    entity,
+                    status: 'Open'
+                };
+            }
+            const orderFilters = new URLSearchParams({
+                filters: JSON.stringify(orderFiltersObj)
             });
             const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                 method: 'GET',
@@ -516,11 +504,11 @@ function Cart() {
                     const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
-                    const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
+                    //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                    const netAmount = baseAmount + vatAmount + sugarTaxAmount;
+                    //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
+                    const netAmount = baseAmount + vatAmount; // + sugarTaxAmount;
                     initialTotalAmount += netAmount;
                 }
                 let deliveryCharges = 0.00;
@@ -582,7 +570,7 @@ function Cart() {
                 const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
-                const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
+                //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
 
                 // Check if this product already exists in the order
                 const existingLine = existingProductMap[productId];
@@ -596,8 +584,8 @@ function Cart() {
                 const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
                 const baseAmount = unitPrice * totalQuantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
-                const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                const netAmount = baseAmount + vatAmount + sugarTaxAmount; if (existingLine) {
+                //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
+                const netAmount = baseAmount + vatAmount; if (existingLine) {
                     // Update existing line with new quantity and recalculated net amount
                     const patchPayload = {
                         quantity: totalQuantity,
@@ -638,15 +626,17 @@ function Cart() {
                 } else {
                     // Create a new line for this product
                     const productName = item.productName || item.name || 'Product';
+                    const productNameLc = item.productNameLc || item.nameLc || productName; // Use localized name if available
                     const newLinePayload = {
                         order_id: orderId,
                         product_id: productId,
                         productName: productName,
+                        productNameLc: productNameLc,
                         quantity: newQuantity,
                         unit: item.unit || 'EA', // Default to EA if unit is not provided
                         unit_price: unitPrice,
                         vat_percentage: vatPercentage || 0,
-                        sugar_tax_price: sugarTaxPrice || 0,
+                        //sugar_tax_price: sugarTaxPrice || 0,
                         net_amount: netAmount.toFixed(2), // Ensure proper format with 2 decimal places
                         erp_line_number: item.erp_line_number || 1,
                         erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
@@ -658,7 +648,8 @@ function Cart() {
                             id: item.id,
                             product_id: item.product_id,
                             productId: item.productId,
-                            name: item.name || item.productName
+                            name: item.name || item.productName,
+                            productNameLc: productNameLc
                         }
                     }); try {
                         const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
@@ -772,16 +763,13 @@ function Cart() {
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
                 deleteUrl.searchParams.append('customer_id', selectedCustomerId);
                 deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                // Fix: For Naqui, always use lowercase 'naqui' for both entity and category
-                if (entity && entity.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
-                } else if (categoryName && categoryName.toLowerCase() === 'naqui') {
-                    deleteUrl.searchParams.append('entity', 'naqui');
-                    deleteUrl.searchParams.append('category', 'naqui');
+                // For VMCO entity, include both entity and category; for others, only entity
+                if (entity && entity.toLowerCase() === 'vmco') {
+                    deleteUrl.searchParams.append('entity', 'vmco');
+                    deleteUrl.searchParams.append('category', categoryName);
                 } else {
                     deleteUrl.searchParams.append('entity', entity);
-                    deleteUrl.searchParams.append('category', categoryName);
+                    // Do NOT include category for non-vmco entities
                 }
 
                 const deleteResponse = await fetch(deleteUrl, {
@@ -807,6 +795,16 @@ function Cart() {
             setIsPlacingOrder(false);
         }
     };
+
+    // Initialize from navigation state if available
+    useEffect(() => {
+        const navState = location.state || {};
+        if (navState.selectedCustomerId) setSelectedCustomerId(navState.selectedCustomerId);
+        if (navState.selectedBranchId) setSelectedBranchId(navState.selectedBranchId);
+        if (navState.selectedBranchName) setSelectedBranchName(navState.selectedBranchName);
+        if (navState.selectedBranchErpId) setSelectedBranchErpId(navState.selectedBranchErpId);
+        if (navState.selectedBranchRegion) setSelectedBranchRegion(navState.selectedBranchRegion);
+    }, [location.state]);
 
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
@@ -924,13 +922,13 @@ function Cart() {
                                                             const quantity = Number(quantities[item.id] || item.quantity || 1);
                                                             const unitPrice = parseFloat(item.price) || 0;
                                                             const vatPercentage = parseFloat(item.vatPercentage) || 0;
-                                                            const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
+                                                            //const sugarTaxPrice = parseFloat(item.sugarTaxPrice) || 0;
 
                                                             const baseAmount = unitPrice * quantity;
                                                             const vatAmount = (baseAmount * vatPercentage) / 100;
-                                                            const sugarTaxAmount = sugarTaxPrice ? (baseAmount * sugarTaxPrice) / 100 : 0;
+                                                            //const sugarTaxAmount = sugarTaxPrice ? (baseAmount * sugarTaxPrice) / 100 : 0;
 
-                                                            const totalAmount = baseAmount + vatAmount + sugarTaxAmount;
+                                                            const totalAmount = baseAmount + vatAmount; // + sugarTaxAmount
                                                             categoryTotal += totalAmount;
                                                         });
                                                         return (
@@ -971,7 +969,21 @@ function Cart() {
                 API_BASE_URL={API_BASE_URL}
                 t={t}
                 category={pendingOrderCategory}
-                customerId={selectedCustomerId} // <-- Add this line
+                customerId={selectedCustomerId}
+                totalAmount={(() => {
+                    // Calculate totalAmount for the pending order category
+                    if (!pendingOrderCategory || !pendingOrderItems || pendingOrderItems.length === 0) return 0;
+                    let sum = 0;
+                    pendingOrderItems.forEach(item => {
+                        const qty = Number(quantities[item.id] || item.quantity || 1);
+                        const price = Number(item.price || item.unitPrice || 0);
+                        const vat = Number(item.vatPercentage || 0);
+                        const base = price * qty;
+                        const vatAmount = (base * vat) / 100;
+                        sum += base + vatAmount;
+                    });
+                    return sum;
+                })()}
             />
 
 

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '../utilities/dateFormatter';
 
 const Table = ({
     columns,
@@ -60,13 +61,38 @@ const Table = ({
                 </button>
             );
         }
+
         
-        //TODO:Update this component to handle date-time field. May input can have one parameter which
-        //will provides aditional properties of the cell to be rendered. In case of date-time field, 
-        //It can {type: 'date-time', format: 'YYYY-MM-DD HH:mm'} and in case of string it can be {type: 'string'}
-    
-        // Default cell rendering
-        return item[column.key];
+   const value = item[column.key];
+
+
+    // If value is an object, stringify it
+   if (typeof value === 'object' && value !== null) {
+        // Try common date keys (for Sequelize, Postgres, etc.)
+        // if (value.hasOwnProperty('toISOString') && typeof value.toISOString === 'function') {
+        //     return formatDate(value.toISOString(), 'YYYY-MM-DD');
+        // }
+        // if (value.hasOwnProperty('date')) {
+        //     return formatDate(value.date, 'YYYY-MM-DD');
+        // }
+        // if (value.hasOwnProperty('value')) {
+        //     return formatDate(value.value, 'YYYY-MM-DD');
+        // }
+        // // Fallback: try to find a string value that looks like a date
+        // for (const key in value) {
+        //     if (typeof value[key] === 'string' && !isNaN(Date.parse(value[key]))) {
+        //         return formatDate(value[key], 'YYYY-MM-DD');
+        //     }
+        // }
+        // If nothing found, stringify the object
+        return JSON.stringify(value);
+    }
+    //TODO:Update this component to handle date-time field. May input can have one parameter which
+    //will provides aditional properties of the cell to be rendered. In case of date-time field,
+    //It can {type: 'date-time', format: 'YYYY-MM-DD HH:mm'} and in case of string it can be {type: 'string'}
+
+    // Default cell rendering
+    return item[column.key];
     };
  
     return (
