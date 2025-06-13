@@ -965,7 +965,62 @@ function CustomersDetails() {
       console.error('Error fetching manager:', err);
     }
   }
-
+   const fetchCurrentDataOfCustomer = async (customerId) => {
+    console.log("Fetching current data for customer ID:~~~~~~", customerId);
+    let customerData = {};
+    let contactsData = {};
+    let paymentMethodsData = {};
+    try {
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const customerDataJson = await response.json();
+      console.log("Customer Data JSON~~~~~~~~~~~~~", customerDataJson);
+      return customerDataJson.data;
+      // if (customerDataJson.status === 'Ok') {
+      //   customerData = customerDataJson.data;
+      //   console.log('Current customer data:', customerDataJson.data);
+      // }
+      // const responseContacts = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+      //   method: 'GET',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   credentials: 'include'
+      // });
+      // const contactsDataJson = await responseContacts.json();
+      // if (contactsDataJson.status === 'Ok') {
+      //   contactsData = contactsDataJson.data;
+      //   console.log('Current customer contacts data:', contactsDataJson.data);
+      //   return { customer: customerData.data, contacts: contactsData.data };
+      // } else {
+      //   throw new Error(contactsData.data?.message || 'Failed to fetch customer contacts');
+      // }
+      // const responsePaymentMethods = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      //   method: 'GET',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   credentials: 'include'
+      // });
+      // const paymentMethodsDataJson = await responsePaymentMethods.json();
+      // if (paymentMethodsDataJson.status === 'Ok') {
+      //   paymentMethodsData = paymentMethodsDataJson.data;
+      //   console.log('Current customer payment methods data:', paymentMethodsDataJson.data);
+      //   return { customer: customerData.data, contacts: contactsData.data, paymentMethods: paymentMethodsData.data };
+      // } else {
+      //   throw new Error(paymentMethodsData.data?.message || 'Failed to fetch customer payment methods');
+      // }
+      // setFormData(prev => ({
+      //   ...prev,
+      //   ...customerData,
+      //   ...contactsData,
+      //   paymentMethods: paymentMethodsData
+      // }));
+      // console.log('Form data after fetching current data:', formData);
+    } catch (error) {
+      console.error('Error fetching current customer data:', error);
+      throw error;
+    }
+  };
 
   const getOptionsFromEmployees = async (fieldName) => {
     const params = new URLSearchParams({
@@ -993,12 +1048,14 @@ function CustomersDetails() {
   const getOptionsFromEmployeesWithManager = async () => {
     try {
       console.log("getOptionsFromEmployeesWithManager #############")
-      console.log("formData region~~~~~~~~~~", formData.region)
+      
+      const customerData = await fetchCurrentDataOfCustomer(customer.id);
+      console.log("CustomerData region~~~~~~~~~~", customerData.region)
       const response = await fetch(`${API_BASE_URL}/employees/manager-and-employees`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ region: formData.region })
+        body: JSON.stringify({ region: customerData.region })
       });
       if (!response.ok) {
         console.error(`~~~~~~~~~~~~~~Failed to fetch options for :`, response.statusText);  
@@ -1039,6 +1096,7 @@ const fetchDropdownOptions = async () => {
 
       setDropdownOptions(options);
     };
+  
     const fetchEmployeeDropdownOptions = async () => {
       const options = {};
       const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdownObject');
@@ -1049,11 +1107,13 @@ const fetchDropdownOptions = async () => {
           // if (field.name === 'assignedTo') {
           //   data = await getOptionsFromEmployees(field.name);
           // } else if (field.name === constants.ENTITY.VMCO || field.name === constants.ENTITY.DIYAFA || field.name === constants.ENTITY.NAQI || field.name === constants.ENTITY.DAR || field.name === constants.ENTITY.GREEN_MAST) {
-            const data = await getOptionsFromEmployeesWithManager()
+            let data = await getOptionsFromEmployeesWithManager()
           // }
+          
           
           // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
           for (const field of dropdownFields) {
+            
           options[field.name] = data.map(opt =>
             typeof opt === 'string'
               ? opt.charAt(0).toUpperCase() + opt.slice(1)
@@ -1065,6 +1125,7 @@ const fetchDropdownOptions = async () => {
         }
       setDropdownEmployeeOptions(options);
     };
+
   useEffect(() => {
     fetchDropdownOptions();
     fetchEmployeeDropdownOptions();
@@ -2020,7 +2081,7 @@ const fetchDropdownOptions = async () => {
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData?.[field.name] || formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']?.[field.name] || ''}
+                              value={formData?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || currentValue ||''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
                                 : false)}
@@ -2039,9 +2100,9 @@ const fetchDropdownOptions = async () => {
               
                                 dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => {
                                     return (
-                                    <option key={idx} value={opt}>
-                                      {t(opt)}
-                                    </option>
+                                      <option key={idx} value={typeof opt === 'object' ? opt.employeeId : opt}>
+                                        {t(typeof opt === 'object' ? opt.name : opt)}
+                                      </option>
                                     );
                                 }) : []
                               }
@@ -2074,7 +2135,7 @@ const fetchDropdownOptions = async () => {
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData?.[field.name] || formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']?.[field.name]}
+                              value={formData?.[field.name] || formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']?.[field.name] || currentValue || ''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
                                 : false)}
