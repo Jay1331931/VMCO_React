@@ -1038,10 +1038,10 @@ function OrderDetails() {
 
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
-      // Logout instead of showing loading message
-      logout();
-      navigate('/login');
-      return; // Return while logout is processing
+      // // Logout instead of showing loading message
+      // logout();
+      // navigate('/login');
+      // return; // Return while logout is processing
     }
 
     if (user && user.userType) {
@@ -1535,7 +1535,7 @@ function OrderDetails() {
                           <input
                             id="customerField"
                             name="selectedCustomerName"
-                            value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
+                            defaultValue={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
