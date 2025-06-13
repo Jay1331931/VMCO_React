@@ -6,6 +6,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLanguage, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import constants from '../constants';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
     const { id } = useParams();
@@ -24,20 +26,21 @@ function CustomersOnboarding() {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [regionOptions, setRegionOptions] = useState([]);
     const navigate = useNavigate();
     const toggleLanguage = () => {
         const newLang = isRTL ? 'en' : 'ar';
         i18n.changeLanguage(newLang);
         document.body.dir = newLang === 'ar' ? 'rtl' : 'ltr';
     };
-
+    const [leadData, setLeadData] = useState(null);
     const fields = [
         { type: 'text', name: 'leadName', label: t('Customer Name'), placeholder: t('Customer Name'), required: true },
         { type: 'empty' },
         { type: 'text', name: 'companyEmail', label: t('Email (Username)'), placeholder: t('Email (Username)'), required: true },
         { type: 'text', name: 'companyPhone', label: t('Phone Number'), placeholder: t('Phone Number'), required: true },
         { type: 'text', name: 'companyName', label: t('Company Name'), placeholder: t('Company Name'), required: true },
-        { type: 'text', name: 'region', label: t('Region'), placeholder: t('Region'), required: true },
+        { type: 'dropdown', name: 'region', label: t('Region'), placeholder: t('Region'), required: true },
         { type: 'password', name: 'password', label: t('Password'), placeholder: t('Password'), required: true },
         { type: 'password', name: 'confirmpassword', label: t('Confirm Password'), placeholder: t('Confirm Password'), required: true }
     ];
@@ -48,16 +51,16 @@ function CustomersOnboarding() {
                 try {
                     // const response = await axios.get(`/customer-registration-staging/onboarding/${id}`);
                     // const res = await fetch('https://vmcoservertest-cyf3gyg4hpb9h7ek.southindia-01.azurewebsites.net/api/user/email-password', {
-                    const response = await fetch(`http://localhost:3000/api/auth/registration/getById/${id}`, {
+                    const response = await fetch(`${API_BASE_URL}/auth/registration/getById/${id}`, {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                     });
                     // Check if response is JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server did not return JSON. Check API endpoint and server logs.');
-        }
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('Server did not return JSON. Check API endpoint and server logs.');
+                    }
 
                     const result = await response.json();
                     console.log(response)
@@ -75,6 +78,8 @@ function CustomersOnboarding() {
                             region: result.data.region,
                             companyName: result.data.companyName,
                         });
+                        console.log('Fetched lead data:', result.data);
+                        setLeadData(result.data);
 
                         if (result.data.registered) {
                             setIsRegistered(true);
@@ -95,7 +100,53 @@ function CustomersOnboarding() {
             fetchInvitationData();
         }
     }, [id]);
-
+    const getManagerFromEmployees = async (region) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees/random`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ designation: "area sales manager", region: region }),
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Manager Result", result.data)
+        return result.data.employeeId;
+      }
+    } catch (err) {
+      console.error('Error fetching manager:', err);
+    }
+  }
+const getOptionsFromBasicsMaster = async (fieldName) => {
+      const params = new URLSearchParams({
+        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
+      });
+  
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
+        const result = await response.json(); // Don't forget 'await' here
+  
+        const options = result.data.map(item => item.value);
+        return options;
+  
+      } catch (err) {
+        console.error('Error fetching options:', err);
+        return []; // Return empty array on error
+      }
+    };
+    useEffect(() => {
+        // Fetch region options on mount
+        getOptionsFromBasicsMaster('region').then(setRegionOptions);
+    }, []);
 
     const validateForm = () => {
         const newErrors = {};
@@ -152,7 +203,7 @@ function CustomersOnboarding() {
         let isValid = validateForm();
         if (isValid) {
             try {
-                const response = await fetch('http://localhost:3000/api/auth/registration/user', {
+                const response = await fetch(`${API_BASE_URL}/auth/registration/user`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -160,6 +211,7 @@ function CustomersOnboarding() {
                         password: formData.password,
                         userType: 'customer',
                         roles: ['customer_primary'],
+                    
                     }),
                     credentials: 'include',
                 });
@@ -181,12 +233,13 @@ function CustomersOnboarding() {
 
         if (isValid) {
             setIsSubmitting(true);
+            const areaSalesManager = await getManagerFromEmployees(formData?.region) || '';
             if (!isRegistered) {
                 const { password, confirmpassword, ...stagingData } = formData;
-                // add the fields to customer table also
-                // router.post("/auth/registration/customer", customerController.createCustomer);
+                
                 try {
-                    const response = await fetch('http://localhost:3000/api/auth/registration/customer', {
+                    console.log('Lead Data:', leadData);
+                    const response = await fetch(`${API_BASE_URL}/auth/registration/customer`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -194,6 +247,15 @@ function CustomersOnboarding() {
                             region: formData.region,
                             customerStatus: 'new',
                             pricingPolicy: 'Price A',
+                            customerSource: leadData?.source || 'portal',
+                            assignedTo: leadData?.employeeId,
+                            assignedToEntityWise: {
+                                 [constants.ENTITY.VMCO]: areaSalesManager,
+              [constants.ENTITY.DIYAFA]: areaSalesManager,
+              [constants.ENTITY.DAR]: areaSalesManager,
+              [constants.ENTITY.NAQI]: areaSalesManager,
+              [constants.ENTITY.GREEN_MAST]: areaSalesManager,
+                            }
                         }),
                         credentials: 'include',
                     });
@@ -202,9 +264,9 @@ function CustomersOnboarding() {
                     console.log(result);
                     const contactTypesPrimary = ['primary']
                     const contactTypes = ['finance', 'business', 'purchasing'];
-                    
+
                     contactTypesPrimary.forEach(async (type) => {
-                         const res = await fetch('http://localhost:3000/api/customer-contacts', {
+                        const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -219,8 +281,8 @@ function CustomersOnboarding() {
                     });
 
                     contactTypes.forEach(async (type) => {
-                        
-                        const res = await fetch('http://localhost:3000/api/customer-contacts', {
+
+                        const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -231,12 +293,12 @@ function CustomersOnboarding() {
                         });
                     });
 
-                    const res = await fetch('http://localhost:3000/api/payment-method', {
+                    const res = await fetch(`${API_BASE_URL}/payment-method`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: {prePayment:{isAllowed:true}, COD:{isAllowed:true, limit: "5000"}, credit:{isAllowed:false, limit: "0", period: "0", balance: "0"}, partialPayment:{isAllowed:true}},
+                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { isAllowed: false, limit: "0", period: "0", balance: "0" }, partialPayment: { isAllowed: true } },
                         }),
                         credentials: 'include',
                     });
@@ -245,7 +307,7 @@ function CustomersOnboarding() {
                 }
                 if (id) {
                     try {
-                        const response = await fetch(`http://localhost:3000/api/auth/registration/staging/id/${id}`, {
+                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging/id/${id}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -265,12 +327,13 @@ function CustomersOnboarding() {
                     }
                 } else {
                     try {
-                        const response = await fetch('http://localhost:3000/api/auth/registration/staging', {
+                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 ...stagingData,
-                                registered: true
+                                registered: true,
+                                source: 'portal',
                             }),
                             credentials: 'include',
                         });
@@ -332,10 +395,12 @@ function CustomersOnboarding() {
 
                     <form onSubmit={handleSubmit} className="onboarding-container" noValidate>
                         {fields.map((field, index) => (
+                                                    
                             <div key={index} className="form-group">
                                 <label htmlFor={field.name}>
                                     {field.label}
                                     {field.required && <span className="required-field">*</span>}
+                                    {console.log('Field:', formData[field.name])}
                                 </label>
                                 {field.type === 'text' && (
                                     <>
@@ -364,6 +429,27 @@ function CustomersOnboarding() {
                                             className={errors[field.name] ? 'error' : ''}
                                             disabled={isRegistered}
                                         />
+                                        {errors[field.name] && <span className="error-message">{errors[field.name]}</span>}
+                                    </>
+                                )}
+                                {field.type === 'dropdown' && (
+                                    <>
+                                        <select
+                                            id={field.name}
+                                            name={field.name}
+                                            value={formData[field.name]}
+                                            onChange={handleChange}
+                                            className={errors[field.name] ? 'error' : ''}
+                                            disabled={isRegistered}
+                                            required={field.required}
+                                        >
+                                            <option value="">{t('Select a region')}</option>
+                                            {regionOptions.map((option, idx) => (
+                                                <option key={idx} value={option}>
+                                                    {t(option)}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {errors[field.name] && <span className="error-message">{errors[field.name]}</span>}
                                     </>
                                 )}

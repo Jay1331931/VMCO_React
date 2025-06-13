@@ -1019,7 +1019,7 @@
 
 .invite-button {
   padding: 8px 16px;
-  background-color: #4CAF50;
+  background-color: darkgreen;
   color: white;
   border: none;
   border-radius: 4px;
@@ -1500,7 +1500,7 @@
 
 .onboarding-container .form-group input {
   width: 250px;
-  height: 30px;
+  height: 37px;
 }
 .onboarding-container .form-group select {
   width: 250px;
