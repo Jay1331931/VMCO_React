@@ -1912,9 +1912,9 @@ const fetchDropdownOptions = async () => {
                   }, []).map((field) => {
                     { console.log(transformedCustomer.module) }
                     const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new') || customer?.customerStatus === 'pending';
-                    const hasUpdate = approvalMode && transformedCustomer.module === 'customer' &&
+                    const hasUpdate = approvalMode && transformedCustomer?.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
-                      (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise);
+                      (field.name in transformedCustomer?.workflowData?.updates || (transformedCustomer?.workflowData?.updates?.['assignedToEntityWise'] && field.name in transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']));
                     console.log('HasUpdate', hasUpdate);
                     let currentValue = customer?.[field.name] || '';
                     console.log("---------field name", field.name)
