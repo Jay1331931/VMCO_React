@@ -164,8 +164,8 @@ function CustomersDetails() {
 
   const location = useLocation();
   const transformedCustomer = location.state?.transformedCustomer;
-  
-// concats customer and customer contacts data into a single object
+
+  // concats customer and customer contacts data into a single object
   const transformCustomerData = async (customer, customerContacts) => {
     console.log("Inside transform customer data")
     const contacts = Array.isArray(customerContacts)
@@ -271,7 +271,7 @@ function CustomersDetails() {
       }
     };
   }
-// Fetches customer data and updates form data
+  // Fetches customer data and updates form data
   const fetchApprovedCustomer = async (transformedCustomer) => {
     console.log("Fetch Approved Customer Called")
     const customerId = transformedCustomer?.id || transformedCustomer?.customerId;
@@ -391,7 +391,7 @@ function CustomersDetails() {
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
-  
+
   console.log("location.state", location.state);
   console.log("@@@@@@@@@@transformedCustomer", transformedCustomer);
   const [customer, setCustomer] = useState(transformedCustomer);
@@ -460,6 +460,7 @@ function CustomersDetails() {
   const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
   const [companyType, setCompanyType] = useState(transformedCustomer?.companyType?.toLowerCase() || '');
   console.log("Company Type", companyType);
   const formsByTab = useMemo(() => ({
@@ -613,7 +614,7 @@ function CustomersDetails() {
 
       const value = formData[fieldName];
 
-      if (action === 'save changes' && field.required && !value && fieldName !== 'nonTradingDocuments') {
+      if (action === 'save changes' && field.required && !value && fieldName !== 'nonTradingDocuments' && field.type !== 'document') {
         errors[fieldName] = t('This field is required.');
       }
 
@@ -621,7 +622,7 @@ function CustomersDetails() {
         errors[fieldName] = t('This field is required.');
       }
 
-      if (checkRequired && field.type === 'document' && field.required && !value?.name) {
+      if (checkRequired && field.type === 'document' && field.required && !uploadedFiles[fieldName]) {
         errors[fieldName] = t('This document is required.');
       }
 
@@ -805,6 +806,9 @@ function CustomersDetails() {
           if (fieldName === 'interCompany' || fieldName === 'isDeliveryChargesApplicable') {
             customerPayload[fieldName] = newValue?.isAllowed
           }
+          if(fieldName === 'region') {
+            customerPayload['region'] = newValue?.toLowerCase();
+          }
           // if(formData.customerStatus === 'new'){
           //   customerPayload['customerStatus'] = 'pending';
           // }
@@ -908,19 +912,20 @@ function CustomersDetails() {
     }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
-    formData
+    formDataByTab['Documents']
   );
   const handleTabClick = (tab) => {
     setTabsHeight('auto');
     setActiveTab(tab);
     setFormErrors({});
     if (tab === 'Documents') {
-      setUploadedFiles(formData);
+      setUploadedFiles(formDataByTab[tab]);
     }
   };
 
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [dropdownEmployeeOptions, setDropdownEmployeeOptions] = useState({});
+ 
   const getOptionsFromBasicsMaster = async (fieldName) => {
     const params = new URLSearchParams({
       filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
@@ -965,6 +970,7 @@ function CustomersDetails() {
       console.error('Error fetching manager:', err);
     }
   }
+
    const fetchCurrentDataOfCustomer = async (customerId) => {
     console.log("Fetching current data for customer ID:~~~~~~", customerId);
     let customerData = {};
@@ -1021,7 +1027,6 @@ function CustomersDetails() {
       throw error;
     }
   };
-
   const getOptionsFromEmployees = async (fieldName) => {
     const params = new URLSearchParams({
       filters: { designation: "sales executive" } // Properly stringify the filter
@@ -1048,7 +1053,7 @@ function CustomersDetails() {
   const getOptionsFromEmployeesWithManager = async () => {
     try {
       console.log("getOptionsFromEmployeesWithManager #############")
-      
+
       const customerData = await fetchCurrentDataOfCustomer(customer.id);
       console.log("CustomerData region~~~~~~~~~~", customerData.region)
       const response = await fetch(`${API_BASE_URL}/employees/manager-and-employees`, {
@@ -1058,7 +1063,7 @@ function CustomersDetails() {
         body: JSON.stringify({ region: customerData.region })
       });
       if (!response.ok) {
-        console.error(`~~~~~~~~~~~~~~Failed to fetch options for :`, response.statusText);  
+        console.error(`~~~~~~~~~~~~~~Failed to fetch options for :`, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
@@ -1070,61 +1075,61 @@ function CustomersDetails() {
       return [];
     }
   };
-const fetchDropdownOptions = async () => {
-      const options = {};
-      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown' || field.type === 'conditionalDropdown');
-      console.log("Dropdown Fields", dropdownFields)
+  const fetchDropdownOptions = async () => {
+    const options = {};
+    const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown' || field.type === 'conditionalDropdown');
+    console.log("Dropdown Fields", dropdownFields)
+    for (const field of dropdownFields) {
+
+      try {
+        let data = await getOptionsFromBasicsMaster(field.name);
+        if (field.name === 'assignedTo') {
+          data = await getOptionsFromEmployees(field.name);
+        }
+        console.log("Data for field", field.name, data);
+        options[field.name] = data.map(opt =>
+          typeof opt === 'string'
+            ? opt.charAt(0) + opt.slice(1)
+            : opt
+        );
+      } catch (err) {
+        console.error(`Failed to fetch options for ${field.name}:`, err);
+        options[field.name] = [];
+
+      }
+    }
+
+    setDropdownOptions(options);
+  };
+
+  const fetchEmployeeDropdownOptions = async () => {
+    const options = {};
+    const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdownObject');
+    // console.log("===============Dropdown Fields", dropdownFields)
+    // for (const field of dropdownFields) {
+
+    try {
+      // if (field.name === 'assignedTo') {
+      //   data = await getOptionsFromEmployees(field.name);
+      // } else if (field.name === constants.ENTITY.VMCO || field.name === constants.ENTITY.DIYAFA || field.name === constants.ENTITY.NAQI || field.name === constants.ENTITY.DAR || field.name === constants.ENTITY.GREEN_MAST) {
+      let data = await getOptionsFromEmployeesWithManager()
+      // }
+
+
+      // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
       for (const field of dropdownFields) {
 
-        try {
-          let data = await getOptionsFromBasicsMaster(field.name);
-          if (field.name === 'assignedTo') {
-            data = await getOptionsFromEmployees(field.name);
-          }
-          console.log("Data for field", field.name, data);
-          options[field.name] = data.map(opt =>
-            typeof opt === 'string'
-              ? opt.charAt(0).toUpperCase() + opt.slice(1)
-              : opt
-          );
-        } catch (err) {
-          console.error(`Failed to fetch options for ${field.name}:`, err);
-          options[field.name] = [];
-
-        }
+        options[field.name] = data.map(opt =>
+          typeof opt === 'string'
+            ? opt.charAt(0) + opt.slice(1)
+            : opt
+        );
       }
-
-      setDropdownOptions(options);
-    };
-  
-    const fetchEmployeeDropdownOptions = async () => {
-      const options = {};
-      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdownObject');
-      // console.log("===============Dropdown Fields", dropdownFields)
-      // for (const field of dropdownFields) {
-
-        try {
-          // if (field.name === 'assignedTo') {
-          //   data = await getOptionsFromEmployees(field.name);
-          // } else if (field.name === constants.ENTITY.VMCO || field.name === constants.ENTITY.DIYAFA || field.name === constants.ENTITY.NAQI || field.name === constants.ENTITY.DAR || field.name === constants.ENTITY.GREEN_MAST) {
-            let data = await getOptionsFromEmployeesWithManager()
-          // }
-          
-          
-          // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
-          for (const field of dropdownFields) {
-            
-          options[field.name] = data.map(opt =>
-            typeof opt === 'string'
-              ? opt.charAt(0).toUpperCase() + opt.slice(1)
-              : opt
-          );
-        }
-        } catch (err) {
-          console.error(`Failed to fetch options for :`, err);
-        }
-      setDropdownEmployeeOptions(options);
-    };
+    } catch (err) {
+      console.error(`Failed to fetch options for :`, err);
+    }
+    setDropdownEmployeeOptions(options);
+  };
 
   useEffect(() => {
     fetchDropdownOptions();
@@ -1484,7 +1489,8 @@ const fetchDropdownOptions = async () => {
       const paymentDetailFields = [
         'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
       ]
-      const areaSalesManager = await getManagerFromEmployees(formData?.region) || '';
+
+      const areaSalesManager = await getManagerFromEmployees(formData?.region?.toLowerCase()) || '';
       console.log('Area Sales Manager:', areaSalesManager);
       const customerPayload = {};
       const contactCreatePayload = {};
@@ -1534,11 +1540,13 @@ const fetchDropdownOptions = async () => {
 
           }
           else {
-            if (fieldName === 'crCertificate' || fieldName === 'vatCertificate' || fieldName === 'nationalId' || fieldName === 'bankLetter' || fieldName === 'nationalAddress' || fieldName === 'contractAgreement' || fieldName === 'creditApplication' || fieldName === 'acknacknowledgementSignature') {
-              customerPayload[fieldName] = newValue?.name || '';
-            }
-            if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
+            if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary') {
               customerPayload[fieldName] = newValue;
+            }
+            if (fieldName === 'crCertificate' || fieldName === 'vatCertificate' || fieldName === 'nationalId' || fieldName === 'bankLetter' || fieldName === 'nationalAddress' || fieldName === 'contractAgreement' || fieldName === 'creditApplication' || fieldName === 'acknacknowledgementSignature') {
+              customerPayload[fieldName] = uploadedFiles[fieldName];
+            }
+
             customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
             customerPayload['interCompany'] = false;
             customerPayload['assignedToEntityWise'] = {
@@ -1547,6 +1555,9 @@ const fetchDropdownOptions = async () => {
               [constants.ENTITY.DAR]: areaSalesManager,
               [constants.ENTITY.NAQI]: areaSalesManager,
               [constants.ENTITY.GREEN_MAST]: areaSalesManager,
+            }
+            if (fieldName === 'region') {
+              customerPayload['region'] = newValue.toLowerCase();
             }
             if (customerPayload['nonTradingDocuments']?.length === 0) {
               customerPayload['nonTradingDocuments'] = {};
@@ -2081,7 +2092,7 @@ const fetchDropdownOptions = async () => {
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || currentValue ||''}
+                              value={formData?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || currentValue || ''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
                                 : false)}
@@ -2097,13 +2108,13 @@ const fetchDropdownOptions = async () => {
                                 Value
                               </option>
                               {
-              
+
                                 dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => {
-                                    return (
-                                      <option key={idx} value={typeof opt === 'object' ? opt.employeeId : opt}>
-                                        {t(typeof opt === 'object' ? opt.name : opt)}
-                                      </option>
-                                    );
+                                  return (
+                                    <option key={idx} value={typeof opt === 'object' ? opt.employeeId : opt}>
+                                      {t(typeof opt === 'object' ? opt.name : opt)}
+                                    </option>
+                                  );
                                 }) : []
                               }
                               {/* {field.options.map((opt, idx) => (
@@ -2124,7 +2135,7 @@ const fetchDropdownOptions = async () => {
                           </div>
                         );
 
-                        case 'dropdownObject':
+                      case 'dropdownObject':
                         return (
                           <div className={`form-group ${hasUpdate ? 'pending-update' : ''}`} key={field.name}>
                             <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
@@ -2158,11 +2169,11 @@ const fetchDropdownOptions = async () => {
                                   console.log("+++++++++field", field.name);
                                   console.log("++++++++++++++++++++opt", opt);
                                   // console.log("+++++++++dropdownOptions[field.name]", dropdownOptions[field.name]);
-                                    return (
+                                  return (
                                     <option key={idx} value={opt.employeeId}>
                                       {t(opt.name)}
                                     </option>
-                                    );
+                                  );
                                 }) : []
                               }
                               {/* {field.options.map((opt, idx) => (
@@ -2328,7 +2339,7 @@ const fetchDropdownOptions = async () => {
                                     ))
                                   ) : (
                                     <div className="file-item">
-                                      {uploadedFiles[field.name].isNew ? (
+                                      {uploadedFiles[field.name]?.isNew ? (
                                         <span className="file-name">
                                           <button
                                             type="button"
@@ -2349,7 +2360,7 @@ const fetchDropdownOptions = async () => {
                                           <button
                                             type="button"
                                             className="view-file-button"
-                                            onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+                                            onClick={() => handleViewFile(customer.id, uploadedFiles[field.name], field.name)}
                                           >
                                             <FontAwesomeIcon icon={faEye} />
                                           </button>
@@ -2538,8 +2549,10 @@ const fetchDropdownOptions = async () => {
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}
-                  {console.log("%%%%%%%%%%%%%%%",customer)}
+                  {console.log("%%%%%%%%%%%%%%%", customer)}
                   {console.log("^^^^^^^^", customer)}
+                  {console.log("&&&&&&&&&&", uploadedFiles)}
+                  {console.log("##########", formData)}
                   {(
                     <>
                       {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>
