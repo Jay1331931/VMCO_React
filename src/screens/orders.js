@@ -209,6 +209,7 @@ function Orders() {
       if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
         salesOrderLines = result.data.data;
       }
+      console.log('Fetched sales order :', order);
       navigate('/orderDetails', {
         state: {
           order: { ...order, salesOrderLines },
@@ -216,7 +217,8 @@ function Orders() {
           fromApproval: isApprovalMode,
           wfid: isApprovalMode ? order.workflowInstanceId : undefined,
           workflowName: isApprovalMode ? order.workflowName : undefined,
-          workflowData: isApprovalMode ? order.workflowData : undefined // Pass workflowData if in approval mode
+          workflowData: isApprovalMode ? order.workflowData : undefined, // Pass workflowData if in approval mode
+          approvalHistory: isApprovalMode ? order.approvalHistory : undefined
         }
       });
     } catch (err) {

@@ -57,6 +57,7 @@ function OrderDetails() {
   // Detect if coming from approval mode
   const fromApproval = location.state?.fromApproval;
   const wfid = location.state?.wfid || null;
+  const approvalHistory = location.state?.approvalHistory || [];
 
 
   // Initialize form data
@@ -1988,7 +1989,7 @@ function OrderDetails() {
             <CommentPopup
               isOpen={isCommentPanelOpen}
               setIsOpen={setIsCommentPanelOpen}
-              externalComments={formData.approvalHistory ? formData.approvalHistory : []}
+              externalComments={approvalHistory ? approvalHistory : []}
               currentUser={user}
               isVisible={fromApproval}
             />
