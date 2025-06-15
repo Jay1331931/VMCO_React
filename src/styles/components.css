@@ -377,7 +377,7 @@
 }
 
 .go-to-cart-btn {
-  padding: 0 16px;
+  padding: 0 14px;
   background-color: #00205B;
   color: white;
   border: none;
@@ -386,12 +386,13 @@
   font-weight: 600;
   white-space: nowrap;
   transition: background-color 0.3s ease;
-  height: 40px;
+  /* height: 40px; */
+  height: 30px;
   min-width: 120px;
   display: flex;
   align-items: center;
   gap: 0;
-  justify-content: center;
+  justify-content:space-between;
 }
 
 .cart-icon {
@@ -611,14 +612,7 @@
   padding: 0 24px 16px 24px;
 }
 
-.cart-item {
-  display: grid;
-  grid-template-columns: 80px 1fr 120px;
-  gap: 20px;
-  align-items: center;
-  padding: 24px 0;
-  border-bottom: 1px solid #F0F0F0;
-}
+
 
 .cart-item:last-child {
   border-bottom: none;
@@ -854,7 +848,8 @@
 
 .cart-item {
   display: grid;
-  grid-template-columns: 80px 1fr 120px;
+  /* grid-template-columns: 80px 1fr 120px; */
+   grid-template-columns: 1fr 9fr 2fr;
   gap: 20px;
   align-items: center;
   padding: 24px 0;
@@ -1024,7 +1019,7 @@
 
 .invite-button {
   padding: 8px 16px;
-  background-color: #4CAF50;
+  background-color: darkgreen;
   color: white;
   border: none;
   border-radius: 4px;
@@ -1505,7 +1500,7 @@
 
 .onboarding-container .form-group input {
   width: 250px;
-  height: 30px;
+  height: 37px;
 }
 .onboarding-container .form-group select {
   width: 250px;
@@ -2134,6 +2129,7 @@
 
 .support-action-btn.save:hover {
   background: #004d43;
+  color: #fff;
 }
 
 .support-action-btn.differ:hover {

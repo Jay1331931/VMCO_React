@@ -117,7 +117,7 @@ const getCookie = (name) => {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
-                        {error && <p className="error-message">{error}</p>}
+                        {error && <p className="error-message">{t(error)}</p>}
 
                     </form>
                 </div>

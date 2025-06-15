@@ -45,7 +45,7 @@ function Customers() {
   const [inviteData, setInviteData] = useState({
     email: '',
     role: '',
-    // Add other fields as needed
+    source: 'salesexecutive' // <-- default value
   });
   const customerTabs = [
     { value: 'customers', label: 'Customers' },
@@ -53,7 +53,35 @@ function Customers() {
   ];
   const [isApprovalMode, setApprovalMode] = useState(false);
   // const { token, user, isAuthenticated, logout } = useAuth();
+  const [dropdownOptions, setDropdownOptions] = useState({});
+  const [regionOptions, setRegionOptions] = useState([]);
   
+    const getOptionsFromBasicsMaster = async (fieldName) => {
+      const params = new URLSearchParams({
+        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
+      });
+  
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+  
+        const result = await response.json(); // Don't forget 'await' here
+  
+        const options = result.data.map(item => item.value);
+        return options;
+  
+      } catch (err) {
+        console.error('Error fetching options:', err);
+        return []; // Return empty array on error
+      }
+    };
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
     console.log('Approval mode:', isApprovalMode);
@@ -95,6 +123,10 @@ function Customers() {
   };
 
   const handleInvite = () => {
+    setInviteData(prev => ({
+      ...prev,
+      source: 'salesexecutive'
+    }));
     setIsInviteModalOpen(true);
   };
 
@@ -500,7 +532,7 @@ function Customers() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
 
   useEffect(() => {
@@ -514,6 +546,10 @@ function Customers() {
       fetchInvites(page, searchQuery);
     }
   }, [activeTab, isApprovalMode, page, searchQuery]);
+
+  useEffect(() => {
+    getOptionsFromBasicsMaster('region').then(setRegionOptions);
+  }, []);
 
   const handleRowClick = (customer) => {
     fetchCustomerContacts(customer.id, customer);
@@ -644,6 +680,7 @@ function Customers() {
             {/* Invite Modal/Popup */}
             {isInviteModalOpen && (
               <div className="modal-overlay">
+                
                 <div className="modal-content">
                   <h2>{t('New Invite')}</h2>
                   <div className="onboarding-container">
@@ -702,9 +739,11 @@ function Customers() {
                         required
                       >
                         <option value="">{t('Select a region')}</option>
-                        <option value="riyadh">{t('Riyadh')}</option>
-                        <option value="jeddah">{t('Jeddah')}</option>
-                        <option value="mecca">{t('Mecca')}</option>
+                        {regionOptions.map(option => (
+                          <option key={option} value={option}>
+                            {t(option)}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -714,6 +753,7 @@ function Customers() {
                         name="source"
                         value={inviteData.source}
                         onChange={handleInputChange}
+                        disabled={true}
                         required
                       >
                         <option value="">{t('Select a source')}</option>

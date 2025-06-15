@@ -36,11 +36,13 @@ const Dropdown = ({
             </select>
             <style>{`
                 .dropdown-container {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                    margin-bottom: 12px;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px; 
+                // margin-bottom: 12px;
                 }
+
                 .dropdown-label {
                     font-size: 1rem;
                     color: #222;

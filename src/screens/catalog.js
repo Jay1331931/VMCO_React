@@ -55,166 +55,166 @@ function Catalog() {
 
     const [filteredProducts, setFilteredProducts] = useState([]);
 
-     const fetchAllPages = async () => {
-            // Show loading state
-            if (currentPage === 1) {
-                setIsLoading(true);
-            } else {
-                setIsLoadingMore(true);
+    const fetchAllPages = async () => {
+        // Show loading state
+        if (currentPage === 1) {
+            setIsLoading(true);
+        } else {
+            setIsLoadingMore(true);
+        }
+
+        try {
+            // Determine which pages we need to fetch
+            const pagesToFetch = [];
+            for (let i = 1; i <= currentPage; i++) {
+                if (!loadedPages.includes(i)) {
+                    pagesToFetch.push(i);
+                }
             }
 
-            try {
-                // Determine which pages we need to fetch
-                const pagesToFetch = [];
-                for (let i = 1; i <= currentPage; i++) {
-                    if (!loadedPages.includes(i)) {
-                        pagesToFetch.push(i);
-                    }
-                }
-
-                if (pagesToFetch.length === 0) {
-                    // All needed pages are already loaded
-                    setIsLoading(false);
-                    setIsLoadingMore(false);
-                    return;
-                }
-
-                // Create a function to fetch a single page
-                const fetchPage = async (pageNumber) => {
-                    const params = new URLSearchParams({
-                        page: pageNumber,
-                        pageSize: productsPerPage,
-                        sortBy: 'id',
-                        sortOrder: 'asc',
-                    });
-
-                    // Handle entity filtering
-                    const selectedCategory = categories.find(cat => cat.value === activeCategory);
-                    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
-                    if (entityToFilter) {
-                        params.append('entity', entityToFilter);
-                    }
-
-                    // For all tabs, just filter by entity without special handling
-                    if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
-                        params.append('entity', 'vmco');
-                    } else if (activeCategory === 'Diyafa') {
-                        params.append('entity', 'diyafa');
-                    } else if (activeCategory === 'Green Mast') {
-                        params.append('entity', 'green mast');
-                    } else if (activeCategory === 'Naqui') {
-                        params.append('entity', 'naqui');
-                    }
-
-                    // Add category and subcategory filters
-                    if (categoryFilter) params.append('category', categoryFilter);
-                    if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
-
-                    // Add search query
-                    if (searchQuery) {
-                        params.append('search', searchQuery);
-                        params.append('searchFields', 'productName,product_name,product_name_lc,productNameLc');
-                    }
-
-                    const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include'
-                    });
-
-                    const result = await response.json();
-                    console.log(`Fetched page ${pageNumber} products:`, result);
-                    // Extract the new products from the response
-                    let pageProducts = [];
-                    let totalCount = 0;
-
-                    if (result.status === 'Ok') {
-                        pageProducts = result.data.data;
-                        totalCount = result.data.totalRecords
-                    }
-
-                    if (Array.isArray(result.data)) {
-                        pageProducts = result.data.data;
-                        totalCount = result.length;
-                    } else if (result.status === 'Ok' && Array.isArray(result.data.data)) {
-                        pageProducts = result.data.data;
-                        totalCount =
-                            (result.total !== undefined && Number(result.total)) ||
-                            (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
-                            result.data.length;
-                    } else if (result && Array.isArray(result.data.data)) {
-                        pageProducts = result.data.data;
-                        totalCount =
-                            (result.total !== undefined && Number(result.total)) ||
-                            (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
-                            result.data.length;
-                    }
-
-                    return { pageProducts, totalCount, pageNumber };
-                };
-
-                // Key fix: Handle the reset products case differently
-                let allProducts = [];
-                let newLoadedPages = [];
-
-                // Reset products if we're starting fresh
-                if (pagesToFetch.includes(1)) {
-                    // Just prepare to reset - don't call setState yet
-                    allProducts = [];
-                    newLoadedPages = [];
-                } else {
-                    // If not resetting, start with existing data
-                    allProducts = [...products];
-                    newLoadedPages = [...loadedPages];
-                }
-
-                // Fetch all pages in sequence
-                let maxTotalCount = 0;
-
-                for (const page of pagesToFetch) {
-                    const { pageProducts, totalCount } = await fetchPage(page);
-
-                    // Add these products to our collection
-                    allProducts = [...allProducts, ...pageProducts];
-                    maxTotalCount = Math.max(maxTotalCount, totalCount);
-
-                    // Add to our new loaded pages array
-                    newLoadedPages.push(page);
-                }
-
-                // Set all products and loaded pages at once after we've loaded everything
-                setProducts(allProducts);
-                setTotalProducts(maxTotalCount);
-                setLoadedPages(newLoadedPages);
-
-                // Determine if there are more products to load
-                const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
-                const moreAvailable = loadedProductsCount < maxTotalCount;
-                setHasMore(moreAvailable);
-
-            } catch (err) {
-                console.error('Error fetching products:', err);
-                setHasMore(false);
-            } finally {
+            if (pagesToFetch.length === 0) {
+                // All needed pages are already loaded
                 setIsLoading(false);
                 setIsLoadingMore(false);
+                return;
             }
-        };
+
+            // Create a function to fetch a single page
+            const fetchPage = async (pageNumber) => {
+                const params = new URLSearchParams({
+                    page: pageNumber,
+                    pageSize: productsPerPage,
+                    sortBy: 'id',
+                    sortOrder: 'asc',
+                });
+
+                // Handle entity filtering
+                const selectedCategory = categories.find(cat => cat.value === activeCategory);
+                const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+
+                if (entityToFilter) {
+                    params.append('entity', entityToFilter);
+                }
+
+                // For all tabs, just filter by entity without special handling
+                if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
+                    params.append('entity', 'vmco');
+                } else if (activeCategory === 'Diyafa') {
+                    params.append('entity', 'diyafa');
+                } else if (activeCategory === 'Green Mast') {
+                    params.append('entity', 'green mast');
+                } else if (activeCategory === 'Naqui') {
+                    params.append('entity', 'naqui');
+                }
+
+                // Add category and subcategory filters
+                if (categoryFilter) params.append('category', categoryFilter);
+                if (subCategoryFilter) params.append('subCategory', subCategoryFilter);
+
+                // Add search query
+                if (searchQuery) {
+                    params.append('search', searchQuery);
+                    params.append('searchFields', 'productName,product_name,product_name_lc,productNameLc');
+                }
+
+                const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+                console.log(`Fetched page ${pageNumber} products:`, result);
+                // Extract the new products from the response
+                let pageProducts = [];
+                let totalCount = 0;
+
+                if (result.status === 'Ok') {
+                    pageProducts = result.data.data;
+                    totalCount = result.data.totalRecords
+                }
+
+                if (Array.isArray(result.data)) {
+                    pageProducts = result.data.data;
+                    totalCount = result.length;
+                } else if (result.status === 'Ok' && Array.isArray(result.data.data)) {
+                    pageProducts = result.data.data;
+                    totalCount =
+                        (result.total !== undefined && Number(result.total)) ||
+                        (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
+                        result.data.length;
+                } else if (result && Array.isArray(result.data.data)) {
+                    pageProducts = result.data.data;
+                    totalCount =
+                        (result.total !== undefined && Number(result.total)) ||
+                        (result.pagination && result.pagination.total !== undefined && Number(result.pagination.total)) ||
+                        result.data.length;
+                }
+
+                return { pageProducts, totalCount, pageNumber };
+            };
+
+            // Key fix: Handle the reset products case differently
+            let allProducts = [];
+            let newLoadedPages = [];
+
+            // Reset products if we're starting fresh
+            if (pagesToFetch.includes(1)) {
+                // Just prepare to reset - don't call setState yet
+                allProducts = [];
+                newLoadedPages = [];
+            } else {
+                // If not resetting, start with existing data
+                allProducts = [...products];
+                newLoadedPages = [...loadedPages];
+            }
+
+            // Fetch all pages in sequence
+            let maxTotalCount = 0;
+
+            for (const page of pagesToFetch) {
+                const { pageProducts, totalCount } = await fetchPage(page);
+
+                // Add these products to our collection
+                allProducts = [...allProducts, ...pageProducts];
+                maxTotalCount = Math.max(maxTotalCount, totalCount);
+
+                // Add to our new loaded pages array
+                newLoadedPages.push(page);
+            }
+
+            // Set all products and loaded pages at once after we've loaded everything
+            setProducts(allProducts);
+            setTotalProducts(maxTotalCount);
+            setLoadedPages(newLoadedPages);
+
+            // Determine if there are more products to load
+            const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
+            const moreAvailable = loadedProductsCount < maxTotalCount;
+            setHasMore(moreAvailable);
+
+        } catch (err) {
+            console.error('Error fetching products:', err);
+            setHasMore(false);
+        } finally {
+            setIsLoading(false);
+            setIsLoadingMore(false);
+        }
+    };
 
     //NOTE: For fetching the user again after browser refersh - start
-       useEffect(() => {
+    useEffect(() => {
         if (loading) {
             return;
         }
 
         if (!user) {
-        console.log("$$$$$$$$$$$ logging out");
-        // Logout instead of showing loading message
-        logout();
-        navigate('/login');
-        return; // Return while logout is processing
-      }
+            console.log("$$$$$$$$$$$ logging out");
+            // Logout instead of showing loading message
+            logout();
+            navigate('/login');
+            return; // Return while logout is processing
+        }
 
         if (user && user.userType) {
             const fetchData = async () => {
@@ -222,9 +222,8 @@ function Catalog() {
             };
             fetchData();
         }
-    }, [user, activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]
-    );
-    
+    }, [user, activeCategory, categoryFilter, subCategoryFilter, searchQuery, currentPage, productsPerPage, API_BASE_URL]);
+
     //RBAC
     //use formMode to decide if it is editform or add form
     const rbacMgr = new RbacManager(user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'catalog');
@@ -237,11 +236,11 @@ function Catalog() {
     }));
 
     const customerId = user?.customerId;
-    const userId = user?.userId;    
+    const userId = user?.userId;
     useEffect(() => {
         if (customerId) { setSelectedCustomerId(customerId); }
     }, [customerId]);
-    
+
     // Initial setup when component loads - for default tab
 
 
@@ -294,9 +293,9 @@ function Catalog() {
     }, [i18n.language]); // Keep i18n.language as dependency to refresh on language change
 
     // Fetch products from backend - now loads all pages from 1 to currentPage
-       
 
-       // Filter products based on tab, category, and subcategory
+
+    // Filter products based on tab, category, and subcategory
 
 
     useEffect(() => {
@@ -431,7 +430,7 @@ function Catalog() {
     const uniqueSubCategories = Array.from(new Set(products.map(p => p.subCategory).filter(Boolean)));
 
     // NEW: Branch selection functionality moved here (before add to cart function)
-   useEffect(() => {
+    useEffect(() => {
         const fetchBranches = async () => {
             try {
                 setIsLoading(true);
@@ -483,7 +482,6 @@ function Catalog() {
         const currentBranchId = selectedLocation;
         if (newBranchId === currentBranchId) return;
         const selectedBranch = branches.find(b => String(b.value) === String(newBranchId));
-        // No localStorage usage here
         try {
             setIsLoading(true);
             // Fetch cart items for the user
@@ -657,11 +655,12 @@ function Catalog() {
                     entity: product.entity, // Keep original case
                     category: product.category, // Keep original case
                     unit: product.unit,
+
                     unitPrice: unitPrice,
                     quantityOrdered: parseInt(quantity),
                     netAmount: netAmount,
                     //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
-                    vatPercentage: vatPercentage.toFixed(2),
+                    vatPercentage: user.companyType === 'non trading' ? 0.00 : vatPercentage.toFixed(2),
                     images: JSON.stringify(imageUrls), // <-- Add images as JSONB
                 };
 
@@ -823,8 +822,8 @@ function Catalog() {
                     .filter(Boolean)
                     .filter(category =>
                         !(category.toLowerCase().includes('consumable') ||
-                          category.toLowerCase().includes('supply') ||
-                          category.toLowerCase().includes('accessory'))
+                            category.toLowerCase().includes('supply') ||
+                            category.toLowerCase().includes('accessory'))
                     )
             ));
         } else if (activeCategory === 'VMCO Consumables') {
@@ -835,12 +834,12 @@ function Catalog() {
                     .filter(Boolean)
                     .filter(category =>
                         !(category.toLowerCase().includes('machine') ||
-                          category.toLowerCase().includes('equipment') ||
-                          category.toLowerCase().includes('device'))
+                            category.toLowerCase().includes('equipment') ||
+                            category.toLowerCase().includes('device'))
                     )
             ));
         }
-        
+
         if (availableCategories.length > 0) {
             // Set default category when products are loaded for VMCO tabs
             setCategoryFilter(availableCategories[0]);
@@ -888,7 +887,7 @@ function Catalog() {
                 <div className="filter-section">
                     <Tabs
                         tabs={categoryTabs}
-                        activeTab={activeCategory}                        onTabChange={(newCategory) => {
+                        activeTab={activeCategory} onTabChange={(newCategory) => {
                             setActiveCategory(newCategory);
                             setSearchQuery('');
                             setCurrentPage(1);

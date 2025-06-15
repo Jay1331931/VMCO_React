@@ -263,6 +263,12 @@
     color: #aaa;
   }
 
+  .text-field:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.dropdown:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
   .customers .file-upload {
     display: flex;
     flex-direction: column;
@@ -1041,7 +1047,6 @@ color: #5E6A71;
 padding: 4px 4px;
 height: 40px;
 text-align: left;
-border-bottom: 1px solid lightgray;
 font-size: 0.85rem;
 line-height: 1.2;
 }
@@ -1224,7 +1229,7 @@ td.file-display-cell {
 
 /* Highlight for pending update fields */
 .pending-update {
-  border-left: 3px solid #ffc107;
+  border-left: 0px solid #ffc107;
   padding-left: 8px;
 }
 
@@ -1235,6 +1240,8 @@ td.file-display-cell {
   border-radius: 4px;
   font-size: 0.8em;
   margin-left: 8px;
+  display: inline-block;
+  text-align: end;
 }
 
 .update-field {

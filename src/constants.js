@@ -10,12 +10,17 @@ const Constants = {
         OPS_MANAGER: 'operations manager',
         SALES_EXECUTIVE: "sales executive",
         AREA_SALES_MANAGER: 'area sales manager',
+        PRODUCTION_MANAGER: 'production manager',
         FIELD_ENGINEER: 'field engineer',
         MAINTENANCE_TECHNICIAN: 'maintenance technician',
         DRIVER: 'driver',
     },
     ENTITY:{
-        
+        VMCO: 'vmco',
+        DIYAFA: 'diyafa',
+        NAQI: 'naqi',
+        DAR: 'dar',
+        GREEN_MAST: 'green mast'
     },
     
 };

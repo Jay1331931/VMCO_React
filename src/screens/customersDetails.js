@@ -20,8 +20,11 @@ import ApprovalDialog from '../components/ApprovalDialog';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import constants from '../constants';
 import LoadingSpinner from '../components/LoadingSpinner';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   const mapContainer = useRef(null);
@@ -158,6 +161,11 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
   );
 };
 function CustomersDetails() {
+
+  const location = useLocation();
+  const transformedCustomer = location.state?.transformedCustomer;
+
+  // concats customer and customer contacts data into a single object
   const transformCustomerData = async (customer, customerContacts) => {
     console.log("Inside transform customer data")
     const contacts = Array.isArray(customerContacts)
@@ -248,6 +256,7 @@ function CustomersDetails() {
     }
   };
 
+  // fetch temp data from workflow and add to form data
   function transformWorkflowData(workflowData) {
     const { methodDetails, ...otherUpdates } = workflowData.updates;
 
@@ -262,7 +271,7 @@ function CustomersDetails() {
       }
     };
   }
-
+  // Fetches customer data and updates form data
   const fetchApprovedCustomer = async (transformedCustomer) => {
     console.log("Fetch Approved Customer Called")
     const customerId = transformedCustomer?.id || transformedCustomer?.customerId;
@@ -345,9 +354,10 @@ function CustomersDetails() {
 
             return newFormData;
           });
+          console.log("11111111111Form Data after updates", formData);
         }
       }
-      console.log("Approved Customer Data", customerData);
+      console.log("!!!!!!!!!!!Approved Customer Data", customerData);
       setApprovedCustomer(customerData);
 
       return customerData;
@@ -362,29 +372,28 @@ function CustomersDetails() {
     }
   }
 
-  const fetchCustomerPaymentMethods = async (customerId) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      const result = await response.json();
-      return result.status === 'Ok' ? result.data : null;
-    } catch (error) {
-      console.error('Error fetching payment methods:', error);
-      return null;
-    }
-  };
+  // const fetchCustomerPaymentMethods = async (customerId) => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+  //       method: 'GET',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       credentials: 'include'
+  //     });
+  //     const result = await response.json();
+  //     return result.status === 'Ok' ? result.data : null;
+  //   } catch (error) {
+  //     console.error('Error fetching payment methods:', error);
+  //     return null;
+  //   }
+  // };
   const contentRef = useRef(null);
   const [tabsHeight, setTabsHeight] = useState('auto');
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
-  const location = useLocation();
-  const transformedCustomer = location.state?.transformedCustomer;
+
   console.log("location.state", location.state);
-  console.log("transformedCustomer", transformedCustomer);
+  console.log("@@@@@@@@@@transformedCustomer", transformedCustomer);
   const [customer, setCustomer] = useState(transformedCustomer);
   const [approvedCustomer, setApprovedCustomer] = useState(null);
   // let approvedCustomer = fetchApprovedCustomer(transformedCustomer);
@@ -400,7 +409,7 @@ function CustomersDetails() {
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const navigate = useNavigate();
- 
+
   useEffect(() => {
     if (loading) {
       return; // Wait while loading
@@ -429,7 +438,7 @@ function CustomersDetails() {
     }
   }, [user, loading]);
 
-  
+
 
 
   let customerFormMode;
@@ -451,6 +460,7 @@ function CustomersDetails() {
   const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
   const [companyType, setCompanyType] = useState(transformedCustomer?.companyType?.toLowerCase() || '');
   console.log("Company Type", companyType);
   const formsByTab = useMemo(() => ({
@@ -545,14 +555,14 @@ function CustomersDetails() {
 
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;  
+    const { name, value, type, checked } = e.target;
     console.log('Input change:', name, value, type, checked);
-    if(name === 'companyType') {
+    if (name === 'companyType') {
       setCompanyType(value.toLowerCase());
       formsByTab['Documents'] = getDocumentsForm(t, value.toLowerCase())['Documents'];
       formDataByTab['Documents'] = getBusinessDetailsFormData(t, customer, value.toLowerCase())['Documents'];
     }
-    const conditionalDropdowns = ['diyafa', 'naqi', 'greenMart', 'dar', 'vmco'];
+    const conditionalDropdowns = [constants.ENTITY.DIYAFA, constants.ENTITY.NAQI, constants.ENTITY.GREEN_MAST, constants.ENTITY.DAR, constants.ENTITY.VMCO];
     if (conditionalDropdowns.includes(name)) {
       setFormData(prev => ({
         ...prev,
@@ -604,7 +614,7 @@ function CustomersDetails() {
 
       const value = formData[fieldName];
 
-      if (action === 'save changes' && field.required && !value && fieldName !== 'nonTradingDocuments') {
+      if (action === 'save changes' && field.required && !value && fieldName !== 'nonTradingDocuments' && field.type !== 'document') {
         errors[fieldName] = t('This field is required.');
       }
 
@@ -612,7 +622,7 @@ function CustomersDetails() {
         errors[fieldName] = t('This field is required.');
       }
 
-      if (checkRequired && field.type === 'document' && field.required && !value?.name) {
+      if (checkRequired && field.type === 'document' && field.required && !uploadedFiles[fieldName]) {
         errors[fieldName] = t('This document is required.');
       }
 
@@ -793,8 +803,11 @@ function CustomersDetails() {
           if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
             customerPayload[fieldName] = newValue;
           customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
-          if(fieldName === 'interCompany' || fieldName === 'isDeliveryChargesApplicable'){
+          if (fieldName === 'interCompany' || fieldName === 'isDeliveryChargesApplicable') {
             customerPayload[fieldName] = newValue?.isAllowed
+          }
+          if(fieldName === 'region') {
+            customerPayload['region'] = newValue?.toLowerCase();
           }
           // if(formData.customerStatus === 'new'){
           //   customerPayload['customerStatus'] = 'pending';
@@ -899,19 +912,20 @@ function CustomersDetails() {
     }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
-    formData
+    formDataByTab['Documents']
   );
   const handleTabClick = (tab) => {
     setTabsHeight('auto');
     setActiveTab(tab);
     setFormErrors({});
     if (tab === 'Documents') {
-      setUploadedFiles(formData);
+      setUploadedFiles(formDataByTab[tab]);
     }
   };
 
   const [dropdownOptions, setDropdownOptions] = useState({});
-
+  const [dropdownEmployeeOptions, setDropdownEmployeeOptions] = useState({});
+ 
   const getOptionsFromBasicsMaster = async (fieldName) => {
     const params = new URLSearchParams({
       filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
@@ -957,7 +971,62 @@ function CustomersDetails() {
     }
   }
 
-
+   const fetchCurrentDataOfCustomer = async (customerId) => {
+    console.log("Fetching current data for customer ID:~~~~~~", customerId);
+    let customerData = {};
+    let contactsData = {};
+    let paymentMethodsData = {};
+    try {
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const customerDataJson = await response.json();
+      console.log("Customer Data JSON~~~~~~~~~~~~~", customerDataJson);
+      return customerDataJson.data;
+      // if (customerDataJson.status === 'Ok') {
+      //   customerData = customerDataJson.data;
+      //   console.log('Current customer data:', customerDataJson.data);
+      // }
+      // const responseContacts = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+      //   method: 'GET',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   credentials: 'include'
+      // });
+      // const contactsDataJson = await responseContacts.json();
+      // if (contactsDataJson.status === 'Ok') {
+      //   contactsData = contactsDataJson.data;
+      //   console.log('Current customer contacts data:', contactsDataJson.data);
+      //   return { customer: customerData.data, contacts: contactsData.data };
+      // } else {
+      //   throw new Error(contactsData.data?.message || 'Failed to fetch customer contacts');
+      // }
+      // const responsePaymentMethods = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      //   method: 'GET',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   credentials: 'include'
+      // });
+      // const paymentMethodsDataJson = await responsePaymentMethods.json();
+      // if (paymentMethodsDataJson.status === 'Ok') {
+      //   paymentMethodsData = paymentMethodsDataJson.data;
+      //   console.log('Current customer payment methods data:', paymentMethodsDataJson.data);
+      //   return { customer: customerData.data, contacts: contactsData.data, paymentMethods: paymentMethodsData.data };
+      // } else {
+      //   throw new Error(paymentMethodsData.data?.message || 'Failed to fetch customer payment methods');
+      // }
+      // setFormData(prev => ({
+      //   ...prev,
+      //   ...customerData,
+      //   ...contactsData,
+      //   paymentMethods: paymentMethodsData
+      // }));
+      // console.log('Form data after fetching current data:', formData);
+    } catch (error) {
+      console.error('Error fetching current customer data:', error);
+      throw error;
+    }
+  };
   const getOptionsFromEmployees = async (fieldName) => {
     const params = new URLSearchParams({
       filters: { designation: "sales executive" } // Properly stringify the filter
@@ -973,7 +1042,7 @@ function CustomersDetails() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const result = await response.json();
-      const options = result.data.data.map(item => item.name);
+      const options = result.data.data.map(item => { return { name: item.name, employeeId: item.employeeId }; });
       return options;
     } catch (err) {
       console.error('Error fetching employee options:', err);
@@ -981,35 +1050,91 @@ function CustomersDetails() {
     }
   };
 
-  useEffect(() => {
-    const fetchDropdownOptions = async () => {
-      const options = {};
-      const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown' || field.type === 'conditionalDropdown');
-      console.log("Dropdown Fields", dropdownFields)
+  const getOptionsFromEmployeesWithManager = async () => {
+    try {
+      console.log("getOptionsFromEmployeesWithManager #############")
+
+      const customerData = await fetchCurrentDataOfCustomer(customer.id);
+      console.log("CustomerData region~~~~~~~~~~", customerData.region)
+      const response = await fetch(`${API_BASE_URL}/employees/manager-and-employees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ region: customerData.region })
+      });
+      if (!response.ok) {
+        console.error(`~~~~~~~~~~~~~~Failed to fetch options for :`, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const options = result.data.map(item => { return { name: item.name, employeeId: item.employeeId }; });
+      console.log("________________$$$$$$$ ", options)
+      return options;
+    } catch (err) {
+      console.error('Error fetching employee options:', err);
+      return [];
+    }
+  };
+  const fetchDropdownOptions = async () => {
+    const options = {};
+    const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdown' || field.type === 'conditionalDropdown');
+    console.log("Dropdown Fields", dropdownFields)
+    for (const field of dropdownFields) {
+
+      try {
+        let data = await getOptionsFromBasicsMaster(field.name);
+        if (field.name === 'assignedTo') {
+          data = await getOptionsFromEmployees(field.name);
+        }
+        console.log("Data for field", field.name, data);
+        options[field.name] = data.map(opt =>
+          typeof opt === 'string'
+            ? opt.charAt(0) + opt.slice(1)
+            : opt
+        );
+      } catch (err) {
+        console.error(`Failed to fetch options for ${field.name}:`, err);
+        options[field.name] = [];
+
+      }
+    }
+
+    setDropdownOptions(options);
+  };
+
+  const fetchEmployeeDropdownOptions = async () => {
+    const options = {};
+    const dropdownFields = formsByTab[activeTab].filter(field => field.type === 'dropdownObject');
+    // console.log("===============Dropdown Fields", dropdownFields)
+    // for (const field of dropdownFields) {
+
+    try {
+      // if (field.name === 'assignedTo') {
+      //   data = await getOptionsFromEmployees(field.name);
+      // } else if (field.name === constants.ENTITY.VMCO || field.name === constants.ENTITY.DIYAFA || field.name === constants.ENTITY.NAQI || field.name === constants.ENTITY.DAR || field.name === constants.ENTITY.GREEN_MAST) {
+      let data = await getOptionsFromEmployeesWithManager()
+      // }
+
+
+      // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
       for (const field of dropdownFields) {
 
-        try {
-          let data = await getOptionsFromBasicsMaster(field.name);
-          if (field.name === 'assignedTo' || field.name === 'naqi' || field.name === 'diyafa' || field.name === 'dar' || field.name === 'greenMart' || field.name === 'vmco') {
-            data = await getOptionsFromEmployees(field.name);
-          }
-          console.log("Data for field", field.name, data);
-          options[field.name] = data.map(opt =>
-            typeof opt === 'string'
-              ? opt.charAt(0).toUpperCase() + opt.slice(1)
-              : opt
-          );
-        } catch (err) {
-          console.error(`Failed to fetch options for ${field.name}:`, err);
-          options[field.name] = [];
-
-        }
+        options[field.name] = data.map(opt =>
+          typeof opt === 'string'
+            ? opt.charAt(0) + opt.slice(1)
+            : opt
+        );
       }
+    } catch (err) {
+      console.error(`Failed to fetch options for :`, err);
+    }
+    setDropdownEmployeeOptions(options);
+  };
 
-      setDropdownOptions(options);
-    };
-
+  useEffect(() => {
     fetchDropdownOptions();
+    fetchEmployeeDropdownOptions();
+    console.log(" $$$$$$$$$$$$$$$$$$$$$$$Employee Dropdown Options", dropdownEmployeeOptions);
   }, [formsByTab, activeTab]);
   const [pendingFileUploads, setPendingFileUploads] = useState({});
 
@@ -1364,7 +1489,8 @@ function CustomersDetails() {
       const paymentDetailFields = [
         'prePayment', 'partialPayment', 'advancePayment', 'COD', 'credit', 'creditLimit', 'creditPeriod', 'creditBalance'
       ]
-      const areaSalesManager = await getManagerFromEmployees(formData?.region) || '';
+
+      const areaSalesManager = await getManagerFromEmployees(formData?.region?.toLowerCase()) || '';
       console.log('Area Sales Manager:', areaSalesManager);
       const customerPayload = {};
       const contactCreatePayload = {};
@@ -1397,7 +1523,7 @@ function CustomersDetails() {
       console.log("Changed fields in Save", changedFields)
       newChangedFields.forEach(fieldName => {
         if (fieldName === 'id' || fieldName === 'undefined' || fieldName === 'pricePlan' || fieldName === 'deliveryCost' || fieldName === 'branchName' || fieldName === 'branchLocation' || fieldName === 'pricingPolicy'
-          || fieldName === 'vmco' || fieldName === 'diyafa' || fieldName === 'dar' || fieldName === 'naqi' || fieldName === 'greenMart' || fieldName === 'isDeliveryChargesApplicable'
+          || fieldName === constants.ENTITY.VMCO || fieldName === constants.ENTITY.DIYAFA || fieldName === constants.ENTITY.NAQI || fieldName === constants.ENTITY.DAR || fieldName === constants.ENTITY.GREEN_MAST || fieldName === 'isDeliveryChargesApplicable'
         ) return;
 
         const newValue = formData[fieldName];
@@ -1414,21 +1540,26 @@ function CustomersDetails() {
 
           }
           else {
-            if(fieldName === 'crCertificate' || fieldName === 'vatCertificate' || fieldName === 'nationalId' || fieldName === 'bankLetter' || fieldName === 'nationalAddress' || fieldName === 'contractAgreement' || fieldName === 'creditApplication' || fieldName === 'acknacknowledgementSignature') {
-              customerPayload[fieldName] = newValue?.name || '';
+            if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary') {
+              customerPayload[fieldName] = newValue;
             }
-            if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
-            customerPayload[fieldName] = newValue;
+            if (fieldName === 'crCertificate' || fieldName === 'vatCertificate' || fieldName === 'nationalId' || fieldName === 'bankLetter' || fieldName === 'nationalAddress' || fieldName === 'contractAgreement' || fieldName === 'creditApplication' || fieldName === 'acknacknowledgementSignature') {
+              customerPayload[fieldName] = uploadedFiles[fieldName];
+            }
+
             customerPayload['customerStatus'] = (formData.customerStatus || customerData.customerStatus).toLowerCase();
             customerPayload['interCompany'] = false;
             customerPayload['assignedToEntityWise'] = {
-              'vmco': areaSalesManager,
-              'diyafa': areaSalesManager,
-              'dar': areaSalesManager,
-              'naqi': areaSalesManager,
-              'greenMart': areaSalesManager,
+              [constants.ENTITY.VMCO]: areaSalesManager,
+              [constants.ENTITY.DIYAFA]: areaSalesManager,
+              [constants.ENTITY.DAR]: areaSalesManager,
+              [constants.ENTITY.NAQI]: areaSalesManager,
+              [constants.ENTITY.GREEN_MAST]: areaSalesManager,
             }
-            if(customerPayload['nonTradingDocuments']?.length === 0){
+            if (fieldName === 'region') {
+              customerPayload['region'] = newValue.toLowerCase();
+            }
+            if (customerPayload['nonTradingDocuments']?.length === 0) {
               customerPayload['nonTradingDocuments'] = {};
             } else {
               customerPayload['nonTradingDocuments'] = formData.nonTradingDocuments?.name || [];
@@ -1532,7 +1663,7 @@ function CustomersDetails() {
 
 
         function showLoadingScreen(message) {
-  document.body.innerHTML = `
+          document.body.innerHTML = `
     <div class="loading-more-container" style="
       padding: 20px; 
       display: flex;
@@ -1560,11 +1691,11 @@ function CustomersDetails() {
       }
     </style>
   `;
-}
+        }
 
-// Usage:
-showLoadingScreen('Updating...');
-setTimeout(() => window.location.reload(true), 3000);
+        // Usage:
+        showLoadingScreen('Updating...');
+        setTimeout(() => window.location.reload(true), 3000);
 
       } catch (error) {
         console.error('Update error:', error);
@@ -1727,7 +1858,7 @@ setTimeout(() => window.location.reload(true), 3000);
     }
   };
   const shouldShowDiv = (transformedCustomer?.isApprovalMode || customer?.isApprovalMode) && customerFormMode === 'custDetailsAdd' && (transformedCustomer.customerStatus !== 'new' || customer?.customerStatus === 'pending');
-  const shouldShowBlock = (customerFormMode === 'custDetailsEdit' && transformedCustomer?.name === 'customer block/unblock' )
+  const shouldShowBlock = (customerFormMode === 'custDetailsEdit' && transformedCustomer?.name === 'customer block/unblock')
   return (
     <Sidebar>
       <div className='customers'>
@@ -1792,11 +1923,18 @@ setTimeout(() => window.location.reload(true), 3000);
                   }, []).map((field) => {
                     { console.log(transformedCustomer.module) }
                     const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new') || customer?.customerStatus === 'pending';
-                    const hasUpdate = approvalMode && transformedCustomer.module === 'customer' &&
+                    const hasUpdate = approvalMode && transformedCustomer?.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
-                      (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise);
+                      (field.name in transformedCustomer?.workflowData?.updates || (transformedCustomer?.workflowData?.updates?.['assignedToEntityWise'] && field.name in transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']));
                     console.log('HasUpdate', hasUpdate);
-                    const currentValue = customer?.[field.name] || '';
+                    let currentValue = customer?.[field.name] || '';
+                    console.log("---------field name", field.name)
+                    console.log("---------current value", currentValue)
+                    if (field.name === constants.ENTITY.VMCO || field.name === constants.ENTITY.DIYAFA || field.name === constants.ENTITY.NAQI || field.name === constants.ENTITY.DAR || field.name === constants.ENTITY.GREEN_MAST) {
+                      console.log("---------in if field name", field.name)
+                      console.log("---------in if current", customer?.assignedToEntityWise?.[field.name])
+                      currentValue = customer?.assignedToEntityWise?.[field.name] || '';
+                    }
                     const proposedValue = hasUpdate ? transformedCustomer?.workflowData?.updates[field.name] : null;
                     switch (field.type) {
                       case 'text':
@@ -1815,7 +1953,7 @@ setTimeout(() => window.location.reload(true), 3000);
                             <label htmlFor={`${field.name}-input`} hidden={!isV(field.name)}>
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
-                              {hasUpdate && <span className="update-badge">Pending Update</span>}
+                              {hasUpdate && <span className="update-badge">Updated</span>}
                             </label>
                             {field.isLocation ? (
                               <div className="location-input-container">
@@ -1920,7 +2058,7 @@ setTimeout(() => window.location.reload(true), 3000);
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData?.[field.name] || transformedCustomer?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || ''}
+                              value={formData?.[field.name] || transformedCustomer?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || customer?.assignedToEntityWise?.[field.name] || ''}
                               onChange={handleInputChange}
                               // disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates) ? field.name in transformedCustomer?.workflowData?.updates?.assignedToEntityWise
                               //   : false)}
@@ -1949,12 +2087,12 @@ setTimeout(() => window.location.reload(true), 3000);
                             <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
                               {field.label}
                               {field.required && <span className="required-field">*</span>}
-                              {hasUpdate && <span className="update-badge">Pending Update</span>}
+                              {hasUpdate && <span className="update-badge">Updated</span>}
                             </label>
                             <select
                               id={`${field.name}-select`}
                               name={field.name}
-                              value={formData[field.name] || formData?.['assignedToEntityWise']?.[field.name] || ''}
+                              value={formData?.[field.name] || transformedCustomer?.workflowData?.updates?.[field.name] || currentValue || ''}
                               onChange={handleInputChange}
                               disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
                                 : false)}
@@ -1970,12 +2108,73 @@ setTimeout(() => window.location.reload(true), 3000);
                                 Value
                               </option>
                               {
-                                dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => (
-                                  <option key={idx} value={opt}>
-                                    {t(opt)}
-                                  </option>
-                                )
-                                ) : []
+
+                                dropdownOptions[field.name] ? dropdownOptions[field.name].map((opt, idx) => {
+                                  return (
+                                    <option key={idx} value={typeof opt === 'object' ? opt.employeeId : opt}>
+                                      {t(typeof opt === 'object' ? opt.name : opt)}
+                                    </option>
+                                  );
+                                }) : []
+                              }
+                              {/* {field.options.map((opt, idx) => (
+                                <option key={idx} value={opt}>
+                                  {opt}
+                                </option>
+                              ))} */}
+                            </select>
+                            {hasUpdate && (
+                              <div className="current-value">
+                                Current: {currentValue || '(empty)'}
+                              </div>
+                            )}
+
+                            {formErrors[field.name] && (
+                              <div className="error">{formErrors[field.name]}</div>
+                            )}
+                          </div>
+                        );
+
+                      case 'dropdownObject':
+                        return (
+                          <div className={`form-group ${hasUpdate ? 'pending-update' : ''}`} key={field.name}>
+                            <label htmlFor={`${field.name}-select`} hidden={!isV(field.name)}>
+                              {field.label}
+                              {field.required && <span className="required-field">*</span>}
+                              {hasUpdate && <span className="update-badge">Updated</span>}
+                            </label>
+                            <select
+                              id={`${field.name}-select`}
+                              name={field.name}
+                              value={formData?.[field.name] || formData?.['assignedToEntityWise']?.[field.name] || transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']?.[field.name] || currentValue || ''}
+                              onChange={handleInputChange}
+                              disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates && customerFormMode !== 'custDetailsAdd' && hasUpdate) ? (field.name in transformedCustomer.workflowData.updates || field.name in transformedCustomer.workflowData.updates?.assignedToEntityWise)
+                                : false)}
+                              hidden={!isV(field.name)}
+                              className={
+                                `dropdown
+                  ${hasUpdate ? 'update-field' : ''}`
+                              }
+                              placeholder="Value"
+                              required
+                            >
+                              <option value="" disabled hidden>
+                                Value
+                              </option>
+                              {
+
+                                dropdownEmployeeOptions[field.name] ? dropdownEmployeeOptions[field.name].map((opt, idx) => {
+                                  console.log(transformedCustomer?.workflowData?.updates?.['assignedToEntityWise']?.[field.name])
+                                  console.log('dropdownOptions', dropdownOptions);
+                                  console.log("+++++++++field", field.name);
+                                  console.log("++++++++++++++++++++opt", opt);
+                                  // console.log("+++++++++dropdownOptions[field.name]", dropdownOptions[field.name]);
+                                  return (
+                                    <option key={idx} value={opt.employeeId}>
+                                      {t(opt.name)}
+                                    </option>
+                                  );
+                                }) : []
                               }
                               {/* {field.options.map((opt, idx) => (
                                 <option key={idx} value={opt}>
@@ -2140,7 +2339,7 @@ setTimeout(() => window.location.reload(true), 3000);
                                     ))
                                   ) : (
                                     <div className="file-item">
-                                      {uploadedFiles[field.name].isNew ? (
+                                      {uploadedFiles[field.name]?.isNew ? (
                                         <span className="file-name">
                                           <button
                                             type="button"
@@ -2161,7 +2360,7 @@ setTimeout(() => window.location.reload(true), 3000);
                                           <button
                                             type="button"
                                             className="view-file-button"
-                                            onClick={() => handleViewFile(customer.id, uploadedFiles[field.name].name, field.name)}
+                                            onClick={() => handleViewFile(customer.id, uploadedFiles[field.name], field.name)}
                                           >
                                             <FontAwesomeIcon icon={faEye} />
                                           </button>
@@ -2177,7 +2376,7 @@ setTimeout(() => window.location.reload(true), 3000);
 
 
                       case 'multiDocument':
-                        const multiUploads = uploadedFiles?.[field.name] || transformedCustomer?.[field.name] || { name: [] };    
+                        const multiUploads = uploadedFiles?.[field.name] || transformedCustomer?.[field.name] || { name: [] };
                         return (
                           <tr className="document-upload full-width" key={field.name}>
                             {/* Label */}
@@ -2291,7 +2490,7 @@ setTimeout(() => window.location.reload(true), 3000);
                                       ? field.name in transformedCustomer.workflowData.updates
                                       : false)}
                                   />
-                                  {option} {hasUpdate && <span className="update-badge">Pending Update</span>}
+                                  {option} {hasUpdate && <span className="update-badge">Updated</span>}
                                 </label>
                               </div>
                             ))}
@@ -2335,7 +2534,7 @@ setTimeout(() => window.location.reload(true), 3000);
             [] :
             (
               <div className="customer-onboarding-form-actions">
-                <div className="status-text">
+                <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className="status-label">{t('Status')}:</span>
                   <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
                 </div>
@@ -2350,8 +2549,10 @@ setTimeout(() => window.location.reload(true), 3000);
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}
-                  {console.log(customer)}
-                  {console.log(customer.isApprovalMode)}
+                  {console.log("%%%%%%%%%%%%%%%", customer)}
+                  {console.log("^^^^^^^^", customer)}
+                  {console.log("&&&&&&&&&&", uploadedFiles)}
+                  {console.log("##########", formData)}
                   {(
                     <>
                       {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>

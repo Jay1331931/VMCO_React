@@ -65,7 +65,7 @@ const Tabs = ({
                     align-items: center;
                     justify-content: center;
                     text-align: center;
-                    padding: 12px 24px;
+                    padding: 12px 12px;
                     background: none;
                     border: none;
                     font-size: 0.9rem;
