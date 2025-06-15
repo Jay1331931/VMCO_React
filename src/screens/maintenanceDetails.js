@@ -422,24 +422,26 @@ function MaintenanceDetails() {
                 <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} disabled={!isE("videos")} />
               </div>
             </div>
-            <div className='maintenance-details-field'>
-              <label>{t("Charges")}</label>
-              <input
-                id='charges'
-                name='charges'
-                type='number'
-                step='1'
-                min='0'
-                placeholder='0.00'
-                onChange={handleInputChange}
-                value={ticket.charges || ""}
-                disabled={!isE("charges")}
-                onInput={(e) => {
-                  // Ensure only decimal values are entered
-                  e.target.value = e.target.value.replace(/[^0-9.]/g, "");
-                }}
-              />
-            </div>
+            {isV("charges") && (
+              <div className='maintenance-details-field'>
+                <label>{t("Charges")}</label>
+                <input
+                  id='charges'
+                  name='charges'
+                  type='number'
+                  step='1'
+                  min='0'
+                  placeholder='0.00'
+                  onChange={handleInputChange}
+                  value={ticket.charges || ""}
+                  disabled={!isE("charges")}
+                  onInput={(e) => {
+                    // Ensure only decimal values are entered
+                    e.target.value = e.target.value.replace(/[^0-9.]/g, "");
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
         {/* {isV("charges") && (
@@ -528,9 +530,10 @@ function MaintenanceDetails() {
         isOpen={isCommentPanelOpen}
         setIsOpen={setIsCommentPanelOpen}
         onAddComment={handleAddComment}
-        showCommentForm={true}
+        showCommentForm={isE("commentIcon")}
         externalComments={ticket.comments}
         currentUser={{ userName: user.userName, userId: user.userId }}
+        isVisible={formMode !== "add" && isV("commentIcon")}
       />
     </Sidebar>
   );
