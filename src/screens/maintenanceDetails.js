@@ -51,10 +51,10 @@ function MaintenanceDetails() {
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
-  const [images, setImages] = useState(Array.isArray(ticket.images) && ticket.images.length > 0 ? ticket.images.filter(Boolean) : []);
+  const [images, setImages] = useState(ticket.attachment?.images || []);
   const fileInputRef = useRef(null);
   const [popupVideo, setPopupVideo] = useState(null);
-  const [videos, setVideos] = useState([]);
+  const [videos, setVideos] = useState(ticket.attachment?.videos || []);
   const videoInputRef = useRef(null);
   // const [maintenanceCharges, setMaintenanceCharges] = useState({
   //   serviceCharges: ticket.charges?.serviceCharges || 0,
@@ -233,47 +233,86 @@ function MaintenanceDetails() {
 
   // Handle save functionality
   const handleSave = async () => {
-    setIsEditing(false);
-    if (formMode == "add" && !ticket.id) {
-      ticket.customerId = user.customerId;
-      ticket.attachment = "none"; // TODO: in DB is is not null. Need to be nullaable
-      ticket.comments = "[]"; // assign an empty array
-      ticket.status = "New"; // Default status for new tickets
-    }
-
-    // Update ticket with selected employee and branch
-    const updatedTicket = {
-      ...ticket,
-      //assignedTo: selectedEmployee,
-      //branchId: selectedBranch
-    };
-
     try {
-      const endPoint = formMode == "add" ? "/maintenance" : "/maintenance/id/" + ticket.id;
-      const method = formMode == "add" ? "POST" : "PATCH";
+      setIsEditing(false);
+
+      // Prepare files for upload
+      const imageFiles = images
+        .map((dataUrl, index) => {
+          const fileName = getUniqueFileName("image", dataUrl, index);
+          return fileName ? dataURLtoFile(dataUrl, fileName) : null;
+        })
+        .filter(Boolean); // Filter out null values (already uploaded images)
+
+      const videoFiles = videos
+        .map((dataUrl, index) => {
+          const fileName = getUniqueFileName("video", dataUrl, index);
+          return fileName ? dataURLtoFile(dataUrl, fileName) : null;
+        })
+        .filter(Boolean); // Filter out null values (already uploaded videos)
+
+      // Only upload if there are new files
+      let uploadedFiles = [];
+      if (imageFiles.length > 0 || videoFiles.length > 0) {
+        uploadedFiles = await uploadFilesToBlobStorage(imageFiles, videoFiles);
+      }
+      uploadedFiles = uploadedFiles.files || [];
+      // Prepare updated ticket with file URLs
+      const updatedImages = images.map((img, idx) =>
+        img.startsWith("data:") && uploadedFiles[idx] && uploadedFiles[idx].originalName.startsWith("image_") ? uploadedFiles[idx].url : img
+      );
+
+      const updatedVideos = videos.map((vid, idx) =>
+        vid.startsWith("data:") && uploadedFiles[images.length + idx] && uploadedFiles[images.length + idx].originalName.startsWith("video_")
+          ? uploadedFiles[images.length + idx].url
+          : vid
+      );
+
+      if (formMode === "add" && !ticket.id) {
+        const attachments = {
+          images: updatedImages,
+          videos: updatedVideos,
+        };
+
+        ticket.customerId = user.customerId;
+        ticket.attachment = attachments;
+        ticket.comments = "[]";
+        ticket.status = "New";
+      }
+
+      // Update ticket with file URLs and other fields
+      const ticketToSave = {
+        ...ticket,
+      };
+
+      const endPoint = formMode === "add" ? "/maintenance" : "/maintenance/id/" + ticket.id;
+      const method = formMode === "add" ? "POST" : "PATCH";
 
       const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}` : null;
-      console.log("~~~~~~~ inside handleSave :" + JSON.stringify(updatedTicket));
+
       const response = await fetch(apiUrl, {
         method: method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(updatedTicket),
+        body: JSON.stringify(ticketToSave),
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       // Update local state with saved ticket data
       const savedTicket = await response.json();
       setTicket(savedTicket);
+      setImages(savedTicket.attachment?.images || []);
+      setVideos(savedTicket.attachment?.videos || []);
 
       // Navigate back to maintenance page after successful save
       navigate("/maintenance");
     } catch (error) {
       console.error("Error saving maintenance ticket:", error);
+      // Re-enable editing if save fails
+      setIsEditing(true);
     }
   };
 
@@ -307,6 +346,84 @@ function MaintenanceDetails() {
       setTicket(updatedTicket);
     } catch (error) {
       console.error("Error updating ticket comments:", error);
+    }
+  };
+
+  // Handle image removal
+  const handleRemoveImage = (indexToRemove) => {
+    setImages(images.filter((_, index) => index !== indexToRemove));
+  };
+
+  // Handle video removal
+  const handleRemoveVideo = (indexToRemove) => {
+    setVideos(videos.filter((_, index) => index !== indexToRemove));
+  };
+
+  // Convert data URL to File object
+  const dataURLtoFile = (dataUrl, filename) => {
+    const arr = dataUrl.split(",");
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Generate a unique filename for Azure Blob Storage
+  const getUniqueFileName = (prefix, dataUrl, index) => {
+    if (!dataUrl.startsWith("data:")) return null;
+
+    // Extract file extension from MIME type
+    const fileExt = dataUrl.split(";")[0].split("/")[1];
+
+    // Generate unique components
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 10);
+    const userId = user.userId || "unknown";
+
+    // Create format: prefix_userId_timestamp_randomString_index.extension
+    return `${prefix}_${userId}_${timestamp}_${randomString}_${index}.${fileExt}`;
+  };
+
+  // Upload files to Azure Blob Storage
+  const uploadFilesToBlobStorage = async (imageFiles, videoFiles) => {
+    try {
+      const formData = new FormData();
+
+      formData.append("uploadModule", "maintenance");
+      // Add image files to formData
+      imageFiles.forEach((file) => {
+        formData.append("files", file, file.name);
+      });
+
+      // Add video files to formData
+      videoFiles.forEach((file) => {
+        formData.append("files", file, file.name);
+      });
+
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}/upload-multiple`
+        : "http://localhost:3000/api/blob-storage/upload";
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      throw error;
     }
   };
 
@@ -397,7 +514,18 @@ function MaintenanceDetails() {
               <div className='maintenance-images-list'>
                 {images.map((img, idx) => (
                   <div key={idx} className='maintenance-image-placeholder' onClick={() => img && setPopupImage(img)} title={img ? "Click to view" : ""}>
-                    <image width='100' height='100' style={{ objectFit: "cover" }} src={img} />
+                    <img width='100' height='100' style={{ objectFit: "cover" }} src={img} alt={`Uploaded image ${idx + 1}`} />
+                    {isE("btnAddimages") && (
+                      <button
+                        className='maintenance-remove-btn'
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent opening the image
+                          handleRemoveImage(idx);
+                        }}
+                        title={t("Remove Image")}>
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
                 {/* Add Image Button */}
@@ -412,7 +540,18 @@ function MaintenanceDetails() {
               <div className='maintenance-videos-list'>
                 {videos.map((vid, idx) => (
                   <div key={idx} className='maintenance-video-placeholder' onClick={() => vid && setPopupVideo(vid)} title={vid ? "Click to view" : ""}>
-                    <video width='100' height='100' style={{ objectFit: "cover" }} src={vid} />
+                    <video width='100' height='100' style={{ objectFit: "cover" }} src={vid} preload='metadata' />
+                    {isE("btnAddvideos") && (
+                      <button
+                        className='maintenance-remove-btn'
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent opening the video
+                          handleRemoveVideo(idx);
+                        }}
+                        title={t("Remove Video")}>
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
                 {/* Add Video Button */}
@@ -521,6 +660,16 @@ function MaintenanceDetails() {
           <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
             <img src={popupImage} alt='Ticket' />
             <button className='image-popup-close' onClick={() => setPopupImage(null)}>
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+      {popupVideo && (
+        <div className='video-popup-overlay' onClick={() => setPopupVideo(null)}>
+          <div className='video-popup-content' onClick={(e) => e.stopPropagation()}>
+            <video src={popupVideo} controls autoPlay className='video-player' onError={(e) => console.error("Video error:", e)} />
+            <button className='video-popup-close' onClick={() => setPopupVideo(null)}>
               ×
             </button>
           </div>
