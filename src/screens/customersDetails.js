@@ -524,6 +524,7 @@ function CustomersDetails() {
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -743,7 +744,12 @@ function CustomersDetails() {
       });
 
       if (!hasPaymentChanges) return { method_details: {} };
-
+      
+      changedFields.forEach(fieldName => {
+        if (paymentDetailFields.includes(fieldName)) {
+          setPaymentChangesIsThere(true);
+        }
+      });
       return {
         method_details: {
           credit: {
@@ -848,7 +854,7 @@ function CustomersDetails() {
         }
       }
 
-      if (!(transformedCustomer?.customerStatus === 'new') && Object.keys(paymentMethodPayload.method_details).length > 0) {
+      if (!(transformedCustomer?.customerStatus === 'new') && paymentChangesIsThere && Object.keys(paymentMethodPayload.method_details).length > 0) {
         // console.log(paymentMethodPayload)
         await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
           method: 'POST',
