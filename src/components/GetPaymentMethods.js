@@ -7,8 +7,8 @@ function GetPaymentMethods({
   API_BASE_URL,
   t = (x) => x,
   category,
-  customerId, // <-- Add customerId prop
-  totalAmount = 0 // <-- Add totalAmount prop
+  customerId,
+  totalAmount
 }) {
   const [methods, setMethods] = useState([]);
   const [balances, setBalances] = useState({});
@@ -17,6 +17,7 @@ function GetPaymentMethods({
 
   // Fetch payment methods
   useEffect(() => {
+    console.log('Passed items:', category, customerId, totalAmount)
     if (!open) return;
     setLoading(true);
     setError(null);
@@ -39,18 +40,14 @@ function GetPaymentMethods({
           throw new Error('Unexpected response format for payment method options');
         }
 
-        // Filter payment methods based on category
+        // Filter payment methods based on category (match Cart logic)
         let allowedMethods = paymentMethods;
-        if (category === 'VMCO Machines') {
+        const cat = (category || '').toLowerCase();
+        if (cat.includes('vmco') && cat.includes('machines')) {
           allowedMethods = paymentMethods.filter(
             m => m === 'Pre Payment' || m === 'Partial Payment'
           );
-        } else if (
-          category === 'VMCO Consumables' ||
-          category === 'Diyafa' ||
-          category === 'Green Mast' ||
-          category === 'Naqui'
-        ) {
+        } else {
           allowedMethods = paymentMethods.filter(
             m => m === 'Pre Payment' || m === 'Credit' || m === 'Cash on Delivery'
           );
@@ -63,26 +60,28 @@ function GetPaymentMethods({
 
   // Fetch payment method balances for the customer
   useEffect(() => {
+    console.log('Open:', open, 'Customer ID:', customerId);
     if (!open || !customerId) return;
-    fetch(`http://localhost:3000/api/payment-method/pagination?filters=${encodeURIComponent(JSON.stringify({ customerId }))}`,
-      {method: 'GET',
+    fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include'
       })
       .then(res => res.json())
       .then(result => {
-        if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
-          const customerData = result.data.data.find(d => d.customerId === Number(customerId));
-          if (customerData && customerData.methodDetails) {
-            console.log('Raw balances data fetched:', customerData.methodDetails);
+        console.log('Fetched payment method balances:', result);
+        if (result.status === 'Ok' && result.data) {
+          const methodDetails = result.data.methodDetails;
+          if (methodDetails) {
+            console.log('Raw balances data fetched:', methodDetails);
             // Map method names to balances
-            const details = customerData.methodDetails;
+            //const details = customerData.methodDetails;
             const map = {};
             // Normalize method names to match those in methods array
-            if (details.COD) map['Cash on Delivery'] = details.COD.limit;
-            if (details.credit) map['Credit'] = details.credit.balance;
-            if (details.prePayment) map['Pre Payment'] = details.prePayment.balance;
-            if (details.partialPayment) map['Partial Payment'] = details.partialPayment.balance;
+            map['Cash on Delivery'] = methodDetails.COD.limit ? Number(methodDetails.COD.limit).toFixed(2) : 'NA';
+            if (methodDetails.credit) map['Credit'] = methodDetails.credit.balance ? Number(methodDetails.credit.balance).toFixed(2) : 'NA';
+            if (methodDetails.prePayment) map['Pre Payment'] = methodDetails.prePayment.balance ? Number(methodDetails.prePayment.balance).toFixed(2) : 'NA';
+            if (methodDetails.partialPayment) map['Partial Payment'] = methodDetails.partialPayment.balance ? Number(methodDetails.partialPayment.balance).toFixed(2) : 'NA';
             setBalances(map);
           }
         }
@@ -128,6 +127,13 @@ function GetPaymentMethods({
                       // Disable if totalAmount >= COD limit
                       isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
                     }
+
+                    if (method === 'Credit' && balances['Credit'] !== undefined) {
+                      // Disable if totalAmount >= Credit limit
+                      isDisabled = Number(totalAmount) >= Number(balances['Credit']);
+                    }
+
+
                     return (
                       <tr key={idx}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
@@ -210,6 +216,12 @@ function GetPaymentMethods({
         .gp-product-btn:hover {
           background: #084532;
         }
+
+        .gp-product-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
         .gp-close-btn {
           padding: 7px 18px;
           border-radius: 6px;

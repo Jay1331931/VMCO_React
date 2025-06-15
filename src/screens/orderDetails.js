@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
 import CommentPopup from '../components/commentPanel';
@@ -16,6 +16,8 @@ import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac'; // Add this import
 import formatDate from '../utilities/dateFormatter';
 import ApprovalDialog from '../components/ApprovalDialog';
+import GetPaymentMethods from '../components/GetPaymentMethods'; // Add this import
+import Dropdown from '../components/DropDown';
 
 const defaultOrder = {
   id: '',
@@ -24,6 +26,7 @@ const defaultOrder = {
   orderBy: '',
   erp: '',
   entity: '',
+  category: '',
   paymentMethod: '',
   totalAmount: '',
   paidAmount: '',
@@ -52,7 +55,7 @@ function OrderDetails() {
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
   // Detect if coming from approval mode
-  const fromApproval = location.state?.fromApproval || false;
+  const fromApproval = location.state?.fromApproval;
   const wfid = location.state?.wfid || null;
 
 
@@ -76,11 +79,23 @@ function OrderDetails() {
   const [nextOrderId, setNextOrderId] = useState('');
   const [saving, setSaving] = useState(false); // New saving state
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
+  const [products, setProducts] = useState([]);
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   // Store companyType in state
   const [companyType, setCompanyType] = useState('');
+
+  // Add state for payment method popup and selected method
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [pendingSaveAction, setPendingSaveAction] = useState(null);
+
+  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
+  // Hardcode VMCO categories
+  const VMCO_CATEGORIES = [
+    'VMCO Machines',
+    'VMCO Consumables'
+  ];
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -253,9 +268,26 @@ function OrderDetails() {
     // Implement download logic here
   };
   // Function to handle form submission
-  const handleSave = async (action) => {
+  const handleSave = async (action, selectedMethod) => {
+     // Perform validation before saving
+      if (!formData.customerId) {
+        alert(t('Please select a customer'));
+        setSaving(false);
+        return;
+      }
     // Disable save button to prevent multiple submissions
     setSaving(true);
+
+    // Only show popup in add mode and if payment method is not selected
+    if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
+      setPendingSaveAction(action);
+      setShowPaymentPopup(true);
+      setSaving(false);
+      return;
+    }
+
+    // Use the selected method if provided, else use from formData
+    const paymentMethodToUse = selectedMethod || formData.paymentMethod;
 
     try {
       // Perform validation before saving
@@ -272,10 +304,15 @@ function OrderDetails() {
       }      // Check if we're editing an existing order or creating a new one
       if (formData.id && isEditMode) {
         // Update existing order
-        const payload = {};
 
         // Include all fields that might need updating
-        [].forEach(field => {
+        const fieldsToUpdate = [
+          'erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
+          'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
+          'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber'
+        ];
+        const payload = {};
+        fieldsToUpdate.forEach(field => {
           if (formData[field] !== undefined && formData[field] !== null) {
             payload[field] = formData[field];
           }
@@ -470,10 +507,10 @@ function OrderDetails() {
             branchNameEn: formData.selectedBranchName || formData.branchNameEn || '',
             branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
             orderBy: formData.orderBy || '',
-            paymentMethod: formData.paymentMethod || '',
+            paymentMethod: selectedMethod || formData.paymentMethod || '', 
             status: 'Open',
             sales_executive: user.employeeId,
-            paymentStatus: 'Pending',
+            paymentStatus: (selectedMethod || formData.paymentMethod) === 'Credit' ? 'Paid' : 'Pending', // <-- Use selectedMethod for logic
             entity: formData.entity || '',
             deliveryCharges: formData.deliveryCharges || '0',
             totalAmount: formData.totalAmount || '0',
@@ -1001,10 +1038,10 @@ function OrderDetails() {
 
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
-      // Logout instead of showing loading message
-      logout();
-      navigate('/login');
-      return; // Return while logout is processing
+      // // Logout instead of showing loading message
+      // logout();
+      // navigate('/login');
+      // return; // Return while logout is processing
     }
 
     if (user && user.userType) {
@@ -1451,6 +1488,32 @@ function OrderDetails() {
     }
   };
 
+  // Add this helper function inside your component, before return
+  function getTotalAmountForPopup() {
+    if (!formData.products || formData.products.length === 0) return 0;
+    let sum = 0;
+    formData.products.forEach(item => {
+      const qty = Number(item.quantity || 1);
+      const price = Number(item.unitPrice || 0);
+      const vat = Number(item.vatPercentage || 0);
+      const base = price * qty;
+      const vatAmount = (base * vat) / 100;
+      sum += base + vatAmount;
+    });
+    return sum;
+  }
+
+  // Add this handler inside your component, before return
+  function handleSelectPaymentMethod(method) {
+    setShowPaymentPopup(false);
+    setFormData(prev => ({ ...prev, paymentMethod: method }));
+    // If a save was pending, continue with save
+    if (pendingSaveAction) {
+      handleSave(pendingSaveAction, method);
+      setPendingSaveAction(null);
+    }
+  }
+
   return (
     <Sidebar>
       {isV('orderDetails') && (
@@ -1472,7 +1535,7 @@ function OrderDetails() {
                           <input
                             id="customerField"
                             name="selectedCustomerName"
-                            value={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
+                            defaultValue={i18n.language === 'ar' ? (formData.companyNameAr || formData.selectedCustomerName || '') : (formData.companyNameEn || formData.selectedCustomerName || '')}
                             onClick={() => setShowCustomerPopup(true)}
                             className="customer-input"
                             placeholder={t('Click to select customer')}
@@ -1565,7 +1628,7 @@ function OrderDetails() {
                           <option value="">{t('Select Entity')}</option>
                           {entityOptions.map((entity, index) => (
                             <option key={index} value={entity}>
-                              {entity}
+                              {t(entity)}
                             </option>
                           ))}
                         </select>
@@ -1579,24 +1642,50 @@ function OrderDetails() {
                     </div>
                   )}
 
+                  {isV('category') && (
+                    <div className="order-details-field">
+                      <label>{t('Category')}</label>
+                      {formMode === 'add' ? (
+                        <Dropdown
+                          name="category"
+                          value={formData.category || ''}
+                          onChange={handleInputChange}
+                          options={
+                            formData.entity && formData.entity.toLowerCase() === 'vmco'
+                              ? VMCO_CATEGORIES.map(category => ({ value: category, label: category }))
+                              : []
+                          }
+                          className="category-dropdown"
+                          placeholder={t('Select Category')}
+                          disabled={
+                            !isE('category') ||
+                            (formData.products && formData.products.length > 0) ||
+                            !formData.entity ||
+                            formData.entity.toLowerCase() !== 'vmco'
+                          }
+                        />
+                      ) : (
+                        <input
+                          name="category"
+                          value={formData.category || ''}
+                          disabled
+                        />
+                      )}
+                    </div>
+                  )}
+
                   {isV('paymentMethod') && (
                     <div className="order-details-field">
                       <label>{t('Payment Method')}</label>
                       {formMode === 'add' ? (
-                        <select
+                        <input
                           name="paymentMethod"
                           value={formData.paymentMethod || ''}
-                          onChange={handleInputChange}
-                          className="entity-dropdown"
-                          disabled={!isE('paymentMethod')}
-                        >
-                          <option value="">{t('Select Payment Method')}</option>
-                          {paymentMethodOptions.map((paymentMethod, index) => (
-                            <option key={index} value={paymentMethod}>
-                              {paymentMethod}
-                            </option>
-                          ))}
-                        </select>
+                          readOnly
+                          placeholder={t('Click Save to select')}
+                          style={{ background: '#f9f9f9', cursor: 'not-allowed' }}
+                          disabled
+                        />
                       ) : (
                         <input
                           name="paymentMethod"
@@ -1867,10 +1956,9 @@ function OrderDetails() {
                     {t('Pay')}
                   </button>
                 )}
-
                 {isV('actionButtons') && fromApproval && (
                   <div className="order-details-actions">
-                    {isV('btnApprove', fromApproval, true) && isE('btnApprove') && (
+                    {isV('btnApprove', fromApproval, true) && (
                       <button
                         className="order-action-btn approve"
                         onClick={() => handleApprovalSubmit('approve')}
@@ -1880,7 +1968,7 @@ function OrderDetails() {
                       </button>
                     )}
 
-                    {isV('btnReject', fromApproval, true) && isE('btnReject') && (
+                    {isV('btnReject', fromApproval, true) && (
                       <button
                         className="order-action-btn reject"
                         onClick={() => handleApprovalSubmit('reject')}
@@ -1920,6 +2008,7 @@ function OrderDetails() {
               token={localStorage.getItem('token')}
               customerId={formData.customerId}
               entity={formData.entity}
+              category={formData.category}
               t={t}
             />
           )}
@@ -1940,6 +2029,7 @@ function OrderDetails() {
             <GetBranches
               open={showBranchPopup}
               onClose={() => setShowBranchPopup(false)}
+             
               onSelectBranch={handleSelectBranch}
               customerId={formData.customerId}
               API_BASE_URL={API_BASE_URL}
@@ -1996,6 +2086,18 @@ function OrderDetails() {
             title={approvalAction === 'approve' ? t('Approve Order') : t('Reject Order')}
             subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this order?') : t('Are you sure you want to reject this order?')}
           />
+
+          {/* Payment Method Popup */}
+          <GetPaymentMethods
+            open={showPaymentPopup}
+            onClose={() => setShowPaymentPopup(false)}
+            onSelectPaymentMethod={handleSelectPaymentMethod}
+            API_BASE_URL={API_BASE_URL}
+            t={t}
+            category={formData.category}
+            customerId={formData.customerId}
+            totalAmount={formData.totalAmount}
+          />
         </div>
       )}
     </Sidebar>
@@ -2003,14 +2105,3 @@ function OrderDetails() {
 }
 
 export default OrderDetails;
-
-// Example usage for Approve/Reject buttons:
-// Place the following inside your JSX render/return block where you want the buttons to appear:
-/*
-{isV('approveButton', fromApproval, true) && (
-  <button onClick={() => handleSubmit('approve')}>Approve</button>
-)}
-{isV('rejectButton', fromApproval, true) && (
-  <button onClick={() => handleSubmit('reject')}>Reject</button>
-)}
-*/

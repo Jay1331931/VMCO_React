@@ -1045,7 +1045,7 @@
 
 .invite-button {
   padding: 8px 16px;
-  /* background-color: #4CAF50; */
+  /* background-color: darkgreen; */
   background-color: #01594d;
   color: white;
   border: none;
@@ -1547,7 +1547,7 @@
 
 .onboarding-container .form-group input {
   width: 250px;
-  height: 30px;
+  height: 37px;
 }
 .onboarding-container .form-group select {
   width: 250px;

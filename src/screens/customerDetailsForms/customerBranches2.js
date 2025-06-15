@@ -53,6 +53,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
             branch_name_en: '',
             city: '',
             locationType: '',
+            region: '',
             branch_status: 'pending',
             customerId: customer.id,
             isNew: true,
@@ -275,7 +276,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     };
     const validateChangedFields = (branchData, checkRequired = false) => {
         const errors = {};
-        const mandatoryFields = ['branchNameEn', 'branchNameLc', 'buildingName', 'street', 'city', 'locationType',
+        const mandatoryFields = ['branchNameEn', 'branchNameLc', 'buildingName', 'street', 'city', 'locationType', 'region',
             'primaryContactName', 'primaryContactEmail', 'primaryContactDesignation', 'primaryContactMobile', 'secondaryContactName', 'secondaryContactEmail', 'secondaryContactDesignation', 'secondaryContactMobile'];
         Object.keys(branchData).forEach((fieldName) => {
             //   const field = formsByTab[activeTab].find(f => f.name === fieldName);
@@ -413,7 +414,9 @@ if(action === 'save' || action === 'save changes') {
                 // add branchStatus to branchPayload by default
                 branchPayload['branchStatus'] = branch['branchStatus'];
                 // branchPayload['customerId'] = customer.id;
-
+                if(fieldName === 'region'){
+                    branchPayload['region'] = branchData['region']?.toLowerCase();
+                }
             }
         });
     }
@@ -516,10 +519,13 @@ if(action === 'save' || action === 'save changes') {
             if (contactDetailFields.includes(fieldName)) {
                 contactPayload[fieldName] = branchData[fieldName];
             } else {
-                if (fieldName === 'allContacts' || fieldName === 'updatedAt') {
+                if (fieldName === 'allContacts' || fieldName === 'updatedAt' || fieldName === 'isNew') {
 
                 } else {
                     branchPayload[fieldName] = branchData[fieldName];
+                    if (fieldName === 'region') {
+                        branchPayload['region'] = branchData['region']?.toLowerCase();
+                    }
                 }
             }
         });
@@ -665,6 +671,7 @@ setTimeout(() => window.location.reload(true), 3000);
                                 <th className="desktop-only">{t('Branch Name')}</th>
                                 <th className="desktop-only">{t('City')}</th>
                                 <th className="desktop-only">{t('Location Type')}</th>
+                                <th className="desktop-only">{t('Region')}</th>
                                 <th>{t('Status')}</th>
                                 <th></th>
                             </tr>
@@ -688,6 +695,7 @@ setTimeout(() => window.location.reload(true), 3000);
                                         <td className="desktop-only">{branch.branchNameEn}</td>
                                         <td className="desktop-only">{branch.city}</td>
                                         <td className="desktop-only">{branch.locationType}</td>
+                                        <td className="desktop-only">{branch.region}</td>
                                         <td className='desktop-only'>
                                             <span className={`branches-status-badge ${getStatusClass(branch.branch_status)}`}>
                                                 {t(branch.branchStatus)}
@@ -840,7 +848,7 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
             const options = {};
             console.log('branch', branch)
             // Find all dropdown fields and fetch their options
-            const dropdownFields = ['city', 'locationType']
+            const dropdownFields = ['city', 'locationType', 'region']
             console.log('dropdownFields', dropdownFields)
             for (const field of dropdownFields) {
                 try {
@@ -848,7 +856,7 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
                     // options[field.name] = data;
                     options[field] = data.map(opt =>
                         typeof opt === 'string'
-                            ? opt.charAt(0).toUpperCase() + opt.slice(1).toLowerCase()
+                            ? opt.charAt(0) + opt.slice(1).toLowerCase()
                             : opt // Fallback if not a string
                     );
                 } catch (err) {
@@ -1068,6 +1076,7 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
         { type: 'text', label: 'Street', name: 'street', placeholder: 'Street', required: true },
         { type: 'dropdown', label: 'City', name: 'city', placeholder: 'City', required: true, options: ['Jeddah', 'Riyadh', 'Dammam'] },
         { type: 'dropdown', label: 'Location Type', name: 'locationType', placeholder: 'Location Type', required: true, options: ['Office', 'Warehouse', 'Showroom'] },
+        { type: 'dropdown', label: 'Region', name: 'region', placeholder: 'Region', required: true, options: ['Region 1', 'Region 2', 'Region 3'] },
         {
             label: 'Geolocation',
             name: 'geolocation',
@@ -1185,6 +1194,9 @@ const hasCheckboxUpdate = customer.isApprovalMode && customer.module === 'branch
                                                         name={field.name}
                                                         value={value}
                                                         onChange={handleInputChange}
+                                                        style={hasUpdate ? {
+                                                            backgroundColor: '#fff8e1',
+                                                        } : {}}
                                                         disabled={customerFormMode==='custDetailsEdit' && !hasUpdate}
                                                     >
                                                         <option value="">{t(field.placeholder)}</option>

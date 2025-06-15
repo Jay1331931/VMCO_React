@@ -28,8 +28,6 @@ const getEntityFromCategory = (categoryName) => {
         return 'naqui';
     }
 
-    // Default to vmco if no match (though this shouldn't happen with your categories)
-    return 'vmco';
 };
 
 function Cart() {
@@ -532,7 +530,7 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2),
                     paidAmount: '0.00',
                     deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: 'Pending',
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: 'Open',
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,

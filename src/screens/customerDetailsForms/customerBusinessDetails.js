@@ -1,6 +1,6 @@
 import { faAnchorLock } from "@fortawesome/free-solid-svg-icons";
 import { typeOf } from "maplibre-gl";
-
+import Constants from "../../constants";
 export function getBusinessDetailsForm(t) {
   return {
     'Business Details': [
@@ -34,56 +34,32 @@ export function getBusinessDetailsForm(t) {
       { type: 'text', name: 'customerSource', label: t('Customer Source'), placeholder: t('Enter customer source'), required: false },
       
     
-    // { type: 'conditionalDropdown',
-    //     name: 'naqi',
-    //     label: t('Naqi'),
-    //     placeholder: t('Select'),
-    //     showWhen: 'interCompany',
-    //     showValue: true,
-    //     required: false,
-    // },
-    // { type: 'conditionalDropdown',
-    //     name: 'greenMart',
-    //     label: t('Green Mart'),
-    //     placeholder: t('Select'),
-    //     showWhen: 'interCompany',
-    //     showValue: true,
-    //     required: false,
-    // },
-    // { type: 'conditionalDropdown',
-    //     name: 'dar',
-    //     label: t('DAR'),
-    //     placeholder: t('Select'),
-    //     showWhen: 'interCompany',
-    //     showValue: true,
-    //     required: false,
-    // },
-    { type: 'dropdown',
-        name: 'vmco',
+    { type: 'dropdownObject',
+        name: Constants.ENTITY.VMCO,
         label: t('VMCO'),
         placeholder: t('Select'),
         required: false,
     },
-    { type: 'dropdown',
-        name: 'diyafa',
+    { type: 'dropdownObject',
+        name: Constants.ENTITY.DIYAFA,
         label: t('Diyafa'),
         placeholder: t('Select'),
         required: false,
     },
-    { type: 'dropdown',
-        name: 'naqi',
+    { type: 'dropdownObject',
+        name: Constants.ENTITY.NAQI,
         label: t('Naqi'),
         placeholder: t('Select'),
         required: false,
     },
-    { type: 'dropdown',
-        name: 'greenMart',
-        label: t('Green Mart'),
+    { type: 'dropdownObject',
+        name: Constants.ENTITY.GREEN_MAST,
+        label: t('Green Mast'),
         placeholder: t('Select'),
         required: false,
     },
-    { type: 'dropdown',
-        name: 'dar',
+    { type: 'dropdownObject',
+        name: Constants.ENTITY.DAR,
         label: t('DAR'),
         placeholder: t('Select'),
         required: false,
@@ -106,6 +82,7 @@ export function getBusinessDetailsForm(t) {
 
 export function getBusinessDetailsFormData(t, customer = null, companyType = null) {
   console.log('getBusinessDetailsFormData called with customer:', customer);
+  console.log('getBusinessDetailsFormData called with companyType:', companyType);
   if (customer) {
     return {
       'Business Details': {
@@ -129,11 +106,12 @@ export function getBusinessDetailsFormData(t, customer = null, companyType = nul
         entity: customer.entity || '',
         status: customer.customerStatus || '',
         customerSource: customer.customerSource || '',
-        vmco: customer.vmco || '',
-        diyafa: customer.diyafa || '',
-        naqi: customer.naqi || '',
-        greenMart: customer.greenMart || '',
-        dar: customer.dar || ''
+        [Constants.ENTITY.VMCO]: customer?.['assignedToEntityWise']?.[Constants.ENTITY.VMCO] || customer?.workflowData?.updates?.[Constants.ENTITY.VMCO] || '',
+        [Constants.ENTITY.DIYAFA]: customer[Constants.ENTITY.DIYAFA] || customer?.workflowData?.updates?.[Constants.ENTITY.DIYAFA] || '',
+        [Constants.ENTITY.NAQI]: customer[Constants.ENTITY.NAQI] || customer?.workflowData?.updates?.[Constants.ENTITY.NAQI] || '',
+        [Constants.ENTITY.GREEN_MAST]: customer[Constants.ENTITY.GREEN_MAST] || customer?.workflowData?.updates?.[Constants.ENTITY.GREEN_MAST] || '',
+        [Constants.ENTITY.DAR]: customer[Constants.ENTITY.DAR] || customer?.workflowData?.updates?.[Constants.ENTITY.DAR] || '',
+        region: customer.region || '',
       },
       'Contact Details': {
         primaryContactName: customer.primaryContactName || '',
@@ -176,18 +154,18 @@ export function getBusinessDetailsFormData(t, customer = null, companyType = nul
         isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable || false,
       },
       'Documents': (companyType === 'trading') ? {
-  crCertificate: customer.crCertificate ? { name: customer.crCertificate } : '',
-  vatCertificate: customer.vatCertificate ? { name: customer.vatCertificate } : '',
-  bankLetter: customer.bankLetter ? { name: customer.bankLetter } : '',
-  nationalId: customer.nationalId ? { name: customer.nationalId } : '',
-  nationalAddress: customer.nationalAddress ? { name: customer.nationalAddress } : '',
-  contractAgreement: customer.contractAgreement ? { name: customer.contractAgreement } : '',
-  creditApplication: customer.creditApplication ? { name: customer.creditApplication } : '',
-  acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
+  crCertificate: customer.crCertificate || customer?.workflowData?.updates?.crCertificate,
+  vatCertificate: customer.vatCertificate || customer?.workflowData?.updates?.vatCertificate,
+  bankLetter: customer.bankLetter || customer?.workflowData?.updates?.bankLetter,
+  nationalId: customer.nationalId || customer?.workflowData?.updates?.nationalId,
+  nationalAddress: customer.nationalAddress || customer?.workflowData?.updates?.nationalAddress,
+  contractAgreement: customer.contractAgreement || customer?.workflowData?.updates?.contractAgreement,
+  creditApplication: customer.creditApplication || customer?.workflowData?.updates?.creditApplication,
+  acknowledgementSignature: customer.acknowledgementSignature || customer?.workflowData?.updates?.acknowledgementSignature,
   } : {
-  acknowledgementSignature: customer.acknowledgementSignature ? { name: customer.acknowledgementSignature } : '',
-  contractAgreement: customer.contractAgreement ? { name: customer.contractAgreement } : '',
-  creditApplication: customer.creditApplication ? { name: customer.creditApplication } : '',
+  acknowledgementSignature: customer.acknowledgementSignature || customer?.workflowData?.updates?.acknowledgementSignature,
+  contractAgreement: customer.contractAgreement || customer?.workflowData?.updates?.contractAgreement,
+  creditApplication: customer.creditApplication || customer?.workflowData?.updates?.creditApplication,
   nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
 }
     }

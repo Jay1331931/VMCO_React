@@ -1229,7 +1229,7 @@ td.file-display-cell {
 
 /* Highlight for pending update fields */
 .pending-update {
-  border-left: 3px solid #ffc107;
+  border-left: 0px solid #ffc107;
   padding-left: 8px;
 }
 
@@ -1240,6 +1240,8 @@ td.file-display-cell {
   border-radius: 4px;
   font-size: 0.8em;
   margin-left: 8px;
+  display: inline-block;
+  text-align: end;
 }
 
 .update-field {
