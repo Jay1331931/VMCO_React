@@ -524,7 +524,7 @@ function CustomersDetails() {
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -745,11 +745,7 @@ function CustomersDetails() {
 
       if (!hasPaymentChanges) return { method_details: {} };
       
-      changedFields.forEach(fieldName => {
-        if (paymentDetailFields.includes(fieldName)) {
-          setPaymentChangesIsThere(true);
-        }
-      });
+      
       return {
         method_details: {
           credit: {
@@ -775,6 +771,14 @@ function CustomersDetails() {
         }
       };
     })();
+    let paymentChangesIsThere = false;
+    changedFields.forEach(fieldName => {
+        if (paymentDetailFields.includes(fieldName)) {
+          console.log("********Payment Detail Field", fieldName)
+          paymentChangesIsThere = true;
+          return;
+        }
+      });
 
     if (action === 'block') {
       customerPayload['customerStatus'] = 'blocked';
@@ -803,7 +807,20 @@ function CustomersDetails() {
           contactUpdatePayload[fieldName] = newValue;
           // }
         } else if (paymentDetailFields.includes(fieldName)) {
-
+          if (fieldName === 'creditLimit' || fieldName === 'creditPeriod') {
+            // if field name is credit limit update limit
+            // if field name is credit period update period
+            if(fieldName === 'creditLimit') {
+              paymentMethodPayload.method_details.credit.limit = newValue;
+            } else if (fieldName === 'creditPeriod') {
+              paymentMethodPayload.method_details.credit.period = newValue;
+            }
+            // paymentMethodPayload.method_details.credit[fieldName] = newValue;
+          } else if (fieldName === 'prePayment' || fieldName === 'partialPayment' || fieldName === 'COD') {
+            paymentMethodPayload.method_details[fieldName].isAllowed = newValue?.isAllowed;
+          } else {
+            paymentMethodPayload.method_details[fieldName] = newValue;
+          }
         }
         else {
           if (fieldName !== 'undefined' && fieldName !== 'businessHeadSameAsPrimary')
@@ -824,6 +841,9 @@ function CustomersDetails() {
     console.log("Form Data", formData)
     console.log("Contact Create Payload", contactCreatePayload)
     console.log("Contact Update Payload", contactUpdatePayload)
+    console.log("Customer Payload", customerPayload)
+    console.log("Payment Method Payload", paymentMethodPayload)
+    console.log("Has Payment Changes", paymentChangesIsThere)
     // Early return if no changes
     if (Object.keys(customerPayload).length === 0 &&
       Object.keys(contactCreatePayload).length === 0 &&
