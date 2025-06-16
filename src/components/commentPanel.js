@@ -6,7 +6,6 @@ import '../i18n';
 import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter';
 import RbacManager from '../utilities/rbac';
-
 /**
  * comment object structure
  {"action": "New", "date": "2025-05-21 00:00", "message": "Technician assigned", "userName": "currentUser.userName", "userId": "currentUser.userId"} 
@@ -108,7 +107,7 @@ const CommentPopup = ({
                 </div>
                 <div className="comment-content">
                   <div className="comment-meta">
-                    <p>{`${comment.date || comment.actionTimestamp}`}</p>
+                    <p>{`${comment.date || formatDate(comment?.actionTimestamp, 'YYYY-MM-DD HH:MM')}`}</p>
                     <p>{t(comment.action || 'Comment')}</p>
                   </div>
                   <div className="comment-text">{comment.message || comment.comment}</div>

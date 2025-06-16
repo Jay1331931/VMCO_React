@@ -2602,7 +2602,7 @@ function CustomersDetails() {
         {transformedCustomer.isApprovalMode && (
           <>
             <div>
-              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={transformedCustomer.approvalHistory ? transformedCustomer.approvalHistory : []} isVisible={true} />
+              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={transformedCustomer.approvalHistory ? transformedCustomer.approvalHistory : []} isVisible={true} showCommentForm={false} />
             </div>
           </>
         )}

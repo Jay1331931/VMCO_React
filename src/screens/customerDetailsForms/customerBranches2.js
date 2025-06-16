@@ -1595,14 +1595,14 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
                 onBlur={() => { }}
                 disabled={customerFormMode === 'custDetailsEdit'}
             />
-
+        
             {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (
                 <div className="time-action-buttons">
                     <button className="time-confirm-button" /*onClick={onConfirm}*/>
-                        <FontAwesomeIcon icon={faCheck} />
+                        {/* <FontAwesomeIcon icon={faCheck} /> */}
                     </button>
                     <button className="time-cancel-button" /*onClick={onCancel}*/>
-                        <FontAwesomeIcon icon={faXmark} />
+                        {/* <FontAwesomeIcon icon={faXmark} /> */}
                     </button>
                 </div>
             )}
