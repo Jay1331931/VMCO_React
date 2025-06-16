@@ -99,10 +99,10 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
                 </div>
                 <div className='comment-content'>
                   <div className='comment-meta'>
-                    <p>{`${comment.date}`}</p>
+                    <p>{`${comment.date || comment.actionTimestamp}`}</p>
                     <p>{t(comment.action || "Comment")}</p>
                   </div>
-                  <div className='comment-text'>{comment.message}</div>
+                  <div className='comment-text'>{comment.message || comment.comment}</div>
                 </div>
               </div>
             ))

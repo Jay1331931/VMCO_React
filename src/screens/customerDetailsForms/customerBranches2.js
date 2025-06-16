@@ -519,7 +519,7 @@ if(action === 'save' || action === 'save changes') {
             if (contactDetailFields.includes(fieldName)) {
                 contactPayload[fieldName] = branchData[fieldName];
             } else {
-                if (fieldName === 'allContacts' || fieldName === 'updatedAt' || fieldName === 'isNew') {
+                if (fieldName === 'allContacts' || fieldName === 'updatedAt' || fieldName === 'isNew' || fieldName === 'createdAt' || fieldName === 'createdBy') {
 
                 } else {
                     branchPayload[fieldName] = branchData[fieldName];
