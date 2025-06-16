@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { faMessage } from "@fortawesome/free-regular-svg-icons";
-import "../i18n";
-import { useTranslation } from "react-i18next";
-import formatDate from "../utilities/dateFormatter";
-import RbacManager from "../utilities/rbac";
-
+import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import { faMessage } from '@fortawesome/free-regular-svg-icons';
+import '../i18n';
+import { useTranslation } from 'react-i18next';
+import formatDate from '../utilities/dateFormatter';
+import RbacManager from '../utilities/rbac';
 /**
  * comment object structure
  {"action": "New", "date": "2025-05-21 00:00", "message": "Technician assigned", "userName": "currentUser.userName", "userId": "currentUser.userId"} 
@@ -97,10 +96,10 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
                   <FontAwesomeIcon icon={faUserCircle} className='user-icon' />
                   <div className='user-name'>{comment.userName || "User"}</div>
                 </div>
-                <div className='comment-content'>
-                  <div className='comment-meta'>
-                    <p>{`${comment.date || comment.actionTimestamp}`}</p>
-                    <p>{t(comment.action || "Comment")}</p>
+                <div className="comment-content">
+                  <div className="comment-meta">
+                    <p>{`${comment.date || formatDate(comment?.actionTimestamp, 'YYYY-MM-DD HH:MM')}`}</p>
+                    <p>{t(comment.action || 'Comment')}</p>
                   </div>
                   <div className='comment-text'>{comment.message || comment.comment}</div>
                 </div>

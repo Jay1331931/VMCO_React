@@ -578,6 +578,35 @@ setTimeout(() => window.location.reload(true), 3000);
         } catch (error) {
             console.error('Error saving branch:', error);
         }
+
+        // Create user if primary contact email exists with default password
+        const primaryContactEmail = branchData.primaryContactEmail;
+if (primaryContactEmail) {
+    const userPayload = {
+        email: primaryContactEmail,
+        password: 'Pass@123',
+        userType: 'customer',
+        roles: ['branch_primary'],
+    };
+
+    try {
+        const userResponse = await fetch(`${API_BASE_URL}/auth/registration/user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userPayload),
+            credentials: 'include'
+        });
+
+        if (!userResponse.ok) {
+            throw new Error('Failed to create user');
+        }
+
+        const userResult = await userResponse.json();
+        console.log('User created:', userResult);
+    } catch (error) {
+        console.error('Error creating user:', error);
+    }
+}
     };
 
 
@@ -1367,7 +1396,7 @@ let customerFormMode;
                                         value={getFieldValue(field)}
                                         required={isRequired}
                                         onChange={(e) => handleContactChange(field, e.target.value)}
-                                        disabled={customerFormMode === 'custDetailsEdit'}
+                                        disabled={customerFormMode === 'custDetailsEdit' || (label === 'Primary Contact' && name === 'Email' && branch?.branchStatus !== 'new' && !branch?.isNew)}
                                     />
                                 </div>
                             ))}
@@ -1595,14 +1624,14 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
                 onBlur={() => { }}
                 disabled={customerFormMode === 'custDetailsEdit'}
             />
-
+        
             {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (
                 <div className="time-action-buttons">
                     <button className="time-confirm-button" /*onClick={onConfirm}*/>
-                        <FontAwesomeIcon icon={faCheck} />
+                        {/* <FontAwesomeIcon icon={faCheck} /> */}
                     </button>
                     <button className="time-cancel-button" /*onClick={onCancel}*/>
-                        <FontAwesomeIcon icon={faXmark} />
+                        {/* <FontAwesomeIcon icon={faXmark} /> */}
                     </button>
                 </div>
             )}
