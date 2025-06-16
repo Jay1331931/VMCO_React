@@ -561,7 +561,7 @@ function MaintenanceDetails() {
                 <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} disabled={!isE("videos")} />
               </div>
             </div>
-            {isV("charges") && (
+            {isV("maintenanceCharges") && (
               <div className='maintenance-details-field'>
                 <label>{t("Charges")}</label>
                 <input
@@ -573,7 +573,7 @@ function MaintenanceDetails() {
                   placeholder='0.00'
                   onChange={handleInputChange}
                   value={ticket.charges || ""}
-                  disabled={!isE("charges")}
+                  disabled={!isE("maintenanceCharges")}
                   onInput={(e) => {
                     // Ensure only decimal values are entered
                     e.target.value = e.target.value.replace(/[^0-9.]/g, "");
@@ -583,23 +583,6 @@ function MaintenanceDetails() {
             )}
           </div>
         </div>
-        {/* {isV("charges") && (
-          <MaintenanceCharges
-            maintenanceCharges={maintenanceCharges}
-            onChargesChange={(updatedCharges) => {
-              console.log("$$$$$$$$$$$$$$$Updated Charges:", JSON.stringify(updatedCharges));
-              setMaintenanceCharges(updatedCharges);
-              setTicket((prev) => ({
-                ...prev,
-                charges: {
-                  serviceCharges: updatedCharges.serviceCharges,
-                  partsCharges: updatedCharges.partsCharges,
-                },
-              }));
-            }}
-            isEditable={isE("charges")}
-          />
-        )} */}
       </div>
       <div className='support-details-footer'>
         {isV("status") && (
