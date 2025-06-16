@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const inventoryData = [
   { name: 'Product Name 01', orderQty: 20, availableQty: 10 },
@@ -8,6 +9,7 @@ const inventoryData = [
 ];
 
 function GetInventory({ open, onClose }) {
+  const { t } = useTranslation();
   if (!open) return null;
 
   return (
@@ -15,15 +17,15 @@ function GetInventory({ open, onClose }) {
       <div className="gi-backdrop" />
       <div className="gi-modal">
         <div className="gi-header">
-          <span className="gi-title">Get Inventory</span>
+          <span className="gi-title">{t("Get Inventory")}</span>
         </div>
         <div className="gi-table-container">
           <table className="gi-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Order Quantity</th>
-                <th>Available Quantity</th>
+                <th>{t("Name")}</th>
+                <th>{t("Order Quantity")}</th>
+                <th>{t("Available Quantity")}</th>
               </tr>
             </thead>
             <tbody>
@@ -40,7 +42,7 @@ function GetInventory({ open, onClose }) {
           </table>
         </div>
         <div className="gi-footer">
-          <button className="gi-close-btn" onClick={onClose}>Close</button>
+          <button className="gi-close-btn" onClick={onClose}>{t("Close")}</button>
         </div>
       </div>
 

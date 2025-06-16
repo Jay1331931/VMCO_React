@@ -2479,6 +2479,7 @@ function CustomersDetails() {
                             {field.options.map((option, idx) => (
                               <div key={idx} className="checkbox-option">
                                 <label htmlFor={`${field.name}-${idx}`} hidden={!isV(field.name)}>
+                                 
                                   <input
                                     id={`${field.name}-${idx}`}
                                     type="checkbox"

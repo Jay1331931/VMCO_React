@@ -1517,7 +1517,9 @@ function OrderDetails() {
   return (
     <Sidebar>
       {isV('orderDetails') && (
-        <div className="order-details-container">
+       
+        <div  >
+          <div  className="order-details-container">
           <div className={`order-details-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
             <div className="order-details-body">
               <h2 className="order-details-title">
@@ -1525,8 +1527,9 @@ function OrderDetails() {
                   ? `${t('New Order')}`
                   : `${t('Order #')} ${formData.id}`}
               </h2>
+              <h4 style={{color:"#525b6d"}}> {t("Order Details")}</h4>
               <div className="order-details-section">
-                <div className="order-details-grid">
+                <div className="order-details-grid " style={{marginTop: '20px'}}>
                   {isV('customerName') && (
                     <div className="order-details-field">
                       <label htmlFor="customerField">{t('Customer Company Name')}</label>
@@ -1849,8 +1852,10 @@ function OrderDetails() {
               </div>
 
               {isV('products') && (
-                <div className="order-products-section">
-                  <h3 className="order-details-subtitle">{t('Products')}</h3>
+                <>
+                <h3 className="order-details-subtitle">{t('Products')}</h3>
+                <div className="order-products-section" style={{boxShadow: '0 0 10px rgba(0,0,0,0.1)', padding: '16px 0px', borderRadius: '8px'}}>
+                  
                   {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
                     <button
                       type="button"
@@ -1905,84 +1910,11 @@ function OrderDetails() {
                     />
                   )}
                 </div>
+                </>
               )}
             </div>
 
-            {isV('orderFooter') && (
-              <div className="order-details-footer">
-                {isV('orderStatus') && (
-                  <div className="order-status">
-                    <span className="status-label">{t('Status')}:</span>
-                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
-                      {t(formData.status) || t('Open')}
-                    </span>
-                  </div>
-                )}
-            <div className="" style={{display:"flex",gap:"10px"}}>
-                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
-                  <button
-                    className="order-action-btn"
-                    onClick={() => handleSave('save')}
-                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
-                  >
-                    {t('Save Changes')}
-                  </button>
-                )}
-
-                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
-                  <button
-                    className="order-action-btn"
-                    onClick={() => handleCancelOrder('cancel order')}
-                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
-                  >
-                    {t('Cancel Order')}
-                  </button>
-                )}
-
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
-                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
-                    {t('Download Invoice')}
-                  </button>
-                )}
-
-                {isV('btnInventory') && isE('btnInventory') && (
-                  <button className="order-action-btn" onClick={() => setShowInventory(true)}>
-                    {t('Get Inventory')}
-                  </button>
-                )}
-
-                {isV('btnPay') && isE('btnPay') && (
-                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
-                    {t('Pay')}
-                  </button>
-                )}
-                {isV('actionButtons') && fromApproval && (
-                  <div className="order-details-actions">
-                    {isV('btnApprove', fromApproval, true) && (
-                      <button
-                        className="order-action-btn approve"
-                        onClick={() => handleApprovalSubmit('approve')}
-                        disabled={formData.status === 'approved'}
-                      >
-                        {t('Approve')}
-                      </button>
-                    )}
-
-                    {isV('btnReject', fromApproval, true) && (
-                      <button
-                        className="order-action-btn reject"
-                        onClick={() => handleApprovalSubmit('reject')}
-                        disabled={formData.status === 'approved'}
-                      >
-                        {t('Reject')}
-                      </button>
-                    )}
-                  
-                  </div>
-                )}
-              </div>
-            </div>
-            )}
+          
           </div>
 
           {/* Comment Panel Popup */}
@@ -2098,6 +2030,82 @@ function OrderDetails() {
             customerId={formData.customerId}
             totalAmount={formData.totalAmount}
           />
+          </div>
+            {isV('orderFooter') && (
+              <div className="order-details-footer">
+                {isV('orderStatus') && (
+                  <div className="order-status">
+                    <span className="status-label">{t('Status')}:</span>
+                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                      {t(formData.status) || t('Open')}
+                    </span>
+                  </div>
+                )}
+            <div className="" style={{display:"flex",gap:"10px"}}>
+                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
+                  <button
+                    className="order-action-btn"
+                    onClick={() => handleSave('save')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
+                    {t('Save Changes')}
+                  </button>
+                )}
+
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
+                  <button
+                    className="order-action-btn"
+                    onClick={() => handleCancelOrder('cancel order')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
+                    {t('Cancel Order')}
+                  </button>
+                )}
+
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+                    {t('Download Invoice')}
+                  </button>
+                )}
+
+                {isV('btnInventory') && isE('btnInventory') && (
+                  <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+                    {t('Get Inventory')}
+                  </button>
+                )}
+
+                {isV('btnPay') && isE('btnPay') && (
+                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                    {t('Pay')}
+                  </button>
+                )}
+                {isV('actionButtons') && fromApproval && (
+                  <div className="order-details-actions">
+                    {isV('btnApprove', fromApproval, true) && (
+                      <button
+                        className="order-action-btn approve"
+                        onClick={() => handleApprovalSubmit('approve')}
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Approve')}
+                      </button>
+                    )}
+
+                    {isV('btnReject', fromApproval, true) && (
+                      <button
+                        className="order-action-btn reject"
+                        onClick={() => handleApprovalSubmit('reject')}
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Reject')}
+                      </button>
+                    )}
+                  
+                  </div>
+                )}
+              </div>
+            </div>
+            )}
         </div>
       )}
     </Sidebar>

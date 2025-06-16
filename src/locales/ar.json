@@ -334,7 +334,9 @@
     "Sugar Tax": "ضريبة السكر",
     "VAT": "ضريبة القيمة المضافة",
     "Cancelled": "ملغاة",
-    "Checkout": "الدفع"
+    "Checkout": "الدفع",
+    "Remarks": "ملاحظات",
+    "Sales Executive": "تنفيذي المبيعات"
    
 
   }
