@@ -412,16 +412,19 @@ function Catalog() {
     };
 
     const handleGoToCart = () => {
-        navigate('/Cart', {
-            state: {
-                selectedCustomerId,
-                selectedBranchId: selectedLocation,
-                selectedBranchName: branches.find(b => b.value === selectedLocation)?.label || '',
-                selectedBranchErpId: branches.find(b => b.value === selectedLocation)?.erpBranchId || '',
-                selectedBranchRegion
-            }
-        });
-    };
+    const selectedBranch = branches.find(b => b.value === selectedLocation);
+    navigate('/Cart', {
+        state: {
+            selectedCustomerId,
+            selectedBranchId: selectedLocation,
+            selectedBranchName: selectedBranch?.label || '',
+            selectedBranchNameLc: selectedBranch?.branch_name_lc || selectedBranch?.raw?.branchNameLc || '',
+            selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || '',
+            selectedBranchErpId: selectedBranch?.erpBranchId || '',
+            selectedBranchRegion,
+        }
+    });
+};
 
     const catalogId = React.useId();
 

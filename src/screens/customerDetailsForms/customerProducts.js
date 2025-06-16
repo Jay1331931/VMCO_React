@@ -360,13 +360,13 @@ if(isApprovalMode) {
                                                 setIsInputFocused(true);
                                                 setEditingMoq(product.id);
                                             }}
-                                            onBlur={() => {
-                                                // Use setTimeout to allow button clicks to register
-                                                setTimeout(() => {
-                                                    setIsInputFocused(false);
-                                                    setEditingMoq(null);
-                                                }, 200);
-                                            }}
+                                            // onBlur={() => {
+                                            //     // Use setTimeout to allow button clicks to register
+                                            //     setTimeout(() => {
+                                            //         setIsInputFocused(false);
+                                            //         setEditingMoq(null);
+                                            //     }, 200);
+                                            // }}
                                             disabled={!isV('btnApplyAll')}
                                             style={{ width: '80px' }}
                                         />

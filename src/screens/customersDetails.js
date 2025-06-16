@@ -481,12 +481,16 @@ function CustomersDetails() {
     'Financial Information': getBusinessDetailsFormData(t, customer)?.['Financial Information']|| [],
     'Documents': getBusinessDetailsFormData(t, customer, companyType)?.['Documents']||[],
   }), [t]);
-
+const [activeTab, setActiveTab] = useState('Business Details');
   const tabs = useMemo(() => {
     const allTabs = Object.keys(formsByTab);
     // Remove 'Branches' tab if module is 'branch'
 
     if (customerFormMode === 'custDetailsAdd') {
+      if (user?.userType === 'customer' && user?.roles[0] === 'branch_primary'){
+        setActiveTab('Branches');
+        return allTabs.filter(tab => tab === 'Branches');
+      }
       if (transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending') {
         return allTabs.filter(tab => tab !== 'Branches' && tab !== 'Products & MoQ');
       } else {
@@ -520,7 +524,7 @@ function CustomersDetails() {
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
-  const [activeTab, setActiveTab] = useState('Business Details');
+  
   const [formData, setFormData] = useState(initialFormData);
   const [formErrors, setFormErrors] = useState({});
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -831,6 +835,7 @@ function CustomersDetails() {
             // if field name is credit period update period
             if(fieldName === 'creditLimit') {
               paymentMethodPayload.method_details.credit.limit = newValue;
+              paymentMethodPayload.method_details.credit.balance = newValue;
             } else if (fieldName === 'creditPeriod') {
               paymentMethodPayload.method_details.credit.period = newValue;
             }
@@ -2695,7 +2700,7 @@ function CustomersDetails() {
         {transformedCustomer?.isApprovalMode && (
           <>
             <div>
-              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={transformedCustomer.approvalHistory ? transformedCustomer.approvalHistory : []} isVisible={true} />
+              <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={transformedCustomer.approvalHistory ? transformedCustomer.approvalHistory : []} isVisible={true} showCommentForm={false} />
             </div>
           </>
         )}

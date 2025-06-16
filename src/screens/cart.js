@@ -40,6 +40,8 @@ function Cart() {
     const [selectedUserId, setSelectedUserId] = useState(''); // Initialize empty
     const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
+    const [selectedBranchNameEn, setSelectedBranchNameEn] = useState('');
+    const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
     const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
@@ -382,7 +384,16 @@ function Cart() {
 
 
     const handleContinueShopping = () => {
-        navigate(-1);
+        navigate('/catalog', {
+            state: {
+                selectedBranchId,
+                selectedBranchName,
+                selectedBranchNameLc,
+                selectedBranchErpId,
+                selectedBranchRegion,
+                selectedCustomerId
+            }
+        });
     };
 
     const handleSelectPaymentMethod = (method) => {
@@ -452,7 +463,27 @@ function Cart() {
         try {
             const entity = getEntityFromCategory(categoryName);
             const category = categoryName;
-            // Build filters for existing order check based on entity
+
+            // --- Fetch the customer contact name using user email ---
+            let orderByName = '';
+            const userEmail = user?.email;
+             if (userEmail) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/customer-contacts/email/${userEmail}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (response.ok) {
+                        const result = await response.json();
+                         if (result && result.data.name) {
+                            orderByName = result.data.name;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch customer contact name:', error);
+                }
+            }
+             // Build filters for existing order check based on entity
             let orderFiltersObj;
             if (entity && entity.toLowerCase() === 'vmco') {
                 // For vmco, include productCategory
@@ -561,6 +592,30 @@ function Cart() {
                     companyNameEn: companyNameEn,
                     companyNameAr: companyNameAr,
                     branchId: selectedBranchId,
+                    branchNameEn: selectedBranchName,
+                    branchNameLc: selectedBranchNameLc,
+                    erpBranchId: selectedBranchErpId,
+                    branchRegion: selectedBranchRegion,
+                    orderBy: orderByName, // <-- Use fetched name here
+                    entity,
+                    paymentMethod: selectedPaymentMethod,
+                    totalAmount: finalTotalAmount.toFixed(2),
+                    paidAmount: '0.00',
+                    deliveryCharges: deliveryCharges.toFixed(2),
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
+                    status: 'Open',
+                    pricingPolicy: pricingPolicy,
+                    salesExecutive: assignedTo,
+                    customerRegion: customerRegion,
+                    productCategory: categoryName
+                };
+                console.log('Order payload:', {
+                    customerId: selectedCustomerId,
+                    companyNameEn: companyNameEn,
+                    companyNameAr: companyNameAr,
+                    branchId: selectedBranchId,
+                    branchNameEn: selectedBranchName,
+                    branchNameLc: selectedBranchNameLc,
                     erpBranchId: selectedBranchErpId,
                     branchRegion: selectedBranchRegion,
                     orderBy: 'Customer',
@@ -575,7 +630,7 @@ function Cart() {
                     salesExecutive: assignedTo,
                     customerRegion: customerRegion,
                     productCategory: categoryName // <-- Add this field
-                };
+                });
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -825,7 +880,7 @@ function Cart() {
                     console.error(`Error removing cart items: ${deleteResponse.statusText}`);
                 }
                 // After deleting cart items, reload the page
-                window.location.reload();
+               // window.location.reload();
             } catch (err) {
                 console.error('Error during cart cleanup:', err);
             }
@@ -847,12 +902,15 @@ function Cart() {
 
     // Initialize from navigation state if available
     useEffect(() => {
-        const navState = location.state || {};
-        if (navState.selectedCustomerId) setSelectedCustomerId(navState.selectedCustomerId);
-        if (navState.selectedBranchId) setSelectedBranchId(navState.selectedBranchId);
-        if (navState.selectedBranchName) setSelectedBranchName(navState.selectedBranchName);
-        if (navState.selectedBranchErpId) setSelectedBranchErpId(navState.selectedBranchErpId);
-        if (navState.selectedBranchRegion) setSelectedBranchRegion(navState.selectedBranchRegion);
+        if (location.state) {
+            setSelectedCustomerId(location.state.selectedCustomerId || '');
+            setSelectedBranchId(location.state.selectedBranchId || '');
+            setSelectedBranchName(location.state.selectedBranchName || 'No location selected');
+            setSelectedBranchErpId(location.state.selectedBranchErpId || '');
+            setSelectedBranchRegion(location.state.selectedBranchRegion || '');
+            setSelectedBranchNameEn(location.state.selectedBranchNameEn || '');
+            setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
+        }
     }, [location.state]);
 
     return (
@@ -955,8 +1013,8 @@ function Cart() {
                                             ))
                                         )}
                                         {/* Show partial payment for VMCO Machines */}
-                                     
-                                        {(category.category === 'VMCO Machines'|| category.category === "آلات VMCO") && category.items.length > 0 && (
+
+                                        {(category.category === 'VMCO Machines' || category.category === "آلات VMCO") && category.items.length > 0 && (
                                             <div className="partial-payment-row">
                                                 <span className="partial-payment-warning">{t("Min. 30% Partial Payment required")}</span>
                                             </div>
