@@ -1,4 +1,4 @@
-import Sidebar from '../components/Sidebar';
+import Sidebar from "../components/Sidebar";
 import constants from "../constants";
 
 // RBAC Manager class
@@ -74,7 +74,7 @@ class RbacManager {
           actionButtons: { visible: true, editable: false },
           btnApprove: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
-        }
+        },
       },
       orderDetailEdit: {
         fields: {
@@ -107,7 +107,7 @@ class RbacManager {
           actionButtons: { visible: false, editable: false },
           btnApprove: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
-        }
+        },
       },
       catalog: {
         fields: {
@@ -117,8 +117,8 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       customersList: {
         fields: {
@@ -340,8 +340,8 @@ class RbacManager {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
+          Settings: { visible: false, editable: true },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -467,9 +467,8 @@ class RbacManager {
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
           btnSaveChanges: { visible: false, editable: true },
-        }
+        },
       },
-
     },
 
     [constants.ROLES.CUSTOMER_PRIMARY]: {
@@ -571,7 +570,6 @@ class RbacManager {
           btnApprove: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           commentIcon: { visible: false, editable: false },
-
         },
       },
       catalog: {
@@ -582,8 +580,8 @@ class RbacManager {
           quantityController: { visible: true, editable: true },
           addToCart: { visible: true, editable: true },
           goToCart: { visible: true, editable: true },
-          sort: { visible: true, editable: true }
-        }
+          sort: { visible: true, editable: true },
+        },
       },
 
       supList: {
@@ -698,7 +696,7 @@ class RbacManager {
           [constants.ENTITY.GREEN_MAST]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
-        }
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -795,7 +793,7 @@ class RbacManager {
           createdDate: { visible: true, editable: false },
           machineSerialNumber: { visible: true, editable: false },
           warrantyEndDate: { visible: true, editable: false },
-          maintenanceCharges: { visible: true, editable: true },
+          maintenanceCharges: { visible: true, editable: false },
           issueDetails: { visible: true, editable: false },
           btnAddvideos: { visible: true, editable: false },
           btnAddimages: { visible: true, editable: false },
@@ -807,9 +805,9 @@ class RbacManager {
         fields: {
           Dashboard: { visible: false, editable: true },
           Customers: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
-      }
+          Settings: { visible: false, editable: true },
+        },
+      },
     },
 
     [constants.ROLES.BRANCH_PRIMARY]: {
@@ -894,14 +892,14 @@ class RbacManager {
           actionButtons: { visible: false, editable: false },
           btnApprove: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
-        }
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Customers: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
+          Settings: { visible: false, editable: true },
+        },
       },
       catalog: {
         fields: {
@@ -911,8 +909,78 @@ class RbacManager {
           quantityController: { visible: true, editable: true },
           addToCart: { visible: true, editable: true },
           goToCart: { visible: true, editable: true },
-          sort: { visible: true, editable: true }
-        }
+          sort: { visible: true, editable: true },
+        },
+      },
+      supList: {
+        fields: {
+          btnAdd: { visible: true, editable: false },
+        },
+      },
+      supDetailAdd: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: true },
+          issueDetails: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          issueStatus: { visible: true, editable: true },
+          assignedTo: { visible: false, editable: true },
+          btnSave: { visible: true, editable: true },
+        },
+      },
+      supDetailEdit: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: false },
+          issueDetails: { visible: true, editable: false },
+          images: { visible: true, editable: true },
+          issueStatus: { visible: true, editable: false },
+          assignedTo: { visible: false, editable: true },
+          btnSave: { visible: true, editable: true },
+        },
+      },
+      maintList: {
+        fields: {
+          btnAdd: { visible: false, editable: false },
+        },
+      },
+      maintDetailAdd: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          machineSerialNumber: { visible: true, editable: true },
+          warrantyEndDate: { visible: false, editable: false },
+          maintenanceCharges: { visible: false, editable: false },
+          issueDetails: { visible: true, editable: true },
+          btnAddvideos: { visible: true, editable: true },
+          btnAddimages: { visible: true, editable: true },
+          status: { visible: false, editable: false },
+          assignedTo: { visible: false, editable: false },
+        },
+      },
+      maintDetailEdit: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: false },
+          issueType: { visible: true, editable: false },
+          issueName: { visible: true, editable: false },
+          createdDate: { visible: true, editable: false },
+          machineSerialNumber: { visible: true, editable: false },
+          warrantyEndDate: { visible: true, editable: false },
+          maintenanceCharges: { visible: false, editable: false },
+          issueDetails: { visible: true, editable: false },
+          btnAddvideos: { visible: true, editable: false },
+          btnAddimages: { visible: true, editable: false },
+          status: { visible: true, editable: true },
+          assignedTo: { visible: true, editable: true },
+        },
       },
     },
 
@@ -997,7 +1065,7 @@ class RbacManager {
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },
-        }
+        },
       },
       catalog: {
         fields: {
@@ -1007,8 +1075,8 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -1078,8 +1146,8 @@ class RbacManager {
           btnBranchSubmit: { visible: false, editable: true },
           btnBranchApprove: { visible: false, editable: true },
           btnBranchReject: { visible: false, editable: true },
-          btnBranchAdd: { visible: false, editable: true},
-          btnApplyAll: { visible: true, editable: true},
+          btnBranchAdd: { visible: false, editable: true },
+          btnApplyAll: { visible: true, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -1163,15 +1231,85 @@ class RbacManager {
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        }
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
-      }
+          Settings: { visible: false, editable: true },
+        },
+      },
+      supList: {
+        fields: {
+          btnAdd: { visible: true, editable: false },
+        },
+      },
+      supDetailAdd: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: true },
+          issueDetails: { visible: true, editable: true },
+          images: { visible: true, editable: true },
+          issueStatus: { visible: true, editable: true },
+          assignedTo: { visible: false, editable: true },
+          btnSave: { visible: true, editable: true },
+        },
+      },
+      supDetailEdit: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: false },
+          issueDetails: { visible: true, editable: false },
+          images: { visible: true, editable: true },
+          issueStatus: { visible: true, editable: false },
+          assignedTo: { visible: false, editable: true },
+          btnSave: { visible: true, editable: true },
+        },
+      },
+      maintList: {
+        fields: {
+          btnAdd: { visible: false, editable: false },
+        },
+      },
+      maintDetailAdd: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: true },
+          issueType: { visible: true, editable: true },
+          issueName: { visible: true, editable: true },
+          createdDate: { visible: false, editable: false },
+          machineSerialNumber: { visible: true, editable: true },
+          warrantyEndDate: { visible: false, editable: false },
+          maintenanceCharges: { visible: false, editable: false },
+          issueDetails: { visible: true, editable: true },
+          btnAddvideos: { visible: true, editable: true },
+          btnAddimages: { visible: true, editable: true },
+          status: { visible: false, editable: false },
+          assignedTo: { visible: false, editable: false },
+        },
+      },
+      maintDetailEdit: {
+        fields: {
+          customerName: { visible: true, editable: false },
+          branch: { visible: true, editable: false },
+          issueType: { visible: true, editable: false },
+          issueName: { visible: true, editable: false },
+          createdDate: { visible: true, editable: false },
+          machineSerialNumber: { visible: true, editable: false },
+          warrantyEndDate: { visible: true, editable: false },
+          maintenanceCharges: { visible: true, editable: true },
+          issueDetails: { visible: true, editable: false },
+          btnAddvideos: { visible: true, editable: false },
+          btnAddimages: { visible: true, editable: false },
+          status: { visible: true, editable: true },
+          assignedTo: { visible: true, editable: true },
+        },
+      },
     },
 
     [constants.DESIGNATIONS.OPS_MANAGER]: {
@@ -1254,7 +1392,7 @@ class RbacManager {
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },
-        }
+        },
       },
       catalog: {
         fields: {
@@ -1264,8 +1402,8 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -1336,14 +1474,14 @@ class RbacManager {
           btnBranchSubmit: { visible: false, editable: true },
           btnBranchApprove: { visible: false, editable: true },
           btnBranchReject: { visible: false, editable: true },
-          btnBranchAdd: { visible: false, editable: true},
-          btnApplyAll: { visible: true, editable: true},
+          btnBranchAdd: { visible: false, editable: true },
+          btnApplyAll: { visible: true, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        }
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -1414,17 +1552,17 @@ class RbacManager {
           btnBranchApprove: { visible: true, editable: true },
           btnBranchReject: { visible: true, editable: true },
           btnBranchAdd: { visible: false, editable: true },
-          [constants.ENTITY.GREEN_MAST]: {visible: true, editable: true},
+          [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        }
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
-      }
+          Settings: { visible: false, editable: true },
+        },
+      },
     },
 
     [constants.DESIGNATIONS.SALES_EXECUTIVE]: {
@@ -1507,8 +1645,8 @@ class RbacManager {
           btnInventory: { visible: false, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
-          btnReject: { visible: true, editable: true }
-        }
+          btnReject: { visible: true, editable: true },
+        },
       },
       catalog: {
         fields: {
@@ -1518,15 +1656,15 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
+          Settings: { visible: false, editable: true },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -1587,9 +1725,9 @@ class RbacManager {
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
           btnSave: { visible: false, editable: true },
-          btnSubmit: {visible: false, editable: true},
-          pricingPolicy: {visible: true, editable: true},
-          btnApplyAll: { visible: true, editable: true},
+          btnSubmit: { visible: false, editable: true },
+          pricingPolicy: { visible: true, editable: true },
+          btnApplyAll: { visible: true, editable: true },
         },
       },
       custDetailsEdit: {
@@ -1654,7 +1792,7 @@ class RbacManager {
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
           btnSaveChanges: { visible: false, editable: true },
-        }
+        },
       },
     },
 
@@ -1752,14 +1890,14 @@ class RbacManager {
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },
-        }
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
+          Settings: { visible: false, editable: true },
+        },
       },
       catalog: {
         fields: {
@@ -1769,8 +1907,8 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -2005,8 +2143,8 @@ class RbacManager {
           btnInventory: { visible: false, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
-          btnReject: { visible: true, editable: true }
-        }
+          btnReject: { visible: true, editable: true },
+        },
       },
       catalog: {
         fields: {
@@ -2016,15 +2154,15 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
+          Settings: { visible: false, editable: true },
+        },
       },
       custDetailsAdd: {
         fields: {
@@ -2085,9 +2223,9 @@ class RbacManager {
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
           btnSave: { visible: false, editable: true },
-          btnSubmit: {visible: false, editable: true},
-          pricingPolicy: {visible: true, editable: true},
-          btnApplyAll: { visible: true, editable: true},
+          btnSubmit: { visible: false, editable: true },
+          pricingPolicy: { visible: true, editable: true },
+          btnApplyAll: { visible: true, editable: true },
         },
       },
       custDetailsEdit: {
@@ -2152,7 +2290,7 @@ class RbacManager {
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
           btnSaveChanges: { visible: false, editable: true },
-        }
+        },
       },
     },
 
@@ -2234,7 +2372,7 @@ class RbacManager {
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },
-        }
+        },
       },
       catalog: {
         fields: {
@@ -2244,16 +2382,16 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
-      }
+          Settings: { visible: false, editable: true },
+        },
+      },
     },
 
     [constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN]: {
@@ -2332,7 +2470,7 @@ class RbacManager {
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },
-        }
+        },
       },
 
       catalog: {
@@ -2343,16 +2481,16 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
       SidebarList: {
         fields: {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
-          Settings: { visible: false, editable: true }
-        }
-      }
+          Settings: { visible: false, editable: true },
+        },
+      },
     },
 
     [constants.DESIGNATIONS.DRIVER]: {
@@ -2430,8 +2568,8 @@ class RbacManager {
           btnInventory: { visible: false, editable: true },
           actionButtons: { visible: true, editable: true },
           btnApprove: { visible: true, editable: true },
-          btnReject: { visible: true, editable: true }
-        }
+          btnReject: { visible: true, editable: true },
+        },
       },
       catalog: {
         fields: {
@@ -2441,10 +2579,10 @@ class RbacManager {
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
-          sort: { visible: false, editable: false }
-        }
+          sort: { visible: false, editable: false },
+        },
       },
-    }
+    },
   };
 
   static getRoles() {
@@ -2476,7 +2614,9 @@ class RbacManager {
   isV(field, approvalWF = false, fieldInWF = false) {
     //console.log(field)
     const access = this.getFieldAccess(field);
-    return (access == null ? true : access.visible) && (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true);
+    return (
+      (access == null ? true : access.visible) && (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true)
+    );
   }
 
   /**
