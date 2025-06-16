@@ -812,6 +812,7 @@ function CustomersDetails() {
             // if field name is credit period update period
             if(fieldName === 'creditLimit') {
               paymentMethodPayload.method_details.credit.limit = newValue;
+              paymentMethodPayload.method_details.credit.balance = newValue;
             } else if (fieldName === 'creditPeriod') {
               paymentMethodPayload.method_details.credit.period = newValue;
             }
