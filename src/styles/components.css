@@ -274,7 +274,19 @@
   display: center;
   gap: 0;
 }
-
+.action-buttons .approve:hover{
+  background-color: #d3d3d3;
+  color: #01594d;
+   border:1px solid #01594d;
+   font-weight:bolder;
+}
+.action-buttons .reject:hover{
+  background-color: #d3d3d3;
+  color: darkorange;
+   border:1px solid darkorange;
+   font-weight:bolder;
+;
+}
 .action-button {
   padding: 6px 12px;
   border-radius: 4px;

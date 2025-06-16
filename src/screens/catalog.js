@@ -13,7 +13,7 @@ import ProductPopup from '../components/ProductPopup';
 import SearchInput from '../components/SearchInput';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-
+import Swal from 'sweetalert2';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -637,8 +637,12 @@ function Catalog() {
                     const errorData = await updateResponse.json().catch(() => ({}));
                     throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
                 }
-
-                alert(t('Product quantity updated in cart successfully'));
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t('Product quantity updated in cart successfully'),
+                    confirmButtonText: t('OK')
+                });
             }
             else {
                 // Item doesn't exist in cart, add it as new
@@ -679,8 +683,12 @@ function Catalog() {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
                 }
-
-                alert(t('Product added to cart successfully'));
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t('Product added to cart successfully'),
+                    confirmButtonText: t('OK')
+                });
             }
 
             // Reset quantity after successful add/update
@@ -691,7 +699,12 @@ function Catalog() {
 
         } catch (error) {
             console.error('Error handling product cart action:', error);
-            alert(t('Failed to update cart. Please try again.'));
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t('Failed to add product to cart. Please try again.'),
+                confirmButtonText: t('OK')
+            });
         }
     };
 

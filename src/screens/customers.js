@@ -12,7 +12,8 @@ import RbacManager from '../utilities/rbac';
 import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
+import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 const getStatusClass = (status) => {
   switch (status) {
     case 'Approved':
@@ -111,12 +112,60 @@ function Customers() {
       if (response.ok) {
         const result = await response.json();
         console.log('Invite resend link:', result);
-        alert('Invite resend link: ' + result.data);
+     
+        // alert('Invite resend link: ' + result.data);
+        Swal.fire({
+  title: 'Invite Resent',
+  html: `
+    <p>${t('The invite has been resent successfully.')}</p>
+
+    <div style="display:flex;align-items:center;">
+      <input
+        id="invite-link"
+        class="swal2-input"
+        style="flex:1;margin:0 8px 0 0;"
+        type="text"
+        value="${result?.data}"
+        readonly
+      />
+       <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+    </div>
+  `,
+  icon: 'success',
+  showConfirmButton: true,
+  confirmButtonText: 'OK',
+
+  didOpen: () => {
+    const input = document.getElementById('invite-link');
+    const icon = document.getElementById('copy-icon');
+
+    icon.addEventListener('click', () => {
+      input.select();
+      input.setSelectionRange(0, 99999); // mobile-friendly
+      navigator.clipboard.writeText(input.value).then(() => {
+        icon.classList.replace('fa-copy', 'fa-check');
+        setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
+      });
+    });
+  }
+});
+
+
+       
+
+       
       }
     } catch (err) {
       // console.error('Error resending in  vite:', err);
       console.log('Error resending invite:', err.message);
-      alert('Failed to resend invite. Please try again later.');
+      Swal.fire({
+        title: 'Error',
+        text: t('Failed to resend invite. Please try again later.'),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      // alert('Failed to resend invite. Please try again later.');
       return;
     }
     // alert('Invite resent successfully!');
@@ -134,7 +183,13 @@ function Customers() {
     // Handle the invite submission here
     console.log('Invite data:', inviteData);
     if (!inviteData.email || !inviteData.name || !inviteData.company || !inviteData.mobile || !inviteData.source || !inviteData.region) {
-      alert('Please fill in all fields');
+      Swal.fire({
+        title: 'Error', 
+        text: t('Please fill in all fields'),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      // alert('Please fill in all fields');
       return;
     }
     // Add your API call to send the invite
@@ -171,15 +226,56 @@ function Customers() {
             })
           })
           console.log('Response:', response);
-          if (response.ok) {
+          // if (response.status=="Ok") {
             const res = await response.json();
             console.log('Invite link:', res);
-            alert('Invite link: ' + res.data);
+            // alert('Invite link: ' + res.data);
+           Swal.fire({
+          title: 'Invite Link Sent',
+          html: `
+            <p>${t('The invite has been sent successfully.')}</p>
+            <div style="display:flex;align-items:center;">
+              <input  id="invite-link"
+                      class="swal2-input"
+                      style="flex:1;margin:0 8px 0 0;"
+                      type="text"
+                      value="${res.data}"
+                      readonly />
+ <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+            </div>
+          `,
+          icon: 'success',
+          showConfirmButton: true,
+          confirmButtonText: 'OK',
+
+          didOpen: () => {
+            const input = document.getElementById('invite-link');
+            const icon  = document.getElementById('copy-icon');
+
+            icon.addEventListener('click', () => {
+              input.select();
+              input.setSelectionRange(0, 99999); 
+              navigator.clipboard.writeText(input.value).then(() => {
+                icon.classList.replace('fa-copy', 'fa-check');
+                setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
+              });
+            });
           }
+        });
+
+
+          // }
         } catch (err) {
           // console.error('Error resending invite:', err);
           console.log('Error sending invite:', err.message);
-          alert('Failed to send invite. Please try again later.');
+          Swal.fire({
+            title: 'Error',
+            text: t('Failed to send invite. Please try again later.'),
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          // alert('Failed to send invite. Please try again later.');
           return;
         }
       }

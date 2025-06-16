@@ -18,6 +18,7 @@ import formatDate from '../utilities/dateFormatter';
 import ApprovalDialog from '../components/ApprovalDialog';
 import GetPaymentMethods from '../components/GetPaymentMethods'; // Add this import
 import Dropdown from '../components/DropDown';
+import Swal from 'sweetalert2';
 
 const defaultOrder = {
   id: '',
@@ -265,14 +266,27 @@ function OrderDetails() {
 
   // Download invoice
   const handleDownloadInvoice = (orderId) => {
-    alert(`Downloading invoice for order ID: ${orderId}`);
+  Swal.fire({
+    title: t('Download Invoice'),
+    text:  `Are you sure you want to download the invoice for order ID:${orderId}?`,
+    icon: 'warning',
+    showCancelButton: true,
+     confirmButtonText: t('OK')
+  })
+
+    // alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
   };
   // Function to handle form submission
   const handleSave = async (action, selectedMethod) => {
      // Perform validation before saving
       if (!formData.customerId) {
-        alert(t('Please select a customer'));
+        Swal.fire({
+          icon: 'warning',
+          title: t('Validation Error'),
+          text: t('Please select a customer'),
+        });
+        // alert(t('Please select a customer'));
         setSaving(false);
         return;
       }
@@ -293,13 +307,23 @@ function OrderDetails() {
     try {
       // Perform validation before saving
       if (!formData.customerId) {
-        alert(t('Please select a customer'));
+        Swal.fire({
+          icon: 'warning',
+          title: t('Validation Error'),
+          text: t('Please select a customer'),
+        });
+        // alert(t('Please select a customer'));
         setSaving(false);
         return;
       }
 
       if (!formData.products || formData.products.length === 0) {
-        alert(t('Please add at least one product'));
+        Swal.fire({ 
+          icon: 'warning',
+          title: t('Validation Error'),
+          text: t('Please add at least one product'),
+        });
+        // alert(t('Please add at least one product'));
         setSaving(false);
         return;
       }      // Check if we're editing an existing order or creating a new one
@@ -463,12 +487,23 @@ function OrderDetails() {
         // Refresh order details after update
         await getOrderById(formData.id);
         setIsEditMode(false);
-        alert(t('Order updated successfully!'));
+        Swal.fire({ 
+          icon: 'success',
+          title: t('Order Updated'),
+          text: t('Order updated successfully!'),
+          confirmButtonText: t('OK')
+        });
+        // alert(t('Order updated successfully!'));
       } else {
         // Create a new order
         // Validation - check if essential fields are filled
         if (!formData.erpCustId || !formData.erpBranchId) {
-          alert(t('Customer and Branch are required fields.'));
+          Swal.fire({
+            icon: 'warning',
+            title: t('Validation Error'),
+            text: t('Customer and Branch are required fields.'),
+          });
+          // alert(t('Customer and Branch are required fields.'));
           setSaving(false);
           return;
         }
@@ -603,7 +638,13 @@ function OrderDetails() {
 
             if (productsPayload.length === 0) {
               console.warn('No valid products to submit');
-              alert(t('Order created successfully, but no products were added.'));
+              Swal.fire({
+                icon: 'info',
+                title: t('Order Created'),
+                text: t('Order created successfully, but no products were added.'),
+                confirmButtonText: t('OK')
+              });
+              // alert(t('Order created successfully, but no products were added.'));
               navigate('/orders');
               return;
             }
@@ -629,12 +670,24 @@ function OrderDetails() {
               }
 
               // If we get here, both order and products were saved successfully
-              alert(t('Order and products created successfully!'));
+              Swal.fire({
+                icon: 'success',
+                title: t('Order Created'),
+                text: t('Order and products created successfully!'),
+                confirmButtonText: t('OK')
+              });
+              // alert(t('Order and products created successfully!'));
               navigate('/orders');
             } catch (err) {
               console.error('Error saving product lines:', err);
               // Even if product lines failed, the order was created successfully
-              alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
+              Swal.fire({
+                icon: 'warning',
+                title: t('Order Created'),
+                text: t('Order created successfully, but there was an issue adding products: ') + err.message,  
+                confirmButtonText: t('OK')
+              });
+              // alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
               navigate('/orders');
             }
             break; // Exit the loop on success
@@ -642,7 +695,12 @@ function OrderDetails() {
             lastError = err;
             if (attempt >= maxAttempts - 1) {
               setError(err.message);
-              alert(t(err.message));
+              Swal.fire({
+                icon: 'error',
+                title: t('Error Saving Order'),
+                text: t(err.message),
+              })
+              // alert(t(err.message));
             }
           } finally {
             setLoading(false);
@@ -651,7 +709,14 @@ function OrderDetails() {
       } // Close the else block from line 458
     } catch (error) {
       console.error('Error saving order:', error);
-      alert(t('Failed to save order. Please try again.'));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Saving Order'),
+        text: t('Failed to save order. Please try again.'),
+        confirmButtonText: t('OK')
+      });
+
+      // alert(t('Failed to save order. Please try again.'));
     } finally {
       setSaving(false);
     }
@@ -660,7 +725,13 @@ function OrderDetails() {
   // cancel handler
   const handleCancelOrder = async () => {
     if (!formData.id) {
-      alert(t('Order ID is missing.'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('Validation Error'),
+        text: t('Order ID is missing.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Order ID is missing.'));
       return;
     }
 
@@ -688,13 +759,24 @@ function OrderDetails() {
           throw new Error(`Failed to cancel order: ${response.status} ${response.statusText}`);
         }
       }
-
-      alert(t('Order status updated to Cancelled!'));
+      Swal.fire({
+        icon: 'success',
+        title: t('Order Cancelled'),
+        text: t('Order status updated to Cancelled!'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Order status updated to Cancelled!'));
       navigate('/orders'); // or refresh the current view if needed
     } catch (err) {
       console.error('Error cancelling order:', err);
       setError(err.message);
-      alert(t(err.message));
+      Swal.fire({ 
+        icon: 'error',
+        title: t('Error Cancelling Order'),
+        text: err.message || t('Failed to cancel order: ')  ,
+        confirmButtonText: t('OK')
+      });
+      // alert(t(err.message));
     } finally {
       setLoading(false);
     }
@@ -703,7 +785,13 @@ function OrderDetails() {
   // cancel/Approve/Reject handler
   const handleSubmit = async (action) => {
     if (!fromApproval || !wfid) {
-      alert(t('Approval action not available.'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('Approval Action Required'),
+        text: t('Approval action not available.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Approval action not available.'));
       return;
     }
     let comment = '';
@@ -725,7 +813,13 @@ function OrderDetails() {
         credentials: 'include',
       });
       if (res.ok) {
-        alert(t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`));
+        Swal.fire({
+          icon: 'success',
+          title: t('Approval Action Successful'),
+          text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),  
+          confirmButtonText: t('OK')
+        });
+        // alert(t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`));
         navigate('/orders');
       } else {
         const errorText = await res.text();
@@ -733,7 +827,13 @@ function OrderDetails() {
       }
     } catch (error) {
       console.error(`Error ${action}ing order:`, error);
-      alert(t(`Error ${action}ing order: ${error.message}`));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Submitting Approval'),
+        text: t(`Error ${action}ing order: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      // alert(t(`Error ${action}ing order: ${error.message}`));
     }
   };
 
@@ -843,7 +943,13 @@ function OrderDetails() {
 
     } catch (error) {
       console.error('Error updating product prices:', error);
-      alert(t('Failed to update prices. Please try again.'));
+      Swal.fire ({
+        icon: 'error',
+      title: t('Error Updating Prices'),
+        text: t('Failed to update product prices. Please try again.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Failed to update prices. Please try again.'));
     }
   };
   // Function to update sales order line
@@ -1125,7 +1231,15 @@ function OrderDetails() {
                 cursor: 'pointer'
               }}
               title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
+              onClick={() =>
+                Swal.fire({
+                  title: t('Stock Information'),
+                  text: t(`Showing stock for ${row.productName || row.id}`),
+                  icon: 'info',
+                  confirmButtonText: t('OK')
+
+                //  alert(`Show stock for ${row.productName || row.id}`)
+                })}
             >
               {t('Stock')}
             </button>
@@ -1452,7 +1566,13 @@ function OrderDetails() {
           credentials: 'include',
         });
       } catch (err) {
-        alert(t('Failed to update order or lines before approval: ') + (err.message || err));
+        Swal.fire({
+          icon: 'error',
+          title: t('Error Updating Order'),
+          text: t('Failed to update order or lines before approval: ') + (err.message || err),
+        confirmButtonText: t('OK')
+        });
+        // alert(t('Failed to update order or lines before approval: ') + (err.message || err));
         return;
       }
     }
@@ -1475,7 +1595,13 @@ function OrderDetails() {
         credentials: 'include',
       });
       if (res.ok) {
-        alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
+        Swal.fire({
+          icon: 'success',
+          title: t('Approval Action Successful'),
+          text: t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`),
+          confirmButtonText: t('OK')
+        });
+        // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
         setIsApprovalDialogOpen(false);
         navigate('/orders');
       } else {
@@ -1484,7 +1610,13 @@ function OrderDetails() {
       }
     } catch (error) {
       console.error(`Error ${approvalAction}ing order:`, error);
-      alert(t(`Error ${approvalAction}ing order: ${error.message}`));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Submitting Approval'),
+        text: t(`Error ${approvalAction}ing order: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      // alert(t(`Error ${approvalAction}ing order: ${error.message}`));
       setIsApprovalDialogOpen(false);
     }
   };
@@ -1569,7 +1701,13 @@ function OrderDetails() {
                             value={formData.selectedBranchName !== undefined && formData.selectedBranchName !== null ? formData.selectedBranchName : ''}
                             onClick={() => {
                               if (!formData.erpCustId) {
-                                alert(t('Please select a customer first'));
+                                Swal.fire({
+                                  icon: 'warning',
+                                  title: t('No Customer Selected'),
+                                  text: t('Please select a customer first'),
+                                  confirmButtonText: t('OK')
+                                });
+                                // alert(t('Please select a customer first'));
                                 return;
                               }
                               if (isE('branchName')) setShowBranchPopup(true);
@@ -1865,15 +2003,33 @@ function OrderDetails() {
                         // In add mode, require customer, branch, and entity selection
                         if (formMode === 'add') {
                           if (!formData.erpCustId) {
-                            alert(t('Please select a customer first'));
+                            Swal.fire({
+                              title: t('Select Customer'),
+                              text: t('Please select a customer first'),
+                              icon: 'warning',  
+                              confirmButtonText: t('OK'),
+                            });
+                            // alert(t('Please select a customer first'));
                             return;
                           }
                           else if (!formData.erpBranchId) {
-                            alert(t('Please select a Branch'));
+                            Swal.fire({
+                              title: t('Select Branch'),
+                              text: t('Please select a branch first'),
+                              icon: 'warning',
+                              confirmButtonText: t('OK'),
+                            });
+                            // alert(t('Please select a Branch'));
                             return;
                           }
                           else if (!formData.entity) {
-                            alert(t('Please select Entity'));
+                            Swal.fire({
+                              title: t('Select Entity'),  
+                              text: t('Please select an entity first'),
+                              icon: 'warning',
+                              confirmButtonText: t('OK'),
+                            });
+                            // alert(t('Please select Entity'));
                             return;
                           }
                         }

@@ -22,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import constants from '../constants';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Swal from 'sweetalert2';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 
@@ -141,18 +142,18 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
             onClick={handleConfirm}
             disabled={!markerRef.current}
           >
-            Confirm Location
+            {t('Confirm Location')}
           </button>
         ) : (
           <>
             <div className="location-confirmed">
-              Location confirmed!
+              {t("Location confirmed!")}
             </div>
             <button
               className="reset-location-button"
               onClick={handleReset}
             >
-              Change Location
+              {t("Change Location")}
             </button>
           </>
         )}
@@ -689,19 +690,37 @@ function CustomersDetails() {
         if (activeTab === 'Contact Details') {
           if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
             formData.financeHeadEmail === formData.purchasingHeadEmail) {
-            alert(t('Finance and Purchasing heads must have unique emails'));
+            Swal.fire({
+              icon: 'error',
+              title: t('Error'),
+              text: t('Finance and Purchasing heads must have unique emails'),
+              confirmButtonText: t('OK')
+            });
+            // alert(t('Finance and Purchasing heads must have unique emails'));
             return;
           }
 
           if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
             (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
-            alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
+            Swal.fire({
+              icon: 'error',  
+              title: t('Error'),
+              text: t('Finance/Purchasing heads cannot use the same email as primary contact'),
+              confirmButtonText: t('OK')
+            });
+            // alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
             return;
           }
         }
         if (action !== 'submit') {
           if (!validateChangedFields(action, changedFields, false)) {
-            alert(t('Please correct the errors before saving'));
+            Swal.fire({ 
+              icon: 'error',
+              title: t('Error'),
+              text: t('Please correct the errors before saving'),
+              confirmButtonText: t('OK')
+            });
+           // alert(t('Please correct the errors before saving'));
             return;
           }
         } else {
@@ -849,7 +868,13 @@ function CustomersDetails() {
       Object.keys(contactCreatePayload).length === 0 &&
       Object.keys(contactUpdatePayload).length === 0 &&
       uploadedFiles.length === 0) {
-      alert(t('No changes detected to save'));
+        Swal.fire({
+            icon: 'info', 
+            title: t('No Changes Detected'),
+            text: t('No changes detected to save'),
+            confirmButtonText: t('OK')
+          });
+      // alert(t('No changes detected to save'));
       return;
     }
 
@@ -918,7 +943,13 @@ function CustomersDetails() {
         );
       }
       handleSaveFiles();
-      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),
+        confirmButtonText: t('OK')
+      });
+      // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
     } catch (error) {
       console.error('Update error:', error);
       setFormErrors(error.message || 'Unable to connect to server');
@@ -1234,7 +1265,13 @@ function CustomersDetails() {
       setChangedFields(prev => new Set(prev).add(fieldName));
     } catch (error) {
       console.error('Error handling file:', error);
-      alert(`Error handling file: ${error.message}`);
+      Swal.fire({
+        icon: 'error',    
+        title: t('Error'),
+        text: t(`Error handling file: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      //alert(`Error handling file: ${error.message}`);
     }
   };
   const handleSaveFiles = async () => {
@@ -1284,7 +1321,13 @@ function CustomersDetails() {
       }
     } catch (error) {
       console.error('Error saving files:', error);
-      alert(`Error saving files: ${error.message}`);
+      Swal.fire({
+        icon: 'error',  
+        title: t('Error'),
+        text: t(`Error saving files: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      // alert(`Error saving files: ${error.message}`);
     }
   };
 
@@ -1333,7 +1376,14 @@ function CustomersDetails() {
 
   const handleApprovalSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please fill all required fields. Please Save files before submitting.'));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Please fill all required fields. Please Save files before submitting.'),
+        confirmButtonText: t('OK')
+      });
+
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     setApprovalAction(action);
@@ -1413,12 +1463,24 @@ function CustomersDetails() {
       }
     } catch (error) {
       console.error(`Error ${approvalAction}ing customer:`, error);
-      alert(`Error ${approvalAction}ing customer: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t(`Error ${approvalAction}ing customer: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      //alert(`Error ${approvalAction}ing customer: ${error.message}`);
     }
   };
   const handleSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please fill all required fields. Please Save files before submitting.'));
+      Swal.fire({
+        icon: 'error',  
+        title: t('Error'),
+        text: t('Please fill all required fields. Please Save files before submitting.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     if (action === 'approve') {
@@ -1446,7 +1508,13 @@ function CustomersDetails() {
         });
       } catch (error) {
         console.error('Error approving customer:', error);
-        alert(`Error approving customer: ${error.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t(`Error approving customer: ${error.message}`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`Error approving customer: ${error.message}`);
       }
     }
 
@@ -1475,7 +1543,13 @@ function CustomersDetails() {
         });
       } catch (error) {
         console.error('Error rejecting customer:', error);
-        alert(`Error rejecting customer: ${error.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t(`Error rejecting customer: ${error.message}`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`Error rejecting customer: ${error.message}`);
       }
     }
 
@@ -1493,7 +1567,13 @@ function CustomersDetails() {
       console.log('Prepared changedFields:', newChangedFields);
 
       if (!validateChangedFields('save changes', newChangedFields, true)) {
-        alert(t('Please fill all required fields. Please Save files before submitting.'));
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('Please fill all required fields. Please Save files before submitting.'),
+          confirmButtonText: t('OK')
+        });
+        // alert(t('Please fill all required fields. Please Save files before submitting.'));
         return;
       }
 
@@ -1602,7 +1682,13 @@ function CustomersDetails() {
         Object.keys(contactCreatePayload).length === 0 &&
         Object.keys(contactUpdatePayload).length === 0 &&
         uploadedFiles.length === 0) {
-        alert(t('No changes detected to save'));
+          Swal.fire({
+            icon: 'info',
+            title: t('No Changes Detected'),
+            text: t('No changes detected to save'),
+            confirmButtonText: t('OK')
+          });
+        // alert(t('No changes detected to save'));
         return;
       }
 
@@ -1685,7 +1771,13 @@ function CustomersDetails() {
           );
         }
         handleSaveFiles();
-        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+        Swal.fire({
+          icon: 'success',
+          title: t('Success'),
+          text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
 
         function showLoadingScreen(message) {

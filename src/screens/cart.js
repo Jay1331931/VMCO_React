@@ -9,6 +9,7 @@ import QuantityController from '../components/QuantityController';
 import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
 import GetPaymentMethods from '../components/GetPaymentMethods';
+import Swal from 'sweetalert2';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -299,7 +300,14 @@ function Cart() {
         }
 
         if (isPlacingOrder) {
-            alert(t('An order is being processed. Please wait.'));
+            Swal.fire({
+                icon: 'info',
+                title: t('Processing Order'),
+                text: t('An order is being processed. Please wait.'),
+                showConfirmButton: false,
+                timer: 2000
+            });
+            // alert(t('An order is being processed. Please wait.'));
             return;
         }
 
@@ -345,7 +353,13 @@ function Cart() {
 
         } catch (err) {
             console.error('Error removing item:', err);
-            alert(t(`Failed to remove item: ${err.message}`));
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t(`Failed to remove item: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
+            // alert(t(`Failed to remove item: ${err.message}`));
         } finally {
             setIsPlacingOrder(false);
         }
@@ -381,12 +395,25 @@ function Cart() {
     // Handle place order button click
     const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
         if (categoryItems.length === 0) {
-            alert(t('No items in this category to order.'));
+            Swal.fire({
+                icon: 'info',
+                title: t('No Items'),
+                text: t('No items in this category to order.'),
+                confirmButtonText: t('OK')
+            });
+            // alert(t('No items in this category to order.'));
             return;
         }
 
         if (isPlacingOrder) {
-            alert(t('An order is already being processed. Please wait.'));
+            Swal.fire({
+                icon: 'info',
+                title: t('Processing Order'),
+                text: t('An order is already being processed. Please wait.'),
+                showConfirmButton: false,
+                timer: 2000
+            });
+            // alert(t('An order is already being processed. Please wait.'));
             return;
         }
 
@@ -397,7 +424,13 @@ function Cart() {
             await placeOrderForCategory(categoryItems, categoryName, selectedPaymentMethod);
         } catch (err) {
             setError(err.message);
-            alert(t(`Failed to place order: ${err.message}`));
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Failed'),
+                text: t(`Failed to place order: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
+            // alert(t(`Failed to place order: ${err.message}`));
         } finally {
             setIsPlacingOrder(false);
         }
@@ -407,7 +440,13 @@ function Cart() {
     const placeOrderForCategory = async (categoryItems, categoryName, selectedPaymentMethod) => {
         // Copy the original handlePlaceOrder logic here, but add productCategory to orderPayload
         if (categoryItems.length === 0) {
-            alert(t('No items in this category to order.'));
+            Swal.fire({
+                icon: 'info',
+                title: t('No Items'),
+                text: t('No items in this category to order.'),
+                confirmButtonText: t('OK')
+            });
+            // alert(t('No items in this category to order.'));
             return;
         }
         try {
@@ -754,7 +793,13 @@ function Cart() {
             console.log('Updated the order:', updatedOrderResponse);
 
             // Show order confirmation alert with order number
-            alert(t(`Order placed successfully! Order #${orderId}`));
+            // alert(t(`Order placed successfully! Order #${orderId}`));
+            Swal.fire({
+                icon: 'success',
+                title: t('Order Placed'),
+                text: t(`Your order has been placed successfully! Order #${orderId}`),
+                confirmButtonText: t('OK')
+            });
 
             // Delete cart items
             try {
@@ -788,7 +833,13 @@ function Cart() {
         } catch (err) {
             console.error('Error placing order:', err);
             setError(err.message);
-            alert(t(`Failed to place order: ${err.message}`));
+            // alert(t(`Failed to place order: ${err.message}`));
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Failed'),
+                text: t(`Failed to place order: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
         } finally {
             setIsPlacingOrder(false);
         }

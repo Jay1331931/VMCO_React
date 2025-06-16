@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import Swal from 'sweetalert2';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -246,12 +247,25 @@ function Orders() {
     {
       key: 'favorites',
       label: 'Favorites',
-      onClick: () => alert('Favorites clicked')
+      onClick: () => Swal.fire({
+        title: t('Favorites'),
+        text: t('Favorites clicked'),
+        icon: 'info',
+        confirmButtonText: 'OK'
+      })
+        // alert('Favorites clicked')
     },
     {
       key: 'customOrders',
       label: 'Custom Orders',
-      onClick: () => alert('Custom Orders clicked')
+      onClick: () => 
+        Swal.fire({
+          title: t('Custom Orders'),
+          text: t('Custom Orders clicked'),
+          icon: 'info',
+          confirmButtonText: 'OK'
+        })
+        // alert('Custom Orders clicked')
     }
   ]; const columns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
