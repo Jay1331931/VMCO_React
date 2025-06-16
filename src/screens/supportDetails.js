@@ -291,9 +291,9 @@ function SupportDetails() {
   };
 
   return (
-    <Sidebar title={`${t("Ticket#")}${ticket.id}${isCommentPanelOpen ? "collapsed" : ""}`}>
+    <Sidebar title={`${t("Ticket# ")}${ticket.ticketId}${isCommentPanelOpen ? "collapsed" : ""}`}>
       <div className='support-details-container'>
-        <h2 className='support-details-title'>{`${t("Ticket#")}${ticket.id}`}</h2>
+        <h2 className='support-details-title'>{`${t("Ticket# ")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
           <h3 className='support-details-subtitle'>{t("Ticket Details")}</h3>
           <div className='support-details-grid'>
