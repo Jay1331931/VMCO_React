@@ -65,6 +65,11 @@ const Table = ({
         
    const value = item[column.key];
 
+    // check if dtring value is a date
+    if (typeof value === 'string' && !isNaN(Date.parse(value))) {
+        // If it's a date string, format it
+        return formatDate(value, 'DD MMM YYYY');
+    }
 
     // If value is an object, stringify it
    if (typeof value === 'object' && value !== null) {
