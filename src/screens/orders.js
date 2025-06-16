@@ -40,7 +40,7 @@ function Orders() {
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { token, user, isAuthenticated, logout, loadingPage } = useAuth();
 
@@ -128,7 +128,7 @@ function Orders() {
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
-          companyNameEn: order.companyNameEn || order.company_name_en|| '',
+          companyNameEn: order.companyNameEn || order.company_name_en || '',
           workflowName: order.workflowName,
           workflowInstanceId: order.workflowInstanceId
         }));
@@ -152,25 +152,25 @@ function Orders() {
       return; // Wait while loading
     }
 
-      console.log("$$$$$$$$$$$ user in orders page", user);
+    console.log("$$$$$$$$$$$ user in orders page", user);
     if (user) {
       fetchOrders(page, searchQuery);
       // eslint-disable-next-line
     }// Check loading state first
-  
-  if (!user) {
-    console.log("$$$$$$$$$$$ logging out");
-    // Logout instead of showing loading message
-    //logout();
-    //navigate('/login');
-    //return null; // Return null while logout is processing
-  }
+
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
+      // Logout instead of showing loading message
+      //logout();
+      //navigate('/login');
+      //return null; // Return null while logout is processing
+    }
 
   }, [page, searchQuery, user]);
 
 
 
-  
+
   //For fetching the user again after browser refersh - End
   //RBAC
   //use formMode to decide if it is editform or add form
@@ -226,7 +226,7 @@ function Orders() {
       // Fallback: navigate without salesOrderLines if fetch fails
       navigate('/orderDetails', {
         state: {
-          order, 
+          order,
           mode: 'edit',
           fromApproval: isApprovalMode,
           wfid: isApprovalMode ? order.workflowInstanceId : undefined,
@@ -253,10 +253,23 @@ function Orders() {
       label: 'Custom Orders',
       onClick: () => alert('Custom Orders clicked')
     }
-  ]; const columns = [
+  ];
+
+
+  const isArabic = i18n.language === 'ar'; // or use your language state
+
+  const columns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
-    { key: 'companyNameEn', header: () => t('Customer'), include: isV('companyName') },
-    { key: 'erpBranchId', header: () => t('Branch'), include: isV('branchName') },
+    {
+      key: isArabic ? 'companyNameAr' : 'companyNameEn',
+      header: () => t('Customer'),
+      include: isV('companyName')
+    },
+    {
+      key: isArabic ? 'branchNameLc' : 'branchNameEn',
+      header: () => t('Branch'),
+      include: isV('branchName')
+    },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
     { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },

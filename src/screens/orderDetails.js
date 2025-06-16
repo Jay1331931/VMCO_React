@@ -1580,9 +1580,13 @@ function OrderDetails() {
                         </div>
                       ) : (
                         <input
-                          id="erpBranchIdField"
-                          name="erpBranchId"
-                          value={formData.erpBranchId !== undefined && formData.erpBranchId !== null ? formData.erpBranchId : ''}
+                          id="branchNameField"
+                          name="branchName"
+                          value={
+                            i18n.language === 'ar'
+                              ? (formData.branchNameLc || formData.selectedBranchName || '')
+                              : (formData.branchNameEn || formData.selectedBranchName || '')
+                          }
                           disabled
                           readOnly
                         />

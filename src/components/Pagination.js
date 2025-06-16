@@ -47,8 +47,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange, startIndex, endInde
 
                 {renderPageNumbers()}
 
-                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages}>›</button>
-                <button onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages}>»</button>   
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === Number(totalPages)}>›</button>
+                <button onClick={() => onPageChange(Number(totalPages))} disabled={currentPage === Number(totalPages)}>»</button>   
             </div>
             <div className="pagination-jump">
                 <label htmlFor="page-jump">Page:</label>
