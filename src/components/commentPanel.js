@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
-import { faMessage } from '@fortawesome/free-regular-svg-icons';
-import '../i18n';
-import { useTranslation } from 'react-i18next';
-import formatDate from '../utilities/dateFormatter';
-import RbacManager from '../utilities/rbac';
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
+import { faMessage } from "@fortawesome/free-regular-svg-icons";
+import "../i18n";
+import { useTranslation } from "react-i18next";
+import formatDate from "../utilities/dateFormatter";
+import RbacManager from "../utilities/rbac";
 
 /**
  * comment object structure
@@ -13,39 +13,32 @@ import RbacManager from '../utilities/rbac';
  {"status": "New", "actionTimestamp": "2025-05-21 00:00", "comment": "Technician assigned", "userName": "currentUser.userName", "userId": "currentUser.userId"} 
  */
 
-const CommentPopup = ({ 
-  isOpen, 
-  setIsOpen, 
-  onAddComment, 
-  showCommentForm = true,
-  externalComments = [],
-  currentUser,  
-  isVisible = false
-}) => {
+const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true, externalComments = [], currentUser, isVisible = false }) => {
   const { t } = useTranslation();
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState(externalComments);
   const [count, setCount] = useState(externalComments?.length);
 
-    //RBAC
-    //use formMode to decide if it is editform or add form
-    const rbacMgr = new RbacManager(currentUser?.userType === 'employee' && currentUser?.roles[0] !== 'admin' ? currentUser?.designation : currentUser?.roles,'commentPanel');
-    const isV = rbacMgr.isV.bind(rbacMgr);
-    const isE = rbacMgr.isE.bind(rbacMgr);
-
-  
+  //RBAC
+  //use formMode to decide if it is editform or add form
+  const rbacMgr = new RbacManager(
+    currentUser?.userType === "employee" && currentUser?.roles[0] !== "admin" ? currentUser?.designation : currentUser?.roles,
+    "commentPanel"
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleAddComment = () => {
     if (commentText.trim()) {
       // Create a new comment object
       const newComment = {
-        action: 'New',
-        date: formatDate(new Date(),'YYYY-MM-DD HH:MM'),
+        action: "New",
+        date: formatDate(new Date(), "YYYY-MM-DD HH:MM"),
         message: commentText.trim(),
         userName: currentUser.userName,
-        userId: currentUser.userId
+        userId: currentUser.userId,
       };
-      
+
       // Add the new comment to the comments array
       const updatedComments = [newComment, ...comments];
       externalComments.push(newComment);
@@ -56,9 +49,9 @@ const CommentPopup = ({
       if (onAddComment) {
         onAddComment(commentText, newComment);
       }
-      
+
       // Clear the comment input
-      setCommentText('');
+      setCommentText("");
     }
   };
 
@@ -67,56 +60,54 @@ const CommentPopup = ({
 
   return (
     <>
-      <button onClick={() => setIsOpen(!isOpen)} className="comment-button">
-        <div className="icon-wrapper">
-          {isV('commentIcon') && isE('commentIcon')&&(<FontAwesomeIcon icon={faMessage} className="message-icon" />)}
-          {count > 0 && <span className="badge">{count}</span>}
+      <button onClick={() => setIsOpen(!isOpen)} className='comment-button'>
+        <div className='icon-wrapper'>
+          {isV("commentIcon") && isE("commentIcon") && <FontAwesomeIcon icon={faMessage} className='message-icon' />}
+          {count > 0 && <span className='badge'>{count}</span>}
         </div>
       </button>
 
-      <div className={`comment-panel ${isOpen ? 'open' : ''}`}>
-        <div className="comment-panel-header">
-          <h2>{t('Comments')}</h2>
-          <button onClick={() => setIsOpen(false)} className="close-btn">✕</button>
+      <div className={`comment-panel ${isOpen ? "open" : ""}`}>
+        <div className='comment-panel-header'>
+          <h2>{t("Comments")}</h2>
+          <button onClick={() => setIsOpen(false)} className='close-btn'>
+            ✕
+          </button>
         </div>
-        <div className="comment-panel-body">
+        <div className='comment-panel-body'>
           {showCommentForm && (
-            <div className="comment-form">
+            <div className='comment-form'>
               <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder={t('Add your comment here...')}
-                className="comment-textarea"
-                rows="3"
+                placeholder={t("Add your comment here...")}
+                className='comment-textarea'
+                rows='3'
               />
-              <button 
-                onClick={handleAddComment} 
-                className="add-comment-btn"
-                disabled={!commentText.trim()}
-              >
-                {t('Add Comment')}
+              <button onClick={handleAddComment} className='add-comment-btn' disabled={!commentText.trim()}>
+                {t("Add Comment")}
               </button>
             </div>
           )}
-          
+
           {comments.length > 0 ? (
             comments.map((comment, index) => (
-              <div className="comment-entry" key={index}>
-                <div className="user-info-1">
-                  <FontAwesomeIcon icon={faUserCircle} className="user-icon" />
-                  <div className="user-name">{comment.userName || 'User'}</div>
+              <div className='comment-entry' key={index}>
+                <div className='user-info-1'>
+                  <FontAwesomeIcon icon={faUserCircle} className='user-icon' />
+                  <div className='user-name'>{comment.userName || "User"}</div>
                 </div>
-                <div className="comment-content">
-                  <div className="comment-meta">
-                    <p>{`${comment.date}`}</p>
-                    <p>{t(comment.action || 'Comment')}</p>
+                <div className='comment-content'>
+                  <div className='comment-meta'>
+                    <p>{`${comment.date || comment.actionTimestamp}`}</p>
+                    <p>{t(comment.action || "Comment")}</p>
                   </div>
-                  <div className="comment-text">{comment.message}</div>
+                  <div className='comment-text'>{comment.message || comment.comment}</div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="no-comments">{t('No comments yet')}</div>
+            <div className='no-comments'>{t("No comments yet")}</div>
           )}
         </div>
       </div>
