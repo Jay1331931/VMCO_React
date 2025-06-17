@@ -444,41 +444,7 @@ function Cart() {
                     console.error('Failed to fetch customer contact name:', error);
                 }
             }
-             // Build filters for existing order check based on entity
-            let orderFiltersObj;
-            if (entity && entity.toLowerCase() === 'vmco') {
-                // For vmco, include productCategory
-                orderFiltersObj = {
-                    customerId: selectedCustomerId,
-                    branchId: selectedBranchId,
-                    entity,
-                    status: 'Open',
-                    productCategory: categoryName
-                };
-            } else {
-                // For other entities, do not include productCategory
-                orderFiltersObj = {
-                    customerId: selectedCustomerId,
-                    branchId: selectedBranchId,
-                    entity,
-                    status: 'Open'
-                };
-            }
-            const orderFilters = new URLSearchParams({
-                filters: JSON.stringify(orderFiltersObj)
-            });
-            const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            if (!existingOrderResponse.ok) {
-                throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
-            }
-            const existingOrderResult = await existingOrderResponse.json();
-            let orderId;
-            let existingProductMap = {};
-            let existingOrderData = null;
+
             // Fetch customer data for delivery charge calculation - do this once up front
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
@@ -496,6 +462,7 @@ function Cart() {
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
             let assignedTo = customerData?.data?.assignedTo;
+            
             if (assignedToEntityWiseRaw) {
                 try {
                     const assignedToEntityWise = typeof assignedToEntityWiseRaw === 'string' ? JSON.parse(assignedToEntityWiseRaw) : assignedToEntityWiseRaw;
@@ -506,40 +473,87 @@ function Cart() {
                     console.error('Error parsing assignedToEntityWise:', e);
                 }
             }
-            if (existingOrderResult.data?.data?.length > 0) {
-                existingOrderData = existingOrderResult.data.data[0];
-                orderId = existingOrderData.id;
-                const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
+
+            let orderId;
+            let existingProductMap = {};
+            let existingOrderData = null;
+            
+            // Check if payment method is "Pre Payment" - if so, always create a new order
+            const isPrePayment = selectedPaymentMethod === 'Pre Payment';
+            
+            if (!isPrePayment) {
+                // Only check for existing orders if NOT using Pre Payment
+                const orderFiltersObj = entity && entity.toLowerCase() === 'vmco' 
+                    ? {
+                        customerId: selectedCustomerId,
+                        branchId: selectedBranchId,
+                        entity,
+                        status: 'Open',
+                        productCategory: categoryName
+                    }
+                    : {
+                        customerId: selectedCustomerId,
+                        branchId: selectedBranchId,
+                        entity,
+                        status: 'Open'
+                    };
+                    
+                const orderFilters = new URLSearchParams({
+                    filters: JSON.stringify(orderFiltersObj)
+                });
+                
+                const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
-                if (!linesResponse.ok) {
-                    throw new Error(`Failed to fetch order lines: ${linesResponse.statusText}`);
+                
+                if (!existingOrderResponse.ok) {
+                    throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
                 }
-                const existingLines = await linesResponse.json();
-                if (existingLines.data?.data) {
-                    const orderLines = existingLines.data.data.filter(line => line.orderId === orderId);
-                    orderLines.forEach(line => {
-                        if (line.productId) {
-                            existingProductMap[line.productId] = line;
-                        }
+                
+                const existingOrderResult = await existingOrderResponse.json();
+                
+                if (existingOrderResult.data?.data?.length > 0) {
+                    existingOrderData = existingOrderResult.data.data[0];
+                    orderId = existingOrderData.id;
+                    const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                     });
+                    
+                    if (!linesResponse.ok) {
+                        throw new Error(`Failed to fetch order lines: ${linesResponse.statusText}`);
+                    }
+                    
+                    const existingLines = await linesResponse.json();
+                    if (existingLines.data?.data) {
+                        const orderLines = existingLines.data.data.filter(line => line.orderId === orderId);
+                        orderLines.forEach(line => {
+                            if (line.productId) {
+                                existingProductMap[line.productId] = line;
+                            }
+                        });
+                    }
                 }
-            } else {
+            }
+            
+            // If we don't have an existing order ID (either because we're using Pre Payment or no existing order was found)
+            // we need to create a new order
+            if (!orderId) {
                 // First calculate the initial totalAmount from cart items
                 let initialTotalAmount = 0;
                 for (const item of categoryItems) {
                     const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
-                    //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
-                    //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                    const netAmount = baseAmount + vatAmount; // + sugarTaxAmount;
+                    const netAmount = baseAmount + vatAmount;
                     initialTotalAmount += netAmount;
                 }
+                
                 let deliveryCharges = 0.00;
                 const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
                 if (isDeliveryChargesApplicable) {
@@ -547,7 +561,9 @@ function Cart() {
                         deliveryCharges = 20.00;
                     }
                 }
+                
                 const finalTotalAmount = initialTotalAmount + deliveryCharges;
+                
                 const orderPayload = {
                     customerId: selectedCustomerId,
                     companyNameEn: companyNameEn,
@@ -557,7 +573,7 @@ function Cart() {
                     branchNameLc: selectedBranchNameLc,
                     erpBranchId: selectedBranchErpId,
                     branchRegion: selectedBranchRegion,
-                    orderBy: orderByName, // <-- Use fetched name here
+                    orderBy: orderByName,
                     entity,
                     paymentMethod: selectedPaymentMethod,
                     totalAmount: finalTotalAmount.toFixed(2),
@@ -570,284 +586,278 @@ function Cart() {
                     customerRegion: customerRegion,
                     productCategory: categoryName
                 };
-                console.log('Order payload:', {
-                    customerId: selectedCustomerId,
-                    companyNameEn: companyNameEn,
-                    companyNameAr: companyNameAr,
-                    branchId: selectedBranchId,
-                    branchNameEn: selectedBranchName,
-                    branchNameLc: selectedBranchNameLc,
-                    erpBranchId: selectedBranchErpId,
-                    branchRegion: selectedBranchRegion,
-                    orderBy: 'Customer',
-                    entity,
-                    paymentMethod: selectedPaymentMethod,
-                    totalAmount: finalTotalAmount.toFixed(2),
-                    paidAmount: '0.00',
-                    deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
-                    status: 'Open',
-                    pricingPolicy: pricingPolicy,
-                    salesExecutive: assignedTo,
-                    customerRegion: customerRegion,
-                    productCategory: categoryName // <-- Add this field
-                });
+                
+                console.log('Order payload:', orderPayload);
+                
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderPayload),
                     credentials: 'include',
                 });
+                
                 if (!orderResponse.ok) {
                     const errorText = await orderResponse.text();
                     throw new Error(JSON.parse(errorText)?.message || 'Failed to create order');
                 }
+                
                 const orderResult = await orderResponse.json();
                 orderId = orderResult.data.id;
             }
-            // Create or Update Order Lines
-            for (const item of categoryItems) {
-                // Make sure we properly identify the product ID - check all possible fields in priority order
-                const productId = item.product_id || item.productId || item.id;
 
-                console.log(`Processing item with product ID: ${productId}`, {
-                    item_details: {
+        // Create or Update Order Lines
+        for (const item of categoryItems) {
+            // Make sure we properly identify the product ID - check all possible fields in priority order
+            const productId = item.product_id || item.productId || item.id;
+
+            console.log(`Processing item with product ID: ${productId}`, {
+                item_details: {
+                    id: item.id,
+                    product_id: item.product_id,
+                    productId: item.productId,
+                    name: item.name || item.productName,
+                    all_item_keys: Object.keys(item)
+                }
+            });
+
+            const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
+            const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+            const vatPercentage = parseFloat(item.vatPercentage || 0);
+
+            // Check if this product already exists in the order (only if not using Pre Payment)
+            const existingLine = isPrePayment ? null : existingProductMap[productId];
+            
+            console.log(`Item ${productId} existing line check:`, existingLine ? 'Found' : 'Not found', {
+                item_id: item.id,
+                product_id: productId,
+                existing_line_id: existingLine?.id,
+                existing_quantity: existingLine?.quantity,
+                isPrepayment: isPrePayment
+            });
+
+            const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
+            const baseAmount = unitPrice * totalQuantity;
+            const vatAmount = (baseAmount * vatPercentage) / 100;
+            const netAmount = baseAmount + vatAmount;
+            
+            if (existingLine && !isPrePayment) {
+                // Update existing line with new quantity and recalculated net amount
+                const patchPayload = {
+                    quantity: totalQuantity,
+                    net_amount: netAmount.toFixed(2)
+                };
+
+                console.log(`Updating existing line for orderId ${orderId} and productId ${productId}:`, {
+                    payload: patchPayload,
+                    existingLine: {
+                        id: existingLine.id,
+                        product_id: productId,
+                        old_quantity: existingLine.quantity,
+                        old_net_amount: existingLine.net_amount
+                    }
+                });
+
+                try {
+                    // Using the new API endpoint that updates by orderId and productId
+                    const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(patchPayload),
+                        credentials: 'include',
+                    });
+
+                    if (!patchResponse.ok) {
+                        const errorText = await patchResponse.text();
+                        console.error(`Failed to update line for orderId ${orderId} and productId ${productId}: ${errorText}`);
+                        throw new Error(errorText);
+                    } else {
+                        const updatedLine = await patchResponse.json();
+                        console.log(`Successfully updated line for orderId ${orderId} and productId ${productId}:`, updatedLine);
+                    }
+                } catch (error) {
+                    console.error(`Error updating line for orderId ${orderId} and productId ${productId}:`, error);
+                    // Continue with the process - don't let one line failure stop the entire order
+                }
+            } else {
+                // Create a new line for this product
+                const productName = item.productName || item.name || 'Product';
+                const productNameLc = item.productNameLc || item.nameLc || productName;
+                
+                const newLinePayload = {
+                    order_id: orderId,
+                    product_id: productId,
+                    productName: productName,
+                    productNameLc: productNameLc,
+                    quantity: newQuantity,
+                    unit: item.unit || 'EA',
+                    unit_price: unitPrice,
+                    vat_percentage: vatPercentage || 0,
+                    net_amount: netAmount.toFixed(2),
+                    erp_line_number: item.erp_line_number || 1,
+                    erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
+                };
+
+                console.log(`Creating new line for product ${productId}:`, {
+                    payload: newLinePayload,
+                    original_item: {
                         id: item.id,
                         product_id: item.product_id,
                         productId: item.productId,
                         name: item.name || item.productName,
-                        all_item_keys: Object.keys(item)
+                        productNameLc: productNameLc
                     }
                 });
-
-                const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
-                const unitPrice = parseFloat(item.unitPrice || item.price || 0);
-                const vatPercentage = parseFloat(item.vatPercentage || 0);
-                //const sugarTaxPrice = parseFloat(item.sugarTaxPrice || 0);
-
-                // Check if this product already exists in the order
-                const existingLine = existingProductMap[productId];
-                console.log(`Item ${productId} existing line check:`, existingLine ? 'Found' : 'Not found', {
-                    item_id: item.id,
-                    product_id: productId,
-                    existing_line_id: existingLine?.id,
-                    existing_quantity: existingLine?.quantity
-                });
-
-                const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
-                const baseAmount = unitPrice * totalQuantity;
-                const vatAmount = (baseAmount * vatPercentage) / 100;
-                //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100;
-                const netAmount = baseAmount + vatAmount; if (existingLine) {
-                    // Update existing line with new quantity and recalculated net amount
-                    const patchPayload = {
-                        quantity: totalQuantity,
-                        net_amount: netAmount.toFixed(2) // Ensure proper format with 2 decimal places
-                    };
-
-                    console.log(`Updating existing line for orderId ${orderId} and productId ${productId}:`, {
-                        payload: patchPayload,
-                        existingLine: {
-                            id: existingLine.id,
-                            product_id: productId,
-                            old_quantity: existingLine.quantity,
-                            old_net_amount: existingLine.net_amount
-                        }
+                
+                try {
+                    const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(newLinePayload),
+                        credentials: 'include',
                     });
 
-                    try {
-                        // Using the new API endpoint that updates by orderId and productId
-                        const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(patchPayload),
-                            credentials: 'include',
-                        });
-
-                        if (!patchResponse.ok) {
-                            const errorText = await patchResponse.text();
-                            console.error(`Failed to update line for orderId ${orderId} and productId ${productId}: ${errorText}`);
-                            throw new Error(errorText);
-                        } else {
-                            const updatedLine = await patchResponse.json();
-                            console.log(`Successfully updated line for orderId ${orderId} and productId ${productId}:`, updatedLine);
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error(`Failed to create line for product ${productId}: ${errorText}`);
+                        throw new Error(errorText);
+                    } else {
+                        const newLine = await createResponse.json();
+                        console.log(`Successfully created line for product ${productId}:`, newLine);
+                        // Add the newly created line to our existingProductMap
+                        if (newLine.data && newLine.data.product_id) {
+                            existingProductMap[newLine.data.product_id] = newLine.data;
                         }
-                    } catch (error) {
-                        console.error(`Error updating line for orderId ${orderId} and productId ${productId}:`, error);
-                        // Continue with the process - don't let one line failure stop the entire order
                     }
-                } else {
-                    // Create a new line for this product
-                    const productName = item.productName || item.name || 'Product';
-                    const productNameLc = item.productNameLc || item.nameLc || productName; // Use localized name if available
-                    const newLinePayload = {
-                        order_id: orderId,
-                        product_id: productId,
-                        productName: productName,
-                        productNameLc: productNameLc,
-                        quantity: newQuantity,
-                        unit: item.unit || 'EA', // Default to EA if unit is not provided
-                        unit_price: unitPrice,
-                        vat_percentage: vatPercentage || 0,
-                        //sugar_tax_price: sugarTaxPrice || 0,
-                        net_amount: netAmount.toFixed(2), // Ensure proper format with 2 decimal places
-                        erp_line_number: item.erp_line_number || 1,
-                        erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
-                    };
-
-                    console.log(`Creating new line for product ${productId}:`, {
-                        payload: newLinePayload,
-                        original_item: {
-                            id: item.id,
-                            product_id: item.product_id,
-                            productId: item.productId,
-                            name: item.name || item.productName,
-                            productNameLc: productNameLc
-                        }
-                    }); try {
-                        const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(newLinePayload),
-                            credentials: 'include',
-                        });
-
-                        if (!createResponse.ok) {
-                            const errorText = await createResponse.text();
-                            console.error(`Failed to create line for product ${productId}: ${errorText}`);
-                            throw new Error(errorText);
-                        } else {
-                            const newLine = await createResponse.json();
-                            console.log(`Successfully created line for product ${productId}:`, newLine);
-                            // Add the newly created line to our existingProductMap
-                            if (newLine.data && newLine.data.product_id) {
-                                existingProductMap[newLine.data.product_id] = newLine.data;
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Error creating line for product ${productId}:`, error);
-                        // Continue with the process - don't let one line failure stop the entire order
-                    }
+                } catch (error) {
+                    console.error(`Error creating line for product ${productId}:`, error);
+                    // Continue with the process - don't let one line failure stop the entire order
                 }
-            }            // Recalculate totalAmount after line inserts/updates
-            const recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-
-            if (!recalcLinesResponse.ok) {
-                throw new Error('Failed to fetch order lines for recalculating total amount');
             }
-
-            const recalcLinesData = await recalcLinesResponse.json();
-            console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
-
-            // Verify we have the correct lines for this order
-            const allLines = recalcLinesData?.data?.data?.filter(line => line.orderId === orderId) || [];
-            console.log(`All order lines for orderId ${orderId}:`, allLines);
-
-            // Calculate the sum of all order line net amounts - ensure we parse all values correctly
-            let linesTotal = 0;
-            for (const line of allLines) {
-                const netAmount = parseFloat(line.netAmount);
-                console.log(`Line for product ${line.productId}: net_amount=${line.netAmount}, parsed=${netAmount}`);
-                linesTotal += netAmount;
-            }
-
-            console.log('Recalculated lines total:', linesTotal);
-
-            // Get existing delivery charges if updating an order
-            let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;        // Calculate delivery charges based on recalculated line totals
-            let deliveryCharges = 0.00;
-            const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');            // Updated delivery charges logic according to requirements
-            if (isDeliveryChargesApplicable) {
-                // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
-
-                // For VMCO Consumables, Diyafa, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
-                if (!isVmcoMachine && linesTotal <= 150) {
-                    deliveryCharges = 20.00;
-                }
-            } else if (existingOrderData) {
-                // Keep existing delivery charges if they exist and we don't need to add new ones
-                deliveryCharges = currentDeliveryCharges;
-            }
-
-            console.log('Delivery Charges calculated:', deliveryCharges);
-
-            // Calculate final total amount (lines total + delivery charges)
-            const finalTotalAmount = linesTotal + deliveryCharges;
-            console.log('Final order totals:', {
-                linesTotal,
-                deliveryCharges,
-                finalTotalAmount,
-                details: {
-                    isVmcoMachine,
-                    isDeliveryChargesApplicable,
-                    categoryName
-                }
-            });
-
-            // Update the order with final calculated amounts
-            const updateOrderPayload = {
-                id: orderId,
-                paymentMethod: selectedPaymentMethod,
-                totalAmount: finalTotalAmount.toFixed(2),
-                deliveryCharges: deliveryCharges.toFixed(2),
-            };
-
-            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateOrderPayload),
-                credentials: 'include',
-            });
-
-            if (!updateOrderResponse.ok) {
-                throw new Error(`Failed to update order with final amounts`);
-            } const updatedOrderResponse = await updateOrderResponse.json();
-            console.log('Updated the order:', updatedOrderResponse);
-
-            // Show order confirmation alert with order number
-            alert(t(`Order placed successfully! Order #${orderId}`));
-
-            // Delete cart items
-            try {
-                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', selectedCustomerId);
-                deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                // For VMCO entity, include both entity and category; for others, only entity
-                if (entity && entity.toLowerCase() === 'vmco') {
-                    deleteUrl.searchParams.append('entity', 'vmco');
-                    deleteUrl.searchParams.append('category', categoryName);
-                } else {
-                    deleteUrl.searchParams.append('entity', entity);
-                    // Do NOT include category for non-vmco entities
-                }
-
-                const deleteResponse = await fetch(deleteUrl, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                });
-
-                if (!deleteResponse.ok) {
-                    console.error(`Error removing cart items: ${deleteResponse.statusText}`);
-                }
-                // After deleting cart items, reload the page
-               // window.location.reload();
-            } catch (err) {
-                console.error('Error during cart cleanup:', err);
-            }
-
-        } catch (err) {
-            console.error('Error placing order:', err);
-            setError(err.message);
-            alert(t(`Failed to place order: ${err.message}`));
-        } finally {
-            setIsPlacingOrder(false);
         }
-    };
+        
+        // Recalculate totalAmount after line inserts/updates
+        const recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+        });
+
+        if (!recalcLinesResponse.ok) {
+            throw new Error('Failed to fetch order lines for recalculating total amount');
+        }
+
+        const recalcLinesData = await recalcLinesResponse.json();
+        console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
+
+        // Verify we have the correct lines for this order
+        const allLines = recalcLinesData?.data?.data?.filter(line => line.orderId === orderId) || [];
+        console.log(`All order lines for orderId ${orderId}:`, allLines);
+
+        // Calculate the sum of all order line net amounts - ensure we parse all values correctly
+        let linesTotal = 0;
+        for (const line of allLines) {
+            const netAmount = parseFloat(line.netAmount);
+            console.log(`Line for product ${line.productId}: net_amount=${line.netAmount}, parsed=${netAmount}`);
+            linesTotal += netAmount;
+        }
+
+        console.log('Recalculated lines total:', linesTotal);
+
+        // Get existing delivery charges if updating an order
+        let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;
+        
+        // Calculate delivery charges based on recalculated line totals
+        let deliveryCharges = 0.00;
+        const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
+        
+        // Updated delivery charges logic according to requirements
+        if (isDeliveryChargesApplicable) {
+            // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
+            // For VMCO Consumables, Diyafa, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
+            if (!isVmcoMachine && linesTotal <= 150) {
+                deliveryCharges = 20.00;
+            }
+        } else if (existingOrderData) {
+            // Keep existing delivery charges if they exist and we don't need to add new ones
+            deliveryCharges = currentDeliveryCharges;
+        }
+
+        console.log('Delivery Charges calculated:', deliveryCharges);
+
+        // Calculate final total amount (lines total + delivery charges)
+        const finalTotalAmount = linesTotal + deliveryCharges;
+        console.log('Final order totals:', {
+            linesTotal,
+            deliveryCharges,
+            finalTotalAmount,
+            details: {
+                isVmcoMachine,
+                isDeliveryChargesApplicable,
+                categoryName
+            }
+        });
+
+        // Update the order with final calculated amounts
+        const updateOrderPayload = {
+            id: orderId,
+            paymentMethod: selectedPaymentMethod,
+            totalAmount: finalTotalAmount.toFixed(2),
+            deliveryCharges: deliveryCharges.toFixed(2),
+        };
+
+        const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updateOrderPayload),
+            credentials: 'include',
+        });
+
+        if (!updateOrderResponse.ok) {
+            throw new Error(`Failed to update order with final amounts`);
+        }
+        
+        const updatedOrderResponse = await updateOrderResponse.json();
+        console.log('Updated the order:', updatedOrderResponse);
+
+        // Show order confirmation alert with order number
+        alert(t(`Order placed successfully! Order #${orderId}`));
+
+        // Delete cart items
+        try {
+            const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+            deleteUrl.searchParams.append('customer_id', selectedCustomerId);
+            deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            // For VMCO entity, include both entity and category; for others, only entity
+            if (entity && entity.toLowerCase() === 'vmco') {
+                deleteUrl.searchParams.append('entity', 'vmco');
+                deleteUrl.searchParams.append('category', categoryName);
+            } else {
+                deleteUrl.searchParams.append('entity', entity);
+                // Do NOT include category for non-vmco entities
+            }
+
+            const deleteResponse = await fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+            });
+
+            if (!deleteResponse.ok) {
+                console.error(`Error removing cart items: ${deleteResponse.statusText}`);
+            }
+            // After deleting cart items, reload the page
+            window.location.reload();
+        } catch (err) {
+            console.error('Error during cart cleanup:', err);
+        }
+    } catch (err) {
+        console.error('Error placing order:', err);
+        setError(err.message);
+        alert(t(`Failed to place order: ${err.message}`));
+    } finally {
+        setIsPlacingOrder(false);
+    }
+};
 
     // Initialize from navigation state if available
     useEffect(() => {
@@ -982,7 +992,7 @@ function Cart() {
 
                                                             const baseAmount = unitPrice * quantity;
                                                             const vatAmount = (baseAmount * vatPercentage) / 100;
-                                                            //const sugarTaxAmount = sugarTaxPrice ? (baseAmount * sugarTaxPrice) / 100 : 0;
+                                                            //const sugarTaxAmount = (baseAmount * sugarTaxPrice) / 100 : 0;
 
                                                             const totalAmount = baseAmount + vatAmount; // + sugarTaxAmount
                                                             categoryTotal += totalAmount;

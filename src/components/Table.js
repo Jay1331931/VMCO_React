@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '../utilities/dateFormatter';
 
 const Table = ({
     columns,
@@ -9,7 +8,7 @@ const Table = ({
     actionButtons,
     customCellRenderer,
     onRowClick,
-    onCheckout
+    onPay
 }) => {
     const { t } = useTranslation();
  
@@ -46,18 +45,18 @@ const Table = ({
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
-          // Handle checkout button
-        if (column.key === 'checkout' && onCheckout) {
+          // Handle pay button
+        if (column.key === 'pay' && onPay) {
             return (
                 <button 
-                    className="action-button checkout"
+                    className="action-button pay"
                     onClick={(e) => {
-                        console.log('Checkout button clicked for item:', item);
+                        console.log('Pay button clicked for item:', item);
                         e.stopPropagation(); // Prevent row click event
-                        onCheckout(item);
+                        onPay(item);
                     }}
                 >
-                    {t('Checkout')}
+                    {t('Pay')}
                 </button>
             );
         }
@@ -178,7 +177,7 @@ const Table = ({
                     background-color: transparent;
                     color: #1F4DE2;
                 }
-                .action-button.checkout {
+                .action-button.pay {
                     background-color: #00594C;
                     color: white;
                 }
