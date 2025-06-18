@@ -74,6 +74,19 @@
     padding: 20px;
     border-left: 1px solid #ccc;
   }
+  .create-customer-btn{
+    padding: 10px;
+    border-radius: 10px;
+    color: #ffff;
+    background-color: rgb(1, 89, 77);
+  }
+  .form-main-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
 
   [dir="rtl"] .customers .customer-onboarding-form-grid {
     border-left: none;
