@@ -67,13 +67,6 @@ const QuantityController = ({
                 <FontAwesomeIcon icon={faPlus} />
             </button>
             
-            {/* Add MOQ indicator if moq > 0 */}
-            {moq > 0 && (
-                <div className="moq-indicator" title={`Minimum Order Quantity: ${moq}`}>
-                    Min: {moq}
-                </div>
-            )}
-            
             <style>{`
                 
                 .quantity-controls {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ActionButton from '../components/ActionButton';
 import ToggleButton from '../components/ToggleButton';
@@ -40,9 +40,9 @@ function Orders() {
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { token, user, isAuthenticated, logout, loadingPage } = useAuth();
+  const { user, } = useAuth();
 
 
 
@@ -59,7 +59,7 @@ function Orders() {
   };
 
   // Fetch orders from API
-  const fetchOrders = async (page = 1, searchTerm = '') => {
+  const fetchOrders = useCallback(async (page = 1, searchTerm = '') => {
     setLoading(true);
     setError(null);
     try {
@@ -100,7 +100,7 @@ function Orders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize]);
 
   // Fetch approvals for orders (similar to customers page)
   const fetchApprovals = async (page = 1, searchTerm = '') => {
@@ -128,7 +128,7 @@ function Orders() {
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
-          companyNameEn: order.companyNameEn || order.company_name_en|| '',
+          companyNameEn: order.companyNameEn || order.company_name_en || '',
           workflowName: order.workflowName,
           workflowInstanceId: order.workflowInstanceId
         }));
@@ -152,25 +152,25 @@ function Orders() {
       return; // Wait while loading
     }
 
-      console.log("$$$$$$$$$$$ user in orders page", user);
+    console.log("$$$$$$$$$$$ user in orders page", user);
     if (user) {
       fetchOrders(page, searchQuery);
       // eslint-disable-next-line
     }// Check loading state first
-  
-  if (!user) {
-    console.log("$$$$$$$$$$$ logging out");
-    // Logout instead of showing loading message
-    //logout();
-    //navigate('/login');
-    //return null; // Return null while logout is processing
-  }
 
-  }, [page, searchQuery, user]);
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
+      // Logout instead of showing loading message
+      //logout();
+      //navigate('/login');
+      //return null; // Return null while logout is processing
+    }
+
+  }, [page, searchQuery, user, fetchOrders]);
 
 
 
-  
+
   //For fetching the user again after browser refersh - End
   //RBAC
   //use formMode to decide if it is editform or add form
@@ -226,7 +226,7 @@ function Orders() {
       // Fallback: navigate without salesOrderLines if fetch fails
       navigate('/orderDetails', {
         state: {
-          order, 
+          order,
           mode: 'edit',
           fromApproval: isApprovalMode,
           wfid: isApprovalMode ? order.workflowInstanceId : undefined,
@@ -237,7 +237,7 @@ function Orders() {
     }
   };
 
-  const handleCheckout = (order) => {
+  const handlePay = (order) => {
     navigate('/checkout', { state: { order } });
   };
 
@@ -253,10 +253,23 @@ function Orders() {
       label: 'Custom Orders',
       onClick: () => alert('Custom Orders clicked')
     }
-  ]; const columns = [
+  ];
+
+
+  const isArabic = i18n.language === 'ar'; // or use your language state
+
+  const columns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
-    { key: 'companyNameEn', header: () => t('Customer'), include: isV('companyName') },
-    { key: 'erpBranchId', header: () => t('Branch'), include: isV('branchName') },
+    {
+      key: isArabic ? 'companyNameAr' : 'companyNameEn',
+      header: () => t('Customer'),
+      include: isV('companyName')
+    },
+    {
+      key: isArabic ? 'branchNameLc' : 'branchNameEn',
+      header: () => t('Branch'),
+      include: isV('branchName')
+    },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
     { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
@@ -264,7 +277,7 @@ function Orders() {
     //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'checkout', header: () => t('Pay'), include: isV('action') }
+    { key: 'pay', header: () => t('Pay'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
@@ -294,7 +307,7 @@ function Orders() {
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}
-          onCheckout={handleCheckout}
+          onPay={handlePay}
         />)}
         {isV('ordersPagination') && (<Pagination
           currentPage={page}

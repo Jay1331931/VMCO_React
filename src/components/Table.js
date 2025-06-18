@@ -1,6 +1,5 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '../utilities/dateFormatter';
 
 const Table = ({
     columns,
@@ -9,7 +8,7 @@ const Table = ({
     actionButtons,
     customCellRenderer,
     onRowClick,
-    onCheckout
+    onPay
 }) => {
     const { t } = useTranslation();
  
@@ -46,18 +45,18 @@ const Table = ({
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
         }
-          // Handle checkout button
-        if (column.key === 'checkout' && onCheckout) {
+          // Handle pay button
+        if (column.key === 'pay' && onPay) {
             return (
                 <button 
-                    className="action-button checkout"
+                    className="action-button pay"
                     onClick={(e) => {
-                        console.log('Checkout button clicked for item:', item);
+                        console.log('Pay button clicked for item:', item);
                         e.stopPropagation(); // Prevent row click event
-                        onCheckout(item);
+                        onPay(item);
                     }}
                 >
-                    {t('Checkout')}
+                    {t('Pay')}
                 </button>
             );
         }
@@ -65,37 +64,10 @@ const Table = ({
         
    const value = item[column.key];
 
-    // check if dtring value is a date
-    if (typeof value === 'string' && !isNaN(Date.parse(value))) {
-        // If it's a date string, format it
-        return formatDate(value, 'DD MMM YYYY');
-    }
-
     // If value is an object, stringify it
    if (typeof value === 'object' && value !== null) {
-        // Try common date keys (for Sequelize, Postgres, etc.)
-        // if (value.hasOwnProperty('toISOString') && typeof value.toISOString === 'function') {
-        //     return formatDate(value.toISOString(), 'YYYY-MM-DD');
-        // }
-        // if (value.hasOwnProperty('date')) {
-        //     return formatDate(value.date, 'YYYY-MM-DD');
-        // }
-        // if (value.hasOwnProperty('value')) {
-        //     return formatDate(value.value, 'YYYY-MM-DD');
-        // }
-        // // Fallback: try to find a string value that looks like a date
-        // for (const key in value) {
-        //     if (typeof value[key] === 'string' && !isNaN(Date.parse(value[key]))) {
-        //         return formatDate(value[key], 'YYYY-MM-DD');
-        //     }
-        // }
-        // If nothing found, stringify the object
         return JSON.stringify(value);
     }
-    //TODO:Update this component to handle date-time field. May input can have one parameter which
-    //will provides aditional properties of the cell to be rendered. In case of date-time field,
-    //It can {type: 'date-time', format: 'YYYY-MM-DD HH:mm'} and in case of string it can be {type: 'string'}
-
     // Default cell rendering
     return item[column.key];
     };
@@ -205,7 +177,7 @@ const Table = ({
                     background-color: transparent;
                     color: #1F4DE2;
                 }
-                .action-button.checkout {
+                .action-button.pay {
                     background-color: #00594C;
                     color: white;
                 }
