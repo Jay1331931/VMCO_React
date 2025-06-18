@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 import ActionButton from '../components/ActionButton';
 import ToggleButton from '../components/ToggleButton';
@@ -43,7 +43,7 @@ function Orders() {
 
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { token, user, isAuthenticated, logout, loadingPage } = useAuth();
+  const { user, } = useAuth();
 
 
 
@@ -60,7 +60,7 @@ function Orders() {
   };
 
   // Fetch orders from API
-  const fetchOrders = async (page = 1, searchTerm = '') => {
+  const fetchOrders = useCallback(async (page = 1, searchTerm = '') => {
     setLoading(true);
     setError(null);
     try {
@@ -101,7 +101,7 @@ function Orders() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize]);
 
   // Fetch approvals for orders (similar to customers page)
   const fetchApprovals = async (page = 1, searchTerm = '') => {
@@ -167,7 +167,7 @@ function Orders() {
       //return null; // Return null while logout is processing
     }
 
-  }, [page, searchQuery, user]);
+  }, [page, searchQuery, user, fetchOrders]);
 
 
 
@@ -238,7 +238,7 @@ function Orders() {
     }
   };
 
-  const handleCheckout = (order) => {
+  const handlePay = (order) => {
     navigate('/checkout', { state: { order } });
   };
 
@@ -291,7 +291,7 @@ function Orders() {
     //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'checkout', header: () => t('Pay'), include: isV('action') }
+    { key: 'pay', header: () => t('Pay'), include: isV('action') }
   ];
 
   // Paginate the filtered orders
@@ -321,7 +321,7 @@ function Orders() {
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}
-          onCheckout={handleCheckout}
+          onPay={handlePay}
         />)}
         {isV('ordersPagination') && (<Pagination
           currentPage={page}

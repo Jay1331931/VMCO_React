@@ -525,28 +525,66 @@ function Catalog() {
             if (otherBranchId) {
                 const otherBranch = branches.find(branch => String(branch.value) === String(otherBranchId));
                 const otherBranchLabel = otherBranch ? otherBranch.label : otherBranchId;
-                if (window.confirm(`There are items in the cart for branch ${otherBranchLabel}. Do you want to discard it?`)) {
-                    // Delete all cart items for the other branch for this user using the provided API
-                    try {
-                        await fetch(`${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId}&branch_id=${otherBranchId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            credentials: 'include'
-                        });
-                        setSelectedLocation(newBranchId);
-                        if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
-                        alert(`Items discarded from the cart for branch ${otherBranchLabel}`);
-                    } catch (deleteError) {
-                        alert('Failed to discard items from the cart. Please try again.');
+                // Make sure this function is already marked `async` (it looks like it is)
+
+
+                const { isConfirmed } = await Swal.fire({
+                icon: 'warning',
+                title: t('Discard items?'),
+                html: t(
+                    'There are items in the cart for branch <strong>{{branch}}</strong>.<br>Do you want to discard them?',
+                    { branch: otherBranchLabel }
+                ),
+                showCancelButton: true,
+                focusCancel: true,
+                confirmButtonText: t('Yes, discard'),
+                cancelButtonText: t('No, keep'),
+                reverseButtons: true,      
+                });
+
+                if (isConfirmed) {
+                try {
+                    await fetch(
+                    `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId}&branch_id=${otherBranchId}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        },
+                        credentials: 'include',
                     }
+                    );
+
+                    setSelectedLocation(newBranchId);
+                    if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
+
+                    await Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t(`Items discarded from the cart for branch ${otherBranchLabel}`),
+                    confirmButtonText: t('OK'),
+                    });
+                } catch (deleteError) {
+                    await Swal.fire({
+                    icon: 'error',
+                    title: t('Error'),
+                    text: t('Failed to discard items from the cart. Please try again.'),
+                    confirmButtonText: t('OK'),
+                    });
                 }
+                }
+
             }
         } catch (error) {
             console.error('Error during branch change:', error);
-            alert('Error checking cart. Branch change may not work correctly.');
+            // alert('Error checking cart. Branch change may not work correctly.');
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t('Error checking cart. Branch change may not work correctly.'),
+                confirmButtonText: t('OK')
+            });
         } finally {
             setIsLoading(false);
         }
@@ -558,7 +596,15 @@ function Catalog() {
         try {
             // Check if a branch is selected
             if (!selectedLocation) {
-                alert(t('Please select a delivery branch first'));
+                // alert(t('Please select a delivery branch first'));
+                Swal.fire({
+                    icon: 'warning',
+                    title: t('No Branch Selected'),
+                    text: t('Please select a delivery branch before adding products to the cart.'),
+                    timer: 5000, 
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
                 return;
             }
 

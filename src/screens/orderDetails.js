@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
 import CommentPopup from '../components/commentPanel';
@@ -50,7 +50,7 @@ function OrderDetails() {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, token, logout } = useAuth();
+  const { user, token } = useAuth();
 
   // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || 'view';
@@ -81,7 +81,6 @@ function OrderDetails() {
   const [nextOrderId, setNextOrderId] = useState('');
   const [saving, setSaving] = useState(false); // New saving state
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
-  const [products, setProducts] = useState([]);
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
@@ -277,19 +276,21 @@ function OrderDetails() {
     // alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
   };
-  // Function to handle form submission
+  // Update the handleSave function to show an alert if payment method is Pre Payment
   const handleSave = async (action, selectedMethod) => {
-     // Perform validation before saving
-      if (!formData.customerId) {
-        Swal.fire({
-          icon: 'warning',
-          title: t('Validation Error'),
-          text: t('Please select a customer'),
-        });
-        // alert(t('Please select a customer'));
-        setSaving(false);
-        return;
-      }
+    // Prevent saving if payment method is Pre Payment
+    if (formData.paymentMethod === 'Pre Payment') {
+      alert(t('The payment method is Pre Payment. The order cannot be altered.'));
+      setSaving(false);
+      return;
+    }
+
+    // Perform validation before saving
+    if (!formData.customerId) {
+      alert(t('Please select a customer'));
+      setSaving(false);
+      return;
+    }
     // Disable save button to prevent multiple submissions
     setSaving(true);
 
@@ -300,9 +301,6 @@ function OrderDetails() {
       setSaving(false);
       return;
     }
-
-    // Use the selected method if provided, else use from formData
-    const paymentMethodToUse = selectedMethod || formData.paymentMethod;
 
     try {
       // Perform validation before saving
@@ -326,11 +324,10 @@ function OrderDetails() {
         // alert(t('Please add at least one product'));
         setSaving(false);
         return;
-      }      // Check if we're editing an existing order or creating a new one
-      if (formData.id && isEditMode) {
-        // Update existing order
+      }
 
-        // Include all fields that might need updating
+      // Check if we're editing an existing order or creating a new one
+      if (formData.id && isEditMode) {
         const fieldsToUpdate = [
           'erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
           'paymentMethod', 'totalAmount', 'paidAmount', 'deliveryCharges',
@@ -493,6 +490,7 @@ function OrderDetails() {
           text: t('Order updated successfully!'),
           confirmButtonText: t('OK')
         });
+         window.location.reload();
         // alert(t('Order updated successfully!'));
       } else {
         // Create a new order
@@ -510,24 +508,38 @@ function OrderDetails() {
 
         let attempt = 0;
         let maxAttempts = 2;
-        let lastError = null;
         // Step 0: If user is employee, fetch empId from employees table using email
-        let empId = '0000';
-        if (user.userType === 'employee' && user.email) {
+        let orderByName = '';
+        const userEmail = user?.email;
+        if (userEmail) {
           try {
-            const empRes = await fetch(`${API_BASE_URL}/employees/email/${encodeURIComponent(user.email)}`, {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-            });
-            if (empRes.ok) {
-              const empResult = await empRes.json();
-              if (empResult.status === 'Ok' && empResult.data && empResult.data.empId) {
-                empId = empResult.data.empId;
+            if (user?.userType === 'employee') {
+              const empRes = await fetch(`http://localhost:3000/api/employees/email/${encodeURIComponent(userEmail)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+              });
+              if (empRes.ok) {
+                const empResult = await empRes.json();
+                if (empResult && empResult.data && empResult.data.name) {
+                  orderByName = empResult.data.name;
+                }
+              }
+            } else if (user?.userType === 'customer') {
+              const response = await fetch(`http://localhost:3000/api/customer-contacts/email/${encodeURIComponent(userEmail)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+              });
+              if (response.ok) {
+                const result = await response.json();
+                if (result && result.data && result.data.name) {
+                  orderByName = result.data.name;
+                }
               }
             }
-          } catch (empErr) {
-            console.warn('Could not fetch empId for employee:', empErr);
+          } catch (error) {
+            console.error('Failed to fetch orderBy name:', error);
           }
         }
         while (attempt < maxAttempts) {
@@ -535,15 +547,14 @@ function OrderDetails() {
           const payload = {
             erpOrderId: `SO00${formData.id || nextOrderId}`,
             customerId: formData.customerId || '',
-            companyNameEn: formData.selectedCustomerName || formData.companyNameEn || '',
-            companyNameAr: formData.companyNameAr || '',
+            companyNameEn: formData.companyNameEn || '', // Always use value from formData
+            companyNameAr: formData.companyNameAr || '', // Always use value from formData
             erpCustId: formData.erpCustId || '',
-            branchId: formData.erpBranchId || '',
-            erpBranchId: formData.erpBranchIdValue || '',
-            branchNameEn: formData.selectedBranchName || formData.branchNameEn || '',
-            branchNameLc: formData.selectedBranchName || formData.branchNameLc || '',
-            orderBy: formData.orderBy || '',
-            paymentMethod: selectedMethod || formData.paymentMethod || '', 
+            erpBranchId: formData.erpBranchId || '',
+            branchNameEn: formData.branchNameEn || '', // Always use value from formData
+            branchNameLc: formData.branchNameLc || '', // Always use value from formData
+            orderBy: orderByName, // <-- Use fetched employee name here
+            paymentMethod: selectedMethod || formData.paymentMethod || '',
             status: 'Open',
             sales_executive: user.employeeId,
             paymentStatus: (selectedMethod || formData.paymentMethod) === 'Credit' ? 'Paid' : 'Pending', // <-- Use selectedMethod for logic
@@ -553,6 +564,7 @@ function OrderDetails() {
             pricingPolicy: formData.pricingPolicy || '',
             customerRegion: formData.customerRegion || ''
           };
+
           try {
             setLoading(true);
             console.log('Submitting order payload:', payload);
@@ -619,17 +631,16 @@ function OrderDetails() {
               }
               return {
                 order_id: result.data.id,
-                line_number: index + 1, // Generate sequential line numbers
-                erp_line_number: index + 1, // Using same as line_number if no specific ERP line number exists
+                line_number: index + 1,
+                erp_line_number: index + 1,
                 product_id: product.id || product.product_id,
                 product_name: product.productName || product.product_name_en,
-                product_name_lc: product.productNameLc,
+                product_name_lc: product.productNameLc || product.product_name_lc || '', // <-- post productNameLc
                 erp_prod_id: product.erpProdId || product.erp_prod_id || '',
                 quantity: parseInt(product.quantity || 1, 10),
                 unit: product.unit || '',
                 unit_price: parseFloat(product.unitPrice),
                 net_amount: parseFloat(product.netAmount),
-                //sugar_tax_price: parseFloat(product.sugarTaxPrice).toFixed(2),
                 vat_percentage: Number(vat).toFixed(2),
               };
             });
@@ -692,8 +703,7 @@ function OrderDetails() {
             }
             break; // Exit the loop on success
           } catch (err) {
-            lastError = err;
-            if (attempt >= maxAttempts - 1) {
+          if (attempt >= maxAttempts - 1) {
               setError(err.message);
               Swal.fire({
                 icon: 'error',
@@ -779,61 +789,6 @@ function OrderDetails() {
       // alert(t(err.message));
     } finally {
       setLoading(false);
-    }
-  };
-
-  // cancel/Approve/Reject handler
-  const handleSubmit = async (action) => {
-    if (!fromApproval || !wfid) {
-      Swal.fire({
-        icon: 'warning',
-        title: t('Approval Action Required'),
-        text: t('Approval action not available.'),
-        confirmButtonText: t('OK')
-      });
-      // alert(t('Approval action not available.'));
-      return;
-    }
-    let comment = '';
-    if (action === 'approve') {
-      comment = prompt(t('Please enter your comments for approval:'));
-    } else if (action === 'reject') {
-      comment = prompt(t('Please enter your comments for rejection:'));
-    }
-    const payload = {
-      workflowData: (action === 'approve' || action === 'reject') ? (location.state?.workflowData || {}) : {},
-      approvedStatus: action === 'approve' ? 'approved' : 'rejected',
-      comment: comment
-    };
-    try {
-      const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        credentials: 'include',
-      });
-      if (res.ok) {
-        Swal.fire({
-          icon: 'success',
-          title: t('Approval Action Successful'),
-          text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),  
-          confirmButtonText: t('OK')
-        });
-        // alert(t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`));
-        navigate('/orders');
-      } else {
-        const errorText = await res.text();
-        throw new Error(errorText || 'Failed to submit approval');
-      }
-    } catch (error) {
-      console.error(`Error ${action}ing order:`, error);
-      Swal.fire({
-        icon: 'error',
-        title: t('Error Submitting Approval'),
-        text: t(`Error ${action}ing order: ${error.message}`),
-        confirmButtonText: t('OK')
-      });
-      // alert(t(`Error ${action}ing order: ${error.message}`));
     }
   };
 
@@ -1015,6 +970,10 @@ function OrderDetails() {
       if (companyType && companyType.toLowerCase() === 'non trading') {
         finalVat = 0.00;
       }
+      // Find the product object to get productName, productNameLc, unit
+      const productObj = formData.products.find(
+        p => (p.id || p.product_id) === productId
+      );
       const payload = {
         order_id: orderId,
         product_id: productId,
@@ -1022,9 +981,13 @@ function OrderDetails() {
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
         //sugar_tax_price: parseFloat(sugarTaxPrice || 0),
-        sales_tax_rate: Number(finalVat).toFixed(2)
+        sales_tax_rate: Number(finalVat).toFixed(2),
+        // Add these fields for display
+        product_name: productObj?.productName || productObj?.product_name_en || '',
+        product_name_lc: productObj?.productNameLc || productObj?.product_name_lc || '',
+        unit: productObj?.unit || '',
+        vat_percentage: Number(finalVat).toFixed(2)
       };
-
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1045,11 +1008,13 @@ function OrderDetails() {
     // Use MOQ for the product, default to 1 if not set
     const moq = Number(product.moq) || 1;
     const unitPrice = parseFloat(product.unitPrice);
-    //const sugarTaxPrice = parseFloat(product.sugarTaxPrice);
     // Determine VAT based on companyType
     let vatPercentage = 0.00;
     if (companyType && companyType.toLowerCase() === 'trading') {
       vatPercentage = parseFloat(product.vatPercentage);
+    } else {
+      // Optionally, handle other company types or log a warning
+      // console.warn('Company type is not trading:', companyType);
     }
     setFormData(prev => {
       // Check if product already exists in the table
@@ -1066,40 +1031,39 @@ function OrderDetails() {
           ...existingProduct,
           quantity: newQuantity,
           netAmount: newNetAmount,
-          moq: moq, // Always keep MOQ for this product
-          vatPercentage: vatPercentage // Always update VAT based on companyType
+          moq: moq,
+          vatPercentage: vatPercentage,
+          // Keep both names updated
+          productName: product.productName,
+          productNameLc: product.productNameLc
         };
-        const updatedFormData = {
+        return {
           ...prev,
           products: updatedProducts
         };
-        console.log('Product selected and updated in order:', updatedFormData.products[existingIdx]);
-        return updatedFormData;
       } else {
         // Product does not exist, add as new row with MOQ as quantity
         const netAmount = ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
         const newProduct = {
-          id: product.id, // Product ID for identifying the product
-          product_id: product.id, // Duplicate for compatibility
+          id: product.id,
+          product_id: product.id,
           productName: product.productName,
+          productNameLc: product.productNameLc, // <-- keep productNameLc
           erpProdId: product.erpProdId || product.erp_prod_id || '',
           quantity: moq,
           unit: product.unit,
           unitPrice: unitPrice.toFixed(2),
           netAmount: netAmount,
-          //sugarTaxPrice: sugarTaxPrice,
           vatPercentage: vatPercentage,
-          moq: moq // Store MOQ for this product
+          moq: moq
         };
-        const updatedFormData = {
+        return {
           ...prev,
           products: [
             ...prev.products,
             newProduct
           ]
         };
-        console.log('Product selected and added to order:', newProduct);
-        return updatedFormData;
       }
     });
     setShowProductPopup(false);
@@ -1119,6 +1083,8 @@ function OrderDetails() {
       customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: i18n.language === 'ar' ? (customer.company_name_ar || customer.companyNameAr) : (customer.company_name_en || customer.companyNameEn),
       pricingPolicy: customerPricingPolicy,
+      companyNameEn: customer.company_name_en || customer.companyNameEn || '', // Set companyNameEn
+      companyNameAr: customer.company_name_ar || customer.companyNameAr || '', // Set companyNameAr
     }));
     setShowCustomerPopup(false);
   };
@@ -1129,7 +1095,9 @@ function OrderDetails() {
       ...prev,
       erpBranchId: branch.id, // Database branch ID
       erpBranchIdValue: branch.erp_branch_id || branch.erpBranchId || '', // Store ERP branch ID
-      selectedBranchName: branch.branch_name_en || branch.branchNameEn || ''
+      selectedBranchName: branch.branch_name_en || branch.branchNameEn || '',
+      branchNameEn: branch.branch_name_en || branch.branchNameEn || '', // Set branchNameEn
+      branchNameLc: branch.branch_name_lc || branch.branchNameLc || '', // Set branchNameLc
     }));
     setShowBranchPopup(false);
   };
@@ -1162,7 +1130,7 @@ function OrderDetails() {
       };
       fetchData();
     }
-  }, [user, t, token, i18n.language, orderFromNav.id, formMode]
+  }, [user, t, token, i18n.language, orderFromNav.id, formMode, loading]
   );
 
 
@@ -1181,7 +1149,10 @@ function OrderDetails() {
     {
       key: 'productName',
       header: () => t('Product Name'),
-      render: (row) => i18n.language === 'ar' ? (row.productNameLc || row.product_name_lc || row.productName) : (row.productName || row.product_name_en || row.productNameLc),
+      render: (row) =>
+        i18n.language === 'ar'
+          ? (row.productNameLc || row.product_name_lc || row.productName)
+          : (row.productName || row.product_name_en || row.productNameLc),
       include: isV('productNameCol'),
     },
     {
@@ -1281,7 +1252,7 @@ function OrderDetails() {
       render: (row) => parseFloat(row.netAmount).toFixed(2),
       include: isV('netAmountCol'),
     },
-    ...(isE('products') ? [{ key: 'actions', header: () => t('Actions') }] : [])
+    ...(isE('deleteCol') ? [{ key: 'actions', header: () => t('Actions') }] : [])
   ];
 
   // Add this useEffect to fetch entity options
@@ -1411,7 +1382,7 @@ function OrderDetails() {
     } else if (formData.totalAmount !== '0.00') {
       setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
     }
-  }, [formData.products]);
+  }, [formData.products, formData.totalAmount, formData.deliveryCharges]);
 
   // Calculate deliveryCharges and totalAmount based on entity and products
   useEffect(() => {
@@ -1437,7 +1408,7 @@ function OrderDetails() {
         totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
       }));
     }
-  }, [formData.products, formData.entity]);
+  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount]);
 
 
 
@@ -1621,21 +1592,6 @@ function OrderDetails() {
     }
   };
 
-  // Add this helper function inside your component, before return
-  function getTotalAmountForPopup() {
-    if (!formData.products || formData.products.length === 0) return 0;
-    let sum = 0;
-    formData.products.forEach(item => {
-      const qty = Number(item.quantity || 1);
-      const price = Number(item.unitPrice || 0);
-      const vat = Number(item.vatPercentage || 0);
-      const base = price * qty;
-      const vatAmount = (base * vat) / 100;
-      sum += base + vatAmount;
-    });
-    return sum;
-  }
-
   // Add this handler inside your component, before return
   function handleSelectPaymentMethod(method) {
     setShowPaymentPopup(false);
@@ -1647,7 +1603,7 @@ function OrderDetails() {
     }
   }
 
-  return (
+   return (
     <Sidebar>
       {isV('orderDetails') && (
        
@@ -2053,7 +2009,7 @@ function OrderDetails() {
                       )}
                       actionButtons={
                         (row) => (
-                          isV('deleteButton') && isE('products') && (
+                          isV('deleteButton') && isE('deleteCol') && (
                             <button className="order-action-btn reject"
                               style={{ padding: '4px 10px', fontSize: 14 }}
                               onClick={e => {
@@ -2122,7 +2078,7 @@ function OrderDetails() {
             <GetBranches
               open={showBranchPopup}
               onClose={() => setShowBranchPopup(false)}
-             
+
               onSelectBranch={handleSelectBranch}
               customerId={formData.customerId}
               API_BASE_URL={API_BASE_URL}
