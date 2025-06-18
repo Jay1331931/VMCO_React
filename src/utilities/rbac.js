@@ -1144,7 +1144,7 @@ class RbacManager {
           paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: true },
-          pricingPolicy: { visible: true, editable: true },
+          pricingPolicy: { visible: false, editable: false },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
           driver: { visible: false, editable: false },
