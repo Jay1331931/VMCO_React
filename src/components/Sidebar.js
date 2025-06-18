@@ -288,14 +288,16 @@ return customerData;
       case 'Company': 
       try {
         const customerData = await fetchApprovedCustomer(user);
-        navigate('/customersDetails', { 
-          state: { 
-            transformedCustomer: JSON.parse(JSON.stringify(customerData)) 
-          }
+        // navigate('/customersDetails', { 
+        //   state: { 
+        //     transformedCustomer: JSON.parse(JSON.stringify(customerData)) 
+        //   }
+        // });
+        navigate('/customerDetails', {
+          state: { customerId: customerData?.id }
         });
       } catch (err) {
         console.error("Failed to fetch customer:", err);
-        // Handle error (e.g., show toast notification)
       }
       break;
       default:

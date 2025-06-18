@@ -544,7 +544,7 @@ function Customers() {
           transformedCustomer.isApprovalMode = false;
         }
         navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
-
+        
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
       }

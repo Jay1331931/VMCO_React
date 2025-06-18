@@ -1,13 +1,42 @@
-import { faAnchorLock } from "@fortawesome/free-solid-svg-icons";
-import { typeOf } from "maplibre-gl";
-import Constants from "../../constants";
+import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
+import "../../styles/forms.css";
 
-export function businessDetails() {
+function BusinessDetails({ customerData = {}, onChangeCustomerData }) {
+  const { t } = useTranslation();
+
+  // Dropdown fields as per your business logic
+  const dropdownFields = [
+    "companyType",
+    "typeOfBusiness",
+    "deliveryLocations",
+    "customerSource",
+  ];
+  const [basicMasterLists, setBasicMasterLists] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
+        dropdownFields
+      );
+      setBasicMasterLists(listOfBasicsMaster);
+    };
+    fetchData();
+  }, []);
+
+  // Example state for conditional fields
+  const [typeOfBusiness, setTypeOfBusiness] = useState(
+    customerData?.typeOfBusiness || ""
+  );
+
+  useEffect(() => {
+    setTypeOfBusiness(customerData?.typeOfBusiness || "");
+  }, [customerData?.typeOfBusiness]);
+
   return (
     <div className="customer-onboarding-form-grid">
-      <div className="form-main-header">
-        <a href="#">{t("Customer Approval Checklist")}</a>
-      </div>
+      {/* Company Name (English) */}
       <div className="form-group">
         <label htmlFor="companyNameEn">
           {t("Company Name")}
@@ -19,9 +48,12 @@ export function businessDetails() {
           name="companyNameEn"
           className="text-field small"
           placeholder={t("Enter company name")}
+          value={customerData?.companyNameEn || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
+      {/* Company Name (Arabic) */}
       <div className="form-group">
         <label htmlFor="companyNameAr">
           {t("Company Name (Arabic)")}
@@ -33,9 +65,12 @@ export function businessDetails() {
           name="companyNameAr"
           className="text-field small arabic"
           placeholder={t("أدخل اسم الشركة")}
+          value={customerData?.companyNameAr || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
+      {/* Commercial Registration # */}
       <div className="form-group">
         <label htmlFor="crNumber">
           {t("Commercial Registration #")}
@@ -47,9 +82,12 @@ export function businessDetails() {
           name="crNumber"
           className="text-field small"
           placeholder={t("Enter value")}
+          value={customerData?.crNumber || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
+      {/* VAT Registration # */}
       <div className="form-group">
         <label htmlFor="vatNumber">
           {t("VAT Registration #")}
@@ -61,9 +99,12 @@ export function businessDetails() {
           name="vatNumber"
           className="text-field small"
           placeholder={t("Enter value")}
+          value={customerData?.vatNumber || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
+      {/* Government Registration # */}
       <div className="form-group">
         <label htmlFor="governmentRegistrationNumber">
           {t("Government Registration #")}
@@ -75,9 +116,12 @@ export function businessDetails() {
           name="governmentRegistrationNumber"
           className="text-field small"
           placeholder={t("Enter value")}
+          value={customerData?.governmentRegistrationNumber || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
+      {/* Baladeah License # */}
       <div className="form-group">
         <label htmlFor="baladeahLicenseNumber">
           {t("Baladeah License #")}
@@ -89,10 +133,12 @@ export function businessDetails() {
           name="baladeahLicenseNumber"
           className="text-field small"
           placeholder={t("Enter value")}
+          value={customerData?.baladeahLicenseNumber || ""}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
-
+      {/* Company Type Dropdown */}
       <div className="form-group">
         <label htmlFor="companyType">
           {t("Company Type")}
@@ -102,16 +148,21 @@ export function businessDetails() {
           id="companyType"
           name="companyType"
           className="dropdown"
+          value={customerData?.companyType || ""}
+          onChange={onChangeCustomerData}
           required
         >
           <option value="" disabled>
             {t("Select")}
           </option>
-          <option value="Trading">{t("Trading")}</option>
-          <option value="Non-Trading">{t("Non-Trading")}</option>
+          {basicMasterLists?.companyType?.map((type) => (
+            <option key={type} value={type}>
+              {t(type)}
+            </option>
+          ))}
         </select>
       </div>
-
+      {/* Type of Business Dropdown */}
       <div className="form-group">
         <label htmlFor="typeOfBusiness">
           {t("Type of Business")}
@@ -121,24 +172,21 @@ export function businessDetails() {
           id="typeOfBusiness"
           name="typeOfBusiness"
           className="dropdown"
-          required
-          onChange={handleTypeOfBusinessChange} // Add this handler in your component
           value={typeOfBusiness}
+          onChange={(e) => setTypeOfBusiness(e.target.value)}
+          required
         >
           <option value="" disabled>
             {t("Select")}
           </option>
-          <option value="Restaurant">{t("Restaurant")}</option>
-          <option value="Coffee Shop">{t("Coffee Shop")}</option>
-          <option value="Supermarket">{t("Supermarket")}</option>
-          <option value="E-commerce">{t("E-commerce")}</option>
-          <option value="Quick Commerce">{t("Quick Commerce")}</option>
-          <option value="Hospital">{t("Hospital")}</option>
-          <option value="Labor Camp">{t("Labor Camp")}</option>
-          <option value="Others">{t("Others")}</option>
+          {basicMasterLists?.typeOfBusiness?.map((type) => (
+            <option key={type} value={type}>
+              {t(type)}
+            </option>
+          ))}
         </select>
       </div>
-
+      {/* Type of Business (Other) - Conditional */}
       {typeOfBusiness === "Others" && (
         <div className="form-group">
           <label htmlFor="typeOfBusinessOther">
@@ -150,10 +198,12 @@ export function businessDetails() {
             name="typeOfBusinessOther"
             className="text-field small"
             placeholder={t("Enter other business type")}
+            value={customerData?.typeOfBusinessOther || ""}
+            onChange={onChangeCustomerData}
           />
         </div>
       )}
-
+      {/* Delivery Locations Dropdown */}
       <div className="form-group">
         <label htmlFor="deliveryLocations">
           {t("Delivery Locations")}
@@ -163,42 +213,47 @@ export function businessDetails() {
           id="deliveryLocations"
           name="deliveryLocations"
           className="dropdown"
+          value={customerData?.deliveryLocations || ""}
+          onChange={onChangeCustomerData}
           required
         >
           <option value="" disabled>
             {t("Select")}
           </option>
-          <option value="Jeddah">{t("Jeddah")}</option>
-          <option value="Riyadh">{t("Riyadh")}</option>
+          {basicMasterLists?.deliveryLocations?.map((loc) => (
+            <option key={loc} value={loc}>
+              {t(loc)}
+            </option>
+          ))}
         </select>
       </div>
-
+      {/* Brand Name (English) */}
       <div className="form-group">
-        <label htmlFor="brandNameEn">
-          {t("Brand Name")}
-        </label>
+        <label htmlFor="brandNameEn">{t("Brand Name")}</label>
         <input
           type="text"
           id="brandNameEn"
           name="brandNameEn"
           className="text-field small"
           placeholder={t("Enter brand name")}
+          value={customerData?.brandNameEn || ""}
+          onChange={onChangeCustomerData}
         />
       </div>
-
+      {/* Brand Name (Arabic) */}
       <div className="form-group">
-        <label htmlFor="brandNameAr">
-          {t("Brand Name (Arabic)")}
-        </label>
+        <label htmlFor="brandNameAr">{t("Brand Name (Arabic)")}</label>
         <input
           type="text"
           id="brandNameAr"
           name="brandNameAr"
           className="text-field small arabic"
           placeholder={t("أدخل اسم العلامة التجارية")}
+          value={customerData?.brandNameAr || ""}
+          onChange={onChangeCustomerData}
         />
       </div>
-
+      {/* Company Logo */}
       <div className="form-group file-upload">
         <label htmlFor="companyLogo">{t("Company Logo")}</label>
         <input
@@ -206,10 +261,10 @@ export function businessDetails() {
           id="companyLogo"
           name="companyLogo"
           className="text-field small"
-          accept="image/*"
+          // value not set for file input
         />
       </div>
-
+      {/* Brand Logo */}
       <div className="form-group file-upload">
         <label htmlFor="brandLogo">{t("Brand Logo")}</label>
         <input
@@ -217,22 +272,30 @@ export function businessDetails() {
           id="brandLogo"
           name="brandLogo"
           className="text-field small"
-          accept="image/*"
+          // value not set for file input
         />
       </div>
-
+      {/* Assigned To Dropdown */}
       <div className="form-group">
         <label htmlFor="assignedTo">{t("Assigned To")}</label>
-        <select id="assignedTo" name="assignedTo" className="dropdown">
+        <select
+          id="assignedTo"
+          name="assignedTo"
+          className="dropdown"
+          value={customerData?.assignedTo || ""}
+          onChange={onChangeCustomerData}
+        >
           <option value="" disabled>
             {t("Select")}
           </option>
-          <option value="Sales Team">{t("Sales Team")}</option>
-          <option value="Marketing Team">{t("Marketing Team")}</option>
-          <option value="Support Team">{t("Support Team")}</option>
+          {basicMasterLists?.assignedTo?.map((team) => (
+            <option key={team} value={team}>
+              {t(team)}
+            </option>
+          ))}
         </select>
       </div>
-
+      {/* Customer Source */}
       <div className="form-group">
         <label htmlFor="customerSource">{t("Customer Source")}</label>
         <input
@@ -241,84 +304,13 @@ export function businessDetails() {
           name="customerSource"
           className="text-field small"
           placeholder={t("Enter customer source")}
+          value={customerData?.customerSource || ""}
+          onChange={onChangeCustomerData}
         />
       </div>
-
-      <div className="form-group">
-        <label htmlFor={Constants.ENTITY.VMCO}>{t("VMCO")}</label>
-        <select id={Constants.ENTITY.VMCO} name={Constants.ENTITY.VMCO} className="dropdown">
-          <option value="" disabled>
-            {t("Select")}
-          </option>
-          {/* Add options dynamically */}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor={Constants.ENTITY.DIYAFA}>{t("Diyafa")}</label>
-        <select id={Constants.ENTITY.DIYAFA} name={Constants.ENTITY.DIYAFA} className="dropdown">
-          <option value="" disabled>
-            {t("Select")}
-          </option>
-          {/* Add options dynamically */}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor={Constants.ENTITY.NAQI}>{t("Naqi")}</label>
-        <select id={Constants.ENTITY.NAQI} name={Constants.ENTITY.NAQI} className="dropdown">
-          <option value="" disabled>
-            {t("Select")}
-          </option>
-          {/* Add options dynamically */}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor={Constants.ENTITY.GREEN_MAST}>{t("Green Mast")}</label>
-        <select id={Constants.ENTITY.GREEN_MAST} name={Constants.ENTITY.GREEN_MAST} className="dropdown">
-          <option value="" disabled>
-            {t("Select")}
-          </option>
-          {/* Add options dynamically */}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor={Constants.ENTITY.DAR}>{t("DAR")}</label>
-        <select id={Constants.ENTITY.DAR} name={Constants.ENTITY.DAR} className="dropdown">
-          <option value="" disabled>
-            {t("Select")}
-          </option>
-          {/* Add options dynamically */}
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>
-          <input
-            type="checkbox"
-            id="interCompany"
-            name="interCompany"
-            checked={interCompany}
-            onChange={handleInterCompanyChange}
-          />
-          {t("Inter-Company")}
-        </label>
-      </div>
-
-      {interCompany && (
-        <div className="form-group">
-          <label htmlFor="entity">{t("Entity")}</label>
-          <select id="entity" name="entity" className="dropdown">
-            <option value="" disabled>
-              {t("Select")}
-            </option>
-            <option value="Al Khaleej">{t("Al Khaleej")}</option>
-            <option value="Al Khaleej Trading">{t("Al Khaleej Trading")}</option>
-          </select>
-        </div>
-      )}
+      {/* Add other dropdowns and fields as needed, following the same pattern */}
     </div>
   );
 }
+
+export default BusinessDetails;
