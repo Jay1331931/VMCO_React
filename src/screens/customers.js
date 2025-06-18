@@ -175,6 +175,28 @@ function Customers() {
             const res = await response.json();
             console.log('Invite link:', res);
             alert('Invite link: ' + res.data);
+            try {
+              const result = await fetch (`${API_BASE_URL}/send`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  eventName: 'WELCOME_EMAIL',
+                  emailData: {
+                    to: inviteData.email,
+                    firstName: inviteData.name,
+                    lastName: '',
+                    activationLink: res.data,
+                  }
+                  })
+              });
+            } catch (err){
+              console.error('Error generating invite link:', err);
+              alert('Failed to generate invite link. Please try again later.');
+              return;
+            }
           }
         } catch (err) {
           // console.error('Error resending invite:', err);
