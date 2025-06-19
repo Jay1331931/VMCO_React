@@ -275,11 +275,12 @@ function OrderDetails() {
 
     // alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
-  };
-  // Update the handleSave function to show an alert if payment method is Pre Payment
+  };  // Handle saving order with special rules:
+  // 1. Prevent editing existing orders with Pre Payment method
+  // 2. Skip existing order check when creating new orders with Pre Payment method
   const handleSave = async (action, selectedMethod) => {
-    // Prevent saving if payment method is Pre Payment
-    if (formData.paymentMethod === 'Pre Payment') {
+    // Prevent EDITING if payment method is Pre Payment (only applies to existing orders)
+    if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
       alert(t('The payment method is Pre Payment. The order cannot be altered.'));
       setSaving(false);
       return;
@@ -495,15 +496,93 @@ function OrderDetails() {
       } else {
         // Create a new order
         // Validation - check if essential fields are filled
-        if (!formData.erpCustId || !formData.erpBranchId) {
+        if (!formData.selectedCustomerName || !formData.selectedBranchName) {
           Swal.fire({
             icon: 'warning',
             title: t('Validation Error'),
             text: t('Customer and Branch are required fields.'),
           });
-          // alert(t('Customer and Branch are required fields.'));
           setSaving(false);
           return;
+        } if (!formData.entity) {
+          alert(t('Entity is a required field.'));
+          setSaving(false);
+          return;
+        }
+        console.log('Starting order creation process with data:', {
+          customerId: formData.customerId,
+          branchId: formData.erpBranchId,
+          entity: formData.entity,
+          category: formData.category,
+          paymentMethod: selectedMethod || formData.paymentMethod
+        });
+
+        // Skip existing order check if payment method is Pre Payment
+        const isPrePayment = (selectedMethod || formData.paymentMethod) === 'Pre Payment';
+
+        // IMPORTANT: Pre Payment orders can be created regardless of existing orders 
+        // for the same customer/branch/entity. This allows multiple Pre Payment orders
+        // which is the desired behavior for immediate payments.
+        if (isPrePayment) {
+          console.log('Payment method is Pre Payment - skipping existing order check');
+        } else {
+          // Check if there is an existing order with the same customer, branch, entity and status = 'Open'
+          // For VMCO entity, also check the category
+          // Make sure to use branchId field as it's being used in the API
+          const branchIdForFilter = formData.branchId || formData.erpBranchId;
+
+          const orderFiltersObj = formData.entity && formData.entity.toLowerCase() === 'vmco'
+            ? {
+              customerId: formData.customerId,
+              branchId: branchIdForFilter,
+              entity: formData.entity,
+              status: 'Open',
+              productCategory: formData.category
+            }
+            : {
+              customerId: formData.customerId,
+              branchId: branchIdForFilter,
+              entity: formData.entity,
+              status: 'Open'
+            };
+
+          console.log('Order filter object created:', orderFiltersObj);
+          const orderFilters = new URLSearchParams({
+            filters: JSON.stringify(orderFiltersObj)
+          });
+
+          console.log('Checking for existing orders with filters:', orderFiltersObj);
+
+          try {
+            const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+            });
+
+            console.log('Existing order response status:', existingOrderResponse.status);
+
+            if (!existingOrderResponse.ok) {
+              throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
+            }
+
+            const existingOrderResult = await existingOrderResponse.json();
+            console.log('Existing order search results:', existingOrderResult);
+
+            if (existingOrderResult.data?.data?.length > 0) {
+              console.log('Found existing order(s):', existingOrderResult.data.data);
+              const entityName = formData.entity.charAt(0).toUpperCase() + formData.entity.slice(1).toLowerCase();
+              alert(t(`There is an existing order in ${entityName} for the selected customer. Please update that order.`));
+              navigate('/orders');
+              setSaving(false);
+              return;
+            } else {
+              console.log('No existing orders found with these criteria, proceeding with order creation');
+            }
+          } catch (error) {
+            console.error('Error checking for existing orders:', error);
+            // Continue with order creation even if checking fails
+          }
         }
 
         let attempt = 0;
@@ -550,6 +629,7 @@ function OrderDetails() {
             companyNameEn: formData.companyNameEn || '', // Always use value from formData
             companyNameAr: formData.companyNameAr || '', // Always use value from formData
             erpCustId: formData.erpCustId || '',
+            branchId: formData.branchId || '',
             erpBranchId: formData.erpBranchId || '',
             branchNameEn: formData.branchNameEn || '', // Always use value from formData
             branchNameLc: formData.branchNameLc || '', // Always use value from formData
@@ -562,20 +642,28 @@ function OrderDetails() {
             deliveryCharges: formData.deliveryCharges || '0',
             totalAmount: formData.totalAmount || '0',
             pricingPolicy: formData.pricingPolicy || '',
-            customerRegion: formData.customerRegion || ''
-          };
-
-          try {
+            customerRegion: formData.customerRegion || '',
+            productCategory: formData.category || '' // Add product category for VMCO filtering
+          }; try {
             setLoading(true);
             console.log('Submitting order payload:', payload);
+            console.log('Branch-related fields in payload:', {
+              branchId: payload.branchId,
+              erpBranchId: payload.erpBranchId,
+              branchNameEn: payload.branchNameEn,
+              branchNameLc: payload.branchNameLc
+            });
+            console.log('Proceeding to create a new order - no duplicates found');
 
             // Step 1: Create the order first
+            console.log('Making API call to create sales order');
             const response = await fetch(`${API_BASE_URL}/sales-order`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
               credentials: 'include',
             });
+            console.log('Sales order API response status:', response.status);
             if (!response.ok) {
               const errorText = await response.text();
               if (errorText.includes('duplicate key value violates unique constraint')) {
@@ -613,15 +701,16 @@ function OrderDetails() {
               } catch (e) {
                 throw new Error(`Failed to create order: ${response.status} ${response.statusText}`);
               }
-            }
-
-            // Parse the response as JSON to get the inserted row's id
+            }            // Parse the response as JSON to get the inserted row's id
             const result = await response.json();
             console.log('Order creation result:', result);
+            console.log('Sales order created successfully with ID:', result.data?.id);
 
             if (!result.data || !result.data.id) {
+              console.error('No order ID returned from API - cannot proceed');
               throw new Error('Order ID not returned from API');
             }
+            console.log('Preparing to create order line items for products');
 
             // Prepare products payload, set sales_executive to empId if user is employee
             const productsPayload = formData.products.map((product, index) => {
@@ -660,13 +749,15 @@ function OrderDetails() {
               return;
             }
 
-            try {
+            console.log(`Prepared ${productsPayload.length} product line items for submission`); try {
+              console.log('Making API call to create sales order line items');
               const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(productsPayload),
                 credentials: 'include',
               });
+              console.log('Sales order lines API response status:', linesResponse.status);
 
               if (!linesResponse.ok) {
                 // Handle HTTP error response
@@ -691,6 +782,7 @@ function OrderDetails() {
               navigate('/orders');
             } catch (err) {
               console.error('Error saving product lines:', err);
+              console.log('Product line items creation failed, but order was created');
               // Even if product lines failed, the order was created successfully
               Swal.fire({
                 icon: 'warning',
@@ -703,7 +795,7 @@ function OrderDetails() {
             }
             break; // Exit the loop on success
           } catch (err) {
-          if (attempt >= maxAttempts - 1) {
+            if (attempt >= maxAttempts - 1) {
               setError(err.message);
               Swal.fire({
                 icon: 'error',
@@ -1088,17 +1180,19 @@ function OrderDetails() {
     }));
     setShowCustomerPopup(false);
   };
-
   // Handle branch selection
   const handleSelectBranch = (branch) => {
+    console.log('Selected branch data:', branch);
     setFormData(prev => ({
       ...prev,
+      branchId: branch.id, // Set branchId (important for API calls)
       erpBranchId: branch.id, // Database branch ID
       erpBranchIdValue: branch.erp_branch_id || branch.erpBranchId || '', // Store ERP branch ID
       selectedBranchName: branch.branch_name_en || branch.branchNameEn || '',
       branchNameEn: branch.branch_name_en || branch.branchNameEn || '', // Set branchNameEn
       branchNameLc: branch.branch_name_lc || branch.branchNameLc || '', // Set branchNameLc
     }));
+    console.log('Updated form data with branch information');
     setShowBranchPopup(false);
   };
 
@@ -1549,6 +1643,8 @@ function OrderDetails() {
     }
     // --- END: PATCH order lines and order if approving in approval mode and status is pending ---
 
+    // --- send the api to trigger the pricing policy workflow approval only if the pricing policy is something else other than the previouly selected one ---
+    
     const payload = {
       workflowData: {
         ...(location.state?.workflowData || {}),
@@ -1603,7 +1699,7 @@ function OrderDetails() {
     }
   }
 
-   return (
+  return (
     <Sidebar>
       {isV('orderDetails') && (
        
@@ -1656,14 +1752,13 @@ function OrderDetails() {
                             name="selectedBranchName"
                             value={formData.selectedBranchName !== undefined && formData.selectedBranchName !== null ? formData.selectedBranchName : ''}
                             onClick={() => {
-                              if (!formData.erpCustId) {
-                                Swal.fire({
+                              if (!formData.selectedCustomerName) {
+                                  Swal.fire({
                                   icon: 'warning',
                                   title: t('No Customer Selected'),
                                   text: t('Please select a customer first'),
                                   confirmButtonText: t('OK')
                                 });
-                                // alert(t('Please select a customer first'));
                                 return;
                               }
                               if (isE('branchName')) setShowBranchPopup(true);
@@ -1845,10 +1940,10 @@ function OrderDetails() {
                       />
                     </div>
                   )}
-
-                  {isV('pricingPolicy') && (
+                  {isV('pricingPolicy', fromApproval, true) && fromApproval && (
                     <div className="order-details-field">
-                      <label>{t('Pricing Policy')}</label>                      <select
+                      <label>{t('Pricing Policy')}</label>
+                      <select
                         name="pricingPolicy"
                         value={formData.pricingPolicy || ''}
                         onChange={handleInputChange}
@@ -1958,28 +2053,25 @@ function OrderDetails() {
                   {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
                     <button
                       type="button"
-                      className="order-action-btn approve"
-                      onClick={() => {
+                      className="order-action-btn approve"                      onClick={() => {
                         // In add mode, require customer, branch, and entity selection
                         if (formMode === 'add') {
-                          if (!formData.erpCustId) {
-                            Swal.fire({
+                          if (!formData.selectedCustomerName) {
+                             Swal.fire({
                               title: t('Select Customer'),
                               text: t('Please select a customer first'),
                               icon: 'warning',  
                               confirmButtonText: t('OK'),
                             });
-                            // alert(t('Please select a customer first'));
                             return;
                           }
-                          else if (!formData.erpBranchId) {
-                            Swal.fire({
+                          else if (!formData.selectedBranchName) {
+                             Swal.fire({
                               title: t('Select Branch'),
                               text: t('Please select a branch first'),
                               icon: 'warning',
                               confirmButtonText: t('OK'),
                             });
-                            // alert(t('Please select a Branch'));
                             return;
                           }
                           else if (!formData.entity) {
