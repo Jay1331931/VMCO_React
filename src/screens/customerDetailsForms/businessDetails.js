@@ -173,7 +173,7 @@ function BusinessDetails({ customerData = {}, onChangeCustomerData }) {
           name="typeOfBusiness"
           className="dropdown"
           value={typeOfBusiness}
-          onChange={(e) => setTypeOfBusiness(e.target.value)}
+          onChange={onChangeCustomerData}
           required
         >
           <option value="" disabled>

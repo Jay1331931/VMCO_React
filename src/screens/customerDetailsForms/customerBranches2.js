@@ -15,7 +15,7 @@ import '../../styles/forms.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-const CustomerBranches = ({ customer, setTabsHeight }) => {
+const CustomerBranches = ({ customer, setTabsHeight, inApproval }) => {
     const { t } = useTranslation();
     const contentRef = useRef(null);
     const actionMenuRef = useRef(null);
@@ -38,7 +38,7 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
     const { token, user, isAuthenticated, logout } = useAuth();
     const navigate = useNavigate();
     let customerFormMode;
-    if (customer?.isApprovalMode) {
+    if (inApproval) {
         customerFormMode = 'custDetailsEdit';
     } else {
         customerFormMode = 'custDetailsAdd';
@@ -749,18 +749,21 @@ if (primaryContactEmail) {
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
                                                         isUnderApproval={checkApproval(branch.id)}
+                                                        inApproval={inApproval}
                                                     />
                                                     <ContactSection
                                                         branch={branch}
                                                         customer={customer}
                                                         branchChanges={branchChanges}
                                                         handleBranchFieldChange={handleBranchFieldChange}
+                                                        inApproval={inApproval}
                                                     />
                                                     <OperatingHours
                                                         hoursData={branch.hours}
                                                         customer={customer}
                                                         branchId={branch.id}
                                                         handleBranchFieldChange={handleBranchFieldChange}
+                                                        inApproval={inApproval}
                                                     />
                                                     {console.log(branch)}
                                                     <div className='expanded-form-container-footer'>
@@ -827,7 +830,7 @@ if (primaryContactEmail) {
         </div>
     );
 };
-const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldChange, isUnderApproval }) => {
+const BranchDetailsForm = ({ branch, customer, inApproval, branchChanges, handleBranchFieldChange, isUnderApproval }) => {
     const { t } = useTranslation();
     const [showMap, setShowMap] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState(null);
@@ -835,7 +838,7 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
     // LocationPicker component
     const { token, user, isAuthenticated, logout } = useAuth();
     let customerFormMode;
-    if (customer?.isApprovalMode) {
+    if (inApproval) {
         customerFormMode = 'custDetailsEdit';
     } else {
         customerFormMode = 'custDetailsAdd';
@@ -1115,7 +1118,7 @@ const BranchDetailsForm = ({ branch, customer, branchChanges, handleBranchFieldC
         }
     ], []);
     console.log('customer', customer);
-const hasCheckboxUpdate = customer.isApprovalMode && customer.module === 'branch' &&
+const hasCheckboxUpdate = inApproval && customer.module === 'branch' &&
                         customer?.workflowData?.updates &&
                         'isDeliveryChargesApplicable' in customer.workflowData.updates;
     return (
@@ -1155,7 +1158,7 @@ const hasCheckboxUpdate = customer.isApprovalMode && customer.module === 'branch
             <div className="form-row">
                 {fields.map((field, index) => {
 
-                    const hasUpdate = customer.isApprovalMode && customer.module === 'branch' &&
+                    const hasUpdate = inApproval && customer.module === 'branch' &&
                         customer?.workflowData?.updates &&
                         field.name in customer.workflowData.updates;
                     const currentValue = branch?.[field.name] || '';
@@ -1318,10 +1321,10 @@ const ContactRow = ({ label, isRequired, onChange }) => {
     );
 };
 
-const ContactSection = ({ branch, customer, branchChanges, handleBranchFieldChange }) => {
+const ContactSection = ({ branch, customer, branchChanges, handleBranchFieldChange, inApproval }) => {
     const { t } = useTranslation();
-let customerFormMode;
-    if (customer?.isApprovalMode) {
+    let customerFormMode;
+    if (inApproval) {
         customerFormMode = 'custDetailsEdit';
     } else {
         customerFormMode = 'custDetailsAdd';
@@ -1414,11 +1417,11 @@ const parseTimeRange = (timeRange) => {
     const [from, to] = timeRange.split('-');
     return { from, to };
 };
-const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange }) => {
+const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange, inApproval }) => {
     const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     const { t } = useTranslation();
-let customerFormMode;
-    if (customer?.isApprovalMode) {
+    let customerFormMode;
+    if (inApproval) {
         customerFormMode = 'custDetailsEdit';
     } else {
         customerFormMode = 'custDetailsAdd';

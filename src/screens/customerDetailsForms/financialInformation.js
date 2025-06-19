@@ -7,6 +7,7 @@ function FinancialInformation({
   customerData = {},
   customerPaymentMethodsData = {},
   onChangeCustomerPaymentMethodsData,
+  onChangeCustomerData
 }) {
   const { t } = useTranslation();
   const [isDeliveryChargesApplicable, setIsDeliveryChargesApplicable] =
@@ -57,6 +58,7 @@ function FinancialInformation({
           className="text-field small"
           placeholder={t("Enter bank name")}
           value={customerData?.bankName}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -72,6 +74,7 @@ function FinancialInformation({
           className="text-field small"
           placeholder={t("Enter account number")}
           value={customerData?.bankAccountNumber}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -87,6 +90,7 @@ function FinancialInformation({
           className="text-field small"
           placeholder={t("Enter IBAN")}
           value={customerData?.iban}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -157,8 +161,8 @@ function FinancialInformation({
             type="checkbox"
             id="partialPayment"
             name="partialPayment"
-            checked={partialPayment}
-            onChange={(e) => setPartialPayment(e.target.checked)}
+            checked={paymentMethods?.partialPayment?.isAllowed}
+            onChange={onChangeCustomerPaymentMethodsData}
           />
           {t("Partial Payment")}
         </label>
@@ -171,13 +175,29 @@ function FinancialInformation({
             type="checkbox"
             id="COD"
             name="COD"
-            checked={COD}
-            onChange={(e) => setCOD(e.target.checked)}
+            checked={paymentMethods?.COD?.isAllowed}
+            onChange={onChangeCustomerPaymentMethodsData}
           />
           {t("Cash on Delivery (COD)")}
         </label>
       </div>
-      <div className="form-group" />
+      <div className="form-group">
+        {customerPaymentMethodsData?.methodDetails?.COD?.isAllowed && (
+          <>
+            <label htmlFor="creditLimit">{t("COD Limit")}</label>
+            <input
+              type="text"
+              id="CODLimit"
+              name="CODLimit"
+              className="text-field small"
+              placeholder={t("Enter COD limit")}
+              value={customerPaymentMethodsData?.methodDetails?.COD?.limit || ""}
+              onChange={onChangeCustomerPaymentMethodsData}
+            />
+          </>
+        )}
+      </div>
+      
 
       <div className="form-group">
         <label className="checkbox-group-label">
@@ -185,37 +205,47 @@ function FinancialInformation({
             type="checkbox"
             id="credit"
             name="credit"
-            checked={credit}
-            onChange={(e) => setCredit(e.target.checked)}
+            checked={paymentMethods?.credit?.isAllowed}
+            onChange={onChangeCustomerPaymentMethodsData}
           />
           {t("Credit")}
         </label>
       </div>
       <div className="form-group">
-        <label htmlFor="creditLimit">{t("Credit Limit")}</label>
-        <input
-          type="text"
-          id="creditLimit"
-          name="creditLimit"
-          className="text-field small"
-          placeholder={t("Enter credit limit")}
-          value={customerPaymentMethodsData?.methodDetails?.credit?.limit || ""}
-        />
+        {customerPaymentMethodsData?.methodDetails?.credit?.isAllowed && (
+          <>
+            <label htmlFor="creditLimit">{t("Credit Limit")}</label>
+            <input
+              type="text"
+              id="creditLimit"
+              name="creditLimit"
+              className="text-field small"
+              placeholder={t("Enter credit limit")}
+              value={customerPaymentMethodsData?.methodDetails?.credit?.limit || ""}
+              onChange={onChangeCustomerPaymentMethodsData}
+            />
+          </>
+        )}
       </div>
       <div className="form-group" />
 
       <div className="form-group">
-        <label htmlFor="creditPeriod">{t("Credit Period")}</label>
-        <input
-          type="text"
-          id="creditPeriod"
-          name="creditPeriod"
-          className="text-field small"
-          placeholder={t("Enter credit period")}
-          value={
-            customerPaymentMethodsData?.methodDetails?.credit?.period || ""
-          }
-        />
+        {customerPaymentMethodsData?.methodDetails?.credit?.isAllowed && (
+          <>
+            <label htmlFor="creditPeriod">{t("Credit Period")}</label>
+            <input
+              type="text"
+              id="creditPeriod"
+              name="creditPeriod"
+              className="text-field small"
+              placeholder={t("Enter credit period")}
+              value={
+                customerPaymentMethodsData?.methodDetails?.credit?.period || ""
+              }
+              onChange={onChangeCustomerPaymentMethodsData}
+            />
+          </>
+        )}
       </div>
     </div>
   );

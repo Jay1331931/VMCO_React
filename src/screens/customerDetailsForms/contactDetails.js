@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 
-function ContactDetails({ customerData = {}, customerContactsData = {} }) {
+function ContactDetails({ customerData = {}, customerContactsData = {}, onChangeCustomerContactsData, onChangeCustomerData }) {
   // Now you can access both objects
   const { t } = useTranslation();
   const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
@@ -47,7 +47,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="primaryContactName"
           className="text-field small"
           placeholder={t("Enter name")}
-          value={getBindingValue("primary", "name")}
+          value={customerContactsData?.primaryContactName}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -62,7 +63,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="primaryContactDesignation"
           className="text-field small"
           placeholder={t("Enter designation")}
-          value={getBindingValue("primary", "designation")}
+          value={customerContactsData?.primaryContactDesignation}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -77,7 +79,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="primaryContactEmail"
           className="text-field small"
           placeholder={t("Enter email")}
-          value={getBindingValue("primary", "email")}
+          value={customerContactsData?.primaryContactEmail}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -92,7 +95,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="primaryContactMobile"
           className="text-field small"
           placeholder={t("Enter Mobile number")}
-          value={getBindingValue("primary", "mobile")}
+          value={customerContactsData?.primaryContactMobile}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -123,7 +127,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="businessHeadName"
           className="text-field small"
           placeholder={t("Enter name")}
-          value={getBindingValue("business", "name")}
+          value={customerContactsData?.businessHeadName}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -138,7 +143,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="businessHeadDesignation"
           className="text-field small"
           placeholder={t("Enter designation")}
-          value={getBindingValue("business", "designation")}
+          value={customerContactsData?.businessHeadDesignation}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -153,7 +159,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="businessHeadEmail"
           className="text-field small"
           placeholder={t("Enter email")}
-          value={getBindingValue("business", "email")}
+          value={customerContactsData?.businessHeadEmail}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -168,7 +175,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="businessHeadMobile"
           className="text-field small"
           placeholder={t("Enter Mobile number")}
-          value={getBindingValue("business", "mobile")}
+          value={customerContactsData?.businessHeadMobile}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -186,7 +194,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="financeHeadName"
           className="text-field small"
           placeholder={t("Enter name")}
-          value={getBindingValue("finance", "name")}
+          value={customerContactsData?.financeHeadName}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -201,7 +210,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="financeHeadDesignation"
           className="text-field small"
           placeholder={t("Enter designation")}
-          value={getBindingValue("finance", "designation")}
+          value={customerContactsData?.financeHeadDesignation}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -216,7 +226,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="financeHeadEmail"
           className="text-field small"
           placeholder={t("Enter email")}
-          value={getBindingValue("finance", "email")}
+          value={customerContactsData?.financeHeadEmail}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -231,7 +242,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="financeHeadMobile"
           className="text-field small"
           placeholder={t("Enter Mobile number")}
-          value={getBindingValue("finance", "mobile")}
+          value={customerContactsData?.financeHeadMobile}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -249,7 +261,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="purchasingHeadName"
           className="text-field small"
           placeholder={t("Enter name")}
-          value={getBindingValue("purchasing", "name")}
+          value={customerContactsData?.purchasingHeadName}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -264,7 +277,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="purchasingHeadDesignation"
           className="text-field small"
           placeholder={t("Enter designation")}
-          value={getBindingValue("purchasing", "designation")}
+          value={customerContactsData?.purchasingHeadDesignation}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -279,7 +293,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="purchasingHeadEmail"
           className="text-field small"
           placeholder={t("Enter email")}
-          value={getBindingValue("purchasing", "email")}
+          value={customerContactsData?.purchasingHeadEmail}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -294,7 +309,8 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           name="purchasingHeadMobile"
           className="text-field small"
           placeholder={t("Enter Mobile number")}
-          value={getBindingValue("purchasing", "mobile")}
+          value={customerContactsData?.purchasingHeadMobile}
+          onChange={onChangeCustomerContactsData}
           required
         />
       </div>
@@ -313,6 +329,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           className="text-field small"
           placeholder={t("Enter building name")}
           value={customerData?.buildingName}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -328,6 +345,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           className="text-field small"
           placeholder={t("Enter street")}
           value={customerData?.street}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -336,7 +354,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           {t("District")}
           <span className="required-field">*</span>
         </label>
-        <select id="district" name="district" className="dropdown" value={customerData?.district} required>
+        <select id="district" name="district" className="dropdown" value={customerData?.district} onChange={onChangeCustomerData} required>
           <option value="" disabled>
             {t("Enter district")}
           </option>
@@ -352,7 +370,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           {t("City")}
           <span className="required-field">*</span>
         </label>
-        <select id="city" name="city" className="dropdown" value={customerData?.city} required>
+        <select id="city" name="city" className="dropdown" value={customerData?.city} onChange={onChangeCustomerData} required>
           <option value="" disabled>
             {t("Enter city")}
           </option>
@@ -368,7 +386,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           {t("Region")}
           <span className="required-field">*</span>
         </label>
-        <select id="region" name="region" className="dropdown" value={customerData?.region} required>
+        <select id="region" name="region" className="dropdown" value={customerData?.region} onChange={onChangeCustomerData} required>
           <option value="" disabled>
             {t("Enter region")}
           </option>
@@ -384,7 +402,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           {t("Zone")}
           <span className="required-field">*</span>
         </label>
-        <select id="zone" name="zone" className="dropdown" value={customerData?.zone} required>
+        <select id="zone" name="zone" className="dropdown" value={customerData?.zone} onChange={onChangeCustomerData} required>
           <option value="" disabled>
             {t("Enter zone")}
           </option>
@@ -407,6 +425,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           className="text-field small"
           placeholder={t("Enter pincode")}
           value={customerData?.pincode}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
@@ -422,6 +441,7 @@ function ContactDetails({ customerData = {}, customerContactsData = {} }) {
           className="text-field small"
           placeholder={t("Enter geolocation")}
           value={customerData?.geolocation}
+          onChange={onChangeCustomerData}
           required
         />
       </div>
