@@ -67,6 +67,7 @@ function Documents({
   };
 
   const handleViewFile = async (customerId, fileName, fileType) => {
+    let fileURL = "";
     try {
       const response = await fetch(
         `${API_BASE_URL}/customers/getfile/${customerId}`,
@@ -78,17 +79,23 @@ function Documents({
           body: JSON.stringify({ fileType, fileName }),
           credentials: "include",
         }
-      );
+      ).then((res) => res.json())
+      .then((res) => {
+        if (res.status == "Ok") {
+          fileURL = res.data.url;
+        } else {
+          throw new Error("Failed to fetch file URL");
+        }
+      });
+      // if (response.status !== "Ok") {
+      //   throw new Error("Failed to fetch file");
+      // }
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch file");
-      }
-
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Open the file in a new tab
-      window.open(blobUrl, "_blank");
+      // const blob = await response.blob();
+      // const blobUrl = URL.createObjectURL(blob);
+      
+      // // Open the file in a new tab
+      window.open(fileURL, "_blank");
 
       // if (fileType === "nonTradingDocuments" || fileName.endsWith(".pdf")) {
       //   window.open(blobUrl, "_blank");
