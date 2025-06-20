@@ -108,7 +108,7 @@ const ProductCard = ({
                         <button
                             className="add-to-cart-btn"
                             onClick={(e) => handleAddToCart(e)}
-                            style={{backgroundColor: '#01594d',color:"#ffffff",width:"100px"}}
+                            style={{backgroundColor: '#01594d',color:"#ffffff"}}
                         >
                             {t('ADD TO CART')}
                         </button>
@@ -238,6 +238,8 @@ const ProductCard = ({
   background-color: #00205B;
   color: white;
   align-items: center;
+  justify-content: center;
+    display: flex;
   border: none;
   border-radius: 4px;
   cursor: pointer;
