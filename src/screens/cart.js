@@ -36,8 +36,9 @@ function Cart() {
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({});
-    const [selectedUserId, setSelectedUserId] = useState(''); // Initialize empty
-    const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
+    const [selectedUserId, setSelectedUserId] = useState('');
+    const [selectedCustomerId, setSelectedCustomerId] = useState('');
+    const [slectedErpCustId, setSelectedErpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchNameEn, setSelectedBranchNameEn] = useState('');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
@@ -63,12 +64,14 @@ function Cart() {
 
     const userId = user?.userId;
     const customerId = user?.customerId;
+    const erpCustId = user?.erpCustomerId;
 
     useEffect(() => {
         // Set user and customer IDs from context
         if (userId) { setSelectedUserId(userId); }
         if (customerId) { setSelectedCustomerId(customerId); }
-    }, [userId, customerId, navigate, t]);
+        if (erpCustId) { setSelectedErpCustId(erpCustId); }
+    }, [userId, customerId, erpCustId, navigate, t]);
 
     // Get current language
     const currentLanguage = i18n.language;
@@ -566,6 +569,7 @@ function Cart() {
                 
                 const orderPayload = {
                     customerId: selectedCustomerId,
+                    erpCustId: erpCustId,
                     companyNameEn: companyNameEn,
                     companyNameAr: companyNameAr,
                     branchId: selectedBranchId,

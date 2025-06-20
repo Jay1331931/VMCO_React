@@ -89,13 +89,15 @@ function OrderDetails() {
   // Add state for payment method popup and selected method
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null);
-
   // Remove categoryOptions/products fetching and getFilteredVmcoCategories
   // Hardcode VMCO categories
   const VMCO_CATEGORIES = [
     'VMCO Machines',
     'VMCO Consumables'
   ];
+
+  // Pricing policy options
+  const pricingPolicyOptions = ['Price A', 'Price B', 'Price C', 'Price D'];
 
   // Fetch next order ID when in add mode
   useEffect(() => {
@@ -461,10 +463,25 @@ function OrderDetails() {
           } else {
             console.log('No products were removed from the order');
           }
+        }        // Refresh order details after update
+        await getOrderById(formData.id);        // Check if this is a VMCO Machines order that needs discount workflow approval
+        if ((formData.entity && formData.entity.toLowerCase() === 'vmco') && 
+            (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') && 
+            formData.customerId) {
+          // Directly trigger the discount workflow without checking if it already exists
+          console.log(`Directly triggering discount workflow for order ${formData.id}`);
+          console.log(`- formData.entity: "${formData.entity}"`);
+          console.log(`- formData.productCategory: "${formData.productCategory}"`);
+          console.log(`- formData.customerId: ${formData.customerId}`);
+          
+          await triggerDiscountWorkflow(formData.id, formData.customerId);
+        } else {
+          console.log('Skipping discount workflow creation in order update because conditions failed:');
+          console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
+          console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+          console.log(`- has customerID: ${Boolean(formData.customerId)}`);
         }
 
-        // Refresh order details after update
-        await getOrderById(formData.id);
         setIsEditMode(false);
         alert(t('Order updated successfully!'));
         window.location.reload();
@@ -599,7 +616,7 @@ function OrderDetails() {
             customerId: formData.customerId || '',
             companyNameEn: formData.companyNameEn || '', // Always use value from formData
             companyNameAr: formData.companyNameAr || '', // Always use value from formData
-            erpCustId: formData.erpCustId || '',
+            erpCustId: formData.erpCustId,
             branchId: formData.branchId || '',
             erpBranchId: formData.erpBranchId || '',
             branchNameEn: formData.branchNameEn || '', // Always use value from formData
@@ -645,7 +662,7 @@ function OrderDetails() {
                   page: 1,
                   pageSize: 1,
                   sortBy: 'id',
-                  sortOrder: 'desc',
+                  sortOrder: 'asc',
                   fields: 'id'
                 });
                 const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
@@ -735,7 +752,24 @@ function OrderDetails() {
               }
 
               console.log('Sales order line items created successfully');              // If we get here, both order and products were saved successfully
-              console.log('Complete order creation process finished successfully');
+              console.log('Complete order creation process finished successfully');              // Check if this is a VMCO Machines order that needs discount workflow approval
+              if ((formData.entity && formData.entity.toLowerCase() === 'vmco') && 
+                  (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') && 
+                  formData.customerId) {
+                // Directly trigger the discount workflow without checking if it already exists
+                console.log(`Directly triggering discount workflow for order ${result.data.id}`);
+                console.log(`- formData.entity: "${formData.entity}"`);
+                console.log(`- formData.productCategory: "${formData.productCategory}"`);
+                console.log(`- formData.customerId: ${formData.customerId}`);
+                
+                await triggerDiscountWorkflow(result.data.id, formData.customerId);
+              } else {
+                console.log('Skipping discount workflow creation in order creation because conditions failed:');
+                console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
+                console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+                console.log(`- has customerID: ${Boolean(formData.customerId)}`);
+              }
+
               alert(t('Order and products created successfully!'));
               console.log('Navigating to orders page');
               navigate('/orders');
@@ -1492,80 +1526,171 @@ function OrderDetails() {
     } catch (err) {
       console.error('Error fetching order details:', err);
       setError(err.message);
+    }  };  // Note: checkWorkflowInstance function removed as we're now directly creating workflow instances
+  // Function to directly createa discount workflow instance regardless of whether one already exists
+  const triggerDiscountWorkflow = async (orderId, customerId) => {
+    try {
+      // Validate inputs
+      if (!orderId) {
+        console.error("Missing orderId in triggerDiscountWorkflow");
+        return false;
+      }
+
+      if (!customerId) {
+        console.error("Missing customerId in triggerDiscountWorkflow");
+        return false;
+      }
+
+      const payload = {
+        customerId: customerId,
+        salesOrderId: orderId
+      };
+
+      console.log('Directly creating discount workflow with payload:', payload);
+      console.log(`API URL: ${API_BASE_URL}/workflow-instance/create/vmco/machines/discount`);
+
+      // Note: The backend should handle duplicate workflow instances gracefully
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/create/vmco/machines/discount`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Adding Authorization header with token if needed
+        },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+
+      console.log('Discount workflow API response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error triggering discount workflow (status: ${response.status}):`, errorText);
+        try {
+          // Try to parse the error as JSON for more details
+          const errorJson = JSON.parse(errorText);
+          console.error('Error details:', errorJson);
+        } catch (e) {
+          // If parsing fails, just log the raw text
+          console.error('Raw error response:', errorText);
+        }
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('Discount workflow triggered successfully:', result);
+      return true;
+    } catch (err) {
+      console.error('Error triggering discount workflow (exception):', err);
+      console.error(err.stack || 'No stack trace available');
+      return false;
     }
   };
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 40 }}>{t('Loading...')}</div>;
-  if (error) return <div className="error">{t(error)}</div>;
-
-  // Pricing policy options
-  const pricingPolicyOptions = ['Price A', 'Price B', 'Price C', 'Price D'];
+  //discount approval code block end -----------------------------------------------------------------------------------------------------
 
   const handleApprovalSubmit = (action) => {
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
-  };
-
-  // Handle dialog submit for order approval/rejection just like in customersDetails.js
+  };  // Handle dialog submit for order approval/rejection just like in customersDetails.js
   const handleDialogSubmit = async (comment) => {
     // Build workflowData payload (add updates if needed, similar to customersDetails)
     let updates = { ...((location.state?.workflowData && location.state.workflowData.updates) || {}) };
     // If you need to add more update logic for orders, do it here
 
-    // --- BEGIN: PATCH order lines and order if approving in approval mode and status is pending ---
-    if (approvalAction === 'approve' && fromApproval && formData.status && formData.status.toLowerCase() === 'pending') {
-      try {
-        // 1. Update all sales order lines (quantity, netAmount)
-        for (const product of formData.products) {
-          const productId = product.id || product.product_id;
-          const unitPrice = parseFloat(product.unitPrice);
-          const quantity = parseInt(product.quantity, 10);
-          const netAmount = parseFloat(product.netAmount);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
-          await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
+    try {
+      // Ensure we have the latest order data
+      console.log("Getting latest order data before proceeding with approval");
+      await getOrderById(formData.id);
+
+      // STEP 1: First update sales order lines and sales order if needed
+      // --- BEGIN: PATCH order lines and order if approving in approval mode and status is pending ---
+      if (approvalAction === 'approve' && fromApproval && formData.status && formData.status.toLowerCase() === 'pending') {
+        try {
+          console.log("Updating sales order lines and sales order before approval");
+
+          // 1. Update all sales order lines (quantity, netAmount)
+          for (const product of formData.products) {
+            const productId = product.id || product.product_id;
+            const unitPrice = parseFloat(product.unitPrice);
+            const quantity = parseInt(product.quantity, 10);
+            const netAmount = parseFloat(product.netAmount);
+            const vatPercentage = parseFloat(product.vatPercentage || 0);
+            await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                quantity,
+                unitPrice,
+                net_amount: netAmount.toFixed(2),
+                vatPercentage: vatPercentage.toFixed(2)
+              }),
+              credentials: 'include',
+            });
+          }
+
+          // 2. Update the sales order's totalAmount
+          // Prepare the payload for PATCH
+          const patchPayload = { totalAmount: formData.totalAmount };
+          // If pricingPolicy is present, include it in the update
+          if (formData.pricingPolicy) {
+            patchPayload.pricingPolicy = formData.pricingPolicy;
+          }
+          await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              quantity,
-              unitPrice,
-              net_amount: netAmount.toFixed(2),
-              vatPercentage: vatPercentage.toFixed(2)
-            }),
+            body: JSON.stringify(patchPayload),
             credentials: 'include',
           });
+
+          console.log("Successfully updated sales order lines and sales order");
+        } catch (err) {
+          alert(t('Failed to update order or lines before approval: ') + (err.message || err));
+          return;
         }
-        // 2. Update the sales order's totalAmount
-        await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ totalAmount: formData.totalAmount }),
-          credentials: 'include',
-        });
-      } catch (err) {
-        alert(t('Failed to update order or lines before approval: ') + (err.message || err));
-        return;
       }
-    }
-    // --- END: PATCH order lines and order if approving in approval mode and status is pending ---
+      // --- END: PATCH order lines and order if approving in approval mode and status is pending ---      // STEP 2: Directly create discount workflow without checking if it exists
+      console.log("Creating discount workflow instance...");
+      console.log("formData:", {
+        id: formData.id,
+        entity: formData.entity,
+        productCategory: formData.productCategory,
+        customerId: formData.customerId
+      });      // Use case-insensitive comparison for entity
+      if ((formData.entity && formData.entity.toLowerCase() === 'vmco') && 
+          (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') && 
+          formData.customerId) {
+        console.log(`Directly triggering discount workflow for order ${formData.id}`);
+        const workflowTriggered = await triggerDiscountWorkflow(formData.id, formData.customerId);
+        console.log(`Discount workflow triggered: ${workflowTriggered}`);
+      } else {
+        console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
+        console.log(`- entity: ${formData.entity}`);
+        console.log(`- entity.toLowerCase() === 'vmco': ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
+        console.log(`- productCategory: ${formData.productCategory}`);
+        console.log(`- productCategory.toLowerCase() === 'vmco machines': ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+        console.log(`- customerId: ${Boolean(formData.customerId)}`);
+      }
+        
 
-    // --- send the api to trigger the pricing policy workflow approval only if the pricing policy is something else other than the previouly selected one ---
-    
-    const payload = {
-      workflowData: {
-        ...(location.state?.workflowData || {}),
-        updates
-      },
-      approvedStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
-      comment: comment
-    };
+      // STEP 3: Submit the approval for the sales order
+      const payload = {
+        workflowData: {
+          ...(location.state?.workflowData || {}),
+          updates
+        },
+        approvedStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
+        comment: comment
+      };
 
-    try {
+      console.log("Submitting sales order approval with payload:", payload);
+
       const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         credentials: 'include',
       });
+
       if (res.ok) {
         alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
         setIsApprovalDialogOpen(false);
@@ -1936,7 +2061,7 @@ function OrderDetails() {
                   {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
                     <button
                       type="button"
-                      className="order-action-btn approve"                      onClick={() => {
+                      className="order-action-btn approve" onClick={() => {
                         // In add mode, require customer, branch, and entity selection
                         if (formMode === 'add') {
                           if (!formData.selectedCustomerName) {

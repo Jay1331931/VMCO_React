@@ -22,6 +22,10 @@ const Constants = {
         DAR: 'dar',
         GREEN_MAST: 'green mast'
     },
+    CATEGORY:{
+        VMCO_MACHINES: 'vmco machines',
+        VMCO_CONSUMABLES: 'vmco consumables'
+    }
     
 };
 
