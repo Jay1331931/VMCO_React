@@ -13,7 +13,7 @@ import ProductPopup from '../components/ProductPopup';
 import SearchInput from '../components/SearchInput';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-
+import Swal from 'sweetalert2';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -525,28 +525,66 @@ function Catalog() {
             if (otherBranchId) {
                 const otherBranch = branches.find(branch => String(branch.value) === String(otherBranchId));
                 const otherBranchLabel = otherBranch ? otherBranch.label : otherBranchId;
-                if (window.confirm(`There are items in the cart for branch ${otherBranchLabel}. Do you want to discard it?`)) {
-                    // Delete all cart items for the other branch for this user using the provided API
-                    try {
-                        await fetch(`${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId}&branch_id=${otherBranchId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            },
-                            credentials: 'include'
-                        });
-                        setSelectedLocation(newBranchId);
-                        if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
-                        alert(`Items discarded from the cart for branch ${otherBranchLabel}`);
-                    } catch (deleteError) {
-                        alert('Failed to discard items from the cart. Please try again.');
+                // Make sure this function is already marked `async` (it looks like it is)
+
+
+                const { isConfirmed } = await Swal.fire({
+                icon: 'warning',
+                title: t('Discard items?'),
+                html: t(
+                    'There are items in the cart for branch <strong>{{branch}}</strong>.<br>Do you want to discard them?',
+                    { branch: otherBranchLabel }
+                ),
+                showCancelButton: true,
+                focusCancel: true,
+                confirmButtonText: t('Yes, discard'),
+                cancelButtonText: t('No, keep'),
+                reverseButtons: true,      
+                });
+
+                if (isConfirmed) {
+                try {
+                    await fetch(
+                    `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId}&branch_id=${otherBranchId}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        },
+                        credentials: 'include',
                     }
+                    );
+
+                    setSelectedLocation(newBranchId);
+                    if (selectedBranch) setSelectedBranchRegion(selectedBranch.branchRegion || '');
+
+                    await Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t(`Items discarded from the cart for branch ${otherBranchLabel}`),
+                    confirmButtonText: t('OK'),
+                    });
+                } catch (deleteError) {
+                    await Swal.fire({
+                    icon: 'error',
+                    title: t('Error'),
+                    text: t('Failed to discard items from the cart. Please try again.'),
+                    confirmButtonText: t('OK'),
+                    });
                 }
+                }
+
             }
         } catch (error) {
             console.error('Error during branch change:', error);
-            alert('Error checking cart. Branch change may not work correctly.');
+            // alert('Error checking cart. Branch change may not work correctly.');
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t('Error checking cart. Branch change may not work correctly.'),
+                confirmButtonText: t('OK')
+            });
         } finally {
             setIsLoading(false);
         }
@@ -558,7 +596,15 @@ function Catalog() {
         try {
             // Check if a branch is selected
             if (!selectedLocation) {
-                alert(t('Please select a delivery branch first'));
+                // alert(t('Please select a delivery branch first'));
+                Swal.fire({
+                    icon: 'warning',
+                    title: t('No Branch Selected'),
+                    text: t('Please select a delivery branch before adding products to the cart.'),
+                    timer: 5000, 
+                    showConfirmButton: false,
+                    timerProgressBar: true
+                });
                 return;
             }
 
@@ -640,8 +686,12 @@ function Catalog() {
                     const errorData = await updateResponse.json().catch(() => ({}));
                     throw new Error(`Failed to update cart item: ${errorData.message || updateResponse.statusText}`);
                 }
-
-                alert(t('Product quantity updated in cart successfully'));
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t('Product quantity updated in cart successfully'),
+                    confirmButtonText: t('OK')
+                });
             }
             else {
                 // Item doesn't exist in cart, add it as new
@@ -682,8 +732,12 @@ function Catalog() {
                     const errorData = await response.json().catch(() => ({}));
                     throw new Error(`Failed to add item to cart: ${errorData.message || response.statusText}`);
                 }
-
-                alert(t('Product added to cart successfully'));
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Success'),
+                    text: t('Product added to cart successfully'),
+                    confirmButtonText: t('OK')
+                });
             }
 
             // Reset quantity after successful add/update
@@ -694,7 +748,12 @@ function Catalog() {
 
         } catch (error) {
             console.error('Error handling product cart action:', error);
-            alert(t('Failed to update cart. Please try again.'));
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t('Failed to add product to cart. Please try again.'),
+                confirmButtonText: t('OK')
+            });
         }
     };
 
@@ -1015,22 +1074,29 @@ function Catalog() {
                     grid-column: 1 / -1;
                 }
                 
-                .product-search-input {
-                    padding: 10px 15px;
-                    width: 300px;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    font-size: 1rem;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease;
-                    margin-right: 10px;
+               .product-search-input {
+                padding: 10px 15px;
+                width: 300px;
+                border: 2px solid #1d396d;
+                border-radius: 8px;
+                font-size: 1rem;
+                background-color: #fff;
+                box-shadow: 0 0 0 2px #E5E4E2; 
+                transition: all 0.2s ease;
+                margin-right: 10px;
+                box-sizing: border-box;
+                }
+
+                .product-search-input:focus {
+                border-color: #1d396d;     
+                box-shadow: 0 0 0 2px #E5E4E2; 
+                outline: none;
+                }
+                .product-search-input::placeholder {
+                color: #D3D3D3;
+                opacity: 1; 
                 }
                 
-                .product-search-input:focus {
-                    border-color: #0a5640;
-                    box-shadow: 0 2px 8px rgba(10, 86, 64, 0.15);
-                    width: 320px;
-                }
                   .loading-more-container {
                     display: flex;
                     flex-direction: column;
@@ -1061,9 +1127,9 @@ function Catalog() {
                     margin-top: 20px;
                 }
                   /* Style for the category filter to show it's linked to tabs */
-                .category-filter {
-                    background-color: #f5f5f5;
-                }
+                // .category-filter {
+                //     background-color: #f5f5f5;
+                // }
                 
                 
                 .tab-linked-filter::after {

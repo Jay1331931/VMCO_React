@@ -6,6 +6,7 @@ import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import RbacManager from "../utilities/rbac";
 import { useAuth } from "../context/AuthContext";
+import Swal from "sweetalert2";
 
 function RbacEditor() {
   const [newRoleName, setNewRoleName] = useState("");
@@ -190,7 +191,13 @@ function RbacEditor() {
 
   const handleSavePermissions = () => {
     // Implement saving permissions to your backend or RbacManager
-    alert("Permissions saved successfully");
+    Swal.fire({
+      title: "Save Permissions",
+      text: t("Permissions saved successfully"),
+      icon: "warning",
+      confirmButtonText:t("Ok")
+    })  
+    // alert("Permissions saved successfully");
   };
 
   const columns = [
@@ -231,12 +238,25 @@ function RbacEditor() {
     {
       key: "exportConfig",
       label: "Export Configuration",
-      onClick: () => alert("Export RBAC Configuration clicked"),
+      onClick: () =>Swal.fire({
+        title: t("Export RBAC Configuration"),
+        text: t("Export RBAC Configuration clicked"),
+        icon: "info",
+        confirmButtonText: "OK",
+      }), // Replace with actual export logic
+        //  alert("Export RBAC Configuration clicked"),
     },
     {
       key: "importConfig",
       label: "Import Configuration",
-      onClick: () => alert("Import RBAC Configuration clicked"),
+      onClick: () => 
+        Swal.fire({
+          title: t("Import RBAC Configuration"),
+          text: t("Import RBAC Configuration clicked"),
+          icon: "info",
+          confirmButtonText: "OK",
+        }), // Replace with actual import logic
+        // alert("Import RBAC Configuration clicked"),
     },
   ];
 

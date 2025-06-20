@@ -18,6 +18,7 @@ import formatDate from '../utilities/dateFormatter';
 import ApprovalDialog from '../components/ApprovalDialog';
 import GetPaymentMethods from '../components/GetPaymentMethods'; // Add this import
 import Dropdown from '../components/DropDown';
+import Swal from 'sweetalert2';
 
 const defaultOrder = {
   id: '',
@@ -266,7 +267,15 @@ function OrderDetails() {
 
   // Download invoice
   const handleDownloadInvoice = (orderId) => {
-    alert(`Downloading invoice for order ID: ${orderId}`);
+  Swal.fire({
+    title: t('Download Invoice'),
+    text:  `Are you sure you want to download the invoice for order ID:${orderId}?`,
+    icon: 'warning',
+    showCancelButton: true,
+     confirmButtonText: t('OK')
+  })
+
+    // alert(`Downloading invoice for order ID: ${orderId}`);
     // Implement download logic here
   };  // Handle saving order with special rules:
   // 1. Prevent editing existing orders with Pre Payment method
@@ -299,13 +308,23 @@ function OrderDetails() {
     try {
       // Perform validation before saving
       if (!formData.customerId) {
-        alert(t('Please select a customer'));
+        Swal.fire({
+          icon: 'warning',
+          title: t('Validation Error'),
+          text: t('Please select a customer'),
+        });
+        // alert(t('Please select a customer'));
         setSaving(false);
         return;
       }
 
       if (!formData.products || formData.products.length === 0) {
-        alert(t('Please add at least one product'));
+        Swal.fire({ 
+          icon: 'warning',
+          title: t('Validation Error'),
+          text: t('Please add at least one product'),
+        });
+        // alert(t('Please add at least one product'));
         setSaving(false);
         return;
       }
@@ -483,13 +502,23 @@ function OrderDetails() {
         }
 
         setIsEditMode(false);
-        alert(t('Order updated successfully!'));
-        window.location.reload();
+        Swal.fire({ 
+          icon: 'success',
+          title: t('Order Updated'),
+          text: t('Order updated successfully!'),
+          confirmButtonText: t('OK')
+        });
+         window.location.reload();
+        // alert(t('Order updated successfully!'));
       } else {
         // Create a new order
         // Validation - check if essential fields are filled
         if (!formData.selectedCustomerName || !formData.selectedBranchName) {
-          alert(t('Customer and Branch are required fields.'));
+          Swal.fire({
+            icon: 'warning',
+            title: t('Validation Error'),
+            text: t('Customer and Branch are required fields.'),
+          });
           setSaving(false);
           return;
         } if (!formData.entity) {
@@ -722,9 +751,17 @@ function OrderDetails() {
               };
             });
 
-            console.log('Submitting products payload:', productsPayload); if (productsPayload.length === 0) {
-              console.warn('No valid products to submit - cannot create order line items');
-              alert(t('Order created successfully, but no products were added.'));
+            console.log('Submitting products payload:', productsPayload);
+
+            if (productsPayload.length === 0) {
+              console.warn('No valid products to submit');
+              Swal.fire({
+                icon: 'info',
+                title: t('Order Created'),
+                text: t('Order created successfully, but no products were added.'),
+                confirmButtonText: t('OK')
+              });
+              // alert(t('Order created successfully, but no products were added.'));
               navigate('/orders');
               return;
             }
@@ -769,23 +806,37 @@ function OrderDetails() {
                 console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
                 console.log(`- has customerID: ${Boolean(formData.customerId)}`);
               }
-
-              alert(t('Order and products created successfully!'));
-              console.log('Navigating to orders page');
+               // If we get here, both order and products were saved successfully
+              Swal.fire({
+                icon: 'success',
+                title: t('Order Created'),
+                text: t('Order and products created successfully!'),
+                confirmButtonText: t('OK')
+              });
               navigate('/orders');
             } catch (err) {
               console.error('Error saving product lines:', err);
               console.log('Product line items creation failed, but order was created');
               // Even if product lines failed, the order was created successfully
-              alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
-              console.log('Navigating to orders page despite product line items error');
+              Swal.fire({
+                icon: 'warning',
+                title: t('Order Created'),
+                text: t('Order created successfully, but there was an issue adding products: ') + err.message,  
+                confirmButtonText: t('OK')
+              });
+              // alert(t('Order created successfully, but there was an issue adding products: ') + err.message);
               navigate('/orders');
             }
             break; // Exit the loop on success
           } catch (err) {
             if (attempt >= maxAttempts - 1) {
               setError(err.message);
-              alert(t(err.message));
+              Swal.fire({
+                icon: 'error',
+                title: t('Error Saving Order'),
+                text: t(err.message),
+              })
+              // alert(t(err.message));
             }
           } finally {
             setLoading(false);
@@ -794,7 +845,14 @@ function OrderDetails() {
       } // Close the else block from line 458
     } catch (error) {
       console.error('Error saving order:', error);
-      alert(t('Failed to save order. Please try again.'));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Saving Order'),
+        text: t('Failed to save order. Please try again.'),
+        confirmButtonText: t('OK')
+      });
+
+      // alert(t('Failed to save order. Please try again.'));
     } finally {
       setSaving(false);
     }
@@ -803,7 +861,13 @@ function OrderDetails() {
   // cancel handler
   const handleCancelOrder = async () => {
     if (!formData.id) {
-      alert(t('Order ID is missing.'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('Validation Error'),
+        text: t('Order ID is missing.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Order ID is missing.'));
       return;
     }
 
@@ -831,13 +895,24 @@ function OrderDetails() {
           throw new Error(`Failed to cancel order: ${response.status} ${response.statusText}`);
         }
       }
-
-      alert(t('Order status updated to Cancelled!'));
+      Swal.fire({
+        icon: 'success',
+        title: t('Order Cancelled'),
+        text: t('Order status updated to Cancelled!'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Order status updated to Cancelled!'));
       navigate('/orders'); // or refresh the current view if needed
     } catch (err) {
       console.error('Error cancelling order:', err);
       setError(err.message);
-      alert(t(err.message));
+      Swal.fire({ 
+        icon: 'error',
+        title: t('Error Cancelling Order'),
+        text: err.message || t('Failed to cancel order: ')  ,
+        confirmButtonText: t('OK')
+      });
+      // alert(t(err.message));
     } finally {
       setLoading(false);
     }
@@ -949,7 +1024,13 @@ function OrderDetails() {
 
     } catch (error) {
       console.error('Error updating product prices:', error);
-      alert(t('Failed to update prices. Please try again.'));
+      Swal.fire ({
+        icon: 'error',
+      title: t('Error Updating Prices'),
+        text: t('Failed to update product prices. Please try again.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Failed to update prices. Please try again.'));
     }
   };
   // Function to update sales order line
@@ -1249,7 +1330,15 @@ function OrderDetails() {
                 cursor: 'pointer'
               }}
               title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-              onClick={() => alert(`Show stock for ${row.productName || row.id}`)}
+              onClick={() =>
+                Swal.fire({
+                  title: t('Stock Information'),
+                  text: t(`Showing stock for ${row.productName || row.id}`),
+                  icon: 'info',
+                  confirmButtonText: t('OK')
+
+                //  alert(`Show stock for ${row.productName || row.id}`)
+                })}
             >
               {t('Stock')}
             </button>
@@ -1644,10 +1733,17 @@ function OrderDetails() {
 
           console.log("Successfully updated sales order lines and sales order");
         } catch (err) {
-          alert(t('Failed to update order or lines before approval: ') + (err.message || err));
+
+          Swal.fire({
+          icon: 'error',
+          title: t('Error Updating Order'),
+          text: t('Failed to update order or lines before approval: ') + (err.message || err),
+        confirmButtonText: t('OK')
+        });
           return;
         }
       }
+
       // --- END: PATCH order lines and order if approving in approval mode and status is pending ---      // STEP 2: Directly create discount workflow without checking if it exists
       console.log("Creating discount workflow instance...");
       console.log("formData:", {
@@ -1692,7 +1788,13 @@ function OrderDetails() {
       });
 
       if (res.ok) {
-        alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
+        Swal.fire({
+          icon: 'success',
+          title: t('Approval Action Successful'),
+          text: t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`),
+          confirmButtonText: t('OK')
+        });
+        // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
         setIsApprovalDialogOpen(false);
         navigate('/orders');
       } else {
@@ -1701,7 +1803,13 @@ function OrderDetails() {
       }
     } catch (error) {
       console.error(`Error ${approvalAction}ing order:`, error);
-      alert(t(`Error ${approvalAction}ing order: ${error.message}`));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Submitting Approval'),
+        text: t(`Error ${approvalAction}ing order: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      // alert(t(`Error ${approvalAction}ing order: ${error.message}`));
       setIsApprovalDialogOpen(false);
     }
   };
@@ -1720,7 +1828,9 @@ function OrderDetails() {
   return (
     <Sidebar>
       {isV('orderDetails') && (
-        <div className="order-details-container">
+       
+        <div  >
+          <div  className="order-details-container">
           <div className={`order-details-content ${isCommentPanelOpen ? 'collapsed' : ''}`}>
             <div className="order-details-body">
               <h2 className="order-details-title">
@@ -1728,8 +1838,9 @@ function OrderDetails() {
                   ? `${t('New Order')}`
                   : `${t('Order #')} ${formData.id}`}
               </h2>
+              <h4 style={{color:"#525b6d"}}> {t("Order Details")}</h4>
               <div className="order-details-section">
-                <div className="order-details-grid">
+                <div className="order-details-grid " style={{marginTop: '20px'}}>
                   {isV('customerName') && (
                     <div className="order-details-field">
                       <label htmlFor="customerField">{t('Customer Company Name')}</label>
@@ -1768,7 +1879,12 @@ function OrderDetails() {
                             value={formData.selectedBranchName !== undefined && formData.selectedBranchName !== null ? formData.selectedBranchName : ''}
                             onClick={() => {
                               if (!formData.selectedCustomerName) {
-                                alert(t('Please select a customer first'));
+                                  Swal.fire({
+                                  icon: 'warning',
+                                  title: t('No Customer Selected'),
+                                  text: t('Please select a customer first'),
+                                  confirmButtonText: t('OK')
+                                });
                                 return;
                               }
                               if (isE('branchName')) setShowBranchPopup(true);
@@ -2056,8 +2172,10 @@ function OrderDetails() {
               </div>
 
               {isV('products') && (
-                <div className="order-products-section">
-                  <h3 className="order-details-subtitle">{t('Products')}</h3>
+                <>
+                <h3 className="order-details-subtitle">{t('Products')}</h3>
+                <div className="order-products-section" style={{boxShadow: '0 0 10px rgba(0,0,0,0.1)', padding: '16px 0px', borderRadius: '8px'}}>
+                  
                   {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
                     <button
                       type="button"
@@ -2065,15 +2183,31 @@ function OrderDetails() {
                         // In add mode, require customer, branch, and entity selection
                         if (formMode === 'add') {
                           if (!formData.selectedCustomerName) {
-                            alert(t('Please select a customer first'));
+                             Swal.fire({
+                              title: t('Select Customer'),
+                              text: t('Please select a customer first'),
+                              icon: 'warning',  
+                              confirmButtonText: t('OK'),
+                            });
                             return;
                           }
                           else if (!formData.selectedBranchName) {
-                            alert(t('Please select a Branch'));
+                             Swal.fire({
+                              title: t('Select Branch'),
+                              text: t('Please select a branch first'),
+                              icon: 'warning',
+                              confirmButtonText: t('OK'),
+                            });
                             return;
                           }
                           else if (!formData.entity) {
-                            alert(t('Please select Entity'));
+                            Swal.fire({
+                              title: t('Select Entity'),  
+                              text: t('Please select an entity first'),
+                              icon: 'warning',
+                              confirmButtonText: t('OK'),
+                            });
+                            // alert(t('Please select Entity'));
                             return;
                           }
                         }
@@ -2111,82 +2245,11 @@ function OrderDetails() {
                     />
                   )}
                 </div>
+                </>
               )}
             </div>
 
-            {isV('orderFooter') && (
-              <div className="order-details-footer">
-                {isV('orderStatus') && (
-                  <div className="order-status">
-                    <span className="status-label">{t('Status')}:</span>
-                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
-                      {t(formData.status) || t('Open')}
-                    </span>
-                  </div>
-                )}
-
-                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
-                  <button
-                    className="order-action-btn"
-                    onClick={() => handleSave('save')}
-                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
-                  >
-                    {t('Save Changes')}
-                  </button>
-                )}
-
-                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
-                  <button
-                    className="order-action-btn"
-                    onClick={() => handleCancelOrder('cancel order')}
-                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
-                  >
-                    {t('Cancel Order')}
-                  </button>
-                )}
-
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
-                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
-                    {t('Download Invoice')}
-                  </button>
-                )}
-
-                {isV('btnInventory') && isE('btnInventory') && (
-                  <button className="order-action-btn" onClick={() => setShowInventory(true)}>
-                    {t('Get Inventory')}
-                  </button>
-                )}
-
-                {isV('btnPay') && isE('btnPay') && (
-                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
-                    {t('Pay')}
-                  </button>
-                )}
-                {isV('actionButtons') && fromApproval && (
-                  <div className="order-details-actions">
-                    {isV('btnApprove', fromApproval, true) && (
-                      <button
-                        className="order-action-btn approve"
-                        onClick={() => handleApprovalSubmit('approve')}
-                        disabled={formData.status === 'approved'}
-                      >
-                        {t('Approve')}
-                      </button>
-                    )}
-
-                    {isV('btnReject', fromApproval, true) && (
-                      <button
-                        className="order-action-btn reject"
-                        onClick={() => handleApprovalSubmit('reject')}
-                        disabled={formData.status === 'approved'}
-                      >
-                        {t('Reject')}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+          
           </div>
 
           {/* Comment Panel Popup */}
@@ -2302,6 +2365,82 @@ function OrderDetails() {
             customerId={formData.customerId}
             totalAmount={formData.totalAmount}
           />
+          </div>
+            {isV('orderFooter') && (
+              <div className="order-details-footer">
+                {isV('orderStatus') && (
+                  <div className="order-status">
+                    <span className="status-label">{t('Status')}:</span>
+                    <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                      {t(formData.status) || t('Open')}
+                    </span>
+                  </div>
+                )}
+            <div className="" style={{display:"flex",gap:"10px"}}>
+                {isV('btnSave', fromApproval, false) && isE('btnSave') && (
+                  <button
+                    className="order-action-btn"
+                    onClick={() => handleSave('save')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
+                    {t('Save Changes')}
+                  </button>
+                )}
+
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
+                  <button
+                    className="order-action-btn"
+                    onClick={() => handleCancelOrder('cancel order')}
+                    disabled={formData.status && formData.status.toLowerCase() !== 'open'}
+                  >
+                    {t('Cancel Order')}
+                  </button>
+                )}
+
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+                    {t('Download Invoice')}
+                  </button>
+                )}
+
+                {isV('btnInventory') && isE('btnInventory') && (
+                  <button className="order-action-btn" onClick={() => setShowInventory(true)}>
+                    {t('Get Inventory')}
+                  </button>
+                )}
+
+                {isV('btnPay') && isE('btnPay') && (
+                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                    {t('Pay')}
+                  </button>
+                )}
+                {isV('actionButtons') && fromApproval && (
+                  <div className="order-details-actions">
+                    {isV('btnApprove', fromApproval, true) && (
+                      <button
+                        className="order-action-btn approve"
+                        onClick={() => handleApprovalSubmit('approve')}
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Approve')}
+                      </button>
+                    )}
+
+                    {isV('btnReject', fromApproval, true) && (
+                      <button
+                        className="order-action-btn reject"
+                        onClick={() => handleApprovalSubmit('reject')}
+                        disabled={formData.status === 'approved'}
+                      >
+                        {t('Reject')}
+                      </button>
+                    )}
+                  
+                  </div>
+                )}
+              </div>
+            </div>
+            )}
         </div>
       )}
     </Sidebar>

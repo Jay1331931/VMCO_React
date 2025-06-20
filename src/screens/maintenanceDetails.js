@@ -601,6 +601,8 @@ function MaintenanceDetails() {
             </select>
           </div>
         )}
+        <div className='support-details-container-right'>
+        
         {isV("assignedTo") && (
           <div className='support-assign'>
             <span>{t("Assign To")}:</span>
@@ -625,6 +627,7 @@ function MaintenanceDetails() {
             </select>
           </div>
         )}
+        </div>
         <div className='support-details-actions'>
           {isV("btnSave") && (
             <button className='support-action-btn save' onClick={handleSave} disabled={!isE("btnSave")}>

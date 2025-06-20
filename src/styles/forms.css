@@ -7,7 +7,7 @@
 .customers .customer-onboarding-details {
   background: #fff;
   border: 1.9px solid #D9D9D6;
-  padding: 20px;
+  /* padding: 20px; */
   border-radius: 16px;
   max-width: 98%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -19,7 +19,8 @@
 .customers .customer-onboarding-tabs-vertical {
     display: flex;
     flex-direction: column;
-    width: 220px;
+    width: 240px;
+    padding: 20px;
     /* height: 200vh; */
   }
 
@@ -70,9 +71,11 @@
     /* grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); */
     gap: 10px;
     flex: 1;
-    padding-left: 20px;
+    padding: 20px;
     border-left: 1px solid #ccc;
   }
+  
+
 
   [dir="rtl"] .customers .customer-onboarding-form-grid {
     border-left: none;
@@ -114,8 +117,8 @@
   }
 
   .customers .customer-onboarding-form-actions {
-    margin: 0 20px;
-    padding: 0px 20px;
+    /* margin: 0 20px;
+    padding: 0px 20px; */
     justify-content: space-between;
     display: flex;
     gap: 10px;
@@ -124,7 +127,7 @@
   .expanded-form-container-footer {
     display: flex;
     justify-content: right;
-    padding: 0px 20px;
+    /* padding: 0px 20px; */
   }
 
   .customers .status-text {
@@ -139,8 +142,8 @@
   .customers .status-badge {
     margin: 20px 0;
     padding: 0px 12px;
-    background-color: gainsboro;
-    color: gray;
+    background-color:  #f4f4f2; /* Previous color code gainsboro */
+    color:#5d6a72  ;/* Prevous color code gray */
     border-radius: 5px;
     display: inline-block;
     /* border: 1px solid #cc6600; */
@@ -204,7 +207,7 @@
   padding: 6px 12px;       
   height: 40px;           
   width: 250px;           
-  border-radius: 4px;
+  border-radius: 8px; /*  Previous Value is 4 */
   border: 1px solid #ccc;
 }
 
@@ -234,7 +237,7 @@
     padding: 4px 8px;
     height: 40px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px;  /*  Previous Value is 4 */
     width: 250px; 
     
   }
@@ -248,7 +251,7 @@
     padding: 4px 8px;
     height: 40px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px; /*  Previous Value is 4 */
     width: 250px; 
     text-align: end;
   }
@@ -574,14 +577,14 @@
     margin-top: 5px;
   }
 
-  .product-search-input {
+  /* .product-search-input {
     padding: 8px 12px;
     width: 200px;
     border: 2px solid darkblue;
     border-radius: 4px;
     font-size: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+  } */
   .product-text-input {
     padding: 8px 12px;
     width: 75px;

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import '../styles/approvaldialog.css'; 
+import Swal from 'sweetalert2';
 
 const ApprovalDialog = ({ 
   isOpen, 
@@ -19,7 +20,13 @@ const ApprovalDialog = ({
 
   const handleSubmit = async () => {
     if (!comment.trim() && action === 'reject') {
-      alert(t('Please provide a reason for rejection'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('Warning'),
+        text: t('Please provide a reason for rejection'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Please provide a reason for rejection'));
       return;
     }
 

@@ -29,7 +29,7 @@ const Dropdown = ({
                     <option value="">{t(placeholder)}</option>
                 )}
                 {options.map((option) => (
-                    <option key={option.value} value={option.value}>
+                    <option  key={option.value} value={option.value}>
                         {t(option.label)}
                     </option>
                 ))}
@@ -52,15 +52,17 @@ const Dropdown = ({
                 .dropdown-select {
                     padding: 10px 14px;
                     border-radius: 8px;
-                    border: 1.5px solid #ddd;
-                    background: #fff;
-                    font-size: 1rem;
+                    // border: 1.5px solid #ddd;
+                    // background: #fff;
+                    font-size: 0.9rem;
                     color: #222;
                     outline: none;
                     transition: border 0.2s;
                 }
+                  
                 .dropdown-select option {
-                    font-size: 1rem;
+                   font-size: 0.9rem;
+                  
                 }
                 @media (max-width: 768px) {
                     .dropdown-select {

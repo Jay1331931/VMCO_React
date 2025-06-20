@@ -22,6 +22,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import constants from '../constants';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 
@@ -141,18 +143,18 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
             onClick={handleConfirm}
             disabled={!markerRef.current}
           >
-            Confirm Location
+            {t('Confirm Location')}
           </button>
         ) : (
           <>
             <div className="location-confirmed">
-              Location confirmed!
+              {t("Location confirmed!")}
             </div>
             <button
               className="reset-location-button"
               onClick={handleReset}
             >
-              Change Location
+              {t("Change Location")}
             </button>
           </>
         )}
@@ -446,11 +448,11 @@ function CustomersDetails() {
     customerFormMode = 'custDetailsEdit';
   }
   else {
-    if (transformedCustomer.customerStatus === 'New') {
+    if (transformedCustomer?.customerStatus === 'New') {
       customerFormMode = 'custDetailsAdd';
-    } else if (transformedCustomer.customerStatus === 'Approved' && customer.isApprovalMode) {
+    } else if (transformedCustomer?.customerStatus === 'Approved' && customer.isApprovalMode) {
       customerFormMode = 'custDetailsEdit';
-    } else if (transformedCustomer.customerStatus === 'Approved' && !customer.isApprovalMode) {
+    } else if (transformedCustomer?.customerStatus === 'Approved' && !customer.isApprovalMode) {
       customerFormMode = 'custDetailsAdd';
     } else {
       customerFormMode = 'custDetailsAdd';
@@ -464,10 +466,10 @@ function CustomersDetails() {
   const [companyType, setCompanyType] = useState(transformedCustomer?.companyType?.toLowerCase() || '');
   console.log("Company Type", companyType);
   const formsByTab = useMemo(() => ({
-    'Business Details': getBusinessDetailsForm(t)['Business Details'],
-    'Contact Details': getContactDetailsForm(t)['Contact Details'],
-    'Financial Information': getFinancialInformationForm(t)['Financial Information'],
-    'Documents': getDocumentsForm(t, companyType)['Documents'],
+    'Business Details': getBusinessDetailsForm(t)?.['Business Details'] || [],
+    'Contact Details': getContactDetailsForm(t)?.['Contact Details']|| [],
+    'Financial Information': getFinancialInformationForm(t)?.['Financial Information']|| [],
+    'Documents': getDocumentsForm(t, companyType)?.['Documents']|| [],
     'Branches': [
       { type: 'text', name: 'branchName', label: t('Branch Name'), placeholder: t('Enter branch name') },
       { type: 'text', name: 'branchLocation', label: t('Branch Location'), placeholder: t('Enter location') },
@@ -475,10 +477,10 @@ function CustomersDetails() {
     'Products & MoQ': [],
   }), [t]);
   const formDataByTab = useMemo(() => ({
-    'Business Details': getBusinessDetailsFormData(t, customer)['Business Details'],
-    'Contact Details': getBusinessDetailsFormData(t, customer)['Contact Details'],
-    'Financial Information': getBusinessDetailsFormData(t, customer)['Financial Information'],
-    'Documents': getBusinessDetailsFormData(t, customer, companyType)['Documents'],
+    'Business Details': getBusinessDetailsFormData(t, customer)?.['Business Details']|| [],
+    'Contact Details': getBusinessDetailsFormData(t, customer)?.['Contact Details']|| [],
+    'Financial Information': getBusinessDetailsFormData(t, customer)?.['Financial Information']|| [],
+    'Documents': getBusinessDetailsFormData(t, customer, companyType)?.['Documents']||[],
   }), [t]);
 const [activeTab, setActiveTab] = useState('Business Details');
   const tabs = useMemo(() => {
@@ -693,19 +695,37 @@ const [activeTab, setActiveTab] = useState('Business Details');
         if (activeTab === 'Contact Details') {
           if (formData.financeHeadEmail && formData.purchasingHeadEmail &&
             formData.financeHeadEmail === formData.purchasingHeadEmail) {
-            alert(t('Finance and Purchasing heads must have unique emails'));
+            Swal.fire({
+              icon: 'error',
+              title: t('Error'),
+              text: t('Finance and Purchasing heads must have unique emails'),
+              confirmButtonText: t('OK')
+            });
+            // alert(t('Finance and Purchasing heads must have unique emails'));
             return;
           }
 
           if ((formData.financeHeadEmail && formData.financeHeadEmail === formData.primaryContactEmail) ||
             (formData.purchasingHeadEmail && formData.purchasingHeadEmail === formData.primaryContactEmail)) {
-            alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
+            Swal.fire({
+              icon: 'error',  
+              title: t('Error'),
+              text: t('Finance/Purchasing heads cannot use the same email as primary contact'),
+              confirmButtonText: t('OK')
+            });
+            // alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
             return;
           }
         }
         if (action !== 'submit') {
           if (!validateChangedFields(action, changedFields, false)) {
-            alert(t('Please correct the errors before saving'));
+            Swal.fire({ 
+              icon: 'error',
+              title: t('Error'),
+              text: t('Please correct the errors before saving'),
+              confirmButtonText: t('OK')
+            });
+           // alert(t('Please correct the errors before saving'));
             return;
           }
         } else {
@@ -854,7 +874,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
       Object.keys(contactCreatePayload).length === 0 &&
       Object.keys(contactUpdatePayload).length === 0 &&
       uploadedFiles.length === 0) {
-      alert(t('No changes detected to save'));
+        Swal.fire({
+            icon: 'info', 
+            title: t('No Changes Detected'),
+            text: t('No changes detected to save'),
+            confirmButtonText: t('OK')
+          });
+      // alert(t('No changes detected to save'));
       return;
     }
 
@@ -923,7 +949,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
         );
       }
       handleSaveFiles();
-      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),
+        confirmButtonText: t('OK')
+      });
+      // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
     } catch (error) {
       console.error('Update error:', error);
       setFormErrors(error.message || 'Unable to connect to server');
@@ -1239,7 +1271,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
       setChangedFields(prev => new Set(prev).add(fieldName));
     } catch (error) {
       console.error('Error handling file:', error);
-      alert(`Error handling file: ${error.message}`);
+      Swal.fire({
+        icon: 'error',    
+        title: t('Error'),
+        text: t(`Error handling file: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      //alert(`Error handling file: ${error.message}`);
     }
   };
   const handleSaveFiles = async () => {
@@ -1289,7 +1327,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
       }
     } catch (error) {
       console.error('Error saving files:', error);
-      alert(`Error saving files: ${error.message}`);
+      Swal.fire({
+        icon: 'error',  
+        title: t('Error'),
+        text: t(`Error saving files: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      // alert(`Error saving files: ${error.message}`);
     }
   };
 
@@ -1338,7 +1382,14 @@ const [activeTab, setActiveTab] = useState('Business Details');
 
   const handleApprovalSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please fill all required fields. Please Save files before submitting.'));
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Please fill all required fields. Please Save files before submitting.'),
+        confirmButtonText: t('OK')
+      });
+
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     setApprovalAction(action);
@@ -1418,12 +1469,24 @@ const [activeTab, setActiveTab] = useState('Business Details');
       }
     } catch (error) {
       console.error(`Error ${approvalAction}ing customer:`, error);
-      alert(`Error ${approvalAction}ing customer: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t(`Error ${approvalAction}ing customer: ${error.message}`),
+        confirmButtonText: t('OK')
+      });
+      //alert(`Error ${approvalAction}ing customer: ${error.message}`);
     }
   };
   const handleSubmit = async (action) => {
     if (!validateChangedFields('save changes', changedFields, true)) {
-      alert(t('Please fill all required fields. Please Save files before submitting.'));
+      Swal.fire({
+        icon: 'error',  
+        title: t('Error'),
+        text: t('Please fill all required fields. Please Save files before submitting.'),
+        confirmButtonText: t('OK')
+      });
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     if (action === 'approve') {
@@ -1451,7 +1514,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
         });
       } catch (error) {
         console.error('Error approving customer:', error);
-        alert(`Error approving customer: ${error.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t(`Error approving customer: ${error.message}`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`Error approving customer: ${error.message}`);
       }
     }
 
@@ -1480,7 +1549,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
         });
       } catch (error) {
         console.error('Error rejecting customer:', error);
-        alert(`Error rejecting customer: ${error.message}`);
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t(`Error rejecting customer: ${error.message}`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`Error rejecting customer: ${error.message}`);
       }
     }
 
@@ -1498,7 +1573,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
       console.log('Prepared changedFields:', newChangedFields);
 
       if (!validateChangedFields('save changes', newChangedFields, true)) {
-        alert(t('Please fill all required fields. Please Save files before submitting.'));
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('Please fill all required fields. Please Save files before submitting.'),
+          confirmButtonText: t('OK')
+        });
+        // alert(t('Please fill all required fields. Please Save files before submitting.'));
         return;
       }
 
@@ -1607,7 +1688,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
         Object.keys(contactCreatePayload).length === 0 &&
         Object.keys(contactUpdatePayload).length === 0 &&
         uploadedFiles.length === 0) {
-        alert(t('No changes detected to save'));
+          Swal.fire({
+            icon: 'info',
+            title: t('No Changes Detected'),
+            text: t('No changes detected to save'),
+            confirmButtonText: t('OK')
+          });
+        // alert(t('No changes detected to save'));
         return;
       }
 
@@ -1690,7 +1777,13 @@ const [activeTab, setActiveTab] = useState('Business Details');
           );
         }
         handleSaveFiles();
-        alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+        Swal.fire({
+          icon: 'success',
+          title: t('Success'),
+          text: t(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`),
+          confirmButtonText: t('OK')
+        });
+        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
 
         function showLoadingScreen(message) {
@@ -1890,6 +1983,8 @@ const [activeTab, setActiveTab] = useState('Business Details');
   };
   const shouldShowDiv = (transformedCustomer?.isApprovalMode || customer?.isApprovalMode) && customerFormMode === 'custDetailsAdd' && (transformedCustomer.customerStatus !== 'new' || customer?.customerStatus === 'pending');
   const shouldShowBlock = (customerFormMode === 'custDetailsEdit' && transformedCustomer?.name === 'customer block/unblock')
+
+
   return (
     <Sidebar>
       <div className='customers'>
@@ -1932,6 +2027,7 @@ const [activeTab, setActiveTab] = useState('Business Details');
                   {shouldShowBlock && transformedCustomer?.customerStatus === 'approved' && <>{t('Customer Approval for Blocking Customer')}</>}
                   {shouldShowBlock && transformedCustomer?.customerStatus === 'blocked' && <>{t('Customer Approval for Unblocking Customer')}</>}
                   <div className="form-main-header">
+                    
                     <a href="#">{t('Customer Approval Checklist')}</a>
                   </div>
                   {formsByTab[activeTab].reduce((acc, field, idx, fields) => {
@@ -1952,7 +2048,7 @@ const [activeTab, setActiveTab] = useState('Business Details');
                     acc.push(field);
                     return acc;
                   }, []).map((field) => {
-                    { console.log(transformedCustomer.module) }
+                    { console.log(transformedCustomer?.module) }
                     const approvalMode = transformedCustomer?.isApprovalMode || (customer?.isApprovalMode && transformedCustomer?.customerStatus !== 'new') || customer?.customerStatus === 'pending';
                     const hasUpdate = approvalMode && transformedCustomer?.module === 'customer' &&
                       transformedCustomer?.workflowData?.updates &&
@@ -2510,6 +2606,7 @@ const [activeTab, setActiveTab] = useState('Business Details');
                             {field.options.map((option, idx) => (
                               <div key={idx} className="checkbox-option">
                                 <label htmlFor={`${field.name}-${idx}`} hidden={!isV(field.name)}>
+                                 
                                   <input
                                     id={`${field.name}-${idx}`}
                                     type="checkbox"
@@ -2564,19 +2661,19 @@ const [activeTab, setActiveTab] = useState('Business Details');
           {activeTab === 'Products & MoQ' || activeTab === 'Branches' ?
             [] :
             (
-              <div className="customer-onboarding-form-actions">
+              <div className="customer-onboarding-form-actions" style={{maxWidth:"98%"}}>
                 <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span className="status-label">{t('Status')}:</span>
-                  <span className="status-badge">{t(customer.customerStatus) || t(formData.customerStatus) || t('Pending')}</span>
+                  <span className="status-badge">{t(customer?.customerStatus) || t(formData?.customerStatus) || t('Pending')}</span>
                 </div>
                 <div className="action-buttons">
-                  {isV('btnSave') && (transformedCustomer.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && transformedCustomer?.isApprovalMode)}>
+                  {isV('btnSave') && (transformedCustomer?.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="save" onClick={() => handleSave('save')} disabled={!isE('btnSave') || (customerFormMode == 'custDetailsAdd' && transformedCustomer?.isApprovalMode)}>
                     {t('Save')}
                   </button>}
-                  {isV('btnSaveChanges') && !(transformedCustomer.customerStatus === 'new') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={(!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)) || transformedCustomer?.isBlocked}>
+                  {isV('btnSaveChanges') && !(transformedCustomer?.customerStatus === 'new') && <button className="savechanges" onClick={() => handleSave('save changes')} disabled={(!isE('btnSaveChanges') || (customerFormMode == 'custDetailsAdd' && customer?.isApprovalMode)) || transformedCustomer?.isBlocked}>
                     {t('Save Changes')}
                   </button>}
-                  {isV('btnSubmit') && (transformedCustomer.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
+                  {isV('btnSubmit') && (transformedCustomer?.customerStatus === 'new' && customer?.customerStatus !== 'pending') && <button className="block" onClick={() => handleSubmit('submit')} disabled={!isE('btnSubmit')}>
                     {t('Submit')}
                   </button>}
                   {console.log(customerFormMode)}
@@ -2586,16 +2683,16 @@ const [activeTab, setActiveTab] = useState('Business Details');
                   {console.log("##########", formData)}
                   {(
                     <>
-                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>
+                      {isV('btnBlock') && <button className="block" onClick={() => handleSave('block')} disabled={!isE('btnBlock') || (customerFormMode == 'custDetailsAdd' && customer?.isApprovalMode)} hidden={transformedCustomer?.isBlocked || transformedCustomer?.customerStatus === 'new' || transformedCustomer?.customerStatus === 'pending'}>
                         {t('Block')}
                       </button>}
                       {(isV('btnUnblock') && transformedCustomer?.isBlocked && customerFormMode !== 'custDetailsEdit') && <button className="block" onClick={() => handleSave('unblock')} >
                         {t('Unblock')}
                       </button>}
-                      {customer.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
+                      {customer?.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="approve" onClick={() => handleApprovalSubmit('approve')} disabled={!isE('btnApprove')}>
                         {t('Approve')}
                       </button>}
-                      {customer.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
+                      {customer?.isApprovalMode && user?.userType !== 'customer' && customerFormMode !== 'custDetailsAdd' && <button className="reject" onClick={() => handleApprovalSubmit('reject')} disabled={!isE('btnReject')}>
                         {t('Reject')}
                       </button>}
                     </>
@@ -2604,7 +2701,7 @@ const [activeTab, setActiveTab] = useState('Business Details');
               </div>
             )}
         </div>
-        {transformedCustomer.isApprovalMode && (
+        {transformedCustomer?.isApprovalMode && (
           <>
             <div>
               <CommentPopup isOpen={isCommentPanelOpen} setIsOpen={setIsCommentPanelOpen} externalComments={transformedCustomer.approvalHistory ? transformedCustomer.approvalHistory : []} isVisible={true} showCommentForm={false} />
@@ -2617,7 +2714,7 @@ const [activeTab, setActiveTab] = useState('Business Details');
         onClose={() => setIsApprovalDialogOpen(false)}
         action={approvalAction}
         onSubmit={handleDialogSubmit}
-        customerName={customer.customerName || 'this customer'}
+        customerName={customer?.customerName || 'this customer'}
         title={approvalAction === 'approve' ? t('Approve Customer') : t('Reject Customer')}
         subtitle={approvalAction === 'approve' ? t('Are you sure you want to approve this customer?') : t('Are you sure you want to reject this customer?')}
       />

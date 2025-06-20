@@ -12,7 +12,8 @@ import RbacManager from '../utilities/rbac';
 import getBusinessDetailsFormData from './customerDetailsForms/customerBusinessDetails';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
+import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 const getStatusClass = (status) => {
   switch (status) {
     case 'Approved':
@@ -111,12 +112,60 @@ function Customers() {
       if (response.ok) {
         const result = await response.json();
         console.log('Invite resend link:', result);
-        alert('Invite resend link: ' + result.data);
+     
+        // alert('Invite resend link: ' + result.data);
+        Swal.fire({
+  title: 'Invite Resent',
+  html: `
+    <p>${t('The invite has been resent successfully.')}</p>
+
+    <div style="display:flex;align-items:center;">
+      <input
+        id="invite-link"
+        class="swal2-input"
+        style="flex:1;margin:0 8px 0 0;"
+        type="text"
+        value="${result?.data}"
+        readonly
+      />
+       <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+    </div>
+  `,
+  icon: 'success',
+  showConfirmButton: true,
+  confirmButtonText: 'OK',
+
+  didOpen: () => {
+    const input = document.getElementById('invite-link');
+    const icon = document.getElementById('copy-icon');
+
+    icon.addEventListener('click', () => {
+      input.select();
+      input.setSelectionRange(0, 99999); // mobile-friendly
+      navigator.clipboard.writeText(input.value).then(() => {
+        icon.classList.replace('fa-copy', 'fa-check');
+        setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
+      });
+    });
+  }
+});
+
+
+       
+
+       
       }
     } catch (err) {
       // console.error('Error resending in  vite:', err);
       console.log('Error resending invite:', err.message);
-      alert('Failed to resend invite. Please try again later.');
+      Swal.fire({
+        title: 'Error',
+        text: t('Failed to resend invite. Please try again later.'),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      // alert('Failed to resend invite. Please try again later.');
       return;
     }
     // alert('Invite resent successfully!');
@@ -134,7 +183,13 @@ function Customers() {
     // Handle the invite submission here
     console.log('Invite data:', inviteData);
     if (!inviteData.email || !inviteData.name || !inviteData.company || !inviteData.mobile || !inviteData.source || !inviteData.region) {
-      alert('Please fill in all fields');
+      Swal.fire({
+        title: 'Error', 
+        text: t('Please fill in all fields'),
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+      // alert('Please fill in all fields');
       return;
     }
     // Add your API call to send the invite
@@ -171,10 +226,10 @@ function Customers() {
             })
           })
           console.log('Response:', response);
-          if (response.ok) {
+          // if (response.status=="Ok") {
             const res = await response.json();
             console.log('Invite link:', res);
-            alert('Invite link: ' + res.data);
+            // alert('Invite link: ' + res.data);
             try {
               const result = await fetch (`${API_BASE_URL}/send`, {
                 method: 'POST',
@@ -197,11 +252,52 @@ function Customers() {
               alert('Failed to generate invite link. Please try again later.');
               return;
             }
+           Swal.fire({
+          title: 'Invite Link Sent',
+          html: `
+            <p>${t('The invite has been sent successfully.')}</p>
+            <div style="display:flex;align-items:center;">
+              <input  id="invite-link"
+                      class="swal2-input"
+                      style="flex:1;margin:0 8px 0 0;"
+                      type="text"
+                      value="${res.data}"
+                      readonly />
+ <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+            </div>
+          `,
+          icon: 'success',
+          showConfirmButton: true,
+          confirmButtonText: 'OK',
+
+          didOpen: () => {
+            const input = document.getElementById('invite-link');
+            const icon  = document.getElementById('copy-icon');
+
+            icon.addEventListener('click', () => {
+              input.select();
+              input.setSelectionRange(0, 99999); 
+              navigator.clipboard.writeText(input.value).then(() => {
+                icon.classList.replace('fa-copy', 'fa-check');
+                setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
+              });
+            });
           }
+        });
+
+
+          // }
         } catch (err) {
           // console.error('Error resending invite:', err);
           console.log('Error sending invite:', err.message);
-          alert('Failed to send invite. Please try again later.');
+          Swal.fire({
+            title: 'Error',
+            text: t('Failed to send invite. Please try again later.'),
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+          // alert('Failed to send invite. Please try again later.');
           return;
         }
       }
@@ -672,13 +768,18 @@ function Customers() {
   return (
     <Sidebar title={t('Customers')}>
       <div className="page-content">
+       
         <div className="customer-content">
           <Tabs
             tabs={customerTabs}
             activeTab={activeTab}
             onTabChange={setActiveTab}
           />
+           {activeTab === t('customers') ?
+          <div style={{margin:"20px 0", color:"#374152",fontSize:"20px"}}> {t("Customers")}</div>
+          : <div style={{margin:"20px 0", color:"#374152",fontSize:"20px"}}> {t("Invites")}</div>}
           <div className="page-header">
+             
             {activeTab === t('customers') && (
               <div className="header-controls" style={{ width: '100%' }}>
                 <SearchInput onSearch={handleSearch} />
@@ -699,124 +800,111 @@ function Customers() {
                 <ActionButton menuItems={customerMenuItems} />
               </>
             )}
-            {/* Invite Modal/Popup */}
-            {isInviteModalOpen && (
-              <div className="modal-overlay">
-                
-                <div className="modal-content">
-                  <h2>{t('New Invite')}</h2>
-                  <div className="onboarding-container">
+         
+                  {isInviteModalOpen && (
+                    <dialog className="invite-dialog" open>
+                      <h2>{t('Invite')}</h2>
 
-                    <div className="form-group">
-                      <label>{t('Customer Name')}</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={inviteData.name}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                      <div className="form-row-1">
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Customer Name')}</label>
+                          <input
+                            type="text"
+                            name="name"
+                            value={inviteData.name}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
 
-                    <div className="form-group">
-                      <label>{t('Email')}</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={inviteData.email}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Email')}</label>
+                          <input
+                            type="email"
+                            name="email"
+                            value={inviteData.email}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Company Name')}</label>
+                          <input
+                            type="text"
+                            name="company"
+                            value={inviteData.company}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Phone Number')}</label>
+                          <input
+                            type="text"
+                            name="mobile"
+                            value={inviteData.mobile}
+                            onChange={handleInputChange}
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Region')}</label>
+                          <select
+                            name="region"
+                            value={inviteData.region}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">{t('Select a region')}</option>
+                            {regionOptions.map(r => (
+                              <option key={r} value={r}>{t(r)}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="form-group-1">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Source')}</label>
+                          <select
+                            name="source"
+                            value={inviteData.source}
+                            onChange={handleInputChange}
+                            disabled
+                            required
+                          >
+                            <option value="">{t('Select a source')}</option>
+                            <option value="portal">{t('Portal')}</option>
+                            <option value="crm">{t('CRM')}</option>
+                            <option value="salesexecutive">{t('Sales Executive')}</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group-1 full-width">
+                          <label style={{ marginBottom: "6px", display: "inline-block" }}>{t('Comments')}</label>
+                          <textarea
+                            name="comments"
+                            value={inviteData.comments}
+                            onChange={handleInputChange}
+                            placeholder={t('Comments...')}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="modal-actions">
+                        <button className="cancel-button" onClick={() => setIsInviteModalOpen(false)}>
+                          {t('Cancel')}
+                        </button>
+                        <button className="invite-button" onClick={handleInviteSubmit}>
+                          {t('Send Invite')}
+                        </button>
+                      </div>
+                    </dialog>
+                  )}
 
 
-                    <div className="form-group">
-                      <label>{t('Company Name')}</label>
-                      <input
-                        type="text"
-                        name="company"
-                        value={inviteData.company}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
 
-                    <div className="form-group">
-                      <label>{t('Phone Number')}</label>
-                      <input
-                        type="text"
-                        name="mobile"
-                        value={inviteData.mobile}
-                        onChange={handleInputChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>{t('Region')}</label>
-                      <select
-                        name="region"
-                        value={inviteData.region}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="">{t('Select a region')}</option>
-                        {regionOptions.map(option => (
-                          <option key={option} value={option}>
-                            {t(option)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>{t('Source')}</label>
-                      <select
-                        name="source"
-                        value={inviteData.source}
-                        onChange={handleInputChange}
-                        disabled={true}
-                        required
-                      >
-                        <option value="">{t('Select a source')}</option>
-                        <option value="portal">{t('Portal')}</option>
-                        <option value="crm">{t('CRM')}</option>
-                        <option value="salesexecutive">{t('Sales Executive')}</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label>{t('Comments')}</label>
-                      <textarea
-                        name="comments"
-                        value={inviteData.comments}
-                        onChange={handleInputChange}
-                        placeholder={t(' Comments...')}
-                        style={{ height: '50px', width: '205%' }}
-                      />
-                    </div>
-
-                    {/* Add more fields as needed */}
-
-
-                  </div>
-                  <div className="modal-actions">
-                    <button
-                      className="cancel-button"
-                      onClick={() => setIsInviteModalOpen(false)}
-                    >
-                      {t('Cancel')}
-                    </button>
-                    <button
-                      className="invite-button"
-                      onClick={handleInviteSubmit}
-                    >
-                      {t('Send Invite')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           {renderContent()}
         </div>
@@ -827,6 +915,84 @@ function Customers() {
           onPageChange={setPage}
         />
       </div>
+    <style>{`
+      .invite-dialog {
+        position: fixed;             
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 95vw;                 
+        max-width: 700px;              
+        border: none;
+        border-radius: 8px;
+        padding: 1.5rem;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,.35);
+        max-height: 90vh;              
+        overflow-y: auto;              
+      }
+
+    
+      .invite-dialog h2 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 1rem;
+      }
+      .form-row-1 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .form-group-1 { flex: 1 1 100%; }
+
+      @media (min-width: 768px) and (max-width: 1000px) {
+       .invite-dialog {         top: 60%;         }
+        .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
+        .form-group-1.full-width { flex: 1 1 100%;                 }
+      }
+         @media (min-width: 320px) and (max-width: 700px)
+          {
+       .invite-dialog
+        {         top: 60%;    
+    }}
+        .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
+        .form-group-1.full-width { flex: 1 1 100%;                 }
+      }
+
+      .form-group-1 label {
+        display:block;
+        margin-bottom:.4rem;
+        font-weight:500;
+      }
+      .form-group-1 input,
+      .form-group-1 select,
+      .form-group-1 textarea {
+        width:100%;
+        padding:.5rem;
+        border:1px solid #ccc;
+        border-radius:8px;
+        font-size:1rem;
+        box-sizing:border-box;
+      }
+      .form-group-1 textarea { min-height:80px; resize:vertical; }
+
+      .modal-actions {
+        margin-top:1.5rem;
+        display:flex;
+        justify-content:flex-end;
+        gap:1rem;
+      }
+      .cancel-button,
+      .invite-button {
+        padding:.5rem 1rem;
+        font-size:1rem;
+        border:none;
+        border-radius:4px;
+        cursor:pointer;
+      }
+      .cancel-button { background:#ccc; color:#000; }
+      .invite-button { background:#03584d; color:#fff; }
+    `}</style>
     </Sidebar>
   );
 }

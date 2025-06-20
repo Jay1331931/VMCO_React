@@ -42,6 +42,7 @@ const QuantityController = ({
     return (
         <div className="quantity-controls">
             <button
+                style={{background:"#d2d2d2"}}
                 className={`quantity-btn ${isMinusDisabled ? 'disabled' : ''}`}
                 onClick={(e) => handleButtonClick(e, -1)}
                 disabled={isMinusDisabled}
@@ -50,6 +51,7 @@ const QuantityController = ({
                 <FontAwesomeIcon icon={faMinus} />
             </button>
             <input
+            
                 type="number"
                 className="quantity-input"
                 id={`quantity-${itemId}`}
@@ -58,9 +60,11 @@ const QuantityController = ({
                 onChange={handleInputChange}
                 onClick={(e) => stopPropagation && e.stopPropagation()}
                 min={moq}  // Set the min attribute to MOQ
+                style={{border:"none",width:"40px"
+                }}
             />
             <button
-                className="quantity-btn"
+                className="quantity-btn-2"
                 onClick={(e) => handleButtonClick(e, 1)}
                 aria-label="Increase quantity"
             >
@@ -71,17 +75,18 @@ const QuantityController = ({
                 
                 .quantity-controls {
                     display: flex;
-                    gap: 10px;
+                    gap: 0px;
                     align-items: center;
                     margin-bottom: 0;
+                    
                 }
                 .quantity-btn {
                     width: 30px;
                     height: 30px;
-                    border: 1px solid #D9D9D6;
+                    border: 1px solid #b2c2d8;
                     border-radius: 4px;
-                    background: white;
-                    color: #00205B;
+                    background: #d2d2d2;
+                    color: black;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
@@ -89,15 +94,23 @@ const QuantityController = ({
                     font-size: 1rem;
                     transition: background 0.15s, color 0.15s;
                 }
+                .quantity-btn-2 {
+                width: 30px;
+                    height: 30px;
+                    border: 1px solid #0a5640;
+                    border-radius: 4px;
+                    background: #0a5640;
+                    color:  white;
+                }
                 .quantity-btn:hover {
-                    background: #f4f4f4;
+                    background: #d2d2d2;
                     color: #0a5640;
                 }
                 .quantity-input {
-                    width: 30px;
+                   // width: 50px;
                     height: 30px;
                     text-align: center;
-                    border: 1px solid #D9D9D6;
+                    // border: 1px solid #D9D9D6;
                     border-radius: 4px;
                     -webkit-appearance: none;
                     appearance: textfield;
@@ -106,6 +119,11 @@ const QuantityController = ({
                     color: #222;
                     background: #fff;
                 }
+                   .quantity-input:focus {
+                    outline: none;
+                    box-shadow: none;
+                    border: none;
+                    }
                 .quantity-input::-webkit-outer-spin-button,
                 .quantity-input::-webkit-inner-spin-button {
                     -webkit-appearance: none;

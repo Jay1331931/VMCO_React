@@ -286,6 +286,16 @@ if(isApprovalMode) {
                         placeholder={t('Search...')}
                         className="product-search-input"
                         onChange={handleSearchChange}
+                        style={{padding:" 10px 15px",
+    width: "300px",
+    border: "2px solid #00205b",
+    borderRadius:"8px",
+    fontSize: "1rem",
+    backgroundColor: "#fff",
+    /* box-shadow: 0 0 0 2px #E5E4E2; */
+    transition: "all 0.2s ease",
+    marginRight: "10px",
+    boxSizing: "border-box"}}
                     />
                     <div className="toggle-container">
                         <label>{t('All')}</label>
@@ -306,7 +316,7 @@ if(isApprovalMode) {
                                 disabled={currentItems.filter(item => item.visible).length < 2}
                                 onClick={handleApplyAll}
                             >
-                                Apply All
+                                {t('Apply All')}
                             </button>
                         )}
                     </div>
@@ -379,6 +389,7 @@ if(isApprovalMode) {
                 onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
             />
             </div>
+            
             
         </div>
     );
