@@ -636,6 +636,13 @@ function Cart() {
                     productCategory: categoryName
                 };
                 
+                // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
+                const isVmcoMachines = categoryName === 'VMCO Machines' || categoryName === "آلات VMCO";
+                if (isVmcoMachines) {
+                    orderPayload.paymentPercentage = '100.00';
+                    orderPayload.paymentMethod = 'Pre Payment';
+                }
+                
                 console.log('Order payload:', orderPayload);
                 
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
@@ -854,6 +861,13 @@ function Cart() {
             deliveryCharges: deliveryCharges.toFixed(2),
         };
 
+        // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
+        const isVmcoMachines = categoryName === 'VMCO Machines' || categoryName === "آلات VMCO";
+        if (isVmcoMachines) {
+            updateOrderPayload.paymentPercentage = '100.00';
+            updateOrderPayload.paymentMethod = 'Pre Payment';
+        }
+
         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -1069,7 +1083,14 @@ function Cart() {
                                                     onClick={() => {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
-                                                        setShowPaymentPopup(true);
+                                                        // Check if it's VMCO Machines category - if so, bypass payment method selection
+                                                        if (category.category === 'VMCO Machines' || category.category === "آلات VMCO") {
+                                                            // Directly place the order with Pre Payment method
+                                                            handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                        } else {
+                                                            // For other categories, show payment method popup as usual
+                                                            setShowPaymentPopup(true);
+                                                        }
                                                     }}
                                                     disabled={isPlacingOrder}
                                                 >
