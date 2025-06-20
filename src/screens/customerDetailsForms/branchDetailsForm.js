@@ -6,31 +6,19 @@ import OperatingHours from "./operatingHours";
 import "../../styles/forms.css";
 import "../../styles/components.css";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const BranchDetailsForm = ({
-  branchId,
-  branch,
-  customer,
-  branchChanges,
-  handleBranchFieldChange,
-  inApproval,
-  onSave,
-  onSubmit,
-  onBlock,
-  onUnblock,
-}) => {
+const BranchDetailsForm = ({ branchId, branch, customer, branchChanges, handleBranchFieldChange, inApproval, onSave, onSubmit, onBlock, onUnblock }) => {
   const { t } = useTranslation();
   const [branchDetails, setBranchDetails] = useState({});
   const [branchContacts, setBranchContacts] = useState([]);
+  const [hoursDetails, setHoursDetails] = useState({});
+
   const fetchBranchDetails = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/customer-branches/id/${branchId}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/customer-branches/id/${branchId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch branches");
@@ -46,14 +34,11 @@ const BranchDetailsForm = ({
 
   const fetchBranchContacts = async () => {
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customer?.id}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customer?.id}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       const result = await response.json();
 
@@ -68,20 +53,19 @@ const BranchDetailsForm = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      setBranchDetails(await fetchBranchDetails());
-      setBranchContacts(await fetchBranchContacts());
+      const branchData = await fetchBranchDetails();
+      const hoursData = branchData?.hours || {};
+      const contactsData = await fetchBranchContacts();
+      setBranchDetails(branchData);
+      setBranchContacts(contactsData);
+      setHoursDetails(hoursData);
     };
-    fetchData().then(() => {
-      console.log(
-        "~~~~~Branch Details Form mounted with operating hours:",
-        branchDetails
-      );
-    });
+    fetchData();
   }, []);
   return (
-    <div className="expanded-form-container">
+    <div className='expanded-form-container'>
       {inApproval && (
-        <div className="approval-notice">
+        <div className='approval-notice'>
           <h3>{t("Branch is currently under approval")}</h3>
         </div>
       )}
@@ -105,35 +89,28 @@ const BranchDetailsForm = ({
       />
 
       {/* Operating Hours */}
-      {branchDetails && branchDetails.hours && false ? (
+      {branchDetails && hoursDetails ? (
         <OperatingHours
-          hoursData={branchDetails.hours}
+          hoursData={hoursDetails}
           customer={customer}
           branchId={branch?.id}
           handleBranchFieldChange={handleBranchFieldChange}
           inApproval={inApproval}
         />
       ) : (
-        <div className="loading-section">Loading hours data...</div>
+        <div className='loading-section'>Loading hours data...</div>
       )}
 
       {/* Footer with action buttons */}
-      <div className="expanded-form-container-footer">
-        <div className="customer-onboarding-form-actions">
-          <div className="action-buttons">
+      <div className='expanded-form-container-footer'>
+        <div className='customer-onboarding-form-actions'>
+          <div className='action-buttons'>
             {branch?.branchStatus === "new" || branch?.isNew ? (
               <>
-                <button
-                  className="save"
-                  onClick={() => onSave && onSave(branch?.id, branch, "save")}
-                >
+                <button className='save' onClick={() => onSave && onSave(branch?.id, branch, "save")}>
                   {t("Save")}
                 </button>
-                <button
-                  className="save"
-                  onClick={() => onSubmit && onSubmit(branch?.id, branch)}
-                  disabled={branch?.id < 0}
-                >
+                <button className='save' onClick={() => onSubmit && onSubmit(branch?.id, branch)} disabled={branch?.id < 0}>
                   {t("Submit")}
                 </button>
               </>
@@ -142,29 +119,18 @@ const BranchDetailsForm = ({
               !branch?.isNew && (
                 <>
                   <button
-                    className="save changes"
-                    onClick={() =>
-                      onSave && onSave(branch?.id, branch, "save changes")
-                    }
-                    disabled={inApproval || branch?.branchStatus === "blocked"}
-                  >
+                    className='save changes'
+                    onClick={() => onSave && onSave(branch?.id, branch, "save changes")}
+                    disabled={inApproval || branch?.branchStatus === "blocked"}>
                     {t("Save Changes")}
                   </button>
 
                   {branch?.branchStatus !== "blocked" ? (
-                    <button
-                      className="block"
-                      disabled={inApproval}
-                      onClick={() => onBlock && onBlock(branch?.id, branch)}
-                    >
+                    <button className='block' disabled={inApproval} onClick={() => onBlock && onBlock(branch?.id, branch)}>
                       {t("Block")}
                     </button>
                   ) : (
-                    <button
-                      className="block"
-                      disabled={inApproval}
-                      onClick={() => onUnblock && onUnblock(branch?.id, branch)}
-                    >
+                    <button className='block' disabled={inApproval} onClick={() => onUnblock && onUnblock(branch?.id, branch)}>
                       {t("Unblock")}
                     </button>
                   )}

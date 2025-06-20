@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-  useEffect,
-} from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 const parseTimeRange = (timeRange) => {
   if (typeof timeRange === "object") return timeRange;
@@ -12,22 +6,8 @@ const parseTimeRange = (timeRange) => {
   return { from, to };
 };
 
-const OperatingHours = ({
-  hoursData,
-  customer,
-  branchId,
-  handleBranchFieldChange,
-  inApproval,
-}) => {
-  const weekdays = [
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-  ];
+const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange, inApproval }) => {
+  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const { t } = useTranslation();
   const [hours, setHours] = useState({});
 
@@ -53,12 +33,8 @@ const OperatingHours = ({
     };
 
     weekdays.forEach((day) => {
-      result.operatingHours[
-        day
-      ] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
-      result.deliveryHours[
-        day
-      ] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
+      result.operatingHours[day] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
+      result.deliveryHours[day] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
     });
 
     return JSON.stringify(result);
@@ -74,19 +50,11 @@ const OperatingHours = ({
     }, {});
   };
 
-  // Initialize state with parsed hours or defaults
-
-  //   () =>
-  //   hoursData !== null && hoursData !== undefined
-  //     ? getBranchTimeSlotsInStringHours()
-  //     : getDefaultTimeSlotsInStringHours()
-  // );
   const getBranchTimeSlotsInStringHours = () => {
     console.log("#### Enter");
     try {
       if (hoursData !== null && hoursData !== undefined) {
-        const parsedData =
-          typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
+        const parsedData = typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
         let convertedData = {};
         weekdays.forEach((day) => {
           convertedData[day] = {
@@ -106,7 +74,8 @@ const OperatingHours = ({
   useEffect(() => {
     console.log("~~~~$$ useEffect hoursData", hoursData);
     if (hoursData) {
-      setHours(getBranchTimeSlotsInStringHours());
+      const hoursToBeSet = getBranchTimeSlotsInStringHours();
+      setHours(hoursToBeSet);
     } else setHours(getDefaultTimeSlotsInStringHours());
   }, [hoursData]);
 
@@ -177,12 +146,12 @@ const OperatingHours = ({
   const formatDayName = (day) => day.charAt(0).toUpperCase() + day.slice(1);
 
   return (
-    <div className="form-section">
+    <div className='form-section'>
       <h3>
         {t("Operating And Delivery Hours")}
-        <span className="required-field">*</span>
+        <span className='required-field'>*</span>
       </h3>
-      <table className="hours-table">
+      <table className='hours-table'>
         <thead>
           <tr>
             <th>{t("Day")}</th>
@@ -199,8 +168,8 @@ const OperatingHours = ({
               <td>
                 <TimeInputGroup
                   day={day}
-                  type="operating"
-                  time={hours[day].operating}
+                  type='operating'
+                  time={hours[day]?.operating}
                   isActive={activeField}
                   isModified={modifiedDays[day]}
                   onChange={handleHoursChange}
@@ -220,8 +189,8 @@ const OperatingHours = ({
               <td>
                 <TimeInputGroup
                   day={day}
-                  type="delivery"
-                  time={hours[day].delivery}
+                  type='delivery'
+                  time={hours[day]?.delivery}
                   isActive={activeField}
                   isModified={modifiedDays[day]}
                   onChange={handleHoursChange}
@@ -243,59 +212,36 @@ const OperatingHours = ({
     </div>
   );
 };
-const TimeInputGroup = ({
-  day,
-  type,
-  time,
-  isActive,
-  isModified,
-  onChange,
-  onFocus,
-  onApplyAll,
-  customerFormMode,
-}) => {
+const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFocus, onApplyAll, customerFormMode }) => {
   return (
-    <div
-      className={`time-input-group ${
-        day === "friday" ? "friday-time-input-group" : ""
-      }`}
-    >
+    <div className={`time-input-group ${day === "friday" ? "friday-time-input-group" : ""}`}>
       <input
-        type="time"
-        value={time.from}
+        type='time'
+        value={time?.from}
         onChange={(e) => onChange(day, type, "from", e.target.value)}
-        onFocus={() => onFocus("from", time.from)}
+        onFocus={() => onFocus("from", time?.from)}
         onBlur={() => {}}
         disabled={customerFormMode === "custDetailsEdit"}
       />
       <span>-</span>
       <input
-        type="time"
-        value={time.to}
+        type='time'
+        value={time?.to}
         onChange={(e) => onChange(day, type, "to", e.target.value)}
-        onFocus={() => onFocus("to", time.to)}
+        onFocus={() => onFocus("to", time?.to)}
         onBlur={() => {}}
         disabled={customerFormMode === "custDetailsEdit"}
       />
 
-      {(isActive === `${day}-${type}-from` ||
-        isActive === `${day}-${type}-to`) && (
-        <div className="time-action-buttons">
-          <button className="time-confirm-button" /*onClick={onConfirm}*/>
-            {/* <FontAwesomeIcon icon={faCheck} /> */}
-          </button>
-          <button className="time-cancel-button" /*onClick={onCancel}*/>
-            {/* <FontAwesomeIcon icon={faXmark} /> */}
-          </button>
+      {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (
+        <div className='time-action-buttons'>
+          <button className='time-confirm-button' /*onClick={onConfirm}*/>{/* <FontAwesomeIcon icon={faCheck} /> */}</button>
+          <button className='time-cancel-button' /*onClick={onCancel}*/>{/* <FontAwesomeIcon icon={faXmark} /> */}</button>
         </div>
       )}
 
       {isModified && (
-        <button
-          className="apply-row-button"
-          onClick={onApplyAll}
-          title="Apply to all days"
-        >
+        <button className='apply-row-button' onClick={onApplyAll} title='Apply to all days'>
           Apply All
         </button>
       )}
