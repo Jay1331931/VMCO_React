@@ -61,17 +61,18 @@ const ProductCard = ({
             style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
             dir={dir}
         >
-            <div className="product-image">
-                {product.image ? (
-                    <img
-                        src={product.image}
-                        alt={product.name}
-                        className="product-img"
-                    />
-                ) : (
-                    <div className="image-placeholder"></div>
-                )}
-            </div>            
+            <div className="product-image-container">
+            {product.image ? (
+                <img
+                src={product.image}
+                alt={product.name}
+                className="responsive-product-image"
+                />
+            ) : (
+                <div className="product-image-placeholder">No Image</div>
+            )}
+            </div>
+          
             <div className="product-details">
                 <h3 className="product-name" title={product.name}>{product.name}</h3>
                 <p className="product-code">{product.code}</p>
@@ -151,12 +152,12 @@ const ProductCard = ({
   justify-content: center;
 }
 
-.product-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 5px;
-}
+// .product-img {
+//   width: 100%;
+//   height: 100%;
+//   object-fit: contain;
+//   border-radius: 5px;
+// }
                 
 .image-placeholder {
   width: 100%;
