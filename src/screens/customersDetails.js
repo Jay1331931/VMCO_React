@@ -448,6 +448,7 @@ function CustomersDetails() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [nonTradingFiles, setNonTradingFiles] = useState([]);
 
   const formMode = location.state?.mode;
 
@@ -824,6 +825,30 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
+ const handleNonTradingDocumentsChange = (e) => {
+    // const fileList = e.target.files;
+    // if (fileList.length > 0) {
+    //   // Convert FileList to array and append to existing files
+    //   const newFiles = Array.from(fileList);
+    //   setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    //   // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
+    //   nonTradingFilesToUpload["others"] = [...newFiles, ...nonTradingFiles];
+    //   console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+    // }
+  };
+
+  // Remove a specific file
+  const removeFile = (index) => {
+    // setNonTradingFiles((prevFiles) =>
+    //   prevFiles.filter((_, fileIndex) => fileIndex !== index)
+    // );
+    // // Remove the file from nonTradingFilesToUpload["others"] as well
+    // const updatedFiles = nonTradingFiles.filter(
+    //   (_, fileIndex) => fileIndex !== index
+    // );
+    // nonTradingFilesToUpload["others"] = updatedFiles;
+    // console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+  };
   const handleSave = async (action) => {
     switch (action) {
       case "save":
@@ -3237,9 +3262,10 @@ function CustomersDetails() {
                                   type="file"
                                   accept="pdf/*"
                                   id={`file-${field.name}`}
-                                  onChange={(e) =>
-                                    handleFileUpload(e, field.name)
-                                  }
+                                  // onChange={(e) =>
+                                  //   handleFileUpload(e, field.name)
+                                  // }
+                                  onChange={handleNonTradingDocumentsChange}
                                   className="hidden-file-input"
                                   disabled={
                                     !isE(
@@ -3317,58 +3343,38 @@ function CustomersDetails() {
                                                     </span>
                                                   </>
                                                 ))}
-
-                                              {/* For newly uploaded files */}
-                                              {file?.isNew && (
-                                                <>
-                                                  {/* For new files with blob URL */}
-                                                  {file.url && (
-                                                    <button
-                                                      type="button"
-                                                      className="view-file-button"
-                                                      onClick={() =>
-                                                        window.open(
-                                                          file.url,
-                                                          "_blank"
-                                                        )
-                                                      }
-                                                      title={file.name}
-                                                    >
-                                                      <FontAwesomeIcon
-                                                        icon={faEye}
-                                                      />
-                                                    </button>
-                                                  )}
-                                                  <span
-                                                    className="file-link-button"
-                                                    style={{
-                                                      marginLeft: file.url
-                                                        ? "8px"
-                                                        : 0,
-                                                    }}
-                                                  >
-                                                    {file.name}
-                                                  </span>
-                                                  <button
-                                                    type="button"
-                                                    className="delete-file-button"
-                                                    onClick={() =>
-                                                      handleFileDelete(
-                                                        field.name,
-                                                        file?.id
-                                                      )
-                                                    }
-                                                  >
-                                                    <FontAwesomeIcon
-                                                      icon={faXmark}
-                                                    />
-                                                  </button>
-                                                </>
-                                              )}
                                             </span>
                                           </div>
                                         )
                                       )
+                                    )}
+                                    {nonTradingFiles.length > 0 && (
+                                      <div className="uploaded-files-container">
+                                        <h4>{t("Uploaded Files")}:</h4>
+                                        <ul className="uploaded-files-list">
+                                          {nonTradingFiles.map(
+                                            (file, index) => (
+                                              <li
+                                                key={index}
+                                                className="uploaded-file-item"
+                                              >
+                                                <span className="file-name">
+                                                  {file.name}
+                                                </span>
+                                                <button
+                                                  type="button"
+                                                  className="delete-file-button"
+                                                  onClick={() =>
+                                                    removeFile(index)
+                                                  }
+                                                >
+                                                  ×
+                                                </button>
+                                              </li>
+                                            )
+                                          )}
+                                        </ul>
+                                      </div>
                                     )}
                                   </div>
                                 )}
