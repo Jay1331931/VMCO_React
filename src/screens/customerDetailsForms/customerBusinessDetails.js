@@ -166,7 +166,7 @@ export function getBusinessDetailsFormData(t, customer = null, companyType = nul
   acknowledgementSignature: customer.acknowledgementSignature || customer?.workflowData?.updates?.acknowledgementSignature,
   contractAgreement: customer.contractAgreement || customer?.workflowData?.updates?.contractAgreement,
   creditApplication: customer.creditApplication || customer?.workflowData?.updates?.creditApplication,
-  nonTradingDocuments: customer.nonTradingDocuments ? { name: customer.nonTradingDocuments } : ''
+  nonTradingDocuments: customer?.nonTradingDocuments ||''
 }
     }
 
