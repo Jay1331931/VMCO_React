@@ -269,10 +269,9 @@ function Orders() {
     }
   ];
 
-
   const isArabic = i18n.language === 'ar'; // or use your language state
 
-  const columns = [
+  const orderColumns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
     {
       key: isArabic ? 'companyNameAr' : 'companyNameEn',
@@ -284,6 +283,29 @@ function Orders() {
       header: () => t('Branch'),
       include: isV('branchName')
     },
+    { key: 'entity', header: () => t('Entity'), include: isV('entity') },
+    { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
+    { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
+    { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
+    //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
+    { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
+    { key: 'status', header: () => t('Status'), include: isV('status') },
+    { key: 'pay', header: () => t('Pay'), include: isV('action') }
+  ];
+
+  const approvalColumns = [
+    { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
+    {
+      key: isArabic ? 'companyNameAr' : 'companyNameEn',
+      header: () => t('Customer'),
+      include: isV('companyName')
+    },
+    {
+      key: isArabic ? 'branchNameLc' : 'branchNameEn',
+      header: () => t('Branch'),
+      include: isV('branchName')
+    },
+    { key: 'workflowName', header: () => t('Workflow Name'), include: isV('workflowName') },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
     { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
@@ -315,9 +337,8 @@ function Orders() {
             {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
             {isV('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
-        </div>
-        {isV('ordersTable') && (<Table
-          columns={columns.filter(col => col.include !== false)}
+        </div>        {isV('ordersTable') && (<Table
+          columns={(isApprovalMode ? approvalColumns : orderColumns).filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}
