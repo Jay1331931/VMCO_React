@@ -1454,19 +1454,75 @@ function CustomersDetails() {
           url: URL.createObjectURL(file),
           isNew: true,
         }));
+        const cleanNonTradingDocuments = (docs) => {
+          if (!Array.isArray(docs)) return [];
 
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [fieldName]: {
-            ...prev[fieldName], // Preserve existing object structure
-            name: [...(prev[fieldName]?.name || []), ...newFiles], // Update the `name` array
-          },
-        }));
+          return docs.flatMap((item) => {
+            // If item is a string, keep it
+            if (typeof item === "string") return item;
 
-        setPendingFileUploads((prev) => ({
-          ...prev,
-          [fieldName]: [...(prev[fieldName] || []), ...newFiles],
-        }));
+            // If item is an object with numeric keys (like your first element) ignore new files
+            if (typeof item === "object" && !item?.isNew && item !== null) {
+              // Extract all values from the object
+              return Object.values(item)
+                .filter((val) => typeof val === "string") // Only keep strings
+                .map((val) => val); // Return as array items
+            }
+
+            return []; // Skip any other types
+          });
+        };
+        // setUploadedFiles((prev) => ({
+        //   ...prev,
+        //   [fieldName]: [...(prev?.[fieldName] || []), ...newFiles],
+        // }));
+
+        // setPendingFileUploads((prev) => ({
+        //   ...prev,
+        //   [fieldName]: [...(prev?.[fieldName] || []), ...newFiles],
+        // }));
+
+        setUploadedFiles((prev) => {
+          // Check what type the current value is
+          const currentFiles = prev?.[fieldName];
+          let existingFiles = [];
+
+          // Handle different possible data types
+          if (Array.isArray(currentFiles)) {
+            // If already an array, use it directly
+            existingFiles = currentFiles;
+          } else if (currentFiles && typeof currentFiles === "object") {
+            // If it's an object with a 'name' property that's an array
+            existingFiles =
+              currentFiles.name && Array.isArray(currentFiles.name)
+                ? currentFiles.name
+                : [];
+          }
+
+          return {
+            ...prev,
+            [fieldName]: [
+              ...cleanNonTradingDocuments(currentFiles),
+              ...newFiles,
+            ],
+          };
+        });
+
+        // Similar approach for pending uploads
+        setPendingFileUploads((prev) => {
+          const currentPending = prev?.[fieldName];
+          const existingPending = Array.isArray(currentPending)
+            ? currentPending
+            : [];
+
+          return {
+            ...prev,
+            [fieldName]: [
+              ...cleanNonTradingDocuments(existingPending),
+              ...newFiles,
+            ],
+          };
+        });
       } else {
         // Single file upload (object)
         const file = files[0];
@@ -1557,25 +1613,21 @@ function CustomersDetails() {
   const handleFileDelete = (fieldName, fileId = null) => {
     if (fieldName === "nonTradingDocuments" && fileId) {
       setUploadedFiles((prev) => {
-        const currentFiles = prev[fieldName]?.name || [];
-
         return {
           ...prev,
-          [fieldName]: {
-            ...prev[fieldName],
-            name: currentFiles.filter((file) => file.id !== fileId),
-          },
+          [fieldName]:
+            Object.values(prev[fieldName])?.filter(
+              (file) => file.id !== fileId
+            ) || [],
         };
       });
 
       setFormData((prev) => ({
         ...prev,
-        [fieldName]: {
-          ...prev[fieldName],
-          name: (prev[fieldName]?.name || []).filter(
+        [fieldName]:
+          Object.values(prev[fieldName])?.filter(
             (file) => file.id !== fileId
-          ),
-        },
+          ) || [],
       }));
 
       const fileToDelete = uploadedFiles[fieldName]?.name?.find(
@@ -2212,6 +2264,7 @@ function CustomersDetails() {
     return elements;
   };
   const handleViewFile = async (customerId, fileName, fileType) => {
+    console.log("@@@@####Viewing file:", fileName, fileType);
     try {
       if (fileType.includes("Logo")) {
         const logoType = fileType.toLowerCase().includes("company")
@@ -3136,8 +3189,14 @@ function CustomersDetails() {
                           );
 
                         case "multiDocument":
-                          const multiUploads = uploadedFiles?.[field.name] ||
-                            transformedCustomer?.[field.name] || { name: [] };
+                          const multiUploads =
+                            uploadedFiles?.[field.name] ||
+                            transformedCustomer?.[field.name] ||
+                            [];
+                          console.log(
+                            "*****multiUploads",
+                            Object.keys(multiUploads).length
+                          );
                           return (
                             <tr
                               className="document-upload full-width"
@@ -3209,88 +3268,113 @@ function CustomersDetails() {
 
                               {/* File Display */}
                               <td className="file-display-cell">
-                                {multiUploads?.name?.length > 0 && (
+                                {Object.keys(multiUploads)?.length > 0 && (
                                   <div className="uploaded-files-list">
-                                    {multiUploads?.name.map((file, index) => {
-                                      const fileObj =
-                                        typeof file === "string"
-                                          ? { name: file }
-                                          : file;
+                                    {Object.values(multiUploads).map(
+                                      (file, index) => (
+                                        console.log("!!!!!file", file),
+                                        (
+                                          <div
+                                            key={file?.id || index}
+                                            className={`file-display ${
+                                              file?.isNew
+                                                ? "new-file"
+                                                : "existing-file"
+                                            }`}
+                                          >
+                                            <span className="file-name">
+                                              {/* For existing files */}
+                                              {!file?.isNew &&
+                                                (console.log(
+                                                  "======file.name",
+                                                  file
+                                                ),
+                                                (
+                                                  <>
+                                                    <button
+                                                      type="button"
+                                                      className="view-file-button"
+                                                      onClick={() =>
+                                                        handleViewFile(
+                                                          customer.id,
+                                                          file,
+                                                          field.name
+                                                        )
+                                                      }
+                                                      title={file}
+                                                    >
+                                                      <FontAwesomeIcon
+                                                        icon={faEye}
+                                                      />
+                                                    </button>
+                                                    <span
+                                                      className="file-link-button"
+                                                      style={{
+                                                        marginLeft: "8px",
+                                                      }}
+                                                    >
+                                                      {file}
+                                                    </span>
+                                                  </>
+                                                ))}
 
-                                      return (
-                                        // <-- Add this return statement
-                                        <div
-                                          key={fileObj.id || index}
-                                          className={`file-display ${
-                                            fileObj.isNew
-                                              ? "new-file"
-                                              : "existing-file"
-                                          }`}
-                                        >
-                                          <span className="file-name">
-                                            {fileObj.isNew !== true && (
-                                              <button
-                                                type="button"
-                                                className="view-file-button"
-                                                onClick={() =>
-                                                  handleViewFile(
-                                                    customer.id,
-                                                    fileObj.name,
-                                                    field.name
-                                                  )
-                                                }
-                                                title={fileObj.name}
-                                              >
-                                                <FontAwesomeIcon icon={faEye} />
-                                              </button>
-                                            )}
-                                            {!fileObj.isNew && (
-                                              <span
-                                                className="file-link-button"
-                                                style={{
-                                                  marginLeft:
-                                                    fileObj.isNew !== true
-                                                      ? "8px"
-                                                      : 0,
-                                                }}
-                                              >
-                                                {fileObj.name}
-                                              </span>
-                                            )}
-                                            {fileObj.isNew && (
-                                              <span className="file-name">
-                                                <button
-                                                  type="button"
-                                                  className="file-link-button"
-                                                >
-                                                  {fileObj.name}
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  className="delete-file-button"
-                                                  onClick={() =>
-                                                    handleFileDelete(
-                                                      field.name,
-                                                      fileObj.id
-                                                    )
-                                                  }
-                                                >
-                                                  <FontAwesomeIcon
-                                                    icon={faXmark}
-                                                  />
-                                                </button>
-                                              </span>
-                                            )}
-                                          </span>
-                                        </div>
-                                      );
-                                    })}
+                                              {/* For newly uploaded files */}
+                                              {file?.isNew && (
+                                                <>
+                                                  {/* For new files with blob URL */}
+                                                  {file.url && (
+                                                    <button
+                                                      type="button"
+                                                      className="view-file-button"
+                                                      onClick={() =>
+                                                        window.open(
+                                                          file.url,
+                                                          "_blank"
+                                                        )
+                                                      }
+                                                      title={file.name}
+                                                    >
+                                                      <FontAwesomeIcon
+                                                        icon={faEye}
+                                                      />
+                                                    </button>
+                                                  )}
+                                                  <span
+                                                    className="file-link-button"
+                                                    style={{
+                                                      marginLeft: file.url
+                                                        ? "8px"
+                                                        : 0,
+                                                    }}
+                                                  >
+                                                    {file.name}
+                                                  </span>
+                                                  <button
+                                                    type="button"
+                                                    className="delete-file-button"
+                                                    onClick={() =>
+                                                      handleFileDelete(
+                                                        field.name,
+                                                        file?.id
+                                                      )
+                                                    }
+                                                  >
+                                                    <FontAwesomeIcon
+                                                      icon={faXmark}
+                                                    />
+                                                  </button>
+                                                </>
+                                              )}
+                                            </span>
+                                          </div>
+                                        )
+                                      )
+                                    )}
                                   </div>
                                 )}
                               </td>
                             </tr>
                           );
-
                         case "checkbox":
                           return (
                             <>
