@@ -5,10 +5,7 @@ import "../styles/forms.css";
 import CommentPopup from "../components/commentPanel";
 import "../i18n";
 import { useTranslation } from "react-i18next";
-import {
-  getBusinessDetailsForm,
-  getBusinessDetailsFormData,
-} from "./customerDetailsForms/customerBusinessDetails";
+import { getBusinessDetailsForm, getBusinessDetailsFormData } from "./customerDetailsForms/customerBusinessDetails";
 import { getContactDetailsForm } from "./customerDetailsForms/customerContactDetails";
 import { getFinancialInformationForm } from "./customerDetailsForms/customerFinancialInformation";
 import { getDocumentsForm } from "./customerDetailsForms/customerDocuments";
@@ -19,12 +16,7 @@ import ContactDetails from "./customerDetailsForms/contactDetails";
 import FinancialInformation from "./customerDetailsForms/financialInformation";
 import Documents from "./customerDetailsForms/documents";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faXmark,
-  faLocationDot,
-  faDownload,
-  faEye,
-} from "@fortawesome/free-solid-svg-icons";
+import { faXmark, faLocationDot, faDownload, faEye } from "@fortawesome/free-solid-svg-icons";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Pagination from "../components/Pagination";
@@ -39,14 +31,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const fetchCurrentDataOfCustomerContacts = async (customerId) => {
   let contactsData = {};
 
-  const responseContacts = await fetch(
-    `${API_BASE_URL}/customer-contacts/${customerId}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    }
-  );
+  const responseContacts = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
   const contactsDataJson = await responseContacts.json();
   console.log(contactsDataJson);
   if (contactsDataJson.status === "Ok") {
@@ -54,35 +43,24 @@ const fetchCurrentDataOfCustomerContacts = async (customerId) => {
     console.log("Current customer contacts data:", contactsDataJson.data);
     return contactsData;
   } else {
-    throw new Error(
-      contactsData.data?.message || "Failed to fetch customer contacts"
-    );
+    throw new Error(contactsData.data?.message || "Failed to fetch customer contacts");
   }
 };
 
 const fetchCurrentPaymentMetods = async (customerId) => {
   let paymentMethodsData = {};
-  const responsePaymentMethods = await fetch(
-    `${API_BASE_URL}/payment-method/id/${customerId}`,
-    {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    }
-  );
+  const responsePaymentMethods = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
   const paymentMethodsDataJson = await responsePaymentMethods.json();
   if (paymentMethodsDataJson.status === "Ok") {
     paymentMethodsData = paymentMethodsDataJson.data;
-    console.log(
-      "Current customer payment methods data:",
-      paymentMethodsDataJson.data
-    );
+    console.log("Current customer payment methods data:", paymentMethodsDataJson.data);
     return paymentMethodsDataJson.data;
   } else {
-    throw new Error(
-      paymentMethodsData.data?.message ||
-        "Failed to fetch customer payment methods"
-    );
+    throw new Error(paymentMethodsData.data?.message || "Failed to fetch customer payment methods");
   }
 };
 
@@ -105,30 +83,93 @@ const fetchCurrentDataOfCustomer = async (customerId) => {
     throw error;
   }
 };
+
+//TODO: Implement this function to fetch workflow data of a customer from server --WF
+const fetchWorkflowDataOfCustomer = async (customerId) => {
+  return {
+    //id: 4,
+    //erpCustId: "ERP004",
+    //companyNameEn: "cust 4",
+    //companyNameAr: "العميل 4",
+    //companyType: "trading",
+    crNumber: "CR111111114",
+    vatNumber: "VAT1111111114",
+    //baladeahLicenseNumber: "BL000004",
+    //governmentRegistrationNumber: "GRN000004",
+    typeOfBusiness: "Supermarket",
+    // typeOfBusinessOther: null,
+    // deliveryLocations: "Riyadh, Jeddah, Dubai",
+    // companyLogo: null,
+    // brandLogo: null,
+    // brandNameEn: "Cust4Brand",
+    // brandNameAr: "كاست4",
+    // buildingName: "Plaza 4",
+    // street: "Main Street",
+    // city: "Khamis Mushait",
+    // district: null,
+    // region: "kamis mushait",
+    // pincode: null,
+    // geolocation: {
+    //   x: 18.3,
+    //   y: 42.7333,
+    // },
+    // bankName: "Alinma Bank",
+    // bankAccountNumber: "SA4567890123456789012346",
+    // iban: "SA4567890123456789012345",
+    // crCertificate: "cr_cert_004.pdf",
+    // vatCertificate: "vat_cert_004.pdf",
+    // nationalId: "NID4567890123",
+    // bankLetter: "bank_letter_004.pdf",
+    // nationalAddress: "78901 Khamis Mushait",
+    // customerSource: "Business Conference",
+    // acknowledgementSignature: "signature_004.png",
+    // contractAgreement: null,
+    // customerContract: null,
+    // creditApplication: null,
+    // declarationName: "Sara Abdullah",
+    // declarationSignature: "decl_sig_004.png",
+    // declarationDate: {},
+    // pricingPolicy: "Price C",
+    // customerStatus: "Active",
+    // isDeliveryChargesApplicable: false,
+    // isBlocked: false,
+    // assignedTo: "emp_1004",
+    // assignedToEntityWise: {
+    //   naqi: "emp_1004",
+    //   vmco: "emp_1001",
+    //   diyafa: "emp_1002",
+    //   "green mast": "emp_1003",
+    // },
+    // nonTradingDocuments: null,
+    // interCompany: true,
+    // entity: null,
+    // zone: null,
+    // createdAt: "2025-06-20T16:39:08.223Z",
+    // updatedAt: "2025-06-20T16:39:08.223Z",
+    // createdBy: 1,
+    // modifiedBy: 1,
+  };
+};
+
 function CustomerDetails() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("Business Details");
   const [tabsHeight, setTabsHeight] = useState("auto");
   const tabs = useMemo(() => {
-    return [
-      "Business Details",
-      "Contact Details",
-      "Financial Information",
-      "Documents",
-      "Products",
-      "Branches",
-    ];
+    return ["Business Details", "Contact Details", "Financial Information", "Documents", "Products", "Branches"];
   }, []);
   const [customerData, setCustomerData] = useState({});
   const [customerContactsData, setCustomerContactsData] = useState({});
-  const [customerPaymentMethodsData, setCustomerPaymentMethodsData] = useState(
-    {}
-  );
+  const [customerPaymentMethodsData, setCustomerPaymentMethodsData] = useState({});
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
   var updatedCustomerPaymentMethodsData = useRef({});
+  //TODO - set it appropriately based  workflow thingy - WF
+  const [inApproval, setInApproval] = useState(true);
+  const [originalCustomerData, setOriginalCustomerData] = useState(null); //WF
+  var wfCustomerData = null; //WF
 
   const location = useLocation();
   const customerId = location?.state?.customerId;
@@ -136,8 +177,15 @@ function CustomerDetails() {
   useEffect(() => {
     const fetchData = async () => {
       const resp = await fetchCurrentDataOfCustomer(customerId);
-      console.log("#####Fetched customer data:", resp);
-      setCustomerData(resp);
+      console.log("#####???????Fetched customer data:", JSON.stringify(resp));
+      var temp;
+      if (inApproval) {
+        //WF
+        setOriginalCustomerData(resp);
+        wfCustomerData = await fetchWorkflowDataOfCustomer(customerId);
+        temp = { ...resp, ...wfCustomerData };
+      }
+      setCustomerData(inApproval ? temp : resp);
       const conRes = await fetchCurrentDataOfCustomerContacts(customerId);
       setCustomerContactsData(conRes);
       const paymentMethodsRes = await fetchCurrentPaymentMetods(customerId);
@@ -158,12 +206,7 @@ function CustomerDetails() {
   const handleCustomerPaymentMethodsDataChange = (e) => {
     const { name, value } = e.target;
     console.log("##########$$$$$$$$$$", e.target.checked);
-    const allowedPaymentMethods = [
-      "prePayment",
-      "partialPayment",
-      "COD",
-      "credit",
-    ];
+    const allowedPaymentMethods = ["prePayment", "partialPayment", "COD", "credit"];
     let paymentMethods = customerPaymentMethodsData.methodDetails;
 
     if (allowedPaymentMethods.includes(name)) {
@@ -189,10 +232,7 @@ function CustomerDetails() {
       methodDetails: paymentMethods,
     };
 
-    console.log(
-      "Updated payment methods data:",
-      updatedCustomerPaymentMethodsData.current
-    );
+    console.log("Updated payment methods data:", updatedCustomerPaymentMethodsData.current);
   };
   const uploadFile = async (fieldName, fileData, customerId) => {
     try {
@@ -214,17 +254,15 @@ function CustomerDetails() {
       tradingFilesToUpload?.map((fieldName, file) => {
         uploadFile(fieldName, file, customerId);
       });
-      Object.entries(nonTradingFilesToUpload || {}).forEach(
-        ([fieldName, file]) => {
-          if (fieldName !== "others") {
-            uploadFile(fieldName, file, customerId);
-          } else if (Array.isArray(file)) {
-            file.forEach((f) => {
-              uploadFile("nonTradingDocuments", f, customerId);
-            });
-          }
+      Object.entries(nonTradingFilesToUpload || {}).forEach(([fieldName, file]) => {
+        if (fieldName !== "others") {
+          uploadFile(fieldName, file, customerId);
+        } else if (Array.isArray(file)) {
+          file.forEach((f) => {
+            uploadFile("nonTradingDocuments", f, customerId);
+          });
         }
-      );
+      });
     } catch (error) {
       console.error("Error uploading files:", error.message);
     }
@@ -235,54 +273,44 @@ function CustomerDetails() {
 
     try {
       uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
-      updatedCustomerData.current["customerStatus"] =
-        customerData.customerStatus;
+      updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
 
-      const response = await fetch(
-        `${API_BASE_URL}/customers/id/${customerId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedCustomerData.current),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedCustomerData.current),
+        credentials: "include",
+      });
       console.log("Response", response);
     } catch (error) {
       console.error("Error updating customer:", error.message);
     }
 
     try {
-      updatedCustomerData.current["customerStatus"] =
-        customerData.customerStatus;
+      //TODO:Merge workflow data with updatedcustomerData.current if inApproval is true and save. This could happen only during
+      //  approval the data is changed
+      updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
 
-      const response = await fetch(
-        `${API_BASE_URL}/customer-contacts/${customerId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedCustomerContactsData.current),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedCustomerContactsData.current),
+        credentials: "include",
+      });
       console.log("Response", response);
     } catch (error) {
       console.error("Error updating customer:", error.message);
     }
 
     try {
-      updatedCustomerPaymentMethodsData.current["customerStatus"] =
-        customerData.customerStatus;
+      updatedCustomerPaymentMethodsData.current["customerStatus"] = customerData.customerStatus;
 
-      const response = await fetch(
-        `${API_BASE_URL}/payment-method/id/${customerId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
+        credentials: "include",
+      });
       console.log("Response", response);
     } catch (error) {
       console.error("Error updating customer payment methods:", error.message);
@@ -290,29 +318,19 @@ function CustomerDetails() {
   };
   return (
     <Sidebar>
-      <div className="customers">
-        <div className="customer-onboarding-details">
-          <div className="customer-onboarding-body">
-            <div
-              className="customer-onboarding-tabs-vertical"
-              style={{ height: tabsHeight }}
-            >
-              <div className="tabs-title">{t("Customer Details")}</div>
+      <div className='customers'>
+        <div className='customer-onboarding-details'>
+          <div className='customer-onboarding-body'>
+            <div className='customer-onboarding-tabs-vertical' style={{ height: tabsHeight }}>
+              <div className='tabs-title'>{t("Customer Details")}</div>
               {tabs.map((tab) => (
-                <div
-                  key={tab}
-                  className={`tab ${tab === activeTab ? "active" : ""}`}
-                  onClick={() => setActiveTab(tab)}
-                >
+                <div key={tab} className={`tab ${tab === activeTab ? "active" : ""}`} onClick={() => setActiveTab(tab)}>
                   {t(tab)}
                 </div>
               ))}
             </div>
             {activeTab === "Business Details" && (
-              <BusinessDetails
-                customerData={customerData}
-                onChangeCustomerData={handleCustomerDataChange}
-              />
+              <BusinessDetails customerData={customerData} originalCustomerData={originalCustomerData} onChangeCustomerData={handleCustomerDataChange} />
             )}
             {activeTab === "Contact Details" && (
               <ContactDetails
@@ -327,9 +345,7 @@ function CustomerDetails() {
                 customerData={customerData}
                 customerPaymentMethodsData={customerPaymentMethodsData}
                 onChangeCustomerData={handleCustomerDataChange}
-                onChangeCustomerPaymentMethodsData={
-                  handleCustomerPaymentMethodsDataChange
-                }
+                onChangeCustomerPaymentMethodsData={handleCustomerPaymentMethodsDataChange}
               />
             )}
             {activeTab === "Documents" && (
@@ -340,35 +356,18 @@ function CustomerDetails() {
                 customerData={customerData}
               />
             )}
-            {activeTab === "Branches" && (
-              <CustomerBranches
-                customer={customerData}
-                setTabsHeight={setTabsHeight}
-                inApproval={false}
-              />
-            )}
-            {activeTab === "Products" && (
-              <CustomerProducts customer={customerData} />
-            )}
+            {activeTab === "Branches" && <CustomerBranches customer={customerData} setTabsHeight={setTabsHeight} inApproval={false} />}
+            {activeTab === "Products" && <CustomerProducts customer={customerData} />}
           </div>
         </div>
-        <div className="customer-onboarding-form-actions">
-          <div
-            className="action-buttons"
-            style={{ display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <span className="status-label">{t("Status")}:</span>
-            <span className="status-badge">
-              {t(customerData.customerStatus) || t("Pending")}
-            </span>
+        <div className='customer-onboarding-form-actions'>
+          <div className='action-buttons' style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span className='status-label'>{t("Status")}:</span>
+            <span className='status-badge'>{t(customerData.customerStatus) || t("Pending")}</span>
           </div>
-          <div className="action-buttons">
+          <div className='action-buttons'>
             {
-              <button
-                className="save"
-                onClick={() => handleSave("save")}
-                disabled={false}
-              >
+              <button className='save' onClick={() => handleSave("save")} disabled={false}>
                 {t("Save")}
               </button>
             }
@@ -380,3 +379,70 @@ function CustomerDetails() {
 }
 
 export default CustomerDetails;
+
+/*
+{
+  "id": 4,
+  "erpCustId": "ERP004",
+  "companyNameEn": "cust 4",
+  "companyNameAr": "العميل 4",
+  "companyType": "trading",
+  "crNumber": "CR0000000004",
+  "vatNumber": "VAT0000000004",
+  "baladeahLicenseNumber": "BL000004",
+  "governmentRegistrationNumber": "GRN000004",
+  "typeOfBusiness": "Coffee Shop",
+  "typeOfBusinessOther": null,
+  "deliveryLocations": "Riyadh, Jeddah, Dubai",
+  "companyLogo": null,
+  "brandLogo": null,
+  "brandNameEn": "Cust4Brand",
+  "brandNameAr": "كاست4",
+  "buildingName": "Plaza 4",
+  "street": "Main Street",
+  "city": "Khamis Mushait",
+  "district": null,
+  "region": "kamis mushait",
+  "pincode": null,
+  "geolocation": {
+    "x": 18.3,
+    "y": 42.7333
+  },
+  "bankName": "Alinma Bank",
+  "bankAccountNumber": "SA4567890123456789012346",
+  "iban": "SA4567890123456789012345",
+  "crCertificate": "cr_cert_004.pdf",
+  "vatCertificate": "vat_cert_004.pdf",
+  "nationalId": "NID4567890123",
+  "bankLetter": "bank_letter_004.pdf",
+  "nationalAddress": "78901 Khamis Mushait",
+  "customerSource": "Business Conference",
+  "acknowledgementSignature": "signature_004.png",
+  "contractAgreement": null,
+  "customerContract": null,
+  "creditApplication": null,
+  "declarationName": "Sara Abdullah",
+  "declarationSignature": "decl_sig_004.png",
+  "declarationDate": {},
+  "pricingPolicy": "Price C",
+  "customerStatus": "Active",
+  "isDeliveryChargesApplicable": false,
+  "isBlocked": false,
+  "assignedTo": "emp_1004",
+  "assignedToEntityWise": {
+    "naqi": "emp_1004",
+    "vmco": "emp_1001",
+    "diyafa": "emp_1002",
+    "green mast": "emp_1003"
+  },
+  "nonTradingDocuments": null,
+  "interCompany": true,
+  "entity": null,
+  "zone": null,
+  "createdAt": "2025-06-20T16:39:08.223Z",
+  "updatedAt": "2025-06-20T16:39:08.223Z",
+  "createdBy": 1,
+  "modifiedBy": 1
+}
+
+ */
