@@ -335,7 +335,7 @@ if(isApprovalMode) {
                                 />
                             </th>
                             <th>{t("Name")}</th>
-                            <th>{t("Minimum Order Quantity")}</th>
+                            {isV('btnApplyAll') && (<th>{t("Minimum Order Quantity")}</th>)}
                         </tr>
                     </thead>
                     <tbody>
@@ -350,7 +350,7 @@ if(isApprovalMode) {
                                     />
                                 </td>
                                 <td>{product.productName}</td>
-                                <td className='edit-cell'>
+                                {isV('btnApplyAll') && (<td className='edit-cell'>
                                     <div className="input-with-icons">
                                         <input
                                             type="text"
@@ -377,7 +377,7 @@ if(isApprovalMode) {
                                             </>
                                         )}
                                     </div>
-                                </td>
+                                </td>)}
                             </tr>
                         ))}
                     </tbody>
