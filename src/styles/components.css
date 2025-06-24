@@ -719,7 +719,7 @@
 }
 
 .checkout-btn {
-  background-color: #ff8a00;
+  background-color: #EF7C00;
   color: white;
   border: none;
   padding: 0 18px;
@@ -1118,7 +1118,7 @@
 }
 
 .checkout-btn {
-  background-color: #ff8a00;
+  background-color: #EF7C00;
   color: white;
   border: none;
   padding: 8px 18px;
@@ -1348,7 +1348,7 @@
 }
 
 .checkout-btn {
-  background-color: #ff8a00;
+  background-color: #EF7C00;
   color: white;
   border: none;
   padding: 8px 18px;
@@ -1578,7 +1578,7 @@
 }
 
 .checkout-btn {
-  background-color: #ff8a00;
+  background-color: #EF7C00;
   color: white;
   border: none;
   padding: 8px 18px;
@@ -1780,7 +1780,7 @@
   box-sizing: border-box;
 }
 }
-@media (min-width: 900px) and (max-width: 1300px) {
+@media (min-width: 900px) and (max-width: 1000px) {
  .products-grid > * {
   flex: 1 1 calc(34% - 20px); 
   max-width: calc(34% - 20px);

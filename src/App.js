@@ -28,14 +28,20 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/catalog" element={<Catalog />} />
-        <Route path='/support' element={<Support />} />
+        <Route path="/support" element={<Support />} />
         <Route path="/maintenance" element={<Maintenance />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/login/employee" element={<LoginScreen />} />
-        <Route path="/customers/registration" element={<CustomersOnboarding />} />
-        <Route path="/customers/registration/:id" element={<CustomersOnboarding />} />
+        <Route
+          path="/customers/registration"
+          element={<CustomersOnboarding />}
+        />
+        <Route
+          path="/customers/registration/:id"
+          element={<CustomersOnboarding />}
+        />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
         <Route path="/orderDetails" element={<OrderDetails />} />
