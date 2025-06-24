@@ -20,6 +20,8 @@ import GetPaymentMethods from '../components/GetPaymentMethods'; // Add this imp
 import Dropdown from '../components/DropDown';
 import Swal from 'sweetalert2';
 import { stringify } from 'ajv';
+import LoadingSpinner from '../components/LoadingSpinner';
+import axios from 'axios';
 
 const defaultOrder = {
   id: '',
@@ -91,6 +93,9 @@ function OrderDetails() {
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
+  const [InventoryData, setInventoryData] = useState([]);
+  const [InventoryLoading, setInventoryLoading] = useState(false);
+  const [productName, setProductName] = useState('');
   // Store companyType in state
   const [companyType, setCompanyType] = useState('');
 
@@ -1329,7 +1334,33 @@ const rbacMgr = new RbacManager(
 const isV = rbacMgr.isV.bind(rbacMgr);
 const isE = rbacMgr.isE.bind(rbacMgr);
 
+// Function to handle Product Stock Availability
+const handleStack = async (productId,productName) => {
+ try
+  {
+    setInventoryLoading(true);
+    const {data} = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
+      {withCredentials: true});
 
+      setProductName(productName);
+      setInventoryData(data?.details || []);
+      setInventoryLoading(false);
+      setShowInventory(true);
+  }
+  catch (error) {
+    console.error('Error fetching stock information:', error);
+    Swal.fire({
+      icon: 'error',
+      title: t('Error Fetching Stock'),
+      text: t('Failed to fetch stock information for the product.'),
+      confirmButtonText: t('OK')
+    });
+  }
+  finally {
+    setInventoryLoading(false);
+  }
+  
+}
 // Table columns
 const columns = [
   { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
@@ -1389,19 +1420,23 @@ const columns = [
               cursor: 'pointer'
             }}
             title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-            onClick={() =>
-              Swal.fire({
-                title: t('Stock Information'),
-                text: t(`Showing stock for ${row.productName || row.id}`),
-                icon: 'info',
-                confirmButtonText: t('OK')
+            onClick={() =>handleStack(row.id , i18n.language === 'ar'
+        ? (row.productNameLc || row.product_name_lc || row.productName)
+        : (row.productName || row.product_name_en || row.productNameLc))
+              // Swal.fire({
+              //   title: t('Stock Information'),
+              //   text: t(`Showing stock for ${row.productName || row.id}`),
+              //   icon: 'info',
+              //   confirmButtonText: t('OK')
 
-                //  alert(`Show stock for ${row.productName || row.id}`)
-              })}
+              //   //  alert(`Show stock for ${row.productName || row.id}`)
+              // })
+              }
           >
             {t('Stock')}
           </button>
         </span>)}
+        {InventoryLoading &&<LoadingSpinner/>}
       </div>
     ),
     include: isV('quantityCol'),
@@ -2367,7 +2402,8 @@ return (
             />
           </div>
           {/* Rest of the component with modals and popups */}
-          {isV('btnInventory') && <GetInventory open={showInventory} onClose={() => setShowInventory(false)} />}
+          
+           <GetInventory open={showInventory} onClose={() => setShowInventory(false)} InventoryData={InventoryData} productName={productName} />
           <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
           {/* Product Popup */}
           {showProductPopup && (

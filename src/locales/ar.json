@@ -381,7 +381,12 @@
   "Export RBAC Configuration clicked": "تم النقر على تصدير تكوين RBAC",
   "Import RBAC Configuration": "استيراد تكوين RBAC",
   "Import RBAC Configuration clicked": "تم النقر على استيراد تكوين RBAC",
-  "Please provide a reason for rejection": "يرجى تقديم سبب للرفض"
+  "Please provide a reason for rejection": "يرجى تقديم سبب للرفض",
+  "Available Quantity": "الكمية المتاحة",
+  "ERP Site ID": "معرف موقع ERP",
+  "Site Name": "اسم الموقع",
+  "Add products": "إضافة منتجات"
+
 
 
   }
