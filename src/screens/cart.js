@@ -611,8 +611,7 @@ function Cart() {
                 }
                 
                 const finalTotalAmount = initialTotalAmount + deliveryCharges;
-                
-                const orderPayload = {
+                  const orderPayload = {
                     customerId: selectedCustomerId,
                     erpCustId: erpCustId,
                     companyNameEn: companyNameEn,
@@ -630,6 +629,7 @@ function Cart() {
                     deliveryCharges: deliveryCharges.toFixed(2),
                     paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: 'Open',
+                    //status: entity === 'vmco' ? 'Pending' : 'Open',
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,
                     customerRegion: customerRegion,
@@ -637,7 +637,7 @@ function Cart() {
                 };
                 
                 // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
-                const isVmcoMachines = categoryName === 'VMCO Machines' || categoryName === "آلات VMCO";
+                const isVmcoMachines = categoryName.toLowerCase() === 'vmco machines' || categoryName.toLowerCase() === "آلات vmco";
                 if (isVmcoMachines) {
                     orderPayload.paymentPercentage = '100.00';
                     orderPayload.paymentMethod = 'Pre Payment';
@@ -878,18 +878,17 @@ function Cart() {
         if (!updateOrderResponse.ok) {
             throw new Error(`Failed to update order with final amounts`);
         }
-        
-        const updatedOrderResponse = await updateOrderResponse.json();
-        console.log('Updated the order:', updatedOrderResponse);
-
-            // Show order confirmation alert with order number
-            // alert(t(`Order placed successfully! Order #${orderId}`));
+          const updatedOrderResponse = await updateOrderResponse.json();
+        console.log('Updated the order:', updatedOrderResponse);            // Show order confirmation alert with order number
             Swal.fire({
                 icon: 'success',
                 title: t('Order Placed'),
                 text: t(`Your order has been placed successfully! Order #${orderId}`),
                 confirmButtonText: t('OK')
+            }).then(() => {
+                window.location.reload();
             });
+           
 
         // Delete cart items
         try {
@@ -914,8 +913,6 @@ function Cart() {
                 if (!deleteResponse.ok) {
                     console.error(`Error removing cart items: ${deleteResponse.statusText}`);
                 }
-                // After deleting cart items, reload the page
-               window.location.reload();
             } catch (err) {
                 console.error('Error during cart cleanup:', err);
             }
@@ -932,6 +929,89 @@ function Cart() {
             });
         } finally {
             setIsPlacingOrder(false);
+        }
+    };    // Function to check if credit payment is allowed for the customer (without balance check)
+    const isCreditPaymentAllowed = async (customerId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                console.error('Failed to fetch payment method details');
+                return false;
+            }
+            
+            const result = await response.json();
+            console.log('Payment method details response:', result);
+            
+            if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+                const methodDetails = result.data.methodDetails;
+                // Check if credit is allowed (without balance validation)
+                if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
+                    console.log('Credit payment is allowed for customer');
+                    return true;
+                }
+            }
+            
+            console.log('Credit payment is not allowed for customer');
+            return false;
+        } catch (error) {
+            console.error('Error checking credit payment allowance:', error);
+            return false;
+        }
+    };
+
+    // Function to validate credit balance and show warning if insufficient
+    const validateCreditBalance = async (customerId, totalAmount) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                console.error('Failed to fetch payment method details');
+                return false;
+            }
+            
+            const result = await response.json();
+            console.log('Payment method details response:', result);
+            
+            if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+                const methodDetails = result.data.methodDetails;
+                
+                // Check if totalAmount is provided and compare with credit balance
+                if (totalAmount !== undefined && methodDetails.credit.balance !== undefined) {
+                    const creditBalance = Number(methodDetails.credit.balance);
+                    const orderTotal = Number(totalAmount);
+                    
+                    console.log(`Checking credit balance: ${creditBalance} vs order total: ${orderTotal}`);
+                    
+                    if (orderTotal > creditBalance) {
+                        console.log('Order total exceeds credit balance');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: t('Credit Balance Insufficient'),
+                            text: t(`The total amount is higher than your credit balance! Your balance is ${creditBalance.toFixed(2)}.`),
+                            confirmButtonText: t('OK')
+                        }).then(() => {
+                            //
+                        });
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            return false;
+        } catch (error) {
+            console.error('Error validating credit balance:', error);
+            return false;
         }
     };
 
@@ -1077,19 +1157,53 @@ function Cart() {
                                                             <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>{t("SAR")}</span></strong>
                                                         );
                                                     })()}
-                                                </span>
-                                                <button
-                                                    className="checkout-btn"
-                                                    onClick={() => {
+                                                </span>                                                <button
+                                                    className="checkout-btn"                                                    onClick={async () => {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
                                                         // Check if it's VMCO Machines category - if so, bypass payment method selection
                                                         if (category.category === 'VMCO Machines' || category.category === "آلات VMCO") {
                                                             // Directly place the order with Pre Payment method
-                                                            handlePlaceOrder(category.items, category.category, 'Pre Payment');
-                                                        } else {
-                                                            // For other categories, show payment method popup as usual
-                                                            setShowPaymentPopup(true);
+                                                            handlePlaceOrder(category.items, category.category, 'Pre Payment');                                                        } else {
+                                                            // Calculate total amount for the category
+                                                            let categoryTotal = 0;
+                                                            category.items.forEach(item => {
+                                                                const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                                                                const vatPercentage = Number(item.vatPercentage) || 0;
+                                                                const vatAmount = (baseAmount * vatPercentage) / 100;
+                                                                const totalAmount = baseAmount + vatAmount;
+                                                                categoryTotal += totalAmount;
+                                                            });
+                                                              // For other categories, check if credit is allowed
+                                                            const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId);
+                                                            if (isCreditAllowed) {
+                                                                // Validate credit balance before placing order
+                                                                const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal);
+                                                                if (isBalanceValid) {
+                                                                    // Directly place the order with Credit method
+                                                                    console.log('Auto-selecting Credit payment method');
+                                                                    handlePlaceOrder(category.items, category.category, 'Credit');
+                                                                }
+                                                                // If balance is insufficient, the validateCreditBalance function will show alert and reload
+                                                                // Do not show payment popup - just return
+                                                            } else {
+                                                                // Credit is not allowed, check category and total amount
+                                                                if (category.category === 'VMCO Consumables' || category.category === "مستهلكات VMCO") {
+                                                                    // For VMCO Consumables, check total amount
+                                                                    if (categoryTotal < 5000) {
+                                                                        // Less than 5000, use Cash on Delivery
+                                                                        console.log('Auto-selecting Cash on Delivery for VMCO Consumables under 5000 SAR');
+                                                                        handlePlaceOrder(category.items, category.category, 'Cash on Delivery');
+                                                                    } else {
+                                                                        // Greater than or equal to 5000, use Pre Payment
+                                                                        console.log('Auto-selecting Pre Payment for VMCO Consumables 5000 SAR or above');
+                                                                        handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                                    }
+                                                                } else {
+                                                                    // For other categories (Diyafa, Green Mast, Naqui), show payment method popup
+                                                                    setShowPaymentPopup(true);
+                                                                }
+                                                            }
                                                         }
                                                     }}
                                                     disabled={isPlacingOrder}

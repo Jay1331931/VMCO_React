@@ -38,9 +38,11 @@ export const formatDate = (isoDateString, format = 'YYYY-MM-DD HH:MM') => {
     
     case 'DD MMM YYYY HH:MM':
       return `${day} ${monthNames[date.getMonth()]} ${year} ${hours}:${minutes}`;
-    
-    case 'MM/DD/YYYY':
+      case 'MM/DD/YYYY':
       return `${month}/${day}/${year}`;
+    
+    case 'DD/MM/YYYY':
+      return `${day}/${month}/${year}`;
     
     case 'YYYY/MM/DD':
       return `${year}/${month}/${day}`;
