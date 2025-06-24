@@ -1190,7 +1190,7 @@ class RbacManager {
           category: { visible: false, editable: false },
           paymentMethod: { visible: true, editable: true },
           totalAmount: { visible: true, editable: false },
-          paymentPercentage: { visible: true, editable: true },
+          paymentPercentage: { visible: true, editable: false },
           paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: true },
