@@ -239,7 +239,13 @@ function Orders() {
   };
 
   const handlePay = (order) => {
-    navigate('/checkout', { state: { order } });
+    // navigate('/checkout', { state: { order } });
+    const paymentWindow = window.open(
+      `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,
+      '_blank',
+      'width=500,height=600'
+    );
+    // window.location.href = '/payment?orderId=' + order.id + '&amount=' + order.totalAmount;
   };
 
   // Action menu for Orders page
