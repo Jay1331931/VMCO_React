@@ -181,49 +181,6 @@ function OrderDetails() {
     };
     fetchNextOrderId();
   }, [formMode]);
-
-  // Fetch order details from backend
-  const fetchOrderDetails = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Only fetch if not in add mode and id exists
-      if (formMode === 'add' || !orderFromNav.id) {
-        setLoading(false);
-        return;
-      }
-      const id = orderFromNav.id;
-      const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch order details'); const result = await response.json();      if (result.status === 'Ok' && result.data) {
-        console.log("Order details received:", result.data);
-        setFormData({
-          ...result.data,
-          // Convert expectedDeliveryDate to string if it's an object, otherwise use as is or empty string
-          expectedDeliveryDate: typeof result.data.expectedDeliveryDate === 'object'
-            ? JSON.stringify(result.data.expectedDeliveryDate)
-            : (result.data.expectedDeliveryDate),
-          // Convert payment percentage from decimal to dropdown format
-          paymentPercentage: convertPaymentPercentageToDropdown(result.data.paymentPercentage) || result.data.paymentPercentage || '',
-          products: result.data.products
-        });
-      } else {
-        throw new Error(result.message || 'Order not found');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrderDetails();
-    // eslint-disable-next-line
-  }, [orderFromNav.id, formMode]);  // Fetch order product details
   useEffect(() => {
     if (formMode === 'add') return;
     
@@ -915,7 +872,7 @@ function OrderDetails() {
                     <p style="font-size: 18px; font-weight: bold; color: #17a2b8; margin: 10px 0;">
                         ${t('Order Number')}: #${result.data.id}
                     </p>
-                    <p style="font-size: 14px; color: #666;">${t('Please save this order number for your records.')}</p>
+                    <p style="font-size: 14px; color: #666;">${t('Order placed using')} ${payload.paymentMethod}</p>
                   </div>`,
             confirmButtonText: t('OK')
           });
@@ -2539,16 +2496,38 @@ const columns = [
                           readOnly
                         />
                       </div>
-                    )}                      {isV('expectedDeliveryDate') && (
+                    )}
+                    {isV('expectedDeliveryDate') && (
                       <div className="order-details-field">
                         <label>{t('Delivery Date')}</label>
-                        <input
-                          type="date"
-                          name="expectedDeliveryDate"
-                          value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'YYYY-MM-DD') : ''}
-                          onChange={handleInputChange}
-                          disabled={!isE('expectedDeliveryDate')}
-                        />
+                        {formMode === 'add' ? (
+                          <input
+                            type="text"
+                            name="expectedDeliveryDate"
+                            value="Delivery Date will be updated later"
+                            disabled
+                            readOnly
+                            style={{ background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }}
+                          />
+                        ) : fromApproval ? (
+                          <input
+                            type="text"
+                            name="expectedDeliveryDate"
+                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'DD/MM/YYYY') : ''}
+                            disabled
+                            readOnly
+                            style={{ background: '#f9f9f9' }}
+                          />
+                        ) : (
+                          <input
+                            type="date"
+                            name="expectedDeliveryDate"
+                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'YYYY-MM-DD') : ''}
+                            placeholder="Delivery Date will be updated later"
+                            onChange={handleInputChange}
+                            disabled={!isE('expectedDeliveryDate')}
+                          />
+                        )}
                       </div>
                     )}
                     {isV('pricingPolicy', fromApproval, true) && fromApproval && (

@@ -637,7 +637,7 @@ function Cart() {
                 };
                 
                 // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
-                const isVmcoMachines = categoryName === 'VMCO Machines' || categoryName === "آلات VMCO";
+                const isVmcoMachines = categoryName.toLowerCase() === 'vmco machines' || categoryName.toLowerCase() === "آلات vmco";
                 if (isVmcoMachines) {
                     orderPayload.paymentPercentage = '100.00';
                     orderPayload.paymentMethod = 'Pre Payment';
