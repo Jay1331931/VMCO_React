@@ -103,9 +103,13 @@ const CustomerBranches = ({ customer, setTabsHeight }) => {
         let isAppMode = false;
 
         try {
-            const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id/${branchId}/module/branch`, {
+            const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: branchId,
+                    module: 'branch',
+                }),
                 credentials: 'include'
             });
             console.log(res)
@@ -1452,8 +1456,12 @@ let customerFormMode;
         const defaultHours = weekdays.reduce((acc, day) => ({
             ...acc,
             [day]: {
-                operating: { from: '09:00', to: '18:00' },
-                delivery: { from: '09:00', to: '18:00' }
+                operating: { from: '08:00', to: '23:00' },
+                delivery: { from: '08:00', to: '23:00' }
+            },
+            ['friday']: {
+                operating: { from: '13:00', to: '23:00' },
+                delivery: { from: '13:00', to: '23:00' }
             }
         }), {});
 

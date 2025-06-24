@@ -10,8 +10,14 @@ export function getFinancialInformationForm(t) {
       { type: 'text', name: 'bankAccountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
       { type: 'text', name: 'iban', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
       { type: 'empty' },
-      // { type: 'header', label: t('Price Plan')},
-      { type: 'dropdown', name: 'pricingPolicy', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
+      { type: 'header', label: t('Price Plan')},
+      // { type: 'dropdown', name: 'pricingPolicy', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
+      { type: 'dropdownObject', name: 'pricingPolicySHC', label: t('Price Plan SHC'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyNAQI', label: t('Price Plan NAQI'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyGMTC', label: t('Price Plan GMTC'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyDAR', label: t('Price Plan DAR'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyVMCO', label: t('Price Plan VMCO'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+
       { type: 'empty' },
       { type: 'checkbox', name: 'isDeliveryChargesApplicable', label: '', options: [t('Is delivery charges applicable')], required: false },
 
