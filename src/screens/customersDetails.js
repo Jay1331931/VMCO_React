@@ -208,7 +208,7 @@ function CustomersDetails() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            customerId: customer?.id,
+            id: customer?.id,
             module: "customer",
           }),
           credentials: "include",
