@@ -275,8 +275,8 @@ export function businessDetails() {
       </div>
 
       <div className="form-group">
-        <label htmlFor={Constants.ENTITY.GREEN_MAST}>{t("Green Mast")}</label>
-        <select id={Constants.ENTITY.GREEN_MAST} name={Constants.ENTITY.GREEN_MAST} className="dropdown">
+        <label htmlFor={Constants.ENTITY.GMTC}>{t("GMTC")}</label>
+        <select id={Constants.ENTITY.GMTC} name={Constants.ENTITY.GMTC} className="dropdown">
           <option value="" disabled>
             {t("Select")}
           </option>

@@ -17,14 +17,15 @@ const Constants = {
     },
     ENTITY:{
         VMCO: 'vmco',
+        DIYAFA: 'diyafa',
         SHC: 'shc',
         NAQI: 'naqi',
         DAR: 'dar',
         GMTC: 'gmtc'
     },
     CATEGORY:{
-        VMCO_MACHINES: 'vmco machines',
-        VMCO_CONSUMABLES: 'vmco consumables'
+        VMCO_MACHINES: 'VMCO Machines',
+        VMCO_CONSUMABLES: 'VMCO Consumables'
     }
     
 };

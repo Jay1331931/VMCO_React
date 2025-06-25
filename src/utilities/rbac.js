@@ -1,4 +1,3 @@
-import Sidebar from "../components/Sidebar";
 import constants from "../constants";
 
 // RBAC Manager class
@@ -627,6 +626,21 @@ class RbacManager {
           credit: { visible: false, editable: true },
           creditLimit: { visible: false, editable: true },
           creditPeriod: { visible: false, editable: true },
+          creditDar: { visible: false, editable: true },
+          creditLimitDar: { visible: false, editable: true },
+          creditPeriodDar: { visible: false, editable: true },
+          creditNaqi: { visible: false, editable: true },
+          creditLimitNaqi: { visible: false, editable: true },
+          creditPeriodNaqi: { visible: false, editable: true },
+          creditGmtc: { visible: false, editable: true },
+          creditLimitGmtc: { visible: false, editable: true },
+          creditPeriodGmtc: { visible: false, editable: true },
+          creditVmco: { visible: false, editable: true },
+          creditLimitVmco: { visible: false, editable: true },
+          creditPeriodVmco: { visible: false, editable: true },
+          creditShc: { visible: false, editable: true },
+          creditLimitShc: { visible: false, editable: true },
+          creditPeriodShc: { visible: false, editable: true },
           btnSave: { visible: true, editable: true },
           btnBlock: { visible: false, editable: true },
           btnUnblock: { visible: false, editable: true },
@@ -648,8 +662,9 @@ class RbacManager {
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
           customerApprovalChecklist: {visible: false, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: true, editable: true }
-        },
+        'Download terms & conditions and upload duly signed document': { visible: true, editable: true },
+        'Price Plan': { visible: false, editable: false }
+      },
       },
       custDetailsEdit: {
         fields: {

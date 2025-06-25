@@ -19,9 +19,9 @@ import ApprovalDialog from '../components/ApprovalDialog';
 import GetPaymentMethods from '../components/GetPaymentMethods'; // Add this import
 import Dropdown from '../components/DropDown';
 import Swal from 'sweetalert2';
-import { stringify } from 'ajv';
 import LoadingSpinner from '../components/LoadingSpinner';
 import axios from 'axios';
+import Constants from '../constants';
 
 const defaultOrder = {
   id: '',
@@ -133,13 +133,12 @@ function OrderDetails() {
 
   // Add state for payment method popup and selected method
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-  const [pendingSaveAction, setPendingSaveAction] = useState(null);
-  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
-  // Hardcode VMCO categories
+  const [pendingSaveAction, setPendingSaveAction] = useState(null);  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
+  // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
-    'VMCO Machines',
-    'VMCO Consumables'
-  ];  const paymentPercentageOptions = [
+    Constants.CATEGORY.VMCO_MACHINES,
+    Constants.CATEGORY.VMCO_CONSUMABLES
+  ];const paymentPercentageOptions = [
     { label: '100%', value: '100%' },
     { label: '30%', value: '30%' },
   ];
@@ -348,10 +347,8 @@ function OrderDetails() {
     }
 
     // Disable save button to prevent multiple submissions
-    setSaving(true);
-
-    // For VMCO Machines category, automatically set payment method to "Pre Payment"
-    const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === 'vmco machines';
+    setSaving(true);    // For VMCO Machines category, automatically set payment method to "Pre Payment"
+    const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
 
     if (isVmcoMachinesCategory && formMode === 'add') {
       // Set payment method to Pre Payment for VMCO Machines
@@ -391,9 +388,8 @@ function OrderDetails() {
       const fieldsToUpdate = [
         'erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
-        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'
-      ]; const payload = {};    // Check if category is VMCO Machines
-      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === 'vmco machines';      fieldsToUpdate.forEach(field => {
+        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'      ]; const payload = {};    // Check if category is VMCO Machines
+      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();      fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === 'paymentPercentage') {
             payload[field] = formData[field] ?
@@ -401,8 +397,7 @@ function OrderDetails() {
                 formData[field] === '30%' ? '30.00' : '0.00') : '0.00';
           } else if (field === 'paymentMethod' && isVmcoMachinesCategory) {
             // Always set payment method to 'Pre Payment' for VMCO Machines category
-            payload[field] = 'Pre Payment';
-          } else if (field === 'status' && formData.entity && formData.entity.toLowerCase() === 'vmco') {
+            payload[field] = 'Pre Payment';          } else if (field === 'status' && formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
             // Set status to 'Pending' for vmco entity
             payload[field] = 'Pending';          } else if (field === 'expectedDeliveryDate') {
             // Handle date fields - convert empty strings to null to avoid database errors
@@ -561,11 +556,9 @@ function OrderDetails() {
           console.log('No products were removed from the order');
         }
       }        
-      // Refresh order details after update
-
-      await getOrderById(formData.id);        // Check if this is a VMCO Machines order that needs discount workflow approval
-      if ((formData.entity && formData.entity.toLowerCase() === 'vmco') &&
-        (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') &&
+      // Refresh order details after update      await getOrderById(formData.id);        // Check if this is a VMCO Machines order that needs discount workflow approval
+      if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
+        (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
         formData.customerId) {
         // Directly trigger the discount workflow without checking if it already exists
         console.log(`Directly triggering discount workflow for order ${formData.id}`);
@@ -576,8 +569,8 @@ function OrderDetails() {
         await triggerDiscountWorkflow(formData.id, formData.customerId);
       } else {
         console.log('Skipping discount workflow creation in order update because conditions failed:');
-        console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
-        console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+        console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
+        console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
         console.log(`- has customerID: ${Boolean(formData.customerId)}`);
       }
 
@@ -650,7 +643,7 @@ function OrderDetails() {
       // Make sure to use branchId field as it's being used in the API
       const branchIdForFilter = formData.branchId || formData.erpBranchId;
 
-      const orderFiltersObj = formData.entity && formData.entity.toLowerCase() === 'vmco'
+      const orderFiltersObj = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
         ? {
           customerId: formData.customerId,
           branchId: branchIdForFilter,
@@ -756,11 +749,10 @@ function OrderDetails() {
         erpBranchId: formData.erpBranchId || '',
         branchNameEn: formData.branchNameEn || '', // Always use value from formData      
         branchNameLc: formData.branchNameLc || '', // Always use value from formData        
-        branchRegion: formData.branchRegion || '', // Include branch region
-        orderBy: orderByName, // <-- Use fetched employee name here
-        paymentMethod: formData.category && formData.category.toLowerCase() === 'vmco machines'
+        branchRegion: formData.branchRegion || '', // Include branch region        orderBy: orderByName, // <-- Use fetched employee name here
+        paymentMethod: formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
           ? 'Pre Payment'
-          : (selectedMethod || formData.paymentMethod || ''), 
+          : (selectedMethod || formData.paymentMethod || ''),
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         //status: formData.entity && formData.entity.toLowerCase() === 'vmco' ? 'Pending' : 'Open',
         status: 'Open',
@@ -904,9 +896,9 @@ function OrderDetails() {
           }
 
           console.log('Sales order line items created successfully');              // If we get here, both order and products were saved successfully
-          console.log('Complete order creation process finished successfully');              // Check if this is a VMCO Machines order that needs discount workflow approval
-          if ((formData.entity && formData.entity.toLowerCase() === 'vmco') &&
-            (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') &&
+          console.log('Complete order creation process finished successfully');          // Check if this is a VMCO Machines order that needs discount workflow approval
+          if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
+            (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
             formData.customerId) {
             // Directly trigger the discount workflow without checking if it already exists
             console.log(`Directly triggering discount workflow for order ${result.data.id}`);
@@ -915,10 +907,9 @@ function OrderDetails() {
             console.log(`- formData.customerId: ${formData.customerId}`);
 
             await triggerDiscountWorkflow(result.data.id, formData.customerId);
-          } else {
-            console.log('Skipping discount workflow creation in order creation because conditions failed:');
-            console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
-            console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+          } else {            console.log('Skipping discount workflow creation in order creation because conditions failed:');
+            console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
+            console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
             console.log(`- has customerID: ${Boolean(formData.customerId)}`);
           }          // If we get here, both order and products were saved successfully
           Swal.fire({
@@ -1071,7 +1062,7 @@ function OrderDetails() {
     if (name === 'entity' && formMode === 'add') {
       // If entity changes in add mode, update payment percentage accordingly
       // Set payment percentage to 100% if entity is not vmco
-      const isVmco = value.toLowerCase() === 'vmco';
+      const isVmco = value.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
 
       setFormData((prev) => ({
         ...prev,
@@ -1079,10 +1070,9 @@ function OrderDetails() {
         // Set payment percentage to 100% for any entity other than vmco
         paymentPercentage: !isVmco ? '100%' : (prev.paymentPercentage || '30%')
       }));
-    } else if (name === 'category' && formMode === 'add') {
-      // If category changes in add mode, update payment percentage accordingly
+    } else if (name === 'category' && formMode === 'add') {      // If category changes in add mode, update payment percentage accordingly
       // and set payment method to "Pre Payment" for "VMCO Machines" category
-      const isVmcoMachines = value === 'VMCO Machines';
+      const isVmcoMachines = value === Constants.CATEGORY.VMCO_MACHINES;
 
       setFormData((prev) => ({
         ...prev,
@@ -1710,9 +1700,8 @@ const columns = [
       total = formData.products.reduce((sum, p) => {
         const net = parseFloat(p.netAmount) || 0;
         return sum + net;
-      }, 0);
-      // Delivery charges logic
-      if (formData.entity && formData.entity.toLowerCase() !== 'vmco') {
+      }, 0);      // Delivery charges logic
+      if (formData.entity && formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()) {
         if (total <= 150) {
           deliveryCharges = '20.00';
         }
@@ -2055,11 +2044,9 @@ const columns = [
       // Additional debugging for the IDs
       console.log("Detailed formData validation:");
       console.log(`- formData.id type: ${typeof formData.id}, value: ${formData.id}`);
-      console.log(`- formData.customerId type: ${typeof formData.customerId}, value: ${formData.customerId}`);
-
-      // Use case-insensitive comparison for entity
-      if ((formData.entity && formData.entity.toLowerCase() === 'vmco') &&
-        (formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines') &&
+      console.log(`- formData.customerId type: ${typeof formData.customerId}, value: ${formData.customerId}`);      // Use case-insensitive comparison for entity
+      if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
+        (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
         formData.customerId && formData.id) {
         
         // Additional validation before calling the workflow
@@ -2075,12 +2062,11 @@ const columns = [
           console.error(`- orderId: ${formData.id} (type: ${typeof formData.id})`);
           console.error(`- customerId: ${formData.customerId} (type: ${typeof formData.customerId})`);
         }
-      } else {
-        console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
+      } else {        console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
         console.log(`- entity: ${formData.entity}`);
-        console.log(`- entity.toLowerCase() === 'vmco': ${formData.entity && formData.entity.toLowerCase() === 'vmco'}`);
+        console.log(`- entity.toLowerCase() === 'vmco': ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
         console.log(`- productCategory: ${formData.productCategory}`);
-        console.log(`- productCategory.toLowerCase() === 'vmco machines': ${formData.productCategory && formData.productCategory.toLowerCase() === 'vmco machines'}`);
+        console.log(`- productCategory.toLowerCase() === 'vmco machines': ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
         console.log(`- customerId: ${Boolean(formData.customerId)}`);
       }
 
@@ -2213,9 +2199,8 @@ const columns = [
   useEffect(() => {
     const autoSelectCreditPayment = async () => {
       // Only auto-select in add mode and when no payment method is already selected
-      if (formMode === 'add' && formData.customerId && !formData.paymentMethod) {
-        // Skip auto-selection for VMCO Machines category as it should use Pre Payment
-        const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === 'vmco machines';
+      if (formMode === 'add' && formData.customerId && !formData.paymentMethod) {        // Skip auto-selection for VMCO Machines category as it should use Pre Payment
+        const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
         if (isVmcoMachinesCategory) {
           return;
         }
@@ -2382,9 +2367,8 @@ const columns = [
                           <Dropdown
                             name="category"
                             value={formData.category || ''}
-                            onChange={handleInputChange}
-                            options={
-                              formData.entity && formData.entity.toLowerCase() === 'vmco'
+                            onChange={handleInputChange}                            options={
+                              formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                                 ? VMCO_CATEGORIES.map(category => ({ value: category, label: category }))
                                 : []
                             }
@@ -2394,7 +2378,7 @@ const columns = [
                               !isE('category') ||
                               (formData.products && formData.products.length > 0) ||
                               !formData.entity ||
-                              formData.entity.toLowerCase() !== 'vmco'
+                              formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()
                             }
                           />
                         ) : (
@@ -2447,7 +2431,7 @@ const columns = [
                             name="paymentPercentage"
                             value={formData.paymentPercentage ?? ''}
                             onChange={handleInputChange}
-                            disabled={fromApproval ? false : formData.category !== 'VMCO Machines'}
+                            disabled={fromApproval ? false : formData.category !== Constants.CATEGORY.VMCO_MACHINES}
                           >
                             <option value="">{t('Select Payment Percentage')}</option>
                             {paymentPercentageOptions.map((option, index) => (
@@ -2496,8 +2480,7 @@ const columns = [
                           readOnly
                         />
                       </div>
-                    )}
-                    {isV('expectedDeliveryDate') && (
+                    )}                    {isV('expectedDeliveryDate') && (
                       <div className="order-details-field">
                         <label>{t('Delivery Date')}</label>
                         {formMode === 'add' ? (
@@ -2513,20 +2496,30 @@ const columns = [
                           <input
                             type="text"
                             name="expectedDeliveryDate"
-                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'DD/MM/YYYY') : ''}
+                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'DD/MM/YYYY') : 'Delivery date will be updated soon'}
                             disabled
                             readOnly
-                            style={{ background: '#f9f9f9' }}
+                            style={{ background: '#f9f9f9', color: formData.expectedDeliveryDate ? '#000' : '#999' }}
                           />
                         ) : (
-                          <input
-                            type="date"
-                            name="expectedDeliveryDate"
-                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'YYYY-MM-DD') : ''}
-                            placeholder="Delivery Date will be updated later"
-                            onChange={handleInputChange}
-                            disabled={!isE('expectedDeliveryDate')}
-                          />
+                          formData.expectedDeliveryDate ? (
+                            <input
+                              type="date"
+                              name="expectedDeliveryDate"
+                              value={formatDate(formData.expectedDeliveryDate, 'YYYY-MM-DD')}
+                              onChange={handleInputChange}
+                              disabled={!isE('expectedDeliveryDate')}
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              name="expectedDeliveryDate"
+                              value="Delivery date will be updated soon"
+                              disabled
+                              readOnly
+                              style={{ background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }}
+                            />
+                          )
                         )}
                       </div>
                     )}

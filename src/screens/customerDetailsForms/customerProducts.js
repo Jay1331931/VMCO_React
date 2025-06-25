@@ -10,6 +10,7 @@ import { faToggleOff, faToggleOn, faCheck, faXmark } from '@fortawesome/free-sol
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { debounce, set } from 'lodash';
+import Constants from '../../constants';
 
 function Products(customer) {
     const [isApprovalMode, setApprovalMode] = useState(false);
@@ -18,10 +19,9 @@ function Products(customer) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-    const actionMenuRef = useRef(null);
-    const { t } = useTranslation();
-    const categories = ['VMCO', 'Diyafa', 'Green Mast', 'Naqui'];
-    const [activeCategory, setActiveCategory] = useState('VMCO');
+    const actionMenuRef = useRef(null);    const { t } = useTranslation();
+    const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GMTC, Constants.ENTITY.NAQI];
+    const [activeCategory, setActiveCategory] = useState(Constants.ENTITY.VMCO);
     const [selectedItems, setSelectedItems] = useState([]);
     const [editingMoq, setEditingMoq] = useState(null);
 
