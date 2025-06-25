@@ -50,8 +50,9 @@ function App() {
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
         <Route path="/rbacEditor" element={<RbacEditor />} />
         <Route path="/logout" element={<Logout />} />
-
-        </Routes>
+        <Route path="/payment" element={<Payment />} />        
+        <Route path="/customerDetails" element={<CustomerDetails />} />
+      </Routes>
     </Router>
   );
 }
