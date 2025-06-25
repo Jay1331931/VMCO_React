@@ -260,10 +260,10 @@ const BranchDetailsForm = ({
         return branch?.[fieldName];
       }
     }
-    if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
-      return branchChanges[branch.id][fieldName];
+    if (branchChanges?.[branch?.id]?.hasOwnProperty(fieldName)) {
+      return branchChanges[branch?.id][fieldName];
     }
-    return branch[fieldName] ?? "";
+    return branch?.[fieldName] ?? "";
   };
 
   // Handle checkbox changes
@@ -374,13 +374,13 @@ const BranchDetailsForm = ({
         required: true,
         options: ["Region 1", "Region 2", "Region 3"],
       },
-      {
-        label: "Geolocation",
-        name: "geolocation",
-        placeholder: "Geolocation",
-        isLocation: true,
-        required: true,
-      },
+      // {
+      //   label: "Geolocation",
+      //   name: "geolocation",
+      //   placeholder: "Geolocation",
+      //   isLocation: true,
+      //   required: true,
+      // },
     ],
     []
   );
@@ -442,8 +442,8 @@ const BranchDetailsForm = ({
             : getFieldValue(field.name);
           console.log(
             "Branch field value:",
-            branch[field.name],
-            typeof branch[field.name]
+            branch?.[field.name],
+            typeof branch?.[field.name]
           );
 
           return (
@@ -496,7 +496,7 @@ const BranchDetailsForm = ({
                             name={field.name}
                             value={value}
                             placeholder={t(field.placeholder)}
-                            onChange={() => {}}
+                            onChange={handleBranchFieldChange}
                             style={
                               hasUpdate
                                 ? {
@@ -515,7 +515,7 @@ const BranchDetailsForm = ({
                           <select
                             name={field.name}
                             value={value}
-                            onChange={() => {}}
+                            onChange={handleBranchFieldChange}
                             style={
                               hasUpdate
                                 ? {

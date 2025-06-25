@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 const ContactRow = ({ label, isRequired, onChange }) => {
   const { t } = useTranslation();
@@ -101,10 +102,13 @@ const ContactSection = ({
     },
   ];
 
-  const handleContactChange = (fieldName, value) => {
-    handleBranchFieldChange(branch.id, fieldName, value);
-  };
-
+  // const handleContactChange = (fieldName, value) => {
+  //   handleBranchFieldChange(branch.id, fieldName, value);
+  // };
+useEffect(() => {
+  // This effect can be used to perform any side effects when the component mounts or updates
+    console.log("ContactSection mounted or updated");
+  });
   return (
     <div className="form-section">
       <h3>{t("Personal Details")}</h3>
@@ -122,14 +126,14 @@ const ContactSection = ({
                     placeholder={t(name)}
                     value={branch[field]}
                     required={isRequired}
-                    onChange={(e) => handleContactChange(field, e.target.value)}
-                    disabled={
-                      customerFormMode === "custDetailsEdit" ||
-                      (label === "Primary Contact" &&
-                        name === "Email" &&
-                        branch?.branchStatus !== "new" &&
-                        !branch?.isNew)
-                    }
+                    onChange={handleBranchFieldChange}
+                    // disabled={
+                    //   customerFormMode === "custDetailsEdit" ||
+                    //   (label === "Primary Contact" &&
+                    //     name === "Email" &&
+                    //     branch?.branchStatus !== "new" &&
+                    //     !branch?.isNew)
+                    // }
                   />
                 </div>
               ))}

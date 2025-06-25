@@ -543,8 +543,8 @@ function Customers() {
         } else {
           transformedCustomer.isApprovalMode = false;
         }
-        navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
-        
+        // navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
+        navigate(`/customerDetails`, { state: { customerId: customerId, workflowId: transformedCustomer?.workflowInstanceId, mode: isApprovalMode ? 'edit' : 'add' } });
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
       }

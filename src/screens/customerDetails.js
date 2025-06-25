@@ -85,70 +85,40 @@ const fetchCurrentDataOfCustomer = async (customerId) => {
 };
 
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
-const fetchWorkflowDataOfCustomer = async (customerId) => {
-  return {
-    //id: 4,
-    //erpCustId: "ERP004",
-    //companyNameEn: "cust 4",
-    //companyNameAr: "العميل 4",
-    //companyType: "trading",
-    crNumber: "CR111111114",
-    vatNumber: "VAT1111111114",
-    //baladeahLicenseNumber: "BL000004",
-    //governmentRegistrationNumber: "GRN000004",
-    typeOfBusiness: "Supermarket",
-    // typeOfBusinessOther: null,
-    // deliveryLocations: "Riyadh, Jeddah, Dubai",
-    // companyLogo: null,
-    // brandLogo: null,
-    // brandNameEn: "Cust4Brand",
-    // brandNameAr: "كاست4",
-    // buildingName: "Plaza 4",
-    // street: "Main Street",
-    // city: "Khamis Mushait",
-    // district: null,
-    // region: "kamis mushait",
-    // pincode: null,
-    // geolocation: {
-    //   x: 18.3,
-    //   y: 42.7333,
-    // },
-    // bankName: "Alinma Bank",
-    // bankAccountNumber: "SA4567890123456789012346",
-    // iban: "SA4567890123456789012345",
-    // crCertificate: "cr_cert_004.pdf",
-    // vatCertificate: "vat_cert_004.pdf",
-    // nationalId: "NID4567890123",
-    // bankLetter: "bank_letter_004.pdf",
-    // nationalAddress: "78901 Khamis Mushait",
-    // customerSource: "Business Conference",
-    // acknowledgementSignature: "signature_004.png",
-    // contractAgreement: null,
-    // customerContract: null,
-    // creditApplication: null,
-    // declarationName: "Sara Abdullah",
-    // declarationSignature: "decl_sig_004.png",
-    // declarationDate: {},
-    // pricingPolicy: "Price C",
-    // customerStatus: "Active",
-    // isDeliveryChargesApplicable: false,
-    // isBlocked: false,
-    // assignedTo: "emp_1004",
-    // assignedToEntityWise: {
-    //   naqi: "emp_1004",
-    //   vmco: "emp_1001",
-    //   diyafa: "emp_1002",
-    //   "green mast": "emp_1003",
-    // },
-    // nonTradingDocuments: null,
-    // interCompany: true,
-    // entity: null,
-    // zone: null,
-    // createdAt: "2025-06-20T16:39:08.223Z",
-    // updatedAt: "2025-06-20T16:39:08.223Z",
-    // createdBy: 1,
-    // modifiedBy: 1,
-  };
+const fetchWorkflowDataOfCustomer = async (workflowId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    const workflowDataJson = await response.json();
+    console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+    return workflowDataJson?.data?.workflowData?.updates;
+  } catch (error) {
+    console.error("Error fetching workflow data:", error);
+    throw error;
+  }
+};
+
+const checkInApproval = async (customerId) => {
+  let isAppMode = false;
+  try {
+    const response = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: customerId, module: "customer" }),
+      credentials: "include",
+    });
+    if (response.ok) {
+        const responseText = await response.text(); // Get raw response text ('t' or 'f')
+        console.log(responseText);
+        const data = responseText ? JSON.parse(responseText) : {};
+        isAppMode = data?.exists === "t"; // Convert to boolean
+        return isAppMode;
+      }} catch (err) {
+      console.error("Error fetching workflow instance:", err);
+    }
 };
 
 function CustomerDetails() {
@@ -169,23 +139,42 @@ function CustomerDetails() {
   //TODO - set it appropriately based  workflow thingy - WF
   const [inApproval, setInApproval] = useState(true);
   const [originalCustomerData, setOriginalCustomerData] = useState(null); //WF
-  var wfCustomerData = null; //WF
-
+  const [originalCustomerContactsData, setOriginalCustomerContactsData] = useState(null); //WF
+  // var wfCustomerData = null; //WF
+  const [wfCustomerData, setWfCustomerData] = useState(null); //WF
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
   const location = useLocation();
   const customerId = location?.state?.customerId;
-
+  const workflowId = location?.state?.workflowId;
+  const mode = location?.state?.mode;
+const rbacMgr = new RbacManager(
+    user?.userType == "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    mode === "add" || customerData?.customerStatus === "new" ? "custDetailsAdd" : "custDetailsEdit",
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   useEffect(() => {
     const fetchData = async () => {
       const resp = await fetchCurrentDataOfCustomer(customerId);
+      const customerContacts = await fetchCurrentDataOfCustomerContacts(customerId);
       console.log("#####???????Fetched customer data:", JSON.stringify(resp));
+      console.log("@@@@@@customerId:", customerId);
+      console.log("@@@@@workflowId:", workflowId);
+      console.log("@@@@@mode:", mode);
+      const isUnderApproval = await checkInApproval(customerId);
+      setInApproval(isUnderApproval);
       var temp;
-      if (inApproval) {
+      if (isUnderApproval) {
         //WF
         setOriginalCustomerData(resp);
-        wfCustomerData = await fetchWorkflowDataOfCustomer(customerId);
-        temp = { ...resp, ...wfCustomerData };
+        setOriginalCustomerContactsData(customerContacts);
+        const wfData = await fetchWorkflowDataOfCustomer(workflowId);
+        setWfCustomerData(wfData);
+        temp = { ...resp, ...wfData };
       }
-      setCustomerData(inApproval ? temp : resp);
+      setCustomerData(isUnderApproval ? temp : resp);
       const conRes = await fetchCurrentDataOfCustomerContacts(customerId);
       setCustomerContactsData(conRes);
       const paymentMethodsRes = await fetchCurrentPaymentMetods(customerId);
@@ -289,7 +278,7 @@ function CustomerDetails() {
     try {
       //TODO:Merge workflow data with updatedcustomerData.current if inApproval is true and save. This could happen only during
       //  approval the data is changed
-      updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
+      // updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
 
       const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
         method: "POST",
@@ -303,7 +292,7 @@ function CustomerDetails() {
     }
 
     try {
-      updatedCustomerPaymentMethodsData.current["customerStatus"] = customerData.customerStatus;
+      // updatedCustomerPaymentMethodsData.current["customerStatus"] = customerData.customerStatus;
 
       const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
         method: "POST",
@@ -316,6 +305,78 @@ function CustomerDetails() {
       console.error("Error updating customer payment methods:", error.message);
     }
   };
+
+  const handleApprove = async(action) => {
+    try {
+      
+      const mergedData = { updates: {...wfCustomerData, ...updatedCustomerData.current}, id: customerId };
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approvedStatus: "approved", comment: "comment", workflowData: mergedData }),
+          credentials: "include",
+        }
+      );
+      console.log("Response", response);
+    } catch (error) {
+      console.error("Error approving customer:", error.message);
+    }
+  }
+
+  const handleReject = async(action) => {
+    try {
+      
+      const mergedData = { updates: {...wfCustomerData, ...updatedCustomerData.current}, id: customerId };
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approvedStatus: "rejected", comment: "comment", workflowData: mergedData }),
+          credentials: "include",
+        }
+      );
+      console.log("Response", response);
+    } catch (error) {
+      console.error("Error approving customer:", error.message);
+    }
+  }
+
+  const handleSubmit = async (action) => {
+    try {
+      uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
+      customerData["customerStatus"] = "pending";
+      
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerData),
+        credentials: "include",
+      });
+      console.log("Response", response);
+    } catch (error) {
+      console.error("Error updating customer:", error.message);
+    }
+
+    try {
+      //TODO:Merge workflow data with updatedcustomerData.current if inApproval is true and save. This could happen only during
+      //  approval the data is changed
+      // updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
+
+      const response = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customerContactsData),
+        credentials: "include",
+      });
+      console.log("Response", response);
+    } catch (error) {
+      console.error("Error updating customer:", error.message);
+    }
+  };
+
   return (
     <Sidebar>
       <div className='customers'>
@@ -330,14 +391,22 @@ function CustomerDetails() {
               ))}
             </div>
             {activeTab === "Business Details" && (
-              <BusinessDetails customerData={customerData} originalCustomerData={originalCustomerData} onChangeCustomerData={handleCustomerDataChange} />
+              <BusinessDetails 
+              customerData={customerData} 
+              originalCustomerData={originalCustomerData} 
+              onChangeCustomerData={handleCustomerDataChange}  
+              mode={mode}
+              />
             )}
             {activeTab === "Contact Details" && (
               <ContactDetails
                 customerData={customerData}
+                originalCustomerData={originalCustomerData}
                 customerContactsData={customerContactsData}
+                originalCustomerContactsData={originalCustomerContactsData}
                 onChangeCustomerData={handleCustomerDataChange}
                 onChangeCustomerContactsData={handleCustomerContactsDataChange}
+                mode={mode}
               />
             )}
             {activeTab === "Financial Information" && (
@@ -366,11 +435,31 @@ function CustomerDetails() {
             <span className='status-badge'>{t(customerData.customerStatus) || t("Pending")}</span>
           </div>
           <div className='action-buttons'>
-            {
+            {isV("btnSave") && customerData?.customerStatus === "new" && (
               <button className='save' onClick={() => handleSave("save")} disabled={false}>
                 {t("Save")}
               </button>
-            }
+            )}
+            {isV("btnSubmit") && customerData?.customerStatus === "new" && (
+              <button className='save' onClick={() => handleSubmit("save")} disabled={false}>
+                {t("Submit")}
+              </button>
+            )}
+            {isV("btnSaveChanges") && customerData?.customerStatus !== "new" && (
+              <button className='save' onClick={() => handleSave("save")} disabled={mode === "add" && inApproval}>
+                {t("Save Changes")}
+              </button>
+            )}
+            {isV("btnApprove") && (
+              <button className='approve' onClick={() => handleApprove("approve")} disabled={false}>
+                {t("Approve")}
+              </button>
+            )}
+            {isV("btnReject") && (
+              <button className='reject' onClick={() => handleReject("reject")} disabled={false}>
+                {t("Reject")}
+              </button>
+            )}
           </div>
         </div>
       </div>

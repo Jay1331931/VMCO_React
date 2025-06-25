@@ -294,7 +294,7 @@ return customerData;
         //   }
         // });
         navigate('/customerDetails', {
-          state: { customerId: customerData?.id }
+          state: { customerId: customerData?.id, workflowId: customerData?.workflowInstanceId, mode: 'add' }
         });
       } catch (err) {
         console.error("Failed to fetch customer:", err);

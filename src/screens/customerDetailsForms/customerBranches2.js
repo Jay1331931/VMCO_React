@@ -862,6 +862,7 @@ const CustomerBranches = ({ customer, setTabsHeight, inApproval }) => {
                         inApproval={inApproval}
                         branchChanges={branchChanges}
                         handleBranchFieldChange={handleBranchFieldChange}
+                        onSave={handleSave}
                       />
                     </td>
                   </tr>
