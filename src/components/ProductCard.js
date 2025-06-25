@@ -61,23 +61,24 @@ const ProductCard = ({
             style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
             dir={dir}
         >
-            <div className="product-image">
-                {product.image ? (
-                    <img
-                        src={product.image}
-                        alt={product.name}
-                        className="product-img"
-                    />
-                ) : (
-                    <div className="image-placeholder"></div>
-                )}
-            </div>            
+            <div className="product-image-container">
+            {product.image ? (
+                <img
+                src={product.image}
+                alt={product.name}
+                className="responsive-product-image"
+                />
+            ) : (
+                <div className="product-image-placeholder">No Image</div>
+            )}
+            </div>
+          
             <div className="product-details">
-                <h3 className="product-name">{product.name}</h3>
+                <h3 className="product-name" title={product.name}>{product.name}</h3>
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
-                <h4 className="unit-price">{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
-                <div className="quantity-controls">
+                <h4 className="unit-price" style={{color:"#6c7584"}}>{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
+                <div className="buttons-container">
                     {isV('quantityController') && (
                         <QuantityController
                             itemId={product.id}
@@ -108,6 +109,7 @@ const ProductCard = ({
                         <button
                             className="add-to-cart-btn"
                             onClick={(e) => handleAddToCart(e)}
+                            style={{backgroundColor: '#01594C',color:"#ffffff"}}
                         >
                             {t('ADD TO CART')}
                         </button>
@@ -115,12 +117,20 @@ const ProductCard = ({
                 </div>
             </div>
             <style>{`
+            .buttons-container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            }
                 .product-card {
   border: 1px solid #D9D9D6;
   border-radius: 14px;
   overflow: hidden;
   background: white;
-  min-width: 280px;
+//   min-width: 150px;
   /* Set minimum width for cards */
   height: 100%;
   /* Ensure consistent height */
@@ -142,12 +152,12 @@ const ProductCard = ({
   justify-content: center;
 }
 
-.product-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 5px;
-}
+// .product-img {
+//   width: 100%;
+//   height: 100%;
+//   object-fit: contain;
+//   border-radius: 5px;
+// }
                 
 .image-placeholder {
   width: 100%;
@@ -163,8 +173,17 @@ const ProductCard = ({
 .product-name {
   font-size: 1rem;
   margin: 0 0 5px 0;
-  color: #333;
+  color: #384152;
+  white-space: nowrap;      
+  overflow: hidden;          
+  text-overflow: ellipsis;  
+  max-width: 100%;         
+  cursor: default;           
+  display: inline-block;
 }
+
+
+
 
 .product-code {
   font-size: 0.9rem;
@@ -184,7 +203,7 @@ const ProductCard = ({
 
 .quantity-controls {
   display: flex;
-  gap: 10px;
+  gap: 0px;
   margin-top: 15px;
   margin-bottom: 15px;
 }
@@ -217,9 +236,11 @@ const ProductCard = ({
   width: 160px;
   height: 30px;
   padding: 10px 10px;
-  background-color: #00205B;
+//   background-color: #00205B;
   color: white;
   align-items: center;
+  justify-content: center;
+    display: flex;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -227,9 +248,9 @@ const ProductCard = ({
   font-weight: 600;
 }
 
-.add-to-cart-btn:hover {
-  background-color: #001845;
-}
+// .add-to-cart-btn:hover {
+//   background-color: #001845;
+// }
 
 /* Specifically target Firefox */
 .quantity-input::-webkit-outer-spin-button,
@@ -257,6 +278,11 @@ const ProductCard = ({
                     .add-to-cart-btn {
                         font-size: 0.97rem;
                         padding: 7px 12px;
+                    }
+                   
+                    .add-to-cart-btn {
+                        width: 140px  !important;
+                        font-size: 14px
                     }
                 }
                 .product-card.rtl {

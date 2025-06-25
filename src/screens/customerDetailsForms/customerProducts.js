@@ -1,34 +1,29 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "../../components/Sidebar";
-import Pagination from "../../components/Pagination";
-import "../../styles/pagination.css";
-import "../../styles/components.css";
-import "../../styles/forms.css";
-import RbacManager from "../../utilities/rbac";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faToggleOff,
-  faToggleOn,
-  faCheck,
-  faXmark,
-} from "@fortawesome/free-solid-svg-icons";
-import { useTranslation } from "react-i18next";
-import { useAuth } from "../../context/AuthContext";
-import { debounce, set } from "lodash";
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Sidebar from '../../components/Sidebar';
+import Pagination from '../../components/Pagination';
+import '../../styles/pagination.css';
+import '../../styles/components.css';
+import '../../styles/forms.css';
+import RbacManager from '../../utilities/rbac';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faToggleOff, faToggleOn, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../context/AuthContext';
+import { debounce, set } from 'lodash';
+import Constants from '../../constants';
 
 function Products(customer) {
-  const [isApprovalMode, setApprovalMode] = useState(false);
-  const [products, setProducts] = useState([]); // all products
-  const [currentItems, setCurrentItems] = useState([]); // products on current page
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-  const actionMenuRef = useRef(null);
-  const { t } = useTranslation();
-  const categories = ["VMCO", "Diyafa", "Green Mast", "Naqui"];
-  const [activeCategory, setActiveCategory] = useState("VMCO");
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [editingMoq, setEditingMoq] = useState(null);
+    const [isApprovalMode, setApprovalMode] = useState(false);
+    const [products, setProducts] = useState([]); // all products
+    const [currentItems, setCurrentItems] = useState([]); // products on current page
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isActionMenuOpen, setActionMenuOpen] = useState(false);
+    const actionMenuRef = useRef(null);    const { t } = useTranslation();
+    const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GMTC, Constants.ENTITY.NAQI];
+    const [activeCategory, setActiveCategory] = useState(Constants.ENTITY.VMCO);
+    const [selectedItems, setSelectedItems] = useState([]);
+    const [editingMoq, setEditingMoq] = useState(null);
 
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -277,153 +272,134 @@ function Products(customer) {
     setCurrentPage(1);
   }, 400);
 
-  return (
-    <div className="products-content">
-      <h3>{t("Products & MoQ - Company Name")}</h3>
-      <div className="category-tabs">
-        {categories.map((category) => (
-          <button
-            key={category}
-            className={`category-tab ${
-              activeCategory === category ? "active" : ""
-            }`}
-            onClick={() => {
-              setActiveCategory(category);
-              setCurrentPage(1);
-              fetchProducts();
-            }}
-          >
-            {t(category)}
-          </button>
-        ))}
-      </div>
-      <div className="products-page-header">
-        <div className="products-header-controls">
-          <input
-            type="text"
-            placeholder={t("Search...")}
-            className="product-search-input"
-            onChange={handleSearchChange}
-          />
-          <div className="toggle-container">
-            <label>{t("All")}</label>
-            <FontAwesomeIcon
-              icon={isApprovalMode ? faToggleOn : faToggleOff}
-              className="product-toggle-icon"
-              onClick={toggleApprovalMode}
-              aria-label={
-                isApprovalMode
-                  ? t("Switch to All Orders")
-                  : t("Switch to My Approvals")
-              }
-            />
-            <label>{t("Selected")}</label>
-          </div>
-          <div className="toggle-container">
-            {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
-            {isV("btnApplyAll") && (
-              <input type="text" className="product-text-input" />
-            )}
-            {isV("btnApplyAll") && (
-              <button
-                className="branches-approve-button"
-                disabled={
-                  currentItems.filter((item) => item.visible).length < 2
-                }
-                onClick={handleApplyAll}
-              >
-                Apply All
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="products-table-container">
-        <table className="products-data-table">
-          <thead>
-            <tr>
-              <th className="checkbox-cell">
-                <input
-                  type="checkbox"
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                  disabled={isV("btnApplyAll")}
-                />
-              </th>
-              <th>{t("Name")}</th>
-              <th>{t("Minimum Order Quantity")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((product) => (
-              <tr key={product.id}>
-                <td className="checkbox-cell">
-                  <input
-                    type="checkbox"
-                    checked={product.visible}
-                    onChange={() => handleToggleVisibility(product.id)}
-                    disabled={isV("btnApplyAll")}
-                  />
-                </td>
-                <td>{product.productName}</td>
-                <td className="edit-cell">
-                  <div className="input-with-icons">
+    return (
+        <div className="products-content">
+            <h3>{t("Products & MoQ - Company Name")}</h3>
+            <div className="category-tabs">
+                {categories.map((category) => (
+                    <button
+                        key={category}
+                        className={`category-tab ${activeCategory === category ? 'active' : ''}`}
+                        onClick={() => {setActiveCategory(category); setCurrentPage(1); fetchProducts();}}
+                    >
+                        {t(category)}
+                    </button>
+                ))}
+            </div>
+            <div className="products-page-header">
+                <div className="products-header-controls">
                     <input
-                      type="text"
-                      value={product.moq}
-                      onChange={(e) =>
-                        handleMoqChange(product.id, e.target.value)
-                      }
-                      onFocus={() => {
-                        setIsInputFocused(true);
-                        setEditingMoq(product.id);
-                      }}
-                      // onBlur={() => {
-                      //     // Use setTimeout to allow button clicks to register
-                      //     setTimeout(() => {
-                      //         setIsInputFocused(false);
-                      //         setEditingMoq(null);
-                      //     }, 200);
-                      // }}
-                      disabled={!isV("btnApplyAll")}
-                      style={{ width: "80px" }}
+                        type="text"
+                        placeholder={t('Search...')}
+                        className="product-search-input"
+                        onChange={handleSearchChange}
+                        style={{padding:" 10px 15px",
+    width: "300px",
+    border: "2px solid #00205b",
+    borderRadius:"8px",
+    fontSize: "1rem",
+    backgroundColor: "#fff",
+    /* box-shadow: 0 0 0 2px #E5E4E2; */
+    transition: "all 0.2s ease",
+    marginRight: "10px",
+    boxSizing: "border-box"}}
                     />
-                    {isInputFocused && (
-                      <>
-                        <button
-                          className="icon-button"
-                          onClick={() => handleSaveMoq(product.id, product.moq)}
-                          onMouseDown={(e) => e.preventDefault()}
-                        >
-                          <FontAwesomeIcon icon={faCheck} />
-                        </button>
-                        <button
-                          className="icon-button"
-                          onClick={() => handleCancelMoq(product.id)}
-                          onMouseDown={(e) => e.preventDefault()}
-                        >
-                          <FontAwesomeIcon icon={faXmark} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => {
-            setCurrentPage(page);
-            fetchProducts();
-          }}
-        />
-      </div>
-    </div>
-  );
+                    <div className="toggle-container">
+                        <label>{t('All')}</label>
+                        <FontAwesomeIcon
+                            icon={isApprovalMode ? faToggleOn : faToggleOff}
+                            className="product-toggle-icon"
+                            onClick={toggleApprovalMode}
+                            aria-label={isApprovalMode ? t('Switch to All Orders') : t('Switch to My Approvals')}
+                        />
+                        <label>{t('Selected')}</label>
+                    </div>
+                    <div className='toggle-container'>
+                        {isV('btnApplyAll') && <label>{t('MoQ')}</label>}
+                        {isV('btnApplyAll') && <input type='text' className='product-text-input' />}
+                        {isV('btnApplyAll') && (
+                            <button
+                                className='branches-approve-button'
+                                disabled={currentItems.filter(item => item.visible).length < 2}
+                                onClick={handleApplyAll}
+                            >
+                                {t('Apply All')}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <div className="products-table-container">
+                <table className="products-data-table">
+                    <thead>
+                        <tr>
+                            <th className="checkbox-cell">
+                                <input
+                                    type="checkbox"
+                                    checked={isAllSelected}
+                                    onChange={handleSelectAll}
+                                    disabled={isV('btnApplyAll')}
+                                />
+                            </th>
+                            <th>{t("Name")}</th>
+                            {isV('btnApplyAll') && (<th>{t("Minimum Order Quantity")}</th>)}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {currentItems.map((product) => (
+                            <tr key={product.id}>
+                                <td className="checkbox-cell">
+                                    <input
+                                        type="checkbox"
+                                        checked={product.visible}
+                                        onChange={() => handleToggleVisibility(product.id)}
+                                        disabled={isV('btnApplyAll')}
+                                    />
+                                </td>
+                                <td>{product.productName}</td>
+                                {isV('btnApplyAll') && (<td className='edit-cell'>
+                                    <div className="input-with-icons">
+                                        <input
+                                            type="text"
+                                            value={product.moq}
+                                            onChange={(e) => handleMoqChange(product.id, e.target.value)}
+                                            onFocus={() => {
+                                                setIsInputFocused(true);
+                                                setEditingMoq(product.id);
+                                            }}
+                                            // onBlur={() => {
+                                            //     // Use setTimeout to allow button clicks to register
+                                            //     setTimeout(() => {
+                                            //         setIsInputFocused(false);
+                                            //         setEditingMoq(null);
+                                            //     }, 200);
+                                            // }}
+                                            disabled={!isV('btnApplyAll')}
+                                            style={{ width: '80px' }}
+                                        />
+                                        {isInputFocused && (
+                                            <>
+                                                <button className="icon-button" onClick={() => handleSaveMoq(product.id, product.moq)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faCheck} /></button>
+                                                <button className="icon-button" onClick={() => handleCancelMoq(product.id)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faXmark} /></button>
+                                            </>
+                                        )}
+                                    </div>
+                                </td>)}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {/* Pagination */}
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
+            />
+            </div>
+            
+            
+        </div>
+    );
 }
 
 export default Products;

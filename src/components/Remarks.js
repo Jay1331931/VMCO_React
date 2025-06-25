@@ -1,6 +1,8 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 function Remarks({ open, onClose }) {
+    const {t} = useTranslation();
     if (!open) return null;
 
     return (
@@ -8,14 +10,14 @@ function Remarks({ open, onClose }) {
             <div className="remarks-backdrop" />
             <div className="remarks-modal">
                 <div className="remarks-header">
-                    <span className="remarks-title">Remarks</span>
+                    <span className="remarks-title">{t("Remarks")}</span>
                     <button className="remarks-close" onClick={onClose}>&times;</button>
                 </div>
                 <div className="remarks-input-container">
                     <input className="remarks-input" type="text" placeholder="Enter remarks here..." />
                 </div>
                 <div className="remarks-footer">
-                    <button className="remarks-approve-btn" onClick={onClose}>Approve</button>
+                    <button className="remarks-approve-btn" onClick={onClose}>{t("Approve")}</button>
                 </div>
             </div>
 

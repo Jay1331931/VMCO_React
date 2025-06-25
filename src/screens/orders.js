@@ -10,6 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import Swal from 'sweetalert2';
+import { formatDate } from '../utilities/dateFormatter';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -84,6 +86,7 @@ function Orders() {
       } const result = await response.json();
       if (result.status === 'Ok') {
         // Ensure we have the companyNameEn field for each order
+        console.log('API Response:', result);
         const processedOrders = result.data.data.map(order => ({
           ...order,
           // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
@@ -238,7 +241,13 @@ function Orders() {
   };
 
   const handlePay = (order) => {
-    navigate('/checkout', { state: { order } });
+    // navigate('/checkout', { state: { order } });
+    const paymentWindow = window.open(
+      `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,
+      '_blank',
+      'width=500,height=600'
+    );
+    // window.location.href = '/payment?orderId=' + order.id + '&amount=' + order.totalAmount;
   };
 
   // Action menu for Orders page
@@ -246,19 +255,30 @@ function Orders() {
     {
       key: 'favorites',
       label: 'Favorites',
-      onClick: () => alert('Favorites clicked')
+      onClick: () => Swal.fire({
+        title: t('Favorites'),
+        text: t('Favorites clicked'),
+        icon: 'info',
+        confirmButtonText: 'OK'
+      })
+        // alert('Favorites clicked')
     },
     {
       key: 'customOrders',
       label: 'Custom Orders',
-      onClick: () => alert('Custom Orders clicked')
+      onClick: () => 
+        Swal.fire({
+          title: t('Custom Orders'),
+          text: t('Custom Orders clicked'),
+          icon: 'info',
+          confirmButtonText: 'OK'
+        })
+        // alert('Custom Orders clicked')
     }
   ];
 
-
   const isArabic = i18n.language === 'ar'; // or use your language state
-
-  const columns = [
+    const orderColumns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
     {
       key: isArabic ? 'companyNameAr' : 'companyNameEn',
@@ -272,7 +292,38 @@ function Orders() {
     },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
-    { key: 'deliveryDate', header: () => t('Delivery Date'), include: isV('expectedDeliveryDate') },
+    { 
+      key: 'deliveryDate', 
+      header: () => t('Delivery Date'), 
+      include: isV('expectedDeliveryDate'),
+      render: (item) => item.expectedDeliveryDate ? formatDate(item.expectedDeliveryDate, 'DD/MM/YYYY') : ' '
+    },
+    { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
+    //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
+    { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
+    { key: 'status', header: () => t('Status'), include: isV('status') },
+    { key: 'pay', header: () => t('Pay'), include: isV('action') }
+  ];  const approvalColumns = [
+    { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
+    {
+      key: isArabic ? 'companyNameAr' : 'companyNameEn',
+      header: () => t('Customer'),
+      include: isV('companyName')
+    },
+    {
+      key: isArabic ? 'branchNameLc' : 'branchNameEn',
+      header: () => t('Branch'),
+      include: isV('branchName')
+    },
+    { key: 'workflowName', header: () => t('Workflow Name'), include: isV('workflowName') },
+    { key: 'entity', header: () => t('Entity'), include: isV('entity') },
+    { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
+    { 
+      key: 'deliveryDate', 
+      header: () => t('Delivery Date'), 
+      include: isV('expectedDeliveryDate'),
+      render: (item) => item.expectedDeliveryDate ? formatDate(item.expectedDeliveryDate, 'DD/MM/YYYY') : ' '
+    },
     { key: 'totalAmount', header: () => t('Total Amount'), include: isV('totalAmount') },
     //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
@@ -301,9 +352,8 @@ function Orders() {
             {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
             {isV('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
           </div>
-        </div>
-        {isV('ordersTable') && (<Table
-          columns={columns.filter(col => col.include !== false)}
+        </div>        {isV('ordersTable') && (<Table
+          columns={(isApprovalMode ? approvalColumns : orderColumns).filter(col => col.include !== false)}
           data={paginatedOrders}
           getStatusClass={getStatusClass}
           onRowClick={handleRowClick}

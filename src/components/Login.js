@@ -136,6 +136,13 @@ const getCookie = (name) => {
                 </div>
 
             </div>
+            <style>
+                {`
+                input:focus {
+                    outline: none;
+                }
+                `}
+            </style>
         </div>
     );
 }

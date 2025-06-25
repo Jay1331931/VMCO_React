@@ -1,50 +1,54 @@
-import React from 'react';
+import React from "react";
+import { useTranslation } from "react-i18next";
 
-const inventoryData = [
-  { name: 'Product Name 01', orderQty: 20, availableQty: 10 },
-  { name: 'Product Name 01', orderQty: 30, availableQty: 35 },
-  { name: 'Product Name 01', orderQty: 20, availableQty: 25 },
-  { name: 'Product Name 01', orderQty: 30, availableQty: 45 }
-];
+// const inventoryData = [
+//   { name: "Product Name 01", orderQty: 20, availableQty: 10 },
+//   { name: "Product Name 01", orderQty: 30, availableQty: 35 },
+//   { name: "Product Name 01", orderQty: 20, availableQty: 25 },
+//   { name: "Product Name 01", orderQty: 30, availableQty: 45 },
+// ];
 
-function GetInventory({ open, onClose }) {
+function GetInventory({ open, onClose, InventoryData, productName }) {
+  const { t } = useTranslation();
   if (!open) return null;
-
+ 
   return (
     <div>
       <div className="gi-backdrop" />
       <div className="gi-modal">
         <div className="gi-header">
-          <span className="gi-title">Get Inventory</span>
+          {/* <span className="gi-title">{t("Get Inventory")}</span> */}
+          <span className="gi-title">{InventoryData[0]?.erpProdId || ""} : {productName || ""} </span>{" "}
         </div>
         <div className="gi-table-container">
           <table className="gi-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Order Quantity</th>
-                <th>Available Quantity</th>
+               
+                <th>{t("ERP Site ID")}</th>
+                <th>{t("Site Name")}</th>
+                 <th>{t("Available Quantity")}</th>
               </tr>
             </thead>
             <tbody>
-              {inventoryData.map((row, idx) => (
+              {InventoryData?.map((row, idx) => (
                 <tr key={idx}>
-                  <td>{row.name}</td>
-                  <td style={{ color: row.orderQty > row.availableQty ? 'red' : undefined }}>
-                    {row.orderQty}
-                  </td>
-                  <td>{row.availableQty}</td>
+                  
+                  <td>{row.erpSiteId || ""}</td>
+                  <td></td>
+                  <td>{row.availableQty || 0}</td> 
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         <div className="gi-footer">
-          <button className="gi-close-btn" onClick={onClose}>Close</button>
+          <button className="gi-close-btn" onClick={onClose}>
+            {t("Close")}
+          </button>
         </div>
       </div>
 
-      
       <style>{`
         .gi-backdrop {
           position: fixed;

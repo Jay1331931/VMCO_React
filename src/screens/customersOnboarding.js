@@ -7,6 +7,7 @@ import { faLanguage, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import constants from '../constants';
+import Constants from '../constants';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
@@ -246,15 +247,21 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                             companyNameEn: formData.companyName,
                             region: formData.region,
                             customerStatus: 'new',
-                            pricingPolicy: 'Price A',
+                            pricingPolicy: {
+                                [constants.ENTITY.VMCO]: 'price A',
+                                [constants.ENTITY.SHC]: 'price A',
+                                [constants.ENTITY.DAR]: 'price A',
+                                [constants.ENTITY.NAQI]: 'price A',
+                                [constants.ENTITY.GMTC]: 'price A',
+                            },
                             customerSource: leadData?.source || 'portal',
                             assignedTo: leadData?.employeeId,
                             assignedToEntityWise: {
                                  [constants.ENTITY.VMCO]: areaSalesManager,
-              [constants.ENTITY.DIYAFA]: areaSalesManager,
+              [constants.ENTITY.SHC]: areaSalesManager,
               [constants.ENTITY.DAR]: areaSalesManager,
               [constants.ENTITY.NAQI]: areaSalesManager,
-              [constants.ENTITY.GREEN_MAST]: areaSalesManager,
+              [constants.ENTITY.GMTC]: areaSalesManager,
                             }
                         }),
                         credentials: 'include',
@@ -298,7 +305,13 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { isAllowed: false, limit: "0", period: "0", balance: "0" }, partialPayment: { isAllowed: true } },
+                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { 
+                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                            }, partialPayment: { isAllowed: true } },
                         }),
                         credentials: 'include',
                     });

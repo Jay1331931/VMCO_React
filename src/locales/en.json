@@ -15,11 +15,11 @@
     "+ Add": "+ Add",
     "+ Invite": "+ Invite",
     "Export": "Export",
-    "Import": "Import",
-    "All": "All",
+    "Import": "Import",    "All": "All",
     "My Approval": "My Approval",
     "Order #": "Order #",
     "Order#": "Order#",
+    "Order Number": "Order Number",
     "Order Details": "Order Details",
     "Order Status": "Order Status",
     "Approve": "Approve",
@@ -166,11 +166,14 @@
     "Min. 30% Partial Payment required": "Min. 30% Partial Payment required",
     "Maintenance Charges": "Maintenance Charges",
     "Warranty Date": "Warranty Date",
-    "Machine Serial Number": "Machine Serial Number",
-    "Videos": "Videos",
-    "Status:": "Status:",
+    "Machine Serial Number": "Machine Serial Number",    "Videos": "Videos",    "Status:": "Status:",
     "Assign To:": "Assign To:",
-    "msgLoadingUserInfo": "Loading user information..."
+    "msgLoadingUserInfo": "Loading user information...",
+    "Please save this order number for your records.": "Please save this order number for your records.",
+    "Order Updated": "Order Updated",
+    "Order updated successfully!": "Order updated successfully!",
+    "Order Updated Successfully": "Order Updated Successfully",
+    "The order has been successfully updated with product changes!": "The order has been successfully updated with product changes!"
     
     
     

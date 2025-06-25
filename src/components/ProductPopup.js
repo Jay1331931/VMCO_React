@@ -99,7 +99,7 @@ function ProductPopup({
                                 <button
                                     className="add-to-cart-btn"
                                     onClick={handleAddToCart}
-                                >
+                                    style={{ backgroundColor: '#0a5640', color: '#ffffff', width: '100%' }}                                >
                                     {t('Add to Cart')}
                                 </button>
                             </div>
@@ -270,7 +270,7 @@ function ProductPopup({
                         margin: 0 0 18px 0;
                     }
                     .addtocartbutton {
-                        margin-top: auto;
+                        // margin-top: auto;
                         display: flex;
                         justify-content: flex-end;
                     }

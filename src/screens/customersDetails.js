@@ -31,6 +31,10 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
+import Swal from "sweetalert2";
+import axios from "axios";
+import { useCustomer } from "../context/CustomerContext";
+import Constants from "../constants";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -159,13 +163,13 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
             onClick={handleConfirm}
             disabled={!markerRef.current}
           >
-            Confirm Location
+            {t("Confirm Location")}
           </button>
         ) : (
           <>
-            <div className="location-confirmed">Location confirmed!</div>
+            <div className="location-confirmed">{t("Location confirmed!")}</div>
             <button className="reset-location-button" onClick={handleReset}>
-              Change Location
+              {t("Change Location")}
             </button>
           </>
         )}
@@ -176,6 +180,11 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
 function CustomersDetails() {
   const location = useLocation();
   const transformedCustomer = location.state?.transformedCustomer;
+  // const {
+  //   refreshCustomerData = () =>
+  //     console.warn("refreshCustomerData not available"),
+  // } = useCustomer() || {};
+  const { refreshCustomerData } = useCustomer();
 
   // concats customer and customer contacts data into a single object
   const transformCustomerData = async (customer, customerContacts) => {
@@ -195,10 +204,14 @@ function CustomersDetails() {
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/workflow-instance/check/id/${customer?.id}/module/customer`,
+        `${API_BASE_URL}/workflow-instance/check/id`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: customer?.id,
+            module: "customer",
+          }),
           credentials: "include",
         }
       );
@@ -225,32 +238,32 @@ function CustomersDetails() {
     return {
       ...customer,
       // Contact details - each contact type is a separate row in DB
-      primaryContactName: contactsMap.primary?.name || "",
-      primaryContactDesignation: contactsMap.primary?.designation || "",
-      primaryContactEmail: contactsMap.primary?.email || "",
-      primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
+      // primaryContactName: contactsMap.primary?.name || "",
+      // primaryContactDesignation: contactsMap.primary?.designation || "",
+      // primaryContactEmail: contactsMap.primary?.email || "",
+      // primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
 
-      businessHeadName: contactsMap.business?.name || "",
-      businessHeadDesignation: contactsMap.business?.designation || "",
-      businessHeadEmail: contactsMap.business?.email || "",
-      businessHeadMobile: contactsMap.business?.mobile || "",
+      // businessHeadName: contactsMap.business?.name || "",
+      // businessHeadDesignation: contactsMap.business?.designation || "",
+      // businessHeadEmail: contactsMap.business?.email || "",
+      // businessHeadMobile: contactsMap.business?.mobile || "",
 
-      financeHeadName: contactsMap.finance?.name || "",
-      financeHeadDesignation: contactsMap.finance?.designation || "",
-      financeHeadEmail: contactsMap.finance?.email || "",
-      financeHeadMobile: contactsMap.finance?.mobile || "",
+      // financeHeadName: contactsMap.finance?.name || "",
+      // financeHeadDesignation: contactsMap.finance?.designation || "",
+      // financeHeadEmail: contactsMap.finance?.email || "",
+      // financeHeadMobile: contactsMap.finance?.mobile || "",
 
-      purchasingHeadName: contactsMap.purchasing?.name || "",
-      purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
-      purchasingHeadEmail: contactsMap.purchasing?.email || "",
-      purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
+      // purchasingHeadName: contactsMap.purchasing?.name || "",
+      // purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
+      // purchasingHeadEmail: contactsMap.purchasing?.email || "",
+      // purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
 
-      // Adding operations contact if needed
-      operationsHeadName: contactsMap.operations?.name || "",
-      operationsHeadDesignation: contactsMap.operations?.designation || "",
-      operationsHeadEmail: contactsMap.operations?.email || "",
-      operationsHeadMobile: contactsMap.operations?.mobile || "",
-
+      // // Adding operations contact if needed
+      // operationsHeadName: contactsMap.operations?.name || "",
+      // operationsHeadDesignation: contactsMap.operations?.designation || "",
+      // operationsHeadEmail: contactsMap.operations?.email || "",
+      // operationsHeadMobile: contactsMap.operations?.mobile || "",
+      ...customerContacts,
       isApprovalMode: isAppMode,
     };
   };
@@ -277,6 +290,10 @@ function CustomersDetails() {
         console.log("transformedData", transformedData);
         console.log("transformedData", transformedData);
         setCustomer(transformedData);
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          ...transformedData,
+        }));
       } else {
         throw new Error(
           response.data.message || "Failed to fetch customer contacts"
@@ -299,6 +316,16 @@ function CustomersDetails() {
         creditLimit: methodDetails?.credit?.limit,
         creditPeriod: methodDetails?.credit?.period,
         creditBalance: methodDetails?.credit?.balance,
+        creditLimitDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.limit,
+        creditPeriodDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.period,
+        creditLimitNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.limit,
+        creditPeriodNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.period,
+        creditLimitGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.limit,
+        creditPeriodGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.period,
+        creditLimitVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.limit,
+        creditPeriodVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.period,
+        creditLimitShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.limit,
+        creditPeriodShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.period,
       },
     };
   }
@@ -349,19 +376,25 @@ function CustomersDetails() {
 
       const paymentResult = await paymentMethodsResponse.json();
       if (paymentResult.status === "Ok") {
-        const paymentMethods = Array.isArray(paymentResult.data)
+        const paymentMethods = paymentResult?.data
           ? paymentResult.data
           : [];
-
+        console.log("Payment Methods:", paymentMethods);
+        console.log("constants.ENTITY.DAR", constants.ENTITY.DAR);
         customerData = {
           ...customerData,
           paymentMethods,
-          creditLimit:
-            paymentMethods.find((m) => m?.methodName === "Credit")
-              ?.creditLimit || 0,
-          creditBalance:
-            paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
-            0,
+          // creditLimit:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditLimit || 0,
+          // creditPeriod:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditPeriod || 0,
+          // creditBalance:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
+          //   0,
+          creditLimitDar:
+            paymentMethods?.methodDetails?.credit?.[constants.ENTITY.DAR]?.limit || 0,
         };
         console.log("Customer Data with Payment Methods:", customerData);
       }
@@ -447,6 +480,8 @@ function CustomersDetails() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [nonTradingFiles, setNonTradingFiles] = useState([]);
+  const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
 
   const formMode = location.state?.mode;
 
@@ -486,15 +521,15 @@ function CustomersDetails() {
   if (formMode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
-    if (transformedCustomer.customerStatus === "New") {
+    if (transformedCustomer?.customerStatus === "New") {
       customerFormMode = "custDetailsAdd";
     } else if (
-      transformedCustomer.customerStatus === "Approved" &&
+      transformedCustomer?.customerStatus === "Approved" &&
       customer.isApprovalMode
     ) {
       customerFormMode = "custDetailsEdit";
     } else if (
-      transformedCustomer.customerStatus === "Approved" &&
+      transformedCustomer?.customerStatus === "Approved" &&
       !customer.isApprovalMode
     ) {
       customerFormMode = "custDetailsAdd";
@@ -518,11 +553,11 @@ function CustomersDetails() {
   console.log("Company Type", companyType);
   const formsByTab = useMemo(
     () => ({
-      "Business Details": getBusinessDetailsForm(t)["Business Details"],
-      "Contact Details": getContactDetailsForm(t)["Contact Details"],
+      "Business Details": getBusinessDetailsForm(t)?.["Business Details"] || [],
+      "Contact Details": getContactDetailsForm(t)?.["Contact Details"] || [],
       "Financial Information":
-        getFinancialInformationForm(t)["Financial Information"],
-      Documents: getDocumentsForm(t, companyType)["Documents"],
+        getFinancialInformationForm(t)?.["Financial Information"] || [],
+      Documents: getDocumentsForm(t, companyType)?.["Documents"] || [],
       Branches: [
         {
           type: "text",
@@ -543,18 +578,16 @@ function CustomersDetails() {
   );
   const formDataByTab = useMemo(
     () => ({
-      "Business Details": getBusinessDetailsFormData(t, customer)[
-        "Business Details"
-      ],
-      "Contact Details": getBusinessDetailsFormData(t, customer)[
-        "Contact Details"
-      ],
-      "Financial Information": getBusinessDetailsFormData(t, customer)[
-        "Financial Information"
-      ],
-      Documents: getBusinessDetailsFormData(t, customer, companyType)[
-        "Documents"
-      ],
+      "Business Details":
+        getBusinessDetailsFormData(t, customer)?.["Business Details"] || [],
+      "Contact Details":
+        getBusinessDetailsFormData(t, customer)?.["Contact Details"] || [],
+      "Financial Information":
+        getBusinessDetailsFormData(t, customer)?.["Financial Information"] ||
+        [],
+      Documents:
+        getBusinessDetailsFormData(t, customer, companyType)?.["Documents"] ||
+        [],
     }),
     [t]
   );
@@ -647,7 +680,37 @@ function CustomersDetails() {
 
   const [changedFields, setChangedFields] = useState(new Set());
   const [savedData, setSavedData] = useState({});
+  const handleDropdownObjectChange = (name, value, parentField) => {
+    const conditionalDropdowns = [
+      constants.ENTITY.SHC,
+      "pricingPolicySHC",
+      constants.ENTITY.NAQI,
+      "pricingPolicyNAQI",
+      constants.ENTITY.GMTC,
+      "pricingPolicyGMTC",
+      constants.ENTITY.DAR,
+      "pricingPolicyDAR",
+      constants.ENTITY.VMCO,
+      "pricingPolicyVMCO",
+    ];
+    if (conditionalDropdowns.includes(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        // remove the parent field part from the name
 
+        [parentField]: {
+          ...prev[parentField],
+          [name.replace(parentField, "")?.toLowerCase()]: value,
+        },
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+      setChangedFields((prev) => new Set(prev).add(parentField));
+      return;
+    }
+  };
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     console.log("Input change:", name, value, type, checked);
@@ -662,24 +725,7 @@ function CustomersDetails() {
         value.toLowerCase()
       )["Documents"];
     }
-    const conditionalDropdowns = [
-      constants.ENTITY.DIYAFA,
-      constants.ENTITY.NAQI,
-      constants.ENTITY.GREEN_MAST,
-      constants.ENTITY.DAR,
-      constants.ENTITY.VMCO,
-    ];
-    if (conditionalDropdowns.includes(name)) {
-      setFormData((prev) => ({
-        ...prev,
-        ["assignedToEntityWise"]: {
-          ...prev["assignedToEntityWise"],
-          [name]: value,
-        },
-      }));
-      setChangedFields((prev) => new Set(prev).add("assignedToEntityWise"));
-      return;
-    }
+
     const inputVal = type === "checkbox" ? checked : value;
     setChangedFields((prev) => new Set(prev).add(name));
     setFormData((prev) => ({ ...prev, [name]: inputVal }));
@@ -825,6 +871,90 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
+  const uploadFile = async (fieldName, fileData, customerId) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", fileData);
+      formData.append("fileType", fieldName);
+
+      const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error uploading files:", error.message);
+    }
+  };
+  const uploadDocuments = (nonTradingFilesToUpload) => {
+    try {
+      Object.entries(nonTradingFilesToUpload || {}).forEach(
+        ([fieldName, file]) => {
+          if (fieldName !== "others") {
+            uploadFile(fieldName, file, customer.id);
+          } else if (Array.isArray(file)) {
+            file.forEach((f) => {
+              uploadFile("nonTradingDocuments", f, customer.id);
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error uploading files:", error.message);
+    }
+  };
+
+  const handleNonTradingDocumentsChange = (e) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const files = Array.from(e.target.files);
+
+    // Check if any file exceeds the size limit
+
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "The following files exceed the maximum size of {{size}} MB: {{files}}",
+          {
+            size: MAX_FILE_SIZE / (1024 * 1024), // Convert to MB
+            files: oversizedFiles.map((file) => file.name).join(", "),
+          }
+        ),
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
+
+    const fileList = e.target.files;
+    if (fileList.length > 0) {
+      // Convert FileList to array and append to existing files
+      const newFiles = Array.from(fileList);
+      setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
+      nonTradingFilesToUpload["others"] = [...newFiles, ...nonTradingFiles];
+      setFormData((prev) => ({
+        ...prev,
+        nonTradingDocuments: nonTradingFilesToUpload["others"],
+      }));
+
+      console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+    }
+  };
+
+  // Remove a specific file
+  const removeFile = (index) => {
+    setNonTradingFiles((prevFiles) =>
+      prevFiles.filter((_, fileIndex) => fileIndex !== index)
+    );
+    // Remove the file from nonTradingFilesToUpload["others"] as well
+    const updatedFiles = nonTradingFiles.filter(
+      (_, fileIndex) => fileIndex !== index
+    );
+    nonTradingFilesToUpload["others"] = updatedFiles;
+    console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+  };
   const handleSave = async (action) => {
     switch (action) {
       case "save":
@@ -836,7 +966,13 @@ function CustomersDetails() {
             formData.purchasingHeadEmail &&
             formData.financeHeadEmail === formData.purchasingHeadEmail
           ) {
-            alert(t("Finance and Purchasing heads must have unique emails"));
+            Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t("Finance and Purchasing heads must have unique emails"),
+              confirmButtonText: t("OK"),
+            });
+            // alert(t('Finance and Purchasing heads must have unique emails'));
             return;
           }
 
@@ -846,17 +982,27 @@ function CustomersDetails() {
             (formData.purchasingHeadEmail &&
               formData.purchasingHeadEmail === formData.primaryContactEmail)
           ) {
-            alert(
-              t(
+            Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t(
                 "Finance/Purchasing heads cannot use the same email as primary contact"
-              )
-            );
+              ),
+              confirmButtonText: t("OK"),
+            });
+            // alert(t('Finance/Purchasing heads cannot use the same email as primary contact'));
             return;
           }
         }
         if (action !== "submit") {
           if (!validateChangedFields(action, changedFields, false)) {
-            alert(t("Please correct the errors before saving"));
+            Swal.fire({
+              icon: "error",
+              title: t("Error"),
+              text: t("Please correct the errors before saving"),
+              confirmButtonText: t("OK"),
+            });
+            // alert(t('Please correct the errors before saving'));
             return;
           }
         } else {
@@ -898,6 +1044,21 @@ function CustomersDetails() {
       "credit",
       "creditLimit",
       "creditPeriod",
+      "creditDar",
+      "creditLimitDar",
+      "creditPeriodDar",
+      "creditNaqi",
+      "creditLimitNaqi",
+      "creditPeriodNaqi",
+      "creditGmtc",
+      "creditLimitGmtc",
+      "creditPeriodGmtc",
+      "creditVmco",
+      "creditLimitVmco",
+      "creditPeriodVmco",
+      "creditShc",
+      "creditLimitShc",
+      "creditPeriodShc",
     ];
 
     const customerPayload = {};
@@ -924,10 +1085,36 @@ function CustomersDetails() {
       return {
         method_details: {
           credit: {
-            isAllowed: formData?.credit?.isAllowed,
-            limit: formData?.creditLimit,
-            period: formData?.creditPeriod,
-            balance: formData?.credit?.balance,
+            [constants.ENTITY.DAR]: {
+              isAllowed: formData?.creditDar?.isAllowed,
+              limit: formData?.creditLimitDar,
+              period: formData?.creditPeriodDar,
+              balance: formData?.creditDar?.balance,
+            },
+            [constants.ENTITY.NAQI]: {
+              isAllowed: formData?.creditNaqi?.isAllowed,
+              limit: formData?.creditLimitNaqi,
+              period: formData?.creditPeriodNaqi,
+              balance: formData?.creditNaqi?.balance,
+            },
+            [constants.ENTITY.GMTC]: {
+              isAllowed: formData?.creditGmtc?.isAllowed,
+              limit: formData?.creditLimitGmtc,
+              period: formData?.creditPeriodGmtc,
+              balance: formData?.creditGmtc?.balance,
+            },
+            [constants.ENTITY.VMCO]: {
+              isAllowed: formData?.creditVmco?.isAllowed,
+              limit: formData?.creditLimitVmco,
+              period: formData?.creditPeriodVmco,
+              balance: formData?.creditVmco?.balance,
+            },
+            [constants.ENTITY.SHC]: {
+              isAllowed: formData?.creditShc?.isAllowed,
+              limit: formData?.creditLimitShc,
+              period: formData?.creditPeriodShc,
+              balance: formData?.creditShc?.balance,
+            },
           },
           prePayment: {
             isAllowed: formData?.prePayment?.isAllowed,
@@ -971,7 +1158,12 @@ function CustomersDetails() {
         fieldName === "id" ||
         fieldName === "undefined" ||
         fieldName === "pricePlan" ||
-        fieldName === "deliveryCost"
+        fieldName === "deliveryCost" ||
+        fieldName === "pricingPolicySHC" ||
+        fieldName === "pricingPolicyNAQI" ||
+        fieldName === "pricingPolicyGMTC" ||
+        fieldName === "pricingPolicyDAR" ||
+        fieldName === "pricingPolicyVMCO"
       )
         return;
 
@@ -986,12 +1178,12 @@ function CustomersDetails() {
           contactUpdatePayload[fieldName] = newValue;
           // }
         } else if (paymentDetailFields.includes(fieldName)) {
-          if (fieldName === "creditLimit" || fieldName === "creditPeriod") {
+          if (fieldName === "creditLimit" || fieldName === "creditPeriod" || fieldName === "creditLimitDar" || fieldName === "creditPeriodDar" || fieldName === "creditLimitNaqi" || fieldName === "creditPeriodNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditPeriodGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditPeriodVmco" || fieldName === "creditLimitShc" || fieldName === "creditPeriodShc") {
             // if field name is credit limit update limit
             // if field name is credit period update period
-            if (fieldName === "creditLimit") {
+            if (fieldName === "creditLimit" || fieldName === "creditLimitDar" || fieldName === "creditLimitNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditLimitShc") {
               paymentMethodPayload.method_details.credit.limit = newValue;
-              paymentMethodPayload.method_details.credit.balance = newValue;
+              // paymentMethodPayload.method_details.credit.balance = newValue;
             } else if (fieldName === "creditPeriod") {
               paymentMethodPayload.method_details.credit.period = newValue;
             }
@@ -1043,7 +1235,13 @@ function CustomersDetails() {
       Object.keys(contactUpdatePayload).length === 0 &&
       uploadedFiles.length === 0
     ) {
-      alert(t("No changes detected to save"));
+      Swal.fire({
+        icon: "info",
+        title: t("No Changes Detected"),
+        text: t("No changes detected to save"),
+        confirmButtonText: t("OK"),
+      });
+      // alert(t('No changes detected to save'));
       return;
     }
 
@@ -1120,28 +1318,42 @@ function CustomersDetails() {
           })
         );
       }
+
       handleSaveFiles();
-      alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
+      uploadDocuments(nonTradingFilesToUpload);
+
+      Swal.fire({
+        icon: "success",
+        title: t("Success"),
+        text: t(
+          `${action.charAt(0).toUpperCase() + action.slice(1)} successful!`
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
     } catch (error) {
       console.error("Update error:", error);
       setFormErrors(error.message || "Unable to connect to server");
     }
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/customers/id/${customer.id}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
-      const result = await response.json();
-      setCustomer(result.data);
-      fetchCustomerContacts(customer.id, customer);
-    } catch (err) {
-      console.error("Error fetching customer:", err);
-    }
+    // try {
+    //   const response = await fetch(
+    //     `${API_BASE_URL}/customers/id/${customer.id}`,
+    //     {
+    //       method: "GET",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include",
+    //     }
+    //   );
+    //   const result = await response.json();
+    //   setCustomer(result.data);
+    //   fetchCustomerContacts(customer.id, customer);
+    // } catch (err) {
+    //   console.error("Error fetching customer:", err);
+    // }
+    // if (refreshCustomerData) {
+    //   refreshCustomerData();
+    // }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
     formDataByTab["Documents"]
@@ -1371,9 +1583,28 @@ function CustomersDetails() {
 
       // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
       for (const field of dropdownFields) {
-        options[field.name] = data.map((opt) =>
-          typeof opt === "string" ? opt.charAt(0) + opt.slice(1) : opt
-        );
+        if (
+          field.name === "pricingPolicySHC" ||
+          field.name === "pricingPolicyNAQI" ||
+          field.name === "pricingPolicyGMTC" ||
+          field.name === "pricingPolicyDAR" ||
+          field.name === "pricingPolicyVMCO"
+        ) {
+          data = await getOptionsFromBasicsMaster("pricingPolicy");
+          console.log("Data for field pricingPolicySHC", data);
+
+          options[field.name] = data.map((item) => {
+            return { name: item, employeeId: item };
+          });
+          console.log(
+            "Options for field pricingPolicySHC",
+            options[field.name]
+          );
+        } else {
+          options[field.name] = data.map((opt) =>
+            typeof opt === "string" ? opt.charAt(0) + opt.slice(1) : opt
+          );
+        }
       }
     } catch (err) {
       console.error(`Failed to fetch options for :`, err);
@@ -1392,9 +1623,32 @@ function CustomersDetails() {
   const [pendingFileUploads, setPendingFileUploads] = useState({});
 
   const handleFileUpload = async (e, fieldName) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
 
+    if (oversizedFiles?.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          `File size exceeds 5MB limit: ${oversizedFiles
+            .map((f) => f.name)
+            .join(", ")}`
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // Reset the file input
+      e.target.value = "";
+      return;
+    }
+
+    // Clear any previous errors
+    setFormErrors((prev) => ({
+      ...prev,
+      [fieldName]: undefined,
+    }));
     try {
       // Special handling for logo upload
       if (fieldName.includes("Logo")) {
@@ -1425,19 +1679,74 @@ function CustomersDetails() {
           url: URL.createObjectURL(file),
           isNew: true,
         }));
+        const cleanNonTradingDocuments = (docs) => {
+          if (!Array.isArray(docs)) return [];
 
-        setUploadedFiles((prev) => ({
-          ...prev,
-          [fieldName]: {
-            ...prev[fieldName], // Preserve existing object structure
-            name: [...(prev[fieldName]?.name || []), ...newFiles], // Update the `name` array
-          },
-        }));
+          return docs.flatMap((item) => {
+            // If item is a string, keep it
+            if (typeof item === "string") return item;
 
-        setPendingFileUploads((prev) => ({
-          ...prev,
-          [fieldName]: [...(prev[fieldName] || []), ...newFiles],
-        }));
+            // If item is an object with numeric keys (like your first element) ignore new files
+            if (typeof item === "object" && !item?.isNew && item !== null) {
+              // Extract all values from the object
+              return Object.values(item)
+                .filter((val) => typeof val === "string") // Only keep strings
+                .map((val) => val); // Return as array items
+            }
+
+            return []; // Skip any other types
+          });
+        };
+        // setUploadedFiles((prev) => ({
+        //   ...prev,
+        //   [fieldName]: [...(prev?.[fieldName] || []), ...newFiles],
+        // }));
+
+        // setPendingFileUploads((prev) => ({
+        //   ...prev,
+        //   [fieldName]: [...(prev?.[fieldName] || []), ...newFiles],
+        // }));
+
+        setUploadedFiles((prev) => {
+          // Check what type the current value is
+          const currentFiles = prev?.[fieldName];
+          let existingFiles = [];
+
+          // Handle different possible data types
+          if (Array.isArray(currentFiles)) {
+            // If already an array, use it directly
+            existingFiles = currentFiles;
+          } else if (currentFiles && typeof currentFiles === "object") {
+            existingFiles =
+              currentFiles.name && Array.isArray(currentFiles.name)
+                ? currentFiles.name
+                : [];
+          }
+
+          return {
+            ...prev,
+            [fieldName]: [
+              ...cleanNonTradingDocuments(currentFiles),
+              ...newFiles,
+            ],
+          };
+        });
+
+        // Similar approach for pending uploads
+        setPendingFileUploads((prev) => {
+          const currentPending = prev?.[fieldName];
+          const existingPending = Array.isArray(currentPending)
+            ? currentPending
+            : [];
+
+          return {
+            ...prev,
+            [fieldName]: [
+              ...cleanNonTradingDocuments(existingPending),
+              ...newFiles,
+            ],
+          };
+        });
       } else {
         // Single file upload (object)
         const file = files[0];
@@ -1461,7 +1770,13 @@ function CustomersDetails() {
       setChangedFields((prev) => new Set(prev).add(fieldName));
     } catch (error) {
       console.error("Error handling file:", error);
-      alert(`Error handling file: ${error.message}`);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error handling file: ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      //alert(`Error handling file: ${error.message}`);
     }
   };
   const handleSaveFiles = async () => {
@@ -1509,32 +1824,34 @@ function CustomersDetails() {
       }
     } catch (error) {
       console.error("Error saving files:", error);
-      alert(`Error saving files: ${error.message}`);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error saving files: ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert(`Error saving files: ${error.message}`);
     }
   };
 
   const handleFileDelete = (fieldName, fileId = null) => {
     if (fieldName === "nonTradingDocuments" && fileId) {
       setUploadedFiles((prev) => {
-        const currentFiles = prev[fieldName]?.name || [];
-
         return {
           ...prev,
-          [fieldName]: {
-            ...prev[fieldName],
-            name: currentFiles.filter((file) => file.id !== fileId),
-          },
+          [fieldName]:
+            Object.values(prev[fieldName])?.filter(
+              (file) => file.id !== fileId
+            ) || [],
         };
       });
 
       setFormData((prev) => ({
         ...prev,
-        [fieldName]: {
-          ...prev[fieldName],
-          name: (prev[fieldName]?.name || []).filter(
+        [fieldName]:
+          Object.values(prev[fieldName])?.filter(
             (file) => file.id !== fileId
-          ),
-        },
+          ) || [],
       }));
 
       const fileToDelete = uploadedFiles[fieldName]?.name?.find(
@@ -1561,11 +1878,16 @@ function CustomersDetails() {
 
   const handleApprovalSubmit = async (action) => {
     if (!validateChangedFields("save changes", changedFields, true)) {
-      alert(
-        t(
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
           "Please fill all required fields. Please Save files before submitting."
-        )
-      );
+        ),
+        confirmButtonText: t("OK"),
+      });
+
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     setApprovalAction(action);
@@ -1663,16 +1985,26 @@ function CustomersDetails() {
       }
     } catch (error) {
       console.error(`Error ${approvalAction}ing customer:`, error);
-      alert(`Error ${approvalAction}ing customer: ${error.message}`);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error ${approvalAction}ing customer: ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      //alert(`Error ${approvalAction}ing customer: ${error.message}`);
     }
   };
   const handleSubmit = async (action) => {
     if (!validateChangedFields("save changes", changedFields, true)) {
-      alert(
-        t(
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
           "Please fill all required fields. Please Save files before submitting."
-        )
-      );
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // alert(t('Please fill all required fields. Please Save files before submitting.'));
       return;
     }
     if (action === "approve") {
@@ -1703,7 +2035,13 @@ function CustomersDetails() {
         });
       } catch (error) {
         console.error("Error approving customer:", error);
-        alert(`Error approving customer: ${error.message}`);
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t(`Error approving customer: ${error.message}`),
+          confirmButtonText: t("OK"),
+        });
+        // alert(`Error approving customer: ${error.message}`);
       }
     }
 
@@ -1735,7 +2073,13 @@ function CustomersDetails() {
         });
       } catch (error) {
         console.error("Error rejecting customer:", error);
-        alert(`Error rejecting customer: ${error.message}`);
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t(`Error rejecting customer: ${error.message}`),
+          confirmButtonText: t("OK"),
+        });
+        // alert(`Error rejecting customer: ${error.message}`);
       }
     }
 
@@ -1753,11 +2097,15 @@ function CustomersDetails() {
       console.log("Prepared changedFields:", newChangedFields);
 
       if (!validateChangedFields("save changes", newChangedFields, true)) {
-        alert(
-          t(
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t(
             "Please fill all required fields. Please Save files before submitting."
-          )
-        );
+          ),
+          confirmButtonText: t("OK"),
+        });
+        // alert(t('Please fill all required fields. Please Save files before submitting.'));
         return;
       }
 
@@ -1840,11 +2188,19 @@ function CustomersDetails() {
           fieldName === "branchLocation" ||
           fieldName === "pricingPolicy" ||
           fieldName === constants.ENTITY.VMCO ||
-          fieldName === constants.ENTITY.DIYAFA ||
+          fieldName === constants.ENTITY.SHC ||
           fieldName === constants.ENTITY.NAQI ||
           fieldName === constants.ENTITY.DAR ||
-          fieldName === constants.ENTITY.GREEN_MAST ||
-          fieldName === "isDeliveryChargesApplicable"
+          fieldName === constants.ENTITY.GMTC ||
+          fieldName === "isDeliveryChargesApplicable" ||
+          fieldName === "isApprovalMode" ||
+          fieldName === "acknowledgmentSignature" ||
+          fieldName === "updatedAt" ||
+          fieldName === "pricingPolicySHC" ||
+          fieldName === "pricingPolicyNAQI" ||
+          fieldName === "pricingPolicyGMTC" ||
+          fieldName === "pricingPolicyDAR" ||
+          fieldName === "pricingPolicyVMCO"
         )
           return;
 
@@ -1878,9 +2234,14 @@ function CustomersDetails() {
               fieldName === "nationalAddress" ||
               fieldName === "contractAgreement" ||
               fieldName === "creditApplication" ||
-              fieldName === "acknacknowledgementSignature"
+              fieldName === "acknowledgementSignature"
             ) {
-              customerPayload[fieldName] = uploadedFiles[fieldName];
+              // Handle file uploads for type objects
+              if (typeof uploadedFiles?.[fieldName] === "object") {
+                customerPayload[fieldName] = uploadedFiles?.[fieldName]?.name;
+              } else {
+                customerPayload[fieldName] = uploadedFiles?.[fieldName];
+              }
             }
 
             customerPayload["customerStatus"] = (
@@ -1889,10 +2250,10 @@ function CustomersDetails() {
             customerPayload["interCompany"] = false;
             customerPayload["assignedToEntityWise"] = {
               [constants.ENTITY.VMCO]: areaSalesManager,
-              [constants.ENTITY.DIYAFA]: areaSalesManager,
+              [constants.ENTITY.SHC]: areaSalesManager,
               [constants.ENTITY.DAR]: areaSalesManager,
               [constants.ENTITY.NAQI]: areaSalesManager,
-              [constants.ENTITY.GREEN_MAST]: areaSalesManager,
+              [constants.ENTITY.GMTC]: areaSalesManager,
             };
             if (fieldName === "region") {
               customerPayload["region"] = newValue.toLowerCase();
@@ -1901,7 +2262,7 @@ function CustomersDetails() {
               customerPayload["nonTradingDocuments"] = {};
             } else {
               customerPayload["nonTradingDocuments"] =
-                formData.nonTradingDocuments?.name || [];
+                JSON.stringify(formData?.nonTradingDocuments) || [];
             }
             // if(formData.customerStatus === 'new'){
             //   customerPayload['customerStatus'] = 'pending';
@@ -1917,7 +2278,13 @@ function CustomersDetails() {
         Object.keys(contactUpdatePayload).length === 0 &&
         uploadedFiles.length === 0
       ) {
-        alert(t("No changes detected to save"));
+        Swal.fire({
+          icon: "info",
+          title: t("No Changes Detected"),
+          text: t("No changes detected to save"),
+          confirmButtonText: t("OK"),
+        });
+        // alert(t('No changes detected to save'));
         return;
       }
 
@@ -2006,9 +2373,15 @@ function CustomersDetails() {
           );
         }
         handleSaveFiles();
-        alert(
-          `${action.charAt(0).toUpperCase() + action.slice(1)} successful!`
-        );
+        Swal.fire({
+          icon: "success",
+          title: t("Success"),
+          text: t(
+            `${action.charAt(0).toUpperCase() + action.slice(1)} successful!`
+          ),
+          confirmButtonText: t("OK"),
+        });
+        // alert(`${action.charAt(0).toUpperCase() + action.slice(1)} successful!`);
 
         function showLoadingScreen(message) {
           document.body.innerHTML = `
@@ -2128,6 +2501,7 @@ function CustomersDetails() {
     return elements;
   };
   const handleViewFile = async (customerId, fileName, fileType) => {
+    console.log("@@@@####Viewing file:", fileName, fileType);
     try {
       if (fileType.includes("Logo")) {
         const logoType = fileType.toLowerCase().includes("company")
@@ -2194,23 +2568,27 @@ function CustomersDetails() {
       if (!response.ok) {
         throw new Error("Failed to fetch file");
       }
+      const result = await response.json();
+      console.log("File result", result);
 
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      if (fileType === "nonTradingDocuments") {
+        // const blob = await response.blob();
+        // const blobUrl = URL.createObjectURL(blob);
 
-      if (fileType === "nonTradingDocuments" || fileName.endsWith(".pdf")) {
-        window.open(blobUrl, "_blank");
+        // window.open(blobUrl, "_blank");
+        window.open(result.data.url, "_blank");
       } else {
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // const a = document.createElement('a');
+        // a.href = blobUrl;
+        // a.download = fileName;
+        // document.body.appendChild(a);
+        // a.click();
+        // document.body.removeChild(a);
+        window.open(result.data.url, "_blank");
       }
 
       // Clean up
-      URL.revokeObjectURL(blobUrl);
+      // URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error("Error viewing file:", error);
       // alert('Failed to open file. Please try again.');
@@ -2224,6 +2602,117 @@ function CustomersDetails() {
   const shouldShowBlock =
     customerFormMode === "custDetailsEdit" &&
     transformedCustomer?.name === "customer block/unblock";
+
+  function SearchableDropdown({
+    name,
+    options,
+    value,
+    onChange,
+    disabled,
+    className,
+  }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Get filtered options based on search term
+    const filteredOptions = options
+      ? options.filter((opt) => {
+          const optionText = typeof opt === "object" ? opt.name : opt;
+          return optionText.toLowerCase().includes(searchTerm.toLowerCase());
+        })
+      : [];
+
+    // Handle option selection
+    const handleOptionSelect = (opt) => {
+      const optValue = typeof opt === "object" ? opt.employeeId : opt;
+
+      setIsOpen(false);
+      setSearchTerm("");
+
+      // Call parent onChange handler
+      onChange({
+        target: {
+          name: name,
+          value: optValue,
+        },
+      });
+    };
+
+    // Find display text for current value
+    const selectedOption = options?.find(
+      (opt) => (typeof opt === "object" ? opt.employeeId : opt) === value
+    );
+    const displayText = selectedOption
+      ? typeof selectedOption === "object"
+        ? selectedOption.name
+        : selectedOption
+      : "Value";
+
+    return (
+      <div className={`searchable-dropdown `} ref={dropdownRef}>
+        <div
+          className={`dropdown-header ${className || ""}`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          tabIndex={disabled ? -1 : 0}
+          style={
+            disabled
+              ? { backgroundColor: "#e9ecef", cursor: "not-allowed" }
+              : {}
+          }
+        >
+          <span className="selected-value">{displayText}</span>
+          <span className="dropdown-arrow">▼</span>
+        </div>
+
+        {isOpen && !disabled && (
+          <div className="dropdown-content">
+            <input
+              type="text"
+              className="dropdown-search"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+
+            <div className="dropdown-options">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    className="dropdown-option"
+                    onClick={() => handleOptionSelect(opt)}
+                  >
+                    {typeof opt === "object" ? opt.name : opt}
+                  </div>
+                ))
+              ) : (
+                <div className="no-options">No matches found</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Sidebar>
       <div className="customers">
@@ -2266,346 +2755,341 @@ function CustomersDetails() {
                   onBranchChanges={setBranchChanges}
                 />
               ) : (
-                <>
-                  <div
-                    className="customer-onboarding-form-grid"
-                    ref={contentRef}
-                  >
-                    {shouldShowDiv && (
-                      <>{t("This form is currently under approval")}</>
+                <div className="customer-onboarding-form-grid" ref={contentRef}>
+                  {shouldShowDiv && (
+                    <>{t("This form is currently under approval")}</>
+                  )}
+                  {shouldShowBlock &&
+                    transformedCustomer?.customerStatus === "approved" && (
+                      <>{t("Customer Approval for Blocking Customer")}</>
                     )}
-                    {shouldShowBlock &&
-                      transformedCustomer?.customerStatus === "approved" && (
-                        <>{t("Customer Approval for Blocking Customer")}</>
-                      )}
-                    {shouldShowBlock &&
-                      transformedCustomer?.customerStatus === "blocked" && (
-                        <>{t("Customer Approval for Unblocking Customer")}</>
-                      )}
+                  {shouldShowBlock &&
+                    transformedCustomer?.customerStatus === "blocked" && (
+                      <>{t("Customer Approval for Unblocking Customer")}</>
+                    )}
+                  {isV("customerApprovalChecklist") && (
                     <div className="form-main-header">
                       <a href="#">{t("Customer Approval Checklist")}</a>
                     </div>
-                    {formsByTab[activeTab]
-                      .reduce((acc, field, idx, fields) => {
-                        if (field.type === "conditionalText") {
-                          const show =
-                            formData[field.showWhen] === field.showValue;
-                          if (!show) return acc;
-                        }
+                  )}
+                  {formsByTab[activeTab]
+                    .reduce((acc, field, idx, fields) => {
+                      if (field.type === "conditionalText") {
+                        const show =
+                          formData[field.showWhen] === field.showValue;
+                        if (!show) return acc;
+                      }
 
-                        if (
-                          field.name === "businessType" &&
-                          formData["businessType"] === "Others" &&
-                          fields[idx + 1]?.type === "empty"
-                        ) {
-                          acc.push(field);
-                          return acc;
-                        }
-
+                      if (
+                        field.name === "businessType" &&
+                        formData["businessType"] === "Others" &&
+                        fields[idx + 1]?.type === "empty"
+                      ) {
                         acc.push(field);
                         return acc;
-                      }, [])
-                      .map((field) => {
-                        {
-                          console.log(transformedCustomer.module);
-                        }
-                        const approvalMode =
-                          transformedCustomer?.isApprovalMode ||
-                          (customer?.isApprovalMode &&
-                            transformedCustomer?.customerStatus !== "new") ||
-                          customer?.customerStatus === "pending";
-                        const hasUpdate =
-                          approvalMode &&
-                          transformedCustomer?.module === "customer" &&
-                          transformedCustomer?.workflowData?.updates &&
-                          (field.name in
-                            transformedCustomer?.workflowData?.updates ||
-                            (transformedCustomer?.workflowData?.updates?.[
-                              "assignedToEntityWise"
-                            ] &&
-                              field.name in
-                                transformedCustomer?.workflowData?.updates?.[
-                                  "assignedToEntityWise"
-                                ]));
-                        console.log("HasUpdate", hasUpdate);
-                        let currentValue = customer?.[field.name] || "";
-                        console.log("---------field name", field.name);
-                        console.log("---------current value", currentValue);
-                        if (
-                          field.name === constants.ENTITY.VMCO ||
-                          field.name === constants.ENTITY.DIYAFA ||
-                          field.name === constants.ENTITY.NAQI ||
-                          field.name === constants.ENTITY.DAR ||
-                          field.name === constants.ENTITY.GREEN_MAST
-                        ) {
-                          console.log("---------in if field name", field.name);
-                          console.log(
-                            "---------in if current",
-                            customer?.assignedToEntityWise?.[field.name]
-                          );
-                          currentValue =
-                            customer?.assignedToEntityWise?.[field.name] || "";
-                        }
-                        const proposedValue = hasUpdate
-                          ? transformedCustomer?.workflowData?.updates[
-                              field.name
-                            ]
-                          : null;
-                        switch (field.type) {
-                          case "text":
-                            const isBusinessHeadField = [
-                              "businessHeadName",
-                              "businessHeadDesignation",
-                              "businessHeadEmail",
-                              "businessHeadPhone",
-                            ].includes(field.name);
+                      }
 
-                            const isDisabled =
-                              isBusinessHeadField &&
-                              formData.businessHeadSameAsPrimary?.includes(
-                                t("Same as Primary Contact Details")
-                              );
+                      acc.push(field);
+                      return acc;
+                    }, [])
+                    .map((field) => {
+                      {
+                        console.log(transformedCustomer?.module);
+                      }
+                      const approvalMode =
+                        transformedCustomer?.isApprovalMode ||
+                        (customer?.isApprovalMode &&
+                          transformedCustomer?.customerStatus !== "new") ||
+                        customer?.customerStatus === "pending";
+                      const hasUpdate =
+                        approvalMode &&
+                        transformedCustomer?.module === "customer" &&
+                        transformedCustomer?.workflowData?.updates &&
+                        (field.name in
+                          transformedCustomer?.workflowData?.updates ||
+                          (transformedCustomer?.workflowData?.updates?.[
+                            "assignedToEntityWise"
+                          ] &&
+                            field.name in
+                              transformedCustomer?.workflowData?.updates?.[
+                                "assignedToEntityWise"
+                              ]));
+                      console.log("HasUpdate", hasUpdate);
+                      let currentValue = customer?.[field.name] || "";
+                      console.log("---------field name", field.name);
+                      console.log("---------current value", currentValue);
+                      if (
+                        field.name === constants.ENTITY.VMCO ||
+                        field.name === constants.ENTITY.SHC ||
+                        field.name === constants.ENTITY.NAQI ||
+                        field.name === constants.ENTITY.DAR ||
+                        field.name === constants.ENTITY.GMTC
+                      ) {
+                        console.log("---------in if field name", field.name);
+                        console.log(
+                          "---------in if current",
+                          customer?.assignedToEntityWise?.[field.name]
+                        );
+                        currentValue =
+                          customer?.assignedToEntityWise?.[field.name] || "";
+                      }
+                      const proposedValue = hasUpdate
+                        ? transformedCustomer?.workflowData?.updates[field.name]
+                        : null;
+                      switch (field.type) {
+                        case "text":
+                          const isBusinessHeadField = [
+                            "businessHeadName",
+                            "businessHeadDesignation",
+                            "businessHeadEmail",
+                            "businessHeadPhone",
+                          ].includes(field.name);
 
-                            return (
-                              <div
-                                className={`form-group ${
-                                  hasUpdate ? "pending-update" : ""
-                                }`}
-                                key={field.name}
+                          const isDisabled =
+                            isBusinessHeadField &&
+                            formData.businessHeadSameAsPrimary?.includes(
+                              t("Same as Primary Contact Details")
+                            );
+
+                          return (
+                            <div
+                              className={`form-group ${
+                                hasUpdate ? "pending-update" : ""
+                              }`}
+                              key={field.name}
+                            >
+                              <label
+                                htmlFor={`${field.name}-input`}
+                                hidden={!isV(field.name)}
                               >
-                                <label
-                                  htmlFor={`${field.name}-input`}
-                                  hidden={!isV(field.name)}
-                                >
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="required-field">*</span>
-                                  )}
-                                  {hasUpdate && (
-                                    <span className="update-badge">
-                                      Updated
-                                    </span>
-                                  )}
-                                </label>
-                                {field.isLocation ? (
-                                  <div className="location-input-container">
-                                    <input
-                                      value={
-                                        formData[field.name]
-                                          ? `${formData[field.name].x.toFixed(
-                                              6
-                                            )}, ${formData[
-                                              field.name
-                                            ].y.toFixed(6)}`
-                                          : "Select Location"
-                                      }
-                                      placeholder={t(field.placeholder)}
-                                      className="text-field small"
-                                      readOnly
-                                    />
-
-                                    <button
-                                      className="location-picker-button"
-                                      disabled={
-                                        !isE(
-                                          field.name,
-                                          approvalMode,
-                                          hasUpdate &&
-                                            customer?.workflowData?.updates
-                                            ? field.name in
-                                                customer.workflowData.updates
-                                            : false
-                                        )
-                                      }
-                                      onClick={() => setShowMap(true)}
-                                    >
-                                      <FontAwesomeIcon icon={faLocationDot} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <input
-                                      id={`${field.name}-input`}
-                                      type="text"
-                                      name={field.name}
-                                      value={
-                                        hasUpdate
-                                          ? formData[field.name]
-                                          : isBusinessHeadField && isDisabled
-                                          ? formData[
-                                              `primaryContact${field.name.replace(
-                                                "businessHead",
-                                                ""
-                                              )}`
-                                            ] || ""
-                                          : formData[field.name] || ""
-                                      }
-                                      onChange={handleInputChange}
-                                      disabled={
-                                        isDisabled ||
-                                        !isE(
-                                          field.name,
-                                          approvalMode,
-                                          transformedCustomer?.workflowData
-                                            ?.updates &&
-                                            customerFormMode !==
-                                              "custDetailsAdd" &&
-                                            hasUpdate
-                                            ? field.name in
-                                                transformedCustomer.workflowData
-                                                  .updates
-                                            : false
-                                        )
-                                      }
-                                      hidden={!isV(field.name)}
-                                      placeholder={field.placeholder}
-                                      className={`text-field ${
-                                        field.label
-                                          .toLowerCase()
-                                          .includes("arabic")
-                                          ? "arabic"
-                                          : "small"
-                                      } 
-                  ${hasUpdate ? "update-field" : ""}`}
-                                    />
-                                    {hasUpdate && (
-                                      <div className="current-value">
-                                        Current: {currentValue || "(empty)"}
-                                      </div>
-                                    )}
-                                    {/* {console.log(field.name)}
-                 {console.log(isV(field.name))}
-                 {console.log(isE(field.name))}
-                  {console.log("customer",customer)}
-                  {console.log("formdata",formData)} */}
-                                    {/* {console.log("customer", customer)} */}
-                                    {console.log(formErrors)}
-                                  </>
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
                                 )}
-                                {formErrors[field.name] && (
-                                  <div className="error">
-                                    {formErrors[field.name]}
-                                  </div>
+                                {hasUpdate && (
+                                  <span className="update-badge">Updated</span>
                                 )}
-                              </div>
-                            );
-                          case "conditionalText":
-                            const shouldShow =
-                              formData[field.showWhen] === field.showValue;
-                            if (!shouldShow) return null;
+                              </label>
+                              {field.isLocation ? (
+                                <div className="location-input-container">
+                                  <input
+                                    value={
+                                      formData[field.name]
+                                        ? `${formData[field.name].x.toFixed(
+                                            6
+                                          )}, ${formData[field.name].y.toFixed(
+                                            6
+                                          )}`
+                                        : "Select Location"
+                                    }
+                                    placeholder={t(field.placeholder)}
+                                    className="text-field small"
+                                    readOnly
+                                  />
 
-                            return (
-                              <div className="form-group" key={field.name}>
-                                <label htmlFor={`${field.name}-input`}>
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="required-field">*</span>
-                                  )}
-                                </label>
-                                <input
-                                  id={`${field.name}-input`}
-                                  type="text"
-                                  name={field.name}
-                                  value={formData[field.name] || ""}
-                                  onChange={handleInputChange}
-                                  placeholder={field.placeholder}
-                                  className="text-field small"
-                                  disabled={
-                                    !isE(
-                                      field.name,
-                                      approvalMode,
-                                      customer?.workflowData?.updates
-                                        ? field.name in
-                                            customer.workflowData.updates
-                                        : false
-                                    )
-                                  }
-                                />
-                                {formErrors[field.name] && (
-                                  <div className="error">
-                                    {formErrors[field.name]}
-                                  </div>
-                                )}
-                              </div>
-                            );
-
-                          case "conditionalDropdown":
-                            const shouldShowDropdown =
-                              formData?.[field.showWhen]?.isAllowed ===
-                              field.showValue;
-                            if (!shouldShowDropdown) return null;
-                            return (
-                              <div className="form-group" key={field.name}>
-                                <label
-                                  htmlFor={`${field.name}-select`}
-                                  hidden={!isV(field.name)}
-                                >
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="required-field">*</span>
-                                  )}
-                                </label>
-                                <select
-                                  id={`${field.name}-select`}
-                                  name={field.name}
-                                  value={
-                                    formData?.[field.name] ||
-                                    transformedCustomer?.[field.name] ||
-                                    transformedCustomer?.workflowData
-                                      ?.updates?.[field.name] ||
-                                    customer?.assignedToEntityWise?.[
-                                      field.name
-                                    ] ||
-                                    ""
-                                  }
-                                  onChange={handleInputChange}
-                                  // disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates) ? field.name in transformedCustomer?.workflowData?.updates?.assignedToEntityWise
-                                  //   : false)}
-                                  hidden={!isV(field.name)}
-                                  className="dropdown"
-                                  placeholder="Value"
-                                >
-                                  <option value="" disabled hidden>
-                                    Value
-                                  </option>
-                                  {dropdownOptions[field.name]
-                                    ? dropdownOptions[field.name].map(
-                                        (opt, idx) => (
-                                          <option key={idx} value={opt}>
-                                            {t(opt)}
-                                          </option>
-                                        )
+                                  <button
+                                    className="location-picker-button"
+                                    disabled={
+                                      !isE(
+                                        field.name,
+                                        approvalMode,
+                                        hasUpdate &&
+                                          customer?.workflowData?.updates
+                                          ? field.name in
+                                              customer.workflowData.updates
+                                          : false
                                       )
-                                    : []}
-                                </select>
-                              </div>
-                            );
-
-                          case "dropdown":
-                            return (
-                              <div
-                                className={`form-group ${
-                                  hasUpdate ? "pending-update" : ""
-                                }`}
-                                key={field.name}
-                              >
-                                <label
-                                  htmlFor={`${field.name}-select`}
-                                  hidden={!isV(field.name)}
-                                >
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="required-field">*</span>
-                                  )}
+                                    }
+                                    onClick={() => setShowMap(true)}
+                                  >
+                                    <FontAwesomeIcon icon={faLocationDot} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <input
+                                    id={`${field.name}-input`}
+                                    type="text"
+                                    name={field.name}
+                                    value={
+                                      hasUpdate
+                                        ? formData[field.name]
+                                        : isBusinessHeadField && isDisabled
+                                        ? formData[
+                                            `primaryContact${field.name.replace(
+                                              "businessHead",
+                                              ""
+                                            )}`
+                                          ] || ""
+                                        : formData[field.name] || ""
+                                    }
+                                    onChange={handleInputChange}
+                                    disabled={
+                                      isDisabled ||
+                                      !isE(
+                                        field.name,
+                                        approvalMode,
+                                        transformedCustomer?.workflowData
+                                          ?.updates &&
+                                          customerFormMode !==
+                                            "custDetailsAdd" &&
+                                          hasUpdate
+                                          ? field.name in
+                                              transformedCustomer.workflowData
+                                                .updates
+                                          : false
+                                      )
+                                    }
+                                    hidden={!isV(field.name)}
+                                    placeholder={field.placeholder}
+                                    className={`text-field ${
+                                      field.label
+                                        .toLowerCase()
+                                        .includes("arabic")
+                                        ? "arabic"
+                                        : "small"
+                                    } 
+                  ${hasUpdate ? "update-field" : ""}`}
+                                  />
                                   {hasUpdate && (
-                                    <span className="update-badge">
-                                      Updated
-                                    </span>
+                                    <div className="current-value">
+                                      Current: {currentValue || "(empty)"}
+                                    </div>
                                   )}
-                                </label>
-                                <select
-                                  id={`${field.name}-select`}
+                                  {/* {console.log(field.name)}
+              {console.log(isV(field.name))}
+              {console.log(isE(field.name))}
+              {console.log("customer",customer)}
+              {console.log("formdata",formData)} */}
+                                  {/* {console.log("customer", customer)} */}
+                                  {console.log(formErrors)}
+                                </>
+                              )}
+                              {formErrors[field.name] && (
+                                <div className="error">
+                                  {formErrors[field.name]}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        case "conditionalText":
+                          const shouldShow =
+                            formData[field.showWhen] === field.showValue;
+                          if (!shouldShow) return null;
+
+                          return (
+                            <div className="form-group" key={field.name}>
+                              <label htmlFor={`${field.name}-input`}>
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
+                                )}
+                              </label>
+                              <input
+                                id={`${field.name}-input`}
+                                type="text"
+                                name={field.name}
+                                value={formData[field.name] || ""}
+                                onChange={handleInputChange}
+                                placeholder={field.placeholder}
+                                className="text-field small"
+                                disabled={
+                                  !isE(
+                                    field.name,
+                                    approvalMode,
+                                    customer?.workflowData?.updates
+                                      ? field.name in
+                                          customer.workflowData.updates
+                                      : false
+                                  )
+                                }
+                              />
+                              {formErrors[field.name] && (
+                                <div className="error">
+                                  {formErrors[field.name]}
+                                </div>
+                              )}
+                            </div>
+                          );
+
+                        case "conditionalDropdown":
+                          const shouldShowDropdown =
+                            formData?.[field.showWhen]?.isAllowed ===
+                            field.showValue;
+                          if (!shouldShowDropdown) return null;
+                          return (
+                            <div className="form-group" key={field.name}>
+                              <label
+                                htmlFor={`${field.name}-select`}
+                                hidden={!isV(field.name)}
+                              >
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
+                                )}
+                              </label>
+                              <select
+                                id={`${field.name}-select`}
+                                name={field.name}
+                                value={
+                                  formData?.[field.name] ||
+                                  transformedCustomer?.[field.name] ||
+                                  transformedCustomer?.workflowData?.updates?.[
+                                    field.name
+                                  ] ||
+                                  customer?.assignedToEntityWise?.[
+                                    field.name
+                                  ] ||
+                                  ""
+                                }
+                                onChange={handleInputChange}
+                                // disabled={!isE(field.name, approvalMode, (transformedCustomer?.workflowData?.updates) ? field.name in transformedCustomer?.workflowData?.updates?.assignedToEntityWise
+                                //   : false)}
+                                hidden={!isV(field.name)}
+                                className="dropdown"
+                                placeholder="Value"
+                              >
+                                <option value="" disabled hidden>
+                                  Value
+                                </option>
+                                {dropdownOptions[field.name]
+                                  ? dropdownOptions[field.name].map(
+                                      (opt, idx) => (
+                                        <option key={idx} value={opt}>
+                                          {t(opt)}
+                                        </option>
+                                      )
+                                    )
+                                  : []}
+                              </select>
+                            </div>
+                          );
+
+                        case "dropdown":
+                          return (
+                            <div
+                              className={`form-group ${
+                                hasUpdate ? "pending-update" : ""
+                              }`}
+                              key={field.name}
+                            >
+                              <label
+                                htmlFor={`${field.name}-select`}
+                                hidden={!isV(field.name)}
+                              >
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
+                                )}
+                                {hasUpdate && (
+                                  <span className="update-badge">Updated</span>
+                                )}
+                              </label>
+
+                              {isV(field.name) && (
+                                <SearchableDropdown
                                   name={field.name}
+                                  options={dropdownOptions[field.name] || []}
                                   value={
                                     formData?.[field.name] ||
                                     transformedCustomer?.workflowData
@@ -2631,80 +3115,46 @@ function CustomersDetails() {
                                         : false
                                     )
                                   }
-                                  hidden={!isV(field.name)}
-                                  className={`dropdown
-                  ${hasUpdate ? "update-field" : ""}`}
-                                  placeholder="Value"
-                                  required
-                                >
-                                  <option value="" disabled hidden>
-                                    Value
-                                  </option>
-                                  {dropdownOptions[field.name]
-                                    ? dropdownOptions[field.name].map(
-                                        (opt, idx) => {
-                                          return (
-                                            <option
-                                              key={idx}
-                                              value={
-                                                typeof opt === "object"
-                                                  ? opt.employeeId
-                                                  : opt
-                                              }
-                                            >
-                                              {t(
-                                                typeof opt === "object"
-                                                  ? opt.name
-                                                  : opt
-                                              )}
-                                            </option>
-                                          );
-                                        }
-                                      )
-                                    : []}
-                                  {/* {field.options.map((opt, idx) => (
-                                <option key={idx} value={opt}>
-                                  {opt}
-                                </option>
-                              ))} */}
-                                </select>
-                                {hasUpdate && (
-                                  <div className="current-value">
-                                    Current: {currentValue || "(empty)"}
-                                  </div>
-                                )}
+                                  className={hasUpdate ? "update-field" : ""}
+                                />
+                              )}
 
-                                {formErrors[field.name] && (
-                                  <div className="error">
-                                    {formErrors[field.name]}
-                                  </div>
-                                )}
-                              </div>
-                            );
+                              {hasUpdate && (
+                                <div className="current-value">
+                                  Current: {currentValue || "(empty)"}
+                                </div>
+                              )}
 
-                          case "dropdownObject":
-                            return (
-                              <div
-                                className={`form-group ${
-                                  hasUpdate ? "pending-update" : ""
-                                }`}
-                                key={field.name}
+                              {formErrors[field.name] && (
+                                <div className="error">
+                                  {formErrors[field.name]}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        case "dropdownObject":
+                          return (
+                            <div
+                              className={`form-group ${
+                                hasUpdate ? "pending-update" : ""
+                              }`}
+                              key={field.name}
+                            >
+                              <label
+                                htmlFor={`${field.name}-select`}
+                                hidden={!isV(field.name)}
                               >
-                                <label
-                                  htmlFor={`${field.name}-select`}
-                                  hidden={!isV(field.name)}
-                                >
-                                  {field.label}
-                                  {field.required && (
-                                    <span className="required-field">*</span>
-                                  )}
-                                  {hasUpdate && (
-                                    <span className="update-badge">
-                                      Updated
-                                    </span>
-                                  )}
-                                </label>
-                                <select
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
+                                )}
+                                {hasUpdate && (
+                                  <span className="update-badge">Updated</span>
+                                )}
+                              </label>
+
+                              {isV(field.name) && (
+                                <SearchableDropdown
                                   id={`${field.name}-select`}
                                   name={field.name}
                                   value={
@@ -2719,7 +3169,14 @@ function CustomersDetails() {
                                     currentValue ||
                                     ""
                                   }
-                                  onChange={handleInputChange}
+                                  options={dropdownEmployeeOptions[field.name]}
+                                  onChange={(e) => {
+                                    handleDropdownObjectChange(
+                                      field.name,
+                                      e.target.value,
+                                      field.parentField
+                                    );
+                                  }}
                                   disabled={
                                     !isE(
                                       field.name,
@@ -2737,426 +3194,218 @@ function CustomersDetails() {
                                         : false
                                     )
                                   }
-                                  hidden={!isV(field.name)}
-                                  className={`dropdown
-                  ${hasUpdate ? "update-field" : ""}`}
+                                  className={hasUpdate ? "update-field" : ""}
                                   placeholder="Value"
                                   required
-                                >
-                                  <option value="" disabled hidden>
-                                    Value
-                                  </option>
-                                  {dropdownEmployeeOptions[field.name]
-                                    ? dropdownEmployeeOptions[field.name].map(
-                                        (opt, idx) => {
-                                          console.log(
-                                            transformedCustomer?.workflowData
-                                              ?.updates?.[
-                                              "assignedToEntityWise"
-                                            ]?.[field.name]
-                                          );
-                                          console.log(
-                                            "dropdownOptions",
-                                            dropdownOptions
-                                          );
-                                          console.log(
-                                            "+++++++++field",
-                                            field.name
-                                          );
-                                          console.log(
-                                            "++++++++++++++++++++opt",
-                                            opt
-                                          );
-                                          // console.log("+++++++++dropdownOptions[field.name]", dropdownOptions[field.name]);
-                                          return (
-                                            <option
-                                              key={idx}
-                                              value={opt.employeeId}
-                                            >
-                                              {t(opt.name)}
-                                            </option>
-                                          );
-                                        }
-                                      )
-                                    : []}
-                                  {/* {field.options.map((opt, idx) => (
-                                <option key={idx} value={opt}>
-                                  {opt}
-                                </option>
-                              ))} */}
-                                </select>
-                                {hasUpdate && (
-                                  <div className="current-value">
-                                    Current: {currentValue || "(empty)"}
-                                  </div>
-                                )}
+                                />
+                              )}
 
-                                {formErrors[field.name] && (
-                                  <div className="error">
-                                    {formErrors[field.name]}
-                                  </div>
+                              {hasUpdate && (
+                                <div className="current-value">
+                                  Current: {currentValue || "(empty)"}
+                                </div>
+                              )}
+
+                              {formErrors[field.name] && (
+                                <div className="error">
+                                  {formErrors[field.name]}
+                                </div>
+                              )}
+                            </div>
+                          );
+
+                        case "file":
+                          return (
+                            <div className="file-upload" key={field.name}>
+                              <label htmlFor={`file-${field.name}`}>
+                                {field.label}
+                                {field.required && (
+                                  <span className="required-field">*</span>
+                                )}
+                              </label>
+                              <div className="upload-row">
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  id={`file-${field.name}`}
+                                  onChange={(e) =>
+                                    handleFileUpload(e, field.name)
+                                  }
+                                  className="hidden-file-input"
+                                  disabled={
+                                    !isE(
+                                      field.name,
+                                      approvalMode,
+                                      transformedCustomer?.workflowData?.updates
+                                        ? field.name in
+                                            transformedCustomer.workflowData
+                                              .updates
+                                        : false
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`file-${field.name}`}
+                                  className="custom-file-button"
+                                >
+                                  {t("Upload")}
+                                </label>
+                                {uploadedFiles[field.name]?.isNew ? (
+                                  <span className="file-name">
+                                    <button
+                                      type="button"
+                                      className="file-link-button"
+                                    >
+                                      {uploadedFiles[field.name].name}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="delete-file-button"
+                                      onClick={() =>
+                                        handleFileDelete(field.name)
+                                      }
+                                    >
+                                      <FontAwesomeIcon icon={faXmark} />
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <span className="file-name">
+                                    <button
+                                      type="button"
+                                      className="view-file-button"
+                                      onClick={() =>
+                                        handleViewFile(
+                                          customer.id,
+                                          uploadedFiles[field.name].name,
+                                          field.name
+                                        )
+                                      }
+                                    >
+                                      <FontAwesomeIcon icon={faEye} />
+                                    </button>
+                                  </span>
                                 )}
                               </div>
-                            );
-
-                          case "file":
-                            return (
-                              <div className="file-upload" key={field.name}>
+                            </div>
+                          );
+                        case "document":
+                          return (
+                            <tr
+                              className="document-upload full-width"
+                              key={field.name}
+                            >
+                              {/* First column - Label */}
+                              <td
+                                className="label-cell"
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  paddingRight: "16px",
+                                  verticalAlign: "top",
+                                }}
+                              >
                                 <label htmlFor={`file-${field.name}`}>
                                   {field.label}
                                   {field.required && (
                                     <span className="required-field">*</span>
                                   )}
                                 </label>
-                                <div className="upload-row">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    id={`file-${field.name}`}
-                                    onChange={(e) =>
-                                      handleFileUpload(e, field.name)
-                                    }
-                                    className="hidden-file-input"
-                                    disabled={
-                                      !isE(
-                                        field.name,
-                                        approvalMode,
-                                        transformedCustomer?.workflowData
-                                          ?.updates
-                                          ? field.name in
-                                              transformedCustomer.workflowData
-                                                .updates
-                                          : false
-                                      )
-                                    }
-                                  />
-                                  <label
-                                    htmlFor={`file-${field.name}`}
-                                    className="custom-file-button"
-                                  >
-                                    {t("Upload")}
-                                  </label>
-                                  {uploadedFiles[field.name]?.isNew ? (
-                                    <span className="file-name">
-                                      <button
-                                        type="button"
-                                        className="file-link-button"
-                                      >
-                                        {uploadedFiles[field.name].name}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="delete-file-button"
-                                        onClick={() =>
-                                          handleFileDelete(field.name)
-                                        }
-                                      >
-                                        <FontAwesomeIcon icon={faXmark} />
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <span className="file-name">
-                                      <button
-                                        type="button"
-                                        className="view-file-button"
-                                        onClick={() =>
-                                          handleViewFile(
-                                            customer.id,
-                                            uploadedFiles[field.name].name,
-                                            field.name
-                                          )
-                                        }
-                                      >
-                                        <FontAwesomeIcon icon={faEye} />
-                                      </button>
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          case "document":
-                            return (
-                              <tr
-                                className="document-upload full-width"
-                                key={field.name}
-                              >
-                                {/* First column - Label */}
-                                <td
-                                  className="label-cell"
-                                  style={{
-                                    whiteSpace: "nowrap",
-                                    paddingRight: "16px",
-                                    verticalAlign: "top",
-                                  }}
-                                >
-                                  <label htmlFor={`file-${field.name}`}>
-                                    {field.label}
-                                    {field.required && (
-                                      <span className="required-field">*</span>
-                                    )}
-                                  </label>
-                                  {formErrors[field.name] && (
-                                    <div className="error">
-                                      {formErrors[field.name]}
-                                    </div>
-                                  )}
-                                </td>
+                                {formErrors[field.name] && (
+                                  <div className="error">
+                                    {formErrors[field.name]}
+                                  </div>
+                                )}
+                              </td>
 
-                                {/* Second column - Upload button */}
-                                <td
-                                  className="upload-cell"
-                                  style={{
-                                    width:
-                                      "100px" /* Fixed width for upload column */,
-                                    paddingRight: "16px",
-                                    verticalAlign: "top",
-                                  }}
-                                >
-                                  <input
-                                    type="file"
-                                    accept=".pdf,application/pdf"
-                                    id={`file-${field.name}`}
-                                    onChange={(e) => {
-                                      const files = e.target.files;
-                                      if (files.length > 0) {
-                                        if (
-                                          files[0].type !== "application/pdf"
-                                        ) {
-                                          alert("Please upload only PDF files");
-                                          e.target.value = "";
-                                          return;
-                                        }
-                                        handleFileUpload(e, field.name);
+                              {/* Second column - Upload button */}
+                              <td
+                                className="upload-cell"
+                                style={{
+                                  width:
+                                    "100px" /* Fixed width for upload column */,
+                                  paddingRight: "16px",
+                                  verticalAlign: "top",
+                                }}
+                              >
+                                <input
+                                  type="file"
+                                  accept=".pdf,application/pdf"
+                                  id={`file-${field.name}`}
+                                  onChange={(e) => {
+                                    const files = e.target.files;
+                                    if (files.length > 0) {
+                                      if (files[0].type !== "application/pdf") {
+                                        alert("Please upload only PDF files");
+                                        e.target.value = "";
+                                        return;
                                       }
-                                    }}
-                                    className="hidden-file-input"
-                                    disabled={
-                                      !isE(
-                                        field.name,
-                                        approvalMode,
-                                        transformedCustomer?.workflowData
-                                          ?.updates
-                                          ? field.name in
-                                              transformedCustomer.workflowData
-                                                .updates
-                                          : false
-                                      )
+                                      handleFileUpload(e, field.name);
                                     }
-                                  />
-                                  <label
-                                    htmlFor={`file-${field.name}`}
-                                    className="custom-file-button"
-                                    style={{
-                                      display: "inline-block",
-                                      width: "100%",
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    {t("Upload")}
-                                  </label>
-                                </td>
-
-                                {/* Third column - File display */}
-                                <td className="file-display-cell">
-                                  {uploadedFiles[field.name] && (
-                                    <div className="file-display">
-                                      {Array.isArray(
-                                        uploadedFiles[field.name]
-                                      ) ? (
-                                        uploadedFiles[field.name].map(
-                                          (fileObj, index) => (
-                                            <div
-                                              key={fileObj.id || index}
-                                              className="file-item"
-                                            >
-                                              {fileObj.isNew ? (
-                                                <span className="file-name">
-                                                  <button
-                                                    type="button"
-                                                    className="file-link-button"
-                                                  >
-                                                    {fileObj.name}
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    className="delete-file-button"
-                                                    onClick={() =>
-                                                      handleFileDelete(
-                                                        field.name,
-                                                        fileObj.id
-                                                      )
-                                                    }
-                                                  >
-                                                    <FontAwesomeIcon
-                                                      icon={faXmark}
-                                                    />
-                                                  </button>
-                                                </span>
-                                              ) : (
-                                                <span className="file-name">
-                                                  {fileObj.name}
-                                                  <button
-                                                    type="button"
-                                                    className="view-file-button"
-                                                    onClick={() =>
-                                                      handleViewFile(
-                                                        customer.id,
-                                                        fileObj.name,
-                                                        field.name
-                                                      )
-                                                    }
-                                                  >
-                                                    View{" "}
-                                                    <FontAwesomeIcon
-                                                      icon={faEye}
-                                                    />
-                                                  </button>
-                                                </span>
-                                              )}
-                                            </div>
-                                          )
-                                        )
-                                      ) : (
-                                        <div className="file-item">
-                                          {uploadedFiles[field.name]?.isNew ? (
-                                            <span className="file-name">
-                                              <button
-                                                type="button"
-                                                className="file-link-button"
-                                              >
-                                                {uploadedFiles[field.name].name}
-                                              </button>
-                                              <button
-                                                type="button"
-                                                className="delete-file-button"
-                                                onClick={() =>
-                                                  handleFileDelete(field.name)
-                                                }
-                                              >
-                                                <FontAwesomeIcon
-                                                  icon={faXmark}
-                                                />
-                                              </button>
-                                            </span>
-                                          ) : (
-                                            <span className="file-name">
-                                              <button
-                                                type="button"
-                                                className="view-file-button"
-                                                onClick={() =>
-                                                  handleViewFile(
-                                                    customer.id,
-                                                    uploadedFiles[field.name],
-                                                    field.name
-                                                  )
-                                                }
-                                              >
-                                                <FontAwesomeIcon icon={faEye} />
-                                              </button>
-                                            </span>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-
-                          case "multiDocument":
-                            const multiUploads = uploadedFiles?.[field.name] ||
-                              transformedCustomer?.[field.name] || { name: [] };
-                            return (
-                              <tr
-                                className="document-upload full-width"
-                                key={field.name}
-                              >
-                                {/* Label */}
-                                <td
-                                  className="label-cell"
+                                  }}
+                                  className="hidden-file-input"
+                                  disabled={
+                                    !isE(
+                                      field.name,
+                                      approvalMode,
+                                      transformedCustomer?.workflowData?.updates
+                                        ? field.name in
+                                            transformedCustomer.workflowData
+                                              .updates
+                                        : false
+                                    )
+                                  }
+                                />
+                                <label
+                                  htmlFor={`file-${field.name}`}
+                                  className="custom-file-button"
                                   style={{
-                                    whiteSpace: "nowrap",
-                                    paddingRight: "16px",
-                                    verticalAlign: "top",
+                                    display: "inline-block",
+                                    width: "100%",
+                                    textAlign: "center",
                                   }}
                                 >
-                                  <label htmlFor={`file-${field.name}`}>
-                                    {field.label}
-                                    {field.required && (
-                                      <span className="required-field">*</span>
-                                    )}
-                                  </label>
-                                  {formErrors[field.name] && (
-                                    <div className="error">
-                                      {formErrors[field.name]}
-                                    </div>
-                                  )}
-                                </td>
+                                  {t("Upload")}
+                                </label>
+                              </td>
 
-                                {/* Upload Button */}
-                                <td
-                                  className="upload-cell"
-                                  style={{
-                                    width: "100px",
-                                    paddingRight: "16px",
-                                    verticalAlign: "top",
-                                  }}
-                                >
-                                  <input
-                                    type="file"
-                                    accept="pdf/*"
-                                    id={`file-${field.name}`}
-                                    onChange={(e) =>
-                                      handleFileUpload(e, field.name)
-                                    }
-                                    className="hidden-file-input"
-                                    disabled={
-                                      !isE(
-                                        field.name,
-                                        customer?.isApprovalMode,
-                                        customer?.workflowData?.updates
-                                          ? field.name in
-                                              customer.workflowData.updates
-                                          : false
-                                      )
-                                    }
-                                    multiple
-                                  />
-                                  <label
-                                    htmlFor={`file-${field.name}`}
-                                    className="custom-file-button"
-                                    style={{
-                                      display: "inline-block",
-                                      width: "100%",
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    {t("Upload")}
-                                  </label>
-                                </td>
-
-                                {/* File Display */}
-                                <td className="file-display-cell">
-                                  {multiUploads?.name?.length > 0 && (
-                                    <div className="uploaded-files-list">
-                                      {multiUploads?.name.map((file, index) => {
-                                        const fileObj =
-                                          typeof file === "string"
-                                            ? { name: file }
-                                            : file;
-
-                                        return (
-                                          // <-- Add this return statement
+                              {/* Third column - File display */}
+                              <td className="file-display-cell">
+                                {uploadedFiles[field.name] && (
+                                  <div className="file-display">
+                                    {Array.isArray(
+                                      uploadedFiles[field.name]
+                                    ) ? (
+                                      uploadedFiles[field.name].map(
+                                        (fileObj, index) => (
                                           <div
                                             key={fileObj.id || index}
-                                            className={`file-display ${
-                                              fileObj.isNew
-                                                ? "new-file"
-                                                : "existing-file"
-                                            }`}
+                                            className="file-item"
                                           >
-                                            <span className="file-name">
-                                              {fileObj.isNew !== true && (
+                                            {fileObj.isNew ? (
+                                              <span className="file-name">
+                                                <button
+                                                  type="button"
+                                                  className="file-link-button"
+                                                >
+                                                  {fileObj.name}
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  className="delete-file-button"
+                                                  onClick={() =>
+                                                    handleFileDelete(
+                                                      field.name,
+                                                      fileObj.id
+                                                    )
+                                                  }
+                                                >
+                                                  <FontAwesomeIcon
+                                                    icon={faXmark}
+                                                  />
+                                                </button>
+                                              </span>
+                                            ) : (
+                                              <span className="file-name">
+                                                {fileObj.name}
                                                 <button
                                                   type="button"
                                                   className="view-file-button"
@@ -3167,156 +3416,321 @@ function CustomersDetails() {
                                                       field.name
                                                     )
                                                   }
-                                                  title={fileObj.name}
                                                 >
+                                                  View{" "}
                                                   <FontAwesomeIcon
                                                     icon={faEye}
                                                   />
                                                 </button>
-                                              )}
-                                              {!fileObj.isNew && (
-                                                <span
-                                                  className="file-link-button"
-                                                  style={{
-                                                    marginLeft:
-                                                      fileObj.isNew !== true
-                                                        ? "8px"
-                                                        : 0,
-                                                  }}
-                                                >
-                                                  {fileObj.name}
-                                                </span>
-                                              )}
-                                              {fileObj.isNew && (
-                                                <span className="file-name">
-                                                  <button
-                                                    type="button"
-                                                    className="file-link-button"
-                                                  >
-                                                    {fileObj.name}
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    className="delete-file-button"
-                                                    onClick={() =>
-                                                      handleFileDelete(
-                                                        field.name,
-                                                        fileObj.id
-                                                      )
-                                                    }
-                                                  >
-                                                    <FontAwesomeIcon
-                                                      icon={faXmark}
-                                                    />
-                                                  </button>
-                                                </span>
-                                              )}
+                                              </span>
+                                            )}
+                                          </div>
+                                        )
+                                      )
+                                    ) : (
+                                      <div className="file-item">
+                                        {uploadedFiles[field.name]?.isNew ? (
+                                          <span className="file-name">
+                                            <button
+                                              type="button"
+                                              className="file-link-button"
+                                            >
+                                              {uploadedFiles[field.name].name}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="delete-file-button"
+                                              onClick={() =>
+                                                handleFileDelete(field.name)
+                                              }
+                                            >
+                                              <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+                                          </span>
+                                        ) : (
+                                          <span className="file-name">
+                                            <button
+                                              type="button"
+                                              className="view-file-button"
+                                              onClick={() =>
+                                                handleViewFile(
+                                                  customer.id,
+                                                  uploadedFiles[field.name],
+                                                  field.name
+                                                )
+                                              }
+                                            >
+                                              <FontAwesomeIcon icon={faEye} />
+                                            </button>
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+
+                        case "multiDocument":
+                          const multiUploads =
+                            uploadedFiles?.[field.name] ||
+                            transformedCustomer?.[field.name] ||
+                            currentValue ||
+                            [];
+                          console.log(
+                            "*****multiUploads",
+                            Object.keys(multiUploads).length
+                          );
+                          return (
+                            <tr
+                              className="document-upload full-width"
+                              key={field.name}
+                            >
+                              {/* Label */}
+                              <td
+                                className="label-cell"
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  paddingRight: "16px",
+                                  verticalAlign: "top",
+                                }}
+                              >
+                                <label htmlFor={`file-${field.name}`}>
+                                  {field.label}
+                                  {field.required && (
+                                    <span className="required-field">*</span>
+                                  )}
+                                </label>
+                                {formErrors[field.name] && (
+                                  <div className="error">
+                                    {formErrors[field.name]}
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Upload Button */}
+                              <td
+                                className="upload-cell"
+                                style={{
+                                  width: "100px",
+                                  paddingRight: "16px",
+                                  verticalAlign: "top",
+                                }}
+                              >
+                                <input
+                                  type="file"
+                                  accept="pdf/*"
+                                  id={`file-${field.name}`}
+                                  // onChange={(e) =>
+                                  //   handleFileUpload(e, field.name)
+                                  // }
+                                  onChange={handleNonTradingDocumentsChange}
+                                  className="hidden-file-input"
+                                  disabled={
+                                    !isE(
+                                      field.name,
+                                      customer?.isApprovalMode,
+                                      customer?.workflowData?.updates
+                                        ? field.name in
+                                            customer.workflowData.updates
+                                        : false
+                                    )
+                                  }
+                                  multiple
+                                />
+                                <label
+                                  htmlFor={`file-${field.name}`}
+                                  className="custom-file-button"
+                                  style={{
+                                    display: "inline-block",
+                                    width: "100%",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {t("Upload")}
+                                </label>
+                              </td>
+
+                              {/* File Display */}
+                              <td className="file-display-cell">
+                                {Object.keys(multiUploads)?.length > 0 && (
+                                  <div className="uploaded-files-list">
+                                    {Object.values(multiUploads).map(
+                                      (file, index) => (
+                                        console.log("!!!!!file", file),
+                                        (
+                                          <div
+                                            key={file?.id || index}
+                                            className={`file-display ${
+                                              file?.isNew
+                                                ? "new-file"
+                                                : "existing-file"
+                                            }`}
+                                          >
+                                            <span className="file-name">
+                                              {/* For existing files */}
+                                              {!file?.isNew &&
+                                                (console.log(
+                                                  "======file.name",
+                                                  file
+                                                ),
+                                                (
+                                                  <>
+                                                    <button
+                                                      type="button"
+                                                      className="view-file-button"
+                                                      onClick={() =>
+                                                        handleViewFile(
+                                                          customer.id,
+                                                          file,
+                                                          field.name
+                                                        )
+                                                      }
+                                                      title={file}
+                                                    >
+                                                      <FontAwesomeIcon
+                                                        icon={faEye}
+                                                      />
+                                                    </button>
+                                                    <span
+                                                      className="file-link-button"
+                                                      style={{
+                                                        marginLeft: "8px",
+                                                      }}
+                                                    >
+                                                      {file}
+                                                    </span>
+                                                  </>
+                                                ))}
                                             </span>
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-
-                          case "checkbox":
-                            return (
-                              <>
-                                {field.label &&
-                                  user.userType === "employee" && (
-                                    <div className="form-header">
-                                      <span className="checkbox-group-label">
-                                        {field.label}
-                                        {field.required && (
-                                          <span className="required-field">
-                                            *
-                                          </span>
-                                        )}
-                                      </span>
-                                    </div>
-                                  )}
-                                <div className="form-group" key={field.name}>
-                                  {field.options.map((option, idx) => (
-                                    <div key={idx} className="checkbox-option">
-                                      <label
-                                        htmlFor={`${field.name}-${idx}`}
-                                        hidden={!isV(field.name)}
+                                        )
+                                      )
+                                    )}
+                                  </div>
+                                )}
+                                {nonTradingFiles.length > 0 && (
+                                  <div className="uploaded-files-list">
+                                    {nonTradingFiles.map((file, index) => (
+                                      <div
+                                        key={index}
+                                        className="file-display new-file"
                                       >
-                                        <input
-                                          id={`${field.name}-${idx}`}
-                                          type="checkbox"
-                                          name={field.name}
-                                          value={option}
-                                          checked={
-                                            formData[field.name]?.isAllowed ||
-                                            formData[field.name] === true
-                                          }
-                                          onChange={(e) =>
-                                            handleCheckboxChange(e, field.name)
-                                          }
-                                          disabled={
-                                            !isE(
-                                              field.name,
-                                              approvalMode,
-                                              transformedCustomer?.workflowData
-                                                ?.updates
-                                                ? field.name in
-                                                    transformedCustomer
-                                                      .workflowData.updates
-                                                : false
-                                            )
-                                          }
-                                        />
-                                        {option}{" "}
-                                        {hasUpdate && (
-                                          <span className="update-badge">
-                                            Updated
-                                          </span>
-                                        )}
-                                      </label>
-                                    </div>
-                                  ))}
+                                        <span
+                                          className="file-link-button"
+                                          style={{
+                                            marginLeft: "8px",
+                                          }}
+                                        >
+                                          {file.name}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          className="delete-file-button"
+                                          onClick={() => removeFile(index)}
+                                        >
+                                          <FontAwesomeIcon icon={faXmark} />
+                                        </button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        case "checkbox":
+                          return (
+                            <>
+                              {field.label && user.userType === "employee" && (
+                                <div className="form-header">
+                                  <span className="checkbox-group-label">
+                                    {field.label}
+                                    {field.required && (
+                                      <span className="required-field">*</span>
+                                    )}
+                                  </span>
                                 </div>
-                              </>
-                            );
-                          case "empty":
-                            return <div key={field.name}></div>;
-                          case "header":
-                            return (
-                              <div
-                                className="form-header"
-                                key={field.label}
-                                hidden={!isV(field.label)}
-                              >
-                                {renderHeaderWithLinks(field.label)}
+                              )}
+                              <div className="form-group" key={field.name}>
+                                {field.options.map((option, idx) => (
+                                  <div key={idx} className="checkbox-option">
+                                    <label
+                                      htmlFor={`${field.name}-${idx}`}
+                                      hidden={!isV(field.name)}
+                                    >
+                                      <input
+                                        id={`${field.name}-${idx}`}
+                                        type="checkbox"
+                                        name={field.name}
+                                        value={option}
+                                        checked={
+                                          formData[field.name]?.isAllowed ||
+                                          formData[field.name] === true
+                                        }
+                                        onChange={(e) =>
+                                          handleCheckboxChange(e, field.name)
+                                        }
+                                        disabled={
+                                          !isE(
+                                            field.name,
+                                            approvalMode,
+                                            transformedCustomer?.workflowData
+                                              ?.updates
+                                              ? field.name in
+                                                  transformedCustomer
+                                                    .workflowData.updates
+                                              : false
+                                          )
+                                        }
+                                      />
+                                      {option}{" "}
+                                      {hasUpdate && (
+                                        <span className="update-badge">
+                                          Updated
+                                        </span>
+                                      )}
+                                    </label>
+                                  </div>
+                                ))}
                               </div>
-                            );
-                          default:
-                            return null;
-                        }
-                      })}
-                    {showMap && (
-                      <div className="map-modal">
-                        <div className="map-modal-content">
-                          <button
-                            className="close-modal-button"
-                            onClick={() => setShowMap(false)}
-                          >
-                            <FontAwesomeIcon icon={faXmark} />
-                          </button>
-                          <h3>{t("Select Location")}</h3>
-                          <LocationPicker
-                            onLocationSelect={handleLocationSelect}
-                            initialLat={formData.geolocation?.x}
-                            initialLng={formData.geolocation?.y}
-                          />
-                        </div>
+                            </>
+                          );
+                        case "empty":
+                          return <div key={field.name}></div>;
+                        case "header":
+                          return (
+                            <div
+                              className="form-header"
+                              key={field.label}
+                              hidden={!isV(field.label)}
+                            >
+                              {renderHeaderWithLinks(field.label)}
+                            </div>
+                          );
+                        default:
+                          return null;
+                      }
+                    })}
+                  {showMap && (
+                    <div className="map-modal">
+                      <div className="map-modal-content">
+                        <button
+                          className="close-modal-button"
+                          onClick={() => setShowMap(false)}
+                        >
+                          <FontAwesomeIcon icon={faXmark} />
+                        </button>
+                        <h3>{t("Select Location")}</h3>
+                        <LocationPicker
+                          onLocationSelect={handleLocationSelect}
+                          initialLat={formData.geolocation?.x}
+                          initialLng={formData.geolocation?.y}
+                        />
                       </div>
-                    )}
-                  </div>
-                </>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -3325,21 +3739,24 @@ function CustomersDetails() {
           {activeTab === "Products & MoQ" || activeTab === "Branches" ? (
             []
           ) : (
-            <div className="customer-onboarding-form-actions">
+            <div
+              className="customer-onboarding-form-actions"
+              style={{ maxWidth: "98%" }}
+            >
               <div
                 className="action-buttons"
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <span className="status-label">{t("Status")}:</span>
                 <span className="status-badge">
-                  {t(customer.customerStatus) ||
-                    t(formData.customerStatus) ||
+                  {t(customer?.customerStatus) ||
+                    t(formData?.customerStatus) ||
                     t("Pending")}
                 </span>
               </div>
               <div className="action-buttons">
                 {isV("btnSave") &&
-                  transformedCustomer.customerStatus === "new" &&
+                  transformedCustomer?.customerStatus === "new" &&
                   customer?.customerStatus !== "pending" && (
                     <button
                       className="save"
@@ -3354,14 +3771,14 @@ function CustomersDetails() {
                     </button>
                   )}
                 {isV("btnSaveChanges") &&
-                  !(transformedCustomer.customerStatus === "new") && (
+                  !(transformedCustomer?.customerStatus === "new") && (
                     <button
                       className="savechanges"
                       onClick={() => handleSave("save changes")}
                       disabled={
                         !isE("btnSaveChanges") ||
                         (customerFormMode == "custDetailsAdd" &&
-                          customer.isApprovalMode) ||
+                          customer?.isApprovalMode) ||
                         transformedCustomer?.isBlocked
                       }
                     >
@@ -3369,7 +3786,7 @@ function CustomersDetails() {
                     </button>
                   )}
                 {isV("btnSubmit") &&
-                  transformedCustomer.customerStatus === "new" &&
+                  transformedCustomer?.customerStatus === "new" &&
                   customer?.customerStatus !== "pending" && (
                     <button
                       className="block"
@@ -3393,7 +3810,7 @@ function CustomersDetails() {
                         disabled={
                           !isE("btnBlock") ||
                           (customerFormMode == "custDetailsAdd" &&
-                            customer.isApprovalMode)
+                            customer?.isApprovalMode)
                         }
                         hidden={
                           transformedCustomer?.isBlocked ||
@@ -3414,7 +3831,7 @@ function CustomersDetails() {
                           {t("Unblock")}
                         </button>
                       )}
-                    {customer.isApprovalMode &&
+                    {customer?.isApprovalMode &&
                       user?.userType !== "customer" &&
                       customerFormMode !== "custDetailsAdd" && (
                         <button
@@ -3425,7 +3842,7 @@ function CustomersDetails() {
                           {t("Approve")}
                         </button>
                       )}
-                    {customer.isApprovalMode &&
+                    {customer?.isApprovalMode &&
                       user?.userType !== "customer" &&
                       customerFormMode !== "custDetailsAdd" && (
                         <button
@@ -3442,7 +3859,7 @@ function CustomersDetails() {
             </div>
           )}
         </div>
-        {transformedCustomer.isApprovalMode && (
+        {transformedCustomer?.isApprovalMode && (
           <>
             <div>
               <CommentPopup
@@ -3465,7 +3882,7 @@ function CustomersDetails() {
         onClose={() => setIsApprovalDialogOpen(false)}
         action={approvalAction}
         onSubmit={handleDialogSubmit}
-        customerName={customer.customerName || "this customer"}
+        customerName={customer?.customerName || "this customer"}
         title={
           approvalAction === "approve"
             ? t("Approve Customer")
