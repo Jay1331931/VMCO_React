@@ -24,10 +24,12 @@ const getEntityFromCategory = (categoryName) => {
         return Constants.ENTITY.VMCO;
     } else if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
         return Constants.ENTITY.DIYAFA;
-    } else if (category.includes(Constants.ENTITY.GREEN_MAST.toLowerCase())) {
-        return Constants.ENTITY.GREEN_MAST;
+    } else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
+        return Constants.ENTITY.GMTC;
     } else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
         return Constants.ENTITY.NAQI;
+    } else if (category.includes(Constants.ENTITY.DAR.toLowerCase())) {
+        return Constants.ENTITY.DAR;
     }
 
 };
@@ -51,9 +53,10 @@ function Cart() {
     const [cartItems, setCartItems] = useState([
         { category: t(Constants.CATEGORY.VMCO_MACHINES), items: [] },
         { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: [] },
-        { category: t(Constants.ENTITY.DIYAFA), items: [] },
-        { category: t(Constants.ENTITY.GREEN_MAST), items: [] },
-        { category: t(Constants.ENTITY.NAQI), items: [] }
+        { category: 'Diyafa Trading Company', items: [] },
+        { category: 'Green Mast Factory Ltd', items: [] },
+        { category: 'Naqi Company', items: [] },
+        { category: 'DAR Company', items: [] }
     ]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const { token, user, logout, loading } = useAuth();
@@ -126,6 +129,7 @@ function Cart() {
             const diyafa = [];
             const greenMast = [];
             const naqui = [];
+            const dar = [];
 
             // Extract cart items from the response with better error handling
             const cartProducts = Array.isArray(result.data.data) ? result.data.data :
@@ -203,20 +207,25 @@ function Cart() {
                     }
                 } else if (entity === Constants.ENTITY.DIYAFA.toLowerCase()) {
                     diyafa.push(formattedItem);
-                } else if (entity === Constants.ENTITY.GREEN_MAST.toLowerCase()) {
+                } else if (entity === Constants.ENTITY.GMTC.toLowerCase()) {
                     greenMast.push(formattedItem);
                 } else if (entity === Constants.ENTITY.NAQI.toLowerCase()) {
                     naqui.push(formattedItem);
+                } else if (entity === Constants.ENTITY.DAR.toLowerCase()) {
+                    dar.push(formattedItem);
                 } else {
                     // If entity is not specified, try to determine by category
                     const category = (product.category || '').toLowerCase();                    if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
                         diyafa.push(formattedItem);
                     }
-                    else if (category.includes(Constants.ENTITY.GREEN_MAST.toLowerCase())) {
+                    else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
                         greenMast.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
                         naqui.push(formattedItem);
+                    }
+                    else if (category.includes(Constants.ENTITY.DAR.toLowerCase())) {
+                        dar.push(formattedItem);
                     }
                     else {
                         // Default to VMCO Consumables if we can't determine category
@@ -227,9 +236,10 @@ function Cart() {
             setCartItems([
                 { category: t(Constants.CATEGORY.VMCO_MACHINES), items: vmcoMachines },
                 { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: vmcoConsumables },
-                { category: t(Constants.ENTITY.DIYAFA), items: diyafa },
-                { category: t(Constants.ENTITY.GREEN_MAST), items: greenMast },
-                { category: t(Constants.ENTITY.NAQI), items: naqui }
+                { category: 'Diyafa Trading Company', items: diyafa },
+                { category: 'Green Mast Factory Ltd', items: greenMast },
+                { category: 'Naqi Company', items: naqui },
+                { category: 'DAR Company', items: dar }
             ]);
 
             // Initialize quantities from fetched data

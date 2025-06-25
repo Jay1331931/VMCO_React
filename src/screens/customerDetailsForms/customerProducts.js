@@ -20,7 +20,7 @@ function Products(customer) {
     const [error, setError] = useState(null);
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
     const actionMenuRef = useRef(null);    const { t } = useTranslation();
-    const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GREEN_MAST, Constants.ENTITY.NAQI];
+    const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GMTC, Constants.ENTITY.NAQI];
     const [activeCategory, setActiveCategory] = useState(Constants.ENTITY.VMCO);
     const [selectedItems, setSelectedItems] = useState([]);
     const [editingMoq, setEditingMoq] = useState(null);

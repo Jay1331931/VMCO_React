@@ -18,20 +18,22 @@ import Constants from '../constants';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// Define categories with their corresponding entity values
-const categories = [
+// Initial categories with their corresponding entity values
+const initialCategories = [
     { value: Constants.CATEGORY.VMCO_MACHINES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_MACHINES },
     { value: Constants.CATEGORY.VMCO_CONSUMABLES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_CONSUMABLES },
-    { value: Constants.ENTITY.DIYAFA, entity: Constants.ENTITY.DIYAFA, label: Constants.ENTITY.DIYAFA },
-    { value: Constants.ENTITY.GREEN_MAST, entity: Constants.ENTITY.GREEN_MAST, label: Constants.ENTITY.GREEN_MAST },
-    { value: Constants.ENTITY.NAQI, entity: Constants.ENTITY.NAQI, label: Constants.ENTITY.NAQI }
+    { value: Constants.ENTITY.DIYAFA, entity: Constants.ENTITY.DIYAFA, label: 'Diyafa Trading Company' },
+    { value: Constants.ENTITY.GMTC, entity: Constants.ENTITY.GMTC, label: 'Green Mast Factory Ltd' },
+    { value: Constants.ENTITY.NAQI, entity: Constants.ENTITY.NAQI, label: 'Naqi Company' },
+    { value: Constants.ENTITY.DAR, entity: Constants.ENTITY.DAR, label: 'DAR Company' }
 ];
 
 function Catalog() {
     const location = useLocation();
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
-    const [activeCategory, setActiveCategory] = useState(categories[0].value);
+    const [categories] = useState(initialCategories); // No need for setCategories anymore
+    const [activeCategory, setActiveCategory] = useState(initialCategories[0].value);
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedCustomerId, setSelectedCustomerId] = useState(''); // Initialize empty
     const [branches, setBranches] = useState([]);
@@ -52,7 +54,6 @@ function Catalog() {
     const productsPerPage = 60;
     const { token, user, isAuthenticated, loading, logout } = useAuth();
     console.log('User Dataaaaa:', user);
-
 
     const [filteredProducts, setFilteredProducts] = useState([]);
 
@@ -100,10 +101,12 @@ function Catalog() {
                     params.append('entity', Constants.ENTITY.VMCO);
                 } else if (activeCategory.toLowerCase() === Constants.ENTITY.DIYAFA.toLowerCase()) {
                     params.append('entity', Constants.ENTITY.DIYAFA);
-                } else if (activeCategory.toLowerCase() === Constants.ENTITY.GREEN_MAST.toLowerCase()) {
-                    params.append('entity', Constants.ENTITY.GREEN_MAST);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.GMTC);
                 } else if (activeCategory.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
                     params.append('entity', Constants.ENTITY.NAQI);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.DAR.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.DAR);
                 }
 
                 // Add category and subcategory filters
@@ -217,6 +220,7 @@ function Catalog() {
 
         if (user && user.userType) {
             const fetchData = async () => {
+                // Only fetch products, entity descriptions are fetched separately
                 await fetchAllPages();
             };
             fetchData();
