@@ -10,6 +10,7 @@ import RbacManager from '../utilities/rbac';
 import { useAuth } from '../context/AuthContext';
 import GetPaymentMethods from '../components/GetPaymentMethods';
 import Swal from 'sweetalert2';
+import Constants from '../constants';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -19,14 +20,14 @@ const getEntityFromCategory = (categoryName) => {
     // Convert to lowercase for case-insensitive comparison
     const category = categoryName.toLowerCase();
 
-    if (category.includes('vmco')) {
-        return 'vmco';
-    } else if (category.includes('diyafa')) {
-        return 'diyafa';
-    } else if (category.includes('green mast')) {
-        return 'green mast';
-    } else if (category.includes('naqui')) {
-        return 'naqui';
+    if (category.includes(Constants.ENTITY.VMCO.toLowerCase())) {
+        return Constants.ENTITY.VMCO;
+    } else if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
+        return Constants.ENTITY.DIYAFA;
+    } else if (category.includes(Constants.ENTITY.GREEN_MAST.toLowerCase())) {
+        return Constants.ENTITY.GREEN_MAST;
+    } else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
+        return Constants.ENTITY.NAQI;
     }
 
 };
@@ -36,28 +37,23 @@ function Cart() {
     const { t, i18n } = useTranslation(); // Get i18n at component level
     const navigate = useNavigate();
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
-    const [quantities, setQuantities] = useState({});
-    const [selectedUserId, setSelectedUserId] = useState('');
+    const [quantities, setQuantities] = useState({});    const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
-    const [slectedErpCustId, setSelectedErpCustId] = useState('');
+    const [selectedErpCustId, setSelectedErpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
-    const [selectedBranchNameEn, setSelectedBranchNameEn] = useState('');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
-    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
-    const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');    const [showPaymentPopup, setShowPaymentPopup] = useState(false);
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
     const [pendingOrderItems, setPendingOrderItems] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);    const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState([
-        { category: t('VMCO Machines'), items: [] },
-        { category: t('VMCO Consumables'), items: [] },
-        { category: t('Diyafa'), items: [] },
-        { category: t('Green Mast'), items: [] },
-        { category: t('Naqui'), items: [] }
+        { category: t(Constants.CATEGORY.VMCO_MACHINES), items: [] },
+        { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: [] },
+        { category: t(Constants.ENTITY.DIYAFA), items: [] },
+        { category: t(Constants.ENTITY.GREEN_MAST), items: [] },
+        { category: t(Constants.ENTITY.NAQI), items: [] }
     ]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const { token, user, logout, loading } = useAuth();
@@ -65,22 +61,19 @@ function Cart() {
 
     const userId = user?.userId;
     const customerId = user?.customerId;
-    const erpCustId = user?.erpCustomerId;
-
-    useEffect(() => {
+    const erpCustId = user?.erpCustomerId;    useEffect(() => {
         // Set user and customer IDs from context
         if (userId) { setSelectedUserId(userId); }
         if (customerId) { setSelectedCustomerId(customerId); }
         if (erpCustId) { setSelectedErpCustId(erpCustId); }
-    }, [userId, customerId, erpCustId, navigate, t]);
+    }, [userId, customerId, erpCustId]);
 
     // Get current language
     const currentLanguage = i18n.language;
     const isArabic = currentLanguage.startsWith('ar');
 
-
-
-    const fetchCartItems = async () => {
+    // Fetch cart items from the backend using fetch API
+    const fetchCartItems = React.useCallback(async () => {
         setIsLoading(true);
         setError(null);
 
@@ -201,32 +194,28 @@ function Cart() {
 
                 // Categorize based on entity and product type
                 const entity = (product.entity || '').toLowerCase();
-                const isMachine = isProductMachine(product);
-
-                // Categorize based on entity and product type
-                if (entity === 'vmco') {
+                const isMachine = isProductMachine(product);                // Categorize based on entity and product type
+                if (entity === Constants.ENTITY.VMCO.toLowerCase()) {
                     if (isMachine) {
                         vmcoMachines.push(formattedItem);
                     } else {
                         vmcoConsumables.push(formattedItem);
                     }
-                } else if (entity === 'diyafa' || entity === 'diyafa') {
+                } else if (entity === Constants.ENTITY.DIYAFA.toLowerCase()) {
                     diyafa.push(formattedItem);
-                } else if (entity === 'green mast') {
+                } else if (entity === Constants.ENTITY.GREEN_MAST.toLowerCase()) {
                     greenMast.push(formattedItem);
-                } else if (entity === 'naqui') {
+                } else if (entity === Constants.ENTITY.NAQI.toLowerCase()) {
                     naqui.push(formattedItem);
                 } else {
                     // If entity is not specified, try to determine by category
-                    const category = (product.category || '').toLowerCase();
-
-                    if (category.includes('diyafa') || category.includes('diyafa')) {
+                    const category = (product.category || '').toLowerCase();                    if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
                         diyafa.push(formattedItem);
                     }
-                    else if (category.includes('green mast')) {
+                    else if (category.includes(Constants.ENTITY.GREEN_MAST.toLowerCase())) {
                         greenMast.push(formattedItem);
                     }
-                    else if (category.includes('naqui')) {
+                    else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
                         naqui.push(formattedItem);
                     }
                     else {
@@ -234,15 +223,13 @@ function Cart() {
                         vmcoConsumables.push(formattedItem);
                     }
                 }
-            });
-
-            // Update the cart items with the categorized data
+            });            // Update the cart items with the categorized data
             setCartItems([
-                { category: t('VMCO Machines'), items: vmcoMachines },
-                { category: t('VMCO Consumables'), items: vmcoConsumables },
-                { category: t('Diyafa'), items: diyafa },
-                { category: t('Green Mast'), items: greenMast },
-                { category: t('Naqui'), items: naqui }
+                { category: t(Constants.CATEGORY.VMCO_MACHINES), items: vmcoMachines },
+                { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: vmcoConsumables },
+                { category: t(Constants.ENTITY.DIYAFA), items: diyafa },
+                { category: t(Constants.ENTITY.GREEN_MAST), items: greenMast },
+                { category: t(Constants.ENTITY.NAQI), items: naqui }
             ]);
 
             // Initialize quantities from fetched data
@@ -254,8 +241,8 @@ function Cart() {
         } finally {
             setIsLoading(false);
         }
-    };
-    // Fetch cart items from the backend using fetch API
+    }, [selectedUserId, selectedCustomerId, selectedBranchId, token, t, currentLanguage, isArabic]);
+
     useEffect(() => {
         if (loading) {
             return;
@@ -267,20 +254,18 @@ function Cart() {
             logout();
             navigate('/login');
             return; // Return while logout is processing
-        }
-
-        if (user && user.userType) {
+        }        if (user && user.userType) {
             const fetchData = async () => {
                 await fetchCartItems();
             };
             fetchData();
         }
-    }, [user, selectedUserId, t, token, selectedCustomerId, selectedBranchId, i18n.language]
+    }, [user, loading, logout, navigate, fetchCartItems]
     );
 
 
     //Rbac and other access based on user object to follow below lik this
-    const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'cart');
+    const rbacMgr = new RbacManager(user?.userType === 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'cart');
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
 
@@ -403,11 +388,8 @@ function Cart() {
                 selectedCustomerId
             }
         });
-    };
-
-    const handleSelectPaymentMethod = (method) => {
+    };    const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
-        setSelectedPaymentMethod(method);
         console.log('selected payment:', method)
         handlePlaceOrder(pendingOrderItems, pendingOrderCategory, method);
     };
@@ -468,10 +450,8 @@ function Cart() {
             });
             // alert(t('No items in this category to order.'));
             return;
-        }
-        try {
+        }        try {
             const entity = getEntityFromCategory(categoryName);
-            const category = categoryName;
 
             // --- Fetch the customer contact name using user email ---
             let orderByName = '';
@@ -531,7 +511,7 @@ function Cart() {
             
             if (!isPrePayment) {
                 // Only check for existing orders if NOT using Pre Payment
-                const orderFiltersObj = entity && entity.toLowerCase() === 'vmco' 
+                const orderFiltersObj = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() 
                     ? {
                         customerId: selectedCustomerId,
                         branchId: selectedBranchId,
@@ -603,15 +583,14 @@ function Cart() {
                 }
                 
                 let deliveryCharges = 0.00;
-                const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
+                const isVmcoMachine = categoryName.toLowerCase().includes(Constants.ENTITY.VMCO.toLowerCase()) && categoryName.toLowerCase().includes('machine');
                 if (isDeliveryChargesApplicable) {
                     if (!isVmcoMachine && initialTotalAmount <= 150) {
                         deliveryCharges = 20.00;
                     }
                 }
                 
-                const finalTotalAmount = initialTotalAmount + deliveryCharges;
-                  const orderPayload = {
+                const finalTotalAmount = initialTotalAmount + deliveryCharges;                const orderPayload = {
                     customerId: selectedCustomerId,
                     erpCustId: erpCustId,
                     companyNameEn: companyNameEn,
@@ -627,19 +606,18 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2),
                     paidAmount: '0.00',
                     deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
-                    status: 'Open',
-                    //status: entity === 'vmco' ? 'Pending' : 'Open',
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',                    status: 'Open',
+                    //status: entity === Constants.ENTITY.VMCO.toLowerCase() ? 'Pending' : 'Open',
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,
                     customerRegion: customerRegion,
-                    productCategory: categoryName
+                    productCategory: categoryName,
+                    paymentPercentage: '100.00'
                 };
                 
-                // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
-                const isVmcoMachines = categoryName.toLowerCase() === 'vmco machines' || categoryName.toLowerCase() === "آلات vmco";
+                // For VMCO Machines, set payment method to Pre Payment
+                const isVmcoMachines = categoryName.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() || categoryName.toLowerCase() === "آلات vmco";
                 if (isVmcoMachines) {
-                    orderPayload.paymentPercentage = '100.00';
                     orderPayload.paymentMethod = 'Pre Payment';
                 }
                 
@@ -824,7 +802,7 @@ function Cart() {
         
         // Calculate delivery charges based on recalculated line totals
         let deliveryCharges = 0.00;
-        const isVmcoMachine = categoryName.toLowerCase().includes('vmco') && categoryName.toLowerCase().includes('machine');
+        const isVmcoMachine = categoryName.toLowerCase().includes(Constants.ENTITY.VMCO.toLowerCase()) && categoryName.toLowerCase().includes('machine');
         
         // Updated delivery charges logic according to requirements
         if (isDeliveryChargesApplicable) {
@@ -851,20 +829,18 @@ function Cart() {
                 isDeliveryChargesApplicable,
                 categoryName
             }
-        });
-
-        // Update the order with final calculated amounts
+        });        // Update the order with final calculated amounts
         const updateOrderPayload = {
             id: orderId,
             paymentMethod: selectedPaymentMethod,
             totalAmount: finalTotalAmount.toFixed(2),
             deliveryCharges: deliveryCharges.toFixed(2),
+            paymentPercentage: '100.00'
         };
 
-        // For VMCO Machines, set payment percentage to 100% and payment method to Pre Payment
-        const isVmcoMachines = categoryName === 'VMCO Machines' || categoryName === "آلات VMCO";
+        // For VMCO Machines, set payment method to Pre Payment
+        const isVmcoMachines = categoryName.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() || categoryName === "آلات VMCO";
         if (isVmcoMachines) {
-            updateOrderPayload.paymentPercentage = '100.00';
             updateOrderPayload.paymentMethod = 'Pre Payment';
         }
 
@@ -883,7 +859,7 @@ function Cart() {
             Swal.fire({
                 icon: 'success',
                 title: t('Order Placed'),
-                text: t(`Your order has been placed successfully! Order #${orderId}`),
+                text: t(`Your order has been placed successfully! Order #${orderId}. Payment Method: ${selectedPaymentMethod}`),
                 confirmButtonText: t('OK')
             }).then(() => {
                 window.location.reload();
@@ -894,10 +870,9 @@ function Cart() {
         try {
             const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
             deleteUrl.searchParams.append('customer_id', selectedCustomerId);
-            deleteUrl.searchParams.append('branch_id', selectedBranchId);
-            // For VMCO entity, include both entity and category; for others, only entity
-            if (entity && entity.toLowerCase() === 'vmco') {
-                deleteUrl.searchParams.append('entity', 'vmco');
+            deleteUrl.searchParams.append('branch_id', selectedBranchId);            // For VMCO entity, include both entity and category; for others, only entity
+            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                deleteUrl.searchParams.append('entity', Constants.ENTITY.VMCO.toLowerCase());
                 deleteUrl.searchParams.append('category', categoryName);
             } else {
                 deleteUrl.searchParams.append('entity', entity);
@@ -1013,9 +988,7 @@ function Cart() {
             console.error('Error validating credit balance:', error);
             return false;
         }
-    };
-
-    // Initialize from navigation state if available
+    };    // Initialize from navigation state if available
     useEffect(() => {
         if (location.state) {
             setSelectedCustomerId(location.state.selectedCustomerId || '');
@@ -1023,7 +996,6 @@ function Cart() {
             setSelectedBranchName(location.state.selectedBranchName || 'No location selected');
             setSelectedBranchErpId(location.state.selectedBranchErpId || '');
             setSelectedBranchRegion(location.state.selectedBranchRegion || '');
-            setSelectedBranchNameEn(location.state.selectedBranchNameEn || '');
             setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
         }
     }, [location.state]);
@@ -1129,7 +1101,7 @@ function Cart() {
                                         )}
                                         {/* Show partial payment for VMCO Machines */}
 
-                                        {(category.category === 'VMCO Machines' || category.category === "آلات VMCO") && category.items.length > 0 && (
+                                        {(category.category.toLowerCase() === t(Constants.CATEGORY.VMCO_MACHINES).toLowerCase() || category.category === "آلات VMCO") && category.items.length > 0 && (
                                             <div className="partial-payment-row">
                                                 <span className="partial-payment-warning">{t("Min. 30% Partial Payment required")}</span>
                                             </div>
@@ -1160,9 +1132,8 @@ function Cart() {
                                                 </span>                                                <button
                                                     className="checkout-btn"                                                    onClick={async () => {
                                                         setPendingOrderCategory(category.category);
-                                                        setPendingOrderItems(category.items);
-                                                        // Check if it's VMCO Machines category - if so, bypass payment method selection
-                                                        if (category.category === 'VMCO Machines' || category.category === "آلات VMCO") {
+                                                        setPendingOrderItems(category.items);                                                        // Check if it's VMCO Machines category - if so, bypass payment method selection
+                                                        if (category.category.toLowerCase() === t(Constants.CATEGORY.VMCO_MACHINES).toLowerCase() || category.category === "آلات VMCO") {
                                                             // Directly place the order with Pre Payment method
                                                             handlePlaceOrder(category.items, category.category, 'Pre Payment');                                                        } else {
                                                             // Calculate total amount for the category
@@ -1184,11 +1155,11 @@ function Cart() {
                                                                     console.log('Auto-selecting Credit payment method');
                                                                     handlePlaceOrder(category.items, category.category, 'Credit');
                                                                 }
-                                                                // If balance is insufficient, the validateCreditBalance function will show alert and reload
+                                                                // If balance is insufficient, the validateCreditBalance function will show alert
                                                                 // Do not show payment popup - just return
                                                             } else {
                                                                 // Credit is not allowed, check category and total amount
-                                                                if (category.category === 'VMCO Consumables' || category.category === "مستهلكات VMCO") {
+                                                                if (category.category.toLowerCase() === t(Constants.CATEGORY.VMCO_CONSUMABLES).toLowerCase() || category.category === "مستهلكات VMCO") {
                                                                     // For VMCO Consumables, check total amount
                                                                     if (categoryTotal < 5000) {
                                                                         // Less than 5000, use Cash on Delivery

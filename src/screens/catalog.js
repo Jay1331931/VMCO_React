@@ -14,16 +14,17 @@ import SearchInput from '../components/SearchInput';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
 import Swal from 'sweetalert2';
+import Constants from '../constants';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Define categories with their corresponding entity values
 const categories = [
-    { value: 'VMCO Machines', entity: 'vmco', label: 'VMCO Machines' },
-    { value: 'VMCO Consumables', entity: 'vmco', label: 'VMCO Consumables' },
-    { value: 'Diyafa', entity: 'diyafa', label: 'Diyafa' },
-    { value: 'Green Mast', entity: 'green mast', label: 'Green Mast' },
-    { value: 'Naqui', entity: 'naqui', label: 'Naqui' }
+    { value: Constants.CATEGORY.VMCO_MACHINES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_MACHINES },
+    { value: Constants.CATEGORY.VMCO_CONSUMABLES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_CONSUMABLES },
+    { value: Constants.ENTITY.DIYAFA, entity: Constants.ENTITY.DIYAFA, label: Constants.ENTITY.DIYAFA },
+    { value: Constants.ENTITY.GREEN_MAST, entity: Constants.ENTITY.GREEN_MAST, label: Constants.ENTITY.GREEN_MAST },
+    { value: Constants.ENTITY.NAQI, entity: Constants.ENTITY.NAQI, label: Constants.ENTITY.NAQI }
 ];
 
 function Catalog() {
@@ -94,17 +95,15 @@ function Catalog() {
 
                 if (entityToFilter) {
                     params.append('entity', entityToFilter);
-                }
-
-                // For all tabs, just filter by entity without special handling
-                if (activeCategory === 'VMCO Machines' || activeCategory === 'VMCO Consumables') {
-                    params.append('entity', 'vmco');
-                } else if (activeCategory === 'Diyafa') {
-                    params.append('entity', 'diyafa');
-                } else if (activeCategory === 'Green Mast') {
-                    params.append('entity', 'green mast');
-                } else if (activeCategory === 'Naqui') {
-                    params.append('entity', 'naqui');
+                }                // For all tabs, just filter by entity without special handling
+                if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() || activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.VMCO);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.DIYAFA.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.DIYAFA);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.GREEN_MAST.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.GREEN_MAST);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.NAQI);
                 }
 
                 // Add category and subcategory filters
@@ -768,10 +767,8 @@ function Catalog() {
         // First filter by entity
         let filteredProductsByEntity = products.filter(p =>
             (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
-        );
-
-        // Additional filtering for VMCO tabs
-        if (activeCategory === 'VMCO Machines') {
+        );        // Additional filtering for VMCO tabs
+        if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) {
             // For VMCO Machines tab, exclude categories that have "consumable" in their name
             return Array.from(new Set(
                 filteredProductsByEntity
@@ -780,10 +777,9 @@ function Catalog() {
                     .filter(category =>
                         !(category.toLowerCase().includes('consumable') ||
                             category.toLowerCase().includes('supply') ||
-                            category.toLowerCase().includes('accessory'))
-                    )
+                            category.toLowerCase().includes('accessory')))
             ));
-        } else if (activeCategory === 'VMCO Consumables') {
+        } else if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()) {
             // For VMCO Consumables tab, exclude categories that have "machine" in their name
             return Array.from(new Set(
                 filteredProductsByEntity
@@ -857,9 +853,8 @@ function Catalog() {
             }
         }
     }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
-    useEffect(() => {
-        // Skip if no products, not a VMCO tab, or if category is already set
-        if (!products.length || !['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) || categoryFilter) {
+    useEffect(() => {        // Skip if no products, not a VMCO tab, or if category is already set
+        if (!products.length || ![Constants.CATEGORY.VMCO_MACHINES.toLowerCase(), Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()].includes(activeCategory.toLowerCase()) || categoryFilter) {
             return;
         }
 
@@ -872,11 +867,9 @@ function Catalog() {
         // Filter products by entity
         let filteredProductsByEntity = products.filter(p =>
             (p.entity || '').toLowerCase() === entityToFilter.toLowerCase()
-        );
-
-        // Apply additional filtering based on tab
+        );        // Apply additional filtering based on tab
         let availableCategories = [];
-        if (activeCategory === 'VMCO Machines') {
+        if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) {
             // For VMCO Machines tab, exclude categories that have "consumable" in their name
             availableCategories = Array.from(new Set(
                 filteredProductsByEntity
@@ -886,9 +879,8 @@ function Catalog() {
                         !(category.toLowerCase().includes('consumable') ||
                             category.toLowerCase().includes('supply') ||
                             category.toLowerCase().includes('accessory'))
-                    )
-            ));
-        } else if (activeCategory === 'VMCO Consumables') {
+                    )            ));
+        } else if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()) {
             // For VMCO Consumables tab, exclude categories that have "machine" in their name
             availableCategories = Array.from(new Set(
                 filteredProductsByEntity
@@ -984,7 +976,7 @@ function Catalog() {
                             id={`category-filter-${catalogId}`}
                             name="categoryFilter"
                             options={getFilteredCategories().map(cat => ({ value: cat, label: cat }))}
-                            className={`category-filter ${['VMCO Machines', 'VMCO Consumables'].includes(activeCategory) ? 'tab-linked-filter' : ''}`}
+                            className={`category-filter ${[Constants.CATEGORY.VMCO_MACHINES.toLowerCase(), Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()].includes(activeCategory.toLowerCase()) ? 'tab-linked-filter' : ''}`}
                             placeholder="Category"
                             value={categoryFilter}
                             onChange={e => {

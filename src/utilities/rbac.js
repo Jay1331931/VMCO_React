@@ -1,4 +1,3 @@
-import Sidebar from "../components/Sidebar";
 import constants from "../constants";
 
 // RBAC Manager class

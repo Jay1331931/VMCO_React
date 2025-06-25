@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Constants from '../constants';
 
 function GetPaymentMethods({
   open,
@@ -38,12 +39,10 @@ function GetPaymentMethods({
           paymentMethods = result.data.map(item => item.value);
         } else {
           throw new Error('Unexpected response format for payment method options');
-        }
-
-        // Filter payment methods based on category (match Cart logic)
+        }        // Filter payment methods based on category (match Cart logic)
         let allowedMethods = paymentMethods;
         const cat = (category || '').toLowerCase();
-        if (cat.includes('vmco') && cat.includes('machines')) {
+        if (cat.includes(Constants.ENTITY.VMCO.toLowerCase()) && cat.includes(Constants.CATEGORY.VMCO_MACHINES.toLowerCase())) {
           allowedMethods = paymentMethods.filter(
             m => m === 'Pre Payment' || m === 'Partial Payment'
           );
@@ -56,7 +55,7 @@ function GetPaymentMethods({
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [open, API_BASE_URL, category]);
+  }, [open, API_BASE_URL, category, customerId, totalAmount]);
 
   // Fetch payment method balances for the customer
   useEffect(() => {
@@ -87,7 +86,7 @@ function GetPaymentMethods({
         }
       })
       .catch(() => setBalances({}));
-    }, [open, customerId]);
+    }, [open, API_BASE_URL, customerId]);
 
   if (!open) return null;
 
