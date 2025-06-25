@@ -6,16 +6,24 @@ import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import formatDate from "../utilities/dateFormatter";
+import { useAuth } from "../context/AuthContext";
+import RbacManager from "../utilities/rbac";
 
 function Maintenance() {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
+  const { token, user, isAuthenticated, logout } = useAuth();
 
   const [initialTickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  //RBAC
+  const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "maintList");
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   useEffect(() => {
     const fetchMaintenanceTickets = async () => {
@@ -54,13 +62,13 @@ function Maintenance() {
   }, []);
 
   const columns = [
-    { key: "requestId", header: "requestId #" },
-    { key: "issueName", header: "Issue Name" },
-    { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer" },
-    { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch" },
-    { key: "category", header: "Category" },
-    { key: "urgencyLevel", header: "Urgency Level" },
-    { key: "status", header: "Status" },
+    { key: "requestId", header: "requestId #", include: isV('requestIdCol') },
+     { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
+    { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
+{ key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
+       { key: "category", header: "Category", include: isV('categoryCol') },
+    { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
+    { key: "status", header: "Status", include: isV('statusCol') },
   ];
 
   const getStatusClass = (status) => {
@@ -77,7 +85,11 @@ function Maintenance() {
 
   const filteredTickets = initialTickets.filter((ticket) => Object.values(ticket).some((val) => String(val).toLowerCase().includes(searchQuery.toLowerCase())));
   const handleAdd = () => {
-    navigate("/maintenanceDetails", { state: { ticket: null, mode: "add" } });
+    if (isAuthenticated) {
+      navigate("/maintenanceDetails", { state: { ticket: null, mode: "add" } });
+    } else {
+      navigate(user?.userType === "customer" ? "/login" : "/login/employee");
+    }
   };
 
   // Handle row click to navigate to Maintenance details page with ticket details
@@ -87,21 +99,32 @@ function Maintenance() {
 
   return (
     <Sidebar title={t("Maintenance Support - Tickets")}>
-      <div className='maintenance-content'>
-        <div className='maintenance-header'>
-          <SearchInput onSearch={setSearchQuery} />
-          <button className='support-add-button' onClick={handleAdd}>
-            {t("+ Add")}
-          </button>
+      {isV('maintenanceContent') && (
+        <div className='maintenance-content'>
+          <div className='maintenance-header'>
+            {isV('searchInput') && <SearchInput onSearch={setSearchQuery} />}
+            {isV("btnAdd") && isE("btnAdd") && (
+              <button className='support-add-button' onClick={handleAdd}>
+                {t("+ Add")}
+              </button>
+            )}
+          </div>
+          {loading && isV('loadingState') ? (
+            <div className='loading'>Loading...</div>
+          ) : error && isV('errorState') ? (
+            <div className='error-message'>Error loading data: {error}</div>
+          ) : (
+            isV('maintenanceTable') && (
+              <Table 
+                columns={columns.filter(col => col.include !== false)} 
+                data={filteredTickets} 
+                getStatusClass={getStatusClass} 
+                onRowClick={handleRowClick} 
+              />
+            )
+          )}
         </div>
-        {loading ? (
-          <div className='loading'>Loading...</div>
-        ) : error ? (
-          <div className='error-message'>Error loading data: {error}</div>
-        ) : (
-          <Table columns={columns} data={filteredTickets} getStatusClass={getStatusClass} onRowClick={handleRowClick} />
-        )}
-      </div>
+      )}
     </Sidebar>
   );
 }

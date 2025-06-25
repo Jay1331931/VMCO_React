@@ -16,12 +16,12 @@ const Constants = {
         DRIVER: 'driver',
     },
     ENTITY:{
-        VMCO: 'vmco',
-        DIYAFA: 'diyafa',
-        SHC: 'shc',
-        NAQI: 'naqi',
-        DAR: 'dar',
-        GMTC: 'gmtc'
+        VMCO: 'VMCO',
+        DIYAFA: 'DIYAFA',
+        SHC: 'SHC',
+        NAQI: 'NAQI',
+        DAR: 'DAR',
+        GMTC: 'GMTC'
     },
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',

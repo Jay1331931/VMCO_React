@@ -290,105 +290,158 @@ function SupportDetails() {
     }
   };
 
+  // Handle image removal
+  const handleRemoveImage = (indexToRemove) => {
+    setImages(images.filter((_, index) => index !== indexToRemove));
+  };
+
+  // Handle video removal
+  const handleRemoveVideo = (indexToRemove) => {
+    setVideos(videos.filter((_, index) => index !== indexToRemove));
+  };
+
   return (
-    <Sidebar title={`${t("Ticket# ")}${ticket.ticketId}${isCommentPanelOpen ? "collapsed" : ""}`}>
+    <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}${isCommentPanelOpen ? "collapsed" : ""}`}>
       <div className='support-details-container'>
-        <h2 className='support-details-title'>{`${t("Ticket# ")}${ticket.ticketId}`}</h2>
+        <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
           <h3 className='support-details-subtitle'>{t("Ticket Details")}</h3>
           <div className='support-details-grid'>
-            <div className='support-details-field'>
-              <label>{t("Customer Name")}</label>
-              <input value={companyNameToShow} disabled={true} />
-            </div>
-            <div className='support-details-field'>
-              <label>{t("Issue Name")}</label>
-              <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName} disabled={!isE("issueName")} />
-            </div>
-            {/** Branch Section */}
-            <div className='support-details-field'>
-              <label htmlFor='branchId'>{t("Branch")} *</label>
-              <select id='branchId' name='branchId' value={ticket.branchId} onChange={handleInputChange} disabled={!isE("branch")}>
-                <option value=''>{t("Select Branch")}</option>
-                {loadingBranches ? (
-                  <option disabled>{t("loading")}</option>
-                ) : (
-                  branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {currentLanguage === "en" ? branch.branchNameEn : branch.branchNameLc}
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-            <div className='support-details-field'>
-              <label>{t("Issue Type")}</label>
-              <select id='grievanceType' name='grievanceType' value={ticket.grievanceType} onChange={handleInputChange} disabled={!isE("issueType")}>
-                <option>{ticket.grievanceType}</option>
-                {isEditing && (
-                  <>
-                    <option>Machine Issue</option>
-                    <option>Product Quality</option>
-                    <option>Service Complaint</option>
-                    <option>Payment Problem</option>
-                    <option>Other</option>
-                  </>
-                )}
-              </select>
-            </div>
-            {formMode == "edit" ? (
+            {isV('customerName') && (
+              <div className='support-details-field'>
+                <label>{t("Customer Name")}</label>
+                <input value={companyNameToShow} disabled={true} />
+              </div>
+            )}
+            {isV('branchName') && (
+              <div className='support-details-field'>
+                <label htmlFor='branchId'>{t("Branch")} *</label>
+                <select id='branchId' name='branchId' value={ticket.branchId} onChange={handleInputChange} disabled={!isE("branch")}>
+                  <option value=''>{t("Select Branch")}</option>
+                  {loadingBranches ? (
+                    <option disabled>{t("loading")}</option>
+                  ) : (
+                    branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {currentLanguage === "en" ? branch.branchNameEn : branch.branchNameLc}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            )}
+            {isV('issueType') && (
+              <div className='support-details-field'>
+                <label>{t("Issue Type")}</label>
+                <select id='grievanceType' name='grievanceType' value={ticket.grievanceType} onChange={handleInputChange} disabled={!isE("issueType")}>
+                  <option>{ticket.grievanceType}</option>
+                  {isEditing && (
+                    <>
+                      <option>Machine Issue</option>
+                      <option>Product Quality</option>
+                      <option>Service Complaint</option>
+                      <option>Payment Problem</option>
+                      <option>Other</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            )}
+            {isV('issueName') && (
+              <div className='support-details-field'>
+                <label>{t("Issue Name")}</label>
+                <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName} disabled={!isE("issueName")} />
+              </div>
+            )}
+            {isV('createdDate') ? (
               <div className='support-details-field'>
                 <label>{t("Created Date")}</label>
                 <input value={formatDate(ticket.updatedAt, "YYYY-MM-DD HH:SS")} disabled />
               </div>
             ) : null}
           </div>
-          <div className='support-details-field support-details-textarea'>
-            <label>{t("Issue Details")}</label>
-            <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description} disabled={!isE("issueDetails")} />
-          </div>
+          {isV('issueDetails') && (
+            <div className='support-details-field support-details-textarea'>
+              <label>{t("Issue Details")}</label>
+              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description} disabled={!isE("issueDetails")} />
+            </div>
+          )}
 
-          <div className='attachments'>
-            <div className='maintenance-details-images'>
-              <label>{t("Images")}</label>
-              <div className='maintenance-images-list'>
-                {/* Add Image Button */}
-                <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
-                  +
-                </button>
-                <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={handleAddImage} />
-                {images.map((img, idx) => (
-                  <div key={idx} className='maintenance-image-placeholder' onClick={() => img && setPopupImage(img)} title={img ? "Click to view" : ""}>
-                    <img width='100%' height='100%' style={{ objectFit: "cover" }} src={img} />
+          {isV('attachments') && (
+            <div className='attachments'>
+              {isV('images') && (
+                <div className='maintenance-details-images'>
+                  <label>{t("Images")}</label>
+                  <div className='maintenance-images-list'>
+                    {/* Add Image Button */}
+                    {isE('addImage') && (
+                      <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
+                        +
+                      </button>
+                    )}
+                    <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={handleAddImage} />
+                    {images.map((img, idx) => (
+                      <div key={idx} className='maintenance-image-placeholder' onClick={() => img && setPopupImage(img)} title={img ? "Click to view" : ""}>
+                        <img width='100%' height='100%' style={{ objectFit: "cover" }} src={img} />
+                        {isV("removeImage") && isE("removeImage") && (
+                          <button
+                            className='maintenance-remove-btn'
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening the image
+                              handleRemoveImage(idx);
+                            }}
+                            title={t("Remove Image")}>
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-            <div className='maintenance-details-videos'>
-              <label>{t("Videos")}</label>
-              <div className='maintenance-videos-list'>
-                {/* Add Video Button */}
-                <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
-                  +
-                </button>
-                <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} />
-                {videos.map((vid, idx) => (
-                  <div key={idx} className='maintenance-video-placeholder' onClick={() => vid && setPopupVideo(vid)} title={vid ? "Click to view" : ""}>
-                    <video width='100%' height='100%' style={{ objectFit: "cover" }} src={vid} />
+                </div>
+              )}
+              {isV('videos') && (
+                <div className='maintenance-details-videos'>
+                  <label>{t("Videos")}</label>
+                  <div className='maintenance-videos-list'>
+                    {/* Add Video Button */}
+                    {isE('addVideo') && (
+                      <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
+                        +
+                      </button>
+                    )}
+                    <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} />
+                    {videos.map((vid, idx) => (
+                      <div key={idx} className='maintenance-video-placeholder' onClick={() => vid && setPopupVideo(vid)} title={vid ? "Click to view" : ""}>
+                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={vid} />
+                        {isV("removeVideo") && isE("removeVideo") && (
+                          <button
+                            className='maintenance-remove-btn'
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent opening the video
+                              handleRemoveVideo(idx);
+                            }}
+                            title={t("Remove Video")}>
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
       <div className='support-details-footer'>
-        <div className='support-status'>
-          <span>{t("Order Status:")}</span>
-          <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
-        </div>
+        {isV('ticketStatus') && (
+          <div className='support-status'>
+            <span>{t("Ticket Status:")}</span>
+            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
+          </div>
+        )}
         <div className='support-details-container-right'>
-            { isV('assignedTo') &&(
+            {isV('assignedTo') && (
               <div className="support-assign">
                 <span>{t("Assign to:")}</span>
                 <select 
@@ -416,20 +469,20 @@ function SupportDetails() {
             <div className="support-details-actions" style={{paddingRight:"20px"}}>
               {isEditing ? (
                 <>
-                  {isV('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
-                  <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>
+                  {isV('btnSave') && isE('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
+                  {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>}
                 </>
               ) : (
                 <>
-                  <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>
-                  <button className="support-action-btn differ">{t("Differ")}</button>
+                  {isV('btnEdit') && isE('btnEdit') && <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>}
+                  {isV('btnDefer') && isE('btnDefer') && <button className="support-action-btn differ">{t("Differ")}</button>}
                 </>
               )}
             </div>
         </div>
       </div>
 
-      {popupImage && (
+      {isV('imagePopup') && popupImage && (
         <div className='image-popup-overlay' onClick={() => setPopupImage(null)}>
           <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
             <img src={popupImage} style={{ maxWidth: "100%", maxHeight: "100%" }} />
@@ -440,7 +493,7 @@ function SupportDetails() {
         </div>
       )}
 
-      {popupVideo && (
+      {isV('videoPopup') && popupVideo && (
         <div className='image-popup-overlay' onClick={() => setPopupVideo(null)}>
           <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
             <video src={popupVideo} controls style={{ maxWidth: "100%", maxHeight: "100%" }} />
@@ -451,14 +504,16 @@ function SupportDetails() {
         </div>
       )}
       {/*TODO: part of params like currentUser Details must be dynamic */}
-      <CommentPopup
-        isOpen={isCommentPanelOpen}
-        setIsOpen={setIsCommentPanelOpen}
-        onAddComment={handleAddComment}
-        showCommentForm={true}
-        externalComments={ticket.comments}
-        currentUser={{ userName: user.userName, userId: user.userId }}
-      />
+      {isV('commentPanel') && (
+        <CommentPopup
+          isOpen={isCommentPanelOpen}
+          setIsOpen={setIsCommentPanelOpen}
+          onAddComment={handleAddComment}
+          showCommentForm={true}
+          externalComments={ticket.comments}
+          currentUser={{ userName: user.userName, userId: user.userId }}
+        />
+      )}
     </Sidebar>
   );
 }
