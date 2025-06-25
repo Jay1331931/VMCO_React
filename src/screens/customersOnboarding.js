@@ -305,7 +305,13 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { isAllowed: false, limit: "0", period: "0", balance: "0" }, partialPayment: { isAllowed: true } },
+                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { 
+                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                            }, partialPayment: { isAllowed: true } },
                         }),
                         credentials: 'include',
                     });

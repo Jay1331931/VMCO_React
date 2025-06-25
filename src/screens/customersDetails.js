@@ -33,6 +33,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import axios from "axios";
 import { useCustomer } from "../context/CustomerContext";
+import Constants from "../constants";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -208,7 +209,7 @@ function CustomersDetails() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            customerId: customer?.id,
+            id: customer?.id,
             module: "customer",
           }),
           credentials: "include",
@@ -315,6 +316,16 @@ function CustomersDetails() {
         creditLimit: methodDetails?.credit?.limit,
         creditPeriod: methodDetails?.credit?.period,
         creditBalance: methodDetails?.credit?.balance,
+        creditLimitDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.limit,
+        creditPeriodDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.period,
+        creditLimitNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.limit,
+        creditPeriodNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.period,
+        creditLimitGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.limit,
+        creditPeriodGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.period,
+        creditLimitVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.limit,
+        creditPeriodVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.period,
+        creditLimitShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.limit,
+        creditPeriodShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.period,
       },
     };
   }
@@ -365,19 +376,25 @@ function CustomersDetails() {
 
       const paymentResult = await paymentMethodsResponse.json();
       if (paymentResult.status === "Ok") {
-        const paymentMethods = Array.isArray(paymentResult.data)
+        const paymentMethods = paymentResult?.data
           ? paymentResult.data
           : [];
-
+        console.log("Payment Methods:", paymentMethods);
+        console.log("constants.ENTITY.DAR", constants.ENTITY.DAR);
         customerData = {
           ...customerData,
           paymentMethods,
-          creditLimit:
-            paymentMethods.find((m) => m?.methodName === "Credit")
-              ?.creditLimit || 0,
-          creditBalance:
-            paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
-            0,
+          // creditLimit:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditLimit || 0,
+          // creditPeriod:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditPeriod || 0,
+          // creditBalance:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
+          //   0,
+          creditLimitDar:
+            paymentMethods?.methodDetails?.credit?.[constants.ENTITY.DAR]?.limit || 0,
         };
         console.log("Customer Data with Payment Methods:", customerData);
       }
@@ -1027,6 +1044,21 @@ function CustomersDetails() {
       "credit",
       "creditLimit",
       "creditPeriod",
+      "creditDar",
+      "creditLimitDar",
+      "creditPeriodDar",
+      "creditNaqi",
+      "creditLimitNaqi",
+      "creditPeriodNaqi",
+      "creditGmtc",
+      "creditLimitGmtc",
+      "creditPeriodGmtc",
+      "creditVmco",
+      "creditLimitVmco",
+      "creditPeriodVmco",
+      "creditShc",
+      "creditLimitShc",
+      "creditPeriodShc",
     ];
 
     const customerPayload = {};
@@ -1053,10 +1085,36 @@ function CustomersDetails() {
       return {
         method_details: {
           credit: {
-            isAllowed: formData?.credit?.isAllowed,
-            limit: formData?.creditLimit,
-            period: formData?.creditPeriod,
-            balance: formData?.credit?.balance,
+            [constants.ENTITY.DAR]: {
+              isAllowed: formData?.creditDar?.isAllowed,
+              limit: formData?.creditLimitDar,
+              period: formData?.creditPeriodDar,
+              balance: formData?.creditDar?.balance,
+            },
+            [constants.ENTITY.NAQI]: {
+              isAllowed: formData?.creditNaqi?.isAllowed,
+              limit: formData?.creditLimitNaqi,
+              period: formData?.creditPeriodNaqi,
+              balance: formData?.creditNaqi?.balance,
+            },
+            [constants.ENTITY.GMTC]: {
+              isAllowed: formData?.creditGmtc?.isAllowed,
+              limit: formData?.creditLimitGmtc,
+              period: formData?.creditPeriodGmtc,
+              balance: formData?.creditGmtc?.balance,
+            },
+            [constants.ENTITY.VMCO]: {
+              isAllowed: formData?.creditVmco?.isAllowed,
+              limit: formData?.creditLimitVmco,
+              period: formData?.creditPeriodVmco,
+              balance: formData?.creditVmco?.balance,
+            },
+            [constants.ENTITY.SHC]: {
+              isAllowed: formData?.creditShc?.isAllowed,
+              limit: formData?.creditLimitShc,
+              period: formData?.creditPeriodShc,
+              balance: formData?.creditShc?.balance,
+            },
           },
           prePayment: {
             isAllowed: formData?.prePayment?.isAllowed,
@@ -1120,12 +1178,12 @@ function CustomersDetails() {
           contactUpdatePayload[fieldName] = newValue;
           // }
         } else if (paymentDetailFields.includes(fieldName)) {
-          if (fieldName === "creditLimit" || fieldName === "creditPeriod") {
+          if (fieldName === "creditLimit" || fieldName === "creditPeriod" || fieldName === "creditLimitDar" || fieldName === "creditPeriodDar" || fieldName === "creditLimitNaqi" || fieldName === "creditPeriodNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditPeriodGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditPeriodVmco" || fieldName === "creditLimitShc" || fieldName === "creditPeriodShc") {
             // if field name is credit limit update limit
             // if field name is credit period update period
-            if (fieldName === "creditLimit") {
+            if (fieldName === "creditLimit" || fieldName === "creditLimitDar" || fieldName === "creditLimitNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditLimitShc") {
               paymentMethodPayload.method_details.credit.limit = newValue;
-              paymentMethodPayload.method_details.credit.balance = newValue;
+              // paymentMethodPayload.method_details.credit.balance = newValue;
             } else if (fieldName === "creditPeriod") {
               paymentMethodPayload.method_details.credit.period = newValue;
             }
