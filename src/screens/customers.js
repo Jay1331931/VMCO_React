@@ -96,7 +96,6 @@ function Customers() {
   //   const isV = rbacMgr.isV.bind(rbacMgr);
   //   const isE = rbacMgr.isE.bind(rbacMgr);
   const handleResend = async (invite) => {
-    console.log('Resend invite:', invite);
     try {
       const response = await fetch(`${API_BASE_URL}/generate-registration-link`, {
         method: 'POST',
@@ -108,53 +107,73 @@ function Customers() {
           id: invite.id,
         })
       })
-      console.log('Response:', response);
       if (response.ok) {
         const result = await response.json();
-        console.log('Invite resend link:', result);
-     
-        // alert('Invite resend link: ' + result.data);
-        Swal.fire({
-  title: 'Invite Resent',
-  html: `
-    <p>${t('The invite has been resent successfully.')}</p>
+            try {
+              await fetch (`${API_BASE_URL}/send`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                  eventName: 'WELCOME_EMAIL',
+                  emailData: {
+                    to: invite?.companyEmail,
+                    firstName: invite?.companyName,
+                    lastName: '',
+                    activationLink: result?.data,
+                  }
+                  })
+              });
+               Swal.fire({
+          title: 'Invite Resent',
+          html: `
+            <p>${t('The invite has been resent successfully.')}</p>
 
-    <div style="display:flex;align-items:center;">
-      <input
-        id="invite-link"
-        class="swal2-input"
-        style="flex:1;margin:0 8px 0 0;"
-        type="text"
-        value="${result?.data}"
-        readonly
-      />
-       <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+            <div style="display:flex;align-items:center;">
+              <input
+                id="invite-link"
+                class="swal2-input"
+                style="flex:1;margin:0 8px 0 0;"
+                type="text"
+                value="${result?.data}"
+                readonly
+              />
+              <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
 
-    </div>
-  `,
-  icon: 'success',
-  showConfirmButton: true,
-  confirmButtonText: 'OK',
+            </div>
+          `,
+          icon: 'success',
+          showConfirmButton: true,
+          confirmButtonText: 'OK',
 
-  didOpen: () => {
-    const input = document.getElementById('invite-link');
-    const icon = document.getElementById('copy-icon');
+          didOpen: () => {
+            const input = document.getElementById('invite-link');
+            const icon = document.getElementById('copy-icon');
 
-    icon.addEventListener('click', () => {
-      input.select();
-      input.setSelectionRange(0, 99999); // mobile-friendly
-      navigator.clipboard.writeText(input.value).then(() => {
-        icon.classList.replace('fa-copy', 'fa-check');
-        setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
-      });
-    });
-  }
-});
-
-
-       
-
-       
+            icon.addEventListener('click', () => {
+              input.select();
+              input.setSelectionRange(0, 99999); // mobile-friendly
+              navigator.clipboard.writeText(input.value).then(() => {
+                icon.classList.replace('fa-copy', 'fa-check');
+                setTimeout(() => icon.classList.replace('fa-check', 'fa-copy'), 2000);
+              });
+            });
+          }
+        });
+            } catch (err){
+              console.error('Error generating invite link:', err);
+              // alert('Failed to generate invite link. Please try again later.');
+              Swal.fire({
+                title: 'Error',
+                text: t('Failed to generate invite link. Please try again later.'),
+                icon: 'error',
+                confirmButtonText: 'OK'
+              });
+              return;
+            }
+         
       }
     } catch (err) {
       // console.error('Error resending in  vite:', err);
