@@ -14,7 +14,7 @@ function SupportDetails() {
     id: null,
     ticketId: "",
     customerId: null,
-    branchId: null,
+    branchId: "",
     grievanceType: "",
     grievanceName: "",
     description: "",
@@ -40,11 +40,25 @@ function SupportDetails() {
   const navigate = useNavigate();
 
   const ticketRcvd = location.state?.ticket || {};
-  const [ticket, setTicket] = useState(ticketRcvd || defaultTicket);
+  const [ticket, setTicket] = useState({
+    ...defaultTicket,
+    ...ticketRcvd,
+    // Ensure all string fields have default empty string values
+    ticketId: ticketRcvd.ticketId || "",
+    branchId: ticketRcvd.branchId || "",
+    grievanceType: ticketRcvd.grievanceType || "",
+    grievanceName: ticketRcvd.grievanceName || "",
+    description: ticketRcvd.description || "",
+    assignedTeamMember: ticketRcvd.assignedTeamMember || "",
+    assignedTeamMemberDept: ticketRcvd.assignedTeamMemberDept || "",
+    status: ticketRcvd.status || "",
+    attachment: ticketRcvd.attachment || "",
+    criticalLevel: ticketRcvd.criticalLevel || "",
+  });
   // State for branches dropdown
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? ticket.branchNameEn : ticket.branchNameLc);
+  const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || ""));
 
   // State for employees dropdown
   const [employees, setEmployees] = useState([]);
@@ -95,10 +109,10 @@ function SupportDetails() {
     currentLanguage === "en"
       ? ticket.companyNameEn
         ? ticket.companyNameEn
-        : user.customerCompanyNameEn
+        : (user?.customerCompanyNameEn || "")
       : ticket.companyNameAr
       ? ticket.companyNameAr
-      : user.customerCompanyNameLc;
+      : (user?.customerCompanyNameLc || "");
   const rbacMgr = new RbacManager(
     user.userType == "employee" && user.roles[0] !== "admin" ? user.designation : user.roles[0],
     formMode == "add" ? "supDetailAdd" : "supDetailEdit"
@@ -310,13 +324,13 @@ function SupportDetails() {
             {isV('customerName') && (
               <div className='support-details-field'>
                 <label>{t("Customer Name")}</label>
-                <input value={companyNameToShow} disabled={true} />
+                <input value={companyNameToShow || ""} disabled={true} />
               </div>
             )}
             {isV('branchName') && (
               <div className='support-details-field'>
                 <label htmlFor='branchId'>{t("Branch")} *</label>
-                <select id='branchId' name='branchId' value={ticket.branchId} onChange={handleInputChange} disabled={!isE("branch")}>
+                <select id='branchId' name='branchId' value={ticket.branchId || ""} onChange={handleInputChange} disabled={!isE("branch")}>
                   <option value=''>{t("Select Branch")}</option>
                   {loadingBranches ? (
                     <option disabled>{t("loading")}</option>
@@ -333,8 +347,8 @@ function SupportDetails() {
             {isV('issueType') && (
               <div className='support-details-field'>
                 <label>{t("Issue Type")}</label>
-                <select id='grievanceType' name='grievanceType' value={ticket.grievanceType} onChange={handleInputChange} disabled={!isE("issueType")}>
-                  <option>{ticket.grievanceType}</option>
+                <select id='grievanceType' name='grievanceType' value={ticket.grievanceType || ""} onChange={handleInputChange} disabled={!isE("issueType")}>
+                  <option>{ticket.grievanceType || ""}</option>
                   {isEditing && (
                     <>
                       <option>Machine Issue</option>
@@ -350,7 +364,7 @@ function SupportDetails() {
             {isV('issueName') && (
               <div className='support-details-field'>
                 <label>{t("Issue Name")}</label>
-                <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName} disabled={!isE("issueName")} />
+                <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName || ""} disabled={!isE("issueName")} />
               </div>
             )}
             {isV('createdDate') ? (
@@ -363,7 +377,7 @@ function SupportDetails() {
           {isV('issueDetails') && (
             <div className='support-details-field support-details-textarea'>
               <label>{t("Issue Details")}</label>
-              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description} disabled={!isE("issueDetails")} />
+              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description || ""} disabled={!isE("issueDetails")} />
             </div>
           )}
 
@@ -447,7 +461,7 @@ function SupportDetails() {
                 <select 
                   id="assignedTeamMember"
                   name="assignedTeamMember"            
-                  value={ticket.assignedTeamMember}
+                  value={ticket.assignedTeamMember || ""}
                   onChange={handleInputChange}
                   disabled={!isE('assignedTo')}
                 >

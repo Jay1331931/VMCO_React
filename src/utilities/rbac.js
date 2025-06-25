@@ -755,7 +755,7 @@ class RbacManager {
           createdDate: { visible: false, editable: false },
           issueDetails: { visible: true, editable: true },
           images: { visible: true, editable: true },
-          issueStatus: { visible: true, editable: true },
+          ticketStatus: { visible: false, editable: true },
           assignedTo: { visible: false, editable: true },
           btnSave: { visible: true, editable: true },
           btnCancel: { visible: true, editable: true },
@@ -1367,7 +1367,7 @@ class RbacManager {
       },
       maintList: {
         fields: {
-          btnAdd: { visible: false, editable: false },
+          btnAdd: { visible: true, editable: true },
         },
       },
       maintDetailAdd: {

@@ -22,8 +22,8 @@ const getEntityFromCategory = (categoryName) => {
 
     if (category.includes(Constants.ENTITY.VMCO.toLowerCase())) {
         return Constants.ENTITY.VMCO;
-    } else if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
-        return Constants.ENTITY.DIYAFA;
+    } else if (category.includes(Constants.ENTITY.SHC.toLowerCase())) {
+        return Constants.ENTITY.SHC;
     } else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
         return Constants.ENTITY.GMTC;
     } else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
@@ -53,7 +53,7 @@ function Cart() {
     const [cartItems, setCartItems] = useState([
         { category: t(Constants.CATEGORY.VMCO_MACHINES), items: [] },
         { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: [] },
-        { category: 'Diyafa Trading Company', items: [] },
+        { category: 'Saudi Hospitality Company', items: [] },
         { category: 'Green Mast Factory Ltd', items: [] },
         { category: 'Naqi Company', items: [] },
         { category: 'DAR Company', items: [] }
@@ -126,7 +126,7 @@ function Cart() {
             // Initialize arrays for each category
             const vmcoMachines = [];
             const vmcoConsumables = [];
-            const diyafa = [];
+            const shc = [];
             const greenMast = [];
             const naqui = [];
             const dar = [];
@@ -205,8 +205,8 @@ function Cart() {
                     } else {
                         vmcoConsumables.push(formattedItem);
                     }
-                } else if (entity === Constants.ENTITY.DIYAFA.toLowerCase()) {
-                    diyafa.push(formattedItem);
+                } else if (entity === Constants.ENTITY.SHC.toLowerCase()) {
+                    shc.push(formattedItem);
                 } else if (entity === Constants.ENTITY.GMTC.toLowerCase()) {
                     greenMast.push(formattedItem);
                 } else if (entity === Constants.ENTITY.NAQI.toLowerCase()) {
@@ -215,8 +215,8 @@ function Cart() {
                     dar.push(formattedItem);
                 } else {
                     // If entity is not specified, try to determine by category
-                    const category = (product.category || '').toLowerCase();                    if (category.includes(Constants.ENTITY.DIYAFA.toLowerCase())) {
-                        diyafa.push(formattedItem);
+                    const category = (product.category || '').toLowerCase();                    if (category.includes(Constants.ENTITY.SHC.toLowerCase())) {
+                        shc.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
                         greenMast.push(formattedItem);
@@ -236,7 +236,7 @@ function Cart() {
             setCartItems([
                 { category: t(Constants.CATEGORY.VMCO_MACHINES), items: vmcoMachines },
                 { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: vmcoConsumables },
-                { category: 'Diyafa Trading Company', items: diyafa },
+                { category: 'SHC Company', items: shc },
                 { category: 'Green Mast Factory Ltd', items: greenMast },
                 { category: 'Naqi Company', items: naqui },
                 { category: 'DAR Company', items: dar }
@@ -817,7 +817,7 @@ function Cart() {
         // Updated delivery charges logic according to requirements
         if (isDeliveryChargesApplicable) {
             // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
-            // For VMCO Consumables, Diyafa, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
+            // For VMCO Consumables, SHC, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
             if (!isVmcoMachine && linesTotal <= 150) {
                 deliveryCharges = 20.00;
             }
@@ -1181,7 +1181,7 @@ function Cart() {
                                                                         handlePlaceOrder(category.items, category.category, 'Pre Payment');
                                                                     }
                                                                 } else {
-                                                                    // For other categories (Diyafa, Green Mast, Naqui), show payment method popup
+                                                                    // For other categories (SHC, Green Mast, Naqui), show payment method popup
                                                                     setShowPaymentPopup(true);
                                                                 }
                                                             }
