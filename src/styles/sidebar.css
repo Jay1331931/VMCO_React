@@ -34,7 +34,9 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: var(--font-primary);
+    font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; /* var(--font-primary); accroding to UI Developer Guide
+*/
+   
 }
 
 /* Sidebar Styles */
@@ -425,7 +427,7 @@
 
 .header-title {
     padding: 35px;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
     font-weight: 600;
 }
 

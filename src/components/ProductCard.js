@@ -109,7 +109,7 @@ const ProductCard = ({
                         <button
                             className="add-to-cart-btn"
                             onClick={(e) => handleAddToCart(e)}
-                            style={{backgroundColor: '#01594d',color:"#ffffff"}}
+                            style={{backgroundColor: '#01594C',color:"#ffffff"}}
                         >
                             {t('ADD TO CART')}
                         </button>
@@ -236,7 +236,7 @@ const ProductCard = ({
   width: 160px;
   height: 30px;
   padding: 10px 10px;
-  background-color: #00205B;
+//   background-color: #00205B;
   color: white;
   align-items: center;
   justify-content: center;
@@ -248,9 +248,9 @@ const ProductCard = ({
   font-weight: 600;
 }
 
-.add-to-cart-btn:hover {
-  background-color: #001845;
-}
+// .add-to-cart-btn:hover {
+//   background-color: #001845;
+// }
 
 /* Specifically target Firefox */
 .quantity-input::-webkit-outer-spin-button,

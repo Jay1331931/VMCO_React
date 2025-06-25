@@ -32,6 +32,9 @@ import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import axios from "axios";
+import { useCustomer } from "../context/CustomerContext";
+import Constants from "../constants";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -177,6 +180,11 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
 function CustomersDetails() {
   const location = useLocation();
   const transformedCustomer = location.state?.transformedCustomer;
+  // const {
+  //   refreshCustomerData = () =>
+  //     console.warn("refreshCustomerData not available"),
+  // } = useCustomer() || {};
+  const { refreshCustomerData } = useCustomer();
 
   // concats customer and customer contacts data into a single object
   const transformCustomerData = async (customer, customerContacts) => {
@@ -196,10 +204,14 @@ function CustomersDetails() {
 
     try {
       const res = await fetch(
-        `${API_BASE_URL}/workflow-instance/check/id/${customer?.id}/module/customer`,
+        `${API_BASE_URL}/workflow-instance/check/id`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: customer?.id,
+            module: "customer",
+          }),
           credentials: "include",
         }
       );
@@ -226,32 +238,32 @@ function CustomersDetails() {
     return {
       ...customer,
       // Contact details - each contact type is a separate row in DB
-      primaryContactName: contactsMap.primary?.name || "",
-      primaryContactDesignation: contactsMap.primary?.designation || "",
-      primaryContactEmail: contactsMap.primary?.email || "",
-      primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
+      // primaryContactName: contactsMap.primary?.name || "",
+      // primaryContactDesignation: contactsMap.primary?.designation || "",
+      // primaryContactEmail: contactsMap.primary?.email || "",
+      // primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
 
-      businessHeadName: contactsMap.business?.name || "",
-      businessHeadDesignation: contactsMap.business?.designation || "",
-      businessHeadEmail: contactsMap.business?.email || "",
-      businessHeadMobile: contactsMap.business?.mobile || "",
+      // businessHeadName: contactsMap.business?.name || "",
+      // businessHeadDesignation: contactsMap.business?.designation || "",
+      // businessHeadEmail: contactsMap.business?.email || "",
+      // businessHeadMobile: contactsMap.business?.mobile || "",
 
-      financeHeadName: contactsMap.finance?.name || "",
-      financeHeadDesignation: contactsMap.finance?.designation || "",
-      financeHeadEmail: contactsMap.finance?.email || "",
-      financeHeadMobile: contactsMap.finance?.mobile || "",
+      // financeHeadName: contactsMap.finance?.name || "",
+      // financeHeadDesignation: contactsMap.finance?.designation || "",
+      // financeHeadEmail: contactsMap.finance?.email || "",
+      // financeHeadMobile: contactsMap.finance?.mobile || "",
 
-      purchasingHeadName: contactsMap.purchasing?.name || "",
-      purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
-      purchasingHeadEmail: contactsMap.purchasing?.email || "",
-      purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
+      // purchasingHeadName: contactsMap.purchasing?.name || "",
+      // purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
+      // purchasingHeadEmail: contactsMap.purchasing?.email || "",
+      // purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
 
-      // Adding operations contact if needed
-      operationsHeadName: contactsMap.operations?.name || "",
-      operationsHeadDesignation: contactsMap.operations?.designation || "",
-      operationsHeadEmail: contactsMap.operations?.email || "",
-      operationsHeadMobile: contactsMap.operations?.mobile || "",
-
+      // // Adding operations contact if needed
+      // operationsHeadName: contactsMap.operations?.name || "",
+      // operationsHeadDesignation: contactsMap.operations?.designation || "",
+      // operationsHeadEmail: contactsMap.operations?.email || "",
+      // operationsHeadMobile: contactsMap.operations?.mobile || "",
+      ...customerContacts,
       isApprovalMode: isAppMode,
     };
   };
@@ -278,6 +290,10 @@ function CustomersDetails() {
         console.log("transformedData", transformedData);
         console.log("transformedData", transformedData);
         setCustomer(transformedData);
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          ...transformedData,
+        }));
       } else {
         throw new Error(
           response.data.message || "Failed to fetch customer contacts"
@@ -300,6 +316,16 @@ function CustomersDetails() {
         creditLimit: methodDetails?.credit?.limit,
         creditPeriod: methodDetails?.credit?.period,
         creditBalance: methodDetails?.credit?.balance,
+        creditLimitDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.limit,
+        creditPeriodDar: methodDetails?.credit?.[constants.ENTITY.DAR]?.period,
+        creditLimitNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.limit,
+        creditPeriodNaqi: methodDetails?.credit?.[constants.ENTITY.NAQI]?.period,
+        creditLimitGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.limit,
+        creditPeriodGmtc: methodDetails?.credit?.[constants.ENTITY.GMTC]?.period,
+        creditLimitVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.limit,
+        creditPeriodVmco: methodDetails?.credit?.[constants.ENTITY.VMCO]?.period,
+        creditLimitShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.limit,
+        creditPeriodShc: methodDetails?.credit?.[constants.ENTITY.SHC]?.period,
       },
     };
   }
@@ -350,19 +376,25 @@ function CustomersDetails() {
 
       const paymentResult = await paymentMethodsResponse.json();
       if (paymentResult.status === "Ok") {
-        const paymentMethods = Array.isArray(paymentResult.data)
+        const paymentMethods = paymentResult?.data
           ? paymentResult.data
           : [];
-
+        console.log("Payment Methods:", paymentMethods);
+        console.log("constants.ENTITY.DAR", constants.ENTITY.DAR);
         customerData = {
           ...customerData,
           paymentMethods,
-          creditLimit:
-            paymentMethods.find((m) => m?.methodName === "Credit")
-              ?.creditLimit || 0,
-          creditBalance:
-            paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
-            0,
+          // creditLimit:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditLimit || 0,
+          // creditPeriod:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")
+          //     ?.creditPeriod || 0,
+          // creditBalance:
+          //   paymentMethods.find((m) => m?.methodName === "Credit")?.balance ||
+          //   0,
+          creditLimitDar:
+            paymentMethods?.methodDetails?.credit?.[constants.ENTITY.DAR]?.limit || 0,
         };
         console.log("Customer Data with Payment Methods:", customerData);
       }
@@ -449,6 +481,7 @@ function CustomersDetails() {
   const [approvalAction, setApprovalAction] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [nonTradingFiles, setNonTradingFiles] = useState([]);
+  const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
 
   const formMode = location.state?.mode;
 
@@ -647,7 +680,37 @@ function CustomersDetails() {
 
   const [changedFields, setChangedFields] = useState(new Set());
   const [savedData, setSavedData] = useState({});
+  const handleDropdownObjectChange = (name, value, parentField) => {
+    const conditionalDropdowns = [
+      constants.ENTITY.SHC,
+      "pricingPolicySHC",
+      constants.ENTITY.NAQI,
+      "pricingPolicyNAQI",
+      constants.ENTITY.GMTC,
+      "pricingPolicyGMTC",
+      constants.ENTITY.DAR,
+      "pricingPolicyDAR",
+      constants.ENTITY.VMCO,
+      "pricingPolicyVMCO",
+    ];
+    if (conditionalDropdowns.includes(name)) {
+      setFormData((prev) => ({
+        ...prev,
+        // remove the parent field part from the name
 
+        [parentField]: {
+          ...prev[parentField],
+          [name.replace(parentField, "")?.toLowerCase()]: value,
+        },
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+      setChangedFields((prev) => new Set(prev).add(parentField));
+      return;
+    }
+  };
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     console.log("Input change:", name, value, type, checked);
@@ -662,24 +725,7 @@ function CustomersDetails() {
         value.toLowerCase()
       )["Documents"];
     }
-    const conditionalDropdowns = [
-      constants.ENTITY.DIYAFA,
-      constants.ENTITY.NAQI,
-      constants.ENTITY.GREEN_MAST,
-      constants.ENTITY.DAR,
-      constants.ENTITY.VMCO,
-    ];
-    if (conditionalDropdowns.includes(name)) {
-      setFormData((prev) => ({
-        ...prev,
-        ["assignedToEntityWise"]: {
-          ...prev["assignedToEntityWise"],
-          [name]: value,
-        },
-      }));
-      setChangedFields((prev) => new Set(prev).add("assignedToEntityWise"));
-      return;
-    }
+
     const inputVal = type === "checkbox" ? checked : value;
     setChangedFields((prev) => new Set(prev).add(name));
     setFormData((prev) => ({ ...prev, [name]: inputVal }));
@@ -825,29 +871,89 @@ function CustomersDetails() {
     return Object.keys(errors).length === 0;
   };
 
- const handleNonTradingDocumentsChange = (e) => {
-    // const fileList = e.target.files;
-    // if (fileList.length > 0) {
-    //   // Convert FileList to array and append to existing files
-    //   const newFiles = Array.from(fileList);
-    //   setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    //   // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
-    //   nonTradingFilesToUpload["others"] = [...newFiles, ...nonTradingFiles];
-    //   console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
-    // }
+  const uploadFile = async (fieldName, fileData, customerId) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", fileData);
+      formData.append("fileType", fieldName);
+
+      const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error uploading files:", error.message);
+    }
+  };
+  const uploadDocuments = (nonTradingFilesToUpload) => {
+    try {
+      Object.entries(nonTradingFilesToUpload || {}).forEach(
+        ([fieldName, file]) => {
+          if (fieldName !== "others") {
+            uploadFile(fieldName, file, customer.id);
+          } else if (Array.isArray(file)) {
+            file.forEach((f) => {
+              uploadFile("nonTradingDocuments", f, customer.id);
+            });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error uploading files:", error.message);
+    }
+  };
+
+  const handleNonTradingDocumentsChange = (e) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    const files = Array.from(e.target.files);
+
+    // Check if any file exceeds the size limit
+
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "The following files exceed the maximum size of {{size}} MB: {{files}}",
+          {
+            size: MAX_FILE_SIZE / (1024 * 1024), // Convert to MB
+            files: oversizedFiles.map((file) => file.name).join(", "),
+          }
+        ),
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
+
+    const fileList = e.target.files;
+    if (fileList.length > 0) {
+      // Convert FileList to array and append to existing files
+      const newFiles = Array.from(fileList);
+      setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
+      // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
+      nonTradingFilesToUpload["others"] = [...newFiles, ...nonTradingFiles];
+      setFormData((prev) => ({
+        ...prev,
+        nonTradingDocuments: nonTradingFilesToUpload["others"],
+      }));
+
+      console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+    }
   };
 
   // Remove a specific file
   const removeFile = (index) => {
-    // setNonTradingFiles((prevFiles) =>
-    //   prevFiles.filter((_, fileIndex) => fileIndex !== index)
-    // );
-    // // Remove the file from nonTradingFilesToUpload["others"] as well
-    // const updatedFiles = nonTradingFiles.filter(
-    //   (_, fileIndex) => fileIndex !== index
-    // );
-    // nonTradingFilesToUpload["others"] = updatedFiles;
-    // console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+    setNonTradingFiles((prevFiles) =>
+      prevFiles.filter((_, fileIndex) => fileIndex !== index)
+    );
+    // Remove the file from nonTradingFilesToUpload["others"] as well
+    const updatedFiles = nonTradingFiles.filter(
+      (_, fileIndex) => fileIndex !== index
+    );
+    nonTradingFilesToUpload["others"] = updatedFiles;
+    console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
   };
   const handleSave = async (action) => {
     switch (action) {
@@ -938,6 +1044,21 @@ function CustomersDetails() {
       "credit",
       "creditLimit",
       "creditPeriod",
+      "creditDar",
+      "creditLimitDar",
+      "creditPeriodDar",
+      "creditNaqi",
+      "creditLimitNaqi",
+      "creditPeriodNaqi",
+      "creditGmtc",
+      "creditLimitGmtc",
+      "creditPeriodGmtc",
+      "creditVmco",
+      "creditLimitVmco",
+      "creditPeriodVmco",
+      "creditShc",
+      "creditLimitShc",
+      "creditPeriodShc",
     ];
 
     const customerPayload = {};
@@ -964,10 +1085,36 @@ function CustomersDetails() {
       return {
         method_details: {
           credit: {
-            isAllowed: formData?.credit?.isAllowed,
-            limit: formData?.creditLimit,
-            period: formData?.creditPeriod,
-            balance: formData?.credit?.balance,
+            [constants.ENTITY.DAR]: {
+              isAllowed: formData?.creditDar?.isAllowed,
+              limit: formData?.creditLimitDar,
+              period: formData?.creditPeriodDar,
+              balance: formData?.creditDar?.balance,
+            },
+            [constants.ENTITY.NAQI]: {
+              isAllowed: formData?.creditNaqi?.isAllowed,
+              limit: formData?.creditLimitNaqi,
+              period: formData?.creditPeriodNaqi,
+              balance: formData?.creditNaqi?.balance,
+            },
+            [constants.ENTITY.GMTC]: {
+              isAllowed: formData?.creditGmtc?.isAllowed,
+              limit: formData?.creditLimitGmtc,
+              period: formData?.creditPeriodGmtc,
+              balance: formData?.creditGmtc?.balance,
+            },
+            [constants.ENTITY.VMCO]: {
+              isAllowed: formData?.creditVmco?.isAllowed,
+              limit: formData?.creditLimitVmco,
+              period: formData?.creditPeriodVmco,
+              balance: formData?.creditVmco?.balance,
+            },
+            [constants.ENTITY.SHC]: {
+              isAllowed: formData?.creditShc?.isAllowed,
+              limit: formData?.creditLimitShc,
+              period: formData?.creditPeriodShc,
+              balance: formData?.creditShc?.balance,
+            },
           },
           prePayment: {
             isAllowed: formData?.prePayment?.isAllowed,
@@ -1011,7 +1158,12 @@ function CustomersDetails() {
         fieldName === "id" ||
         fieldName === "undefined" ||
         fieldName === "pricePlan" ||
-        fieldName === "deliveryCost"
+        fieldName === "deliveryCost" ||
+        fieldName === "pricingPolicySHC" ||
+        fieldName === "pricingPolicyNAQI" ||
+        fieldName === "pricingPolicyGMTC" ||
+        fieldName === "pricingPolicyDAR" ||
+        fieldName === "pricingPolicyVMCO"
       )
         return;
 
@@ -1026,12 +1178,12 @@ function CustomersDetails() {
           contactUpdatePayload[fieldName] = newValue;
           // }
         } else if (paymentDetailFields.includes(fieldName)) {
-          if (fieldName === "creditLimit" || fieldName === "creditPeriod") {
+          if (fieldName === "creditLimit" || fieldName === "creditPeriod" || fieldName === "creditLimitDar" || fieldName === "creditPeriodDar" || fieldName === "creditLimitNaqi" || fieldName === "creditPeriodNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditPeriodGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditPeriodVmco" || fieldName === "creditLimitShc" || fieldName === "creditPeriodShc") {
             // if field name is credit limit update limit
             // if field name is credit period update period
-            if (fieldName === "creditLimit") {
+            if (fieldName === "creditLimit" || fieldName === "creditLimitDar" || fieldName === "creditLimitNaqi" || fieldName === "creditLimitGmtc" || fieldName === "creditLimitVmco" || fieldName === "creditLimitShc") {
               paymentMethodPayload.method_details.credit.limit = newValue;
-              paymentMethodPayload.method_details.credit.balance = newValue;
+              // paymentMethodPayload.method_details.credit.balance = newValue;
             } else if (fieldName === "creditPeriod") {
               paymentMethodPayload.method_details.credit.period = newValue;
             }
@@ -1166,7 +1318,10 @@ function CustomersDetails() {
           })
         );
       }
+
       handleSaveFiles();
+      uploadDocuments(nonTradingFilesToUpload);
+
       Swal.fire({
         icon: "success",
         title: t("Success"),
@@ -1181,21 +1336,24 @@ function CustomersDetails() {
       setFormErrors(error.message || "Unable to connect to server");
     }
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/customers/id/${customer.id}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
-      const result = await response.json();
-      setCustomer(result.data);
-      fetchCustomerContacts(customer.id, customer);
-    } catch (err) {
-      console.error("Error fetching customer:", err);
-    }
+    // try {
+    //   const response = await fetch(
+    //     `${API_BASE_URL}/customers/id/${customer.id}`,
+    //     {
+    //       method: "GET",
+    //       headers: { "Content-Type": "application/json" },
+    //       credentials: "include",
+    //     }
+    //   );
+    //   const result = await response.json();
+    //   setCustomer(result.data);
+    //   fetchCustomerContacts(customer.id, customer);
+    // } catch (err) {
+    //   console.error("Error fetching customer:", err);
+    // }
+    // if (refreshCustomerData) {
+    //   refreshCustomerData();
+    // }
   };
   const [uploadedFiles, setUploadedFiles] = useState(
     formDataByTab["Documents"]
@@ -1425,9 +1583,28 @@ function CustomersDetails() {
 
       // console.log("Data for field fetchEmployeeDropdownOptions", field.name, data);
       for (const field of dropdownFields) {
-        options[field.name] = data.map((opt) =>
-          typeof opt === "string" ? opt.charAt(0) + opt.slice(1) : opt
-        );
+        if (
+          field.name === "pricingPolicySHC" ||
+          field.name === "pricingPolicyNAQI" ||
+          field.name === "pricingPolicyGMTC" ||
+          field.name === "pricingPolicyDAR" ||
+          field.name === "pricingPolicyVMCO"
+        ) {
+          data = await getOptionsFromBasicsMaster("pricingPolicy");
+          console.log("Data for field pricingPolicySHC", data);
+
+          options[field.name] = data.map((item) => {
+            return { name: item, employeeId: item };
+          });
+          console.log(
+            "Options for field pricingPolicySHC",
+            options[field.name]
+          );
+        } else {
+          options[field.name] = data.map((opt) =>
+            typeof opt === "string" ? opt.charAt(0) + opt.slice(1) : opt
+          );
+        }
       }
     } catch (err) {
       console.error(`Failed to fetch options for :`, err);
@@ -1446,9 +1623,32 @@ function CustomersDetails() {
   const [pendingFileUploads, setPendingFileUploads] = useState({});
 
   const handleFileUpload = async (e, fieldName) => {
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
 
+    if (oversizedFiles?.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          `File size exceeds 5MB limit: ${oversizedFiles
+            .map((f) => f.name)
+            .join(", ")}`
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // Reset the file input
+      e.target.value = "";
+      return;
+    }
+
+    // Clear any previous errors
+    setFormErrors((prev) => ({
+      ...prev,
+      [fieldName]: undefined,
+    }));
     try {
       // Special handling for logo upload
       if (fieldName.includes("Logo")) {
@@ -1517,7 +1717,6 @@ function CustomersDetails() {
             // If already an array, use it directly
             existingFiles = currentFiles;
           } else if (currentFiles && typeof currentFiles === "object") {
-            // If it's an object with a 'name' property that's an array
             existingFiles =
               currentFiles.name && Array.isArray(currentFiles.name)
                 ? currentFiles.name
@@ -1989,11 +2188,19 @@ function CustomersDetails() {
           fieldName === "branchLocation" ||
           fieldName === "pricingPolicy" ||
           fieldName === constants.ENTITY.VMCO ||
-          fieldName === constants.ENTITY.DIYAFA ||
+          fieldName === constants.ENTITY.SHC ||
           fieldName === constants.ENTITY.NAQI ||
           fieldName === constants.ENTITY.DAR ||
-          fieldName === constants.ENTITY.GREEN_MAST ||
-          fieldName === "isDeliveryChargesApplicable"
+          fieldName === constants.ENTITY.GMTC ||
+          fieldName === "isDeliveryChargesApplicable" ||
+          fieldName === "isApprovalMode" ||
+          fieldName === "acknowledgmentSignature" ||
+          fieldName === "updatedAt" ||
+          fieldName === "pricingPolicySHC" ||
+          fieldName === "pricingPolicyNAQI" ||
+          fieldName === "pricingPolicyGMTC" ||
+          fieldName === "pricingPolicyDAR" ||
+          fieldName === "pricingPolicyVMCO"
         )
           return;
 
@@ -2027,9 +2234,14 @@ function CustomersDetails() {
               fieldName === "nationalAddress" ||
               fieldName === "contractAgreement" ||
               fieldName === "creditApplication" ||
-              fieldName === "acknacknowledgementSignature"
+              fieldName === "acknowledgementSignature"
             ) {
-              customerPayload[fieldName] = uploadedFiles[fieldName];
+              // Handle file uploads for type objects
+              if (typeof uploadedFiles?.[fieldName] === "object") {
+                customerPayload[fieldName] = uploadedFiles?.[fieldName]?.name;
+              } else {
+                customerPayload[fieldName] = uploadedFiles?.[fieldName];
+              }
             }
 
             customerPayload["customerStatus"] = (
@@ -2038,10 +2250,10 @@ function CustomersDetails() {
             customerPayload["interCompany"] = false;
             customerPayload["assignedToEntityWise"] = {
               [constants.ENTITY.VMCO]: areaSalesManager,
-              [constants.ENTITY.DIYAFA]: areaSalesManager,
+              [constants.ENTITY.SHC]: areaSalesManager,
               [constants.ENTITY.DAR]: areaSalesManager,
               [constants.ENTITY.NAQI]: areaSalesManager,
-              [constants.ENTITY.GREEN_MAST]: areaSalesManager,
+              [constants.ENTITY.GMTC]: areaSalesManager,
             };
             if (fieldName === "region") {
               customerPayload["region"] = newValue.toLowerCase();
@@ -2050,7 +2262,7 @@ function CustomersDetails() {
               customerPayload["nonTradingDocuments"] = {};
             } else {
               customerPayload["nonTradingDocuments"] =
-                formData.nonTradingDocuments?.name || [];
+                JSON.stringify(formData?.nonTradingDocuments) || [];
             }
             // if(formData.customerStatus === 'new'){
             //   customerPayload['customerStatus'] = 'pending';
@@ -2391,6 +2603,116 @@ function CustomersDetails() {
     customerFormMode === "custDetailsEdit" &&
     transformedCustomer?.name === "customer block/unblock";
 
+  function SearchableDropdown({
+    name,
+    options,
+    value,
+    onChange,
+    disabled,
+    className,
+  }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target)
+        ) {
+          setIsOpen(false);
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Get filtered options based on search term
+    const filteredOptions = options
+      ? options.filter((opt) => {
+          const optionText = typeof opt === "object" ? opt.name : opt;
+          return optionText.toLowerCase().includes(searchTerm.toLowerCase());
+        })
+      : [];
+
+    // Handle option selection
+    const handleOptionSelect = (opt) => {
+      const optValue = typeof opt === "object" ? opt.employeeId : opt;
+
+      setIsOpen(false);
+      setSearchTerm("");
+
+      // Call parent onChange handler
+      onChange({
+        target: {
+          name: name,
+          value: optValue,
+        },
+      });
+    };
+
+    // Find display text for current value
+    const selectedOption = options?.find(
+      (opt) => (typeof opt === "object" ? opt.employeeId : opt) === value
+    );
+    const displayText = selectedOption
+      ? typeof selectedOption === "object"
+        ? selectedOption.name
+        : selectedOption
+      : "Value";
+
+    return (
+      <div className={`searchable-dropdown `} ref={dropdownRef}>
+        <div
+          className={`dropdown-header ${className || ""}`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          tabIndex={disabled ? -1 : 0}
+          style={
+            disabled
+              ? { backgroundColor: "#e9ecef", cursor: "not-allowed" }
+              : {}
+          }
+        >
+          <span className="selected-value">{displayText}</span>
+          <span className="dropdown-arrow">▼</span>
+        </div>
+
+        {isOpen && !disabled && (
+          <div className="dropdown-content">
+            <input
+              type="text"
+              className="dropdown-search"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+
+            <div className="dropdown-options">
+              {filteredOptions.length > 0 ? (
+                filteredOptions.map((opt, idx) => (
+                  <div
+                    key={idx}
+                    className="dropdown-option"
+                    onClick={() => handleOptionSelect(opt)}
+                  >
+                    {typeof opt === "object" ? opt.name : opt}
+                  </div>
+                ))
+              ) : (
+                <div className="no-options">No matches found</div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <Sidebar>
       <div className="customers">
@@ -2445,9 +2767,11 @@ function CustomersDetails() {
                     transformedCustomer?.customerStatus === "blocked" && (
                       <>{t("Customer Approval for Unblocking Customer")}</>
                     )}
-                  <div className="form-main-header">
-                    <a href="#">{t("Customer Approval Checklist")}</a>
-                  </div>
+                  {isV("customerApprovalChecklist") && (
+                    <div className="form-main-header">
+                      <a href="#">{t("Customer Approval Checklist")}</a>
+                    </div>
+                  )}
                   {formsByTab[activeTab]
                     .reduce((acc, field, idx, fields) => {
                       if (field.type === "conditionalText") {
@@ -2496,10 +2820,10 @@ function CustomersDetails() {
                       console.log("---------current value", currentValue);
                       if (
                         field.name === constants.ENTITY.VMCO ||
-                        field.name === constants.ENTITY.DIYAFA ||
+                        field.name === constants.ENTITY.SHC ||
                         field.name === constants.ENTITY.NAQI ||
                         field.name === constants.ENTITY.DAR ||
-                        field.name === constants.ENTITY.GREEN_MAST
+                        field.name === constants.ENTITY.GMTC
                       ) {
                         console.log("---------in if field name", field.name);
                         console.log(
@@ -2761,72 +3085,40 @@ function CustomersDetails() {
                                   <span className="update-badge">Updated</span>
                                 )}
                               </label>
-                              <select
-                                id={`${field.name}-select`}
-                                name={field.name}
-                                value={
-                                  formData?.[field.name] ||
-                                  transformedCustomer?.workflowData?.updates?.[
-                                    field.name
-                                  ] ||
-                                  currentValue ||
-                                  ""
-                                }
-                                onChange={handleInputChange}
-                                disabled={
-                                  !isE(
-                                    field.name,
-                                    approvalMode,
+
+                              {isV(field.name) && (
+                                <SearchableDropdown
+                                  name={field.name}
+                                  options={dropdownOptions[field.name] || []}
+                                  value={
+                                    formData?.[field.name] ||
                                     transformedCustomer?.workflowData
-                                      ?.updates &&
-                                      customerFormMode !== "custDetailsAdd" &&
-                                      hasUpdate
-                                      ? field.name in
-                                          transformedCustomer.workflowData
-                                            .updates ||
-                                          field.name in
+                                      ?.updates?.[field.name] ||
+                                    currentValue ||
+                                    ""
+                                  }
+                                  onChange={handleInputChange}
+                                  disabled={
+                                    !isE(
+                                      field.name,
+                                      approvalMode,
+                                      transformedCustomer?.workflowData
+                                        ?.updates &&
+                                        customerFormMode !== "custDetailsAdd" &&
+                                        hasUpdate
+                                        ? field.name in
                                             transformedCustomer.workflowData
-                                              .updates?.assignedToEntityWise
-                                      : false
-                                  )
-                                }
-                                hidden={!isV(field.name)}
-                                className={`dropdown
-                  ${hasUpdate ? "update-field" : ""}`}
-                                placeholder="Value"
-                                required
-                              >
-                                <option value="" disabled hidden>
-                                  Value
-                                </option>
-                                {dropdownOptions[field.name]
-                                  ? dropdownOptions[field.name].map(
-                                      (opt, idx) => {
-                                        return (
-                                          <option
-                                            key={idx}
-                                            value={
-                                              typeof opt === "object"
-                                                ? opt.employeeId
-                                                : opt
-                                            }
-                                          >
-                                            {t(
-                                              typeof opt === "object"
-                                                ? opt.name
-                                                : opt
-                                            )}
-                                          </option>
-                                        );
-                                      }
+                                              .updates ||
+                                            field.name in
+                                              transformedCustomer.workflowData
+                                                .updates?.assignedToEntityWise
+                                        : false
                                     )
-                                  : []}
-                                {/* {field.options.map((opt, idx) => (
-                                <option key={idx} value={opt}>
-                                  {opt}
-                                </option>
-                              ))} */}
-                              </select>
+                                  }
+                                  className={hasUpdate ? "update-field" : ""}
+                                />
+                              )}
+
                               {hasUpdate && (
                                 <div className="current-value">
                                   Current: {currentValue || "(empty)"}
@@ -2840,7 +3132,6 @@ function CustomersDetails() {
                               )}
                             </div>
                           );
-
                         case "dropdownObject":
                           return (
                             <div
@@ -2861,86 +3152,54 @@ function CustomersDetails() {
                                   <span className="update-badge">Updated</span>
                                 )}
                               </label>
-                              <select
-                                id={`${field.name}-select`}
-                                name={field.name}
-                                value={
-                                  formData?.[field.name] ||
-                                  formData?.["assignedToEntityWise"]?.[
-                                    field.name
-                                  ] ||
-                                  transformedCustomer?.workflowData?.updates?.[
-                                    "assignedToEntityWise"
-                                  ]?.[field.name] ||
-                                  currentValue ||
-                                  ""
-                                }
-                                onChange={handleInputChange}
-                                disabled={
-                                  !isE(
-                                    field.name,
-                                    approvalMode,
+
+                              {isV(field.name) && (
+                                <SearchableDropdown
+                                  id={`${field.name}-select`}
+                                  name={field.name}
+                                  value={
+                                    formData?.[field.name] ||
+                                    formData?.["assignedToEntityWise"]?.[
+                                      field.name
+                                    ] ||
                                     transformedCustomer?.workflowData
-                                      ?.updates &&
-                                      customerFormMode !== "custDetailsAdd" &&
-                                      hasUpdate
-                                      ? field.name in
-                                          transformedCustomer.workflowData
-                                            .updates ||
-                                          field.name in
+                                      ?.updates?.["assignedToEntityWise"]?.[
+                                      field.name
+                                    ] ||
+                                    currentValue ||
+                                    ""
+                                  }
+                                  options={dropdownEmployeeOptions[field.name]}
+                                  onChange={(e) => {
+                                    handleDropdownObjectChange(
+                                      field.name,
+                                      e.target.value,
+                                      field.parentField
+                                    );
+                                  }}
+                                  disabled={
+                                    !isE(
+                                      field.name,
+                                      approvalMode,
+                                      transformedCustomer?.workflowData
+                                        ?.updates &&
+                                        customerFormMode !== "custDetailsAdd" &&
+                                        hasUpdate
+                                        ? field.name in
                                             transformedCustomer.workflowData
-                                              .updates?.assignedToEntityWise
-                                      : false
-                                  )
-                                }
-                                hidden={!isV(field.name)}
-                                className={`dropdown
-                  ${hasUpdate ? "update-field" : ""}`}
-                                placeholder="Value"
-                                required
-                              >
-                                <option value="" disabled hidden>
-                                  Value
-                                </option>
-                                {dropdownEmployeeOptions[field.name]
-                                  ? dropdownEmployeeOptions[field.name].map(
-                                      (opt, idx) => {
-                                        console.log(
-                                          transformedCustomer?.workflowData
-                                            ?.updates?.[
-                                            "assignedToEntityWise"
-                                          ]?.[field.name]
-                                        );
-                                        console.log(
-                                          "dropdownOptions",
-                                          dropdownOptions
-                                        );
-                                        console.log(
-                                          "+++++++++field",
-                                          field.name
-                                        );
-                                        console.log(
-                                          "++++++++++++++++++++opt",
-                                          opt
-                                        );
-                                        // console.log("+++++++++dropdownOptions[field.name]", dropdownOptions[field.name]);
-                                        return (
-                                          <option
-                                            key={idx}
-                                            value={opt.employeeId}
-                                          >
-                                            {t(opt.name)}
-                                          </option>
-                                        );
-                                      }
+                                              .updates ||
+                                            field.name in
+                                              transformedCustomer.workflowData
+                                                .updates?.assignedToEntityWise
+                                        : false
                                     )
-                                  : []}
-                                {/* {field.options.map((opt, idx) => (
-                                <option key={idx} value={opt}>
-                                  {opt}
-                                </option>
-                              ))} */}
-                              </select>
+                                  }
+                                  className={hasUpdate ? "update-field" : ""}
+                                  placeholder="Value"
+                                  required
+                                />
+                              )}
+
                               {hasUpdate && (
                                 <div className="current-value">
                                   Current: {currentValue || "(empty)"}
@@ -3217,6 +3476,7 @@ function CustomersDetails() {
                           const multiUploads =
                             uploadedFiles?.[field.name] ||
                             transformedCustomer?.[field.name] ||
+                            currentValue ||
                             [];
                           console.log(
                             "*****multiUploads",
@@ -3348,34 +3608,32 @@ function CustomersDetails() {
                                         )
                                       )
                                     )}
-                                    {nonTradingFiles.length > 0 && (
-                                      <div className="uploaded-files-container">
-                                        <h4>{t("Uploaded Files")}:</h4>
-                                        <ul className="uploaded-files-list">
-                                          {nonTradingFiles.map(
-                                            (file, index) => (
-                                              <li
-                                                key={index}
-                                                className="uploaded-file-item"
-                                              >
-                                                <span className="file-name">
-                                                  {file.name}
-                                                </span>
-                                                <button
-                                                  type="button"
-                                                  className="delete-file-button"
-                                                  onClick={() =>
-                                                    removeFile(index)
-                                                  }
-                                                >
-                                                  ×
-                                                </button>
-                                              </li>
-                                            )
-                                          )}
-                                        </ul>
+                                  </div>
+                                )}
+                                {nonTradingFiles.length > 0 && (
+                                  <div className="uploaded-files-list">
+                                    {nonTradingFiles.map((file, index) => (
+                                      <div
+                                        key={index}
+                                        className="file-display new-file"
+                                      >
+                                        <span
+                                          className="file-link-button"
+                                          style={{
+                                            marginLeft: "8px",
+                                          }}
+                                        >
+                                          {file.name}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          className="delete-file-button"
+                                          onClick={() => removeFile(index)}
+                                        >
+                                          <FontAwesomeIcon icon={faXmark} />
+                                        </button>
                                       </div>
-                                    )}
+                                    ))}
                                   </div>
                                 )}
                               </td>

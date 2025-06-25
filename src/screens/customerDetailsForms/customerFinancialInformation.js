@@ -10,8 +10,14 @@ export function getFinancialInformationForm(t) {
       { type: 'text', name: 'bankAccountNumber', label: t('Account Number'), placeholder: t('Enter account number'), required: true },
       { type: 'text', name: 'iban', label: t('IBAN'), placeholder: t('Enter IBAN'), required: true },
       { type: 'empty' },
-      // { type: 'header', label: t('Price Plan')},
-      { type: 'dropdown', name: 'pricingPolicy', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
+      { type: 'header', label: t('Price Plan')},
+      // { type: 'dropdown', name: 'pricingPolicy', label: t('Price Plan'), options: ['Price A', 'Price B', 'Price C'], required: false },
+      { type: 'dropdownObject', name: 'pricingPolicySHC', label: t('Price Plan SHC'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyNAQI', label: t('Price Plan NAQI'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyGMTC', label: t('Price Plan GMTC'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyDAR', label: t('Price Plan DAR'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+      { type: 'dropdownObject', name: 'pricingPolicyVMCO', label: t('Price Plan VMCO'), options: ['Price A', 'Price B', 'Price C'], parentField: 'pricingPolicy', required: false },
+
       { type: 'empty' },
       { type: 'checkbox', name: 'isDeliveryChargesApplicable', label: '', options: [t('Is delivery charges applicable')], required: false },
 
@@ -24,10 +30,36 @@ export function getFinancialInformationForm(t) {
       { type: 'empty' },
       { type: 'checkbox', name: 'COD', label: '', options: [t('Cash on Delivery (COD)')], required: false },
       { type: 'empty' },
-      { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
-      { type: 'text', name: 'creditLimit', label: t('Credit Limit'), placeholder: t('Enter credit limit'), required: false },
+      // { type: 'checkbox', name: 'credit', label: '', options: [t('Credit')], required: false },
+      // { type: 'text', name: 'creditLimit', label: t('Credit Limit'), placeholder: t('Enter credit limit'), required: false },
+      // { type: 'empty' },
+      // { type: 'text', name: 'creditPeriod', label: t('Credit Period'), placeholder: t('Enter credit period'), required: false },
+    { type: 'checkbox', name: 'creditDar', label: '', options: [t('Credit (DAR)')], required: false },
+      { type: 'text', name: 'creditLimitDar', label: t('Credit Limit (DAR)'), placeholder: t('Enter credit limit'), required: false },
       { type: 'empty' },
-      { type: 'text', name: 'creditPeriod', label: t('Credit Period'), placeholder: t('Enter credit period'), required: false },
+      { type: 'text', name: 'creditPeriodDar', label: t('Credit Period (DAR)'), placeholder: t('Enter credit period'), required: false },
+      { type: 'checkbox', name: 'creditNaqi', label: '', options: [t('Credit (NAQI)')], required: false },
+      { type: 'text', name: 'creditLimitNaqi', label: t('Credit Limit (NAQI)'), placeholder: t('Enter credit limit'), required: false },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriodNaqi', label: t('Credit Period (NAQI)'), placeholder: t('Enter credit period'), required: false },
+
+
+      { type: 'checkbox', name: 'creditGmtc', label: '', options: [t('Credit (GMTC)')], required: false },
+      { type: 'text', name: 'creditLimitGmtc', label: t('Credit Limit (GMTC)'), placeholder: t('Enter credit limit'), required: false },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriodGmtc', label: t('Credit Period (GMTC)'), placeholder: t('Enter credit period'), required: false },
+
+
+      { type: 'checkbox', name: 'creditVmco', label: '', options: [t('Credit (VMCO)')], required: false },
+      { type: 'text', name: 'creditLimitVmco', label: t('Credit Limit (VMCO)'), placeholder: t('Enter credit limit'), required: false },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriodVmco', label: t('Credit Period (VMCO)'), placeholder: t('Enter credit period'), required: false },
+    
+
+      { type: 'checkbox', name: 'creditShc', label: '', options: [t('Credit (SHC)')], required: false },
+      { type: 'text', name: 'creditLimitShc', label: t('Credit Limit (SHC)'), placeholder: t('Enter credit limit'), required: false },
+      { type: 'empty' },
+      { type: 'text', name: 'creditPeriodShc', label: t('Credit Period (SHC)'), placeholder: t('Enter credit period'), required: false },
     ],
   };
 }
