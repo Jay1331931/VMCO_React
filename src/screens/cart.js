@@ -236,7 +236,7 @@ function Cart() {
             setCartItems([
                 { category: t(Constants.CATEGORY.VMCO_MACHINES), items: vmcoMachines },
                 { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: vmcoConsumables },
-                { category: 'SHC Company', items: shc },
+                { category: 'Saudi Hospitality Company', items: shc },
                 { category: 'Green Mast Factory Ltd', items: greenMast },
                 { category: 'Naqi Company', items: naqui },
                 { category: 'DAR Company', items: dar }

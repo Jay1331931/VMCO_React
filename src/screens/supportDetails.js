@@ -2,12 +2,15 @@ import React, { useState, useRef, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
 import CommentPopup from "../components/commentPanel";
+import GetCustomers from "../components/GetCustomers";
+import GetBranches from "../components/GetBranches";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import formatDate from "../utilities/dateFormatter"; // Import the date formatter
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 function SupportDetails() {
   const defaultTicket = {
@@ -54,6 +57,8 @@ function SupportDetails() {
     status: ticketRcvd.status || "",
     attachment: ticketRcvd.attachment || "",
     criticalLevel: ticketRcvd.criticalLevel || "",
+    // Set customer ID for customer users
+    customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
   });
   // State for branches dropdown
   const [branches, setBranches] = useState([]);
@@ -68,27 +73,207 @@ function SupportDetails() {
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
-  // Images state (allow dynamic add)
-  const [images, setImages] = useState(Array.isArray(ticket.images) && ticket.images.length > 0 ? ticket.images.filter(Boolean) : []);
+  // Images state (allow dynamic add) - store both data URL and original filename
+  const [images, setImages] = useState([]);
   // File input ref
   const fileInputRef = useRef(null);
 
   // State for video popup
   const [popupVideo, setPopupVideo] = useState(null);
 
-  // Videos state (allow dynamic add)
+  // Videos state (allow dynamic add) - store both data URL and original filename
   const [videos, setVideos] = useState([]);
 
   // File input ref for videos
   const videoInputRef = useRef(null);
 
+  // State for customer popup
+  const [showCustomerPopup, setShowCustomerPopup] = useState(false);
+  
+  // State for branch popup
+  const [showBranchPopup, setShowBranchPopup] = useState(false);
+  
+  // State for issue type options
+  const [issueTypeOptions, setIssueTypeOptions] = useState([]);
+  
+  // API base URL
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // Function to load existing images and videos from attachment field
+  const loadExistingFiles = async () => {
+    if (formMode === 'edit' && ticket.attachment && ticket.attachment !== 'none') {
+      try {
+        let attachmentData = {};
+        
+        // Parse attachment field - it can be string or object
+        if (typeof ticket.attachment === 'string') {
+          attachmentData = JSON.parse(ticket.attachment);
+        } else {
+          attachmentData = ticket.attachment;
+        }
+
+        console.log('Loading existing files from attachment:', attachmentData);
+
+        // Load images
+        if (attachmentData.images && Array.isArray(attachmentData.images)) {
+          const imagePromises = attachmentData.images.map(async (imageItem) => {
+            try {
+              // Handle both old format (string) and new format (object)
+              const fileName = typeof imageItem === 'string' ? imageItem : imageItem.fileName || imageItem;
+              
+              if (!fileName) return null;
+              
+              console.log('Loading image:', fileName);
+              
+              // Fetch image from backend
+              const response = await fetch(`${API_BASE_URL}/grievances/file/${fileName}`, {
+                method: 'GET',
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                const blob = await response.blob();
+                const dataUrl = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = (e) => resolve(e.target.result);
+                  reader.readAsDataURL(blob);
+                });
+                
+                return {
+                  dataUrl,
+                  fileName,
+                  originalName: typeof imageItem === 'object' ? imageItem.originalName || fileName : fileName,
+                  isExisting: true
+                };
+              } else {
+                console.warn(`Failed to load image ${fileName}: ${response.status}`);
+              }
+            } catch (error) {
+              console.error(`Error loading image ${imageItem}:`, error);
+            }
+            return null;
+          });
+          
+          const loadedImages = await Promise.all(imagePromises);
+          const validImages = loadedImages.filter(img => img !== null);
+          console.log('Loaded images:', validImages.length);
+          setImages(validImages);
+        }
+
+        // Load videos
+        if (attachmentData.videos && Array.isArray(attachmentData.videos)) {
+          const videoPromises = attachmentData.videos.map(async (videoItem) => {
+            try {
+              // Handle both old format (string) and new format (object)  
+              const fileName = typeof videoItem === 'string' ? videoItem : videoItem.fileName || videoItem;
+              
+              if (!fileName) return null;
+              
+              console.log('Loading video:', fileName);
+              
+              // Fetch video from backend
+              const response = await fetch(`${API_BASE_URL}/grievances/file/${fileName}`, {
+                method: 'GET',
+                credentials: 'include'
+              });
+              
+              if (response.ok) {
+                const blob = await response.blob();
+                const dataUrl = await new Promise((resolve) => {
+                  const reader = new FileReader();
+                  reader.onload = (e) => resolve(e.target.result);
+                  reader.readAsDataURL(blob);
+                });
+                
+                return {
+                  dataUrl,
+                  fileName,
+                  originalName: typeof videoItem === 'object' ? videoItem.originalName || fileName : fileName,
+                  isExisting: true
+                };
+              } else {
+                console.warn(`Failed to load video ${fileName}: ${response.status}`);
+              }
+            } catch (error) {
+              console.error(`Error loading video ${videoItem}:`, error);
+            }
+            return null;
+          });
+          
+          const loadedVideos = await Promise.all(videoPromises);
+          const validVideos = loadedVideos.filter(vid => vid !== null);
+          console.log('Loaded videos:', validVideos.length);
+          setVideos(validVideos);
+        }
+      } catch (error) {
+        console.error('Error parsing attachment data:', error);
+      }
+    }
+  };
+
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
     if (user) {
       fetchEmployees();
-      fetchBranches();
+      
+      // Only fetch branches if we have a customer ID
+      const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
+      if (customerIdToUse) {
+        fetchBranches();
+      }
+      
+      // Set customer ID for customer users if not already set
+      if (user.userType === 'customer' && !ticket.customerId) {
+        setTicket(prev => ({
+          ...prev,
+          customerId: user.customerId,
+          companyNameEn: user.customerCompanyNameEn,
+          companyNameAr: user.customerCompanyNameLc
+        }));
+      }
+
+      // Load existing files if in edit mode
+      if (formMode === 'edit') {
+        loadExistingFiles();
+      }
     }
   }, [user]);
+
+  // Fetch issue type options
+  useEffect(() => {
+    const fetchIssueTypeOptions = async () => {
+      try {
+        // Updated URL to include query parameter for supportIssueType master type
+        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "supportIssueType"}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch issue type options');
+
+        const result = await response.json();
+
+        if (result.status === 'Ok' && result.data) {
+          const options = result.data;
+          // Extract issue type values from the response data
+          const issueTypeValues = options.map(item => item.value);
+          setIssueTypeOptions(issueTypeValues);
+        } else if (result.data && Array.isArray(result.data)) {
+          const options = result.data;
+          // Handle the actual response structure we're seeing in the logs
+          const issueTypeValues = options.map(item => item.value);
+          setIssueTypeOptions(issueTypeValues);
+        } else {
+          throw new Error('Unexpected response format for issue type options');
+        }
+      } catch (err) {
+        console.error('Error fetching issue type options:', err);
+      }
+    };
+
+    fetchIssueTypeOptions();
+  }, []);
 
   // Check loading state first
   if (loading) {
@@ -107,12 +292,8 @@ function SupportDetails() {
   //Rbac and other access based on user object to follow below lik this
   const companyNameToShow =
     currentLanguage === "en"
-      ? ticket.companyNameEn
-        ? ticket.companyNameEn
-        : (user?.customerCompanyNameEn || "")
-      : ticket.companyNameAr
-      ? ticket.companyNameAr
-      : (user?.customerCompanyNameLc || "");
+      ? ticket.companyNameEn || (user?.customerCompanyNameEn || "")
+      : ticket.companyNameAr || (user?.customerCompanyNameLc || "");
   const rbacMgr = new RbacManager(
     user.userType == "employee" && user.roles[0] !== "admin" ? user.designation : user.roles[0],
     formMode == "add" ? "supDetailAdd" : "supDetailEdit"
@@ -124,11 +305,20 @@ function SupportDetails() {
   const fetchBranches = async () => {
     if (branches.length > 0) return; // Don't fetch if we already have branches
 
+    // Use customer ID from ticket or user (for customer users)
+    const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
+    
+    // Don't fetch branches if no customer ID is available
+    if (!customerIdToUse) {
+      console.log("No customer ID available for fetching branches");
+      return;
+    }
+
     setLoadingBranches(true);
     try {
       // Replace with your actual API endpoint URL
       const apiUrl = process.env.REACT_APP_API_BASE_URL
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${ticket.customerId ? ticket.customerId : user.customerId}`
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerIdToUse}`
         : "http://localhost:3000/api/branches";
 
       const response = await fetch(apiUrl, {
@@ -192,8 +382,8 @@ function SupportDetails() {
   };
 
   const handleCancel = () => {
-    // Navigate back to maintenance page
-    navigate("/maintenance");
+    // Reload the page to reset all changes
+    window.location.reload();
   };
 
   // Rest of your existing state variables...
@@ -205,7 +395,16 @@ function SupportDetails() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setImages((prev) => [...prev, ev.target.result]);
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop() || 'jpg';
+        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'image';
+        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
+        
+        setImages((prev) => [...prev, {
+          dataUrl: ev.target.result,
+          originalName: file.name,
+          fileName: newFileName
+        }]);
       };
       reader.readAsDataURL(file);
     }
@@ -224,7 +423,16 @@ function SupportDetails() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setVideos((prev) => [...prev, ev.target.result]);
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop() || 'mp4';
+        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'video';
+        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
+        
+        setVideos((prev) => [...prev, {
+          dataUrl: ev.target.result,
+          originalName: file.name,
+          fileName: newFileName
+        }]);
       };
       reader.readAsDataURL(file);
     }
@@ -237,38 +445,263 @@ function SupportDetails() {
     if (videoInputRef.current) videoInputRef.current.click();
   };
 
+  // Handle customer selection
+  const handleSelectCustomer = (customer) => {
+    setTicket(prev => ({
+      ...prev,
+      customerId: customer.id,
+      companyNameEn: customer.company_name_en || customer.companyNameEn,
+      companyNameAr: customer.company_name_ar || customer.companyNameAr,
+      erpCustId: customer.erp_cust_id || customer.erpCustId
+    }));
+    setShowCustomerPopup(false);
+    
+    // Reset branch when customer changes and fetch new branches
+    setTicket(prev => ({ ...prev, branchId: "" }));
+    setBranches([]);
+    if (customer.id) {
+      fetchBranchesForCustomer(customer.id);
+    }
+  };
+
+  // Handle branch selection
+  const handleSelectBranch = (branch) => {
+    setTicket(prev => ({
+      ...prev,
+      branchId: branch.id,
+      branchNameEn: branch.branch_name_en || branch.branchNameEn,
+      branchNameLc: branch.branch_name_lc || branch.branchNameLc,
+      erpBranchId: branch.erp_branch_id || branch.erpBranchId
+    }));
+    setShowBranchPopup(false);
+  };
+
+  // Fetch branches for a specific customer
+  const fetchBranchesForCustomer = async (customerId) => {
+    if (!customerId) {
+      console.log("No customer ID provided for fetching branches");
+      return;
+    }
+
+    setLoadingBranches(true);
+    try {
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerId}`
+        : "http://localhost:3000/api/branches";
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setBranches(data || []);
+    } catch (err) {
+      console.error("Error fetching branches:", err);
+    } finally {
+      setLoadingBranches(false);
+    }
+  };
+
   // Handle save
   const handleSave = async (e) => {
-    //TODO: onSave validaations
-
-    setIsEditing(false);
-    if (formMode == "add" && !ticket.id) {
-      ticket.customerId = user.customerId;
-      ticket.dateOfComplaint = new Date().toISOString();
-      ticket.attachment = "none"; //TODO: in DB is is not null. Need to be nullaable
-      ticket.comments = "[]"; //assign an empty array
+    e.preventDefault();
+    
+    // Basic validation
+    if (!ticket.branchId) {
+      alert(t("Please select a branch"));
+      return;
     }
+    if (!ticket.grievanceType) {
+      alert(t("Please select an issue type"));
+      return;
+    }
+    if (!ticket.grievanceName?.trim()) {
+      alert(t("Please enter an issue name"));
+      return;
+    }
+    if (!ticket.description?.trim()) {
+      alert(t("Please enter issue details"));
+      return;
+    }
+
     try {
-      const endPoint = formMode == "add" ? "/grievances" : "/grievances/id/" + ticket.id;
-      const method = formMode == "add" ? "POST" : "PATCH";
+      // First, create the ticket to get the ID for file uploads
+      const ticketData = {
+        ...ticket,
+        // Ensure customer ID is set correctly
+        customerId: user?.userType === 'customer' ? user.customerId : ticket.customerId,
+        // Set creation date for new tickets
+        dateOfComplaint: formMode === "add" ? new Date().toISOString() : ticket.dateOfComplaint,
+        // Set default status for new tickets
+        status: formMode === "add" ? "New" : ticket.status,
+        // Ensure comments is properly formatted
+        comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+      };
+
+      // Remove id and ticketId for new tickets (let database auto-generate them)
+      if (formMode === "add") {
+        delete ticketData.id;
+        delete ticketData.ticketId;
+        // Set initial attachment to "none" for new tickets
+        ticketData.attachment = "none";
+      }
+
+      const endPoint = formMode === "add" ? "/grievances" : `/grievances/id/${ticket.id}`;
+      const method = formMode === "add" ? "POST" : "PATCH";
 
       const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}` : null;
+      
+      if (!apiUrl) {
+        throw new Error("API base URL is not configured");
+      }
+
       const response = await fetch(apiUrl, {
         method: method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(ticket),
+        body: JSON.stringify(ticketData),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("API Error:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      // Add redirect to the supports page after successful save
+
+      const result = await response.json();
+      console.log("Save successful:", result);
+      
+      const ticketId = formMode === "add" ? result.grievance.id : ticket.id;
+
+      // Upload files if there are any images or videos
+      if (images.length > 0 || videos.length > 0) {
+        await uploadFilesAndUpdateAttachment(ticketId);
+      }
+      
+      // Show success message with SweetAlert and navigate after OK
+      await Swal.fire({
+        title: t("Success!"),
+        text: formMode === "add" ? t("Ticket created successfully!") : t("Ticket updated successfully!"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#28a745"
+      });
+      
+      // Set editing to false and redirect to support page
+      setIsEditing(false);
       navigate("/support");
     } catch (error) {
       console.error("Error saving ticket:", error);
+      
+      // Show error message with SweetAlert
+      await Swal.fire({
+        title: t("Error!"),
+        text: t("Failed to save ticket. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+      
+      // Keep editing mode active on error
+      setIsEditing(true);
     }
+  };
+
+  // Function to upload files and update attachment field
+  const uploadFilesAndUpdateAttachment = async (ticketId) => {
+    try {
+      // Only upload new files (not existing ones)
+      const newImages = images.filter(img => !img.isExisting);
+      const newVideos = videos.filter(vid => !vid.isExisting);
+
+      if (newImages.length === 0 && newVideos.length === 0) {
+        console.log('No new files to upload');
+        return;
+      }
+
+      // Create array of all files to upload
+      const filesToUpload = [];
+      
+      newImages.forEach(imageData => {
+        const imageFile = dataURLtoFile(imageData.dataUrl, imageData.fileName);
+        filesToUpload.push(imageFile);
+      });
+
+      newVideos.forEach(videoData => {
+        const videoFile = dataURLtoFile(videoData.dataUrl, videoData.fileName);
+        filesToUpload.push(videoFile);
+      });
+
+      // Upload all files in one request
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(file => {
+          formData.append('file', file);
+        });
+        formData.append('fileType', 'attachment');
+
+        const uploadResponse = await fetch(`${API_BASE_URL}/grievances/${ticketId}/file`, {
+          method: "PATCH",
+          credentials: "include",
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload files');
+        }
+
+        const uploadResult = await uploadResponse.json();
+        console.log('Files uploaded successfully:', uploadResult);
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      throw error;
+    }
+  };
+
+  // Function to upload individual file to backend
+  const uploadFileToBackend = async (ticketId, file, fileType) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileType', fileType);
+
+      const uploadResponse = await fetch(`${API_BASE_URL}/grievances/${ticketId}/file`, {
+        method: "PATCH",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Failed to upload ${file.name}`);
+      }
+
+      const uploadResult = await uploadResponse.json();
+      console.log(`File ${file.name} uploaded successfully`);
+      return uploadResult.fileName;
+    } catch (error) {
+      console.error(`Error uploading file ${file.name}:`, error);
+      return null;
+    }
+  };
+
+  // Helper function to convert data URL to File object
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
   };
 
   const handleAddComment = async () => {
@@ -324,40 +757,53 @@ function SupportDetails() {
             {isV('customerName') && (
               <div className='support-details-field'>
                 <label>{t("Customer Name")}</label>
-                <input value={companyNameToShow || ""} disabled={true} />
+                <input 
+                  value={companyNameToShow || ""} 
+                  readOnly
+                  style={{ cursor: (isE("customerName") && user?.userType !== 'customer') ? 'pointer' : 'default' }}
+                  onClick={() => (isE("customerName") && user?.userType !== 'customer') && setShowCustomerPopup(true)}
+                  placeholder={user?.userType === 'customer' ? "" : t("Click to select customer")}
+                />
               </div>
             )}
             {isV('branchName') && (
               <div className='support-details-field'>
                 <label htmlFor='branchId'>{t("Branch")} *</label>
-                <select id='branchId' name='branchId' value={ticket.branchId || ""} onChange={handleInputChange} disabled={!isE("branch")}>
-                  <option value=''>{t("Select Branch")}</option>
-                  {loadingBranches ? (
-                    <option disabled>{t("loading")}</option>
-                  ) : (
-                    branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {currentLanguage === "en" ? branch.branchNameEn : branch.branchNameLc}
-                      </option>
-                    ))
-                  )}
-                </select>
+                <input
+                  value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
+                  readOnly
+                  style={{ cursor: isE("branch") ? 'pointer' : 'default' }}
+                  onClick={() => isE("branch") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
+                  placeholder={
+                    user?.userType === 'customer' 
+                      ? t("Click to select branch") 
+                      : ticket.customerId 
+                        ? t("Click to select branch") 
+                        : t("Please select a customer first")
+                  }
+                  disabled={user?.userType === 'customer' ? false : !ticket.customerId}
+                />
               </div>
             )}
             {isV('issueType') && (
               <div className='support-details-field'>
                 <label>{t("Issue Type")}</label>
-                <select id='grievanceType' name='grievanceType' value={ticket.grievanceType || ""} onChange={handleInputChange} disabled={!isE("issueType")}>
-                  <option>{ticket.grievanceType || ""}</option>
-                  {isEditing && (
-                    <>
-                      <option>Machine Issue</option>
-                      <option>Product Quality</option>
-                      <option>Service Complaint</option>
-                      <option>Payment Problem</option>
-                      <option>Other</option>
-                    </>
-                  )}
+                <select 
+                  id='grievanceType' 
+                  name='grievanceType' 
+                  value={ticket.grievanceType || ""} 
+                  onChange={handleInputChange} 
+                  disabled={!isE("issueType")}
+                  style={{
+                    color: ticket.grievanceType ? 'inherit' : '#999',
+                  }}
+                >
+                  <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
+                  {issueTypeOptions.map((issueType, index) => (
+                    <option key={index} value={issueType} style={{ color: 'inherit' }}>
+                      {issueType}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}
@@ -388,15 +834,15 @@ function SupportDetails() {
                   <label>{t("Images")}</label>
                   <div className='maintenance-images-list'>
                     {/* Add Image Button */}
-                    {isE('addImage') && (
+                    {isV('addImage') && isE('addImage') && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
                         +
                       </button>
                     )}
                     <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={handleAddImage} />
-                    {images.map((img, idx) => (
-                      <div key={idx} className='maintenance-image-placeholder' onClick={() => img && setPopupImage(img)} title={img ? "Click to view" : ""}>
-                        <img width='100%' height='100%' style={{ objectFit: "cover" }} src={img} />
+                    {images.map((imageData, idx) => (
+                      <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.dataUrl && setPopupImage(imageData.dataUrl)} title={imageData.dataUrl ? "Click to view" : ""}>
+                        <img width='100%' height='100%' style={{ objectFit: "cover" }} src={imageData.dataUrl} />
                         {isV("removeImage") && isE("removeImage") && (
                           <button
                             className='maintenance-remove-btn'
@@ -424,9 +870,9 @@ function SupportDetails() {
                       </button>
                     )}
                     <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} />
-                    {videos.map((vid, idx) => (
-                      <div key={idx} className='maintenance-video-placeholder' onClick={() => vid && setPopupVideo(vid)} title={vid ? "Click to view" : ""}>
-                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={vid} />
+                    {videos.map((videoData, idx) => (
+                      <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.dataUrl && setPopupVideo(videoData.dataUrl)} title={videoData.dataUrl ? "Click to view" : ""}>
+                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.dataUrl} />
                         {isV("removeVideo") && isE("removeVideo") && (
                           <button
                             className='maintenance-remove-btn'
@@ -457,7 +903,7 @@ function SupportDetails() {
         <div className='support-details-container-right'>
             {isV('assignedTo') && (
               <div className="support-assign">
-                <span>{t("Assign to:")}</span>
+                <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
                 <select 
                   id="assignedTeamMember"
                   name="assignedTeamMember"            
@@ -484,12 +930,10 @@ function SupportDetails() {
               {isEditing ? (
                 <>
                   {isV('btnSave') && isE('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
-                  {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={toggleEditMode}>{t("Cancel")}</button>}
+                  {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={handleCancel}>{t("Cancel")}</button>}
                 </>
               ) : (
                 <>
-                  {isV('btnEdit') && isE('btnEdit') && <button className="support-action-btn edit" onClick={toggleEditMode}>{t("Edit")}</button>}
-                  {isV('btnDefer') && isE('btnDefer') && <button className="support-action-btn differ">{t("Differ")}</button>}
                 </>
               )}
             </div>
@@ -528,6 +972,25 @@ function SupportDetails() {
           currentUser={{ userName: user.userName, userId: user.userId }}
         />
       )}
+
+      {/* Customer Selection Popup */}
+      <GetCustomers
+        open={showCustomerPopup}
+        onClose={() => setShowCustomerPopup(false)}
+        onSelectCustomer={handleSelectCustomer}
+        API_BASE_URL={API_BASE_URL}
+        t={t}
+      />
+
+      {/* Branch Selection Popup */}
+      <GetBranches
+        open={showBranchPopup}
+        onClose={() => setShowBranchPopup(false)}
+        onSelectBranch={handleSelectBranch}
+        customerId={user?.userType === 'customer' ? user.customerId : ticket.customerId}
+        API_BASE_URL={API_BASE_URL}
+        t={t}
+      />
     </Sidebar>
   );
 }
