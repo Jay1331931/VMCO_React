@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
-import { faMessage } from '@fortawesome/free-regular-svg-icons';
+// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+// import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+// import { faMessage } from '@fortawesome/free-regular-svg-icons';
+import { FaRegMessage } from "react-icons/fa6";
+import { FaUserCircle } from "react-icons/fa";
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import formatDate from '../utilities/dateFormatter';
@@ -61,7 +63,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
     <>
       <button onClick={() => setIsOpen(!isOpen)} className='comment-button'>
         <div className='icon-wrapper'>
-          {isV("commentIcon") && isE("commentIcon") && <FontAwesomeIcon icon={faMessage} className='message-icon' />}
+          {isV("commentIcon") && isE("commentIcon") && <FaRegMessage className='message-icon' />}
           {count > 0 && <span className='badge'>{count}</span>}
         </div>
       </button>
@@ -93,7 +95,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
             comments.map((comment, index) => (
               <div className='comment-entry' key={index}>
                 <div className='user-info-1'>
-                  <FontAwesomeIcon icon={faUserCircle} className='user-icon' />
+                  <FaUserCircle className='user-icon' />
                   <div className='user-name'>{comment.userName || "User"}</div>
                 </div>
                 <div className="comment-content">
