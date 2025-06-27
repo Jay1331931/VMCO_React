@@ -1002,9 +1002,13 @@ function Catalog() {
                             }}
                         />
                     </div>
-                </div>                <div className="products-grid">
-                    {displayedProducts.length > 0 ? (
-                        displayedProducts.map((product) => (
+                </div>                
+                
+                    {displayedProducts.length > 0 ? 
+                   
+                        (
+                        displayedProducts?.map((product) => (
+                             <div className="products-grid">
                             <ProductCard
                                 key={product.id}
                                 product={mapProductToCardProps(product)}
@@ -1014,8 +1018,9 @@ function Catalog() {
                                 onProductClick={() => handleProductClick(product)}
                                 setQuantities={setQuantities}
                             />
+                            </div>  
                         ))
-                    ) : !isLoading && (
+                    )  : !isLoading && (
                         <div className="no-products-message">
                             {searchQuery ? (
                                 <p>{t('No products found matching your search term "{{searchTerm}}".', { searchTerm: searchQuery })}</p>
@@ -1029,7 +1034,7 @@ function Catalog() {
                             <LoadingSpinner size="medium" />
                         </div>
                     )}
-                </div>                {/* Separate loading indicator at the bottom of the page */}
+                             {/* Separate loading indicator at the bottom of the page */}
                 {isLoadingMore && hasMore && displayedProducts.length < totalProducts && (
                     <div className="loading-more-container">
                         <LoadingSpinner size="medium" />

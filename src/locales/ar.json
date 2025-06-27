@@ -384,7 +384,12 @@
   "ERP Site ID": "معرف موقع ERP",
   "Site Name": "اسم الموقع",
   "Add products": "إضافة منتجات",
-  "Please save this order number for your records.": "يرجى حفظ رقم الطلب هذا لسجلاتك."
+  "Please save this order number for your records.": "يرجى حفظ رقم الطلب هذا لسجلاتك.",
+  "No products found matching your criteria.": "لم يتم العثور على منتجات تطابق معاييرك.",
+  "No branches available": "لا توجد فروع متاحة",
+  "All products loaded.": "تم تحميل جميع المنتجات.",
+  "Send OTP": "إرسال OTP",
+  "Resend OTP": "إعادة إرسال OTP"
 
 
 

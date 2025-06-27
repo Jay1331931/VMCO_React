@@ -3338,3 +3338,6 @@
 .video-popup-close:hover {
   background: #eee;
 }
+input:focus {
+                    outline: none;
+                } 
