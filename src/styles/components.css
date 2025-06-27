@@ -2994,7 +2994,7 @@
 }
 
 .maintenance-image-placeholder:hover {
-  box-shadow: 0 0 0 2px #00594c;
+  box-shadow: 0 0 0 1px #212121;
 }
 
 .maintenance-details-videos {
@@ -3244,20 +3244,29 @@
 
 .maintenance-remove-btn {
   position: absolute;
-  top: 0;
-  right: 0;
-  background-color: rgba(255, 0, 0, 0.7);
+  top: -8px;
+  right: -8px;
+  background-color: #a9a9a9;
   color: white;
-  border: none;
+  border: 0.2px solid white;
   border-radius: 50%;
   width: 20px;
   height: 20px;
-  font-size: 14px;
-  line-height: 1;
+  font-size: 12px;
+  font-weight: bold;
   cursor: pointer;
   display: flex;
-  align-items: center;
+  align-content: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.maintenance-remove-btn:hover {
+  background-color: #b94040;
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .upload-progress-overlay {

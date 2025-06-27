@@ -22,7 +22,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const initialCategories = [
     { value: Constants.CATEGORY.VMCO_MACHINES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_MACHINES },
     { value: Constants.CATEGORY.VMCO_CONSUMABLES, entity: Constants.ENTITY.VMCO, label: Constants.CATEGORY.VMCO_CONSUMABLES },
-    { value: Constants.ENTITY.DIYAFA, entity: Constants.ENTITY.DIYAFA, label: 'Diyafa Trading Company' },
+    { value: Constants.ENTITY.SHC, entity: Constants.ENTITY.SHC, label: 'Saudi Hospitality Company' },
     { value: Constants.ENTITY.GMTC, entity: Constants.ENTITY.GMTC, label: 'Green Mast Factory Ltd' },
     { value: Constants.ENTITY.NAQI, entity: Constants.ENTITY.NAQI, label: 'Naqi Company' },
     { value: Constants.ENTITY.DAR, entity: Constants.ENTITY.DAR, label: 'DAR Company' }
@@ -99,8 +99,8 @@ function Catalog() {
                 }                // For all tabs, just filter by entity without special handling
                 if (activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() || activeCategory.toLowerCase() === Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()) {
                     params.append('entity', Constants.ENTITY.VMCO);
-                } else if (activeCategory.toLowerCase() === Constants.ENTITY.DIYAFA.toLowerCase()) {
-                    params.append('entity', Constants.ENTITY.DIYAFA);
+                } else if (activeCategory.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                    params.append('entity', Constants.ENTITY.SHC);
                 } else if (activeCategory.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
                     params.append('entity', Constants.ENTITY.GMTC);
                 } else if (activeCategory.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
