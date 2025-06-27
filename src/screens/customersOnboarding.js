@@ -55,7 +55,7 @@ function CustomersOnboarding() {
       placeholder: t("Enter OTP"),
       required: true,
     },
-    // {   type: "empty" },
+    {   type: "empty" ,"name": "empty" },
    
     {
       type: "text",
@@ -525,6 +525,11 @@ function CustomersOnboarding() {
 
         setIsOtpSent(true);
       }
+      if(data?.status =="verified")
+      {
+        setIsOtpVerify(true);
+         setIsOtpSent(true);
+      }
        Swal.fire({
           title: t(data.status),
           text: t(data.message),
@@ -611,8 +616,8 @@ function CustomersOnboarding() {
             noValidate
           >
             {fields.map((field, index) => 
-            { 
-                //  if (field.name === "otp" && isOtpVerify) return null;
+            {    
+                if (field.name === "empty" && isOtpSent) return null;
                  if (field.name === "otp" && !isOtpSent) return null;
                 return(
               <div key={index} className="form-group">
