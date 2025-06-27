@@ -281,12 +281,13 @@ function CustomersOnboarding() {
     e.preventDefault();
     if(!isOtpVerify)
     {
-        Swal.fire({
-          title: t("Please verify the Email"),
-            text: t("Please verify the email by clicking on the Verify Otp button."),
-            icon: "warning",
-            confirmButtonText: t("OK"),
-        });
+        // Swal.fire({
+        //   title: t("Please verify the Email"),
+        //     text: t("Please verify the email by clicking on the Verify Otp button."),
+        //     icon: "warning",
+        //     confirmButtonText: t("OK"),
+        // });
+        setErrors(t("Please verify the email by clicking on the Verify Otp button."))
         return;
     }
     // Validate form only on submit

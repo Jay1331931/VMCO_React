@@ -882,7 +882,7 @@ function Cart() {
             deleteUrl.searchParams.append('customer_id', selectedCustomerId);
             deleteUrl.searchParams.append('branch_id', selectedBranchId);            // For VMCO entity, include both entity and category; for others, only entity
             if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                deleteUrl.searchParams.append('entity', Constants.ENTITY.VMCO.toLowerCase());
+                deleteUrl.searchParams.append('entity', Constants.ENTITY.VMCO);
                 deleteUrl.searchParams.append('category', categoryName);
             } else {
                 deleteUrl.searchParams.append('entity', entity);
