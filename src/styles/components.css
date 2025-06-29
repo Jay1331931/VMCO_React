@@ -2760,13 +2760,14 @@
 .image-popup-close {
   position: absolute;
   top: 8px;
-  right: 16px;
+  right: 8px;
   background: #fff;
   border: none;
   font-size: 2rem;
+  align-content: center;
   color: #222;
   cursor: pointer;
-  padding: 0 8px;
+  padding: 0px;
   border-radius: 50%;
   transition: background 0.2s;
 }
@@ -3182,17 +3183,6 @@
   max-width: 500px;
   max-height: 70vh;
   border-radius: 8px;
-}
-
-.image-popup-close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: #888;
-  cursor: pointer;
 }
 
 .maintenance-add-image-btn {

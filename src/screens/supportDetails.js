@@ -57,6 +57,7 @@ function SupportDetails() {
     status: ticketRcvd.status || "",
     attachment: ticketRcvd.attachment || "",
     criticalLevel: ticketRcvd.criticalLevel || "",
+    branchRegion: ticketRcvd.branchRegion || "",
     // Set customer ID for customer users
     customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
   });
@@ -69,6 +70,11 @@ function SupportDetails() {
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || "");
+
+  // State for departments dropdown
+  const [departments, setDepartments] = useState([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState(ticket.assignedTeamMemberDept || "");
 
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
@@ -98,6 +104,9 @@ function SupportDetails() {
   
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // State for saving
+  const [saving, setSaving] = useState(false);
 
   // Function to load existing images and videos from attachment field
   const loadExistingFiles = async () => {
@@ -214,7 +223,8 @@ function SupportDetails() {
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
     if (user) {
-      fetchEmployees();
+      // First fetch departments
+      fetchDepartments();
       
       // Only fetch branches if we have a customer ID
       const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
@@ -238,6 +248,17 @@ function SupportDetails() {
       }
     }
   }, [user]);
+
+  // Separate useEffect to handle department selection and employee fetching
+  useEffect(() => {
+    if (departments.length > 0 && ticket.assignedTeamMemberDept) {
+      // Set the selected department from ticket data
+      setSelectedDepartment(ticket.assignedTeamMemberDept);
+      
+      // Fetch employees for this department
+      fetchEmployees(ticket.assignedTeamMemberDept);
+    }
+  }, [departments, ticket.assignedTeamMemberDept]);
 
   // Fetch issue type options
   useEffect(() => {
@@ -345,15 +366,19 @@ function SupportDetails() {
   };
 
   // Fetch employees from backend
-  const fetchEmployees = async () => {
-    if (employees.length > 0) return; // Don't fetch if we already have employees
-    const supportStaffDesignation = "sales executive";
+  const fetchEmployees = async (department = null) => {
+    const targetDepartment = department || selectedDepartment;
+    if (!targetDepartment) {
+      setEmployees([]);
+      return;
+    }
+
     setLoadingEmployees(true);
     try {
       // Replace with your actual API endpoint URL
-      const apiUrl = process.env.REACT_APP_API_BASE_URL
-        ? `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=10&sortOrder=asc&filters={"designation": "${supportStaffDesignation}"}`
-        : "http://localhost:3000/api/grievances/employees";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50&sortOrder=asc&filters={"department": "${targetDepartment}"}`;
+      console.log('Fetching employees for department:', targetDepartment);
+      console.log('API URL:', apiUrl);
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -366,11 +391,54 @@ function SupportDetails() {
       }
 
       const resp = await response.json();
+      console.log('Employees API response:', resp);
       setEmployees(resp.data.data || []);
     } catch (err) {
       console.error("Failed to fetch employees:", err);
+      setEmployees([]);
     } finally {
       setLoadingEmployees(false);
+    }
+  };
+
+  // Fetch departments from backend
+  const fetchDepartments = async () => {
+    if (departments.length > 0) return; // Don't fetch if we already have departments
+
+    setLoadingDepartments(true);
+    try {
+      // Use employees API to get all departments
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50&sortOrder=asc`;
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.data && result.data.data && Array.isArray(result.data.data)) {
+        const employees = result.data.data;
+        // Extract unique departments from employees
+        const uniqueDepartments = [...new Set(employees
+          .map(employee => employee.department)
+          .filter(department => department && department.trim() !== '')
+        )];
+
+        console.log('Extracted departments:', uniqueDepartments);
+        setDepartments(uniqueDepartments);
+      } else {
+        throw new Error('Unexpected response format for employees');
+      }
+    } catch (err) {
+      console.error("Failed to fetch departments:", err);
+   } finally {
+      setLoadingDepartments(false);
     }
   };
 
@@ -381,9 +449,84 @@ function SupportDetails() {
     setIsEditing(!isEditing);
   };
 
-  const handleCancel = () => {
-    // Reload the page to reset all changes
-    window.location.reload();
+  const handleCancel = async () => {
+    if (formMode === "add") {
+      // In add mode, just reload the page
+      window.location.reload();
+    } else {
+      // In edit mode, ask for confirmation to cancel the ticket
+      const result = await Swal.fire({
+        title: t("Cancel Ticket?"),
+        text: t("Are you sure you want to cancel this ticket? This will change the ticket status to 'Cancelled'."),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: t("Yes, Cancel Ticket"),
+        cancelButtonText: t("No, Keep Editing"),
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d"
+      });
+
+      if (result.isConfirmed) {
+        try {
+          setSaving(true);
+
+          // Update ticket status to "Cancelled"
+          const ticketData = {
+            ...ticket,
+            status: "Cancelled",
+            // Ensure comments is properly formatted
+            comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+          };
+
+          const endPoint = `/grievances/id/${ticket.id}`;
+          const apiUrl = `${API_BASE_URL}${endPoint}`;
+
+          const response = await fetch(apiUrl, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(ticketData),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("API Error:", errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+          }
+
+          const responseResult = await response.json();
+          console.log("Cancel ticket successful:", responseResult);
+
+          // Show success message
+          await Swal.fire({
+            title: t("Success!"),
+            text: t("Ticket cancelled successfully!"),
+            icon: "success",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#28a745"
+          });
+
+          // Update local state and redirect
+          setTicket(prev => ({ ...prev, status: "Cancelled" }));
+          setIsEditing(false);
+          navigate("/support");
+        } catch (error) {
+          console.error("Error cancelling ticket:", error);
+
+          // Show error message
+          await Swal.fire({
+            title: t("Error!"),
+            text: t("Failed to cancel ticket. Please try again."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#dc3545"
+          });
+        } finally {
+          setSaving(false);
+        }
+      }
+      // If user chose "No, Keep Editing", do nothing and stay in edit mode
+    }
   };
 
   // Rest of your existing state variables...
@@ -395,15 +538,10 @@ function SupportDetails() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop() || 'jpg';
-        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'image';
-        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
-        
         setImages((prev) => [...prev, {
           dataUrl: ev.target.result,
           originalName: file.name,
-          fileName: newFileName
+          fileName: file.name
         }]);
       };
       reader.readAsDataURL(file);
@@ -423,15 +561,10 @@ function SupportDetails() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop() || 'mp4';
-        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'video';
-        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
-        
         setVideos((prev) => [...prev, {
           dataUrl: ev.target.result,
           originalName: file.name,
-          fileName: newFileName
+          fileName: file.name
         }]);
       };
       reader.readAsDataURL(file);
@@ -471,7 +604,8 @@ function SupportDetails() {
       branchId: branch.id,
       branchNameEn: branch.branch_name_en || branch.branchNameEn,
       branchNameLc: branch.branch_name_lc || branch.branchNameLc,
-      erpBranchId: branch.erp_branch_id || branch.erpBranchId
+      erpBranchId: branch.erp_branch_id || branch.erpBranchId,
+      branchRegion: branch.region || branch.branchRegion
     }));
     setShowBranchPopup(false);
   };
@@ -511,7 +645,7 @@ function SupportDetails() {
   // Handle save
   const handleSave = async (e) => {
     e.preventDefault();
-    
+    setSaving(true); // Start saving
     // Basic validation
     if (!ticket.branchId) {
       alert(t("Please select a branch"));
@@ -534,15 +668,27 @@ function SupportDetails() {
       // First, create the ticket to get the ID for file uploads
       const ticketData = {
         ...ticket,
-        // Ensure customer ID is set correctly
         customerId: user?.userType === 'customer' ? user.customerId : ticket.customerId,
-        // Set creation date for new tickets
         dateOfComplaint: formMode === "add" ? new Date().toISOString() : ticket.dateOfComplaint,
-        // Set default status for new tickets
         status: formMode === "add" ? "New" : ticket.status,
+        branchRegion: ticket.branchRegion || "",
+        // Ensure assignment fields are included
+        assignedTeamMember: ticket.assignedTeamMember || "",
+        assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
         // Ensure comments is properly formatted
         comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
       };
+
+      // Update status to "In Progress" if an employee is assigned
+      if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
+        ticketData.status = "In Progress";
+      }
+
+      console.log('Saving ticket with assignment data:', {
+        assignedTeamMember: ticketData.assignedTeamMember,
+        assignedTeamMemberDept: ticketData.assignedTeamMemberDept,
+        status: ticketData.status
+      });
 
       // Remove id and ticketId for new tickets (let database auto-generate them)
       if (formMode === "add") {
@@ -610,6 +756,85 @@ function SupportDetails() {
       
       // Keep editing mode active on error
       setIsEditing(true);
+    } finally {
+      setSaving(false); // End saving
+    }
+  };
+
+  // Handle close ticket
+  const handleCloseTicket = async () => {
+    try {
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: t("Close Ticket?"),
+        text: t("Are you sure you want to close this ticket? This action cannot be undone."),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: t("Yes, Close Ticket"),
+        cancelButtonText: t("Cancel"),
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d"
+      });
+
+      if (!result.isConfirmed) {
+        return; // User cancelled
+      }
+
+      setSaving(true);
+
+      // Update ticket status to "Closed"
+      const ticketData = {
+        ...ticket,
+        status: "Closed",
+        // Ensure comments is properly formatted
+        comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+      };
+
+      const endPoint = `/grievances/id/${ticket.id}`;
+      const apiUrl = `${API_BASE_URL}${endPoint}`;
+
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(ticketData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const responseResult = await response.json();
+      console.log("Close ticket successful:", responseResult);
+
+      // Show success message
+      await Swal.fire({
+        title: t("Success!"),
+        text: t("Ticket closed successfully!"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#28a745"
+      });
+
+      // Update local state and redirect
+      setTicket(prev => ({ ...prev, status: "Closed" }));
+      setIsEditing(false);
+      navigate("/support");
+    } catch (error) {
+      console.error("Error closing ticket:", error);
+
+      // Show error message
+      await Swal.fire({
+        title: t("Error!"),
+        text: t("Failed to close ticket. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -734,6 +959,25 @@ function SupportDetails() {
       fetchBranches(value);
       // Reset branch when customer changes
       setTicket((prev) => ({ ...prev, branchId: "" }));
+    }
+  };
+
+  // Handle department selection
+  const handleDepartmentChange = (e) => {
+    const department = e.target.value;
+    console.log('Department selected:', department);
+    setSelectedDepartment(department);
+    setTicket(prev => ({ 
+      ...prev, 
+      assignedTeamMemberDept: department,
+      assignedTeamMember: "" // Reset selected employee when department changes
+    }));
+    setSelectedEmployee("");
+    setEmployees([]); // Clear current employees
+    
+    if (department) {
+      console.log('Fetching employees for department:', department);
+      fetchEmployees(department);
     }
   };
 
@@ -903,33 +1147,87 @@ function SupportDetails() {
         <div className='support-details-container-right'>
             {isV('assignedTo') && (
               <div className="support-assign">
-                <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
-                <select 
-                  id="assignedTeamMember"
-                  name="assignedTeamMember"            
-                  value={ticket.assignedTeamMember || ""}
-                  onChange={handleInputChange}
-                  disabled={!isE('assignedTo')}
-                >
-                  <option value="">{t('Select Assignee')}</option>
-                  {loadingEmployees ? (
-                    <option>{t("Loading employees...")}</option>
-                  ) : employees.length > 0 ? (
-                    employees.map(employee => (
-                      <option key={employee.id} value={employee.employeeId}>
-                        {employee.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={ticket.assignedTo}>{ticket.assignedTo || "Select Employee"}</option>
-                  )}
-                </select>
+                <div style={{ display: 'flex', flexDirection: 'row', gap: '6px' }}>
+                  {/* Assigned to Label */}
+                  <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+                  
+                  {/* Department Selection */}
+                  <div>
+                    <span>{t("Department:")}</span>
+                    <select 
+                      id="assignedTeamMemberDept"
+                      name="assignedTeamMemberDept"            
+                      value={selectedDepartment || ""}
+                      onChange={handleDepartmentChange}
+                      disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status !== "New")}
+                      style={{ marginLeft: '10px', width: '150px' }}
+                    >
+                      <option value="">{t('Select Department')}</option>
+                      {loadingDepartments ? (
+                        <option>{t("Loading departments...")}</option>
+                      ) : departments.length > 0 ? (
+                        departments.map((dept, index) => (
+                          <option key={index} value={dept}>
+                            {dept}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>{t("No departments available")}</option>
+                      )}
+                    </select>
+                  </div>
+                  
+                  {/* Assignee Selection */}
+                  <div>
+                    <span>{t("Employee:")}</span>
+                    <select 
+                      id="assignedTeamMember"
+                      name="assignedTeamMember"            
+                      value={ticket.assignedTeamMember || ""}
+                      onChange={handleInputChange}
+                      disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status !== "New")}
+                      style={{ marginLeft: '10px', width: '150px' }}
+                    >
+                      <option value="">{!selectedDepartment ? t('Select department first') : t('Select Assignee')}</option>
+                      {loadingEmployees ? (
+                        <option>{t("Loading employees...")}</option>
+                      ) : employees.length > 0 ? (
+                        employees.map(employee => (
+                          <option key={employee.id} value={employee.employeeId}>
+                            {employee.name}
+                          </option>
+                        ))
+                      ) : selectedDepartment ? (
+                        <option disabled>{t("No employees in this department")}</option>
+                      ) : null}
+                    </select>
+                  </div>
+                </div>
               </div>
             )}
             <div className="support-details-actions" style={{paddingRight:"20px"}}>
               {isEditing ? (
                 <>
-                  {isV('btnSave') && isE('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
+                  {isV('btnSave') && isE('btnSave') && (
+                    <button
+                      className="support-action-btn save"
+                      onClick={handleSave}
+                      disabled={saving}
+                    >
+                      {saving ? t("Saving...") : t("Save")}
+                    </button>
+                  )}
+                  {/* Close Ticket Button - only show for existing tickets that are not already closed */}
+                  {formMode === "edit" && ticket.status !== "Closed" && isV('btnCloseTicket') && isE('btnCloseTicket') && (
+                    <button
+                      className="support-action-btn close"
+                      onClick={handleCloseTicket}
+                      disabled={saving}
+                      style={{ backgroundColor: "#ffdf4f", marginLeft: "10px" }}
+                    >
+                      {saving ? t("Closing...") : t("Close Ticket")}
+                    </button>
+                  )}
                   {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={handleCancel}>{t("Cancel")}</button>}
                 </>
               ) : (
