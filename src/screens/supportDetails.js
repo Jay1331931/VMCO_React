@@ -107,6 +107,7 @@ function SupportDetails() {
 
   // State for saving
   const [saving, setSaving] = useState(false);
+  const [closing, setClosing] = useState(false); // Track closing state
 
   // Function to load existing images and videos from attachment field
   const loadExistingFiles = async () => {
@@ -669,41 +670,43 @@ function SupportDetails() {
     }
 
     try {
-      // First, create the ticket to get the ID for file uploads
+      // Ensure comments is always an array of plain objects and filter out invalid entries
+      const commentsArray = Array.isArray(ticket.comments)
+        ? ticket.comments.filter(c => c && typeof c === 'object' && !Array.isArray(c))
+        : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
+          ? (() => { try { return JSON.parse(ticket.comments).filter(c => c && typeof c === 'object' && !Array.isArray(c)); } catch { return []; } })()
+          : [];
+
+      // Convert dateOfComplaint to ISO string if it's a Date object or object
+      let dateOfComplaintValue = ticket.dateOfComplaint;
+      if (ticket.dateOfComplaint instanceof Date) {
+        dateOfComplaintValue = ticket.dateOfComplaint.toISOString();
+      } else if (typeof ticket.dateOfComplaint === 'object' && ticket.dateOfComplaint !== null && ticket.dateOfComplaint.toISOString) {
+        dateOfComplaintValue = ticket.dateOfComplaint.toISOString();
+      } else if (typeof ticket.dateOfComplaint === 'object' && ticket.dateOfComplaint !== null) {
+        // If it's an object but not a Date, set to null or empty string
+        dateOfComplaintValue = '';
+      }
+
+      // Only send required fields
       const ticketData = {
-        ...ticket,
         customerId: user?.userType === 'customer' ? user.customerId : ticket.customerId,
-        dateOfComplaint: formMode === "add" ? new Date().toISOString() : ticket.dateOfComplaint,
-        status: formMode === "add" ? "New" : ticket.status,
-        branchRegion: ticket.branchRegion || "",
-        // Ensure assignment fields are included
+        branchId: ticket.branchId,
+        grievanceType: ticket.grievanceType,
+        grievanceName: ticket.grievanceName,
+        description: ticket.description,
+        dateOfComplaint: formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
         assignedTeamMember: ticket.assignedTeamMember || "",
         assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
-        // Ensure comments is always an array
-        comments: Array.isArray(ticket.comments)
-          ? ticket.comments
-          : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
-            ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
-            : []
+        status: formMode === "add" ? "New" : ticket.status,
+        attachment: formMode === "add" ? "none" : ticket.attachment,
+        comments: commentsArray,
+        branchRegion: ticket.branchRegion || ""
       };
 
       // Update status to "In Progress" if an employee is assigned
       if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
         ticketData.status = "In Progress";
-      }
-
-      console.log('Saving ticket with assignment data:', {
-        assignedTeamMember: ticketData.assignedTeamMember,
-        assignedTeamMemberDept: ticketData.assignedTeamMemberDept,
-        status: ticketData.status
-      });
-
-      // Remove id and ticketId for new tickets (let database auto-generate them)
-      if (formMode === "add") {
-        delete ticketData.id;
-        delete ticketData.ticketId;
-        // Set initial attachment to "none" for new tickets
-        ticketData.attachment = "none";
       }
 
       const endPoint = formMode === "add" ? "/grievances" : `/grievances/id/${ticket.id}`;
@@ -713,6 +716,11 @@ function SupportDetails() {
       
       if (!apiUrl) {
         throw new Error("API base URL is not configured");
+      }
+
+      // Double check: comments must be an array, not a string
+      if (!Array.isArray(ticketData.comments)) {
+        ticketData.comments = [];
       }
 
       const response = await fetch(apiUrl, {
@@ -731,11 +739,11 @@ function SupportDetails() {
       const result = await response.json();
       console.log("Save successful:", result);
       
-      const ticketId = formMode === "add" ? result.grievance.id : ticket.id;
+      const savedTicketId = formMode === "add" ? result.grievance.id : ticket.id;
 
       // Upload files if there are any images or videos
       if (images.length > 0 || videos.length > 0) {
-        await uploadFilesAndUpdateAttachment(ticketId);
+        await uploadFilesAndUpdateAttachment(savedTicketId);
       }
       
       // Show success message with SweetAlert and navigate after OK
@@ -771,6 +779,7 @@ function SupportDetails() {
 
   // Handle close ticket
   const handleCloseTicket = async () => {
+    setClosing(true); // Start closing
     try {
       // Show confirmation dialog
       const result = await Swal.fire({
@@ -846,7 +855,7 @@ function SupportDetails() {
         confirmButtonColor: "#dc3545"
       });
     } finally {
-      setSaving(false);
+      setClosing(false); // End closing
     }
   };
 
@@ -1221,7 +1230,7 @@ function SupportDetails() {
                     <button
                       className="support-action-btn save"
                       onClick={handleSave}
-                      disabled={saving || ticket.status === "Closed"}
+                      disabled={saving || closing || ticket.status === "Closed"}
                     >
                       {saving ? t("Saving...") : t("Save")}
                     </button>
@@ -1231,14 +1240,14 @@ function SupportDetails() {
                     <button
                       className="support-action-btn close"
                       onClick={handleCloseTicket}
-                      disabled={saving}
+                      disabled={closing || saving}
                       style={{ backgroundColor: "#ffdf4f", marginLeft: "10px" }}
                     >
-                      {saving ? t("Closing...") : t("Close Ticket")}
+                      {closing ? t("Closing...") : t("Close Ticket")}
                     </button>
                   )}
                   {isV('btnCancel') && isE('btnCancel') && (
-                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed"}>
+                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed" || saving || closing}>
                       {t("Cancel")}
                     </button>
                   )}
@@ -1273,7 +1282,7 @@ function SupportDetails() {
         </div>
       )}
       {/*TODO: part of params like currentUser Details must be dynamic */}
-      {isV('commentPanel') && (
+      {isV('commentPanel') && formMode === 'edit' && (
         <CommentPopup
           isOpen={isCommentPanelOpen}
           setIsOpen={setIsCommentPanelOpen}
@@ -1287,7 +1296,7 @@ function SupportDetails() {
                 : []
           }
           currentUser={{ userName: user.userName, userId: user.userId }}
-          isVisible={user?.userType === 'employee' && (formMode === 'add' || formMode === 'edit') && isV('commentPanel')}
+          isVisible={user?.userType === 'employee' && formMode === 'edit' && isV('commentPanel')}
         />
       )}
 
