@@ -474,8 +474,12 @@ function SupportDetails() {
           const ticketData = {
             ...ticket,
             status: "Cancelled",
-            // Ensure comments is properly formatted
-            comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+            // Ensure comments is always an array
+            comments: Array.isArray(ticket.comments)
+              ? ticket.comments
+              : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
+                ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
+                : []
           };
 
           const endPoint = `/grievances/id/${ticket.id}`;
@@ -675,8 +679,12 @@ function SupportDetails() {
         // Ensure assignment fields are included
         assignedTeamMember: ticket.assignedTeamMember || "",
         assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
-        // Ensure comments is properly formatted
-        comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+        // Ensure comments is always an array
+        comments: Array.isArray(ticket.comments)
+          ? ticket.comments
+          : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
+            ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
+            : []
       };
 
       // Update status to "In Progress" if an employee is assigned
@@ -786,8 +794,12 @@ function SupportDetails() {
       const ticketData = {
         ...ticket,
         status: "Closed",
-        // Ensure comments is properly formatted
-        comments: typeof ticket.comments === 'string' ? ticket.comments : JSON.stringify(ticket.comments || [])
+        // Ensure comments is always an array
+        comments: Array.isArray(ticket.comments)
+          ? ticket.comments
+          : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
+            ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
+            : []
       };
 
       const endPoint = `/grievances/id/${ticket.id}`;
@@ -929,25 +941,22 @@ function SupportDetails() {
     return new File([u8arr], filename, { type: mime });
   };
 
-  const handleAddComment = async () => {
-    try {
-      const endPoint = "/grievances/id/" + ticket.id;
-      const method = "PATCH";
-
-      const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}` : null;
-      const response = await fetch(apiUrl, {
-        method: method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(ticket),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error("Error saving ticket:", error);
-    }
+  // Add comment to ticket.comments in correct format
+  const handleAddComment = (commentText, newCommentObj) => {
+    if (!commentText || !user) return;
+    const newComment = {
+      date: formatDate(new Date(), "YYYY-MM-DD HH:MM"),
+      status: "New",
+      userId: user.userId,
+      message: commentText,
+      userName: user.userName
+    };
+    setTicket(prev => ({
+      ...prev,
+      comments: Array.isArray(prev.comments)
+        ? [...prev.comments]
+        : [newComment]
+    }));
   };
 
   const handleInputChange = (e) => {
@@ -1060,7 +1069,7 @@ function SupportDetails() {
             {isV('createdDate') ? (
               <div className='support-details-field'>
                 <label>{t("Created Date")}</label>
-                <input value={formatDate(ticket.updatedAt, "YYYY-MM-DD HH:SS")} disabled />
+                <input value={formatDate(ticket.updatedAt, "DD/MM/YYYY")} disabled />
               </div>
             ) : null}
           </div>
@@ -1212,7 +1221,7 @@ function SupportDetails() {
                     <button
                       className="support-action-btn save"
                       onClick={handleSave}
-                      disabled={saving}
+                      disabled={saving || ticket.status === "Closed"}
                     >
                       {saving ? t("Saving...") : t("Save")}
                     </button>
@@ -1228,7 +1237,11 @@ function SupportDetails() {
                       {saving ? t("Closing...") : t("Close Ticket")}
                     </button>
                   )}
-                  {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={handleCancel}>{t("Cancel")}</button>}
+                  {isV('btnCancel') && isE('btnCancel') && (
+                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed"}>
+                      {t("Cancel")}
+                    </button>
+                  )}
                 </>
               ) : (
                 <>
@@ -1266,8 +1279,15 @@ function SupportDetails() {
           setIsOpen={setIsCommentPanelOpen}
           onAddComment={handleAddComment}
           showCommentForm={true}
-          externalComments={ticket.comments}
+          externalComments={
+            Array.isArray(ticket.comments)
+              ? ticket.comments
+              : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
+                ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
+                : []
+          }
           currentUser={{ userName: user.userName, userId: user.userId }}
+          isVisible={user?.userType === 'employee' && (formMode === 'add' || formMode === 'edit') && isV('commentPanel')}
         />
       )}
 
