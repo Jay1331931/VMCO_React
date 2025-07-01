@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 function SupportDetails() {
   const defaultTicket = {
@@ -377,7 +378,7 @@ function SupportDetails() {
     setLoadingEmployees(true);
     try {
       // Replace with your actual API endpoint URL
-      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50&sortOrder=asc&filters={"department": "${targetDepartment}"}`;
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50000&sortOrder=asc&filters={"department": "${targetDepartment}"}`;
       console.log('Fetching employees for department:', targetDepartment);
       console.log('API URL:', apiUrl);
 
@@ -409,7 +410,7 @@ function SupportDetails() {
     setLoadingDepartments(true);
     try {
       // Use employees API to get all departments
-      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50&sortOrder=asc`;
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=5000&sortOrder=asc`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -722,12 +723,12 @@ function SupportDetails() {
       if (!Array.isArray(ticketData.comments)) {
         ticketData.comments = [];
       }
-
+const {createdAt,...filterdata}=ticketData
       const response = await fetch(apiUrl, {
         method: method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(ticketData),
+        body: JSON.stringify(filterdata),
       });
 
       if (!response.ok) {
@@ -801,7 +802,7 @@ function SupportDetails() {
 
       // Update ticket status to "Closed"
       const ticketData = {
-        ...ticket,
+        id:ticket.id,
         status: "Closed",
         // Ensure comments is always an array
         comments: Array.isArray(ticket.comments)
@@ -1155,75 +1156,51 @@ function SupportDetails() {
           )}
         </div>
       </div>
-      <div className='support-details-footer'>
+      <div className='support-details-footer'  style={{ alignItems: 'center'}}>
         {isV('ticketStatus') && (
           <div className='support-status'>
             <span>{t("Ticket Status:")}</span>
             <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
           </div>
         )}
-        <div className='support-details-container-right'>
-            {isV('assignedTo') && (
+        <div className='support-details-container-center'  >
+           {isV('assignedTo') && (
               <div className="support-assign">
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
                   {/* Assigned to Label */}
                   <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
                   
                   {/* Department Selection */}
                   <div>
                     <span>{t("Department:")}</span>
-                    <select 
-                      id="assignedTeamMemberDept"
-                      name="assignedTeamMemberDept"            
+                    <SearchableDropdown
+                      name="assignedTeamMemberDept"
+                      options={departments}
                       value={selectedDepartment || ""}
-                      onChange={handleDepartmentChange}
+                      onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
                       disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status !== "New")}
-                      style={{ marginLeft: '10px', width: '150px' }}
-                    >
-                      <option value="">{t('Select Department')}</option>
-                      {loadingDepartments ? (
-                        <option>{t("Loading departments...")}</option>
-                      ) : departments.length > 0 ? (
-                        departments.map((dept, index) => (
-                          <option key={index} value={dept}>
-                            {dept}
-                          </option>
-                        ))
-                      ) : (
-                        <option disabled>{t("No departments available")}</option>
-                      )}
-                    </select>
+                      placeholder={t('Select Department')}
+                    />
                   </div>
                   
                   {/* Assignee Selection */}
                   <div>
                     <span>{t("Employee:")}</span>
-                    <select 
-                      id="assignedTeamMember"
-                      name="assignedTeamMember"            
+                    <SearchableDropdown
+                      name="assignedTeamMember"
+                      options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                       value={ticket.assignedTeamMember || ""}
                       onChange={handleInputChange}
                       disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status !== "New")}
-                      style={{ marginLeft: '10px', width: '150px' }}
-                    >
-                      <option value="">{!selectedDepartment ? t('Select department first') : t('Select Assignee')}</option>
-                      {loadingEmployees ? (
-                        <option>{t("Loading employees...")}</option>
-                      ) : employees.length > 0 ? (
-                        employees.map(employee => (
-                          <option key={employee.id} value={employee.employeeId}>
-                            {employee.name}
-                          </option>
-                        ))
-                      ) : selectedDepartment ? (
-                        <option disabled>{t("No employees in this department")}</option>
-                      ) : null}
-                    </select>
+                      placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
+                    />
                   </div>
                 </div>
               </div>
             )}
-            <div className="support-details-actions" style={{paddingRight:"20px"}}>
+        </div>
+        <div className='support-details-container-right'>
+            <div className="support-details-actions" style={{ display: 'flex', gap: '10px', height: '60px' }}>
               {isEditing ? (
                 <>
                   {isV('btnSave') && isE('btnSave') && (
@@ -1241,7 +1218,7 @@ function SupportDetails() {
                       className="support-action-btn close"
                       onClick={handleCloseTicket}
                       disabled={closing || saving}
-                      style={{ backgroundColor: "#ffdf4f", marginLeft: "10px" }}
+                      style={{ backgroundColor: "#ffdf4f" }}
                     >
                       {closing ? t("Closing...") : t("Close Ticket")}
                     </button>

@@ -386,7 +386,7 @@ function OrderDetails() {
     // Check if we're editing an existing order or creating a new one
     if (formData.id && isEditMode) {
       const fieldsToUpdate = [
-        'erpCustId', 'erpBranchId', 'orderBy', 'erp', 'entity',
+        'erpCustId', 'erpBranchId', 'orderBy', 'entity',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
         'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'      ]; const payload = {};    // Check if category is VMCO Machines
       const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();      fieldsToUpdate.forEach(field => {

@@ -622,7 +622,8 @@ function Cart() {
                     salesExecutive: assignedTo,
                     customerRegion: customerRegion,
                     productCategory: categoryName,
-                    paymentPercentage: '100.00'
+                    paymentPercentage: '100.00',
+                    //createdBy: userId // <-- Add createdBy field
                 };
                 
                 // For VMCO Machines, set payment method to Pre Payment
@@ -845,7 +846,8 @@ function Cart() {
             paymentMethod: selectedPaymentMethod,
             totalAmount: finalTotalAmount.toFixed(2),
             deliveryCharges: deliveryCharges.toFixed(2),
-            paymentPercentage: '100.00'
+            paymentPercentage: '100.00',
+           // modifiedBy: userId // Removed to avoid backend 500 error
         };
 
         // For VMCO Machines, set payment method to Pre Payment
