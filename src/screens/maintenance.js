@@ -111,10 +111,11 @@ function Maintenance() {
     { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
     { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
+    { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
     { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
-  ];
+    ];
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -160,7 +161,10 @@ function Maintenance() {
           {isV('maintenanceTable') && (
             <Table 
               columns={columns.filter(col => col.include !== false)} 
-              data={filteredTickets} 
+              data={filteredTickets.map(ticket => ({
+                ...ticket,
+                createdAt: formatDate(ticket.createdAt, 'DD/MM/YYYY')
+              }))}
               getStatusClass={getStatusClass} 
               onRowClick={(ticket) => handleRowClick(ticket)} 
             />
