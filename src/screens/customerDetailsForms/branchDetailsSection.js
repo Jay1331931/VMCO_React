@@ -23,18 +23,24 @@ import maplibregl from "maplibre-gl";
 
 const BranchDetailsForm = ({
   branch,
+  originalBranch,
   customer,
   inApproval,
+  workflowId,
+  workflowInstanceId,
   branchChanges,
   handleBranchFieldChange,
+  setGeoLocation,
+  mode,
   isUnderApproval,
 }) => {
   const { t } = useTranslation();
   const [showMap, setShowMap] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(branch?.geolocation);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   // LocationPicker component
   const { token, user, isAuthenticated, logout } = useAuth();
+  const [workflowData, setWorkflowData] = useState(null);
   let customerFormMode;
   if (inApproval) {
     customerFormMode = "custDetailsEdit";
@@ -109,6 +115,30 @@ const BranchDetailsForm = ({
 
     fetchDropdownOptions();
   }, [branch]);
+const fetchWorkflowDataOfBranch = async (workflowId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    const workflowDataJson = await response.json();
+    console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+    return workflowDataJson?.data?.workflowData?.updates;
+  } catch (error) {
+    console.error("Error fetching workflow data:", error);
+    throw error;
+  }
+};
+  useEffect(() => {
+    const fetchWorkflowData = async () => {
+    if (inApproval) {
+      const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
+      setWorkflowData(wfData?.branch);
+    }
+  };
+  fetchWorkflowData();
+  }, [workflowInstanceId, inApproval]);
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
     const markerRef = useRef(null); // Using ref instead of state for the marker
@@ -207,6 +237,10 @@ const BranchDetailsForm = ({
         const lngLat = markerRef.current.getLngLat();
         onLocationSelect(lngLat.lat, lngLat.lng);
         setConfirmedLocation(lngLat);
+        handleLocationSelect(lngLat.lat, lngLat.lng);
+        setGeoLocation({
+          x: lngLat.lat.toFixed(6),
+          y: lngLat.lng.toFixed(6),});
       }
     };
 
@@ -291,15 +325,16 @@ const BranchDetailsForm = ({
   //   [branch.id, handleBranchFieldChange]
   // );
 
-  // const handleLocationSelect = useCallback(
-  //   (lat, lng) => {
-  //     setSelectedLocation({ lat, lng });
-  //     setShowMap(false);
-  //     // Store as object for display but convert to string for backend
-  //     handleBranchFieldChange(branch.id, "geolocation", { x: lat, y: lng });
-  //   },
-  //   [branch.id, handleBranchFieldChange]
-  // );
+  const handleLocationSelect = useCallback(
+    (lat, lng) => {
+      setSelectedLocation({ lat, lng });
+      setShowMap(false);
+      
+      // Store as object for display but convert to string for backend
+      // handleBranchFieldChange(branch.id, "geolocation", { x: lat, y: lng });
+    },
+    // [branch.id, handleBranchFieldChange]
+  );
 
   const getLocationDisplay = (location) => {
     if (!location) return "Select Location";
@@ -374,13 +409,13 @@ const BranchDetailsForm = ({
         required: true,
         options: ["Region 1", "Region 2", "Region 3"],
       },
-      // {
-      //   label: "Geolocation",
-      //   name: "geolocation",
-      //   placeholder: "Geolocation",
-      //   isLocation: true,
-      //   required: true,
-      // },
+      {
+        label: "Geolocation",
+        name: "geolocation",
+        placeholder: "Geolocation",
+        isLocation: true,
+        required: true,
+      },
     ],
     []
   );
@@ -431,14 +466,14 @@ const BranchDetailsForm = ({
 
       <div className="form-row">
         {fields.map((field, index) => {
-          const hasUpdate =
-            inApproval &&
-            customer.module === "branch" &&
-            customer?.workflowData?.updates &&
-            field.name in customer.workflowData.updates;
-          const currentValue = branch?.[field.name] || "";
+          const hasUpdate = (inApproval && workflowData ? field.name in workflowData : false) || (inApproval && branch.branchStatus === "pending");
+            // inApproval &&
+            // customer.module === "branch" &&
+            // customer?.workflowData?.updates &&
+            // field.name in customer.workflowData.updates;
+          const currentValue = originalBranch?.[field.name] || "";
           const value = hasUpdate
-            ? customer?.workflowData?.updates[field.name]
+            ? workflowData?.[field.name]
             : getFieldValue(field.name);
           console.log(
             "Branch field value:",
@@ -459,9 +494,10 @@ const BranchDetailsForm = ({
               {field.isLocation ? (
                 <div className="location-input-container">
                   <input
+                    name={field.name}
                     value={
-                      value
-                        ? `${value.x.toFixed(6)}, ${value.y.toFixed(6)}`
+                      branch?.[field.name]
+                        ? getLocationDisplay(branch[field.name])
                         : "Select Location"
                     }
                     // value={getLocationDisplay(branch[field.name])}
@@ -469,7 +505,15 @@ const BranchDetailsForm = ({
                     disabled={
                       customerFormMode === "custDetailsEdit" && !hasUpdate
                     }
-                    readOnly
+                    style={
+                              hasUpdate
+                                ? {
+                                    backgroundColor: "#fff8e1",
+                                  }
+                                : {}
+                            }
+                    onChange={handleBranchFieldChange}
+                    // readOnly
                   />
 
                   <button
@@ -494,7 +538,7 @@ const BranchDetailsForm = ({
                           <input
                             type="text"
                             name={field.name}
-                            value={value}
+                            value={branch?.[field.name]}
                             placeholder={t(field.placeholder)}
                             onChange={handleBranchFieldChange}
                             style={
@@ -514,7 +558,7 @@ const BranchDetailsForm = ({
                         return (
                           <select
                             name={field.name}
-                            value={value}
+                            value={branch?.[field.name]}
                             onChange={handleBranchFieldChange}
                             style={
                               hasUpdate
@@ -546,10 +590,10 @@ const BranchDetailsForm = ({
               )}
               {hasUpdate && (
                 <div className="current-value">
-                  Current:{" "}
+                  Previous:{" "}
                   {field.isLocation
                     ? getLocationDisplay(currentValue)
-                    : currentValue || "(empty)"}
+                    : originalBranch?.[field.name] || "(empty)"}
                 </div>
               )}
             </div>

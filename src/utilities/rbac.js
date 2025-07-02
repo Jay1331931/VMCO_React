@@ -663,10 +663,13 @@ class RbacManager {
           [constants.ENTITY.GMTC]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
-          customerApprovalChecklist: {visible: false, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: true, editable: true },
-        'Price Plan': { visible: false, editable: false }
-      },
+          customerApprovalChecklist: { visible: false, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: true,
+            editable: true,
+          },
+          "Price Plan": { visible: false, editable: false },
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -745,7 +748,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: false, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -790,7 +793,7 @@ class RbacManager {
           issueNameCol: { visible: true, editable: true },
           categoryCol: { visible: true, editable: true },
           urgencyLevelCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       maintDetailAdd: {
@@ -823,7 +826,7 @@ class RbacManager {
         },
       },
       maintDetailEdit: {
-       fields: {
+        fields: {
           customerName: { visible: false, editable: false },
           branchName: { visible: true, editable: true },
           issueType: { visible: true, editable: true },
@@ -935,7 +938,7 @@ class RbacManager {
           images: { visible: false, editable: false },
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
-           productIdCol: { visible: true, editable: false },
+          productIdCol: { visible: true, editable: false },
           quantityCol: { visible: true, editable: false },
           unitCol: { visible: true, editable: false },
           unitPriceCol: { visible: true, editable: false },
@@ -978,7 +981,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: false, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1136,9 +1139,17 @@ class RbacManager {
           [constants.ENTITY.GMTC]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
-           customerApprovalChecklist: {visible: false, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: true, editable: true }
-        
+          customerApprovalChecklist: { visible: false, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: true,
+            editable: true,
+          },
+          businessDetailsTab: {visible: false, editable: false},
+          contactDetailsTab: {visible: false, editable: false},
+          financialInformationTab: {visible: false, editable: false},
+          documentsTab: {visible: false, editable: false},
+          productsTab: {visible: false, editable: false},
+          
         },
       },
       custDetailsEdit: {
@@ -1334,7 +1345,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1480,9 +1491,11 @@ class RbacManager {
           pricingPolicyGMTC: { visible: true, editable: true },
           pricingPolicyVMCO: { visible: true, editable: true },
           btnApplyAll: { visible: true, editable: true },
-           customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
         },
       },
       custDetailsEdit: {
@@ -1547,9 +1560,11 @@ class RbacManager {
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
           btnSaveChanges: { visible: false, editable: true },
-         customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
         },
       },
     },
@@ -1680,7 +1695,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1828,10 +1843,12 @@ class RbacManager {
           [constants.ENTITY.DAR]: { visible: true, editable: true },
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -1904,12 +1921,15 @@ class RbacManager {
           btnBranchAdd: { visible: false, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-      }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
     },
-  
+
     [constants.DESIGNATIONS.OPS_COORDINATOR]: {
       orderList: {
         fields: {
@@ -2017,92 +2037,95 @@ class RbacManager {
           sort: { visible: false, editable: false },
         },
       },
-      custDetailsAdd: {
-        fields: {
-          companyNameEn: { visible: true, editable: true },
-          companyNameLc: { visible: true, editable: true },
-          crNumber: { visible: true, editable: true },
-          vatRegistrationNumber: { visible: true, editable: true },
-          baladeahLicense: { visible: true, editable: true },
-          companyType: { visible: true, editable: true },
-          businessType: { visible: true, editable: true },
-          businessTypeOther: { visible: true, editable: true },
-          interCompany: { visible: true, editable: true },
-          entity: { visible: true, editable: true },
-          deliveryLocations: { visible: true, editable: true },
-          brandName: { visible: true, editable: true },
-          brandNameArabic: { visible: true, editable: true },
-          company_logo: { visible: true, editable: true },
-          brand_logo: { visible: true, editable: true },
-          primaryContactName: { visible: true, editable: true },
-          primaryContactDesignation: { visible: true, editable: true },
-          primaryContactEmail: { visible: true, editable: true },
-          primaryContactMobile: { visible: true, editable: false },
-          businessHeadSameAsPrimary: { visible: true, editable: true },
-          businessHeadName: { visible: true, editable: true },
-          businessHeadDesignation: { visible: true, editable: true },
-          businessHeadEmail: { visible: true, editable: true },
-          businessHeadMobile: { visible: true, editable: false },
-          financeHeadName: { visible: true, editable: true },
-          financeHeadDesignation: { visible: true, editable: true },
-          financeHeadEmail: { visible: true, editable: true },
-          financeHeadMobile: { visible: true, editable: false },
-          purchasingHeadName: { visible: true, editable: true },
-          purchasingHeadDesignation: { visible: true, editable: true },
-          purchasingHeadEmail: { visible: true, editable: true },
-          purchasingHeadMobile: { visible: true, editable: false },
-          buildingName: { visible: true, editable: true },
-          street: { visible: true, editable: true },
-          district: { visible: true, editable: true },
-          city: { visible: true, editable: true },
-          region: { visible: true, editable: true },
-          zone: { visible: true, editable: true },
-          geolocation: { visible: true, editable: true },
-          pincode: { visible: true, editable: true },
-          dulySigned: { visible: true, editable: true },
-          crCertificate: { visible: true, editable: true },
-          vatCertificate: { visible: true, editable: true },
-          nationalID: { visible: true, editable: true },
-          bankLetter: { visible: true, editable: true },
-          nonTradingDocuments: { visible: true, editable: true },
-          bankName: { visible: true, editable: true },
-          accountNumber: { visible: true, editable: true },
-          ibanNumber: { visible: true, editable: true },
-          prePayment: { visible: true, editable: true },
-          partialPayment: { visible: true, editable: true },
-          advancePayment: { visible: true, editable: true },
-          COD: { visible: true, editable: true },
-          credit: { visible: true, editable: true },
-          creditLimit: { visible: true, editable: true },
-          creditPeriod: { visible: true, editable: true },
-          btnSave: { visible: false, editable: true },
-          btnSubmit: { visible: false, editable: true },
-          btnApprove: { visible: false, editable: true },
-          btnReject: { visible: false, editable: true },
-          pricingPolicy: { visible: true, editable: true },
-          pricingPolicySHC: { visible: true, editable: true },
-          pricingPolicyDAR: { visible: true, editable: true },
-          pricingPolicyNAQI: { visible: true, editable: true },
-          pricingPolicyGMTC: { visible: true, editable: true },
-          pricingPolicyVMCO: { visible: true, editable: true },
-          btnBranchSave: { visible: false, editable: true },
-          btnBranchSaveChanges: { visible: true, editable: true },
-          btnBranchBlock: { visible: false, editable: true },
-          btnBranchUnblock: { visible: false, editable: true },
-          btnBranchSubmit: { visible: false, editable: true },
-          btnBranchApprove: { visible: false, editable: true },
-          btnBranchReject: { visible: false, editable: true },
-          btnBranchAdd: { visible: false, editable: true },
-          btnApplyAll: { visible: true, editable: true },
-          [constants.ENTITY.VMCO]: { visible: true, editable: true },
-          [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
-          [constants.ENTITY.DAR]: { visible: true, editable: true },
-          [constants.ENTITY.NAQI]: { visible: true, editable: true },
-          [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        }
-      },
+      // custDetailsAdd: {
+      //   fields: {
+      //     companyNameEn: { visible: true, editable: true },
+      //     companyNameLc: { visible: true, editable: true },
+      //     crNumber: { visible: true, editable: true },
+      //     vatRegistrationNumber: { visible: true, editable: true },
+      //     baladeahLicense: { visible: true, editable: true },
+      //     companyType: { visible: true, editable: true },
+      //     businessType: { visible: true, editable: true },
+      //     businessTypeOther: { visible: true, editable: true },
+      //     interCompany: { visible: true, editable: true },
+      //     entity: { visible: true, editable: true },
+      //     deliveryLocations: { visible: true, editable: true },
+      //     brandName: { visible: true, editable: true },
+      //     brandNameArabic: { visible: true, editable: true },
+      //     company_logo: { visible: true, editable: true },
+      //     brand_logo: { visible: true, editable: true },
+      //     primaryContactName: { visible: true, editable: true },
+      //     primaryContactDesignation: { visible: true, editable: true },
+      //     primaryContactEmail: { visible: true, editable: true },
+      //     primaryContactMobile: { visible: true, editable: false },
+      //     businessHeadSameAsPrimary: { visible: true, editable: true },
+      //     businessHeadName: { visible: true, editable: true },
+      //     businessHeadDesignation: { visible: true, editable: true },
+      //     businessHeadEmail: { visible: true, editable: true },
+      //     businessHeadMobile: { visible: true, editable: false },
+      //     financeHeadName: { visible: true, editable: true },
+      //     financeHeadDesignation: { visible: true, editable: true },
+      //     financeHeadEmail: { visible: true, editable: true },
+      //     financeHeadMobile: { visible: true, editable: false },
+      //     purchasingHeadName: { visible: true, editable: true },
+      //     purchasingHeadDesignation: { visible: true, editable: true },
+      //     purchasingHeadEmail: { visible: true, editable: true },
+      //     purchasingHeadMobile: { visible: true, editable: false },
+      //     buildingName: { visible: true, editable: true },
+      //     street: { visible: true, editable: true },
+      //     district: { visible: true, editable: true },
+      //     city: { visible: true, editable: true },
+      //     region: { visible: true, editable: true },
+      //     zone: { visible: true, editable: true },
+      //     geolocation: { visible: true, editable: true },
+      //     pincode: { visible: true, editable: true },
+      //     dulySigned: { visible: true, editable: true },
+      //     crCertificate: { visible: true, editable: true },
+      //     vatCertificate: { visible: true, editable: true },
+      //     nationalID: { visible: true, editable: true },
+      //     bankLetter: { visible: true, editable: true },
+      //     nonTradingDocuments: { visible: true, editable: true },
+      //     bankName: { visible: true, editable: true },
+      //     accountNumber: { visible: true, editable: true },
+      //     ibanNumber: { visible: true, editable: true },
+      //     prePayment: { visible: true, editable: true },
+      //     partialPayment: { visible: true, editable: true },
+      //     advancePayment: { visible: true, editable: true },
+      //     COD: { visible: true, editable: true },
+      //     credit: { visible: true, editable: true },
+      //     creditLimit: { visible: true, editable: true },
+      //     creditPeriod: { visible: true, editable: true },
+      //     btnSave: { visible: false, editable: true },
+      //     btnSubmit: { visible: false, editable: true },
+      //     btnApprove: { visible: false, editable: true },
+      //     btnReject: { visible: false, editable: true },
+      //     pricingPolicy: { visible: true, editable: true },
+      //     pricingPolicySHC: { visible: true, editable: true },
+      //     pricingPolicyDAR: { visible: true, editable: true },
+      //     pricingPolicyNAQI: { visible: true, editable: true },
+      //     pricingPolicyGMTC: { visible: true, editable: true },
+      //     pricingPolicyVMCO: { visible: true, editable: true },
+      //     btnBranchSave: { visible: false, editable: true },
+      //     btnBranchSaveChanges: { visible: true, editable: true },
+      //     btnBranchBlock: { visible: false, editable: true },
+      //     btnBranchUnblock: { visible: false, editable: true },
+      //     btnBranchSubmit: { visible: false, editable: true },
+      //     btnBranchApprove: { visible: false, editable: true },
+      //     btnBranchReject: { visible: false, editable: true },
+      //     btnBranchAdd: { visible: false, editable: true },
+      //     btnApplyAll: { visible: true, editable: true },
+      //     [constants.ENTITY.VMCO]: { visible: true, editable: true },
+      //     [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
+      //     [constants.ENTITY.DAR]: { visible: true, editable: true },
+      //     [constants.ENTITY.NAQI]: { visible: true, editable: true },
+      //     [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
+      //     customerApprovalChecklist: { visible: true, editable: true },
+      //     "Download terms & conditions and upload duly signed document": {
+      //       visible: false,
+      //       editable: true,
+      //     },
+      //   },
+      // },
       custDetailsEdit: {
         fields: {
           companyNameEn: { visible: true, editable: true },
@@ -2180,9 +2203,11 @@ class RbacManager {
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
         },
       },
       supList: {
@@ -2198,7 +2223,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2405,7 +2430,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2479,6 +2504,7 @@ class RbacManager {
       },
       custDetailsAdd: {
         fields: {
+          //trigerrr
           companyNameEn: { visible: true, editable: true },
           companyNameLc: { visible: true, editable: true },
           crNumber: { visible: true, editable: true },
@@ -2548,15 +2574,19 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -2631,10 +2661,12 @@ class RbacManager {
           btnBranchAdd: { visible: false, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
     },
 
@@ -2764,7 +2796,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2898,6 +2930,8 @@ class RbacManager {
           btnBlock: { visible: true, editable: true },
           btnUnblock: { visible: true, editable: true },
           btnSubmit: { visible: false, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
           btnBranchSave: { visible: false, editable: true },
           btnBranchSaveChanges: { visible: true, editable: true },
           btnBranchBlock: { visible: false, editable: true },
@@ -2912,10 +2946,12 @@ class RbacManager {
           [constants.ENTITY.DAR]: { visible: true, editable: true },
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -2990,10 +3026,12 @@ class RbacManager {
           btnBranchAdd: { visible: false, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
     },
 
@@ -3123,7 +3161,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -3271,10 +3309,12 @@ class RbacManager {
           [constants.ENTITY.DAR]: { visible: true, editable: true },
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
       custDetailsEdit: {
         fields: {
@@ -3347,10 +3387,12 @@ class RbacManager {
           btnBranchAdd: { visible: false, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
-        customerApprovalChecklist: {visible: true, editable: true},
-        'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-        
-        }
+          customerApprovalChecklist: { visible: true, editable: true },
+          "Download terms & conditions and upload duly signed document": {
+            visible: false,
+            editable: true,
+          },
+        },
       },
     },
 
@@ -3460,7 +3502,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -3643,7 +3685,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -3826,7 +3868,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -3919,7 +3961,8 @@ class RbacManager {
    * @returns {object|undefined} The access definition object or undefined if not found
    */
   getFieldAccess(field) {
-    return RbacManager.roleformfieldmap?.[this.currentRole]?.[this.currentForm]?.fields?.[field];
+    return RbacManager.roleformfieldmap?.[this.currentRole]?.[this.currentForm]
+      ?.fields?.[field];
   }
 
   /**
@@ -3931,7 +3974,12 @@ class RbacManager {
     //console.log(field)
     const access = this.getFieldAccess(field);
     return (
-      (access == null ? true : access.visible) && (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true)
+      (access == null ? true : access.visible) &&
+      (approvalWF == true && fieldInWF == true
+        ? true
+        : approvalWF == true && fieldInWF == false
+        ? false
+        : true)
     );
   }
 
@@ -3953,7 +4001,11 @@ class RbacManager {
     return (
       (access == null ? true : access.editable) &&
       (this.itemInWF == null ? true : this.isUserOwner) &&
-      (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true)
+      (approvalWF == true && fieldInWF == true
+        ? true
+        : approvalWF == true && fieldInWF == false
+        ? false
+        : true)
     );
   }
 }

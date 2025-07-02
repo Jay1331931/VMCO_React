@@ -1,7 +1,17 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
 import "../../styles/forms.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEllipsisV,
+  faChevronDown,
+  faChevronRight,
+  faLocationDot,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
+import "maplibre-gl/dist/maplibre-gl.css";
+import maplibregl from "maplibre-gl";
 
 function ContactDetails({
   customerData = {},
@@ -10,12 +20,15 @@ function ContactDetails({
   originalCustomerContactsData = {},
   onChangeCustomerContactsData,
   onChangeCustomerData,
-  mode
+  setGeoLocation,
+  setBusinessHeadSameAsPrimary,
+  mode,
+  setTabsHeight
 }) {
   // Now you can access both objects
   const { t } = useTranslation();
-  const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
-    useState(false);
+  // const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
+  //   useState(false);
 
   // Dropdown state
   const dropdownFields = ["district", "city", "region", "zone"];
@@ -28,6 +41,7 @@ function ContactDetails({
       setBasicMasterLists(listOfBasicsMaster);
     };
     fetchData();
+    setTabsHeight("auto");
   }, []);
   const getBindingValue = (contactType, fieldname) => {
     if (Array.isArray(customerContactsData.data)) {
@@ -38,6 +52,182 @@ function ContactDetails({
     }
     return "";
   };
+
+  const [showMap, setShowMap] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  
+  const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
+    const mapContainer = useRef(null);
+    const markerRef = useRef(null); // Using ref instead of state for the marker
+    const [map, setMap] = useState(null);
+    const { t, i18n } = useTranslation();
+    const [coords, setCoords] = useState("Detecting your location...");
+    const [coordsArabic, setCoordsArabic] = useState(
+      t("Detecting your location...")
+    );
+    const [defaultCenter] = useState([77.5946, 12.9716]);
+    const [zoom] = useState(14);
+    const [confirmedLocation, setConfirmedLocation] = useState(null);
+    console.log("Initial Lat:", initialLat);
+    console.log("Initial Lng:", initialLng);
+    useEffect(() => {
+      let mapInstance;
+
+      const initializeMap = async () => {
+        mapInstance = new maplibregl.Map({
+          container: mapContainer.current,
+          style:
+            "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
+          center:
+            initialLat && initialLng ? [initialLat, initialLng] : defaultCenter,
+          zoom: zoom,
+        });
+
+        mapInstance.on("load", async () => {
+          setMap(mapInstance);
+          try {
+            const position =
+              initialLat && initialLng
+                ? { coords: { latitude: initialLat, longitude: initialLng } }
+                : await getCurrentPosition();
+            const { latitude, longitude } = position.coords;
+            updateMarker(mapInstance, longitude, latitude);
+          } catch (error) {
+            console.log("Geolocation error:", error);
+            setCoords("Click on the map to select a location");
+            setCoordsArabic(t("Click on the map to select a location"));
+          }
+        });
+
+        mapInstance.on("click", (e) => {
+          if (!confirmedLocation) {
+            const { lng, lat } = e.lngLat;
+            updateMarker(mapInstance, lng, lat);
+          }
+        });
+
+        return () => {
+          if (markerRef.current) markerRef.current.remove();
+          mapInstance.remove();
+        };
+      };
+
+      const getCurrentPosition = () => {
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+          });
+        });
+      };
+
+      const updateMarker = (map, lng, lat) => {
+        // Remove existing marker if it exists
+        if (markerRef.current) {
+          markerRef.current.remove();
+          markerRef.current = null;
+        }
+
+        // Create new marker
+        const newMarker = new maplibregl.Marker()
+          .setLngLat([lng, lat])
+          .addTo(map);
+
+        markerRef.current = newMarker;
+        setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+        setCoordsArabic(
+          `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
+        );
+
+        map.setCenter([lng, lat]);
+      };
+
+      initializeMap();
+
+      return () => {
+        if (mapInstance) mapInstance.remove();
+      };
+    }, [confirmedLocation]);
+
+    const handleConfirm = () => {
+      if (markerRef.current) {
+        const lngLat = markerRef.current.getLngLat();
+        onLocationSelect(lngLat.lat, lngLat.lng);
+        setConfirmedLocation(lngLat);
+        handleLocationSelect(lngLat.lat, lngLat.lng);
+        setGeoLocation({
+          x: lngLat.lat.toFixed(6),
+          y: lngLat.lng.toFixed(6),});
+      }
+    };
+
+    const handleReset = () => {
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
+      setConfirmedLocation(null);
+      setCoords("Click on the map to select a location");
+      setCoordsArabic(t("Click on the map to select a location"));
+    };
+
+    return (
+      <div className="location-picker-container">
+        <div ref={mapContainer} className="map-container" />
+        <div className="location-coords">
+          {i18n.language === "ar" ? coordsArabic : coords}
+        </div>
+        <div className="location-actions">
+          {!confirmedLocation ? (
+            <button
+              className="confirm-location-button"
+              onClick={handleConfirm}
+              disabled={!markerRef.current}
+            >
+              Confirm Location
+            </button>
+          ) : (
+            <>
+              <div className="location-confirmed">Location confirmed!</div>
+              <button className="reset-location-button" onClick={handleReset}>
+                Change Location
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const handleLocationSelect = useCallback(
+    (lat, lng) => {
+      setSelectedLocation({ lat, lng });
+      setShowMap(false);
+      // Store as object for display but convert to string for backend
+      // handleBranchFieldChange(branch.id, "geolocation", { x: lat, y: lng });
+    }
+    // [branch.id, handleBranchFieldChange]
+  );
+
+  const getLocationDisplay = (location) => {
+    if (!location) return "Select Location";
+
+    if (
+      typeof location === "object" &&
+      location.x !== undefined &&
+      location.y !== undefined
+    ) {
+      const x = parseFloat(location.x);
+      const y = parseFloat(location.y);
+
+      if (!isNaN(x) && !isNaN(y)) {
+        return `${x.toFixed(6)}, ${y.toFixed(6)}`;
+      }
+    }
+
+    return "Select Location";
+  };
+
   return (
     <div className="customer-onboarding-form-grid">
       {/* Primary Contact Details Header */}
@@ -48,133 +238,165 @@ function ContactDetails({
         <label htmlFor="primaryContactName">
           {t("Primary Contact Name")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.primaryContactName !=
-            customerContactsData?.primaryContactName && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactName !=
+              customerContactsData?.primaryContactName &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="primaryContactName"
           name="primaryContactName"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.primaryContactName !=
-            customerContactsData?.primaryContactName && mode === "edit"
+              customerContactsData?.primaryContactName &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter name")}
           value={customerContactsData?.primaryContactName || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactName === customerContactsData?.primaryContactName && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.primaryContactName !=
-          customerContactsData?.primaryContactName && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.primaryContactName || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.primaryContactName !=
+            customerContactsData?.primaryContactName &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.primaryContactName || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="primaryContactDesignation">
           {t("Designation")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.primaryContactDesignation !=
-            customerContactsData?.primaryContactDesignation && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactDesignation !=
+              customerContactsData?.primaryContactDesignation &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="primaryContactDesignation"
           name="primaryContactDesignation"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.primaryContactDesignation !=
-            customerContactsData?.primaryContactDesignation && mode === "edit"
+              customerContactsData?.primaryContactDesignation &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter designation")}
           value={customerContactsData?.primaryContactDesignation || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactDesignation === customerContactsData?.primaryContactDesignation && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.primaryContactDesignation !=
-          customerContactsData?.primaryContactDesignation && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.primaryContactDesignation ||
-              "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.primaryContactDesignation !=
+            customerContactsData?.primaryContactDesignation &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.primaryContactDesignation ||
+                "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="primaryContactEmail">
           {t("Email")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.primaryContactEmail !=
-            customerContactsData?.primaryContactEmail && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactEmail !=
+              customerContactsData?.primaryContactEmail &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="primaryContactEmail"
           name="primaryContactEmail"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.primaryContactEmail !=
-            customerContactsData?.primaryContactEmail && mode === "edit"
+              customerContactsData?.primaryContactEmail &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter email")}
           value={customerContactsData?.primaryContactEmail || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactEmail === customerContactsData?.primaryContactEmail && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.primaryContactEmail !=
-          customerContactsData?.primaryContactEmail && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.primaryContactEmail || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.primaryContactEmail !=
+            customerContactsData?.primaryContactEmail &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.primaryContactEmail || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="primaryContactMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.primaryContactMobile !=
-            customerContactsData?.primaryContactMobile && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactMobile !=
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="primaryContactMobile"
           name="primaryContactMobile"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.primaryContactMobile !=
-            customerContactsData?.primaryContactMobile && mode === "edit"
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.primaryContactMobile || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactMobile === customerContactsData?.primaryContactMobile && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.primaryContactMobile !=
-          customerContactsData?.primaryContactMobile && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.primaryContactMobile !=
+            customerContactsData?.primaryContactMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
+            </div>
+          )}
       </div>
 
       {/* Business Head Header */}
@@ -185,7 +407,8 @@ function ContactDetails({
             type="checkbox"
             id="businessHeadSameAsPrimary"
             name="businessHeadSameAsPrimary"
-            checked={businessHeadSameAsPrimary}
+            checked={customerContactsData?.businessHeadName === customerContactsData?.primaryContactName &&
+              customerContactsData?.businessHeadDesignation === customerContactsData?.primaryContactDesignation && customerContactsData?.businessHeadEmail === customerContactsData?.primaryContactEmail && customerContactsData?.businessHeadPhone === customerContactsData?.primaryContactPhone}
             onChange={(e) => setBusinessHeadSameAsPrimary(e.target.checked)}
           />
           {t("Same as Primary Contact Details")}
@@ -196,132 +419,165 @@ function ContactDetails({
         <label htmlFor="businessHeadName">
           {t("Business Head Name")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.businessHeadName !=
-            customerContactsData?.businessHeadName && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadName !=
+              customerContactsData?.businessHeadName &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="businessHeadName"
           name="businessHeadName"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.businessHeadName !=
-            customerContactsData?.businessHeadName && mode === "edit"
+              customerContactsData?.businessHeadName &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter name")}
           value={customerContactsData?.businessHeadName || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadName === customerContactsData?.businessHeadName && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.businessHeadName !=
-          customerContactsData?.businessHeadName && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.businessHeadName || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.businessHeadName !=
+            customerContactsData?.businessHeadName &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.businessHeadName || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="businessHeadDesignation">
           {t("Designation")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.businessHeadDesignation !=
-            customerContactsData?.businessHeadDesignation && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadDesignation !=
+              customerContactsData?.businessHeadDesignation &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="businessHeadDesignation"
           name="businessHeadDesignation"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.businessHeadDesignation !=
-            customerContactsData?.businessHeadDesignation && mode === "edit"
+              customerContactsData?.businessHeadDesignation &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter designation")}
           value={customerContactsData?.businessHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadDesignation === customerContactsData?.businessHeadDesignation && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.businessHeadDesignation !=
-          customerContactsData?.businessHeadDesignation && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.businessHeadDesignation || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.businessHeadDesignation !=
+            customerContactsData?.businessHeadDesignation &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.businessHeadDesignation ||
+                "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="businessHeadEmail">
           {t("Email")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.businessHeadEmail !=
-            customerContactsData?.businessHeadEmail && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadEmail !=
+              customerContactsData?.businessHeadEmail &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="businessHeadEmail"
           name="businessHeadEmail"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.businessHeadEmail !=
-            customerContactsData?.businessHeadEmail && mode === "edit"
+              customerContactsData?.businessHeadEmail &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter email")}
           value={customerContactsData?.businessHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadEmail === customerContactsData?.businessHeadEmail && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.businessHeadEmail !=
-          customerContactsData?.businessHeadEmail && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.businessHeadEmail || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.businessHeadEmail !=
+            customerContactsData?.businessHeadEmail &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.businessHeadEmail || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="businessHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.businessHeadMobile !=
-            customerContactsData?.businessHeadMobile && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadMobile !=
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="businessHeadMobile"
           name="businessHeadMobile"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.businessHeadMobile !=
-            customerContactsData?.businessHeadMobile && mode === "edit"
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.businessHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadMobile === customerContactsData?.businessHeadMobile && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.businessHeadMobile !=
-          customerContactsData?.businessHeadMobile && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.businessHeadMobile !=
+            customerContactsData?.businessHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
+            </div>
+          )}
       </div>
 
       {/* Finance Head Header */}
@@ -330,132 +586,165 @@ function ContactDetails({
         <label htmlFor="financeHeadName">
           {t("Finance Head Name")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.financeHeadName !=
-            customerContactsData?.financeHeadName && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadName !=
+              customerContactsData?.financeHeadName &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="financeHeadName"
           name="financeHeadName"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.financeHeadName !=
-            customerContactsData?.financeHeadName && mode === "edit"
+              customerContactsData?.financeHeadName &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter name")}
           value={customerContactsData?.financeHeadName || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadName === customerContactsData?.financeHeadName && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.financeHeadName !=
-          customerContactsData?.financeHeadName && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.financeHeadName || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.financeHeadName !=
+            customerContactsData?.financeHeadName &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.financeHeadName || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="financeHeadDesignation">
           {t("Designation")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.financeHeadDesignation !=
-            customerContactsData?.financeHeadDesignation && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadDesignation !=
+              customerContactsData?.financeHeadDesignation &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="financeHeadDesignation"
           name="financeHeadDesignation"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.financeHeadDesignation !=
-            customerContactsData?.financeHeadDesignation && mode === "edit"
+              customerContactsData?.financeHeadDesignation &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter designation")}
           value={customerContactsData?.financeHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadDesignation === customerContactsData?.financeHeadDesignation && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.financeHeadDesignation !=
-          customerContactsData?.financeHeadDesignation && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.financeHeadDesignation || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.financeHeadDesignation !=
+            customerContactsData?.financeHeadDesignation &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.financeHeadDesignation ||
+                "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="financeHeadEmail">
           {t("Email")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.financeHeadEmail !=
-            customerContactsData?.financeHeadEmail && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadEmail !=
+              customerContactsData?.financeHeadEmail &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="financeHeadEmail"
           name="financeHeadEmail"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.financeHeadEmail !=
-            customerContactsData?.financeHeadEmail && mode === "edit"
+              customerContactsData?.financeHeadEmail &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter email")}
           value={customerContactsData?.financeHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadEmail === customerContactsData?.financeHeadEmail && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.financeHeadEmail !=
-          customerContactsData?.financeHeadEmail && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.financeHeadEmail || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.financeHeadEmail !=
+            customerContactsData?.financeHeadEmail &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.financeHeadEmail || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="financeHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.financeHeadMobile !=
-            customerContactsData?.financeHeadMobile && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadMobile !=
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="financeHeadMobile"
           name="financeHeadMobile"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.financeHeadMobile !=
-            customerContactsData?.financeHeadMobile && mode === "edit"
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.financeHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadMobile === customerContactsData?.financeHeadMobile && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.financeHeadMobile !=
-          customerContactsData?.financeHeadMobile && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.financeHeadMobile !=
+            customerContactsData?.financeHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
+            </div>
+          )}
       </div>
 
       {/* Purchasing Head Header */}
@@ -464,133 +753,170 @@ function ContactDetails({
         <label htmlFor="purchasingHeadName">
           {t("Purchasing Head Name")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.purchasingHeadName !=
-            customerContactsData?.purchasingHeadName && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadName !=
+              customerContactsData?.purchasingHeadName &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="purchasingHeadName"
           name="purchasingHeadName"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.purchasingHeadName !=
-            customerContactsData?.purchasingHeadName && mode === "edit"
+              customerContactsData?.purchasingHeadName &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter name")}
           value={customerContactsData?.purchasingHeadName || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadName === customerContactsData?.purchasingHeadName && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.purchasingHeadName !=
-          customerContactsData?.purchasingHeadName && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.purchasingHeadName || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.purchasingHeadName !=
+            customerContactsData?.purchasingHeadName &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.purchasingHeadName || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="purchasingHeadDesignation">
           {t("Designation")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.purchasingHeadDesignation !=
-            customerContactsData?.purchasingHeadDesignation && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadDesignation !=
+              customerContactsData?.purchasingHeadDesignation &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="purchasingHeadDesignation"
           name="purchasingHeadDesignation"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.purchasingHeadDesignation !=
-            customerContactsData?.purchasingHeadDesignation && mode === "edit"
+              customerContactsData?.purchasingHeadDesignation &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter designation")}
           value={customerContactsData?.purchasingHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadDesignation === customerContactsData?.purchasingHeadDesignation && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.purchasingHeadDesignation !=
-          customerContactsData?.purchasingHeadDesignation && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.purchasingHeadDesignation ||
-              "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.purchasingHeadDesignation !=
+            customerContactsData?.purchasingHeadDesignation &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.purchasingHeadDesignation ||
+                "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="purchasingHeadEmail">
           {t("Email")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.purchasingHeadEmail !=
-            customerContactsData?.purchasingHeadEmail && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadEmail !=
+              customerContactsData?.purchasingHeadEmail &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="purchasingHeadEmail"
           name="purchasingHeadEmail"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.purchasingHeadEmail !=
-            customerContactsData?.purchasingHeadEmail && mode === "edit"
+              customerContactsData?.purchasingHeadEmail &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter email")}
           value={customerContactsData?.purchasingHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadEmail === customerContactsData?.purchasingHeadEmail && mode === "edit"}
           required
         />
-        {originalCustomerContactsData?.purchasingHeadEmail !=
-          customerContactsData?.purchasingHeadEmail && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.purchasingHeadEmail || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.purchasingHeadEmail !=
+            customerContactsData?.purchasingHeadEmail &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.purchasingHeadEmail || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="purchasingHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
-          {originalCustomerContactsData?.purchasingHeadMobile !=
-            customerContactsData?.purchasingHeadMobile && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadMobile !=
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="purchasingHeadMobile"
           name="purchasingHeadMobile"
           className={`text-field small ${
+            originalCustomerContactsData &&
+            customerContactsData &&
             originalCustomerContactsData?.purchasingHeadMobile !=
-            customerContactsData?.purchasingHeadMobile && mode === "edit"
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.purchasingHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadMobile ===
+              customerContactsData?.purchasingHeadMobile && mode === "edit"
+          }
           required
         />
-        {originalCustomerContactsData?.purchasingHeadMobile !=
-          customerContactsData?.purchasingHeadMobile && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
-          </div>
-        )}
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.purchasingHeadMobile !=
+            customerContactsData?.purchasingHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
+            </div>
+          )}
       </div>
 
       {/* Business Address Header */}
@@ -599,78 +925,99 @@ function ContactDetails({
         <label htmlFor="buildingName">
           {t("Building Name")}
           <span className="required-field">*</span>
-          {originalCustomerData?.buildingName != customerData?.buildingName &&  mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.buildingName != customerData?.buildingName &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="buildingName"
           name="buildingName"
           className={`text-field small ${
-            originalCustomerData?.buildingName != customerData?.buildingName && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.buildingName != customerData?.buildingName &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter building name")}
           value={customerData?.buildingName || ""}
           onChange={onChangeCustomerData}
+          disabled={originalCustomerData && customerData && originalCustomerData?.buildingName === customerData?.buildingName && mode === "edit"}
           required
         />
-        {originalCustomerData?.buildingName != customerData?.buildingName && mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.buildingName || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.buildingName != customerData?.buildingName &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.buildingName || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="street">
           {t("Street")}
           <span className="required-field">*</span>
-          {originalCustomerData?.street != customerData?.street &&  mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.street != customerData?.street &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="street"
           name="street"
           className={`text-field small ${
-            originalCustomerData?.street != customerData?.street && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.street != customerData?.street &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter street")}
           value={customerData?.street || ""}
           onChange={onChangeCustomerData}
+          disabled={originalCustomerData && customerData && originalCustomerData?.street === customerData?.street && mode === "edit"}
           required
         />
-        {originalCustomerData?.street != customerData?.street && mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.street || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.street != customerData?.street &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.street || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="district">
           {t("District")}
           <span className="required-field">*</span>
-          {originalCustomerData?.district != customerData?.district && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.district != customerData?.district &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <select
           id="district"
           name="district"
           className={`dropdown ${
-            originalCustomerData?.district != customerData?.district && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.district != customerData?.district &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           value={customerData?.district || ""}
           onChange={onChangeCustomerData}
+          disabled={originalCustomerData && customerData && originalCustomerData?.district === customerData?.district && mode === "edit"}
           required
         >
           <option value="" disabled>
@@ -682,31 +1029,42 @@ function ContactDetails({
             </option>
           ))}
         </select>
-        {originalCustomerData?.district != customerData?.district && mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.district || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.district != customerData?.district &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.district || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="city">
           {t("City")}
           <span className="required-field">*</span>
-          {originalCustomerData?.city != customerData?.city && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.city != customerData?.city &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <select
           id="city"
           name="city"
           className={`dropdown ${
-            originalCustomerData?.city != customerData?.city && customerData?.city && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.city != customerData?.city &&
+            customerData?.city &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           value={customerData?.city || ""}
           onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData && customerData && originalCustomerData?.city === customerData?.city && mode === "edit"
+          }
           required
         >
           <option value="" disabled>
@@ -718,31 +1076,41 @@ function ContactDetails({
             </option>
           ))}
         </select>
-        {originalCustomerData?.city != customerData?.city &&  mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.city || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.city != customerData?.city &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.city || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="region">
           {t("Region")}
           <span className="required-field">*</span>
-          {originalCustomerData?.region != customerData?.region && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <select
           id="region"
           name="region"
           className={`dropdown ${
-            originalCustomerData?.region != customerData?.region && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           value={customerData?.region || ""}
           onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData && customerData && originalCustomerData?.region === customerData?.region && mode === "edit"
+          }
           required
         >
           <option value="" disabled>
@@ -754,31 +1122,41 @@ function ContactDetails({
             </option>
           ))}
         </select>
-        {originalCustomerData?.region != customerData?.region &&  mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.region || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.region != customerData?.region &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.region || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="zone">
           {t("Zone")}
           <span className="required-field">*</span>
-          {originalCustomerData?.zone != customerData?.zone && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.zone != customerData?.zone &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <select
           id="zone"
           name="zone"
           className={`dropdown ${
-            originalCustomerData?.zone != customerData?.zone && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.zone != customerData?.zone &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           value={customerData?.zone || ""}
           onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData && customerData && originalCustomerData?.zone === customerData?.zone && mode === "edit"
+          }
           required
         >
           <option value="" disabled>
@@ -790,77 +1168,136 @@ function ContactDetails({
             </option>
           ))}
         </select>
-        {originalCustomerData?.zone != customerData?.zone && mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.zone || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.zone != customerData?.zone &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.zone || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="pincode">
           {t("Pincode")}
           <span className="required-field">*</span>
-          {originalCustomerData?.pincode != customerData?.pincode && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.pincode != customerData?.pincode &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
           type="text"
           id="pincode"
           name="pincode"
           className={`text-field small ${
-            originalCustomerData?.pincode != customerData?.pincode && mode === "edit"
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.pincode != customerData?.pincode &&
+            mode === "edit"
               ? "update-field"
               : ""
           }`}
           placeholder={t("Enter pincode")}
           value={customerData?.pincode || ""}
           onChange={onChangeCustomerData}
+          disabled={originalCustomerData && customerData && originalCustomerData?.pincode === customerData?.pincode && mode === "edit"}
           required
         />
-        {originalCustomerData?.pincode != customerData?.pincode && mode === "edit" && (
-          <div className="current-value">
-            Previous: {originalCustomerData?.pincode || "(empty)"}
-          </div>
-        )}
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.pincode != customerData?.pincode &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.pincode || "(empty)"}
+            </div>
+          )}
       </div>
 
       <div className="form-group">
         <label htmlFor="geolocation">
           {t("Geolocation")}
           <span className="required-field">*</span>
-          {originalCustomerData?.geolocation != customerData?.geolocation && mode === "edit" && (
-            <span className="update-badge">Updated</span>
-          )}
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.geolocation != customerData?.geolocation &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-        <input
-          type="text"
-          id="geolocation"
-          name="geolocation"
-          className={`text-field small ${
-            originalCustomerData?.geolocation != customerData?.geolocation && mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter geolocation")}
-          value={
-            typeof customerData?.geolocation === 'object' 
-              ? JSON.stringify(customerData?.geolocation) 
-              : (customerData?.geolocation || "")
-          }
-          onChange={onChangeCustomerData}
-          required
-        />
-        {originalCustomerData?.geolocation != customerData?.geolocation && mode === "edit" && (
-          <div className="current-value">
-            Previous:{" "}
-            {typeof originalCustomerData?.geolocation === 'object'
-              ? JSON.stringify(originalCustomerData?.geolocation)
-              : (originalCustomerData?.geolocation || "(empty)")}
-          </div>
-        )}
+        <div className="location-input-container">
+          <input
+            name="geolocation"
+            value={
+              // selectedLocation
+              //   ? `${selectedLocation.lat.toFixed(
+              //       6
+              //     )}, ${selectedLocation.lng.toFixed(6)}` :
+                customerData?.geolocation
+                ? getLocationDisplay(customerData.geolocation)
+                : "Select Location"
+            }
+            // value={getLocationDisplay(branch[field.name])}
+            placeholder={t("Select Location")}
+            onChange={onChangeCustomerData}
+            disabled={
+              originalCustomerData && customerData && originalCustomerData?.geolocation === customerData?.geolocation && mode === "edit"
+            }
+            className={`text-field small ${
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.geolocation != customerData?.geolocation &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            readOnly
+            required
+          />
+
+          <button
+            className="location-picker-button"
+            //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
+            //     ? field.name in customer.workflowData.updates
+            //     : false)}
+            // disabled={
+            //   customerFormMode === "custDetailsEdit" && !hasUpdate
+            // }
+            onClick={() => setShowMap(true)}
+          >
+            <FontAwesomeIcon icon={faLocationDot} />
+          </button>
+        </div>
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.geolocation != customerData?.geolocation &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {typeof originalCustomerData?.geolocation === "object"
+                ? JSON.stringify(originalCustomerData?.geolocation)
+                : originalCustomerData?.geolocation || "(empty)"}
+            </div>
+          )}
       </div>
+
+      {showMap && (
+        <div className="map-modal">
+          <div className="map-modal-content">
+            <button
+              className="close-modal-button"
+              onClick={() => setShowMap(false)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <h3>{t("Select Location")}</h3>
+            <LocationPicker
+              onLocationSelect={() => {}}
+              initialLat={customerData?.geolocation?.x}
+              initialLng={customerData?.geolocation?.y}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

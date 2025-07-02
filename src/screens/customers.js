@@ -414,7 +414,7 @@ function Customers() {
     { key: 'id', header: 'Registration ID' },
     { key: 'erp_cust_id', header: 'ERP ID' },
     { key: 'companyNameEn', header: 'Company' },
-    { key: 'name', header: 'Workflow Name' },
+    { key: 'workflowName', header: 'Workflow Name' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
     { key: 'customerStatus', header: 'Status' }
@@ -659,7 +659,7 @@ function Customers() {
           transformedCustomer.isApprovalMode = false;
         }
         // navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
-        navigate(`/customerDetails`, { state: { customerId: customerId, workflowId: transformedCustomer?.workflowInstanceId, mode: isApprovalMode ? 'edit' : 'add' } });
+        navigate(`/customerDetails`, { state: { customerId: customerId, workflowId: transformedCustomer?.workflowData?.id, workflowInstanceId: transformedCustomer?.workflowInstanceId, mode: isApprovalMode ? 'edit' : 'add' } });
       } else {
         throw new Error(response.data.message || 'Failed to fetch customer contacts');
       }

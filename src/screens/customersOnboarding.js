@@ -124,7 +124,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
       });
   
       try {
-        const response = await fetch(`${API_BASE_URL}/basics-masters?${params.toString()}`, {
+        const response = await fetch(`${API_BASE_URL}/auth/basics-masters?${params.toString()}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
@@ -273,7 +273,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                     const contactTypes = ['finance', 'business', 'purchasing'];
 
                     contactTypesPrimary.forEach(async (type) => {
-                        const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
+                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -289,7 +289,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
 
                     contactTypes.forEach(async (type) => {
 
-                        const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
+                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -300,18 +300,23 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                         });
                     });
 
-                    const res = await fetch(`${API_BASE_URL}/payment-method`, {
+                    const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customerId: result.data.id,
-                            methodDetails: { prePayment: { isAllowed: true }, COD: { isAllowed: true, limit: "5000" }, credit: { 
+                            methodDetails: { 
+                                prePayment: { isAllowed: true }, 
+                                COD: { isAllowed: true, limit: "5000" }, 
+                                credit: { 
                                 [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
                                 [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
                                 [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
                                 [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
                                 [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
-                            }, partialPayment: { isAllowed: true } },
+                            }, 
+                            // partialPayment: { isAllowed: true } 
+                        },
                         }),
                         credentials: 'include',
                     });

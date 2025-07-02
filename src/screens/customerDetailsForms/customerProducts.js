@@ -12,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { debounce, set } from 'lodash';
 import Constants from '../../constants';
 
-function Products(customer) {
+function Products({customer, setTabsHeight}) {
     const [isApprovalMode, setApprovalMode] = useState(false);
     const [products, setProducts] = useState([]); // all products
     const [currentItems, setCurrentItems] = useState([]); // products on current page
@@ -112,6 +112,7 @@ function Products(customer) {
     if (customer?.customer?.id && activeCategory) {
       fetchProducts();
     }
+    setTabsHeight("auto");
   }, [customer, activeCategory, currentPage, isApprovalMode, search]);
 
   const toggleApprovalMode = () => {

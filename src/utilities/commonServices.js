@@ -106,4 +106,64 @@
     return options;
   };
 
+export const getOptionsFromEmployees = async () => {
+    const params = new URLSearchParams({
+      filters: { designation: "sales executive" }, // Properly stringify the filter
+    });
+    const supportStaffDesignation = "sales executive";
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const options = result.data.data.map((item) => {
+        return { name: item.name, employeeId: item.employeeId };
+      });
+      return options;
+    } catch (err) {
+      console.error("Error fetching employee options:", err);
+      return [];
+    }
+  };
+
+  export const getOptionsFromEmployeesWithManager = async (region) => {
+    try {
+      console.log("getOptionsFromEmployeesWithManager #############");
+
+      const response = await fetch(
+        `${API_BASE_URL}/employees/manager-and-employees`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ region: region }),
+        }
+      );
+      if (!response.ok) {
+        console.error(
+          `~~~~~~~~~~~~~~Failed to fetch options for :`,
+          response.statusText
+        );
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const options = result.data.map((item) => {
+        return { name: item.name, employeeId: item.employeeId };
+      });
+      console.log("________________$$$$$$$ ", options);
+      return options;
+    } catch (err) {
+      console.error("Error fetching employee options:", err);
+      return [];
+    }
+  };
+
 

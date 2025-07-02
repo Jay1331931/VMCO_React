@@ -7,12 +7,12 @@ import "../../styles/forms.css";
 import "../../styles/components.css";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const BranchDetailsForm = ({
-  branchId,
+  branchId, // required
   branch,
-  customer,
+  customer, // required
   branchChanges,
   handleBranchFieldChange,
-  inApproval,
+  mode,
   onSave,
   onSubmit,
   onBlock,
@@ -20,11 +20,18 @@ const BranchDetailsForm = ({
 }) => {
   const { t } = useTranslation();
   const [branchDetails, setBranchDetails] = useState({});
+  const [originalBranchDetails, setOriginalBranchDetails] = useState({});
   const [branchContacts, setBranchContacts] = useState([]);
+  const [originalBranchContacts, setOriginalBranchContacts] = useState([]);
   const [hoursDetails, setHoursDetails] = useState({});
+  const [originalHoursData, setOriginalHoursData] = useState({});
+  const [workflowData, setWorkflowData] = useState({});
+  const [isApprovalMode, setIsApprovalMode] = useState(false);
+  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   var updatedBranchData = useRef({});
   var updatedBranchContactsData = useRef({});
   const fetchBranchDetails = async () => {
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${branchId}`,
@@ -68,185 +75,692 @@ const BranchDetailsForm = ({
       console.error("Error fetching contacts:", err);
     }
   };
+  const fetchWorkflowDataOfBranch = async (workflowId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      const workflowDataJson = await response.json();
+      console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+      return workflowDataJson?.data?.workflowData?.updates;
+    } catch (error) {
+      console.error("Error fetching workflow data:", error);
+      throw error;
+    }
+  };
+  const checkIfBranchIsInApproval = async (branchId) => {
+    console.log("Branch Id", branchId);
+    console.log("check approval called");
+    let isAppMode = false;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: branchId,
+          module: "branch",
+        }),
+        credentials: "include",
+      });
+
+      console.log("!!!!!!!", res);
+
+      if (res.ok) {
+        const responseText = await res.text(); // Get raw response text ('t' or 'f')
+        console.log("^^^^^^^", responseText);
+
+        try {
+          // Try to parse as JSON first
+          const data = responseText ? JSON.parse(responseText) : {};
+          console.log("Parsed data:", data);
+          isAppMode = data?.exists === "t"; // Convert to boolean
+          console.log("is approval mode", isAppMode);
+          console.log(
+            `Workflow check result for branch ${branchId}:`,
+            isAppMode
+          );
+          return isAppMode;
+        } catch (parseError) {
+          // If not valid JSON, check if it's a direct 't' or 'f' string
+          console.error("Error parsing response as JSON:", parseError);
+          isAppMode = responseText.trim() === "t";
+          console.log(
+            "Using direct string match, is approval mode:",
+            isAppMode
+          );
+          return isAppMode;
+        }
+      } else {
+        console.log(`Workflow check failed`, res.status);
+        return false;
+      }
+    } catch (err) {
+      console.error("Error fetching workflow instance:", err);
+      return false;
+    }
+
+    // Fallback return - shouldn't reach here, but added for safety
+    return false;
+  };
+
+  // Helper function to parse time range strings
+  const parseTimeRange = (timeRange) => {
+    if (!timeRange) return { from: "09:00", to: "18:00" };
+    const [from, to] = timeRange.split("-");
+    return { from: from || "09:00", to: to || "18:00" };
+  };
+  // Helper function to stringify hours for storage
+  const stringifyHours = (hoursData) => {
+    const result = {
+      operatingHours: {},
+      deliveryHours: {},
+    };
+
+    weekdays.forEach((day) => {
+      result.operatingHours[day] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
+      result.deliveryHours[day] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
+    });
+
+    return JSON.stringify(result);
+  };
+
+  const getDefaultTimeSlotsInStringHours = () => {
+    return weekdays.reduce((acc, day) => {
+      acc[day] = {
+        operating: { from: "09:00", to: "18:00" },
+        delivery: { from: "09:00", to: "18:00" },
+      };
+      return acc;
+    }, {});
+  };
+
+  const getBranchTimeSlotsInStringHours = (hoursData) => {
+    console.log("#### Enter");
+    try {
+      if (hoursData !== null && hoursData !== undefined) {
+        const parsedData = typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
+        let convertedData = {};
+        weekdays.forEach((day) => {
+          convertedData[day] = {
+            operating: parseTimeRange(parsedData.operatingHours?.[day]),
+            delivery: parseTimeRange(parsedData.deliveryHours?.[day]),
+          };
+        });
+        console.log("#### Exit" + JSON.stringify(convertedData));
+        return convertedData;
+      }
+      return getDefaultTimeSlotsInStringHours();
+    } catch (e) {
+      console.error("Error parsing hours data:", e);
+    }
+  };
+
+  const handleHoursChange = (day,type, field, value) => {
+    // const {day, type, field, value} = e.target;
+    const updatedHours = {
+      ...hoursDetails,
+      [day]: {
+        ...hoursDetails[day],
+        [type]: {
+          ...hoursDetails[day][type],
+          [field]: value,
+        },
+      },
+    };
+
+    setHoursDetails(updatedHours);
+    updatedBranchData.current.hours = stringifyHours(updatedHours);
+    // setModifiedDays((prev) => ({ ...prev, [day]: true }));
+    // handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  };
+
+  const applyAllHours = (sourceDay, type) => {
+    const timeToApply = hoursDetails[sourceDay][type];
+    const updatedHours = {
+      ...hoursDetails,
+      ...weekdays.reduce(
+        (acc, day) => ({
+          ...acc,
+          [day]: {
+            ...hoursDetails[day],
+            [type]: timeToApply,
+          },
+        }),
+        {}
+      ),
+    };
+
+    setHoursDetails(updatedHours);
+    updatedBranchData.current.hours = stringifyHours(updatedHours);
+    // setModifiedDays({});
+    // handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      // if (branchId > 0) {
+        // Existing code for fetching data for existing branches
+        const branchData = await fetchBranchDetails();
+        const hoursData = getBranchTimeSlotsInStringHours(branchData?.hours || {});
+        const contactsData = await fetchBranchContacts();
+        const isAppMode = await checkIfBranchIsInApproval(branchId);
+        var temp;
+        if (isAppMode) {
+          const wfData = await fetchWorkflowDataOfBranch(customer?.workflowInstanceId);
+          setWorkflowData(wfData);
+          temp = { ...branchData, ...wfData };
+          setIsApprovalMode(isAppMode);
+        }
+        setBranchDetails(isAppMode && Object.keys(temp?.branch).length > 0 ? {...branchData, ...temp?.branch} : branchData);
+        setOriginalBranchDetails(branchData);
+        setBranchContacts(isAppMode && Object.keys(temp?.contacts).length > 0 ? {...contactsData, ...temp?.contacts} : contactsData);
+        setOriginalBranchContacts(contactsData);
+        setHoursDetails(temp?.branch?.hours ? getBranchTimeSlotsInStringHours(temp?.branch?.hours) : hoursData);
+        setOriginalHoursData(hoursData);
+      // } else if (branchId < 0) {
+      //   // For new branches (negative IDs), use the branch prop directly
+      //   console.log("Initializing new branch with ID:", branchId);
+      //   setBranchDetails(branch || {});
+      //   setOriginalBranchDetails({});
+      //   setBranchContacts([]);
+      //   setOriginalBranchContacts([]);
+      //   setHoursDetails({});
+      //   setIsApprovalMode(false);
+        
+      //   // Initialize updatedBranchData with basic branch info
+      //   updatedBranchData.current = {
+      //     ...branch,
+      //     branchNameEn: branch?.branchNameEn || "",
+      //     branch_name_en: branch?.branch_name_en || "",
+      //     customerId: customer?.id,
+      //     customer_id: customer?.id
+      //   };
+      // }
+    };
+    fetchData();
+  }, [branchId, branch, customer]); // Add dependencies to re-run effect when they change
   const handleBranchDataChange = (e) => {
     const { name, value } = e.target;
     updatedBranchData.current[name] = value;
     setBranchDetails((prev) => ({ ...prev, [name]: value }));
   };
+  const setGeoLocation = (location) => {
+    updatedBranchData.current.geolocation = location;
+    setBranchDetails((prev) => ({...prev, geolocation: location }));
+    console.log("^^^^^^^^", branchDetails)
+  };
+
   const handleBranchContactsDataChange = (e) => {
+    console.log("#####handleBranchContactsDataChange called", e.target);
     const { name, value } = e.target;
+    console.log("#####handleBranchContactsDataChange name, value", name, value);
     updatedBranchContactsData.current[name] = value;
     setBranchContacts((prev) => ({ ...prev, [name]: value }));
   };
 
+  // useEffect(() => {
+  //   const fetchWorkflowData = async () => {
+  //   if (isApprovalMode) {
+  //     const wfData = await fetchWorkflowDataOfBranch(customer?.workflowId);
+  //     setWorkflowData(wfData);
+  //     const temp = { ...branchDetails, ...wfData };
+  //     setBranchDetails(temp);
+  //   }
+  // };
+  // fetchWorkflowData();
+  // }, [customer?.workflowId, isApprovalMode]);
+  const handleSubmit = async (id) => {
+    handleSave(id);
+    // if (!validateChangedFields(branchData, true)) {
+    //   alert(t("Please fill all required fields before submitting."));
+    //   return;
+    // }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-branches/id/${id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch : {
+              branchStatus: "pending",
+              customerId: customer?.id,
+            },
+            contacts: {
+            },
+            
+          }),
+          credentials: "include",
+        }
+      );
+
+      const result = await response.json();
+      function showLoadingScreen(message) {
+        document.body.innerHTML = `
+    <div class="loading-more-container" style="
+      padding: 20px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      gap: 16px;
+    ">
+      <div class="loading-spinner" style="
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      "></div>
+      <div class="loading-more-text">${message}</div>
+    </div>
+    
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  `;
+      }
+
+      // Usage:
+      showLoadingScreen("Updating...");
+      setTimeout(() => window.location.reload(true), 3000);
+    } catch (error) {
+      console.error("Error saving branch:", error);
+    }
+
+    // Create user if primary contact email exists with default password
+    const primaryContactEmail = branchContacts.primaryContactEmail;
+    if (primaryContactEmail) {
+      const userPayload = {
+        email: primaryContactEmail,
+        password: "Pass@123",
+        userType: "customer",
+        roles: ["branch_primary"],
+      };
+
+      try {
+        const userResponse = await fetch(
+          `${API_BASE_URL}/auth/registration/user`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userPayload),
+            credentials: "include",
+          }
+        );
+
+        if (!userResponse.ok) {
+          throw new Error("Failed to create user");
+        }
+
+        const userResult = await userResponse.json();
+        console.log("User created:", userResult);
+      } catch (error) {
+        console.error("Error creating user:", error);
+      }
+    }
+  };
+
   const handleSave = async (id) => {
     const isNewBranch = id < 0; // Negative IDs are temporary
-      if (isNewBranch) {
-        
-        try {
+    if (isNewBranch) {
+      try {
         const response = await fetch(`${API_BASE_URL}/customer-branches`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...updatedBranchData.current,
-            customer_id: customer?.id,
+            customer_id: customer?.id, // Set initial status to 'new'
             isDeliveryChargesApplicable: customer?.isDeliveryChargesApplicable,
           }),
           credentials: "include",
         });
 
-          const result = await response.json();
+        const result = await response.json();
 
-          if (response.ok) {
-            console.log("$$$$ updatedBranchContactsData:", updatedBranchContactsData.current);
-            try {
-              const res = await fetch(
-                `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    ...updatedBranchContactsData.current,
-                    customer_id: customer.id,
-                    branch_id: result.data.id,
-                  }),
-                  credentials: "include",
-                }
-              );
-            } catch (error) {
-              console.error("Error saving contacts for new branch:", error);
-            }
-          }
-
-        } catch (error) {
-          console.error("Error creating new branch:", error);
-        }
-
-      } else {
-        // UPDATE existing branch
-        // console.log("branchPayload:", branchPayload);
-        try {
-          // if (Object.keys(branchPayload).length > 0) {
-          const response =
-            await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...updatedBranchData.current, customerId: customer.id }),
-              credentials: "include",
-            });
-        } catch (error) {
-          console.error("Error updating branch:", error);
-        }
-        // console.log("Contact payload:", contactPayload);
-        // if (Object.keys(contactPayload).length > 0) {
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(updatedBranchContactsData.current),
-              credentials: "include", 
-            }
+        if (response.ok) {
+          console.log(
+            "$$$$ updatedBranchContactsData:",
+            updatedBranchContactsData.current
           );
-        } catch (error) {
-          console.error("Error saving contacts for updated branch:", error);
+          try {
+            const res = await fetch(
+              `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...updatedBranchContactsData.current,
+                  customer_id: customer.id,
+                  branch_id: result.data.id,
+                }),
+                credentials: "include",
+              }
+            );
+          } catch (error) {
+            console.error("Error saving contacts for new branch:", error);
+          }
         }
+      } catch (error) {
+        console.error("Error creating new branch:", error);
       }
+    } else {
+      // UPDATE existing branch
+      // console.log("branchPayload:", branchPayload);
+      try {
+        // if (Object.keys(branchPayload).length > 0) {
+        const response = await fetch(
+          `${API_BASE_URL}/customer-branches/id/${id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              branch: {
+                ...updatedBranchData.current,
+                customerId: customer.id,
+                branchStatus: branchDetails?.branchStatus,
+              },
+              contacts: {
+              },
+            }),
+            credentials: "include",
+          }
+        );
+      } catch (error) {
+        console.error("Error updating branch:", error);
+      }
+      // console.log("Contact payload:", contactPayload);
+      // if (Object.keys(contactPayload).length > 0) {
+      console.log(
+        "$$$$ updatedBranchContactsData:",
+        updatedBranchContactsData.current
+      );
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...updatedBranchContactsData.current }),
+            credentials: "include",
+          }
+        );
+      } catch (error) {
+        console.error("Error saving contacts for updated branch:", error);
+      }
+    }
 
-      // Clear changes for this branch
-      // setBranchChanges(prev => {
-      //     const newChanges = { ...prev };
-      //     delete newChanges[id];
-      //     return newChanges;
-      // });
+    // Clear changes for this branch
+    // setBranchChanges(prev => {
+    //     const newChanges = { ...prev };
+    //     delete newChanges[id];
+    //     return newChanges;
+    // });
 
-      // Refresh data
-      // await fetchBranches();
+    // Refresh data
+    // await fetchBranches();
     // } catch (error) {
     //   console.error("Error saving branch:", error);
     // }
   };
-  useEffect(() => {
-    const fetchData = async () => {
-      const branchData = await fetchBranchDetails();
-      const hoursData = branchData?.hours || {};
-      const contactsData = await fetchBranchContacts();
-      setBranchDetails(branchData);
-      setBranchContacts(contactsData);
-      setHoursDetails(hoursData);
+const handleSaveChanges = async (id) => {
+    // const isNewBranch = id < 0; // Negative IDs are temporary
+    // if (isNewBranch) {
+    //   try {
+    //     const response = await fetch(`${API_BASE_URL}/customer-branches`, {
+    //       method: "POST",
+    //       headers: { "Content-Type": "application/json" },
+    //       body: JSON.stringify({
+    //         ...updatedBranchData.current,
+    //         customer_id: customer?.id, // Set initial status to 'new'
+    //         isDeliveryChargesApplicable: customer?.isDeliveryChargesApplicable,
+    //       }),
+    //       credentials: "include",
+    //     });
+
+    //     const result = await response.json();
+
+    //     if (response.ok) {
+    //       console.log(
+    //         "$$$$ updatedBranchContactsData:",
+    //         updatedBranchContactsData.current
+    //       );
+    //       try {
+    //         const res = await fetch(
+    //           `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
+    //           {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({
+    //               ...updatedBranchContactsData.current,
+    //               customer_id: customer.id,
+    //               branch_id: result.data.id,
+    //             }),
+    //             credentials: "include",
+    //           }
+    //         );
+    //       } catch (error) {
+    //         console.error("Error saving contacts for new branch:", error);
+    //       }
+    //     }
+    //   } catch (error) {
+    //     console.error("Error creating new branch:", error);
+    //   }
+    // } else {
+      // UPDATE existing branch
+      // console.log("branchPayload:", branchPayload);
+      try {
+        // if (Object.keys(branchPayload).length > 0) {
+        const response = await fetch(
+          `${API_BASE_URL}/customer-branches/id/${id}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              branch: {
+              ...updatedBranchData.current,
+              customerId: customer.id,
+              branchStatus: branchDetails?.branchStatus,
+            },
+            contacts: {
+              ...updatedBranchContactsData.current,
+            }
+          }),
+            credentials: "include",
+          }
+        );
+      } catch (error) {
+        console.error("Error updating branch:", error);
+      }
+      // console.log("Contact payload:", contactPayload);
+      // if (Object.keys(contactPayload).length > 0) {
+      // console.log(
+      //   "$$$$ updatedBranchContactsData:",
+      //   updatedBranchContactsData.current
+      // );
+      // try {
+      //   const response = await fetch(
+      //     `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
+      //     {
+      //       method: "POST",
+      //       headers: { "Content-Type": "application/json" },
+      //       body: JSON.stringify({ ...updatedBranchContactsData.current }),
+      //       credentials: "include",
+      //     }
+      //   );
+      // } catch (error) {
+      //   console.error("Error saving contacts for updated branch:", error);
+      // }
+    // }
+
+    // Clear changes for this branch
+    // setBranchChanges(prev => {
+    //     const newChanges = { ...prev };
+    //     delete newChanges[id];
+    //     return newChanges;
+    // });
+
+    // Refresh data
+    // await fetchBranches();
+    // } catch (error) {
+    //   console.error("Error saving branch:", error);
+    // }
+  };
+  const handleApprove = async () => {
+    const mergedData = {
+      updates: { branch:{...workflowData.branch, ...updatedBranchData.current } , contacts: {...workflowData.contacts, ...updatedBranchContactsData.current} },
+      id: branchId,
     };
-    fetchData();
-  }, []);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvedStatus: "approved",
+            comment: "comment",
+            workflowData: mergedData,
+          }),
+          credentials: "include",
+        }
+      );
+
+      // if (response.ok) {
+      //   const result = await response.json();
+      //   navigate("/customers");
+      // } else {
+      //   throw new Error("Failed to submit approval");
+      // }
+    } catch (error) {
+      console.log("Error", error.message);
+    }
+  };
+  const handleReject = async () => {
+    const mergedData = {
+      updates: { branch:{...workflowData.branch, ...updatedBranchData.current } , contacts: {...workflowData.contacts, ...updatedBranchContactsData.current} },
+      id: branchId,
+    };
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvedStatus: "rejected",
+            comment: "comment",
+            workflowData: mergedData,
+          }),
+          credentials: "include",
+        }
+      );
+
+      // if (response.ok) {
+      //   const result = await response.json();
+      //   navigate("/customers");
+      // } else {
+      //   throw new Error("Failed to submit approval");
+      // }
+    } catch (error) {
+      console.log("Error", error.message);
+    }
+  };
+
   return (
     <div className="expanded-form-container">
-      {inApproval && (
+      {/* {isApprovalMode && (
         <div className="approval-notice">
           <h3>{t("Branch is currently under approval")}</h3>
         </div>
-      )}
+      )} */}
 
       {/* Branch Details Section */}
       <BranchDetailsSection
         branch={branchDetails}
+        originalBranch={originalBranchDetails}
         customer={customer}
-        inApproval={inApproval}
+        inApproval={isApprovalMode}
+        workflowId={customer?.workflowId}
+        workflowInstanceId={customer?.workflowInstanceId}
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchDataChange}
+        setGeoLocation={setGeoLocation}
+        mode={mode}
       />
 
       {/* Contact Section */}
       <ContactSection
         branch={branchContacts}
+        originalBranchContacts={originalBranchContacts}
+        branchDetails={branchDetails}
         customer={customer}
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchContactsDataChange}
-        inApproval={inApproval}
+        inApproval={isApprovalMode}
+        workflowInstanceId={customer?.workflowInstanceId}
       />
-
-      {/* Operating Hours */}
-      {branchDetails && hoursDetails ? (
-        <OperatingHours
-          hoursData={hoursDetails}
-          customer={customer}
-          branchId={branch?.id}
-          handleBranchFieldChange={handleBranchDataChange}
-          inApproval={inApproval}
-        />
-      ) : (
-        <div className="loading-section">Loading hours data...</div>
-      )}
+      <OperatingHours
+        hoursData={hoursDetails}
+        originalHoursData={originalHoursData}
+        branchDetails={branchDetails}
+        customer={customer}
+        branchId={branch?.id}
+        handleBranchFieldChange={handleBranchDataChange}
+        inApproval={isApprovalMode}
+        handleHoursChange={handleHoursChange}
+        applyAllHours={applyAllHours}
+        workflowInstanceId={customer?.workflowInstanceId}
+      />
 
       {/* Footer with action buttons */}
       <div className="expanded-form-container-footer">
         <div className="customer-onboarding-form-actions">
           <div className="action-buttons">
-            {branch?.branchStatus === "new" || branch?.isNew ? (
+            {mode === "add" &&
+            (branch?.branchStatus === "new" || branch?.isNew) ? (
               <>
                 <button
                   className="save"
                   onClick={() => handleSave(branch?.id)}
+                  disabled={customer?.isBlocked}
                 >
                   {t("Save")}
                 </button>
                 <button
                   className="save"
-                  onClick={() => onSubmit && onSubmit(branch?.id, branch)}
-                  disabled={branch?.id < 0}
+                  onClick={() => handleSubmit(branch?.id)}
+                  disabled={branch?.id < 0 || customer?.isBlocked}
                 >
                   {t("Submit")}
                 </button>
               </>
             ) : (
               branch?.branchStatus !== "pending" &&
-              !branch?.isNew && (
+              !branch?.isNew && mode === "add" && (
                 <>
                   <button
                     className="save changes"
-                    onClick={() =>
-                      onSave && onSave(branch?.id, branch, "save changes")
+                    onClick={() => handleSaveChanges(branch?.id)}
+                    disabled={
+                      isApprovalMode ||
+                      branch?.branchStatus === "blocked" ||
+                      customer?.isBlocked
                     }
-                    disabled={inApproval || branch?.branchStatus === "blocked"}
                   >
                     {t("Save Changes")}
                   </button>
@@ -254,7 +768,7 @@ const BranchDetailsForm = ({
                   {branch?.branchStatus !== "blocked" ? (
                     <button
                       className="block"
-                      disabled={inApproval}
+                      disabled={isApprovalMode || customer?.isBlocked}
                       onClick={() => onBlock && onBlock(branch?.id, branch)}
                     >
                       {t("Block")}
@@ -262,14 +776,24 @@ const BranchDetailsForm = ({
                   ) : (
                     <button
                       className="block"
-                      disabled={inApproval}
+                      disabled={isApprovalMode || customer?.isBlocked}
                       onClick={() => onUnblock && onUnblock(branch?.id, branch)}
                     >
                       {t("Unblock")}
                     </button>
                   )}
                 </>
-              )
+              ))}
+
+            {mode === "edit" && isApprovalMode && (
+              <button className="approve" onClick={() => handleApprove()}>
+                {t("Approve")}
+              </button>
+            )}
+            {mode === "edit" && isApprovalMode && (
+              <button className="reject" onClick={() => handleReject()}>
+                {t("Reject")}
+              </button>
             )}
           </div>
         </div>

@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import "../../styles/forms.css";
 const ContactRow = ({ label, isRequired, onChange }) => {
   const { t } = useTranslation();
   return (
@@ -42,12 +43,18 @@ const ContactRow = ({ label, isRequired, onChange }) => {
 
 const ContactSection = ({
   branch,
+  originalBranchContacts,
+  branchDetails,
   customer,
   branchChanges,
   handleBranchFieldChange,
   inApproval,
+  workflowInstanceId,
 }) => {
   const { t } = useTranslation();
+  const [workflowData, setWorkflowData] = useState(null);
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
   let customerFormMode;
   if (inApproval) {
     customerFormMode = "custDetailsEdit";
@@ -105,10 +112,33 @@ const ContactSection = ({
   // const handleContactChange = (fieldName, value) => {
   //   handleBranchFieldChange(branch.id, fieldName, value);
   // };
-useEffect(() => {
-  // This effect can be used to perform any side effects when the component mounts or updates
-    console.log("ContactSection mounted or updated");
-  });
+  const fetchWorkflowDataOfBranch = async (workflowId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      const workflowDataJson = await response.json();
+      console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+      return workflowDataJson?.data?.workflowData?.updates;
+    } catch (error) {
+      console.error("Error fetching workflow data:", error);
+      throw error;
+    }
+  };
+  useEffect(() => {
+    const fetchWorkflowData = async () => {
+      if (inApproval) {
+        const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
+        setWorkflowData(wfData?.contacts);
+      }
+    };
+    fetchWorkflowData();
+  }, [workflowInstanceId, inApproval]);
   return (
     <div className="form-section">
       <h3>{t("Personal Details")}</h3>
@@ -120,23 +150,39 @@ useEffect(() => {
               {isRequired && <span className="required-field">*</span>}
             </label>
             <div className="form-row">
-              {fields.map(({ name, field }) => (
-                <div className="form-group" key={field}>
-                  <input
-                    placeholder={t(name)}
-                    value={branch[field]}
+              {fields.map(({ name, field }) => {
+                // const hasUpdate = (inApproval && workflowData ? field.name in workflowData : false) || (inApproval && branchDetails.branchStatus === "pending");
+                const hasUpdate = (inApproval && branch?.[field] !==
+                  originalBranchContacts?.[field]) || (inApproval && branchDetails?.branchStatus === "pending");
+                return (
+                  <div className="form-group" key={field}>
+                    <input
+                      // type="text"
+                      placeholder={t(name)}
+                      name={field}
+                      value={branch?.[field]}
                     required={isRequired}
                     onChange={handleBranchFieldChange}
-                    // disabled={
-                    //   customerFormMode === "custDetailsEdit" ||
-                    //   (label === "Primary Contact" &&
-                    //     name === "Email" &&
-                    //     branch?.branchStatus !== "new" &&
-                    //     !branch?.isNew)
-                    // }
+                    style={
+                              hasUpdate
+                                ? {
+                                    backgroundColor: "#fff8e1",
+                                  }
+                                : {}
+                            }
+                    disabled={
+                    (customerFormMode === "custDetailsEdit" &&
+                      !hasUpdate) || (branchDetails?.branchStatus !== "new" && field === "primaryContactEmail")
+                  }
                   />
-                </div>
-              ))}
+                  {hasUpdate && (
+                    <div className="current-value">
+                      {t("Previous")}:{" "}
+                      {originalBranchContacts?.[field] || "(empty)"}
+                    </div>
+                  )}
+                </div>)
+              })}
             </div>
           </div>
         </div>

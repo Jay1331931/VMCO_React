@@ -2957,10 +2957,10 @@ function CustomersDetails() {
                                     </div>
                                   )}
                                   {/* {console.log(field.name)}
-              {console.log(isV(field.name))}
-              {console.log(isE(field.name))}
-              {console.log("customer",customer)}
-              {console.log("formdata",formData)} */}
+                 {console.log(isV(field.name))}
+                 {console.log(isE(field.name))}
+                  {console.log("customer",customer)}
+                 {console.log("formdata",formData)} */}
                                   {/* {console.log("customer", customer)} */}
                                   {console.log(formErrors)}
                                 </>

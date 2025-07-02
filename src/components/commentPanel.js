@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 import { faMessage } from '@fortawesome/free-regular-svg-icons';
@@ -26,6 +26,16 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
+  useEffect(() => {
+    const setInitialComments = () => {
+      if (externalComments && externalComments.length > 0) {
+      setComments(externalComments);
+      setCount(externalComments.length);
+      }
+    }
+    setInitialComments();
+  }, [externalComments]);
 
   const handleAddComment = () => {
     if (commentText.trim()) {
@@ -99,7 +109,7 @@ const CommentPopup = ({ isOpen, setIsOpen, onAddComment, showCommentForm = true,
                 <div className="comment-content">
                   <div className="comment-meta">
                     <p>{`${comment.date || formatDate(comment?.actionTimestamp, 'YYYY-MM-DD HH:MM')}`}</p>
-                    <p>{t(comment.action || 'Comment')}</p>
+                    <p>{t(comment.status || 'Comment')}</p>
                   </div>
                   <div className='comment-text'>{comment.message || comment.comment}</div>
                 </div>

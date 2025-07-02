@@ -6,7 +6,7 @@ const parseTimeRange = (timeRange) => {
   return { from, to };
 };
 
-const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange, inApproval }) => {
+const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer, branchId, handleBranchFieldChange, inApproval, handleHoursChange, applyAllHours, workflowInstanceId }) => {
   const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const { t } = useTranslation();
   const [hours, setHours] = useState({});
@@ -19,130 +19,153 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
     customerFormMode = "custDetailsAdd";
   }
   // Helper function to parse time range strings
-  const parseTimeRange = (timeRange) => {
-    if (!timeRange) return { from: "09:00", to: "18:00" };
-    const [from, to] = timeRange.split("-");
-    return { from: from || "09:00", to: to || "18:00" };
-  };
+  // const parseTimeRange = (timeRange) => {
+  //   if (!timeRange) return { from: "09:00", to: "18:00" };
+  //   const [from, to] = timeRange.split("-");
+  //   return { from: from || "09:00", to: to || "18:00" };
+  // };
 
   // Helper function to stringify hours for storage
-  const stringifyHours = (hoursData) => {
-    const result = {
-      operatingHours: {},
-      deliveryHours: {},
-    };
+  // const stringifyHours = (hoursData) => {
+  //   const result = {
+  //     operatingHours: {},
+  //     deliveryHours: {},
+  //   };
 
-    weekdays.forEach((day) => {
-      result.operatingHours[day] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
-      result.deliveryHours[day] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
-    });
+  //   weekdays.forEach((day) => {
+  //     result.operatingHours[day] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
+  //     result.deliveryHours[day] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
+  //   });
 
-    return JSON.stringify(result);
-  };
+  //   return JSON.stringify(result);
+  // };
 
-  const getDefaultTimeSlotsInStringHours = () => {
-    return weekdays.reduce((acc, day) => {
-      acc[day] = {
-        operating: { from: "09:00", to: "18:00" },
-        delivery: { from: "09:00", to: "18:00" },
-      };
-      return acc;
-    }, {});
-  };
+  // const getDefaultTimeSlotsInStringHours = () => {
+  //   return weekdays.reduce((acc, day) => {
+  //     acc[day] = {
+  //       operating: { from: "09:00", to: "18:00" },
+  //       delivery: { from: "09:00", to: "18:00" },
+  //     };
+  //     return acc;
+  //   }, {});
+  // };
 
-  const getBranchTimeSlotsInStringHours = () => {
-    console.log("#### Enter");
-    try {
-      if (hoursData !== null && hoursData !== undefined) {
-        const parsedData = typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
-        let convertedData = {};
-        weekdays.forEach((day) => {
-          convertedData[day] = {
-            operating: parseTimeRange(parsedData.operatingHours?.[day]),
-            delivery: parseTimeRange(parsedData.deliveryHours?.[day]),
-          };
-        });
-        console.log("#### Exit" + JSON.stringify(convertedData));
-        return convertedData;
-      }
-      return getDefaultTimeSlotsInStringHours();
-    } catch (e) {
-      console.error("Error parsing hours data:", e);
-    }
-  };
+  // const getBranchTimeSlotsInStringHours = () => {
+  //   console.log("#### Enter");
+  //   try {
+  //     if (hoursData !== null && hoursData !== undefined) {
+  //       const parsedData = typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
+  //       let convertedData = {};
+  //       weekdays.forEach((day) => {
+  //         convertedData[day] = {
+  //           operating: parseTimeRange(parsedData.operatingHours?.[day]),
+  //           delivery: parseTimeRange(parsedData.deliveryHours?.[day]),
+  //         };
+  //       });
+  //       console.log("#### Exit" + JSON.stringify(convertedData));
+  //       return convertedData;
+  //     }
+  //     return getDefaultTimeSlotsInStringHours();
+  //   } catch (e) {
+  //     console.error("Error parsing hours data:", e);
+  //   }
+  // };
   //getBranchTimeSlotsInStringHours();
-  useEffect(() => {
-    console.log("~~~~$$ useEffect hoursData", hoursData);
-    if (hoursData) {
-      const hoursToBeSet = getBranchTimeSlotsInStringHours();
-      setHours(hoursToBeSet);
-    } else setHours(getDefaultTimeSlotsInStringHours());
-  }, [hoursData]);
+  // useEffect(() => {
+  //   console.log("~~~~$$ useEffect hoursData", hoursData);
+  //   if (hoursData) {
+  //     const hoursToBeSet = getBranchTimeSlotsInStringHours();
+  //     setHours(hoursToBeSet);
+  //   } else setHours(getDefaultTimeSlotsInStringHours());
+  // }, [hoursData]);
 
   const [modifiedDays, setModifiedDays] = useState({});
   const [activeField, setActiveField] = useState(null);
   const [originalValues, setOriginalValues] = useState({});
 
-  const handleHoursChange = (day, type, field, value) => {
-    const updatedHours = {
-      ...hours,
-      [day]: {
-        ...hours[day],
-        [type]: {
-          ...hours[day][type],
-          [field]: value,
-        },
-      },
-    };
+  // const handleHoursChange = (day, type, field, value) => {
+  //   const updatedHours = {
+  //     ...hours,
+  //     [day]: {
+  //       ...hours[day],
+  //       [type]: {
+  //         ...hours[day][type],
+  //         [field]: value,
+  //       },
+  //     },
+  //   };
 
-    setHours(updatedHours);
-    setModifiedDays((prev) => ({ ...prev, [day]: true }));
-    handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
-  };
+  //   setHours(updatedHours);
+  //   setModifiedDays((prev) => ({ ...prev, [day]: true }));
+  //   handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  // };
 
-  const applyAllHours = (sourceDay, type) => {
-    const timeToApply = hours[sourceDay][type];
-    const updatedHours = {
-      ...hours,
-      ...weekdays.reduce(
-        (acc, day) => ({
-          ...acc,
-          [day]: {
-            ...hours[day],
-            [type]: timeToApply,
-          },
-        }),
-        {}
-      ),
-    };
+  // const applyAllHours = (sourceDay, type) => {
+  //   const timeToApply = hours[sourceDay][type];
+  //   const updatedHours = {
+  //     ...hours,
+  //     ...weekdays.reduce(
+  //       (acc, day) => ({
+  //         ...acc,
+  //         [day]: {
+  //           ...hours[day],
+  //           [type]: timeToApply,
+  //         },
+  //       }),
+  //       {}
+  //     ),
+  //   };
 
-    setHours(updatedHours);
-    setModifiedDays({});
-    handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
-  };
+  //   setHours(updatedHours);
+  //   setModifiedDays({});
+  //   handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  // };
 
-  const handleCancel = () => {
-    if (activeField) {
-      const [day, type, field] = activeField.split("-");
-      const originalValue = originalValues[activeField];
+  // const handleCancel = () => {
+  //   if (activeField) {
+  //     const [day, type, field] = activeField.split("-");
+  //     const originalValue = originalValues[activeField];
 
-      const updatedHours = {
-        ...hours,
-        [day]: {
-          ...hours[day],
-          [type]: {
-            ...hours[day][type],
-            [field]: originalValue,
-          },
-        },
-      };
+  //     const updatedHours = {
+  //       ...hours,
+  //       [day]: {
+  //         ...hours[day],
+  //         [type]: {
+  //           ...hours[day][type],
+  //           [field]: originalValue,
+  //         },
+  //       },
+  //     };
 
-      setHours(updatedHours);
-      setActiveField(null);
-      handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
-    }
-  };
-
+  //     setHours(updatedHours);
+  //     setActiveField(null);
+  //     handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  //   }
+  // };
+// const fetchWorkflowDataOfBranch = async (workflowId) => {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
+//       method: "GET",
+//       headers: { "Content-Type": "application/json" },
+//       credentials: "include",
+//     });
+//     const workflowDataJson = await response.json();
+//     console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+//     return workflowDataJson?.data?.workflowData?.updates;
+//   } catch (error) {
+//     console.error("Error fetching workflow data:", error);
+//     throw error;
+//   }
+// };
+//   useEffect(() => {
+//     const fetchWorkflowData = async () => {
+//     if (inApproval) {
+//       const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
+//       // setWorkflowData(wfData?.branch);
+//     }
+//   };
+//   fetchWorkflowData();
+//   }, [workflowInstanceId, inApproval]);
   const formatDayName = (day) => day.charAt(0).toUpperCase() + day.slice(1);
 
   return (
@@ -160,7 +183,9 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
           </tr>
         </thead>
         <tbody>
-          {weekdays.map((day) => (
+          {weekdays.map((day) => {
+            
+            return(
             <tr key={day} className={day === "friday" ? "friday-row" : ""}>
               <td>{t(formatDayName(day))}</td>
 
@@ -169,9 +194,10 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
                 <TimeInputGroup
                   day={day}
                   type='operating'
-                  time={hours[day]?.operating}
+                  time={hoursData[day]?.operating}
                   isActive={activeField}
-                  isModified={modifiedDays[day]}
+                  inApproval={inApproval}
+                  isModified={hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending"}
                   onChange={handleHoursChange}
                   onFocus={(field, value) => {
                     setActiveField(`${day}-operating-${field}`);
@@ -183,6 +209,11 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
                   onApplyAll={() => applyAllHours(day, "operating")}
                   customerFormMode={customerFormMode}
                 />
+                {inApproval && (hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending") && (
+                  <div className="current-value">
+                  Previous: {originalHoursData[day]?.operating?.from || "09:00"} - {originalHoursData[day]?.operating?.to || "18:00"}
+                </div>
+                )} 
               </td>
 
               {/* Delivery Hours */}
@@ -190,9 +221,10 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
                 <TimeInputGroup
                   day={day}
                   type='delivery'
-                  time={hours[day]?.delivery}
+                  time={hoursData[day]?.delivery}
                   isActive={activeField}
-                  isModified={modifiedDays[day]}
+                  inApproval={inApproval}
+                  isModified={hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending"}
                   onChange={handleHoursChange}
                   onFocus={(field, value) => {
                     setActiveField(`${day}-delivery-${field}`);
@@ -204,15 +236,20 @@ const OperatingHours = ({ hoursData, customer, branchId, handleBranchFieldChange
                   onApplyAll={() => applyAllHours(day, "delivery")}
                   customerFormMode={customerFormMode}
                 />
+                {inApproval && (hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending") && (
+                  <div className="current-value">
+                  Previous: {originalHoursData[day]?.delivery?.from || "09:00"} - {originalHoursData[day]?.delivery?.to || "18:00"}
+                </div>
+                )} 
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
     </div>
   );
 };
-const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFocus, onApplyAll, customerFormMode }) => {
+const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onChange, onFocus, onApplyAll, customerFormMode }) => {
   return (
     <div className={`time-input-group ${day === "friday" ? "friday-time-input-group" : ""}`}>
       <input
@@ -221,7 +258,14 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
         onChange={(e) => onChange(day, type, "from", e.target.value)}
         onFocus={() => onFocus("from", time?.from)}
         onBlur={() => {}}
-        disabled={customerFormMode === "custDetailsEdit"}
+        disabled={inApproval && !isModified}
+        style={
+                              inApproval && isModified
+                                ? {
+                                    backgroundColor: "#fff8e1",
+                                  }
+                                : {}
+                            }
       />
       <span>-</span>
       <input
@@ -230,7 +274,14 @@ const TimeInputGroup = ({ day, type, time, isActive, isModified, onChange, onFoc
         onChange={(e) => onChange(day, type, "to", e.target.value)}
         onFocus={() => onFocus("to", time?.to)}
         onBlur={() => {}}
-        disabled={customerFormMode === "custDetailsEdit"}
+        disabled={inApproval && !isModified}
+        style={
+                              inApproval && isModified
+                                ? {
+                                    backgroundColor: "#fff8e1",
+                                  }
+                                : {}
+                            }
       />
 
       {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (

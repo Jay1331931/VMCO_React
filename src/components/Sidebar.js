@@ -72,16 +72,12 @@ function Sidebar({ children, title }) {
     }, {});
     let isApprovalMode;
     try {
-      const res = fetch(
-        `${API_BASE_URL}/workflow-instance/check/id/${
-          transformedCustomer?.id
-        }/module/${"customer"}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const res = fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: customer?.id, module: "customer" }),
+        credentials: "include",
+      });
       if (res.ok) {
         isApprovalMode = true;
       }

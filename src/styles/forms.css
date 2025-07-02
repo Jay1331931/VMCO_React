@@ -651,11 +651,10 @@
 }
 
 .uploaded-files-container {
-  margin-top: 10px;
-  border: 1px solid #eee;
+  width: max-content;
+
   border-radius: 4px;
   padding: 10px;
-  background-color: #f9f9f9;
 }
 
 .customers .error {
@@ -1361,6 +1360,7 @@ td.file-display-cell {
   color: #666;
   margin-top: 4px;
   font-style: italic;
+  text-align: left;
 }
 
 @media (max-width: 768px) {
