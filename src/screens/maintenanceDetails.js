@@ -986,8 +986,8 @@ function MaintenanceDetails() {
                 <input
                   value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
                   readOnly
-                  style={{ cursor: isE("branch") ? 'pointer' : 'default' }}
-                  onClick={() => isE("branch") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
+                  style={{ cursor: isE("branchName") ? 'pointer' : 'default' }}
+                  onClick={() => isE("branchName") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
                   placeholder={
                     user?.userType === 'customer'
                       ? t("Click to select branch")
@@ -1077,6 +1077,20 @@ function MaintenanceDetails() {
                 />
               </div>
             )}
+            {isV('maintenanceCharges') && (
+              <div className='maintenance-details-field'>
+                <label>{t("Maintenance Charges")}</label>
+                <input
+                  id='maintenanceCharges'
+                  name='maintenanceCharges'
+                  type='string'
+                  onChange={handleInputChange}
+                  value={ticket.maintenanceCharges || ''}
+                  disabled={!isE("maintenanceCharges")}
+                  placeholder={formMode === 'add' ? t("Auto-calculated") : ""}
+                />
+              </div>
+            )}
             {isV('createdDate') ? (
               <div className='maintenance-details-field'>
                 <label>{t("Created Date")}</label>
@@ -1155,19 +1169,6 @@ function MaintenanceDetails() {
               )}
             </div>
           )}
-          {/* Maintenance Charges Field */}
-          <div className='maintenance-details-field'>
-            <label>{t("Maintenance Charges")}</label>
-            <input style={{ width: "240px" }}
-              id='maintenanceCharges'
-              name='maintenanceCharges'
-              type='string'
-              onChange={handleInputChange}
-              value={ticket.maintenanceCharges || ''}
-              disabled={!isE("maintenanceCharges")}
-              placeholder={formMode === 'add' ? t("Auto-calculated after warranty date selection") : ""}
-            />
-          </div>
         </div>
       </div>
       <div className='support-details-footer'>

@@ -52,21 +52,21 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Helper function to convert payment percentage from decimal to dropdown format
 const convertPaymentPercentageToDropdown = (paymentPercentage) => {
   if (!paymentPercentage) return '';
-  
+
   // Convert string to number for comparison
   const numValue = parseFloat(paymentPercentage);
-  
+
   if (numValue === 100 || numValue === 100.00) {
     return '100%';
   } else if (numValue === 30 || numValue === 30.00) {
     return '30%';
   }
-  
+
   // If it's already in percentage format, return as is
   if (typeof paymentPercentage === 'string' && paymentPercentage.includes('%')) {
     return paymentPercentage;
   }
-  
+
   return '';
 };
 
@@ -88,8 +88,8 @@ function OrderDetails() {
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
   // Get pre-fetched sales order lines from navigation state with safety check
-  const salesOrderLinesFromNav = (orderFromNav && orderFromNav.salesOrderLines && Array.isArray(orderFromNav.salesOrderLines)) 
-    ? orderFromNav.salesOrderLines 
+  const salesOrderLinesFromNav = (orderFromNav && orderFromNav.salesOrderLines && Array.isArray(orderFromNav.salesOrderLines))
+    ? orderFromNav.salesOrderLines
     : [];
   // Detect if coming from approval mode
   const fromApproval = location.state?.fromApproval;
@@ -120,7 +120,7 @@ function OrderDetails() {
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [showBranchPopup, setShowBranchPopup] = useState(false);
   const [popupImage, setPopupImage] = useState(null);
-  const [nextOrderId, setNextOrderId] = useState('');  const [saving, setSaving] = useState(false); // New saving state
+  const [nextOrderId, setNextOrderId] = useState(''); const [saving, setSaving] = useState(false); // New saving state
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
@@ -138,7 +138,7 @@ function OrderDetails() {
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
     Constants.CATEGORY.VMCO_CONSUMABLES
-  ];const paymentPercentageOptions = [
+  ]; const paymentPercentageOptions = [
     { label: '100%', value: '100%' },
     { label: '30%', value: '30%' },
   ];
@@ -182,10 +182,10 @@ function OrderDetails() {
   }, [formMode]);
   useEffect(() => {
     if (formMode === 'add') return;
-    
+
     console.log('Loading sales order lines - orderFromNav.id:', orderFromNav.id);
     console.log('Pre-fetched salesOrderLinesFromNav:', salesOrderLinesFromNav);
-      // If sales order lines were already provided from navigation, use them and skip fetching
+    // If sales order lines were already provided from navigation, use them and skip fetching
     if (salesOrderLinesFromNav && Array.isArray(salesOrderLinesFromNav) && salesOrderLinesFromNav.length > 0) {
       console.log('Using pre-fetched sales order lines:', salesOrderLinesFromNav.length, 'items');
       const processedProducts = salesOrderLinesFromNav.map(product => ({
@@ -194,25 +194,25 @@ function OrderDetails() {
         productName: product.productName || product.product_name || product.erp_prod_id,
         quantity: product.quantity,
       }));
-      
+
       // Update formData with pre-fetched products
       setFormData(prev => ({
         ...prev,
         products: processedProducts
       }));
-      
+
       setOriginalProducts(processedProducts);
       console.log('Successfully loaded pre-fetched sales order lines:', processedProducts);
       return;
     }
-    
+
     // If no pre-fetched data, fetch from API
     const fetchOrderProducts = async () => {
       if (!orderFromNav.id) {
         console.log('No order ID available, skipping sales order lines fetch');
         return;
       }
-      
+
       console.log('Fetching sales order lines from API for order ID:', orderFromNav.id);
       try {
         const params = new URLSearchParams({
@@ -239,7 +239,7 @@ function OrderDetails() {
 
         const result = await response.json();
         console.log('Sales order lines API response:', result);
-        
+
         if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
           // Map the product data to ensure we use productName instead of erpProdId
           const processedProducts = result.data.data.map(product => ({
@@ -278,7 +278,7 @@ function OrderDetails() {
         }));
         setOriginalProducts([]);
       }
-    };    fetchOrderProducts();
+    }; fetchOrderProducts();
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode, (salesOrderLinesFromNav ? salesOrderLinesFromNav.length : 0)]); // Use length with safety check
 
@@ -357,7 +357,7 @@ function OrderDetails() {
     if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
       // Check if credit payment is allowed for the customer
       const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId);
-      
+
       if (isCreditAllowed) {
         // Automatically select credit payment method
         console.log('Auto-selecting Credit payment method as it is allowed for customer');
@@ -388,8 +388,8 @@ function OrderDetails() {
       const fieldsToUpdate = [
         'erpCustId', 'erpBranchId', 'orderBy', 'entity',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
-        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'      ]; const payload = {};    // Check if category is VMCO Machines
-      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();      fieldsToUpdate.forEach(field => {
+        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion']; const payload = {};    // Check if category is VMCO Machines
+      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase(); fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === 'paymentPercentage') {
             payload[field] = formData[field] ?
@@ -397,9 +397,11 @@ function OrderDetails() {
                 formData[field] === '30%' ? '30.00' : '0.00') : '0.00';
           } else if (field === 'paymentMethod' && isVmcoMachinesCategory) {
             // Always set payment method to 'Pre Payment' for VMCO Machines category
-            payload[field] = 'Pre Payment';          } else if (field === 'status' && formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+            payload[field] = 'Pre Payment';
+          } else if (field === 'status' && formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
             // Set status to 'Pending' for vmco entity
-            payload[field] = 'Pending';          } else if (field === 'expectedDeliveryDate') {
+            payload[field] = 'Pending';
+          } else if (field === 'expectedDeliveryDate') {
             // Handle date fields - convert empty strings to null to avoid database errors
             payload[field] = safeDateValue(formData[field]);
           } else {
@@ -414,17 +416,17 @@ function OrderDetails() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
         credentials: 'include',
-      });      if (!orderResponse.ok) {
+      }); if (!orderResponse.ok) {
         const errorData = await orderResponse.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Server response:', errorData);
-        
+
         // Show user-friendly error message
         Swal.fire({
           icon: 'error',
           title: t('Error'),
           text: errorData.details || errorData.message || `Failed to update order: ${orderResponse.statusText}`,
         });
-        
+
         setSaving(false);
         return;
       }
@@ -545,7 +547,8 @@ function OrderDetails() {
           .map(product => {
             const productId = product.id || product.productId;
             console.log(`Deleting removed product ID ${productId} from order`);
-            return deleteSalesOrderLine(formData.id, productId);          });
+            return deleteSalesOrderLine(formData.id, productId);
+          });
 
         // Wait for all delete operations to complete
         if (deletePromises.length > 0) {
@@ -555,7 +558,7 @@ function OrderDetails() {
         } else {
           console.log('No products were removed from the order');
         }
-      }        
+      }
       // Refresh order details after update      await getOrderById(formData.id);        // Check if this is a VMCO Machines order that needs discount workflow approval
       if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
         (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
@@ -575,7 +578,7 @@ function OrderDetails() {
       }
 
       setIsEditMode(false);
-      
+
       // Show specific success message based on whether products were deleted
       if (productsDeleted) {
         Swal.fire({
@@ -854,7 +857,7 @@ function OrderDetails() {
           };
         });
 
-        console.log('Submitting products payload:', productsPayload);        if (productsPayload.length === 0) {
+        console.log('Submitting products payload:', productsPayload); if (productsPayload.length === 0) {
           console.warn('No valid products to submit');
           Swal.fire({
             icon: 'info',
@@ -907,7 +910,8 @@ function OrderDetails() {
             console.log(`- formData.customerId: ${formData.customerId}`);
 
             await triggerDiscountWorkflow(result.data.id, formData.customerId);
-          } else {            console.log('Skipping discount workflow creation in order creation because conditions failed:');
+          } else {
+            console.log('Skipping discount workflow creation in order creation because conditions failed:');
             console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
             console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
             console.log(`- has customerID: ${Boolean(formData.customerId)}`);
@@ -1420,148 +1424,147 @@ function OrderDetails() {
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-// Function to handle Product Stock Availability
-const handleStack = async (productId,productName) => {
- try
-  {
-    setInventoryLoading(true);
-    const {data} = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
-      {withCredentials: true});
+  // Function to handle Product Stock Availability
+  const handleStack = async (productId, productName) => {
+    try {
+      setInventoryLoading(true);
+      const { data } = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
+        { withCredentials: true });
 
       setProductName(productName);
       setInventoryData(data?.details || []);
       setInventoryLoading(false);
       setShowInventory(true);
-  }
-  catch (error) {
-    console.error('Error fetching stock information:', error);
-    Swal.fire({
-      icon: 'error',
-      title: t('Error Fetching Stock'),
-      text: t('Failed to fetch stock information for the product.'),
-      confirmButtonText: t('OK')
-    });
-  }
-  finally {
-    setInventoryLoading(false);
-  }
-  
-}
-// Table columns
-const columns = [
-  { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
-  {
-    key: 'productName',
-    header: () => t('Product Name'),
-    render: (row) =>
-      i18n.language === 'ar'
-        ? (row.productNameLc || row.product_name_lc || row.productName)
-        : (row.productName || row.product_name_en || row.productNameLc),
-    include: isV('productNameCol'),
-  },
-  {
-    key: 'quantity',
-    header: () => t('Quantity'),
-    render: (row) => (
-      <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <QuantityController
-          itemId={row.id || row.product_id}
-          quantity={row.quantity}
-          moq={Number(row.moq) || 1}
-          minQuantity={Number(row.moq) || 1}
-          disabled={!isE('products')}
-          onQuantityChange={(_, delta) => {
-            if (!isE('products')) return;
-            const idx = formData.products.findIndex(
-              p => (p.id || p.product_id) === (row.id || row.product_id)
-            );
-            if (idx !== -1) {
-              const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
-              const moq = Number(formData.products[idx].moq) || 1;
-              const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
-              handleQuantityChange(idx, newQty);
-            }
-          }}
-          onInputChange={(_, value) => {
-            if (!isE('products')) return;
-            const idx = formData.products.findIndex(
-              p => (p.id || p.product_id) === (row.id || row.product_id)
-            );
-            if (idx !== -1) {
-              const moq = Number(formData.products[idx].moq) || 1;
-              handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
-            }
-          }}
-        />
-        {isV('stock') && (<span>
-          <button
-            type="button"
-            style={{
-              background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
-              borderRadius: '4px',
-              fontSize: '12px',
-              padding: '2px 8px',
-              marginLeft: '6px',
-              marginRight: '6px',
-              cursor: 'pointer'
-            }}
-            title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-            onClick={() =>handleStack(row.id , i18n.language === 'ar'
-        ? (row.productNameLc || row.product_name_lc || row.productName)
-        : (row.productName || row.product_name_en || row.productNameLc))
-              // Swal.fire({
-              //   title: t('Stock Information'),
-              //   text: t(`Showing stock for ${row.productName || row.id}`),
-              //   icon: 'info',
-              //   confirmButtonText: t('OK')
+    }
+    catch (error) {
+      console.error('Error fetching stock information:', error);
+      Swal.fire({
+        icon: 'error',
+        title: t('Error Fetching Stock'),
+        text: t('Failed to fetch stock information for the product.'),
+        confirmButtonText: t('OK')
+      });
+    }
+    finally {
+      setInventoryLoading(false);
+    }
 
-              //   //  alert(`Show stock for ${row.productName || row.id}`)
-              // })
-              }
-          >
-            {t('Stock')}
-          </button>
-        </span>)}
-        {InventoryLoading &&<LoadingSpinner/>}
-      </div>
-    ),
-    include: isV('quantityCol'),
-  },
-  {
-    key: 'unit',
-    header: () => t('Unit'),
-    render: (row) => row.unit,
-    include: isV('unitCol'),
-  },
-  {
-    key: 'unitPrice',
-    header: () => t('Unit Price (SAR)'),
-    render: (row) => {
-      const price = parseFloat(row.unitPrice);
-      return price.toFixed(2);
+  }
+  // Table columns
+  const columns = [
+    { key: 'id', header: () => t('Product ID'), include: isV('productIdCol') },
+    {
+      key: 'productName',
+      header: () => t('Product Name'),
+      render: (row) =>
+        i18n.language === 'ar'
+          ? (row.productNameLc || row.product_name_lc || row.productName)
+          : (row.productName || row.product_name_en || row.productNameLc),
+      include: isV('productNameCol'),
     },
-    include: isV('unitPriceCol'),
-  },
-  // {
-  //   key: 'sugarTaxPrice',
-  //   header: () => t('Sugar Tax'),
-  //   render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
-  //   include: isV('sugarTaxPriceCol'),
-  // },
-  {
-    key: 'vatPercentage',
-    header: () => t('VAT'),
-    render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
-    include: isV('vatPercentageCol'),
-  },
-  {
-    key: 'netAmount',
-    header: () => t('Net Amount (SAR)'),
-    render: (row) => parseFloat(row.netAmount).toFixed(2),
-    include: isV('netAmountCol'),
-  },
-  ...(isE('deleteCol') ? [{ key: 'actions', header: () => t('Actions') }] : [])
-];
+    {
+      key: 'quantity',
+      header: () => t('Quantity'),
+      render: (row) => (
+        <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <QuantityController
+            itemId={row.id || row.product_id}
+            quantity={row.quantity}
+            moq={Number(row.moq) || 1}
+            minQuantity={Number(row.moq) || 1}
+            disabled={!isE('products')}
+            onQuantityChange={(_, delta) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
+                const moq = Number(formData.products[idx].moq) || 1;
+                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
+                handleQuantityChange(idx, newQty);
+              }
+            }}
+            onInputChange={(_, value) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const moq = Number(formData.products[idx].moq) || 1;
+                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
+              }
+            }}
+          />
+          {isV('stock') && (<span>
+            <button
+              type="button"
+              style={{
+                background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
+                borderRadius: '4px',
+                fontSize: '12px',
+                padding: '2px 8px',
+                marginLeft: '6px',
+                marginRight: '6px',
+                cursor: 'pointer'
+              }}
+              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+              onClick={() => handleStack(row.id, i18n.language === 'ar'
+                ? (row.productNameLc || row.product_name_lc || row.productName)
+                : (row.productName || row.product_name_en || row.productNameLc))
+                // Swal.fire({
+                //   title: t('Stock Information'),
+                //   text: t(`Showing stock for ${row.productName || row.id}`),
+                //   icon: 'info',
+                //   confirmButtonText: t('OK')
+
+                //   //  alert(`Show stock for ${row.productName || row.id}`)
+                // })
+              }
+            >
+              {t('Stock')}
+            </button>
+          </span>)}
+          {InventoryLoading && <LoadingSpinner />}
+        </div>
+      ),
+      include: isV('quantityCol'),
+    },
+    {
+      key: 'unit',
+      header: () => t('Unit'),
+      render: (row) => row.unit,
+      include: isV('unitCol'),
+    },
+    {
+      key: 'unitPrice',
+      header: () => t('Unit Price (SAR)'),
+      render: (row) => {
+        const price = parseFloat(row.unitPrice);
+        return price.toFixed(2);
+      },
+      include: isV('unitPriceCol'),
+    },
+    // {
+    //   key: 'sugarTaxPrice',
+    //   header: () => t('Sugar Tax'),
+    //   render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
+    //   include: isV('sugarTaxPriceCol'),
+    // },
+    {
+      key: 'vatPercentage',
+      header: () => t('VAT'),
+      render: (row) => parseFloat(row.vatPercentage).toFixed(2) + "%",
+      include: isV('vatPercentageCol'),
+    },
+    {
+      key: 'netAmount',
+      header: () => t('Net Amount (SAR)'),
+      render: (row) => parseFloat(row.netAmount).toFixed(2),
+      include: isV('netAmountCol'),
+    },
+    ...(isE('deleteCol') ? [{ key: 'actions', header: () => t('Actions') }] : [])
+  ];
 
   // Add this useEffect to fetch entity options
   useEffect(() => {
@@ -1612,7 +1615,8 @@ const columns = [
           page: 1,
           pageSize: 100, // Fetch a reasonable number of customers
           sortBy: (i18n.language === 'ar' ? 'company_name_ar' : 'company_name_en'),
-          sortOrder: 'asc'
+          sortOrder: 'asc',
+          purpose: 'order creation' // Add the purpose parameter
         });
 
         const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
@@ -1809,7 +1813,8 @@ const columns = [
     } catch (err) {
       console.error('Error fetching order details:', err);
       setError(err.message);
-    }  };  
+    }
+  };
 
   // Note: checkWorkflowInstance function removed as we're now directly creating workflow instances
   // Function to directly create a discount workflow instance regardless of whether one already exists
@@ -1838,7 +1843,7 @@ const columns = [
 
       // Ensure values are properly converted to strings and are valid
       let orderIdStr, customerIdStr;
-      
+
       try {
         orderIdStr = String(orderId).trim();
         customerIdStr = String(customerId).trim();
@@ -1856,7 +1861,7 @@ const columns = [
       if (!customerIdStr || customerIdStr === 'null' || customerIdStr === 'undefined') {
         console.error("CustomerId converted to invalid string:", customerIdStr);
         return false;
-      }      const payload = {
+      } const payload = {
         customerId: customerIdStr,
         salesOrderId: orderIdStr
       };
@@ -1933,7 +1938,8 @@ const columns = [
       // STEP 1: First update sales order lines and sales order if needed
       // --- BEGIN: PATCH order lines and order if approving in approval mode and status is pending ---
       if (approvalAction === 'approve' && fromApproval && formData.status && formData.status.toLowerCase() === 'pending') {
-        try {          console.log("Updating sales order lines and sales order before approval");
+        try {
+          console.log("Updating sales order lines and sales order before approval");
 
           // 1. Update existing sales order lines and create new ones
           for (const product of formData.products) {
@@ -1942,12 +1948,12 @@ const columns = [
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
-            
+
             // Check if this product exists in the original products (was part of the original order)
-            const existsInOriginal = originalProducts.some(originalProduct => 
+            const existsInOriginal = originalProducts.some(originalProduct =>
               (originalProduct.id || originalProduct.product_id) === productId
             );
-              if (existsInOriginal) {
+            if (existsInOriginal) {
               // Product exists in original order - PATCH to update it
               console.log(`Updating existing product line: ${productId}`);
               const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
@@ -1961,7 +1967,7 @@ const columns = [
                 }),
                 credentials: 'include',
               });
-              
+
               if (!patchResponse.ok) {
                 const errorText = await patchResponse.text();
                 throw new Error(`Failed to update product line ${productId}: ${errorText}`);
@@ -1986,17 +1992,18 @@ const columns = [
                 }),
                 credentials: 'include',
               });
-              
+
               if (!postResponse.ok) {
                 const errorText = await postResponse.text();
                 throw new Error(`Failed to create new product line ${productId}: ${errorText}`);
               }
-            }          }
+            }
+          }
 
           // 2. Update the sales order's totalAmount and payment percentage
           // Prepare the payload for PATCH
           const patchPayload = {
-            totalAmount: formData.totalAmount, 
+            totalAmount: formData.totalAmount,
             paymentPercentage: formData.paymentPercentage ?
               (formData.paymentPercentage === '100%' ? '100.00' :
                 formData.paymentPercentage === '30%' ? '30.00' : '0.00') : '0.00'
@@ -2005,7 +2012,7 @@ const columns = [
           if (formData.pricingPolicy) {
             patchPayload.pricingPolicy = formData.pricingPolicy;
           }
-          
+
           console.log("Updating sales order with payload:", patchPayload);
           const orderUpdateResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
             method: 'PATCH',
@@ -2048,12 +2055,12 @@ const columns = [
       if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
         (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
         formData.customerId && formData.id) {
-        
+
         // Additional validation before calling the workflow
-        if (formData.id && formData.customerId && 
-            formData.id !== null && formData.id !== undefined &&
-            formData.customerId !== null && formData.customerId !== undefined) {
-          
+        if (formData.id && formData.customerId &&
+          formData.id !== null && formData.id !== undefined &&
+          formData.customerId !== null && formData.customerId !== undefined) {
+
           console.log(`Directly triggering discount workflow for order ${formData.id} with customer ${formData.customerId}`);
           const workflowTriggered = await triggerDiscountWorkflow(formData.id, formData.customerId);
           console.log(`Discount workflow triggered: ${workflowTriggered}`);
@@ -2062,7 +2069,8 @@ const columns = [
           console.error(`- orderId: ${formData.id} (type: ${typeof formData.id})`);
           console.error(`- customerId: ${formData.customerId} (type: ${typeof formData.customerId})`);
         }
-      } else {        console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
+      } else {
+        console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
         console.log(`- entity: ${formData.entity}`);
         console.log(`- entity.toLowerCase() === 'vmco': ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
         console.log(`- productCategory: ${formData.productCategory}`);
@@ -2140,7 +2148,7 @@ const columns = [
   // Safety effect to handle late-arriving pre-fetched data
   useEffect(() => {
     if (formMode === 'add') return;
-    
+
     // If we have pre-fetched data but no products loaded yet, load them
     if (salesOrderLinesFromNav && salesOrderLinesFromNav.length > 0 && formData.products && formData.products.length === 0) {
       console.log('Late-loading pre-fetched sales order lines');
@@ -2150,12 +2158,12 @@ const columns = [
         productName: product.productName || product.product_name || product.erp_prod_id,
         quantity: product.quantity,
       }));
-      
+
       setFormData(prev => ({
         ...prev,
         products: processedProducts
       }));
-      
+
       setOriginalProducts(processedProducts);
       console.log('Late-loaded pre-fetched sales order lines:', processedProducts);
     }
@@ -2169,15 +2177,15 @@ const columns = [
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         console.error('Failed to fetch payment method details');
         return false;
       }
-      
+
       const result = await response.json();
       console.log('Payment method details response:', result);
-      
+
       if (result.status === 'Ok' && result.data && result.data.methodDetails) {
         const methodDetails = result.data.methodDetails;
         // Check if credit is allowed (without balance validation)
@@ -2186,7 +2194,7 @@ const columns = [
           return true;
         }
       }
-      
+
       console.log('Credit payment is not allowed for customer');
       return false;
     } catch (error) {
@@ -2367,7 +2375,7 @@ const columns = [
                           <Dropdown
                             name="category"
                             value={formData.category || ''}
-                            onChange={handleInputChange}                            options={
+                            onChange={handleInputChange} options={
                               formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                                 ? VMCO_CATEGORIES.map(category => ({ value: category, label: category }))
                                 : []
@@ -2713,34 +2721,34 @@ const columns = [
 
             </div>
 
-          {/* Comment Panel Popup */}
-          <div>
-            <CommentPopup
-              isOpen={isCommentPanelOpen}
-              setIsOpen={setIsCommentPanelOpen}
-              externalComments={approvalHistory ? approvalHistory : []}
-              currentUser={user}
-              isVisible={fromApproval}
-            />
-          </div>
-          {/* Rest of the component with modals and popups */}
-          
-           <GetInventory open={showInventory} onClose={() => setShowInventory(false)} InventoryData={InventoryData} productName={productName} />
-          <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
-          {/* Product Popup */}
-          {showProductPopup && (
-            <GetProducts
-              open={showProductPopup}
-              onClose={() => setShowProductPopup(false)}
-              onSelectProduct={handleSelectProduct}
-              API_BASE_URL={API_BASE_URL}
-              token={localStorage.getItem('token')}
-              customerId={formData.customerId}
-              entity={formData.entity}
-              category={formData.category}
-              t={t}
-            />
-          )}
+            {/* Comment Panel Popup */}
+            <div>
+              <CommentPopup
+                isOpen={isCommentPanelOpen}
+                setIsOpen={setIsCommentPanelOpen}
+                externalComments={approvalHistory ? approvalHistory : []}
+                currentUser={user}
+                isVisible={fromApproval}
+              />
+            </div>
+            {/* Rest of the component with modals and popups */}
+
+            <GetInventory open={showInventory} onClose={() => setShowInventory(false)} InventoryData={InventoryData} productName={productName} />
+            <Remarks open={showRemarks} onClose={() => setShowRemarks(false)} />
+            {/* Product Popup */}
+            {showProductPopup && (
+              <GetProducts
+                open={showProductPopup}
+                onClose={() => setShowProductPopup(false)}
+                onSelectProduct={handleSelectProduct}
+                API_BASE_URL={API_BASE_URL}
+                token={localStorage.getItem('token')}
+                customerId={formData.customerId}
+                entity={formData.entity}
+                category={formData.category}
+                t={t}
+              />
+            )}
 
             {/* Customer Popup */}
             {showCustomerPopup && (
