@@ -45,6 +45,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   // let isApprovalMode = false;
   const [isApprovalMode, setIsApprovalMode] = useState(false);
   const [nextTempId, setNextTempId] = useState(-1);
+  const [isFirstBranch, setIsFirstBranch] = useState(false);
   let search = "";
   const isMobile = false;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -67,6 +68,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleAddBranch = () => {
+    if (branches.length === 0) {
+      setIsFirstBranch(true); // Set flag for first branch
+    }
     const tempId = nextTempId;
     setNextTempId((prev) => prev - 1); // Decrement for next temporary ID
     setIsApprovalMode(false); // Reset approval mode when adding a new branch
@@ -77,7 +81,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       city: "",
       locationType: "",
       region: "",
-      branch_status: "pending",
+      branchStatus: "new",
       customerId: customer.id,
       isNew: true,
     };
@@ -960,9 +964,11 @@ const handleSaveChanges = async (id, branch, action) => {
 
   return (
     <div className="branches-content" ref={contentRef}>
-      <div className="form-main-header">
-        <a href="#">{t("Customer Approval Checklist")}</a>
-      </div>
+      {isV("customerApprovalChecklist") && (
+                    <div className="form-main-header">
+                      <a href="#">{t("Customer Approval Checklist")}</a>
+                    </div>
+                  )}
       <div className="branches-page-header">
         <div className="branches-header-controls">
           <input
@@ -1147,6 +1153,7 @@ const handleSaveChanges = async (id, branch, action) => {
                             handleBranchFieldChange={handleBranchFieldChange}
                             isApprovalMode={isApprovalMode}
                             mode={mode}
+                            isFirstBranch={isFirstBranch}
                           />
                           {console.log(branch)}
                           

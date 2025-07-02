@@ -50,6 +50,7 @@ const ContactSection = ({
   handleBranchFieldChange,
   inApproval,
   workflowInstanceId,
+  formErrors = {},
 }) => {
   const { t } = useTranslation();
   const [workflowData, setWorkflowData] = useState(null);
@@ -132,7 +133,7 @@ const ContactSection = ({
   };
   useEffect(() => {
     const fetchWorkflowData = async () => {
-      if (inApproval) {
+      if (inApproval && workflowInstanceId) {
         const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
         setWorkflowData(wfData?.contacts);
       }
@@ -181,6 +182,11 @@ const ContactSection = ({
                       {originalBranchContacts?.[field] || "(empty)"}
                     </div>
                   )}
+                  {formErrors[field] && (
+                <div className="current-value">
+                <span className="error-message" style={{ fontSize: "12px"}}>{formErrors[field]}</span>
+              </div>
+              )}
                 </div>)
               })}
             </div>

@@ -33,6 +33,10 @@ const BranchDetailsForm = ({
   setGeoLocation,
   mode,
   isUnderApproval,
+  formErrors = {},
+  handleDeliveryChargesChange,
+  isFirstBranch,
+  setSameAsCustomer
 }) => {
   const { t } = useTranslation();
   const [showMap, setShowMap] = useState(false);
@@ -132,13 +136,25 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
 };
   useEffect(() => {
     const fetchWorkflowData = async () => {
-    if (inApproval) {
+    if (inApproval && workflowInstanceId) {
       const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
       setWorkflowData(wfData?.branch);
     }
   };
   fetchWorkflowData();
   }, [workflowInstanceId, inApproval]);
+   useEffect(() => {
+     const getFieldValue = (fieldName) => {
+    if (fieldName === "isDeliveryChargesApplicable") {
+      if (branch?.[fieldName]) {
+        return branch?.[fieldName];
+      } else {
+        return customer?.[fieldName];
+      }
+    }
+  }
+  branch.isDeliveryChargesApplicable = getFieldValue("isDeliveryChargesApplicable");
+  }, []);
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
     const markerRef = useRef(null); // Using ref instead of state for the marker
@@ -288,10 +304,10 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
   // };
   const getFieldValue = (fieldName) => {
     if (fieldName === "isDeliveryChargesApplicable") {
-      if (branchChanges?.[branch.id]?.hasOwnProperty(fieldName)) {
-        return branchChanges[branch.id][fieldName];
-      } else {
+      if (branch?.[fieldName]) {
         return branch?.[fieldName];
+      } else {
+        return customer?.[fieldName];
       }
     }
     if (branchChanges?.[branch?.id]?.hasOwnProperty(fieldName)) {
@@ -441,15 +457,30 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     />
                     {'\t' + t('Same as Customer Details')}
                 </label> */}
-
+{isFirstBranch && mode!== "edit" && (<div className="form-group">
+        <label className="checkbox-group-label">
+          <input
+            type="checkbox"
+            id="sameAsCustomer"
+            name="sameAsCustomer"
+            checked={branch?.street === customer?.street &&
+              branch?.buildingName === customer?.buildingName &&
+              branch?.city === customer?.city &&
+              branch?.region === customer?.region &&
+              branch?.geolocation === customer?.geolocation}
+            onChange={(e) => setSameAsCustomer(e.target.checked)}
+          />
+          {t("Same as Customer Details")}
+        </label>
+      </div>)}
         {isV("isDeliveryChargesApplicable") && (
           <div className="form-group">
             <label>
               <input
                 type="checkbox"
                 name="isDeliveryChargesApplicable"
-                checked={getFieldValue("isDeliveryChargesApplicable") || false}
-                onChange={() => {}}
+                checked={branch?.isDeliveryChargesApplicable}
+                onChange={handleDeliveryChargesChange}
                 disabled={
                   customerFormMode === "custDetailsEdit" && !hasCheckboxUpdate
                 }
@@ -490,6 +521,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                 {t(field.label)}
                 {field.required && <span className="required-field">*</span>}
               </label>
+              
 
               {field.isLocation ? (
                 <div className="location-input-container">
@@ -553,6 +585,8 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                               !hasUpdate
                             }
                           />
+                          
+                          
                         );
                       case "dropdown":
                         return (
@@ -595,6 +629,11 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     ? getLocationDisplay(currentValue)
                     : originalBranch?.[field.name] || "(empty)"}
                 </div>
+              )}
+              {formErrors[field.name] && (
+                <div className="current-value">
+                <span className="error-message" style={{ fontSize: "12px"}}>{formErrors[field.name]}</span>
+              </div>
               )}
             </div>
           );

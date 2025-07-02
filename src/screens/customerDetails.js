@@ -25,7 +25,7 @@ import {
   faDownload,
   faEye,
 } from "@fortawesome/free-solid-svg-icons";
-import maplibregl, { setWorkerCount } from "maplibre-gl";
+import maplibregl, { setWorkerCount, validate } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Pagination from "../components/Pagination";
 import ApprovalDialog from "../components/ApprovalDialog";
@@ -388,6 +388,15 @@ const setInterCompany = (e) => {
     interCompany: value
   }));
 };
+const setIsDeliveryChargesApplicable = (e) => {
+  const {name} = e.target;
+  const value = e.target.checked;
+  updatedCustomerData.current["isDeliveryChargesApplicable"] = value;
+  setCustomerData((prev) => ({
+    ...prev,
+    isDeliveryChargesApplicable: value
+  }));
+};
 const mandatoryFields = [
   "companyNameEn",
   "companyNameAr",
@@ -563,18 +572,139 @@ const mandatoryFields = [
 //     setFormErrors(errors);
 //     return Object.keys(errors).length === 0;
 //   };
+const isArabicText = (text) => {
+    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+  };
+  const validateData = async (dataToValidate, mandatoryCheckRequired = false) => {
+    const errors = {};    
+    const arabicList = [
+      "companyNameAr",
+      "brandNameAr",
+    ]
+    const documentList = [
+      "acknowledgementSignature",
+      "crCertificate",
+      "vatCertificate",
+      "nationalId",
+      "bankLetter",
+      "nationalAddress",
+      "contractAgreement",
+      "creditApplication",
+    ];
 
-  const validateData = (dataToValidate, mandatoryCheckRequired = false) => {
-    const errors = {};    // If mandatoryCheckReguired is true, check all mandatory fields
+    const uniqueFieldsList = [
+      "crNumber",
+      "vatNumber",
+      "baladeahLicenseNumber",
+      "governmentRegistrationNumber",
+    ]
+    // If mandatoryCheckReguired is true, check all mandatory fields
+
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
         if (field in dataToValidate && !dataToValidate[field]) {
-          errors[field] = t("This field is required.");
+          if (documentList.includes(field)) {
+            errors[field] = t("This document is required.");
+          } else {
+            errors[field] = t("This field is required.");
+          }
         }
       });
     }
-    return errors;
-  };
+   for (const field in dataToValidate) {
+      const value = dataToValidate[field];
+      if (
+        arabicList.includes(field) &&
+        value &&
+        !isArabicText(value)
+      ) {
+        errors[field] = t("Please enter Arabic text.");
+      }
+
+      if (field.toLowerCase().includes("email")) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (value && !emailRegex.test(value)) {
+          errors[field] = t("Invalid email format");
+        }
+      }
+
+      if (field.toLowerCase().includes("mobile") || field.toLowerCase().includes("phone")) {
+  const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
+  if (value && !saudiMobileRegex.test(value)) {
+    errors[field] = t("Invalid mobile number format");
+  }
+}
+
+if (field.toLowerCase().includes("iban")) {
+  const saudiIbanRegex = /^SA\d{22}$/;
+  if (value && !saudiIbanRegex.test(value)) {
+    errors[field] = t("Invalid Saudi IBAN format");
+  }
+}
+
+if (field.toLowerCase().includes("bankaccountnumber")) {
+  const saudiBankAccountRegex = /^\d{15,20}$/;
+  if (value && !saudiBankAccountRegex.test(value)) {
+    errors[field] = t("Invalid Saudi bank account number format");
+  }
+}
+
+if (field.toLowerCase().includes("baladeahlicensenumber")) {
+  const baladeahLicenseRegex = /^\d{9,10}$/;
+  if (value && !baladeahLicenseRegex.test(value)) {
+    errors[field] = t("Invalid Baladeah license number format");
+  }
+}
+
+if (field.toLowerCase().includes("vatnumber")) {
+  const saudiVatRegex = /^\d{15}$/;
+  if (value && !saudiVatRegex.test(value)) {
+    errors[field] = t("Invalid Saudi VAT registration number format");
+  }
+}
+
+if (field.toLowerCase().includes("crnumber")) {
+  const crNumberRegex = /^[1-9]\d{9}$/;
+  if (value && !crNumberRegex.test(value)) {
+    errors[field] = t("Invalid Saudi Commercial Registration number format");
+  }
+}
+if (field.toLowerCase().includes("governmentregistrationnumber")) {
+  const govRegNumberRegex = /^[1-9]\d{8,9}$/;
+  if (value && !govRegNumberRegex.test(value)) {
+    errors[field] = t("Invalid Saudi Government Registration number format");
+  }
+}
+
+if (field.toLowerCase().includes("pincode")) {
+  const saudiPincodeRegex = /^\d{5}$/;
+  if (value && !saudiPincodeRegex.test(value)) {
+    errors[field] = t("Invalid Saudi pincode format");
+  }
+}
+
+if(uniqueFieldsList.includes(field)) {
+  const res = await fetch(
+    `${API_BASE_URL}/customers/checkUniqueField`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ customerId, field, value })
+    }
+  );
+  if (res.ok) {
+    const data = await res.json();
+    if (data.data.valid) {
+      // Field is valid
+    } else {
+      errors[field] = t("This number is registered.");
+    }
+  }
+}
+   }
+  return errors;
+};
 
   const uploadFile = async (fieldName, fileData, customerId) => {
     try {
@@ -659,6 +789,12 @@ const mandatoryFields = [
       updatedCustomerData.current["customerStatus"] =
         customerData.customerStatus;
 
+      const errors = await validateData({...updatedCustomerData.current, ...updatedCustomerContactsData.current}, false);
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        // Handle errors (e.g., show error messages)
+        return;
+      }
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -725,12 +861,12 @@ const mandatoryFields = [
         ...updatedCustomerData.current,
         ...uploadedFiles,
       };
-      // const errors = validateData(customerData, true);
-      // setFormErrors(errors);
-      // if (Object.keys(errors).length > 0) {
-      //   // Handle errors (e.g., show error messages)
-      //   return;
-      // }
+      const errors = await validateData({...customerData, ...customerContactsData}, true);
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        // Handle errors (e.g., show error messages)
+        return;
+      }
       
       // if(Object.keys(nonTradingFilesToUpload?.others) > 0) {
       //   updatedCustomerData.current["nonTradingDocuments"] = [
@@ -864,7 +1000,12 @@ const mandatoryFields = [
       // uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
       handleSave();
       customerData["customerStatus"] = "pending";
-
+const errors = await validateData({...customerData, ...customerContactsData}, true);
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        // Handle errors (e.g., show error messages)
+        return;
+      }
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -1000,6 +1141,7 @@ const mandatoryFields = [
                   {t("Branches")}
               </div>)}
             </div>
+            
             {activeTab === "Business Details" && isV("businessDetailsTab") && (
               <BusinessDetails
                 customerData={customerData}
@@ -1024,6 +1166,7 @@ const mandatoryFields = [
                 setBusinessHeadSameAsPrimary={setBusinessHeadSameAsPrimary}
                 mode={mode}
                 setTabsHeight={setTabsHeight}
+                formErrors={formErrors}
               />
             )}
             {activeTab === "Financial Information" && isV("financialInformationTab") && (
@@ -1038,8 +1181,10 @@ const mandatoryFields = [
                 }
                 setEntityWisePricePlan={setEntityWisePricePlan}
                 setCustomerCreditChange={handleCustomerCreditChange}
+                setIsDeliveryChargesApplicable={setIsDeliveryChargesApplicable}
                 mode={mode}
                 setTabsHeight={setTabsHeight}
+                formErrors={formErrors}
               />
             )}
             {activeTab === "Documents" && isV("documentsTab") && (
@@ -1051,6 +1196,7 @@ const mandatoryFields = [
                 originalCustomerData={originalCustomerData}
                 setTabsHeight={setTabsHeight}
                 mode={mode}
+                formErrors={formErrors}
               />
             )}
             {activeTab === "Branches" && isV("branchesTab") && (

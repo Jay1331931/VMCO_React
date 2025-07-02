@@ -45,6 +45,8 @@ function Products({customer, setTabsHeight}) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (

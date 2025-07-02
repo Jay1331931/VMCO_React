@@ -12,6 +12,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
+import RbacManager from "../../utilities/rbac";
+import { useAuth } from "../../context/AuthContext";
 
 function ContactDetails({
   customerData = {},
@@ -23,7 +25,8 @@ function ContactDetails({
   setGeoLocation,
   setBusinessHeadSameAsPrimary,
   mode,
-  setTabsHeight
+  setTabsHeight,
+  formErrors = {},
 }) {
   // Now you can access both objects
   const { t } = useTranslation();
@@ -33,6 +36,20 @@ function ContactDetails({
   // Dropdown state
   const dropdownFields = ["district", "city", "region", "zone"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
+    
+  const rbacMgr = new RbacManager(
+      user?.userType == "employee" && user?.roles[0] !== "admin"
+        ? user?.designation
+        : user?.roles[0],
+      mode === "add" || customerData?.customerStatus === "new"
+        ? "custDetailsAdd"
+        : "custDetailsEdit"
+    );
+    console.log("RBAC Manager:", rbacMgr);
+  
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -230,6 +247,11 @@ function ContactDetails({
 
   return (
     <div className="customer-onboarding-form-grid">
+       {isV("customerApprovalChecklist") && (
+                          <div className="form-main-header">
+                            <a href="#">{t("Customer Approval Checklist")}</a>
+                          </div>
+                        )}
       {/* Primary Contact Details Header */}
       <div className="form-header full-width">
         {t("Primary Contact Details")}
@@ -273,6 +295,9 @@ function ContactDetails({
               {originalCustomerContactsData?.primaryContactName || "(empty)"}
             </div>
           )}
+        {formErrors.primaryContactName && (
+          <div className="error">{formErrors.primaryContactName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -315,6 +340,9 @@ function ContactDetails({
                 "(empty)"}
             </div>
           )}
+          {formErrors.primaryContactDesignation && (
+            <div className="error">{formErrors.primaryContactDesignation}</div>
+          )}
       </div>
 
       <div className="form-group">
@@ -355,6 +383,9 @@ function ContactDetails({
               Previous:{" "}
               {originalCustomerContactsData?.primaryContactEmail || "(empty)"}
             </div>
+          )}
+          {formErrors.primaryContactEmail && (
+            <div className="error">{formErrors.primaryContactEmail}</div>
           )}
       </div>
 
@@ -397,6 +428,9 @@ function ContactDetails({
               {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
             </div>
           )}
+        {formErrors.primaryContactMobile && (
+          <div className="error">{formErrors.primaryContactMobile}</div>
+        )}
       </div>
 
       {/* Business Head Header */}
@@ -454,6 +488,9 @@ function ContactDetails({
               {originalCustomerContactsData?.businessHeadName || "(empty)"}
             </div>
           )}
+        {formErrors.businessHeadName && (
+          <div className="error">{formErrors.businessHeadName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -496,6 +533,9 @@ function ContactDetails({
                 "(empty)"}
             </div>
           )}
+        {formErrors.businessHeadDesignation && (
+          <div className="error">{formErrors.businessHeadDesignation}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -537,6 +577,9 @@ function ContactDetails({
               {originalCustomerContactsData?.businessHeadEmail || "(empty)"}
             </div>
           )}
+        {formErrors.businessHeadEmail && (
+          <div className="error">{formErrors.businessHeadEmail}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -578,6 +621,9 @@ function ContactDetails({
               {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
             </div>
           )}
+        {formErrors.businessHeadMobile && (
+          <div className="error">{formErrors.businessHeadMobile}</div>
+        )}
       </div>
 
       {/* Finance Head Header */}
@@ -621,6 +667,9 @@ function ContactDetails({
               {originalCustomerContactsData?.financeHeadName || "(empty)"}
             </div>
           )}
+        {formErrors.financeHeadName && (
+          <div className="error">{formErrors.financeHeadName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -663,6 +712,9 @@ function ContactDetails({
                 "(empty)"}
             </div>
           )}
+        {formErrors.financeHeadDesignation && (
+          <div className="error">{formErrors.financeHeadDesignation}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -704,6 +756,9 @@ function ContactDetails({
               {originalCustomerContactsData?.financeHeadEmail || "(empty)"}
             </div>
           )}
+        {formErrors.financeHeadEmail && (
+          <div className="error">{formErrors.financeHeadEmail}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -745,6 +800,9 @@ function ContactDetails({
               {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
             </div>
           )}
+        {formErrors.financeHeadMobile && (
+          <div className="error">{formErrors.financeHeadMobile}</div>
+        )}
       </div>
 
       {/* Purchasing Head Header */}
@@ -788,6 +846,9 @@ function ContactDetails({
               {originalCustomerContactsData?.purchasingHeadName || "(empty)"}
             </div>
           )}
+        {formErrors.purchasingHeadName && (
+          <div className="error">{formErrors.purchasingHeadName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -830,6 +891,9 @@ function ContactDetails({
                 "(empty)"}
             </div>
           )}
+        {formErrors.purchasingHeadDesignation && (
+          <div className="error">{formErrors.purchasingHeadDesignation}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -871,6 +935,9 @@ function ContactDetails({
               {originalCustomerContactsData?.purchasingHeadEmail || "(empty)"}
             </div>
           )}
+        {formErrors.purchasingHeadEmail && (
+          <div className="error">{formErrors.purchasingHeadEmail}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -917,6 +984,9 @@ function ContactDetails({
               {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
             </div>
           )}
+        {formErrors.purchasingHeadMobile && (
+          <div className="error">{formErrors.purchasingHeadMobile}</div>
+        )}
       </div>
 
       {/* Business Address Header */}
@@ -956,6 +1026,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.buildingName || "(empty)"}
             </div>
           )}
+        {formErrors.buildingName && (
+          <div className="error">{formErrors.buildingName}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -993,6 +1066,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.street || "(empty)"}
             </div>
           )}
+        {formErrors.street && (
+          <div className="error">{formErrors.street}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -1037,6 +1113,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.district || "(empty)"}
             </div>
           )}
+        {formErrors.district && (
+          <div className="error">{formErrors.district}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -1084,6 +1163,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.city || "(empty)"}
             </div>
           )}
+        {formErrors.city && (
+          <div className="error">{formErrors.city}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -1130,6 +1212,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.region || "(empty)"}
             </div>
           )}
+        {formErrors.region && (
+          <div className="error">{formErrors.region}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -1176,6 +1261,7 @@ function ContactDetails({
               Previous: {originalCustomerData?.zone || "(empty)"}
             </div>
           )}
+        {formErrors.zone && (<div className="error">{formErrors.zone}</div>)}
       </div>
 
       <div className="form-group">
@@ -1213,6 +1299,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.pincode || "(empty)"}
             </div>
           )}
+        {formErrors.pincode && (
+          <div className="error">{formErrors.pincode}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -1278,6 +1367,9 @@ function ContactDetails({
                 : originalCustomerData?.geolocation || "(empty)"}
             </div>
           )}
+        {formErrors.geolocation && (
+          <div className="error">{formErrors.geolocation}</div>
+        )}
       </div>
 
       {showMap && (

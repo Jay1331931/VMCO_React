@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import "../../styles/forms.css";
 import { not } from "ajv/dist/compile/codegen";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import RbacManager from "../../utilities/rbac";
+import { useAuth } from "../../context/AuthContext";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
   isTrading = true,
@@ -11,9 +14,24 @@ function Documents({
   customerData = {},
   originalCustomerData = {},
   setTabsHeight,
-  mode
+  mode,
+  formErrors = {},
 }) {
   const { t } = useTranslation();
+  const { token, user, isAuthenticated, logout, loading } = useAuth();
+      
+    const rbacMgr = new RbacManager(
+        user?.userType == "employee" && user?.roles[0] !== "admin"
+          ? user?.designation
+          : user?.roles[0],
+        mode === "add" || customerData?.customerStatus === "new"
+          ? "custDetailsAdd"
+          : "custDetailsEdit"
+      );
+      console.log("RBAC Manager:", rbacMgr);
+    
+      const isV = rbacMgr.isV.bind(rbacMgr);
+      const isE = rbacMgr.isE.bind(rbacMgr);
   const [nonTradingFiles, setNonTradingFiles] = useState([]);
   const [tradingDocuments, setTradingDocuments] = useState({
     acknowledgementSignature: null,
@@ -143,6 +161,11 @@ function Documents({
 
   return (
     <div className="customer-onboarding-form-grid">
+      {isV("customerApprovalChecklist") && (
+                          <div className="form-main-header">
+                            <a href="#">{t("Customer Approval Checklist")}</a>
+                          </div>
+                        )}
       {/* Documents Header */}
       <div className="form-header full-width">{t("Documents")}</div>
       <div className="form-group" />
@@ -163,6 +186,7 @@ function Documents({
                 </span>
               )}
             </label>
+           { formErrors?.acknowledgementSignature && (<div className="error">{formErrors.acknowledgementSignature}</div>)}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -239,6 +263,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.crCertificate && (
+              <div className="error">{formErrors.crCertificate}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -309,6 +336,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.vatCertificate && (
+              <div className="error">{formErrors.vatCertificate}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -380,6 +410,9 @@ function Documents({
                 </span>
               )}
             </label>
+            { formErrors?.nationalId && (
+              <div className="error">{formErrors.nationalId}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -450,6 +483,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.bankLetter && (
+              <div className="error">{formErrors.bankLetter}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -520,6 +556,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.nationalAddress && (
+              <div className="error">{formErrors.nationalAddress}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -590,6 +629,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.contractAgreement && (
+              <div className="error">{formErrors.contractAgreement}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -660,6 +702,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.creditApplication && (
+              <div className="error">{formErrors.creditApplication}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -733,6 +778,9 @@ function Documents({
                 </span>
               )}
             </label>
+            {formErrors?.contractAgreement && (
+              <div className="error">{formErrors.contractAgreement}</div>
+            )}
           </td>
           <td className="upload-cell" style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }} hidden={mode === "edit"}>
             <input
@@ -751,6 +799,9 @@ function Documents({
             >
               {t("Upload")}
             </label>
+            {formErrors?.contractAgreement && (
+              <div className="error">{formErrors.contractAgreement}</div>
+            )}
           </td>
           <td className="file-display-cell">
             {tradingFilesToUpload?.contractAgreement && (

@@ -15,8 +15,10 @@ function FinancialInformation({
   onChangeCustomerData,
   setEntityWisePricePlan,
   setCustomerCreditChange,
+  setIsDeliveryChargesApplicable,
   mode,
   setTabsHeight,
+  formErrors = {},
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -33,8 +35,8 @@ function FinancialInformation({
 
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-  const [isDeliveryChargesApplicable, setIsDeliveryChargesApplicable] =
-    useState(false);
+  // const [isDeliveryChargesApplicable, setIsDeliveryChargesApplicable] =
+  //   useState(false);
   const [prePayment, setPrePayment] = useState(
     customerPaymentMethodsData?.methodDetails?.prePayment?.isAllowed || false
   );
@@ -68,6 +70,11 @@ function FinancialInformation({
 
   return (
     <div className="customer-onboarding-form-grid">
+      {isV("customerApprovalChecklist") && (
+                          <div className="form-main-header">
+                            <a href="#">{t("Customer Approval Checklist")}</a>
+                          </div>
+                        )}
       {/* Bank Details Header */}
       <div className="form-header full-width">{t("Bank Details")}</div>
       <div className="form-group">
@@ -103,6 +110,9 @@ function FinancialInformation({
           <div className="current-value">
             Previous: {originalCustomerData?.bankName || "(empty)"}
           </div>
+        )}
+        {formErrors.bankName && (
+          <div className="error">{formErrors.bankName}</div>
         )}
       </div>
 
@@ -140,6 +150,9 @@ function FinancialInformation({
             Previous: {originalCustomerData?.bankAccountNumber || "(empty)"}
           </div>
         )}
+        {formErrors.bankAccountNumber && (
+          <div className="error">{formErrors.bankAccountNumber}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -175,6 +188,9 @@ function FinancialInformation({
           <div className="current-value">
             Previous: {originalCustomerData?.iban || "(empty)"}
           </div>
+        )}
+        {formErrors.iban && (
+          <div className="error">{formErrors.iban}</div>
         )}
       </div>
       <div className="form-group" />
@@ -486,8 +502,8 @@ function FinancialInformation({
             type="checkbox"
             id="isDeliveryChargesApplicable"
             name="isDeliveryChargesApplicable"
-            checked={isDeliveryChargesApplicable}
-            onChange={(e) => setIsDeliveryChargesApplicable(e.target.checked)}
+            checked={customerData?.isDeliveryChargesApplicable}
+            onChange={setIsDeliveryChargesApplicable}
             disabled={
               originalCustomerData &&
               customerData &&

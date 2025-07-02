@@ -74,6 +74,11 @@ function BusinessDetails({
 
   return (
     <div className="customer-onboarding-form-grid">
+      {isV("customerApprovalChecklist") && (
+                          <div className="form-main-header">
+                            <a href="#">{t("Customer Approval Checklist")}</a>
+                          </div>
+                        )}
       {/* Company Name (English) */}
       <div className="form-group">
         <label htmlFor="companyNameEn">
