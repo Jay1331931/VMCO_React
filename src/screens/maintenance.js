@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Table from "../components/Table";
 import SearchInput from "../components/SearchInput";
+import ToggleButton from "../components/ToggleButton";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import ActionButton from "../components/ActionButton";
+import Constants from "../constants";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -17,6 +19,7 @@ function Maintenance() {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMyTicketsMode, setMyTicketsMode] = useState(false);
   const navigate = useNavigate();
 
   const [initialTickets, setTickets] = useState([]);
@@ -30,17 +33,27 @@ function Maintenance() {
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-  console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
-
-  // Fetch tickets from API
+  // Fetch all tickets from API
   const fetchMaintenanceTickets = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = API_BASE_URL
-        ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
-        : "http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc";
-
+      let apiUrl;
+      
+      // Only include access parameter if user is maintenance head
+      if (user?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+        const accessParam = isMyTicketsMode ? 'region' : 'all';
+        apiUrl = API_BASE_URL
+          ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc&access=${accessParam}`
+          : `http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc&access=${accessParam}`;
+      } else {
+        // For other designations, don't include access parameter
+        apiUrl = API_BASE_URL
+          ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
+          : `http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`;
+      }
+      
+      console.log("Fetching maintenance tickets from:", apiUrl);
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -76,7 +89,16 @@ function Maintenance() {
     } finally {
       setLoading(false);
     }
-  }, [navigate, logout, user?.userType]);
+  }, [navigate, logout, user?.userType, user?.designation, isMyTicketsMode]);
+
+  // Toggle between all tickets and my tickets
+  const toggleMyTicketsMode = () => {
+    setMyTicketsMode((prev) => {
+      const newMode = !prev;
+      // The fetchMaintenanceTickets function will be called by useEffect when isMyTicketsMode changes
+      return newMode;
+    });
+  };
 
   //NOTE: For fetching the user again after browser refresh - start
   useEffect(() => {
@@ -96,7 +118,7 @@ function Maintenance() {
       // navigate('/login');
       // return null; // Return null while logout is processing
     }
-  }, [user, fetchMaintenanceTickets]);
+  }, [user, fetchMaintenanceTickets, isMyTicketsMode]);
   //For fetching the user again after browser refresh - End
 
   // Handle search functionality
@@ -111,10 +133,11 @@ function Maintenance() {
     { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
     { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
+    { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
     { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
-  ];
+    ];
 
   const getStatusClass = (status) => {
     switch (status) {
@@ -149,18 +172,34 @@ function Maintenance() {
       {isV('maintenanceContent') && (
         <div className='maintenance-content'>
           <div className='maintenance-header'>
-            {isV('searchInput') && <SearchInput onSearch={handleSearch} />}
-            {isV("btnAdd") && isE("btnAdd") && (
-              <button className='support-add-button' onClick={handleAdd}>
-                {t("+ Add")}
-              </button>
-            )}
+            <div className="header-controls">
+              {isV('searchInput') && <SearchInput onSearch={handleSearch} />}
+            </div>
+            <div className="header-actions">
+              {/* Only show toggle button for maintenance head */}
+              {isV('toggleButton') && user?.designation === "maintenance head" && (
+                <ToggleButton
+                  isToggled={isMyTicketsMode}
+                  onToggle={toggleMyTicketsMode}
+                  leftLabel={t('All')}
+                  rightLabel={t('My Tickets')}
+                />
+              )}
+              {isV("btnAdd") && isE("btnAdd") && (
+                <button className='support-add-button' onClick={handleAdd}>
+                  {t("+ Add")}
+                </button>
+              )}
+            </div>
           </div>
           {/* <ActionButton menuItems={maintenanceMenuItems} /> */}
           {isV('maintenanceTable') && (
             <Table 
               columns={columns.filter(col => col.include !== false)} 
-              data={filteredTickets} 
+              data={filteredTickets.map(ticket => ({
+                ...ticket,
+                createdAt: formatDate(ticket.createdAt, 'DD/MM/YYYY')
+              }))}
               getStatusClass={getStatusClass} 
               onRowClick={(ticket) => handleRowClick(ticket)} 
             />

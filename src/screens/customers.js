@@ -806,6 +806,8 @@ function Customers() {
                   <ToggleButton
                     isToggled={isApprovalMode}
                     onToggle={toggleApprovalMode}
+                    leftLabel={t('All')}
+                    rightLabel={t('My Approval')}
                   />
                   <button className='add-button' style={{ visibility: 'hidden' }}></button>
                   <ActionButton menuItems={customerMenuItems} />
