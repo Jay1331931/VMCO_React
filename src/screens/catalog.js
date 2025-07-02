@@ -15,6 +15,7 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import Constants from "../constants";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -1158,14 +1159,13 @@ function Catalog() {
         {isV("selectBranch") && (
           <div className="catalog-header">
             <div className="location-selector">
-              <Dropdown
+              <SearchableDropdown
                 id={`location-select-${catalogId}`}
                 name="locationSelect"
                 value={selectedLocation}
                 onChange={handleBranchSelect}
-                options={branches}
+                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value }))}
                 className="location-select"
-                label={t("Delivery to:")}
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}
               />
@@ -1201,9 +1201,7 @@ function Catalog() {
           />
           {isV("goToCart") && (
             <button
-              className={`go-to-cart-btn ${
-                !selectedLocation ? "disabled" : ""
-              }`}
+              className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
               style={{
                 opacity: !selectedLocation ? 0.6 : 1,
                 cursor: !selectedLocation ? "not-allowed" : "pointer",
@@ -1228,20 +1226,16 @@ function Catalog() {
                 className="product-search-input"
               />
             )}{" "}
-            <Dropdown
+            <SearchableDropdown
               id={`category-filter-${catalogId}`}
               name="categoryFilter"
-              options={getFilteredCategories().map((cat) => ({
-                value: cat,
-                label: cat,
-              }))}
-              className={`category-filter ${
-                [
-                  Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
-                  Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
-                ].includes(activeCategory.toLowerCase())
-                  ? "tab-linked-filter"
-                  : ""
+              options={getFilteredCategories().map((cat) => ({ name: cat, value: cat }))}
+              className={`category-filter ${[
+                Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
+                Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
+              ].includes(activeCategory.toLowerCase())
+                ? "tab-linked-filter"
+                : ""
               }`}
               placeholder="Category"
               value={categoryFilter}
@@ -1251,13 +1245,10 @@ function Catalog() {
                 setCurrentPage(1);
               }}
             />
-            <Dropdown
+            <SearchableDropdown
               id={`subcategory-filter-${catalogId}`}
               name="subCategoryFilter"
-              options={getFilteredSubcategories().map((sub) => ({
-                value: sub,
-                label: sub,
-              }))}
+              options={getFilteredSubcategories().map((sub) => ({ name: sub, value: sub }))}
               className="category-filter"
               placeholder="Sub category"
               value={subCategoryFilter}
@@ -1407,15 +1398,6 @@ function Catalog() {
         //     background-color: #f5f5f5;
         // }
 
-        .tab-linked-filter::after {
-          content: "(Linked to tabs)";
-          position: absolute;
-          bottom: -16px;
-          left: 0;
-          font-size: 10px;
-          color: #666;
-          font-style: italic;
-        }
 
         @media (max-width: 768px) {
           .product-search-input {

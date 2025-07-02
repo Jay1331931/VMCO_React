@@ -348,6 +348,8 @@ function Orders() {
               className="toggle-button"
               isToggled={isApprovalMode}
               onToggle={toggleApprovalMode}
+              leftLabel={t('All')}
+              rightLabel={t('My Approval')}
             />}
             {isV('addButton') && <button className="add-button" onClick={handleAddOrder}>{t('+ Add')}</button>}
             {isV('actionMenu') && (<ActionButton menuItems={orderMenuItems} />)}
