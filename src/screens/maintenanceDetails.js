@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
 import CommentPopup from "../components/commentPanel";
@@ -6,7 +6,7 @@ import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import formatDate from "../utilities/dateFormatter";
+import { formatDate } from "../utilities/dateFormatter";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { useNavigate } from "react-router-dom";
@@ -30,9 +30,10 @@ function MaintenanceDetails() {
     assignedTeamMember: "",
     assignedTeamMemberDept: "",
     comments: [],
-    chargers: null,
+    charges: null,
     customerRegion: null,
     branchRegion: null,
+    maintenanceCharges: null,
   };
 
   // Ensure these are defined at the top of the component
@@ -62,6 +63,8 @@ function MaintenanceDetails() {
     attachment: ticketRcvd.attachment || "",
     // Set customer ID for customer users
     customerId: ticketRcvd.customerId || (user?.userType === 'customer' ? user.customerId : null),
+    // Set maintenance charges from backend charges field in edit mode
+    maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
   });
 
   // State for branches dropdown
@@ -102,6 +105,27 @@ function MaintenanceDetails() {
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // Date conversion helper function
+  const convertDateFormat = (dateStr, fromFormat, toFormat) => {
+    if (!dateStr) return "";
+
+    if (fromFormat === "DD/MM/YYYY" && toFormat === "YYYY-MM-DD") {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+      }
+    }
+
+    if (fromFormat === "YYYY-MM-DD" && toFormat === "DD/MM/YYYY") {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+      }
+    }
+
+    return dateStr;
+  };
 
   // State for closing ticket (MOVED UP to fix React Hooks order)
   const [closing, setClosing] = useState(false); // Track closing state
@@ -246,42 +270,56 @@ function MaintenanceDetails() {
 
   // Logic to calculate maintenance charges
   const calculateMaintenanceCharges = async () => {
-    if (formMode !== 'edit') {
-      console.log('[Charges] Not in edit mode, skipping calculation');
-      return; // Only in edit mode
+    if (formMode !== 'add') {
+      console.log('[Charges] Not in add mode, skipping calculation');
+      return; // Only in add mode
     }
-    if (!ticket.warrantyEndDate || !ticket.createdAt) {
-      console.log('[Charges] Missing warrantyEndDate or createdAt, skipping calculation');
+    if (!ticket.warrantyEndDate) {
+      console.log('[Charges] Missing warrantyEndDate, skipping calculation');
       return;
     }
+    if (!ticket.branchId || branches.length === 0) {
+      console.log('[Charges] Missing branchId or branches not loaded, skipping calculation');
+      return;
+    }
+
+    // Use current date for comparison in add mode
+    const currentDate = new Date();
+    const currentDateFormatted = formatDate(currentDate.toISOString(), "DD/MM/YYYY");
     
-    // Convert dates to DD/MM/YYYY format for comparison
+    // Convert warranty end date to DD/MM/YYYY format for comparison
     const warrantyDateFormatted = formatDate(ticket.warrantyEndDate, "DD/MM/YYYY");
-    const createdDateFormatted = formatDate(ticket.createdAt, "DD/MM/YYYY");
-    
+
     // Parse dates for comparison (DD/MM/YYYY format)
     const warrantyDateParts = warrantyDateFormatted.split('/');
-    const createdDateParts = createdDateFormatted.split('/');
-    
+    const currentDateParts = currentDateFormatted.split('/');
+
     const warrantyDate = new Date(warrantyDateParts[2], warrantyDateParts[1] - 1, warrantyDateParts[0]);
-    const createdDate = new Date(createdDateParts[2], createdDateParts[1] - 1, createdDateParts[0]);
+    const todayDate = new Date(currentDateParts[2], currentDateParts[1] - 1, currentDateParts[0]);
+
+    console.log('[Charges] warrantyEndDate (DD/MM/YYYY):', warrantyDateFormatted, 'currentDate (DD/MM/YYYY):', currentDateFormatted);
+    console.log('[Charges] warrantyDate >= currentDate?', warrantyDate >= todayDate);
     
-    console.log('[Charges] warrantyEndDate (DD/MM/YYYY):', warrantyDateFormatted, 'createdAt (DD/MM/YYYY):', createdDateFormatted);
-    console.log('[Charges] warrantyDate >= createdDate?', warrantyDate >= createdDate);
     const regions = await fetchRegions();
     console.log('[Charges] Regions from basics master:', regions);
+    
     const branchCity = getSelectedBranchCity();
     console.log('[Charges] Branch city:', branchCity);
+    
     const cityMatchesRegion = regions.includes(branchCity);
     console.log('[Charges] City matches region?', cityMatchesRegion);
+    
     let charges = 0;
-    if (warrantyDate >= createdDate) {
+    if (warrantyDate >= todayDate) {
+      // Warranty is still valid (not expired)
       charges = cityMatchesRegion ? 0.00 : 200.00;
-      console.log('[Charges] In warranty, charges:', charges);
+      console.log('[Charges] Warranty valid, charges:', charges);
     } else {
+      // Warranty has expired
       charges = cityMatchesRegion ? 200.00 : 300.00;
-      console.log('[Charges] Out of warranty, charges:', charges);
+      console.log('[Charges] Warranty expired, charges:', charges);
     }
+    
     setTicket(prev => ({ ...prev, maintenanceCharges: charges.toFixed(2) }));
     console.log('[Charges] Final maintenanceCharges set:', charges.toFixed(2));
   };
@@ -289,9 +327,8 @@ function MaintenanceDetails() {
   // Single function to check and calculate maintenance charges
   const handleMaintenanceChargesCalculation = async () => {
     if (
-      formMode === 'edit' &&
+      formMode === 'add' &&
       ticket.warrantyEndDate &&
-      ticket.createdAt &&
       ticket.branchId &&
       branches.length > 0
     ) {
@@ -321,18 +358,17 @@ function MaintenanceDetails() {
       if (formMode === 'edit') {
         loadExistingFiles();
       }
-      // Calculate maintenance charges if in edit mode and all required fields are present
+      // Calculate maintenance charges if in add mode and all required fields are present
       if (
-        formMode === 'edit' &&
+        formMode === 'add' &&
         ticket.warrantyEndDate &&
-        ticket.createdAt &&
         ticket.branchId &&
         branches.length > 0
       ) {
         calculateMaintenanceCharges();
       }
     }
-  }, [user, formMode, ticket.warrantyEndDate, ticket.createdAt, ticket.branchId, branches]);
+  }, [user, formMode, ticket.warrantyEndDate, ticket.branchId, branches]);
 
   useEffect(() => {
     const fetchIssueTypeOptions = async () => {
@@ -355,11 +391,10 @@ function MaintenanceDetails() {
         } else {
           throw new Error('Unexpected response format for issue type options');
         }
-        // Calculate maintenance charges if in edit mode and all required fields are present
+        // Calculate maintenance charges if in add mode and all required fields are present
         if (
-          formMode === 'edit' &&
+          formMode === 'add' &&
           ticket.warrantyEndDate &&
-          ticket.createdAt &&
           ticket.branchId &&
           branches.length > 0
         ) {
@@ -370,7 +405,41 @@ function MaintenanceDetails() {
       }
     };
     fetchIssueTypeOptions();
-  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.createdAt, ticket.branchId, branches]);
+  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches]);
+
+  // Add a separate useEffect to trigger calculation when warranty end date changes
+  useEffect(() => {
+    if (
+      formMode === 'add' &&
+      ticket.warrantyEndDate &&
+      ticket.branchId &&
+      branches.length > 0
+    ) {
+      calculateMaintenanceCharges();
+    }
+  }, [ticket.warrantyEndDate]);
+
+  // Add helper functions to get customer and branch regions
+  const getCustomerRegion = async (customerId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch customer details');
+      const customer = await response.json();
+      return customer.city || customer.cityName || '';
+    } catch (error) {
+      console.error('Error fetching customer region:', error);
+      return '';
+    }
+  };
+
+  const getBranchRegion = () => {
+    const branch = branches.find(b => b.id === ticket.branchId);
+    return branch ? (branch.city || branch.cityName || '') : '';
+  };
 
   // Early returns must come after all hooks
   if (loading) {
@@ -395,6 +464,9 @@ function MaintenanceDetails() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
+  
+  console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
   // Place columns definition here, after isV/currentLanguage are defined
   const columns = [
@@ -628,11 +700,16 @@ function MaintenanceDetails() {
     }
 
     try {
+      // Get customer and branch regions
+      const customerIdToUse = user?.userType === 'customer' ? user.customerId : ticket.customerId;
+      const customerRegion = await getCustomerRegion(customerIdToUse);
+      const branchRegion = getBranchRegion();
+
       // First, create the ticket to get the ID for file uploads
       const ticketData = {
         ...ticket,
         // Ensure customer ID is set correctly
-        customerId: user?.userType === 'customer' ? user.customerId : ticket.customerId,
+        customerId: customerIdToUse,
         // Set creation date for new tickets
         createdAt: formMode === "add" ? new Date().toISOString() : ticket.createdAt,
         // Set default status for new tickets
@@ -644,7 +721,12 @@ function MaintenanceDetails() {
             ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
             : [],
         // Always include warrantyEndDate in the payload
-        warrantyEndDate: ticket.warrantyEndDate || null
+        warrantyEndDate: ticket.warrantyEndDate || null,
+        // Include maintenance charges in both maintenanceCharges and charges fields
+        maintenanceCharges: ticket.maintenanceCharges || null,
+        charges: ticket.maintenanceCharges || null, // Fixed typo: was "chargers", now "charges"
+        customerRegion: customerRegion,
+        branchRegion: branchRegion
       };
 
       // Remove id and requestId for new tickets (let database auto-generate them)
@@ -654,6 +736,13 @@ function MaintenanceDetails() {
         // Set initial attachment to "none" for new tickets
         ticketData.attachment = "none";
       }
+
+      console.log('Ticket data being sent:', {
+        ...ticketData,
+        customerRegion: customerRegion,
+        branchRegion: branchRegion,
+        charges: ticketData.charges // Log the charges field specifically
+      });
 
       const endPoint = formMode === "add" ? "/maintenance" : `/maintenance/id/${ticket.id}`;
       const method = formMode === "add" ? "POST" : "PATCH";
@@ -976,20 +1065,24 @@ function MaintenanceDetails() {
                 <input
                   id='warrantyEndDate'
                   name='warrantyEndDate'
-                  type='text'
+                  type='date'
                   onChange={handleInputChange}
-                  value={ticket.warrantyEndDate ? formatDate(ticket.warrantyEndDate, "DD/MM/YYYY") : ""}
+                  value={ticket.warrantyEndDate ? (
+                    // For date inputs, we need YYYY-MM-DD format
+                    ticket.warrantyEndDate.includes('-') && ticket.warrantyEndDate.match(/^\d{4}-\d{2}-\d{2}$/) ?
+                      ticket.warrantyEndDate :
+                      convertDateFormat(formatDate(ticket.warrantyEndDate, "DD/MM/YYYY"), "DD/MM/YYYY", "YYYY-MM-DD")
+                  ) : ""}
                   disabled={!isE("warrantyEndDate")}
-                  placeholder="DD/MM/YYYY"
                 />
               </div>
             )}
-            {isV('createdDate') && formMode === "edit" && (
+            {isV('createdDate') ? (
               <div className='maintenance-details-field'>
                 <label>{t("Created Date")}</label>
-                <input value={formatDate(ticket.createdAt, "DD/MM/YYYY")} disabled />
+                <input value={formatDate(ticket.updatedAt, "DD/MM/YYYY")} disabled />
               </div>
-            )}
+            ) : null}
           </div>
           {isV('issueDetails') && (
             <div className='maintenance-details-field maintenance-details-textarea'>
@@ -1072,7 +1165,7 @@ function MaintenanceDetails() {
               onChange={handleInputChange}
               value={ticket.maintenanceCharges || ''}
               disabled={!isE("maintenanceCharges")}
-              placeholder={t("Charges will be updated soon")}
+              placeholder={formMode === 'add' ? t("Auto-calculated after warranty date selection") : ""}
             />
           </div>
         </div>

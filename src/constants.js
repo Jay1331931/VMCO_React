@@ -40,6 +40,10 @@ const Constants = {
         TABUK: 'Tabuk',
         HAIL: 'Hail',
         ASIR: 'Asir'
+    },
+    EXCLUDED_REGIONS: {
+        RIYADH: 'Riyadh',
+        JEDDAH: 'Jeddah'
     }
 };
 
