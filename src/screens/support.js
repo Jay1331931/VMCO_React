@@ -161,7 +161,10 @@ function Support() {
           {isV('supportTable') && (
             <Table 
               columns={columns.filter(col => col.include !== false)} 
-              data={filteredTickets} 
+              data={filteredTickets.map(ticket => ({
+                ...ticket,
+                createdAt: formatDate(ticket.createdAt, 'DD/MM/YYYY')
+              }))} 
               getStatusClass={getStatusClass} 
               onRowClick={(ticket) => handleRowClick(ticket)} 
             />

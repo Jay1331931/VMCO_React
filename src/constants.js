@@ -17,7 +17,6 @@ const Constants = {
     },
     ENTITY:{
         VMCO: 'VMCO',
-        DIYAFA: 'DIYAFA',
         SHC: 'SHC',
         NAQI: 'NAQI',
         DAR: 'DAR',

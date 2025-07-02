@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import Table from "../components/Table";
 import SearchInput from "../components/SearchInput";
@@ -6,68 +6,113 @@ import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import formatDate from "../utilities/dateFormatter";
+import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
+import ActionButton from "../components/ActionButton";
+
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function Maintenance() {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
-  const { token, user, isAuthenticated, logout } = useAuth();
 
   const [initialTickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const { token, user, isAuthenticated, logout } = useAuth();
 
   //RBAC
   const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "maintList");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-  useEffect(() => {
-    const fetchMaintenanceTickets = async () => {
-      try {
-        // Replace with your actual API endpoint URL
-        //TODO: Parameters such as search, sort order must be added dynamically
-        const apiUrl = process.env.REACT_APP_API_BASE_URL
-          ? `${process.env.REACT_APP_API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
-          : "http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc";
+  console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
-        const response = await fetch(apiUrl, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
+  // Fetch tickets from API
+  const fetchMaintenanceTickets = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = API_BASE_URL
+        ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
+        : "http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc";
 
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
-        const resp = await response.json();
-        console.log("Fetched maintenance tickets:", typeof resp.data.data);
-        setTickets(resp.data.data);
-      } catch (err) {
-        console.error("Failed to fetch maintenance tickets:", err);
-        setError(err.message);
-        // Fall back to static data in case of API failure
-        setTickets([]);
-      } finally {
-        setLoading(false);
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('API did not return JSON. Check API URL and server.');
       }
-    };
 
-    console.log("Component mounted, fetching maintenance tickets...");
-    fetchMaintenanceTickets();
-  }, []);
+      if (!response.ok) {
+        if (response.status === 401) {
+          logout();
+          navigate(user?.userType === "customer" ? "/login" : "/login/employee");
+          return;
+        }
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
+      const resp = await response.json();
+      console.log("Fetched maintenance tickets:", resp);
+      
+      if (resp.status === 'Ok' || resp.data) {
+        setTickets(resp.data?.data || resp.data || []);
+      } else {
+        throw new Error(resp.message || 'Failed to fetch maintenance tickets');
+      }
+    } catch (err) {
+      console.error("Failed to fetch maintenance tickets:", err);
+      setError(err.message);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, logout, user?.userType]);
+
+  //NOTE: For fetching the user again after browser refresh - start
+  useEffect(() => {
+    if (loading) {
+      return; // Wait while loading
+    }
+
+    console.log("$$$$$$$$$$$ user in maintenance page", user);
+    if (user) {
+      fetchMaintenanceTickets();
+    }
+
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
+      // Logout instead of showing loading message
+      // logout();
+      // navigate('/login');
+      // return null; // Return null while logout is processing
+    }
+  }, [user, fetchMaintenanceTickets]);
+  //For fetching the user again after browser refresh - End
+
+  // Handle search functionality
+  const handleSearch = (searchTerm) => {
+    setSearchQuery(searchTerm);
+  };
+
+  //TODO: Handle arabic and english names for company and branch
   const columns = [
-    { key: "requestId", header: "requestId #", include: isV('requestIdCol') },
-     { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
+    { key: "requestId", header: "Request #", include: isV('requestIdCol') },
+    { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
     { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
-{ key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
-       { key: "category", header: "Category", include: isV('categoryCol') },
+    { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
+    { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
     { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
+    { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
   ];
 
@@ -84,17 +129,19 @@ function Maintenance() {
   };
 
   const filteredTickets = initialTickets.filter((ticket) => Object.values(ticket).some((val) => String(val).toLowerCase().includes(searchQuery.toLowerCase())));
-  const handleAdd = () => {
-    if (isAuthenticated) {
-      navigate("/maintenanceDetails", { state: { ticket: null, mode: "add" } });
-    } else {
-      navigate(user?.userType === "customer" ? "/login" : "/login/employee");
-    }
-  };
 
   // Handle row click to navigate to Maintenance details page with ticket details
   const handleRowClick = (ticket) => {
     navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+  };
+
+  // Handle adding a new ticket
+  const handleAdd = () => {
+    if (isAuthenticated) {
+      navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } });
+    } else {
+      navigate(user?.userType === "customer" ? "/login" : "/login/employee");
+    }
   };
 
   return (
@@ -102,27 +149,24 @@ function Maintenance() {
       {isV('maintenanceContent') && (
         <div className='maintenance-content'>
           <div className='maintenance-header'>
-            {isV('searchInput') && <SearchInput onSearch={setSearchQuery} />}
+            {isV('searchInput') && <SearchInput onSearch={handleSearch} />}
             {isV("btnAdd") && isE("btnAdd") && (
               <button className='support-add-button' onClick={handleAdd}>
                 {t("+ Add")}
               </button>
             )}
           </div>
-          {loading && isV('loadingState') ? (
-            <div className='loading'>Loading...</div>
-          ) : error && isV('errorState') ? (
-            <div className='error-message'>Error loading data: {error}</div>
-          ) : (
-            isV('maintenanceTable') && (
-              <Table 
-                columns={columns.filter(col => col.include !== false)} 
-                data={filteredTickets} 
-                getStatusClass={getStatusClass} 
-                onRowClick={handleRowClick} 
-              />
-            )
+          {/* <ActionButton menuItems={maintenanceMenuItems} /> */}
+          {isV('maintenanceTable') && (
+            <Table 
+              columns={columns.filter(col => col.include !== false)} 
+              data={filteredTickets} 
+              getStatusClass={getStatusClass} 
+              onRowClick={(ticket) => handleRowClick(ticket)} 
+            />
           )}
+          {loading && isV('loadingState') && <div>{t("Loading...")}</div>}
+          {error && isV('errorState') && <div className="error">{error}</div>}
         </div>
       )}
     </Sidebar>
@@ -145,7 +189,7 @@ export default Maintenance;
                 "requestId": "M-1234",
                 "customerId": 1,
                 "branchId": 1,
-                "category": "Machine Maintenance",
+                "issueType": "Machine Maintenance",
                 "issueName": "Machine depensation Issue",
                 "issueDetails": "Regular maintenance check required",
                 "urgencyLevel": "Medium",
@@ -189,7 +233,7 @@ export default Maintenance;
                 "requestId": "M-2133",
                 "customerId": 1,
                 "branchId": 1,
-                "category": "Machine Maintenance",
+                "issueType": "Machine Maintenance",
                 "issueName": "Machine Noise",
                 "issueDetails": "Machine makes noise while dispensing coffee",
                 "urgencyLevel": "Medium",
