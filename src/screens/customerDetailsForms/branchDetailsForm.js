@@ -331,10 +331,10 @@ const setSameAsCustomer = (e) => {
     updatedBranchContactsData.current[name] = value;
     setBranchContacts((prev) => ({ ...prev, [name]: value }));
   };
-
+  
   // useEffect(() => {
-  //   const fetchWorkflowData = async () => {
-  //   if (isApprovalMode) {
+    //   const fetchWorkflowData = async () => {
+    //   if (isApprovalMode) {
   //     const wfData = await fetchWorkflowDataOfBranch(customer?.workflowId);
   //     setWorkflowData(wfData);
   //     const temp = { ...branchDetails, ...wfData };
@@ -380,7 +380,7 @@ const setSameAsCustomer = (e) => {
       mandatoryFields.forEach((field) => {
         if (field in dataToValidate && !dataToValidate[field]) {
           
-            errors[field] = t("This field is required.");
+            errors[field] = t("This field is required");
           
         }
       });

@@ -1,7 +1,7 @@
 
 
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/api";
-  const getOptionsFromBasicsMaster = async (fieldName) => {
+  export const getOptionsFromBasicsMaster = async (fieldName) => {
     const params = new URLSearchParams({
       filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
     });

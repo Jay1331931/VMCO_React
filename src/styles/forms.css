@@ -863,7 +863,7 @@ body::-webkit-scrollbar {
 .expanded-form-container {
   background: #f9f9f9;
   padding: 1rem;
-  border-top: 1px solid #ccc;
+  /* border-top: 1px solid #ccc; */
 }
 
 .form-section {

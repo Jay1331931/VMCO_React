@@ -447,131 +447,6 @@ const mandatoryFields = [
   "zone"
 ];
 
-// const validateChangedFields = (
-//     action,
-//     changedFields,
-//     checkRequired = false
-//   ) => {
-//     const errors = {};
-//     console.log("Validating changed fields:", changedFields);
-
-//     changedFields.forEach((fieldName) => {
-//       // Find the field in all tabs if checkRequired, otherwise only in activeTab
-//       let field;
-//       if (checkRequired) {
-//         for (const tab of Object.keys(formsByTab)) {
-//           field = formsByTab[tab].find((f) => f.name === fieldName);
-//           if (field) break;
-//         }
-//       } else {
-//         field = formsByTab[activeTab].find((f) => f.name === fieldName);
-//       }
-
-//       // Skip if field is not found in any tab
-//       if (!field) return;
-
-//       const value = formData[fieldName];
-
-//       if (
-//         action === "save changes" &&
-//         field.required &&
-//         !value &&
-//         fieldName !== "nonTradingDocuments" &&
-//         field.type !== "document"
-//       ) {
-//         errors[fieldName] = t("This field is required.");
-//       }
-
-//       if (checkRequired && field.type === "text" && field.required && !value) {
-//         errors[fieldName] = t("This field is required.");
-//       }
-
-//       if (
-//         checkRequired &&
-//         field.type === "document" &&
-//         field.required &&
-//         !uploadedFiles[fieldName]
-//       ) {
-//         errors[fieldName] = t("This document is required.");
-//       }
-
-//       if (
-//         fieldName.toLowerCase().includes("arabic") &&
-//         value &&
-//         !isArabicText(value)
-//       ) {
-//         errors[fieldName] = t("Please enter Arabic text.");
-//       }
-
-//       if (fieldName.toLowerCase().includes("email")) {
-//         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//         if (value && !emailRegex.test(value)) {
-//           errors[fieldName] = t("Invalid email format");
-//         }
-//       }
-
-//       if (
-//         fieldName.toLowerCase().includes("phone") ||
-//         fieldName.toLowerCase().includes("number") ||
-//         fieldName.toLowerCase().includes("#")
-//       ) {
-//         if (value && isNaN(value)) {
-//           errors[fieldName] = t("Only numeric values are allowed");
-//         }
-//       }
-
-//       if (activeTab === "Contact Details") {
-//         if (
-//           checkRequired &&
-//           fieldName === "primaryContactName" &&
-//           !formData[fieldName]
-//         ) {
-//           errors[fieldName] = t("Primary contact name is required");
-//         }
-//         if (checkRequired && fieldName === "primaryContactEmail") {
-//           if (!formData[fieldName]) {
-//             errors[fieldName] = t("Primary contact email is required");
-//           }
-//         }
-//         if (
-//           fieldName === "financeHeadEmail" ||
-//           fieldName === "purchasingHeadEmail"
-//         ) {
-//           const otherHeadEmail =
-//             fieldName === "financeHeadEmail"
-//               ? formData.purchasingHeadEmail
-//               : formData.financeHeadEmail;
-
-//           if (formData[fieldName] && formData[fieldName] === otherHeadEmail) {
-//             errors[fieldName] = t(
-//               "Finance and Purchasing heads must have unique emails"
-//             );
-//           }
-//           if (
-//             formData[fieldName] &&
-//             formData[fieldName] === formData.primaryContactEmail
-//           ) {
-//             errors[fieldName] = t(
-//               "This email is already used by primary contact"
-//             );
-//           }
-//         }
-//       }
-
-//       if (
-//         checkRequired &&
-//         fieldName === "nonTradingDocuments" &&
-//         (pendingFileUploads[fieldName]?.length === 0 ||
-//           transformedCustomer?.[fieldName]?.length === 0)
-//       ) {
-//         // console.log("Non trading documents", pendingFileUploads[fieldName]?.length)
-//         errors[fieldName] = t("At least one document is required");
-//       }
-//     });
-
-//     setFormErrors(errors);
-//     return Object.keys(errors).length === 0;
-//   };
 const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
@@ -737,16 +612,9 @@ if(uniqueFieldsList.includes(field)) {
   const uploadDocuments = async (tradingFilesToUpload, nonTradingFilesToUpload) => {
     const uploadedFiles = {};
     try {
-      // Object.entries(tradingFilesToUpload).forEach(async ([fieldName, file]) => {
-      //   const uploadedFile = await uploadFile(fieldName, file, customerId);
-      //   updatedCustomerData.current[fieldName] = uploadedFile.fileName;
-      // });
       for (const fieldName of Object.keys(tradingFilesToUpload)) {
   const file = tradingFilesToUpload[fieldName];
   const uploadedFile = await uploadFile(fieldName, file, customerId);
-  // if (uploadedFile && uploadedFile.fileName) {
-  //   updatedCustomerData.current[fieldName] = uploadedFile.fileName;
-  // }
   if( uploadedFile && uploadedFile.fileName) {
     uploadedFiles[fieldName] = uploadedFile.fileName;
   }
@@ -767,10 +635,6 @@ if(uniqueFieldsList.includes(field)) {
                 uploadedFiles["nonTradingDocuments"].push(uploadedFile.fileName);
                 }
             }
-            // updatedCustomerData.current["nonTradingDocuments"] = [
-            //   ...(customerData?.nonTradingDocuments || []),
-            //   ...(nonTradingFilesToUpload?.others || [])
-            // ];
           }
         }
         if(uploadedFiles?.["nonTradingDocuments"])
@@ -868,12 +732,7 @@ if(uniqueFieldsList.includes(field)) {
         return;
       }
       
-      // if(Object.keys(nonTradingFilesToUpload?.others) > 0) {
-      //   updatedCustomerData.current["nonTradingDocuments"] = [
-      //     ...(customerData?.nonTradingDocuments || []),
-      //     ...(nonTradingFilesToUpload?.others || [])
-      //   ];
-      // }
+    
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -887,25 +746,6 @@ if(uniqueFieldsList.includes(field)) {
     } catch (error) {
       console.error("Error updating customer:", error.message);
     }
-
-    // try {
-    //   //TODO:Merge workflow data with updatedcustomerData.current if inApproval is true and save. This could happen only during
-    //   //  approval the data is changed
-    //   // updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
-
-    //   const response = await fetch(
-    //     `${API_BASE_URL}/customer-contacts/${customerId}`,
-    //     {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(updatedCustomerContactsData.current),
-    //       credentials: "include",
-    //     }
-    //   );
-    //   console.log("Response", response);
-    // } catch (error) {
-    //   console.error("Error updating customer:", error.message);
-    // }
 
     try {
       // updatedCustomerPaymentMethodsData.current["customerStatus"] = customerData.customerStatus;
@@ -938,7 +778,7 @@ if(uniqueFieldsList.includes(field)) {
         );
       }
       const mergedData = {
-        updates: { ...wfCustomerData, ...updatedCustomerData.current },
+        updates: { ...wfCustomerData, customer: { ...updatedCustomerData.current }, contacts: { ...updatedCustomerContactsData.current }},
         id: customerId,
       };
       const response = await fetch(
@@ -973,7 +813,7 @@ if(uniqueFieldsList.includes(field)) {
         );
       }
       const mergedData = {
-        updates: { ...wfCustomerData, ...updatedCustomerData.current },
+        updates: { ...wfCustomerData, customer: { ...updatedCustomerData.current }, contacts: { ...updatedCustomerContactsData.current }},
         id: customerId,
       };
       const response = await fetch(
@@ -1020,24 +860,6 @@ const errors = await validateData({...customerData, ...customerContactsData}, tr
       console.error("Error updating customer:", error.message);
     }
 
-    // try {
-    //   //TODO:Merge workflow data with updatedcustomerData.current if inApproval is true and save. This could happen only during
-    //   //  approval the data is changed
-    //   // updatedCustomerData.current["customerStatus"] = customerData.customerStatus;
-
-    //   const response = await fetch(
-    //     `${API_BASE_URL}/customer-contacts/${customerId}`,
-    //     {
-    //       method: "POST",
-    //       headers: { "Content-Type": "application/json" },
-    //       body: JSON.stringify(customerContactsData),
-    //       credentials: "include",
-    //     }
-    //   );
-    //   console.log("Response", response);
-    // } catch (error) {
-    //   console.error("Error updating customer:", error.message);
-    // }
   };
 
   const handleBlock = async () => {
@@ -1213,6 +1035,7 @@ const errors = await validateData({...customerData, ...customerContactsData}, tr
             )}
             {activeTab === "Products" && isV("productsTab") && (
               <CustomerProducts
+                customerId={customerId}
                 customer={customerData}
                 setTabsHeight={setTabsHeight}
               />

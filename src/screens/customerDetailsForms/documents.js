@@ -365,7 +365,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("vatCertificate")}
                 >
                         ×
                       </button>
@@ -439,7 +439,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("nationalId")}
                 >
                   ×
                 </button>
@@ -512,7 +512,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("bankLetter")}
                 >
                   ×
                 </button>
@@ -585,7 +585,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("nationalAddress")}
                 >
                   ×
                 </button>
@@ -658,7 +658,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("contractAgreement")}
                 >
                   ×
                 </button>
@@ -732,7 +732,7 @@ function Documents({
                 <button
                   type="button"
                   className="delete-file-button"
-                  onClick={() => removeFile()}
+                  onClick={() => removeTradingFile("creditApplication")}
                 >
                   ×
                 </button>

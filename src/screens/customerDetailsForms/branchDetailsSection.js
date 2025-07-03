@@ -316,31 +316,6 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
     return branch?.[fieldName] ?? "";
   };
 
-  // Handle checkbox changes
-  // const [sameAsCustomer, setSameAsCustomer] = useState(
-  //   getFieldValue("sameAsCustomer") || false
-  // );
- 
-
-  // Use useCallback to memoize the handler
-  // const handleInputChange = useCallback(
-  //   (e) => {
-  //     const { name, value } = e.target;
-  //     console.log("Input changed:", name, value);
-  //     handleBranchFieldChange(branch.id, name, value);
-  //   },
-  //   [branch.id, handleBranchFieldChange]
-  // );
-
-  // const handleCheckboxChange = useCallback(
-  //   (e) => {
-  //     const { name, checked } = e.target;
-      
-  //     handleBranchFieldChange(branch.id, name, checked);
-  //   },
-  //   [branch.id, handleBranchFieldChange]
-  // );
-
   const handleLocationSelect = useCallback(
     (lat, lng) => {
       setSelectedLocation({ lat, lng });
@@ -545,7 +520,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                                 : {}
                             }
                     onChange={handleBranchFieldChange}
-                    // readOnly
+                    readOnly
                   />
 
                   <button
