@@ -389,7 +389,29 @@
   "No branches available": "لا توجد فروع متاحة",
   "All products loaded.": "تم تحميل جميع المنتجات.",
   "Send OTP": "إرسال OTP",
-  "Resend OTP": "إعادة إرسال OTP"
+  "Resend OTP": "إعادة إرسال OTP",
+  "Bank Transactions": "المعاملات البنكية",
+  "Transaction Id": "معرف المعاملة",
+  "ERP Customer Id": "معرف العميل ERP",
+  "Amount Transferred": "المبلغ المحول",
+  "Transaction Date": "تاريخ المعاملة",
+  "ERP Order Id": "معرف طلب ERP",
+  "Transaction Status": "حالة المعاملة",
+  "Bank Transaction Details"  : "تفاصيل المعاملة البنكية",
+  "Verify": "تحقق",
+  "Created At": "تم الإنشاء في",
+  "ERP Order ID": "معرف طلب ERP",
+  "Company Name (AR)": "اسم الشركة (بالعربية)",
+  "Upload Bank Documents": "تحميل مستندات البنك",
+  "Company Name (EN)": "اسم الشركة (بالإنجليزية)",
+  "ERP Customer ID": "معرف العميل ERP",
+  "Description": "الوصف",
+  "verified": "تم التحقق",
+  "pending": "قيد الانتظار",
+  "rejected": "مرفوض",
+  "Select Entity": "اختر الكيان"
+ 
+
 
 
 
