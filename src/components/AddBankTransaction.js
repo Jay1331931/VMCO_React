@@ -10,7 +10,7 @@ import axios from "axios";
 import GetSalesOrder from "./GetSalesOrder";
 import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
-
+import "../styles/addBankTransaction.css";
 const AddBankTransaction = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -28,13 +28,12 @@ const AddBankTransaction = () => {
     bankDocuments: [],
   });
   const { id } = useParams();
-
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [updateTransaction, setUpdateTransaction] = useState({});
   const [showSalesOrderPopup, setshowSalesOrderPopup] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
+  const [fileData, setFileData] = useState([]);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -70,12 +69,7 @@ const AddBankTransaction = () => {
       );
 
       if (data.success) {
-        const fileUrls = data.files.map((file) => ({
-          // fileUrl: file.fileUrl,
-          blobPath: file.blobPath,
-        }));
-
-        setImageUrls( fileUrls)
+        setImageUrls([...imageUrls, ...data.files.flat()]);
       }
     } catch (error) {
       console.error("Upload failed", error);
@@ -83,19 +77,24 @@ const AddBankTransaction = () => {
   };
   const handleSubmit = async () => {
     try {
-    if (!formData.erpCustId || !formData.entity || !formData.transactionDate ||imageUrls?.length==0 || !formData.amountTransferred )  {
+      if (
+        !formData.erpCustId ||
+        !formData.entity ||
+        !formData.transactionDate ||
+        imageUrls?.length == 0 ||
+        !formData.amountTransferred
+      ) {
         setError(t("Please fill all required fields"));
         return;
       }
       const payload = {
         ...formData,
-        // Ensure the date is in correct format (YYYY-MM-DD)
         bankDocuments: JSON.stringify(imageUrls),
         transactionDate: new Date(formData.transactionDate)
           .toISOString()
           .split("T")[0],
       };
-      delete payload.entity
+      delete payload.entity;
       const response = await axios.post(
         `${API_BASE_URL}/bank-transactions`,
         payload,
@@ -167,6 +166,7 @@ const AddBankTransaction = () => {
           withCredentials: true,
         }
       );
+      setImageUrls(data.data.bankDocuments ? data.data.bankDocuments : []);
       setUpdateTransaction({
         ...data.data,
         transactionDate: data.data.transactionDate.split("T")[0],
@@ -178,6 +178,32 @@ const AddBankTransaction = () => {
   useEffect(() => {
     fetchTransaction();
   }, [fetchTransaction]);
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      console.log("Fetching files for imageUrls:", imageUrls);
+      if (imageUrls.length === 0) return;
+      const { data } = await axios.post(
+        `${API_BASE_URL}/bank-transactions/getFiles`,
+        { fileNames: imageUrls },
+
+        { withCredentials: true }
+      );
+      console.log("Fetched files:", data.files);
+      setFileData(data.files);
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    }
+  }, [imageUrls]);
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
+  const handleRemoveImage = (fileName) => {
+    setFileData((prev) => prev.filter((file) => file.fileName !== fileName));
+    setImageUrls((prev) => prev.filter((img) => img !== fileName));
+  };
+  console.log("Disabled?", !Boolean(updateTransaction?.erpOrderId));
+
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
   return (
@@ -238,7 +264,6 @@ const AddBankTransaction = () => {
                       updateTransaction?.companyNameAr
                     )
                   }
-                    
                   onChange={handleChange}
                 />
               </div>
@@ -262,10 +287,11 @@ const AddBankTransaction = () => {
                   onChange={handleChange}
                 />
               </div>
-             
 
               <div className="form-group">
-                <label htmlFor="transactionDate">{t("Transaction Date *")}</label>
+                <label htmlFor="transactionDate">
+                  {t("Transaction Date *")}
+                </label>
                 <input
                   id="transactionDate"
                   name="transactionDate"
@@ -300,40 +326,35 @@ const AddBankTransaction = () => {
               {(formData.entity && formData.erpCustId) ||
               Object.keys(updateTransaction).length > 0 ? (
                 <>
-                <div className="form-group">
-                  <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
-                  <input
-                    id="erpOrderId"
-                    name="erpOrderId"
-                    placeholder={t("ERP Order ID")}
-                    value={
-                      formData?.erpOrderId ||
-                      updateTransaction?.erpOrderId ||
-                      ""
-                    }
-                    disabled={!!updateTransaction?.erpOrderId}
-                    onClick={() => setshowSalesOrderPopup(true)}
-                  />
-                </div>
-                 <div className="form-group">
-                <label htmlFor="orderId">
-                  {t("Order ID")}
-                </label>
-                <input
-                  id="orderId"
-                  name="orderId"
-                  type="number"
-                  placeholder={t("Order Id")}
-                  min={0}
-                  value={
-                    formData?.orderId ||
-                    updateTransaction?.orderId ||
-                    ""
-                  }
-                  disabled={!!updateTransaction?.orderId}
-                  onChange={handleChange}
-                />
-              </div></>
+                  <div className="form-group">
+                    <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
+                    <input
+                      id="erpOrderId"
+                      name="erpOrderId"
+                      placeholder={t("ERP Order ID")}
+                      value={
+                        formData?.erpOrderId || updateTransaction?.erpOrderId
+                      }
+                      disabled={!!updateTransaction?.erpOrderId}
+                      onClick={() => setshowSalesOrderPopup(true)}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="orderId">{t("Order ID")}</label>
+                    <input
+                      id="orderId"
+                      name="orderId"
+                      type="number"
+                      placeholder={t("Order Id")}
+                      min={0}
+                      value={
+                        formData?.orderId || updateTransaction?.orderId || ""
+                      }
+                      disabled={!!updateTransaction?.orderId}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </>
               ) : null}
 
               <div className="form-group">
@@ -345,7 +366,78 @@ const AddBankTransaction = () => {
                   type="file"
                   multiple
                   onChange={handleFileChange}
+                  disabled={!!updateTransaction?.bankDocuments}
                 />
+              </div>
+              <div className="form-group">
+                <div className="image-grid">
+                  {fileData?.map((file, index) => {
+                    const fileUrl = `${API_BASE_URL}/${file.fileName}`;
+                    const extension = file.fileName
+                      .split(".")
+                      .pop()
+                      .toLowerCase();
+                    const isImage = [
+                      "png",
+                      "jpg",
+                      "jpeg",
+                      "gif",
+                      "webp",
+                    ].includes(extension);
+                    const isPdf = extension === "pdf";
+                    const isExcel = ["xls", "xlsx", "csv"].includes(extension);
+
+                    return (
+                      <div key={index} className="image-item">
+                        {isImage ? (
+                          <img
+                            src={fileUrl}
+                            alt={file.fileName}
+                            className="preview-image"
+                          />
+                        ) : isPdf ? (
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                             className="file-link-button"
+                            
+                          >
+                            📄 View PDF
+                          </a>
+                        ) : isExcel ? (
+                          <a
+                            href={fileUrl}
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                             className="file-link-button"
+                          >
+                            📊 Open Excel File
+                          </a>
+                        ) : (
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                             className="file-link-button"
+                          >
+                            📁 Download File
+                          </a>
+                        )}
+
+                        {Object.keys(updateTransaction).length === 0 && (
+                          <button
+                            type="button"
+                            className="remove-image-btn"
+                            onClick={() => handleRemoveImage(file.fileName)}
+                          >
+                            ✖
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="form-group full-width">
@@ -397,7 +489,9 @@ const AddBankTransaction = () => {
                 <button className="status-btn" disabled>
                   {t("Status")}: {t(updateTransaction?.status)}
                 </button>
-              ):<div></div>}
+              ) : (
+                <div></div>
+              )}
 
               <div className="form-actions">
                 {Object.keys(updateTransaction).length === 0 ? (
@@ -436,133 +530,7 @@ const AddBankTransaction = () => {
               </div>
             </div>
           </>
-          <style>
-            {`
-.bank-add-container {
-  align-items: center;
-  padding: 10px;
-            }
-
-.bank-add-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-   margin: 0 auto;
-  padding: 16px;
-    background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1rem;
-}
-
-.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-grid input,
-.form-grid select,
-.form-grid textarea {
-  padding: 0.75rem;
-  font-size: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-
-.full-width {
-  grid-column: 1 / -1;
-}
-
-
-
-.submit-btn,
-.cancel-btn {
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-
-.submit-btn {
-  background-color: #00594c;
-  color: white;
-}
-
-.cancel-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.form-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.status-btn {
-  background-color: #e0e0e0;
-  color: #333;
-  font-weight: bold;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  cursor: default;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-}
-
-
- .form-actions .submit-btn, {
-    justify-content: flex-end;
-    width: 100%;
-  }
-@media (max-width: 600px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-.form-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .form-actions {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  .submit-btn,
-  .cancel-btn {
-    width: 100%;
-  }
-}
-`}
-          </style>
+      
         </div>
       )}
     </Sidebar>
