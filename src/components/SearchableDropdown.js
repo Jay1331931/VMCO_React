@@ -31,8 +31,8 @@ function SearchableDropdown({
   // Get filtered options based on search term
   const filteredOptions = options
     ? options.filter((opt) => {
-        const optionText = typeof opt === "object" ? opt.name : opt;
-        return optionText.toLowerCase().includes(searchTerm.toLowerCase());
+        const optionText = typeof opt === "object" ? (opt.name || opt.label || "") : (opt || "");
+        return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
       })
     : [];
 

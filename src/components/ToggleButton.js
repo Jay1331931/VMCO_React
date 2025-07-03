@@ -3,20 +3,31 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faToggleOff, faToggleOn } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
-const ToggleButton = ({ isToggled, onToggle }) => {
+const ToggleButton = ({ 
+  isToggled, 
+  onToggle, 
+  leftLabel, 
+  rightLabel, 
+  leftLabelKey = 'All', 
+  rightLabelKey = 'My Items' 
+}) => {
   const { t } = useTranslation();
+
+  // Use provided labels or fall back to translation keys
+  const displayLeftLabel = leftLabel || t(leftLabelKey);
+  const displayRightLabel = rightLabel || t(rightLabelKey);
 
   return (
     <>
       <div className="toggle-container">
-        <label>{t('All')}</label>
+        <label>{displayLeftLabel}</label>
         <FontAwesomeIcon
           icon={isToggled ? faToggleOn : faToggleOff}
           className="toggle-icon"
           onClick={onToggle}
-          aria-label={isToggled ? t('Switch to All Orders') : t('Switch to My Approvals')}
+          aria-label={isToggled ? t(`Switch to ${displayLeftLabel}`) : t(`Switch to ${displayRightLabel}`)}
         />
-        <label>{t('My Approval')}</label>
+        <label>{displayRightLabel}</label>
       </div>
       <style>{`
         .toggle-container {

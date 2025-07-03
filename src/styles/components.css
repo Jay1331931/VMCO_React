@@ -3044,6 +3044,11 @@
   box-shadow: 0 0 0 2px #00594c;
 }
 
+.maintenance-details-field {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
 .maintenance-details-footer {
   display: flex;
   justify-content: space-between;
