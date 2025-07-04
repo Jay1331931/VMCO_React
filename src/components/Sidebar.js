@@ -22,7 +22,7 @@ import {
   faCog,
   faUser,
   faSignOutAlt,
-  faLanguage,
+  faLanguage,faBank
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 
@@ -333,6 +333,9 @@ function Sidebar({ children, title }) {
       case "Maintenance":
         navigate("/maintenance");
         break;
+      case "Bank":
+        navigate("/bankTransactions");
+        break;
       case "Dashboard":
         navigate("/login");
         break;
@@ -381,6 +384,7 @@ function Sidebar({ children, title }) {
     { icon: faUsers, label: "Customers" },
     { icon: faHeadset, label: "Support" },
     { icon: faTools, label: "Maintenance" },
+    { icon: faBank, label: "Bank" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
   ];
@@ -415,7 +419,7 @@ function Sidebar({ children, title }) {
 
         <div className="sidebar-menu">
           <div className="main-menu-items">
-            {menuItems.slice(0, 6).map(({ icon, label }) => (
+            {menuItems.slice(0, 7).map(({ icon, label }) => (
               <div
                 key={label}
                 className={`menu-item ${activeMenu === label ? "active" : ""}`}
@@ -428,7 +432,7 @@ function Sidebar({ children, title }) {
             ))}
           </div>
           <div className="bottom-menu-section">
-            {menuItems.slice(6).map(({ icon, label }) => (
+            {menuItems.slice(7).map(({ icon, label }) => (
               <div
                 key={label}
                 className={`menu-item ${activeMenu === label ? "active" : ""}`}
