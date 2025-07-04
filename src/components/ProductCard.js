@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import QuantityController from './QuantityController';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
 
 const ProductCard = ({
     product,
@@ -14,6 +15,7 @@ const ProductCard = ({
 }) => {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
     
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
@@ -50,6 +52,11 @@ const ProductCard = ({
         onAddToCart(product.id); // Call the parent component's onAddToCart function
     }
 
+    const handleToggleFavorite = (e) => {
+        e.stopPropagation(); // Prevent triggering the onProductClick event
+        setIsFavorite(!isFavorite);
+    };
+
     // Determine direction and alignment
     const dir = i18n.dir();
     const isRTL = dir === 'rtl';
@@ -62,15 +69,24 @@ const ProductCard = ({
             dir={dir}
         >
             <div className="product-image-container">
-            {product.image ? (
-                <img
-                src={product.image}
-                alt={product.name}
-                className="responsive-product-image"
-                />
-            ) : (
-                <div className="product-image-placeholder">No Image</div>
-            )}
+                <button 
+                    className="favorite-btn"
+                    onClick={handleToggleFavorite}
+                >
+                    {isFavorite ? 
+                        <MdFavorite className="favorite-icon filled" /> : 
+                        <MdFavoriteBorder className="favorite-icon" />
+                    }
+                </button>
+                {product.image ? (
+                    <img
+                    src={product.image}
+                    alt={product.name}
+                    className="responsive-product-image"
+                    />
+                ) : (
+                    <div className="product-image-placeholder">No Image</div>
+                )}
             </div>
           
             <div className="product-details">
@@ -117,6 +133,46 @@ const ProductCard = ({
                 </div>
             </div>
             <style>{`
+            .product-image-container {
+                position: relative;
+                width: 100%;
+            }
+            
+            .favorite-btn {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                z-index: 2;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 5px;
+                border-radius: 50%;
+                transition: background-color 0.2s;
+            }
+            
+            .favorite-btn:hover {
+                background-color: rgba(255, 255, 255, 0.7);
+            }
+            
+            .favorite-icon {
+                font-size: 24px;
+                color: #6c7584;
+            }
+            
+            .favorite-icon.filled {
+                color: red;
+            }
+            
+            /* RTL support for favorite button */
+            .product-card.rtl .favorite-btn {
+                right: auto;
+                left: 10px;
+            }
+            
             .buttons-container {
             display: flex;
             flex-direction: row;

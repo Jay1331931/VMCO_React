@@ -128,6 +128,7 @@ function OrderDetails() {
   const [InventoryData, setInventoryData] = useState([]);
   const [InventoryLoading, setInventoryLoading] = useState(false);
   const [productName, setProductName] = useState('');
+  const [sampleMode, setSampleMode] = useState(false); // Add this line
   // Store companyType in state
   const [companyType, setCompanyType] = useState('');
 
@@ -302,8 +303,12 @@ function OrderDetails() {
       updatedProducts[idx].quantity = parseInt(value, 10);
 
       // Update the net amount based on the new quantity
-      const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
-      updatedProducts[idx].netAmount = (unitPrice * value).toFixed(2);
+      if (sampleMode) {
+        updatedProducts[idx].netAmount = "0.00";
+      } else {
+        const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
+        updatedProducts[idx].netAmount = (unitPrice * value).toFixed(2);
+      }
 
       return { ...prev, products: updatedProducts };
     });
@@ -388,7 +393,9 @@ function OrderDetails() {
       const fieldsToUpdate = [
         'erpCustId', 'erpBranchId', 'orderBy', 'entity',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
-        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion']; const payload = {};    // Check if category is VMCO Machines
+        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'];
+
+      const payload = {};    // Check if category is VMCO Machines
       const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase(); fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === 'paymentPercentage') {
@@ -559,7 +566,9 @@ function OrderDetails() {
           console.log('No products were removed from the order');
         }
       }
-      // Refresh order details after update      await getOrderById(formData.id);        // Check if this is a VMCO Machines order that needs discount workflow approval
+      // Refresh order details after update
+      // await getOrderById(formData.id);
+      // Check if this is a VMCO Machines order that needs discount workflow approval
       if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
         (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
         formData.customerId) {
@@ -752,13 +761,14 @@ function OrderDetails() {
         erpBranchId: formData.erpBranchId || '',
         branchNameEn: formData.branchNameEn || '', // Always use value from formData      
         branchNameLc: formData.branchNameLc || '', // Always use value from formData        
-        branchRegion: formData.branchRegion || '', // Include branch region        orderBy: orderByName, // <-- Use fetched employee name here
+        branchRegion: formData.branchRegion || '', // Include branch region        
+        orderBy: orderByName, // <-- Use fetched employee name here
         paymentMethod: formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
           ? 'Pre Payment'
           : (selectedMethod || formData.paymentMethod || ''),
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         //status: formData.entity && formData.entity.toLowerCase() === 'vmco' ? 'Pending' : 'Open',
-        status: 'Open',
+        status: sampleMode ? 'approved' : 'Open',
         sales_executive: user.employeeId,
         paymentStatus: (selectedMethod || formData.paymentMethod) === 'Credit' ? 'Paid' : 'Pending', // <-- Use selectedMethod for logic
         entity: formData.entity || '',
@@ -766,8 +776,10 @@ function OrderDetails() {
         totalAmount: formData.totalAmount || '0',
         pricingPolicy: formData.pricingPolicy || '',
         customerRegion: formData.customerRegion || '',
-        productCategory: formData.category || '' // Add product category for VMCO filtering
-      }; try {
+        productCategory: formData.category || '',
+        sample_order: sampleMode
+      };
+      try {
         setLoading(true);
         console.log('Submitting order payload:', payload);
         console.log('Branch-related fields in payload:', {
@@ -1120,6 +1132,7 @@ function OrderDetails() {
           })
         });
 
+
         if (response.ok) {
           const result = await response.json();
           if (result.status === 'Ok' && result.data) {
@@ -1266,15 +1279,14 @@ function OrderDetails() {
   const handleSelectProduct = (product) => {
     // Use MOQ for the product, default to 1 if not set
     const moq = Number(product.moq) || 1;
-    const unitPrice = parseFloat(product.unitPrice);
-    // Determine VAT based on companyType
+    // In sample mode, set price to 0, otherwise use the actual price
+    const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
+    // Determine VAT based on companyType and sample mode
     let vatPercentage = 0.00;
-    if (companyType && companyType.toLowerCase() === 'trading') {
+    if (!sampleMode && companyType && companyType.toLowerCase() === 'trading') {
       vatPercentage = parseFloat(product.vatPercentage);
-    } else {
-      // Optionally, handle other company types or log a warning
-      // console.warn('Company type is not trading:', companyType);
     }
+
     setFormData(prev => {
       // Check if product already exists in the table
       const existingIdx = prev.products.findIndex(
@@ -1285,13 +1297,18 @@ function OrderDetails() {
         const updatedProducts = [...prev.products];
         const existingProduct = updatedProducts[existingIdx];
         const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + 1;
-        const newNetAmount = ((unitPrice * newQuantity) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+        // In sample mode, netAmount is always 0
+        const newNetAmount = sampleMode ? "0.00" :
+          ((unitPrice * newQuantity) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+
         updatedProducts[existingIdx] = {
           ...existingProduct,
           quantity: newQuantity,
           netAmount: newNetAmount,
           moq: moq,
           vatPercentage: vatPercentage,
+          // In sample mode, unitPrice is always 0
+          unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
           // Keep both names updated
           productName: product.productName,
           productNameLc: product.productNameLc
@@ -1302,16 +1319,20 @@ function OrderDetails() {
         };
       } else {
         // Product does not exist, add as new row with MOQ as quantity
-        const netAmount = ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
+        // In sample mode, netAmount is always 0
+        const netAmount = sampleMode ? "0.00" :
+          ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
+
         const newProduct = {
           id: product.id,
           product_id: product.id,
           productName: product.productName,
-          productNameLc: product.productNameLc, // <-- keep productNameLc
+          productNameLc: product.productNameLc,
           erpProdId: product.erpProdId || product.erp_prod_id || '',
           quantity: moq,
           unit: product.unit,
-          unitPrice: unitPrice.toFixed(2),
+          // In sample mode, unitPrice is always 0
+          unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
           netAmount: netAmount,
           vatPercentage: vatPercentage,
           moq: moq
@@ -1363,7 +1384,8 @@ function OrderDetails() {
       companyNameEn: customer.company_name_en || customer.companyNameEn || '', // Set companyNameEn
       companyNameAr: customer.company_name_ar || customer.companyNameAr || '', // Set companyNameAr
       salesExecutive: customer.assignedToEntityWise,
-      assignedToEntityWise: assignedToEntityWise // Store the parsed object for later use
+      assignedToEntityWise: assignedToEntityWise,
+      customerRegion: customer.region || ''
     }));
     setShowCustomerPopup(false);
   };
@@ -1616,9 +1638,9 @@ function OrderDetails() {
           pageSize: 100, // Fetch a reasonable number of customers
           sortBy: (i18n.language === 'ar' ? 'company_name_ar' : 'company_name_en'),
           sortOrder: 'asc',
-          purpose: 'order creation' // Add the purpose parameter
+          purpose: 'order creation'
         });
-
+        console.log('Fetching customer options with params:', params.toString());
         const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
@@ -1628,6 +1650,7 @@ function OrderDetails() {
         if (!response.ok) throw new Error('Failed to fetch customer options');
 
         const result = await response.json();
+        console.log('Customer options response:', result);
         if (result.status === 'Ok' && result.data && Array.isArray(result.data.data)) {
           setCustomerOptions(result.data.data);
         } else {
@@ -1698,6 +1721,16 @@ function OrderDetails() {
 
   // Calculate deliveryCharges and totalAmount based on entity and products
   useEffect(() => {
+    if (sampleMode) {
+      // In sample mode, delivery charges and total amount are always 0
+      setFormData(prev => ({
+        ...prev,
+        deliveryCharges: '0.00',
+        totalAmount: '0.00'
+      }));
+      return;
+    }
+
     let deliveryCharges = '0.00';
     let total = 0;
     if (Array.isArray(formData.products) && formData.products.length > 0) {
@@ -1719,7 +1752,7 @@ function OrderDetails() {
         totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
       }));
     }
-  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount]);
+  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount, sampleMode]);
 
   // Set payment percentage based on category
   useEffect(() => {
@@ -2640,47 +2673,70 @@ function OrderDetails() {
                   <>
                     <h3 className="order-details-subtitle">{t('Products')}</h3>
                     {((formMode === 'add') || (formMode === 'edit' && isE('products'))) && (
-                      <button
-                        type="button"
-                        className="order-action-btn approve" onClick={() => {
-                          // In add mode, require customer, branch, and entity selection
-                          if (formMode === 'add') {
-                            if (!formData.selectedCustomerName) {
-                              Swal.fire({
-                                title: t('Select Customer'),
-                                text: t('Please select a customer first'),
-                                icon: 'warning',
-                                confirmButtonText: t('OK'),
-                              });
-                              return;
-                            }
-                            else if (!formData.selectedBranchName) {
-                              Swal.fire({
-                                title: t('Select Branch'),
-                                text: t('Please select a branch first'),
-                                icon: 'warning',
-                                confirmButtonText: t('OK'),
-                              });
-                              return;
-                            }
-                            else if (!formData.entity) {
-                              Swal.fire({
-                                title: t('Select Entity'),
-                                text: t('Please select an entity first'),
-                                icon: 'warning',
-                                confirmButtonText: t('OK')
-                              });
-                              // alert(t('Please select Entity'));
-                              return;
-                            }
-                          }
-                          // In edit mode, always use values from formData (order state)
-                          setShowProductPopup(true)
-                        }}
-                        style={{ marginBottom: 8 }}
-                      >
-                        {t('Add products')}
-                      </button>
+                      <div style={{ display: 'flex', gap: '10px', marginBottom: 8 }}>
+                        {isV('addProducts') && (
+                          <button
+                            type="button"
+                            className="order-action-btn approve"
+                            onClick={() => {
+                              // In add mode, require customer, branch, and entity selection
+                              if (formMode === 'add') {
+                                if (!formData.selectedCustomerName) {
+                                  Swal.fire({
+                                    title: t('Select Customer'),
+                                    text: t('Please select a customer first'),
+                                    icon: 'warning',
+                                    confirmButtonText: t('OK'),
+                                  });
+                                  return;
+                                }
+                                else if (!formData.selectedBranchName) {
+                                  Swal.fire({
+                                    title: t('Select Branch'),
+                                    text: t('Please select a branch first'),
+                                    icon: 'warning',
+                                    confirmButtonText: t('OK'),
+                                  });
+                                  return;
+                                }
+                                else if (!formData.entity) {
+                                  Swal.fire({
+                                    title: t('Select Entity'),
+                                    text: t('Please select an entity first'),
+                                    icon: 'warning',
+                                    confirmButtonText: t('OK')
+                                  });
+                                  return;
+                                }
+                              }
+                              // In edit mode, always use values from formData (order state)
+                              setShowProductPopup(true)
+                            }}
+                            disabled={!isE('addProducts')}
+                            style={{
+                              cursor: !isE('addProducts') ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            {t('Add products')}
+                          </button>
+                        )}
+                        {isV('sampleOrder') && (
+                          <button
+                            type="button"
+                            className="order-action-btn"
+                            onClick={() => setSampleMode(!sampleMode)}
+                            disabled={!isE('sampleOrder') || (formData.products && formData.products.length > 0)}
+                            style={{
+                              backgroundColor: sampleMode ? '#ffeb3b' : 'white',
+                              color: sampleMode ? 'black' : '#333',
+                              border: '1px solid #ccc',
+                              cursor: (!isE('sampleOrder') || (formData.products && formData.products.length > 0)) ? 'not-allowed' : 'pointer'
+                            }}
+                          >
+                            {t('Sample Order')}
+                          </button>
+                        )}
+                      </div>
                     )}
                     {((formMode !== 'add') || ((formData.products || []).length > 0)) && (
                       <div className="order-products-section" style={{ boxShadow: '0 0 10px rgba(0,0,0,0.1)', padding: '16px 0px', borderRadius: '8px' }}>

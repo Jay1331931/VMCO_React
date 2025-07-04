@@ -1149,6 +1149,46 @@ function Catalog() {
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
 
+  // Filter categories based on interCompany status
+  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
+  
+  // Filter out tabs based on interCompany status
+  useEffect(() => {
+    if (!user) return;
+    
+    // Default to all tabs
+    let tabsToShow = categoryTabs;
+    
+    // If user is a customer with interCompany set to true, filter out matching entity tabs
+    if (user.userType === "customer" && user.interCompany === true && user.entity) {
+      const customerEntity = user.entity.toLowerCase();
+      
+      tabsToShow = categoryTabs.filter(tab => {
+        // Find the original category to get its entity
+        const category = categories.find(cat => cat.value === tab.value);
+        
+        // If no matching category or no entity, include the tab
+        if (!category || !category.entity) return true;
+        
+        // If entity matches customer's entity, exclude the tab
+        return category.entity.toLowerCase() !== customerEntity;
+      });
+      
+      // If we filtered all tabs, show the original tabs as fallback
+      if (tabsToShow.length === 0) {
+        tabsToShow = categoryTabs;
+        console.warn("All tabs would be filtered out based on interCompany rules. Showing all tabs instead.");
+      }
+    }
+    
+    setFilteredCategoryTabs(tabsToShow);
+    
+    // If current active category is not in filtered tabs, set to first available
+    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab.value === activeCategory)) {
+      setActiveCategory(tabsToShow[0].value);
+    }
+  }, [user, categories.entity, categoryTabs.values, activeCategory]);
+
   return (
     <Sidebar title={t("Catalog")}>
       <div
@@ -1186,7 +1226,7 @@ function Catalog() {
         )}
         <div className="filter-section">
           <Tabs
-            tabs={categoryTabs}
+            tabs={filteredCategoryTabs}  // Use filtered tabs instead of all tabs
             activeTab={activeCategory}
             onTabChange={(newCategory) => {
               setActiveCategory(newCategory);

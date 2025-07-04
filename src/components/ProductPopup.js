@@ -3,6 +3,7 @@ import QuantityController from './QuantityController';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
 
 function ProductPopup({
     product,
@@ -14,6 +15,7 @@ function ProductPopup({
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
 
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
@@ -34,6 +36,11 @@ function ProductPopup({
         onAddToCart(product.id); // Call the parent component's onAddToCart function
     };
 
+    const handleToggleFavorite = (e) => {
+        e.stopPropagation(); // Prevent closing the popup
+        setIsFavorite(!isFavorite);
+    };
+
     if (!product) return null;
 
     return (
@@ -42,15 +49,26 @@ function ProductPopup({
                 <button className="popup-close" onClick={onClose}>×</button>
                 <div className="popup-content">
                     <div className="popup-image-section">
-                        {selectedImage ? (
-                            <img
-                                src={selectedImage}
-                                alt={product.name}
-                                className="popup-image"
-                            />
-                        ) : (
-                            <div className="popup-image placeholder"></div>
-                        )}
+                        <div className="popup-image-container">
+                            <button 
+                                className="favorite-btn"
+                                onClick={handleToggleFavorite}
+                            >
+                                {isFavorite ? 
+                                    <MdFavorite className="favorite-icon filled" /> : 
+                                    <MdFavoriteBorder className="favorite-icon" />
+                                }
+                            </button>
+                            {selectedImage ? (
+                                <img
+                                    src={selectedImage}
+                                    alt={product.name}
+                                    className="popup-image"
+                                />
+                            ) : (
+                                <div className="popup-image placeholder"></div>
+                            )}
+                        </div>
                         <div className="additional-images">
                             {images.map((img, idx) => (
                                 <div
@@ -161,6 +179,40 @@ function ProductPopup({
                         flex-direction: column;
                         align-items: flex-start;
                         min-width: 320px;
+                    }
+                    .popup-image-container {
+                        position: relative;
+                        width: 100%;
+                    }
+                    .favorite-btn {
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background: transparent;
+                        border: none;
+                        cursor: pointer;
+                        z-index: 2;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        padding: 5px;
+                        border-radius: 50%;
+                        transition: background-color 0.2s;
+                    }
+                    .favorite-btn:hover {
+                        background-color: rgba(255, 255, 255, 0.7);
+                    }
+                    .favorite-icon {
+                        font-size: 24px;
+                        color: #6c7584;
+                    }
+                    .favorite-icon.filled {
+                        color: red;
+                    }
+                    /* RTL support for favorite button */
+                    [dir="rtl"] .favorite-btn {
+                        right: auto;
+                        left: 10px;
                     }
                     .popup-image {
                         width: 100%;

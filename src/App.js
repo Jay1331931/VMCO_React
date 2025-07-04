@@ -20,6 +20,8 @@ import Logout from "./screens/logout";
 import RbacEditor from "./screens/rbacEditor";
 import CustomerDetails from "./screens/customerDetails";
 import Payment from './screens/payment';
+import BankTransactions from './screens/BankTransactions';
+import AddBankTransaction from './components/AddBankTransaction';
 
 function App() {
   return (
@@ -51,6 +53,9 @@ function App() {
         <Route path="/rbacEditor" element={<RbacEditor />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/payment" element={<Payment />} />        
+        <Route path="/bankTransactions" element={<BankTransactions/>} />
+        <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
         <Route path="/customerDetails" element={<CustomerDetails />} />
       </Routes>
     </Router>
