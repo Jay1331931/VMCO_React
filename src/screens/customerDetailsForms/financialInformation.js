@@ -100,7 +100,7 @@ function FinancialInformation({
           value={customerData?.bankName || ""}
           onChange={onChangeCustomerData}
           disabled={originalCustomerData && 
-                   customerData && originalCustomerData?.bankName === customerData?.bankName && mode === "edit"}
+                   customerData && originalCustomerData?.bankName === customerData?.bankName && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData && 
@@ -139,7 +139,7 @@ function FinancialInformation({
           value={customerData?.bankAccountNumber || ""}
           onChange={onChangeCustomerData}
           disabled={originalCustomerData && 
-                   customerData && originalCustomerData?.bankAccountNumber === customerData?.bankAccountNumber && mode === "edit"}
+                   customerData && originalCustomerData?.bankAccountNumber === customerData?.bankAccountNumber && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData && 
@@ -178,7 +178,7 @@ function FinancialInformation({
           value={customerData?.iban || ""}
           onChange={onChangeCustomerData}
           disabled={originalCustomerData && 
-                   customerData && originalCustomerData?.iban === customerData?.iban && mode === "edit"}
+                   customerData && originalCustomerData?.iban === customerData?.iban && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData && 

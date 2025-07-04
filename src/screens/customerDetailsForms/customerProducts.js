@@ -1,29 +1,38 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Sidebar from '../../components/Sidebar';
-import Pagination from '../../components/Pagination';
-import '../../styles/pagination.css';
-import '../../styles/components.css';
-import '../../styles/forms.css';
-import RbacManager from '../../utilities/rbac';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faToggleOff, faToggleOn, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../context/AuthContext';
-import { debounce, set } from 'lodash';
-import Constants from '../../constants';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import Sidebar from "../../components/Sidebar";
+import Pagination from "../../components/Pagination";
+import Tabs from "../../components/Tabs";
+import "../../styles/pagination.css";
+import "../../styles/components.css";
+import "../../styles/forms.css";
+import RbacManager from "../../utilities/rbac";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faToggleOff,
+  faToggleOn,
+  faCheck,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
+import { debounce, set } from "lodash";
+import Constants from "../../constants";
+import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
 
-function Products({customer, setTabsHeight}) {
-    const [isApprovalMode, setApprovalMode] = useState(false);
-    const [products, setProducts] = useState([]); // all products
-    const [currentItems, setCurrentItems] = useState([]); // products on current page
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-    const actionMenuRef = useRef(null);    const { t } = useTranslation();
-    const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GMTC, Constants.ENTITY.NAQI];
-    const [activeCategory, setActiveCategory] = useState(Constants.ENTITY.VMCO);
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [editingMoq, setEditingMoq] = useState(null);
+function Products({ customerId, customer, setTabsHeight }) {
+  const [isApprovalMode, setApprovalMode] = useState(false);
+  const [products, setProducts] = useState([]); // all products
+  const [currentItems, setCurrentItems] = useState([]); // products on current page
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isActionMenuOpen, setActionMenuOpen] = useState(false);
+  const actionMenuRef = useRef(null);
+  const { t } = useTranslation();
+  const [entities, setEntities] = useState([]);
+  const [activeEntity, setActiveEntity] = useState("");
+  const [entitiesLoading, setEntitiesLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [editingMoq, setEditingMoq] = useState(null);
 
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +41,8 @@ function Products({customer, setTabsHeight}) {
   const [totalPages, setTotalPages] = useState(0);
   const [pageInput, setPageInput] = useState("");
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -45,7 +56,6 @@ function Products({customer, setTabsHeight}) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,20 +72,56 @@ function Products({customer, setTabsHeight}) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+ 
+  
+  useEffect(() => {
+    const fetchEntities = async () => {
+      setEntitiesLoading(true);
+      const params = new URLSearchParams({
+        filters: JSON.stringify({ master_name: "entity" }),
+      });
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/basics-masters?${params.toString()}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        const formatted = result.data.map((opt) => ({
+          value: opt.value,
+          label: opt.description || opt.value,
+        }));
+        setEntities(formatted);
+        setActiveEntity(formatted[0]?.value || "");
+        setEntitiesLoading(false);
+      } catch (err) {
+        console.error("Error fetching options:", err);
+        setEntitiesLoading(false);
+      }
+    };
+    fetchEntities();
+  }, []);
+
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
 
     const filters = {
-      customer_id: customer?.customer?.id,
-      entity: activeCategory,
+      customer_id: customerId,
+      entity: activeEntity,
     };
-    if (isApprovalMode) {
-      // If not in approval mode, add the visible filter
-      filters.visible = true;
-    } else {
-      delete filters.visible; // Remove the visible filter if in approval mode
-    }
+    if (categoryFilter) filters.category = categoryFilter;
+    if (subCategoryFilter) filters.subCategory = subCategoryFilter;
+
     const query = new URLSearchParams({
       page: currentPage,
       pageSize: itemsPerPage,
@@ -111,11 +157,11 @@ function Products({customer, setTabsHeight}) {
   };
 
   useEffect(() => {
-    if (customer?.customer?.id && activeCategory) {
+    if (customerId && activeEntity) {
       fetchProducts();
     }
     setTabsHeight("auto");
-  }, [customer, activeCategory, currentPage, isApprovalMode, search]);
+  }, [customer, activeEntity, currentPage, isApprovalMode, search]);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -275,134 +321,222 @@ function Products({customer, setTabsHeight}) {
     setCurrentPage(1);
   }, 400);
 
-    return (
-        <div className="products-content">
-            <h3>{t("Products & MoQ - Company Name")}</h3>
-            <div className="category-tabs">
-                {categories.map((category) => (
-                    <button
-                        key={category}
-                        className={`category-tab ${activeCategory === category ? 'active' : ''}`}
-                        onClick={() => {setActiveCategory(category); setCurrentPage(1); fetchProducts();}}
-                    >
-                        {t(category)}
-                    </button>
-                ))}
-            </div>
-            <div className="products-page-header">
-                <div className="products-header-controls">
-                    <input
-                        type="text"
-                        placeholder={t('Search...')}
-                        className="product-search-input"
-                        onChange={handleSearchChange}
-                        style={{padding:" 10px 15px",
-    width: "300px",
-    border: "2px solid #00205b",
-    borderRadius:"8px",
-    fontSize: "1rem",
-    backgroundColor: "#fff",
-    /* box-shadow: 0 0 0 2px #E5E4E2; */
-    transition: "all 0.2s ease",
-    marginRight: "10px",
-    boxSizing: "border-box"}}
-                    />
-                    <div className="toggle-container">
-                        <label>{t('All')}</label>
-                        <FontAwesomeIcon
-                            icon={isApprovalMode ? faToggleOn : faToggleOff}
-                            className="product-toggle-icon"
-                            onClick={toggleApprovalMode}
-                            aria-label={isApprovalMode ? t('Switch to All Orders') : t('Switch to My Approvals')}
-                        />
-                        <label>{t('Selected')}</label>
-                    </div>
-                    <div className='toggle-container'>
-                        {isV('btnApplyAll') && <label>{t('MoQ')}</label>}
-                        {isV('btnApplyAll') && <input type='text' className='product-text-input' />}
-                        {isV('btnApplyAll') && (
-                            <button
-                                className='branches-approve-button'
-                                disabled={currentItems.filter(item => item.visible).length < 2}
-                                onClick={handleApplyAll}
-                            >
-                                {t('Apply All')}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-            <div className="products-table-container">
-                <table className="products-data-table">
-                    <thead>
-                        <tr>
-                            <th className="checkbox-cell">
-                                <input
-                                    type="checkbox"
-                                    checked={isAllSelected}
-                                    onChange={handleSelectAll}
-                                    disabled={isV('btnApplyAll')}
-                                />
-                            </th>
-                            <th>{t("Name")}</th>
-                            {isV('btnApplyAll') && (<th>{t("Minimum Order Quantity")}</th>)}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {currentItems.map((product) => (
-                            <tr key={product.id}>
-                                <td className="checkbox-cell">
-                                    <input
-                                        type="checkbox"
-                                        checked={product.visible}
-                                        onChange={() => handleToggleVisibility(product.id)}
-                                        disabled={isV('btnApplyAll')}
-                                    />
-                                </td>
-                                <td>{product.productName}</td>
-                                {isV('btnApplyAll') && (<td className='edit-cell'>
-                                    <div className="input-with-icons">
-                                        <input
-                                            type="text"
-                                            value={product.moq}
-                                            onChange={(e) => handleMoqChange(product.id, e.target.value)}
-                                            onFocus={() => {
-                                                setIsInputFocused(true);
-                                                setEditingMoq(product.id);
-                                            }}
-                                            // onBlur={() => {
-                                            //     // Use setTimeout to allow button clicks to register
-                                            //     setTimeout(() => {
-                                            //         setIsInputFocused(false);
-                                            //         setEditingMoq(null);
-                                            //     }, 200);
-                                            // }}
-                                            disabled={!isV('btnApplyAll')}
-                                            style={{ width: '80px' }}
-                                        />
-                                        {isInputFocused && (
-                                            <>
-                                                <button className="icon-button" onClick={() => handleSaveMoq(product.id, product.moq)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faCheck} /></button>
-                                                <button className="icon-button" onClick={() => handleCancelMoq(product.id)} onMouseDown={(e) => e.preventDefault()}><FontAwesomeIcon icon={faXmark} /></button>
-                                            </>
-                                        )}
-                                    </div>
-                                </td>)}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-                {/* Pagination */}
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
-            />
-            </div>
-            
-            
+  const uniqueCategories = Array.from(
+    new Set(products.map((p) => p.category).filter(Boolean))
+  );
+  const uniqueSubCategories = Array.from(
+    new Set(
+      products
+        .filter((p) => !categoryFilter || p.category === categoryFilter)
+        .map((p) => p.subCategory)
+        .filter(Boolean)
+    )
+  );
+
+  return (
+    <div className="products-content">
+      <h3>{t("Products & MoQ - Company Name")}</h3>
+
+      <div className="products-header-controls">
+        {/* Tabs */}
+        {entitiesLoading ? (
+          <div>{t("Loading entities...")}</div>
+        ) : (
+          <Tabs
+            tabs={entities}
+            activeTab={activeEntity}
+            onTabChange={(newEntity) => {
+              setActiveEntity(newEntity);
+              setCurrentPage(1);
+              setCategoryFilter("");
+              setSubCategoryFilter("");
+              setSearch("");
+              // Do not call fetchProducts() here, let useEffect handle it
+            }}
+            variant="category"
+          />
+        )}
+      </div>
+      <div className="products-page-header">
+        {/* Search */}
+        <input
+          type="text"
+          placeholder={t("Search...")}
+          className="product-search-input"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+            fetchProducts();
+          }}
+          style={{
+            padding: "10px 15px",
+            width: "300px",
+            border: "2px solid #00205b",
+            borderRadius: "8px",
+            fontSize: "1rem",
+            backgroundColor: "#fff",
+            transition: "all 0.2s ease",
+            marginRight: "10px",
+            boxSizing: "border-box",
+          }}
+        />
+        {/* Category Filter */}
+        <div className="filters-container">
+          <select
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setSubCategoryFilter("");
+              setCurrentPage(1);
+              fetchProducts();
+            }}
+          >
+            <option value="">{t("All Categories")}</option>
+            {uniqueCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
+          {/* Subcategory Filter */}
+          <select
+            value={subCategoryFilter}
+            onChange={(e) => {
+              setSubCategoryFilter(e.target.value);
+              setCurrentPage(1);
+              fetchProducts();
+            }}
+          >
+            <option value="">{t("All Subcategories")}</option>
+            {uniqueSubCategories.map((sub) => (
+              <option key={sub} value={sub}>
+                {sub}
+              </option>
+            ))}
+          </select>
         </div>
-    );
+        <div className="toggle-container">
+          <label>{t("All")}</label>
+          <FontAwesomeIcon
+            icon={isApprovalMode ? faToggleOn : faToggleOff}
+            className="product-toggle-icon"
+            onClick={toggleApprovalMode}
+            aria-label={
+              isApprovalMode
+                ? t("Switch to All Orders")
+                : t("Switch to My Approvals")
+            }
+          />
+          <label>{t("Selected")}</label>
+        </div>
+        <div className="toggle-container">
+          {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
+          {isV("btnApplyAll") && (
+            <input type="text" className="product-text-input" />
+          )}
+          {isV("btnApplyAll") && (
+            <button
+              className="branches-approve-button"
+              disabled={currentItems.filter((item) => item.visible).length < 2}
+              onClick={handleApplyAll}
+            >
+              {t("Apply All")}
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="products-table-container">
+        <table className="products-data-table">
+          <thead>
+            <tr>
+              <th className="checkbox-cell">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  disabled={isV("btnApplyAll")}
+                />
+              </th>
+              <th>{t("Name")}</th>
+              {isV("btnApplyAll") && <th>{t("Minimum Order Quantity")}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {currentItems.map((product) => (
+              <tr key={product.id}>
+                <td className="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    checked={product.visible}
+                    onChange={() => handleToggleVisibility(product.id)}
+                    disabled={isV("btnApplyAll")}
+                  />
+                </td>
+                <td>{product.productName}</td>
+                {isV("btnApplyAll") && (
+                  <td className="edit-cell">
+                    <div className="input-with-icons">
+                      <input
+                        type="text"
+                        value={product.moq}
+                        onChange={(e) =>
+                          handleMoqChange(product.id, e.target.value)
+                        }
+                        onFocus={() => {
+                          setIsInputFocused(true);
+                          setEditingMoq(product.id);
+                        }}
+                        // onBlur={() => {
+                        //     // Use setTimeout to allow button clicks to register
+                        //     setTimeout(() => {
+                        //         setIsInputFocused(false);
+                        //         setEditingMoq(null);
+                        //     }, 200);
+                        // }}
+                        disabled={!isV("btnApplyAll")}
+                        style={{ width: "80px" }}
+                      />
+                      {isInputFocused && (
+                        <>
+                          <button
+                            className="icon-button"
+                            onClick={() =>
+                              handleSaveMoq(product.id, product.moq)
+                            }
+                            onMouseDown={(e) => e.preventDefault()}
+                          >
+                            <FontAwesomeIcon icon={faCheck} />
+                          </button>
+                          <button
+                            className="icon-button"
+                            onClick={() => handleCancelMoq(product.id)}
+                            onMouseDown={(e) => e.preventDefault()}
+                          >
+                            <FontAwesomeIcon icon={faXmark} />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {/* Pagination */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            fetchProducts();
+          }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default Products;

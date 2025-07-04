@@ -34,7 +34,7 @@ function ContactDetails({
   //   useState(false);
 
   // Dropdown state
-  const dropdownFields = ["district", "city", "region", "zone"];
+  const dropdownFields = ["district", "city", "region", "zone", "branch"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const { token, user, isAuthenticated, logout, loading } = useAuth();
     
@@ -282,7 +282,7 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.primaryContactName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactName === customerContactsData?.primaryContactName && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactName === customerContactsData?.primaryContactName && mode === "edit" && customerData?.customerStatus !== "pending" }
           required
         />
         {originalCustomerContactsData &&
@@ -326,7 +326,7 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.primaryContactDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactDesignation === customerContactsData?.primaryContactDesignation && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactDesignation === customerContactsData?.primaryContactDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -371,7 +371,7 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.primaryContactEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactEmail === customerContactsData?.primaryContactEmail && mode === "edit"}
+          disabled={(originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactEmail === customerContactsData?.primaryContactEmail && mode === "edit" && customerData?.customerStatus !== "pending") || true}
           required
         />
         {originalCustomerContactsData &&
@@ -415,7 +415,7 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.primaryContactMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactMobile === customerContactsData?.primaryContactMobile && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactMobile === customerContactsData?.primaryContactMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -442,7 +442,7 @@ function ContactDetails({
             id="businessHeadSameAsPrimary"
             name="businessHeadSameAsPrimary"
             checked={customerContactsData?.businessHeadName === customerContactsData?.primaryContactName &&
-              customerContactsData?.businessHeadDesignation === customerContactsData?.primaryContactDesignation && customerContactsData?.businessHeadEmail === customerContactsData?.primaryContactEmail && customerContactsData?.businessHeadPhone === customerContactsData?.primaryContactPhone}
+              customerContactsData?.businessHeadDesignation === customerContactsData?.primaryContactDesignation && customerContactsData?.businessHeadEmail === customerContactsData?.primaryContactEmail && customerContactsData?.businessHeadMobile === customerContactsData?.primaryContactMobile}
             onChange={(e) => setBusinessHeadSameAsPrimary(e.target.checked)}
           />
           {t("Same as Primary Contact Details")}
@@ -475,7 +475,7 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.businessHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadName === customerContactsData?.businessHeadName && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadName === customerContactsData?.businessHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -519,7 +519,7 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.businessHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadDesignation === customerContactsData?.businessHeadDesignation && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadDesignation === customerContactsData?.businessHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -564,7 +564,7 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.businessHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadEmail === customerContactsData?.businessHeadEmail && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadEmail === customerContactsData?.businessHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -608,7 +608,7 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.businessHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadMobile === customerContactsData?.businessHeadMobile && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadMobile === customerContactsData?.businessHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -654,7 +654,7 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.financeHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadName === customerContactsData?.financeHeadName && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadName === customerContactsData?.financeHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -698,7 +698,7 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.financeHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadDesignation === customerContactsData?.financeHeadDesignation && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadDesignation === customerContactsData?.financeHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -743,7 +743,7 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.financeHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadEmail === customerContactsData?.financeHeadEmail && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadEmail === customerContactsData?.financeHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -787,7 +787,7 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.financeHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadMobile === customerContactsData?.financeHeadMobile && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadMobile === customerContactsData?.financeHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -833,7 +833,7 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.purchasingHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadName === customerContactsData?.purchasingHeadName && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadName === customerContactsData?.purchasingHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -877,7 +877,7 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.purchasingHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadDesignation === customerContactsData?.purchasingHeadDesignation && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadDesignation === customerContactsData?.purchasingHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -922,7 +922,7 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.purchasingHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadEmail === customerContactsData?.purchasingHeadEmail && mode === "edit"}
+          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadEmail === customerContactsData?.purchasingHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerContactsData &&
@@ -970,7 +970,7 @@ function ContactDetails({
             originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadMobile ===
-              customerContactsData?.purchasingHeadMobile && mode === "edit"
+              customerContactsData?.purchasingHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -1015,7 +1015,7 @@ function ContactDetails({
           placeholder={t("Enter building name")}
           value={customerData?.buildingName || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.buildingName === customerData?.buildingName && mode === "edit"}
+          disabled={originalCustomerData && customerData && originalCustomerData?.buildingName === customerData?.buildingName && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData &&
@@ -1055,7 +1055,7 @@ function ContactDetails({
           placeholder={t("Enter street")}
           value={customerData?.street || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.street === customerData?.street && mode === "edit"}
+          disabled={originalCustomerData && customerData && originalCustomerData?.street === customerData?.street && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData &&
@@ -1093,7 +1093,7 @@ function ContactDetails({
           }`}
           value={customerData?.district || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.district === customerData?.district && mode === "edit"}
+          disabled={originalCustomerData && customerData && originalCustomerData?.district === customerData?.district && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         >
           <option value="" disabled>
@@ -1142,7 +1142,7 @@ function ContactDetails({
           value={customerData?.city || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData && customerData && originalCustomerData?.city === customerData?.city && mode === "edit"
+            originalCustomerData && customerData && originalCustomerData?.city === customerData?.city && mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -1191,7 +1191,7 @@ function ContactDetails({
           value={customerData?.region || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData && customerData && originalCustomerData?.region === customerData?.region && mode === "edit"
+            originalCustomerData && customerData && originalCustomerData?.region === customerData?.region && mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -1240,7 +1240,7 @@ function ContactDetails({
           value={customerData?.zone || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData && customerData && originalCustomerData?.zone === customerData?.zone && mode === "edit"
+            originalCustomerData && customerData && originalCustomerData?.zone === customerData?.zone && mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -1288,7 +1288,7 @@ function ContactDetails({
           placeholder={t("Enter pincode")}
           value={customerData?.pincode || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.pincode === customerData?.pincode && mode === "edit"}
+          disabled={originalCustomerData && customerData && originalCustomerData?.pincode === customerData?.pincode && mode === "edit" && customerData?.customerStatus !== "pending"}
           required
         />
         {originalCustomerData &&
@@ -1329,7 +1329,7 @@ function ContactDetails({
             placeholder={t("Select Location")}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData && customerData && originalCustomerData?.geolocation === customerData?.geolocation && mode === "edit"
+              originalCustomerData && customerData && originalCustomerData?.geolocation === customerData?.geolocation && mode === "edit" && customerData?.customerStatus !== "pending"
             }
             className={`text-field small ${
               originalCustomerData &&
@@ -1369,6 +1369,56 @@ function ContactDetails({
           )}
         {formErrors.geolocation && (
           <div className="error">{formErrors.geolocation}</div>
+        )}
+      </div>
+
+<div className="form-group">
+        <label htmlFor="branch">
+          {t("Branch")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.branch != customerData?.branch &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
+        </label>
+        <select
+          id="branch"
+          name="branch"
+          className={`dropdown ${
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.branch != customerData?.branch &&
+            customerData?.branch &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }`}
+          value={customerData?.branch || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData && customerData && originalCustomerData?.branch === customerData?.branch && mode === "edit" && customerData?.customerStatus !== "pending"
+          }
+          required
+        >
+          <option value="" disabled>
+            {t("Enter branch")}
+          </option>
+          {basicMasterLists?.branch?.map((branch) => (
+            <option key={branch} value={branch}>
+              {t(branch)}
+            </option>
+          ))}
+        </select>
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.branch != customerData?.branch &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.branch || "(empty)"}
+            </div>
+          )}
+        {formErrors.branch && (
+          <div className="error">{formErrors.branch}</div>
         )}
       </div>
 

@@ -111,7 +111,8 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.companyNameEn ===
               customerData?.companyNameEn &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -160,7 +161,8 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.companyNameAr ===
               customerData?.companyNameAr &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -206,7 +208,8 @@ function BusinessDetails({
             originalCustomerData &&
             customerData &&
             originalCustomerData?.crNumber === customerData?.crNumber &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -252,7 +255,8 @@ function BusinessDetails({
             originalCustomerData &&
             customerData &&
             originalCustomerData?.vatNumber === customerData?.vatNumber &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -301,7 +305,8 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.governmentRegistrationNumber ===
               customerData?.governmentRegistrationNumber &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -352,7 +357,8 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.baladeahLicenseNumber ===
               customerData?.baladeahLicenseNumber &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -398,7 +404,8 @@ function BusinessDetails({
             originalCustomerData &&
             customerData &&
             originalCustomerData?.companyType === customerData?.companyType &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -452,7 +459,8 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.typeOfBusiness ===
               customerData?.typeOfBusiness &&
-            mode === "edit"
+            mode === "edit" && 
+            customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -510,7 +518,7 @@ function BusinessDetails({
               customerData &&
               originalCustomerData?.typeOfBusinessOther ===
                 customerData?.typeOfBusinessOther &&
-              mode === "edit"
+              mode === "edit" && customerData?.customerStatus !== "pending"
             }
           />
           {originalCustomerData &&
@@ -559,7 +567,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.deliveryLocations ===
               customerData?.deliveryLocations &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         >
@@ -617,7 +625,7 @@ function BusinessDetails({
             originalCustomerData &&
             customerData &&
             originalCustomerData?.brandNameEn === customerData?.brandNameEn &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         />
         {originalCustomerData &&
@@ -658,7 +666,7 @@ function BusinessDetails({
             originalCustomerData &&
             customerData &&
             originalCustomerData?.brandNameAr === customerData?.brandNameAr &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         />
         {originalCustomerData &&
@@ -768,7 +776,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedTo ===
               customerData?.assignedTo &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -824,7 +832,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.customerSource ===
               customerData?.customerSource &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         />
         {originalCustomerData &&
@@ -877,7 +885,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] ===
               customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -935,7 +943,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] ===
               customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -994,7 +1002,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] ===
               customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -1053,7 +1061,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] ===
               customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -1112,7 +1120,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] ===
               customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
         >
           <option value="" disabled>
@@ -1153,7 +1161,7 @@ function BusinessDetails({
               customerData &&
               originalCustomerData?.interCompany ===
                 customerData?.interCompany &&
-              mode === "edit"
+              mode === "edit" && customerData?.customerStatus !== "pending"
             }
           />
           {t("Inter Company")}
@@ -1191,7 +1199,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.entity ===
               customerData?.entity &&
-            mode === "edit"
+            mode === "edit" && customerData?.customerStatus !== "pending"
           }
           required
         >

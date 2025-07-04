@@ -95,7 +95,7 @@ const BranchDetailsForm = ({
       const options = {};
       console.log("branch", branch);
       // Find all dropdown fields and fetch their options
-      const dropdownFields = ["city", "locationType", "region"];
+      const dropdownFields = ["city", "locationType", "region", "branch"];
       console.log("dropdownFields", dropdownFields);
       for (const field of dropdownFields) {
         try {
@@ -406,6 +406,14 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
         placeholder: "Geolocation",
         isLocation: true,
         required: true,
+      },
+      {
+        type: "dropdown",
+        label: "Branch",
+        name: "branch",
+        placeholder: "Branch",
+        required: true,
+        options: ["Jeddah", "Riyadh", "Dammam"],
       },
     ],
     []
