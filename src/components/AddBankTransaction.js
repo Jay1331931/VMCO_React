@@ -23,17 +23,19 @@ const AddBankTransaction = () => {
     companyNameAr: "",
     amountTransferred: "",
     transactionDate: "",
-    erpOrderId: "",
+    erpOrderId: [],
     description: "",
     bankDocuments: [],
+    orderId: [],
   });
-  const { id } = useParams();
+  const { id, orderId } = useParams();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [updateTransaction, setUpdateTransaction] = useState({});
   const [showSalesOrderPopup, setshowSalesOrderPopup] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
   const [fileData, setFileData] = useState([]);
+  const [popupImage, setPopupImage] = useState(null);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -42,7 +44,7 @@ const AddBankTransaction = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
+  console.log("isV:", isV("BankContent"));
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -50,31 +52,31 @@ const AddBankTransaction = () => {
 
   const handleFileChange = async (e) => {
     const files = e.target.files;
-    const formDataUpload = new FormData();
 
     for (let file of files) {
-      formDataUpload.append("files", file);
-    }
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+      formDataUpload.append("containerType", "transactions");
 
-    formDataUpload.append("containerType", "transactions");
+      try {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/upload-files`,
+          formDataUpload,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true,
+          }
+        );
 
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/upload-multiple-files`,
-        formDataUpload,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
+        if (data.success) {
+          setImageUrls((prev) => [...prev, data.files]);
         }
-      );
-
-      if (data.success) {
-        setImageUrls([...imageUrls, ...data.files.flat()]);
+      } catch (error) {
+        console.error("Upload failed", error);
       }
-    } catch (error) {
-      console.error("Upload failed", error);
     }
   };
+
   const handleSubmit = async () => {
     try {
       if (
@@ -89,6 +91,10 @@ const AddBankTransaction = () => {
       }
       const payload = {
         ...formData,
+        erpOrderId: formData.erpOrderId
+          ? JSON.stringify(formData.erpOrderId)
+          : [],
+        orderId: formData.orderId ? JSON.stringify(formData.orderId) : [],
         bankDocuments: JSON.stringify(imageUrls),
         transactionDate: new Date(formData.transactionDate)
           .toISOString()
@@ -175,6 +181,40 @@ const AddBankTransaction = () => {
       console.error("Failed to fetch transaction", error);
     }
   }, [id]);
+  const fetchSaleOrder = useCallback(async () => {
+    try {
+      if (!orderId) return;
+      const { data } = await axios.get(
+        `${API_BASE_URL}/sales-order/id/${parseInt(orderId)}`,
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Sale Order Data:", data.data);
+      setFormData((prev) => ({
+        ...prev,
+        entity: data.data.entity,
+        erpCustId: data.data.erpCustId,
+        companyNameEn: data.data.companyNameEn,
+        companyNameAr: data.data.companyNameAr,
+        amountTransferred:
+          data.data.paymentStatus.toLowerCase() !== "paid" &&
+          parseInt(data.data.paymentPercentage) === 100
+            ? parseInt(data.data.totalAmount)
+            : parseInt(data.data.totalAmount) - parseInt(data.data.paidAmount),
+        erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
+        orderId: [data.data.id] || [],
+      }));
+      console.log("Sale Order Data:", data.data);
+    } catch (error) {
+      console.error("Failed to fetch sales order", error);
+    }
+  }, [orderId]);
+  useEffect(() => {
+    if (orderId) {
+      fetchSaleOrder();
+    }
+  }, [fetchSaleOrder]);
   useEffect(() => {
     fetchTransaction();
   }, [fetchTransaction]);
@@ -183,27 +223,65 @@ const AddBankTransaction = () => {
     try {
       console.log("Fetching files for imageUrls:", imageUrls);
       if (imageUrls.length === 0) return;
-      const { data } = await axios.post(
-        `${API_BASE_URL}/bank-transactions/getFiles`,
-        { fileNames: imageUrls },
 
-        { withCredentials: true }
-      );
-      console.log("Fetched files:", data.files);
-      setFileData(data.files);
+      const fetched = [];
+
+      for (let fileName of imageUrls) {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/get-files`,
+          { fileName, containerType: "transactions" },
+          { withCredentials: true }
+        );
+
+        if (data?.status === "Ok" && data.data) {
+          fetched.push(data.data);
+        }
+      }
+
+      setFileData(fetched);
     } catch (error) {
       console.error("Error fetching files:", error);
     }
   }, [imageUrls]);
+
   useEffect(() => {
     fetchFiles();
   }, [fetchFiles]);
-  const handleRemoveImage = (fileName) => {
-    setFileData((prev) => prev.filter((file) => file.fileName !== fileName));
-    setImageUrls((prev) => prev.filter((img) => img !== fileName));
-  };
-  console.log("Disabled?", !Boolean(updateTransaction?.erpOrderId));
+  const handleRemoveImage = async (fileName) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/delete-files`,
+        {
+          fileName: fileName,
+          containerType: "transactions",
+        },
+        { withCredentials: true }
+      );
 
+      if (data.success) {
+        // Update local state only after successful delete
+        setFileData((prev) =>
+          prev.filter((file) => file.fileName !== fileName)
+        );
+        setImageUrls((prev) => prev.filter((img) => img !== fileName));
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    for (let fileName of imageUrls) {
+      handleRemoveImage(fileName);
+    }
+    navigate("/banktransactions");
+  };
+  const fileInputRef = useRef(null);
+
+  // const handleFileChange = (e) => {
+  //   const files = Array.from(e.target.files);
+  //   // Add logic to set fileData or preview as needed
+  // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
   return (
@@ -213,7 +291,7 @@ const AddBankTransaction = () => {
           <div className="bank-add-form">
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="erpCustId">{t("ERP Customer ID *")}</label>
+                <label htmlFor="erpCustId">{t("ERP Customer ID ")}<span style={{ color: "red" }}> *</span></label>
                 <input
                   id="erpCustId"
                   name="erpCustId"
@@ -222,7 +300,7 @@ const AddBankTransaction = () => {
                     formData?.erpCustId || updateTransaction?.erpCustId || ""
                   }
                   onClick={() => setShowCustomerPopup(true)}
-                  disabled={!!updateTransaction?.erpCustId}
+                  disabled={!!updateTransaction?.erpCustId || orderId}
                 />
               </div>
 
@@ -270,7 +348,7 @@ const AddBankTransaction = () => {
 
               <div className="form-group">
                 <label htmlFor="amountTransferred">
-                  {t("Amount Transferred *")}
+                  {t("Amount Transferred")}<span style={{ color: "red" }}> *</span>
                 </label>
                 <input
                   id="amountTransferred"
@@ -283,14 +361,14 @@ const AddBankTransaction = () => {
                     updateTransaction?.amountTransferred ||
                     ""
                   }
-                  disabled={!!updateTransaction?.amountTransferred}
+                  disabled={!!updateTransaction?.amountTransferred || orderId}
                   onChange={handleChange}
                 />
               </div>
 
               <div className="form-group">
                 <label htmlFor="transactionDate">
-                  {t("Transaction Date *")}
+                  {t("Transaction Date")}<span style={{ color: "red" }}> *</span>
                 </label>
                 <input
                   id="transactionDate"
@@ -309,12 +387,13 @@ const AddBankTransaction = () => {
 
               {Object.keys(updateTransaction).length === 0 && (
                 <div className="form-group">
-                  <label htmlFor="entity">{t("Entity *")}</label>
+                  <label htmlFor="entity">{t("Entity")} <span style={{ color: "red" }}> *</span></label>
                   <select
                     id="entity"
                     name="entity"
                     value={formData.entity}
                     onChange={handleChange}
+                    disabled={orderId}
                   >
                     <option value="">{t("Select Entity")}</option>
                     <option value="VMCO">VMCO</option>
@@ -333,9 +412,11 @@ const AddBankTransaction = () => {
                       name="erpOrderId"
                       placeholder={t("ERP Order ID")}
                       value={
-                        formData?.erpOrderId || updateTransaction?.erpOrderId
+                        formData?.erpOrderId?.join(", ") ||
+                        updateTransaction?.erpOrderId?.join(", ") ||
+                        ""
                       }
-                      disabled={!!updateTransaction?.erpOrderId}
+                      disabled={!!updateTransaction?.erpOrderId || orderId}
                       onClick={() => setshowSalesOrderPopup(true)}
                     />
                   </div>
@@ -344,19 +425,24 @@ const AddBankTransaction = () => {
                     <input
                       id="orderId"
                       name="orderId"
-                      type="number"
+                      type="text"
                       placeholder={t("Order Id")}
                       min={0}
+                      // value={
+                      //   formData?.orderId || updateTransaction?.orderId || ""
+                      // }
                       value={
-                        formData?.orderId || updateTransaction?.orderId || ""
+                        formData?.orderId?.join(", ") ||
+                        updateTransaction?.orderId?.join(", ") ||
+                        ""
                       }
-                      disabled={!!updateTransaction?.orderId}
+                      disabled={!!updateTransaction?.orderId || orderId}
                       onChange={handleChange}
                     />
                   </div>
                 </>
               ) : null}
-
+              {/* {Object.keys(updateTransaction).length === 0  &&
               <div className="form-group">
                 <label htmlFor="bankDocuments">
                   {t("Upload Bank Documents *")}
@@ -368,11 +454,11 @@ const AddBankTransaction = () => {
                   onChange={handleFileChange}
                   disabled={!!updateTransaction?.bankDocuments}
                 />
-              </div>
+              </div>}
               <div className="form-group">
                 <div className="image-grid">
                   {fileData?.map((file, index) => {
-                    const fileUrl = `${API_BASE_URL}/${file.fileName}`;
+                    const fileUrl = file.url;
                     const extension = file.fileName
                       .split(".")
                       .pop()
@@ -400,17 +486,16 @@ const AddBankTransaction = () => {
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                             className="file-link-button"
-                            
+                            className="file-link-button"
                           >
                             📄 View PDF
                           </a>
                         ) : isExcel ? (
                           <a
                             href={fileUrl}
-                            target="_blank" 
+                            target="_blank"
                             rel="noopener noreferrer"
-                             className="file-link-button"
+                            className="file-link-button"
                           >
                             📊 Open Excel File
                           </a>
@@ -419,7 +504,7 @@ const AddBankTransaction = () => {
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                             className="file-link-button"
+                            className="file-link-button"
                           >
                             📁 Download File
                           </a>
@@ -438,6 +523,123 @@ const AddBankTransaction = () => {
                     );
                   })}
                 </div>
+              </div> */}
+              <div className="form-group full-width">
+              <label htmlFor="bankDocuments">
+                {t("Upload Bank Documents")}<span style={{ color: "red" }}> *</span>
+              </label>
+              <div
+                // className="form-group  full-width"
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  backgroundColor: "#f7f8fa",
+                }}
+              >
+                <div className="bank-doc-upload-wrapper">
+                  {Object.keys(updateTransaction).length === 0 && (
+                    <>
+                      <button
+                        type="button"
+                        className="maintenance-add-image-btn"
+                        onClick={() => fileInputRef.current.click()}
+                        title="Upload Documents"
+                      >
+                        +
+                      </button>
+                      <input
+                        id="bankDocuments"
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                        disabled={!!updateTransaction?.bankDocuments}
+                      />
+                    </>
+                  )}
+                  <div className="scrollable-preview-container">
+                    {fileData?.map((file, index) => {
+                      const fileUrl = file.url;
+                      const extension = file.fileName
+                        .split(".")
+                        .pop()
+                        .toLowerCase();
+                      const isImage = [
+                        "png",
+                        "jpg",
+                        "jpeg",
+                        "gif",
+                        "webp",
+                      ].includes(extension);
+                      const isPdf = extension === "pdf";
+                      const isExcel = ["xls", "xlsx", "csv"].includes(
+                        extension
+                      );
+
+                      return (
+                        <div
+                          key={index}
+                          className="image-item"
+                          onClick={() => isImage && setPopupImage(fileUrl)}
+                          title={isImage ? "Click to view" : ""}
+                        >
+                          {isImage ? (
+                            <img
+                              src={fileUrl}
+                              alt={file.fileName}
+                              className="preview-image"
+                            />
+                          ) : isPdf ? (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📄 View PDF
+                            </a>
+                          ) : isExcel ? (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📊 Open Excel File
+                            </a>
+                          ) : (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📁 Download File
+                            </a>
+                          )}
+
+                          {Object.keys(updateTransaction).length === 0 && (
+                            <button
+                              type="button"
+                              className="remove-image-btn"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent image popup
+                                handleRemoveImage(file.fileName);
+                              }}
+                              title="Remove File"
+                            >
+                              ✖
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
               </div>
 
               <div className="form-group full-width">
@@ -494,45 +696,117 @@ const AddBankTransaction = () => {
               )}
 
               <div className="form-actions">
-                {Object.keys(updateTransaction).length === 0 ? (
+                {isV("btnSubmit") && !id && (
                   <>
                     <button className="submit-btn" onClick={handleSubmit}>
                       {t("Submit")}
                     </button>
                     <button
                       className="cancel-btn"
-                      onClick={() => navigate("/banktransactions")}
+                      onClick={() => handleCancel()}
                     >
                       {t("Cancel")}
-                    </button>
+                    </button>{" "}
                   </>
-                ) : (
-                  <>
-                    {updateTransaction &&
-                      updateTransaction.status === "pending" && (
-                        <>
-                          <button
-                            className="submit-btn"
-                            onClick={() => handleUpdate("verified", id)}
-                          >
-                            {t("Verify")}
-                          </button>
-                          <button
-                            className="cancel-btn"
-                            onClick={() => handleUpdate("rejected", id)}
-                          >
-                            {t("Reject")}
-                          </button>
-                        </>
-                      )}
-                  </>
+                )}
+
+                {isE("btnVerify") && updateTransaction?.status?.toLowerCase()==="pending"&& (
+                  <button
+                    className="submit-btn"
+                    onClick={() => handleUpdate("verified", id)}
+                  >
+                    {t("Verify")}
+                  </button>
+                )}
+                {isE("btnReject") &&updateTransaction?.status?.toLowerCase()==="pending"&&  (
+                  <button
+                    className="cancel-btn"
+                    onClick={() => handleUpdate("rejected", id)}
+                  >
+                    {t("Reject")}
+                  </button>
                 )}
               </div>
             </div>
           </>
-      
         </div>
       )}
+
+      <style>
+        {`.full-width {
+  width: 100%;
+}
+
+.bank-doc-upload-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.scrollable-preview-container {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+ scrollbar-width: none; 
+  -ms-overflow-style: none;
+}
+
+.scrollable-preview-container::-webkit-scrollbar {
+  display: none;
+}
+.image-item {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100px;
+  height: 100px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(255, 0, 0, 0.7);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.file-link-button {
+  display: inline-block;
+  text-align: center;
+  padding: 6px 10px;
+  background: #e8e8e8;
+  border-radius: 4px;
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+
+`}
+      </style>
     </Sidebar>
   );
 };

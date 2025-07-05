@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
 import axios from 'axios';
+import { BiHandicap } from 'react-icons/bi';
 
 
 function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x }) {
@@ -21,6 +22,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
       const filteredData = {}
       filteredData.erpCustId=formData.erpCustId;
       filteredData.entity= formData.entity;
+      filteredData.paymentStatus="Pending";
       const filter=JSON.stringify(filteredData);
       const { data } = await axios.get(`${API_BASE_URL}/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&perpose=maintenancecreation&filters=${filter}`, {
         withCredentials: true,
@@ -50,7 +52,31 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
   }, [search, open]);
 
   if (!open) return null;
- 
+
+const handleSelect = (customer) => {
+  setFormData(prev => {
+    const updated = { ...prev };
+    if (customer.erpOrderId) {
+      if (prev.erpOrderId?.includes(customer.erpOrderId)) {
+        updated.erpOrderId = prev.erpOrderId?.filter(id => id !== customer.erpOrderId);
+      } else {
+        updated.erpOrderId = [...prev.erpOrderId, customer.erpOrderId];
+      }
+    }
+
+    if (customer?.id) {
+      if (prev.orderId?.includes(customer.id)) {
+        updated.orderId = prev.orderId.filter(id => id !== customer.id);
+      } else {
+        updated.orderId = [...(prev.orderId || []), customer.id];
+      }
+    }
+
+    return updated;
+  });
+};
+
+
   const totalPages = Math.ceil(pagination.total / pagination.pageSize);
   return (
     <div>
@@ -108,11 +134,9 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
                     <td>
                       <button
                         className="gp-product-btn"
-                        onClick={() => {
-                          setFormData({...formData, erpOrderId: customer.erpOrderId, orderId: customer.id, });
-                          onClose();}}
+                        onClick={() =>handleSelect(customer)} 
                       >
-                        {t('Select')}
+                         {formData.orderId?.includes(customer.id) ? t("Selected") : t("Select")}
                       </button>
                     </td>
                   </tr>
