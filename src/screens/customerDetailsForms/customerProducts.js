@@ -456,7 +456,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                   type="checkbox"
                   checked={isAllSelected}
                   onChange={handleSelectAll}
-                  disabled={isV("btnApplyAll")}
+                  disabled={!isV("btnSelectItems")}
                 />
               </th>
               <th>{t("Name")}</th>
@@ -471,7 +471,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                     type="checkbox"
                     checked={product.visible}
                     onChange={() => handleToggleVisibility(product.id)}
-                    disabled={isV("btnApplyAll")}
+                    disabled={!isV("btnSelectItems")}
                   />
                 </td>
                 <td>{product.productName}</td>

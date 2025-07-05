@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import "../styles/forms.css";
 import CommentPopup from "../components/commentPanel";
@@ -183,7 +183,7 @@ function CustomerDetails() {
   const [wfCustomerData, setWfCustomerData] = useState(null); //WF
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
-
+  const navigate = useNavigate();
   const fetchWorkflowDataOfCustomer = async (workflowId) => {
     try {
       const response = await fetch(
@@ -894,6 +894,8 @@ function CustomerDetails() {
       alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
     }
+    alert("Customer data saved successfully.");
+    window.location.reload();
   };
 
   const handleApprovalClick = (action) => {
@@ -916,8 +918,8 @@ function CustomerDetails() {
       const mergedData = {
         updates: {
           ...wfCustomerData,
-          customer: { ...updatedCustomerData.current },
-          contacts: { ...updatedCustomerContactsData.current },
+          customer: { ...wfCustomerData?.customer, ...updatedCustomerData.current },
+          contacts: { ...wfCustomerData?.contacts, ...updatedCustomerContactsData.current },
         },
         id: customerId,
       };
@@ -947,6 +949,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
       setIsApprovalDialogOpen(false);
+      navigate("/customers");
     } catch (error) {
       console.error("Error approving/rejecting customer:", error.message);
       setIsApprovalDialogOpen(false);
@@ -1037,6 +1040,7 @@ function CustomerDetails() {
         }
       );
       console.log("Response", response);
+
     } catch (error) {
       console.error("Error approving customer:", error.message);
     }

@@ -14,7 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
-
+import SearchableDropdown from "../../components/SearchableDropdown";
 function ContactDetails({
   customerData = {},
   customerContactsData = {},
@@ -1071,199 +1071,189 @@ function ContactDetails({
         )}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="district">
-          {t("District")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.district != customerData?.district &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <select
-          id="district"
-          name="district"
-          className={`dropdown ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.district != customerData?.district &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          value={customerData?.district || ""}
-          onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.district === customerData?.district && mode === "edit" && customerData?.customerStatus !== "pending"}
-          required
-        >
-          <option value="" disabled>
-            {t("Enter district")}
-          </option>
-          {basicMasterLists?.district?.map((district) => (
-            <option key={district} value={district}>
-              {t(district)}
-            </option>
-          ))}
-        </select>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.district != customerData?.district &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.district || "(empty)"}
-            </div>
-          )}
-        {formErrors.district && (
-          <div className="error">{formErrors.district}</div>
-        )}
+{/*district dropdown*/}
+<div className="form-group">
+  <label htmlFor="district">
+    {t("District")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.district != customerData?.district &&
+      mode === "edit" && <span className="update-badge">Updated</span>}
+  </label>
+  <SearchableDropdown
+    name="district"
+    options={basicMasterLists?.district || []}
+    value={customerData?.district || ""}
+    onChange={onChangeCustomerData}
+    disabled={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.district === customerData?.district &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending"
+    }
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.district != customerData?.district &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Enter district")}
+    required
+  />
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.district != customerData?.district &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.district || "(empty)"}
       </div>
+    )}
+  {formErrors.district && (
+    <div className="error">{formErrors.district}</div>
+  )}
+</div>
 
-      <div className="form-group">
-        <label htmlFor="city">
-          {t("City")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.city != customerData?.city &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <select
-          id="city"
-          name="city"
-          className={`dropdown ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.city != customerData?.city &&
-            customerData?.city &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          value={customerData?.city || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData && customerData && originalCustomerData?.city === customerData?.city && mode === "edit" && customerData?.customerStatus !== "pending"
-          }
-          required
-        >
-          <option value="" disabled>
-            {t("Enter city")}
-          </option>
-          {basicMasterLists?.city?.map((city) => (
-            <option key={city} value={city}>
-              {t(city)}
-            </option>
-          ))}
-        </select>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.city != customerData?.city &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.city || "(empty)"}
-            </div>
-          )}
-        {formErrors.city && (
-          <div className="error">{formErrors.city}</div>
-        )}
+{/* city dropdown */}
+<div className="form-group">
+  <label htmlFor="city">
+    {t("City")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.city != customerData?.city &&
+      mode === "edit" && <span className="update-badge">Updated</span>}
+  </label>
+  <SearchableDropdown
+    name="city"
+    options={basicMasterLists?.city || []}
+    value={customerData?.city || ""}
+    onChange={onChangeCustomerData}
+    disabled={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.city === customerData?.city &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending"
+    }
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.city != customerData?.city &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Enter city")}
+    required
+  />
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.city != customerData?.city &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.city || "(empty)"}
       </div>
+    )}
+  {formErrors.city && (
+    <div className="error">{formErrors.city}</div>
+  )}
+</div>
 
-      <div className="form-group">
-        <label htmlFor="region">
-          {t("Region")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region != customerData?.region &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <select
-          id="region"
-          name="region"
-          className={`dropdown ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region != customerData?.region &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          value={customerData?.region || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData && customerData && originalCustomerData?.region === customerData?.region && mode === "edit" && customerData?.customerStatus !== "pending"
-          }
-          required
-        >
-          <option value="" disabled>
-            {t("Enter region")}
-          </option>
-          {basicMasterLists?.region?.map((region) => (
-            <option key={region} value={region}>
-              {t(region)}
-            </option>
-          ))}
-        </select>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.region != customerData?.region &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.region || "(empty)"}
-            </div>
-          )}
-        {formErrors.region && (
-          <div className="error">{formErrors.region}</div>
-        )}
+{/* region dropdown */}
+<div className="form-group">
+  <label htmlFor="region">
+    {t("Region")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.region != customerData?.region &&
+      mode === "edit" && <span className="update-badge">Updated</span>}
+  </label>
+  <SearchableDropdown
+    name="region"
+    options={basicMasterLists?.region || []}
+    value={customerData?.region || ""}
+    onChange={onChangeCustomerData}
+    disabled={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.region === customerData?.region &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending"
+    }
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.region != customerData?.region &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Enter region")}
+    required
+  />
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.region != customerData?.region &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.region || "(empty)"}
       </div>
+    )}
+  {formErrors.region && (
+    <div className="error">{formErrors.region}</div>
+  )}
+</div>
 
-      <div className="form-group">
-        <label htmlFor="zone">
-          {t("Zone")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.zone != customerData?.zone &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <select
-          id="zone"
-          name="zone"
-          className={`dropdown ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.zone != customerData?.zone &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          value={customerData?.zone || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData && customerData && originalCustomerData?.zone === customerData?.zone && mode === "edit" && customerData?.customerStatus !== "pending"
-          }
-          required
-        >
-          <option value="" disabled>
-            {t("Enter zone")}
-          </option>
-          {basicMasterLists?.zone?.map((zone) => (
-            <option key={zone} value={zone}>
-              {t(zone)}
-            </option>
-          ))}
-        </select>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.zone != customerData?.zone &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.zone || "(empty)"}
-            </div>
-          )}
-        {formErrors.zone && (<div className="error">{formErrors.zone}</div>)}
+{/* zone dropdown */}
+<div className="form-group">
+  <label htmlFor="zone">
+    {t("Zone")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.zone != customerData?.zone &&
+      mode === "edit" && <span className="update-badge">Updated</span>}
+  </label>
+  <SearchableDropdown
+    name="zone"
+    options={basicMasterLists?.zone || []}
+    value={customerData?.zone || ""}
+    onChange={onChangeCustomerData}
+    disabled={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.zone === customerData?.zone &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending"
+    }
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.zone != customerData?.zone &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Enter zone")}
+    required
+  />
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.zone != customerData?.zone &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.zone || "(empty)"}
       </div>
-
+    )}
+  {formErrors.zone && (
+    <div className="error">{formErrors.zone}</div>
+  )}
+</div>
       <div className="form-group">
         <label htmlFor="pincode">
           {t("Pincode")}
@@ -1372,55 +1362,51 @@ function ContactDetails({
         )}
       </div>
 
+{/* branch dropdown */}
 <div className="form-group">
-        <label htmlFor="branch">
-          {t("Branch")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.branch != customerData?.branch &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <select
-          id="branch"
-          name="branch"
-          className={`dropdown ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.branch != customerData?.branch &&
-            customerData?.branch &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          value={customerData?.branch || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData && customerData && originalCustomerData?.branch === customerData?.branch && mode === "edit" && customerData?.customerStatus !== "pending"
-          }
-          required
-        >
-          <option value="" disabled>
-            {t("Enter branch")}
-          </option>
-          {basicMasterLists?.branch?.map((branch) => (
-            <option key={branch} value={branch}>
-              {t(branch)}
-            </option>
-          ))}
-        </select>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.branch != customerData?.branch &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.branch || "(empty)"}
-            </div>
-          )}
-        {formErrors.branch && (
-          <div className="error">{formErrors.branch}</div>
-        )}
+  <label htmlFor="branch">
+    {t("Branch")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.branch != customerData?.branch &&
+      mode === "edit" && <span className="update-badge">Updated</span>}
+  </label>
+  <SearchableDropdown
+    name="branch"
+    options={basicMasterLists?.branch || []}
+    value={customerData?.branch || ""}
+    onChange={onChangeCustomerData}
+    disabled={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.branch === customerData?.branch &&
+      mode === "edit" &&
+      customerData?.customerStatus !== "pending"
+    }
+    className={
+      originalCustomerData &&
+      customerData &&
+      originalCustomerData?.branch != customerData?.branch &&
+      mode === "edit"
+        ? "update-field"
+        : ""
+    }
+    placeholder={t("Enter branch")}
+    required
+  />
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.branch != customerData?.branch &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.branch || "(empty)"}
       </div>
+    )}
+  {formErrors.branch && (
+    <div className="error">{formErrors.branch}</div>
+  )}
+</div>
 
       {showMap && (
         <div className="map-modal">

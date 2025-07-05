@@ -198,7 +198,7 @@ function FinancialInformation({
         {isV("assignedToEntityWise") && (<>
       {/* Entity Wise Price Plan Assignment Header */}
       <div className="form-header full-width">
-        {t("Entity Wise Price Plan Assignment")}
+        {t("Pricing Plan")}
       </div>
       {/* Entity Wise Price Plan Assignment */}
       <div className="form-group">
@@ -495,6 +495,9 @@ function FinancialInformation({
       </div>
       <div className="form-group" />
 
+<div className="form-header full-width">
+        {t("Delivery Charges")}
+      </div>
       {/* Delivery Charges Applicable */}
       <div className="form-group">
         <label className="checkbox-group-label">
@@ -621,7 +624,7 @@ function FinancialInformation({
       
       {/* Entity Wise Credit Assignment Header */}
       <div className="form-header full-width">
-        {t("Entity Wise Credit Assignment")}
+        {t("Credit")}
       </div>
       {/* DAR Credit */}  
       <div className="form-group">
