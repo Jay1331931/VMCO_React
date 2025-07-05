@@ -49,6 +49,11 @@ const BankTransactions = () => {
       header: "ERP Order Id",
       include: isV("erpOrderIdCol"),
     },
+     {
+      key: "orderId",
+      header: "Order Id",
+      include: isV("OrderIdCol"),
+    },
     {
       key: currentLanguage == "en" ? "companyNameEn" : "companyNameAr",
       header: "Customer",
@@ -95,8 +100,12 @@ const BankTransactions = () => {
           withCredentials: true,
         }
       );
-
-      setTransactions(data.data || []);
+      const formattedData = data.data?.map(row => ({
+  ...row,
+  orderId:  row.orderId?.join(", "),
+  erpOrderId: row.erpOrderId?.join(", ") ,
+}));
+      setTransactions(formattedData || []);
       setPagination({
         page: data.pagination.currentPage,
         pageSize: data.pagination.pageSize,

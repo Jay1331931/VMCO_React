@@ -16,6 +16,7 @@ const Constants = {
         MAINTENANCE_HEAD: 'maintenance head',
         MAINTENANCE_MANAGER: 'maintenance manager',
         DRIVER: 'driver',
+        BRANCH_ACCOUNTANT: 'branch accountant',
     },
     ENTITY:{
         VMCO: 'VMCO',
@@ -24,6 +25,7 @@ const Constants = {
         DAR: 'DAR',
         GMTC: 'GMTC'
     },
+    FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',
         VMCO_CONSUMABLES: 'VMCO Consumables'
