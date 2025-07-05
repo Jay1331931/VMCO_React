@@ -2750,9 +2750,13 @@
   position: absolute;
   top: 8px;
   right: 8px;
+  height: 20px;
+  width: 20px;
+  align-content: center;
+  justify-content: center;
   background: #fff;
   border: none;
-  font-size: 2rem;
+  font-size: 0.9rem;
   align-content: center;
   color: #222;
   cursor: pointer;

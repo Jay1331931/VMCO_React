@@ -51,6 +51,11 @@ const initialCategories = [
     entity: Constants.ENTITY.DAR,
     label: "DAR Company",
   },
+  {
+    value: "SPECIAL_PRODUCTS",
+    entity: "", // No specific entity restriction
+    label: "Special Products",
+  },
 ];
 
 function Catalog() {
@@ -117,40 +122,33 @@ function Catalog() {
           sortOrder: "asc",
         });
 
-        // Handle entity filtering
-        const selectedCategory = categories.find(
-          (cat) => cat.value === activeCategory
-        );
-        const entityToFilter = selectedCategory
-          ? selectedCategory.entity
-          : null;
+        // Special handling for the Special Products tab
+        if (activeCategory === "SPECIAL_PRODUCTS") {
+          params.append("filters", JSON.stringify({"specialProduct":true}));
+          // No entity filtering for special products
+        } else {
+          // Handle entity filtering for regular tabs
+          const selectedCategory = categories.find(
+            (cat) => cat.value === activeCategory
+          );
+          const entityToFilter = selectedCategory
+            ? selectedCategory.entity
+            : null;
 
-        if (entityToFilter) {
-          params.append("entity", entityToFilter);
-        } // For all tabs, just filter by entity without special handling
-        if (
-          activeCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ||
-          activeCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.VMCO);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.SHC);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.GMTC);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.NAQI);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.DAR.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.DAR);
+          if (entityToFilter) {
+            params.append("entity", entityToFilter);
+            
+            // Special handling for VMCO entity tabs
+            if (entityToFilter === Constants.ENTITY.VMCO) {
+              if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
+                // For VMCO Machines tab
+                params.append("isMachine", "true");
+              } else {
+                // For other VMCO tabs (consumables, etc.)
+                params.append("isMachine", "false");
+              }
+            }
+          }
         }
 
         // Add category and subcategory filters
@@ -1262,8 +1260,7 @@ function Catalog() {
                   setSearchQuery(searchTerm);
                   setCurrentPage(1); // Reset to page 1 when searching
                 }}
-                debounceTime={500} // Increased debounce time for better performance
-                className="product-search-input"
+                debounceTime={500}
               />
             )}{" "}
             <SearchableDropdown

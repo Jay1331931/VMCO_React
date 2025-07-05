@@ -58,6 +58,7 @@ function Cart() {
         { category: 'Naqi Company', items: [] },
         { category: 'DAR Company', items: [] }
     ]);
+    const [filteredCartItems, setFilteredCartItems] = useState([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const { token, user, logout, loading } = useAuth();
     console.log('User data:', user);
@@ -1012,6 +1013,49 @@ function Cart() {
         }
     }, [location.state]);
 
+    // Add a new effect to filter cart sections based on interCompany status
+    useEffect(() => {
+        // Default to showing all sections
+        let sectionsToShow = cartItems;
+        
+        console.log("=== INTER-COMPANY CART SECTION FILTERING DEBUG ===");
+        console.log("User details:", {
+            userType: user?.userType,
+            interCompany: user?.interCompany,
+            entity: user?.entity
+        });
+        console.log("Original cart sections:", cartItems.map(item => item.category));
+        
+        // If user is a customer with interCompany set to true, filter out matching entity sections
+        if (user?.userType === "customer" && user?.interCompany === true && user?.entity) {
+            const customerEntity = user.entity.toLowerCase();
+            console.log("Customer entity (lowercase):", customerEntity);
+            
+            sectionsToShow = cartItems.filter(section => {
+                // Get the entity from the category name
+                const sectionEntity = getEntityFromCategory(section.category)?.toLowerCase();
+                
+                // If no entity could be determined, include the section
+                if (!sectionEntity) {
+                    console.log(`Section ${section.category}: No matching entity determined - including`);
+                    return true;
+                }
+                
+                // If entity matches customer's entity, exclude the section
+                const shouldInclude = sectionEntity !== customerEntity;
+                console.log(`Section ${section.category}: Entity = ${sectionEntity}, Include = ${shouldInclude}`);
+                return shouldInclude;
+            });
+        } else {
+            console.log("Not applying interCompany filtering - user is not an interCompany customer");
+        }
+        
+        console.log("Filtered sections:", sectionsToShow.map(item => item.category));
+        console.log("=== END DEBUG ===");
+        
+        setFilteredCartItems(sectionsToShow);
+    }, [cartItems, user]);
+
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
@@ -1031,7 +1075,7 @@ function Cart() {
                     <div className="error-message">{error}</div>
                 ) : (
                     <div className="cart-items-panel">
-                        {cartItems.map((category) => (
+                        {filteredCartItems.map((category) => (
                             <div key={category.category} className="category-section">
                                 <div
                                     className="category-header"

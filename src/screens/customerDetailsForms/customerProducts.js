@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { debounce, set } from 'lodash';
 import Constants from '../../constants';
+import SearchInput from '../../components/SearchInput'; // Add this import
 
 function Products(customer) {
     const [isApprovalMode, setApprovalMode] = useState(false);
@@ -19,7 +20,7 @@ function Products(customer) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isActionMenuOpen, setActionMenuOpen] = useState(false);
-    const actionMenuRef = useRef(null);    const { t } = useTranslation();
+    const actionMenuRef = useRef(null); const { t } = useTranslation();
     const categories = [Constants.ENTITY.VMCO, Constants.ENTITY.DIYAFA, Constants.ENTITY.GMTC, Constants.ENTITY.NAQI];
     const [activeCategory, setActiveCategory] = useState(Constants.ENTITY.VMCO);
     const [selectedItems, setSelectedItems] = useState([]);
@@ -35,11 +36,11 @@ function Products(customer) {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-        const { token, user, isAuthenticated, logout } = useAuth();
+    const { token, user, isAuthenticated, logout } = useAuth();
     // const currentItems = products.slice(startIndex, endIndex);
     const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], 'custDetailsAdd');
-        const isV = rbacMgr.isV.bind(rbacMgr);
-        const isE = rbacMgr.isE.bind(rbacMgr);
+    const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr);
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
@@ -52,53 +53,53 @@ function Products(customer) {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
- const fetchProducts = async () => {
-            setLoading(true);
-            setError(null);
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
 
-            const filters = {
-                customer_id: customer?.customer?.id,
-                entity: activeCategory,
-            };
-if(isApprovalMode) {
-                // If not in approval mode, add the visible filter
-                filters.visible = true;
-            } else {
-                delete filters.visible; // Remove the visible filter if in approval mode
-            }
-            const query = new URLSearchParams({
-                page: currentPage,
-                pageSize: itemsPerPage,
-                sortBy: "product_id",
-                sortOrder: "asc",
-                filters: JSON.stringify(filters),
-                search: search
+        const filters = {
+            customer_id: customer?.customer?.id,
+            entity: activeCategory,
+        };
+        if (isApprovalMode) {
+            // If not in approval mode, add the visible filter
+            filters.visible = true;
+        } else {
+            delete filters.visible; // Remove the visible filter if in approval mode
+        }
+        const query = new URLSearchParams({
+            page: currentPage,
+            pageSize: itemsPerPage,
+            sortBy: "product_id",
+            sortOrder: "asc",
+            filters: JSON.stringify(filters),
+            search: search
+        });
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
             });
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch products');
-                }
-
-                const data = await response.json();
-                setProducts(data.data); 
-                setCurrentItems(data.data);
-                setTotalPages(data.totalPages);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                throw new Error('Failed to fetch products');
             }
-        };
+
+            const data = await response.json();
+            setProducts(data.data);
+            setCurrentItems(data.data);
+            setTotalPages(data.totalPages);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-       
+
         if (customer?.customer?.id && activeCategory) {
             fetchProducts();
         }
@@ -273,7 +274,7 @@ if(isApprovalMode) {
                     <button
                         key={category}
                         className={`category-tab ${activeCategory === category ? 'active' : ''}`}
-                        onClick={() => {setActiveCategory(category); setCurrentPage(1); fetchProducts();}}
+                        onClick={() => { setActiveCategory(category); setCurrentPage(1); fetchProducts(); }}
                     >
                         {t(category)}
                     </button>
@@ -281,21 +282,13 @@ if(isApprovalMode) {
             </div>
             <div className="products-page-header">
                 <div className="products-header-controls">
-                    <input
-                        type="text"
-                        placeholder={t('Search...')}
+                    <SearchInput
+                        onSearch={(value) => {
+                            setSearch(value);
+                            setCurrentPage(1);
+                        }}
                         className="product-search-input"
-                        onChange={handleSearchChange}
-                        style={{padding:" 10px 15px",
-    width: "300px",
-    border: "2px solid #00205b",
-    borderRadius:"8px",
-    fontSize: "1rem",
-    backgroundColor: "#fff",
-    /* box-shadow: 0 0 0 2px #E5E4E2; */
-    transition: "all 0.2s ease",
-    marginRight: "10px",
-    boxSizing: "border-box"}}
+                        debounceTime={400}
                     />
                     <div className="toggle-container">
                         <label>{t('All')}</label>
@@ -383,14 +376,14 @@ if(isApprovalMode) {
                     </tbody>
                 </table>
                 {/* Pagination */}
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
-            />
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={(page) => { setCurrentPage(page); fetchProducts(); }}
+                />
             </div>
-            
-            
+
+
         </div>
     );
 }

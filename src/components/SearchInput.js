@@ -37,15 +37,15 @@ const SearchInput = ({ onSearch, className = 'search-input', debounceTime = 300 
         .search-input {
           padding: 8px 12px;
           width: 300px;
-          border: 2px solid #1d396d;
-                border-radius: 8px;
-         box-shadow: 0 0 0 2px ##E5E4E2; 
+          border: 1px solid #bababa;
+          border-radius: 8px;
+          box-shadow: 0 0 0 1px #E5E4E2;
           font-size: 1rem;
           // box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
           transition: border 0.2s;
         }
         .search-input:focus {
-          border: 1.5px solid #1d396d;
+        border: 1px solid #bababa;
           outline: none;
         }
         @media (max-width: 768px) {

@@ -24,6 +24,7 @@ const Constants = {
         DAR: 'DAR',
         GMTC: 'GMTC'
     },
+    FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',
         VMCO_CONSUMABLES: 'VMCO Consumables'
