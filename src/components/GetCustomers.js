@@ -40,8 +40,9 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) =
       const params = new URLSearchParams({
         page: pagination.page,
         pageSize: pagination.pageSize,
-        sortBy: 'company_name_en',
+        sortBy: 'id',
         sortOrder: 'asc',
+        purpose: 'order creation',
         search: searchQuery
       });
 

@@ -3,6 +3,7 @@ import QuantityController from './QuantityController';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import FavButton from './FavButton';
 
 function ProductPopup({
     product,
@@ -14,6 +15,7 @@ function ProductPopup({
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
+    const [isFavorite, setIsFavorite] = useState(false);
 
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
@@ -34,6 +36,11 @@ function ProductPopup({
         onAddToCart(product.id); // Call the parent component's onAddToCart function
     };
 
+    const handleFavoriteToggle = (newState) => {
+        setIsFavorite(newState);
+        // Add any additional logic for when favorite state changes
+    };
+
     if (!product) return null;
 
     return (
@@ -42,15 +49,21 @@ function ProductPopup({
                 <button className="popup-close" onClick={onClose}>×</button>
                 <div className="popup-content">
                     <div className="popup-image-section">
-                        {selectedImage ? (
-                            <img
-                                src={selectedImage}
-                                alt={product.name}
-                                className="popup-image"
+                        <div className="popup-image-container">
+                            <FavButton 
+                                initialState={isFavorite}
+                                onToggle={handleFavoriteToggle}
                             />
-                        ) : (
-                            <div className="popup-image placeholder"></div>
-                        )}
+                            {selectedImage ? (
+                                <img
+                                    src={selectedImage}
+                                    alt={product.name}
+                                    className="popup-image"
+                                />
+                            ) : (
+                                <div className="popup-image placeholder"></div>
+                            )}
+                        </div>
                         <div className="additional-images">
                             {images.map((img, idx) => (
                                 <div
@@ -161,6 +174,10 @@ function ProductPopup({
                         flex-direction: column;
                         align-items: flex-start;
                         min-width: 320px;
+                    }
+                    .popup-image-container {
+                        position: relative;
+                        width: 100%;
                     }
                     .popup-image {
                         width: 100%;

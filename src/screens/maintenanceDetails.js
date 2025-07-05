@@ -76,7 +76,7 @@ function MaintenanceDetails() {
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || "");
-
+  const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
   const [popupImage, setPopupImage] = useState(null);
   const [isCommentPanelOpen, setIsCommentPanelOpen] = useState(false);
@@ -102,6 +102,8 @@ function MaintenanceDetails() {
 
   // State for issue type options
   const [issueTypeOptions, setIssueTypeOptions] = useState([]);
+
+  
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -677,25 +679,33 @@ function MaintenanceDetails() {
     }
   };
 
+  // Track saving state
+  
+
   // Handle save
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true); // Start saving process
 
     // Basic validation
     if (!ticket.branchId) {
       alert(t("Please select a branch"));
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueType) {
       alert(t("Please select an issue type"));
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueName?.trim()) {
       alert(t("Please enter an issue name"));
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueDetails?.trim()) {
       alert(t("Please enter issue details"));
+      setSaving(false); // End saving if validation fails
       return;
     }
 
@@ -724,10 +734,15 @@ function MaintenanceDetails() {
         warrantyEndDate: ticket.warrantyEndDate || null,
         // Include maintenance charges in both maintenanceCharges and charges fields
         maintenanceCharges: ticket.maintenanceCharges || null,
-        charges: ticket.maintenanceCharges || null, // Fixed typo: was "chargers", now "charges"
+        charges: ticket.maintenanceCharges || null,
         customerRegion: customerRegion,
         branchRegion: branchRegion
       };
+
+      // Update status to "In Progress" if an employee is assigned
+      if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
+        ticketData.status = "In Progress";
+      }
 
       // Remove id and requestId for new tickets (let database auto-generate them)
       if (formMode === "add") {
@@ -802,6 +817,8 @@ function MaintenanceDetails() {
 
       // Keep editing mode active on error
       setIsEditing(true);
+    } finally {
+      setSaving(false); // End saving process regardless of outcome
     }
   };
 
@@ -1197,9 +1214,33 @@ function MaintenanceDetails() {
           <div className="support-details-actions" style={{ paddingRight: "20px" }}>
             {isEditing ? (
               <>
-                {isV('btnSave') && isE('btnSave') && <button className="support-action-btn save " onClick={handleSave}>{t("Save")}</button>}
-                {isV('btnCancel') && isE('btnCancel') && <button className="support-action-btn cancel" onClick={handleCancel}>{t("Cancel")}</button>}
-                {isV('btnClose') && isE('btnClose') && <button className="support-action-btn close" onClick={handleCloseTicket} disabled={closing || ticket.status === 'Closed'}>{closing ? t("Closing...") : t("Close Ticket")}</button>}
+                {isV('btnSave') && isE('btnSave') && 
+                  <button 
+                    className="support-action-btn save" 
+                    onClick={handleSave}
+                    disabled={saving || closing || ticket.status === "Closed"}
+                  >
+                    {saving ? t("Saving...") : t("Save")}
+                  </button>
+                }
+                {isV('btnCancel') && isE('btnCancel') && 
+                  <button 
+                    className="support-action-btn cancel" 
+                    onClick={handleCancel}
+                    disabled={ticket.status === "In Progress" || saving || closing}
+                  >
+                    {t("Cancel")}
+                  </button>
+                }
+                {isV('btnClose') && isE('btnClose') && 
+                  <button 
+                    className="support-action-btn close" 
+                    onClick={handleCloseTicket} 
+                    disabled={closing || saving || ticket.status === 'Closed'}
+                  >
+                    {closing ? t("Closing...") : t("Close Ticket")}
+                  </button>
+                }
               </>
             ) : (
               <>

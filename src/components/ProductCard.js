@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import QuantityController from './QuantityController';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
+import FavButton from './FavButton';
 
 const ProductCard = ({
     product,
@@ -14,12 +15,13 @@ const ProductCard = ({
 }) => {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-    
+    const [isFavorite, setIsFavorite] = useState(false);
+
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
-        user?.userType === 'employee' && user?.roles[0] !== 'admin' 
-            ? user?.designation 
-            : user?.roles?.[0], 
+        user?.userType === 'employee' && user?.roles[0] !== 'admin'
+            ? user?.designation
+            : user?.roles?.[0],
         'catalog'
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
@@ -38,7 +40,7 @@ const ProductCard = ({
         // Ensure the value is not less than the MOQ
         const moq = Number(product.moq) || 0;
         const newValue = Math.max(moq, Number(value));
-        
+
         setQuantities({
             ...quantities,
             [product.id]: newValue
@@ -49,6 +51,11 @@ const ProductCard = ({
         e.stopPropagation(); // Prevent triggering the onProductClick event
         onAddToCart(product.id); // Call the parent component's onAddToCart function
     }
+
+    const handleFavoriteToggle = (newState) => {
+        setIsFavorite(newState);
+        // Add any additional logic for when favorite state changes
+    };
 
     // Determine direction and alignment
     const dir = i18n.dir();
@@ -62,22 +69,26 @@ const ProductCard = ({
             dir={dir}
         >
             <div className="product-image-container">
-            {product.image ? (
-                <img
-                src={product.image}
-                alt={product.name}
-                className="responsive-product-image"
+                <FavButton
+                    initialState={isFavorite}
+                    onToggle={handleFavoriteToggle}
                 />
-            ) : (
-                <div className="product-image-placeholder">No Image</div>
-            )}
+                {product.image ? (
+                    <img
+                        src={product.image}
+                        alt={product.name}
+                        className="responsive-product-image"
+                    />
+                ) : (
+                    <div className="product-image-placeholder">No Image</div>
+                )}
             </div>
-          
+
             <div className="product-details">
                 <h3 className="product-name" title={product.name}>{product.name}</h3>
                 <p className="product-code">{product.code}</p>
                 {product.entity && <p className="product-entity">{product.entity}</p>}
-                <h4 className="unit-price" style={{color:"#6c7584"}}>{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
+                <h4 className="unit-price" style={{ color: "#6c7584" }}>{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
                 <div className="buttons-container">
                     {isV('quantityController') && (
                         <QuantityController
@@ -88,7 +99,7 @@ const ProductCard = ({
                                 const currentQty = quantities[product.id] || 0;
                                 const moq = Number(product.moq) || 0;
                                 const newQty = currentQty + delta;
-                                
+
                                 if (newQty >= moq) {
                                     onQuantityChange(id, delta);
                                 } else if (delta > 0 && currentQty < moq) {
@@ -109,7 +120,7 @@ const ProductCard = ({
                         <button
                             className="add-to-cart-btn"
                             onClick={(e) => handleAddToCart(e)}
-                            style={{backgroundColor: '#01594C',color:"#ffffff"}}
+                            style={{ backgroundColor: '#01594C', color: "#ffffff" }}
                         >
                             {t('ADD TO CART')}
                         </button>
@@ -117,6 +128,17 @@ const ProductCard = ({
                 </div>
             </div>
             <style>{`
+            .product-image-container {
+                position: relative;
+                width: 100%;
+            }
+            
+            /* RTL support for favorite button */
+            .product-card.rtl .favorite-btn {
+                right: auto;
+                left: 10px;
+            }
+            
             .buttons-container {
             display: flex;
             flex-direction: row;

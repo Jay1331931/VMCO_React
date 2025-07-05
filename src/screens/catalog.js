@@ -51,6 +51,11 @@ const initialCategories = [
     entity: Constants.ENTITY.DAR,
     label: "DAR Company",
   },
+  {
+    value: "SPECIAL_PRODUCTS",
+    entity: "", // No specific entity restriction
+    label: "Special Products",
+  },
 ];
 
 function Catalog() {
@@ -117,40 +122,33 @@ function Catalog() {
           sortOrder: "asc",
         });
 
-        // Handle entity filtering
-        const selectedCategory = categories.find(
-          (cat) => cat.value === activeCategory
-        );
-        const entityToFilter = selectedCategory
-          ? selectedCategory.entity
-          : null;
+        // Special handling for the Special Products tab
+        if (activeCategory === "SPECIAL_PRODUCTS") {
+          params.append("filters", JSON.stringify({"specialProduct":true}));
+          // No entity filtering for special products
+        } else {
+          // Handle entity filtering for regular tabs
+          const selectedCategory = categories.find(
+            (cat) => cat.value === activeCategory
+          );
+          const entityToFilter = selectedCategory
+            ? selectedCategory.entity
+            : null;
 
-        if (entityToFilter) {
-          params.append("entity", entityToFilter);
-        } // For all tabs, just filter by entity without special handling
-        if (
-          activeCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ||
-          activeCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.VMCO);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.SHC);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.GMTC);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.NAQI);
-        } else if (
-          activeCategory.toLowerCase() === Constants.ENTITY.DAR.toLowerCase()
-        ) {
-          params.append("entity", Constants.ENTITY.DAR);
+          if (entityToFilter) {
+            params.append("entity", entityToFilter);
+            
+            // Special handling for VMCO entity tabs
+            if (entityToFilter === Constants.ENTITY.VMCO) {
+              if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
+                // For VMCO Machines tab
+                params.append("isMachine", "true");
+              } else {
+                // For other VMCO tabs (consumables, etc.)
+                params.append("isMachine", "false");
+              }
+            }
+          }
         }
 
         // Add category and subcategory filters
@@ -1149,6 +1147,46 @@ function Catalog() {
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
 
+  // Filter categories based on interCompany status
+  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
+  
+  // Filter out tabs based on interCompany status
+  useEffect(() => {
+    if (!user) return;
+    
+    // Default to all tabs
+    let tabsToShow = categoryTabs;
+    
+    // If user is a customer with interCompany set to true, filter out matching entity tabs
+    if (user.userType === "customer" && user.interCompany === true && user.entity) {
+      const customerEntity = user.entity.toLowerCase();
+      
+      tabsToShow = categoryTabs.filter(tab => {
+        // Find the original category to get its entity
+        const category = categories.find(cat => cat.value === tab.value);
+        
+        // If no matching category or no entity, include the tab
+        if (!category || !category.entity) return true;
+        
+        // If entity matches customer's entity, exclude the tab
+        return category.entity.toLowerCase() !== customerEntity;
+      });
+      
+      // If we filtered all tabs, show the original tabs as fallback
+      if (tabsToShow.length === 0) {
+        tabsToShow = categoryTabs;
+        console.warn("All tabs would be filtered out based on interCompany rules. Showing all tabs instead.");
+      }
+    }
+    
+    setFilteredCategoryTabs(tabsToShow);
+    
+    // If current active category is not in filtered tabs, set to first available
+    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab.value === activeCategory)) {
+      setActiveCategory(tabsToShow[0].value);
+    }
+  }, [user, categories.entity, categoryTabs.values, activeCategory]);
+
   return (
     <Sidebar title={t("Catalog")}>
       <div
@@ -1186,7 +1224,7 @@ function Catalog() {
         )}
         <div className="filter-section">
           <Tabs
-            tabs={categoryTabs}
+            tabs={filteredCategoryTabs}  // Use filtered tabs instead of all tabs
             activeTab={activeCategory}
             onTabChange={(newCategory) => {
               setActiveCategory(newCategory);
@@ -1222,8 +1260,7 @@ function Catalog() {
                   setSearchQuery(searchTerm);
                   setCurrentPage(1); // Reset to page 1 when searching
                 }}
-                debounceTime={500} // Increased debounce time for better performance
-                className="product-search-input"
+                debounceTime={500}
               />
             )}{" "}
             <SearchableDropdown
