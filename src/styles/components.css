@@ -2964,7 +2964,7 @@
 
 .maintenance-images-list {
   display: flex;
-  flex-wrap: wrap; /* Add this to enable wrapping */
+  /* flex-wrap: wrap; Add this to enable wrapping */
   min-height: 120px; /* Change from fixed height to min-height */
   gap: 16px; /* Slightly adjust gap for better spacing */
   margin-top: 8px;
@@ -3000,7 +3000,7 @@
 
 .maintenance-videos-list {
   display: flex;
-  flex-wrap: wrap; /* Add this to enable wrapping */
+  /* flex-wrap: wrap; Add this to enable wrapping */
   min-height: 120px; /* Change from fixed height to min-height */
   gap: 16px; /* Slightly adjust gap for better spacing */
   margin-top: 8px;
@@ -3347,5 +3347,46 @@
 input:focus {
                     outline: none;
                 } 
+
+
+/* Support images display */
+.scrollable-image-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
+}
+
+.scrollable-preview-container::-webkit-scrollbar {
+  display: none;
+}
+
+
+.maintenance-image-placeholder {
+  min-width: 150px;
+  min-height: 100px;
+  max-height: 120px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.maintenance-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
 
 

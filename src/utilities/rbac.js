@@ -1554,6 +1554,7 @@ class RbacManager {
           videoPopup: { visible: true, editable: true },
           commentPanel: { visible: false, editable: true },
           commentIcon: { visible: false, editable: true },
+          removeVideo: { visible: true, editable: true}
         },
       },
       maintDetailEdit: {
@@ -1584,6 +1585,7 @@ class RbacManager {
           videoPopup: { visible: true, editable: true },
           commentPanel: { visible: false, editable: true },
           commentIcon: { visible: false, editable: true },
+          removeVideo: { visible: false, editable: false}
         },
       },
       SidebarList: {

@@ -54,6 +54,11 @@ const AddBankTransaction = () => {
     const files = e.target.files;
 
     for (let file of files) {
+      //file Size less than 30MB
+       if (file.size > 30 * 1024 * 1024) { 
+      setError(t("File size exceeds 30MB limit"));
+      continue;
+    }
       const formDataUpload = new FormData();
       formDataUpload.append("file", file);
       formDataUpload.append("containerType", "transactions");
@@ -641,7 +646,7 @@ const AddBankTransaction = () => {
                 </div>
               </div>
               </div>
-
+     
               <div className="form-group full-width">
                 <label htmlFor="description">{t("Description")}</label>
                 <textarea
@@ -668,7 +673,16 @@ const AddBankTransaction = () => {
                 </div>
               )}
             </div>
-
+ { popupImage && (
+        <div className='image-popup-overlay' onClick={() => setPopupImage(null)}>
+          <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
+            <img src={popupImage} style={{ maxWidth: "100%", maxHeight: "100%" }} />
+            <button className='image-popup-close' onClick={() => setPopupImage(null)}>
+              ×
+            </button>
+          </div>
+        </div>
+      )}
             <GetCustomers
               open={showCustomerPopup}
               onClose={() => setShowCustomerPopup(false)}
@@ -803,6 +817,64 @@ const AddBankTransaction = () => {
   text-decoration: none;
   white-space: nowrap;
 }
+.image-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.image-popup-content {
+  position: relative;
+  max-width: 50%;
+  
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-popup-content img {
+  width: 100%;
+  max-width: 400px;
+  max-height: 400px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.image-popup-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: red;
+  color: white;
+  border: none;
+  font-size: 20px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s;
+}
+
+.image-popup-close:hover {
+  background: #c00;
+}
+
+
 
 
 `}
