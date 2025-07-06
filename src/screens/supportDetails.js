@@ -811,16 +811,9 @@ function SupportDetails() {
 
       setSaving(true);
 
-      // Update ticket status to "Closed"
+      // Only update the status field, not the entire ticket
       const ticketData = {
-        id: ticket.id,
-        status: "Closed",
-        // Ensure comments is always an array
-        comments: Array.isArray(ticket.comments)
-          ? ticket.comments
-          : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
-            ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
-            : []
+        status: "Closed"
       };
 
       const endPoint = `/grievances/id/${ticket.id}`;
@@ -852,7 +845,10 @@ function SupportDetails() {
       });
 
       // Update local state and redirect
-      setTicket(prev => ({ ...prev, status: "Closed" }));
+      setTicket(prev => ({
+        ...prev,
+        status: "Closed"
+      }));
       setIsEditing(false);
       navigate("/support");
     } catch (error) {
@@ -962,22 +958,64 @@ function SupportDetails() {
     return new File([u8arr], filename, { type: mime });
   };
 
-  // Add comment to ticket.comments in correct format
-  const handleAddComment = (commentText, newCommentObj) => {
+  // Add comment to ticket.comments in correct format and save to backend immediately
+  const handleAddComment = async (commentText, newCommentObj) => {
     if (!commentText || !user) return;
+    
+    // Create the new comment object
     const newComment = {
-      date: formatDate(new Date(), "YYYY-MM-DD HH:MM"),
-      status: "New",
-      userId: user.userId,
+      date: formatDate(new Date(), "DD/MM/YYYY HH:MM"),
+      action: newCommentObj?.action || "New",
+      userId: String(user.userId),
       message: commentText,
       userName: user.userName
     };
+    
+    // Update local state first for immediate UI feedback
+    const updatedComments = Array.isArray(ticket.comments) 
+      ? [...ticket.comments] 
+      : [newComment];
+      
     setTicket(prev => ({
       ...prev,
-      comments: Array.isArray(prev.comments)
-        ? [...prev.comments]
-        : [newComment]
+      comments: updatedComments
     }));
+    
+    try {
+      // Only attempt to save to backend if we're in edit mode and have a ticket ID
+      if (formMode === "edit" && ticket.id) {
+        const apiUrl = `${API_BASE_URL}/grievances/id/${ticket.id}`;
+        
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            comments: updatedComments 
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        // Optional: show a small success notification
+        console.log("Comment saved successfully to backend");
+      }
+    } catch (error) {
+      console.error("Failed to save comment to backend:", error);
+      
+      // Optional: show error notification to user
+      Swal.fire({
+        title: t("Error"),
+        text: t("Failed to save comment. The comment will be saved when you save the ticket."),
+        icon: "warning",
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
   };
 
   const handleInputChange = (e) => {

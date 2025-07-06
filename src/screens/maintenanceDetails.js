@@ -908,71 +908,140 @@ useEffect(() => {
 
   // Handle close ticket
   const handleCloseTicket = async () => {
-    if (!ticket.status || ticket.status === 'Closed') {
-      Swal.fire({
-        icon: 'info',
-        title: t('Ticket already closed'),
-        timer: 2000,
-        showConfirmButton: false
+    setClosing(true); // Start closing
+    try {
+      // Show confirmation dialog
+      const result = await Swal.fire({
+        title: t("Close Ticket?"),
+        text: t("Are you sure you want to close this maintenance request? This action cannot be undone."),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: t("Yes, Close Request"),
+        cancelButtonText: t("Cancel"),
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d"
       });
-      return;
-    }
-    const result = await Swal.fire({
-      title: t('Are you sure you want to close this ticket?'),
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: t('Yes, close it!'),
-      cancelButtonText: t('Cancel')
-    });
-    if (result.isConfirmed) {
-      setClosing(true);
-      try {
-        // Use PATCH to update ticket status to Closed
-        const apiUrl = process.env.REACT_APP_API_BASE_URL
-          ? `${process.env.REACT_APP_API_BASE_URL}/maintenance/id/${ticket.id}`
-          : `http://localhost:3000/api/maintenance/id/${ticket.id}`;
-        const response = await fetch(apiUrl, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ status: 'Closed' })
-        });
-        if (!response.ok) throw new Error('Failed to close ticket');
-        Swal.fire({
-          icon: 'success',
-          title: t('Ticket closed successfully'),
-          timer: 2000,
-          showConfirmButton: false
-        });
-        setTicket(prev => ({ ...prev, status: 'Closed' }));
-      } catch (err) {
-        Swal.fire({
-          icon: 'error',
-          title: t('Failed to close ticket'),
-          text: err.message
-        });
-      } finally {
-        setClosing(false);
+
+      if (!result.isConfirmed) {
+        return; // User cancelled
       }
+
+      setSaving(true);
+
+      // Only update the status field, not the entire ticket
+      const ticketData = {
+        status: "Closed"
+      };
+
+      const endPoint = `/maintenance/id/${ticket.id}`;
+      const apiUrl = `${API_BASE_URL}${endPoint}`;
+
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(ticketData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const responseResult = await response.json();
+      console.log("Close ticket successful:", responseResult);
+
+      // Show success message
+      await Swal.fire({
+        title: t("Success!"),
+        text: t("Maintenance request closed successfully!"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#28a745"
+      });
+
+      // Update local state and redirect
+      setTicket(prev => ({
+        ...prev,
+        status: "Closed"
+      }));
+      setIsEditing(false);
+      navigate("/maintenance");
+    } catch (error) {
+      console.error("Error closing maintenance request:", error);
+
+      // Show error message
+      await Swal.fire({
+        title: t("Error!"),
+        text: t("Failed to close maintenance request. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    } finally {
+      setClosing(false); // End closing
     }
   };
 
-  // Add comment to ticket.comments in correct format (avoid duplicates)
-  const handleAddComment = (commentText, newCommentObj) => {
+  // Add comment to ticket.comments in correct format and save to backend immediately
+  const handleAddComment = async (commentText, newCommentObj) => {
     if (!commentText || !user) return;
+    
+    // Create the new comment object
     const newComment = {
-      date: new Date().toISOString(),
+      date: formatDate(new Date(), "DD/MM/YYYY HH:MM"),
       action: newCommentObj?.action || "New",
       userId: String(user.userId),
       message: commentText,
       userName: user.userName
     };
+    
+    // Update local state first for immediate UI feedback
+    const updatedComments = Array.isArray(ticket.comments) 
+      ? [...ticket.comments] 
+      : [newComment];
+      
     setTicket(prev => ({
       ...prev,
-      comments: Array.isArray(prev.comments)
-        ? [...prev.comments, newComment]
-        : [newComment]
+      comments: updatedComments
     }));
+    
+    try {
+      // Only attempt to save to backend if we're in edit mode and have a ticket ID
+      if (formMode === "edit" && ticket.id) {
+        const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
+        
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            comments: updatedComments 
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        // Optional: show a small success notification
+        console.log("Comment saved successfully to backend");
+      }
+    } catch (error) {
+      console.error("Failed to save comment to backend:", error);
+      
+      // Optional: show error notification to user
+      Swal.fire({
+        title: t("Error"),
+        text: t("Failed to save comment. The comment will be saved when you save the ticket."),
+        icon: "warning",
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 3000
+      });
+    }
   };
 
   const handleInputChange = (e) => {
