@@ -51,8 +51,7 @@ function Cart() {
     const [pendingOrderItems, setPendingOrderItems] = useState([]);
     const [isLoading, setIsLoading] = useState(false);    const [error, setError] = useState(null);
     const [cartItems, setCartItems] = useState([
-        { category: t(Constants.CATEGORY.VMCO_MACHINES), items: [] },
-        { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: [] },
+        { category: 'Vending Machine Company', items: [] },
         { category: 'Saudi Hospitality Company', items: [] },
         { category: 'Green Mast Factory Ltd', items: [] },
         { category: 'Naqi Company', items: [] },
@@ -125,12 +124,11 @@ function Cart() {
             console.log('Fetched cart data:', result);
 
             // Initialize arrays for each category
-            const vmcoMachines = [];
-            const vmcoConsumables = [];
-            const shc = [];
-            const greenMast = [];
-            const naqui = [];
-            const dar = [];
+            const vmco = [];
+const shc = [];
+const greenMast = [];
+const naqui = [];
+const dar = [];
 
             // Extract cart items from the response with better error handling
             const cartProducts = Array.isArray(result.data.data) ? result.data.data :
@@ -201,11 +199,7 @@ function Cart() {
                 const entity = (product.entity || '').toLowerCase();
                 const isMachine = isProductMachine(product);                // Categorize based on entity and product type
                 if (entity === Constants.ENTITY.VMCO.toLowerCase()) {
-                    if (isMachine) {
-                        vmcoMachines.push(formattedItem);
-                    } else {
-                        vmcoConsumables.push(formattedItem);
-                    }
+                    vmco.push(formattedItem);
                 } else if (entity === Constants.ENTITY.SHC.toLowerCase()) {
                     shc.push(formattedItem);
                 } else if (entity === Constants.ENTITY.GMTC.toLowerCase()) {
@@ -216,7 +210,8 @@ function Cart() {
                     dar.push(formattedItem);
                 } else {
                     // If entity is not specified, try to determine by category
-                    const category = (product.category || '').toLowerCase();                    if (category.includes(Constants.ENTITY.SHC.toLowerCase())) {
+                    const category = (product.category || '').toLowerCase();
+                    if (category.includes(Constants.ENTITY.SHC.toLowerCase())) {
                         shc.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
@@ -229,14 +224,13 @@ function Cart() {
                         dar.push(formattedItem);
                     }
                     else {
-                        // Default to VMCO Consumables if we can't determine category
-                        vmcoConsumables.push(formattedItem);
+                        // Default to VMCO if we can't determine category
+                        vmco.push(formattedItem);
                     }
                 }
             });            // Update the cart items with the categorized data
             setCartItems([
-                { category: t(Constants.CATEGORY.VMCO_MACHINES), items: vmcoMachines },
-                { category: t(Constants.CATEGORY.VMCO_CONSUMABLES), items: vmcoConsumables },
+                { category: 'Vending Machine Company', items: vmco },
                 { category: 'Saudi Hospitality Company', items: shc },
                 { category: 'Green Mast Factory Ltd', items: greenMast },
                 { category: 'Naqi Company', items: naqui },

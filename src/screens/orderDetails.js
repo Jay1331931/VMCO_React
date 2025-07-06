@@ -1706,6 +1706,15 @@ function OrderDetails() {
 
   // Calculate totalAmount as the sum of netAmount of all products
   useEffect(() => {
+    // If it's a sample order, always set totalAmount to 0.00
+    if (sampleMode || formData.sample_order) {
+      if (formData.totalAmount !== '0.00') {
+        setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
+      }
+      return;
+    }
+
+    // For non-sample orders, calculate the total as before
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       const total = formData.products.reduce((sum, p) => {
         const net = parseFloat(p.netAmount) || 0;
@@ -1717,11 +1726,11 @@ function OrderDetails() {
     } else if (formData.totalAmount !== '0.00') {
       setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
     }
-  }, [formData.products, formData.totalAmount, formData.deliveryCharges]);
+  }, [formData.products, formData.totalAmount, formData.deliveryCharges, sampleMode, formData.sample_order]);
 
   // Calculate deliveryCharges and totalAmount based on entity and products
   useEffect(() => {
-    if (sampleMode) {
+    if (sampleMode || formData.sample_order) {
       // In sample mode, delivery charges and total amount are always 0
       setFormData(prev => ({
         ...prev,
@@ -1752,7 +1761,7 @@ function OrderDetails() {
         totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
       }));
     }
-  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount, sampleMode]);
+  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount, sampleMode, formData.sample_order]);
 
   // Set payment percentage based on category
   useEffect(() => {
