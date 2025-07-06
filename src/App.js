@@ -55,6 +55,7 @@ function App() {
         <Route path="/bankTransactions" element={<BankTransactions/>} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
         <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/order/:orderId" element={<AddBankTransaction />} />
         </Routes>
     </Router>
   );

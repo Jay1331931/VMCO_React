@@ -16,6 +16,7 @@ const Constants = {
         MAINTENANCE_HEAD: 'maintenance head',
         MAINTENANCE_MANAGER: 'maintenance manager',
         DRIVER: 'driver',
+        BRANCH_ACCOUNTANT: 'branch accountant',
     },
     ENTITY:{
         VMCO: 'VMCO',

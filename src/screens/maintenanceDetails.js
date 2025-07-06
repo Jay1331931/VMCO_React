@@ -12,7 +12,7 @@ import RbacManager from "../utilities/rbac";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
-
+import axios from "axios";
 function MaintenanceDetails() {
   const defaultTicket = {
     id: null,
@@ -90,7 +90,8 @@ function MaintenanceDetails() {
 
   // Videos state (allow dynamic add) - store both data URL and original filename
   const [videos, setVideos] = useState([]);
-
+ const [videoData, setVideoData] = useState([]);
+const [fileData, setFileData] = useState([]);
   // File input ref for videos
   const videoInputRef = useRef(null);
 
@@ -128,7 +129,116 @@ function MaintenanceDetails() {
 
     return dateStr;
   };
+const handleFileUpload = async (e, type) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
 
+  if (file.size > 30 * 1024 * 1024) {
+    Swal.fire({
+      title: t("File size exceeds 30MB limit"),
+      text: t("Please select a smaller file."),
+      icon: "error",
+      confirmButtonText: t("OK"),
+      confirmButtonColor: "#dc3545"
+    });
+    return;
+  }
+
+  const formDataUpload = new FormData();
+  formDataUpload.append("file", file);
+  formDataUpload.append("containerType", "maintenance");
+
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/upload-files`,
+      formDataUpload,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      }
+    );
+
+    if (data.success && data.files) {
+      if (type === "image") {
+        setImages((prev) => [...prev, data.files]);
+      } else if (type === "video") {
+        setVideos((prev) => [...prev, data.files]);
+      }
+    }
+  } catch (err) {
+    console.error("Upload error:", err);
+  }
+
+  e.target.value = "";
+};
+
+const fetchUploadedFiles = useCallback(async (fileNames, type) => {
+  try {
+    if (!fileNames || fileNames.length === 0) return;
+
+    const fetched = [];
+
+    for (let fileName of fileNames) {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/get-files`,
+        { fileName, containerType: "maintenance" },
+        { withCredentials: true }
+      );
+
+      if (data?.status === "Ok" && data.data) {
+        fetched.push(data.data);
+      }
+    }
+
+    if (type === "image") {
+      setFileData(fetched);
+    } else if (type === "video") {
+      setVideoData(fetched);
+    }
+  } catch (error) {
+    console.error(`Error fetching ${type} files:`, error);
+  }
+}, []);
+
+const handleRemoveFile = async (fileName, type) => {
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/delete-files`,
+      {
+        fileName,
+        containerType: "maintenance",
+      },
+      { withCredentials: true }
+    );
+
+    if (data.success) {
+      if (type === "image") {
+        setFileData((prev) =>
+          prev.filter((file) => file.fileName !== fileName)
+        );
+        setImages((prev) => prev.filter((img) => img !== fileName));
+      } else if (type === "video") {
+        setVideoData((prev) =>
+          prev.filter((file) => file.fileName !== fileName)
+        );
+        setVideos((prev) => prev.filter((vid) => vid !== fileName));
+      }
+    }
+  } catch (error) {
+    console.error(`Error deleting ${type}:`, error);
+  }
+};
+
+
+useEffect(() => {
+  if(images.length ==0) return; // Avoid fetching if no images{
+  fetchUploadedFiles(images, "image");
+}, [images, fetchUploadedFiles]);
+
+useEffect(() => {
+  if(videos.length ==0) return; // Avoid fetching if no videos
+  fetchUploadedFiles(videos, "video");
+}, [videos, fetchUploadedFiles]);
   // State for closing ticket (MOVED UP to fix React Hooks order)
   const [closing, setClosing] = useState(false); // Track closing state
 
@@ -140,104 +250,13 @@ function MaintenanceDetails() {
 
         // Parse attachment field - it can be string or object
         if (typeof ticket.attachment === 'string') {
-          attachmentData = JSON.parse(ticket.attachment);
+          attachmentData = ticket.attachment
         } else {
           attachmentData = ticket.attachment;
         }
-
-        console.log('Loading existing files from attachment:', attachmentData);
-
-        // Load images
-        if (attachmentData.images && Array.isArray(attachmentData.images)) {
-          const imagePromises = attachmentData.images.map(async (imageItem) => {
-            try {
-              // Handle both old format (string) and new format (object)
-              const fileName = typeof imageItem === 'string' ? imageItem : imageItem.fileName || imageItem;
-
-              if (!fileName) return null;
-
-              console.log('Loading image:', fileName);
-
-              // Fetch image from backend
-              const response = await fetch(`${API_BASE_URL}/maintenance/file/${fileName}`, {
-                method: 'GET',
-                credentials: 'include'
-              });
-
-              if (response.ok) {
-                const blob = await response.blob();
-                const dataUrl = await new Promise((resolve) => {
-                  const reader = new FileReader();
-                  reader.onload = (e) => resolve(e.target.result);
-                  reader.readAsDataURL(blob);
-                });
-
-                return {
-                  dataUrl,
-                  fileName,
-                  originalName: typeof imageItem === 'object' ? imageItem.originalName || fileName : fileName,
-                  isExisting: true
-                };
-              } else {
-                console.warn(`Failed to load image ${fileName}: ${response.status}`);
-              }
-            } catch (error) {
-              console.error(`Error loading image ${imageItem}:`, error);
-            }
-            return null;
-          });
-
-          const loadedImages = await Promise.all(imagePromises);
-          const validImages = loadedImages.filter(img => img !== null);
-          console.log('Loaded images:', validImages.length);
-          setImages(validImages);
-        }
-
-        // Load videos
-        if (attachmentData.videos && Array.isArray(attachmentData.videos)) {
-          const videoPromises = attachmentData.videos.map(async (videoItem) => {
-            try {
-              // Handle both old format (string) and new format (object)  
-              const fileName = typeof videoItem === 'string' ? videoItem : videoItem.fileName || videoItem;
-
-              if (!fileName) return null;
-
-              console.log('Loading video:', fileName);
-
-              // Fetch video from backend
-              const response = await fetch(`${API_BASE_URL}/maintenance/file/${fileName}`, {
-                method: 'GET',
-                credentials: 'include'
-              });
-
-              if (response.ok) {
-                const blob = await response.blob();
-                const dataUrl = await new Promise((resolve) => {
-                  const reader = new FileReader();
-                  reader.onload = (e) => resolve(e.target.result);
-                  reader.readAsDataURL(blob);
-                });
-
-                return {
-                  dataUrl,
-                  fileName,
-                  originalName: typeof videoItem === 'object' ? videoItem.originalName || fileName : fileName,
-                  isExisting: true
-                };
-              } else {
-                console.warn(`Failed to load video ${fileName}: ${response.status}`);
-              }
-            } catch (error) {
-              console.error(`Error loading video ${videoItem}:`, error);
-            }
-            return null;
-          });
-
-          const loadedVideos = await Promise.all(videoPromises);
-          const validVideos = loadedVideos.filter(vid => vid !== null);
-          console.log('Loaded videos:', validVideos.length);
-          setVideos(validVideos);
-        }
+        setImages([...attachmentData.images || []]);
+        setVideos([...attachmentData.videos || []]);
+       
       } catch (error) {
         console.error('Error parsing attachment data:', error);
       }
@@ -749,7 +768,7 @@ function MaintenanceDetails() {
         ticketData.id = undefined;
         ticketData.requestId = undefined;
         // Set initial attachment to "none" for new tickets
-        ticketData.attachment = "none";
+        ticketData.attachment = { images: images || [], videos:videos|| [] };
       }
 
       console.log('Ticket data being sent:', {
@@ -787,9 +806,9 @@ function MaintenanceDetails() {
       const ticketId = formMode === "add" ? result.maintenance.id : ticket.id;
 
       // Upload files if there are any images or videos
-      if (images.length > 0 || videos.length > 0) {
-        await uploadFilesAndUpdateAttachment(ticketId);
-      }
+      // if (images.length > 0 || videos.length > 0) {
+      //   await uploadFilesAndUpdateAttachment(ticketId);
+      // }
 
       // Show success message with SweetAlert and navigate after OK
       await Swal.fire({
@@ -1129,21 +1148,21 @@ function MaintenanceDetails() {
                   <label>{t("Images")}</label>
                   <div className='maintenance-images-list'>
                     {/* Add Image Button */}
-                    {isV('addImage') && isE('addImage') && (
+                    {isV('addImage') && isE('addImage') && images.length<=6 &&  (
                       <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
                         +
                       </button>
                     )}
-                    <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={handleAddImage} />
-                    {images.map((imageData, idx) => (
-                      <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.dataUrl && setPopupImage(imageData.dataUrl)} title={imageData.dataUrl ? "Click to view" : ""}>
-                        <img width='100%' height='100%' style={{ objectFit: "cover" }} src={imageData.dataUrl} />
+                    {images.length<=6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"image")}  />}
+                    {fileData?.map((imageData, idx) => (
+                      <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.url && setPopupImage(imageData.url)} title={imageData.url ? "Click to view" : ""}>
+                        <img width='100%' height='100%' style={{ objectFit: "cover" }} src={imageData.url} />
                         {isV("removeImage") && isE("removeImage") && (
                           <button
                             className='maintenance-remove-btn'
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening the image
-                              handleRemoveImage(idx);
+                             handleRemoveFile(imageData.fileName, "image");
                             }}
                             title={t("Remove Image")}>
                             ×
@@ -1159,21 +1178,21 @@ function MaintenanceDetails() {
                   <label>{t("Videos")}</label>
                   <div className='maintenance-videos-list'>
                     {/* Add Video Button */}
-                    {isV('addVideo') && isE('addVideo') && (
+                    {isV('addVideo') && isE('addVideo') && videos?.length<=6 &&  (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
                         +
                       </button>
                     )}
-                    <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={handleAddVideo} />
-                    {videos.map((videoData, idx) => (
-                      <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.dataUrl && setPopupVideo(videoData.dataUrl)} title={videoData.dataUrl ? "Click to view" : ""}>
-                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.dataUrl} />
+                    { videos?.length<=6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"video")}  />}
+                    {videoData?.map((videoData, idx) => (
+                      <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
+                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
                         {isV("removeVideo") && isE("removeVideo") && (
                           <button
                             className='maintenance-remove-btn'
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening the video
-                              handleRemoveVideo(idx);
+                            handleRemoveFile(videoData.fileName,"video");
                             }}
                             title={t("Remove Video")}>
                             ×
