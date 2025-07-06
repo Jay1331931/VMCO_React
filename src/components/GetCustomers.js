@@ -3,15 +3,15 @@ import '../styles/components.css';
 import Pagination from './Pagination';
 
 
-function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) => x }) {
+function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoint, apiParams, t = (x) => x }) {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 10,
+    page: apiParams?.page || 1,
+    pageSize: apiParams?.pageSize || 10,
     total: 0
   });
   const debounceTimeout = useRef();
@@ -37,16 +37,16 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, t = (x) =
     setLoading(true);
     setError(null);
     try {
+      // Use the provided apiParams and add pagination and search parameters
       const params = new URLSearchParams({
+        ...apiParams,
         page: pagination.page,
         pageSize: pagination.pageSize,
-        sortBy: 'id',
-        sortOrder: 'asc',
-        purpose: 'order creation',
         search: searchQuery
       });
 
-      const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
+      const url = `${API_BASE_URL}${apiEndpoint}?${params.toString()}`;
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

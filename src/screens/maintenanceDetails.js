@@ -1311,6 +1311,13 @@ useEffect(() => {
         onSelectCustomer={handleSelectCustomer}
         API_BASE_URL={API_BASE_URL}
         t={t}
+        apiEndpoint="/customers/pagination"
+        apiParams={{
+          page: 1,
+          pageSize: 10,
+          sortBy: 'id',
+          sortOrder: 'asc'
+        }}
       />
       <GetBranches
         open={showBranchPopup}

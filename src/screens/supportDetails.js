@@ -91,144 +91,144 @@ function SupportDetails() {
 
   // Videos state (allow dynamic add) - store both data URL and original filename
   const [videos, setVideos] = useState([]);
- const [videoData, setVideoData] = useState([]);
-const [fileData, setFileData] = useState([]); // State to hold fetched file data
+  const [videoData, setVideoData] = useState([]);
+  const [fileData, setFileData] = useState([]); // State to hold fetched file data
   // File input ref for videos
   const videoInputRef = useRef(null);
 
   // State for customer popup
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
-  
+
   // State for branch popup
   const [showBranchPopup, setShowBranchPopup] = useState(false);
-  
+
   // State for issue type options
   const [issueTypeOptions, setIssueTypeOptions] = useState([]);
-  
+
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   // State for saving
   const [saving, setSaving] = useState(false);
   const [closing, setClosing] = useState(false); // Track closing state
- // Handle image add
-const handleFileUpload = async (e, type) => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
+  // Handle image add
+  const handleFileUpload = async (e, type) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
 
-  if (file.size > 30 * 1024 * 1024) {
-    Swal.fire({
-      title: t("File size exceeds 30MB limit"),
-      text: t("Please select a smaller file."),
-      icon: "error",
-      confirmButtonText: t("OK"),
-      confirmButtonColor: "#dc3545"
-    });
-    return;
-  }
-
-  const formDataUpload = new FormData();
-  formDataUpload.append("file", file);
-  formDataUpload.append("containerType", "support");
-
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/upload-files`,
-      formDataUpload,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      }
-    );
-
-    if (data.success && data.files) {
-      if (type === "image") {
-        setImages((prev) => [...prev, data.files]);
-      } else if (type === "video") {
-        setVideos((prev) => [...prev, data.files]);
-      }
+    if (file.size > 30 * 1024 * 1024) {
+      Swal.fire({
+        title: t("File size exceeds 30MB limit"),
+        text: t("Please select a smaller file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+      return;
     }
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
 
-  e.target.value = "";
-};
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
+    formDataUpload.append("containerType", "support");
 
-const fetchUploadedFiles = useCallback(async (fileNames, type) => {
-  try {
-    if (!fileNames || fileNames.length === 0) return;
-
-    const fetched = [];
-
-    for (let fileName of fileNames) {
+    try {
       const { data } = await axios.post(
-        `${API_BASE_URL}/get-files`,
-        { fileName, containerType: "support" },
+        `${API_BASE_URL}/upload-files`,
+        formDataUpload,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (data.success && data.files) {
+        if (type === "image") {
+          setImages((prev) => [...prev, data.files]);
+        } else if (type === "video") {
+          setVideos((prev) => [...prev, data.files]);
+        }
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+    }
+
+    e.target.value = "";
+  };
+
+  const fetchUploadedFiles = useCallback(async (fileNames, type) => {
+    try {
+      if (!fileNames || fileNames.length === 0) return;
+
+      const fetched = [];
+
+      for (let fileName of fileNames) {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/get-files`,
+          { fileName, containerType: "support" },
+          { withCredentials: true }
+        );
+
+        if (data?.status === "Ok" && data.data) {
+          fetched.push(data.data);
+        }
+      }
+
+      if (type === "image") {
+        setFileData(fetched);
+      } else if (type === "video") {
+        setVideoData(fetched);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${type} files:`, error);
+    }
+  }, []);
+
+  const handleRemoveFile = async (fileName, type) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/delete-files`,
+        {
+          fileName,
+          containerType: "support",
+        },
         { withCredentials: true }
       );
 
-      if (data?.status === "Ok" && data.data) {
-        fetched.push(data.data);
+      if (data.success) {
+        if (type === "image") {
+          setFileData((prev) =>
+            prev.filter((file) => file.fileName !== fileName)
+          );
+          setImages((prev) => prev.filter((img) => img !== fileName));
+        } else if (type === "video") {
+          setVideoData((prev) =>
+            prev.filter((file) => file.fileName !== fileName)
+          );
+          setVideos((prev) => prev.filter((vid) => vid !== fileName));
+        }
       }
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error);
     }
-
-    if (type === "image") {
-      setFileData(fetched);
-    } else if (type === "video") {
-      setVideoData(fetched);
-    }
-  } catch (error) {
-    console.error(`Error fetching ${type} files:`, error);
-  }
-}, []);
-
-const handleRemoveFile = async (fileName, type) => {
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/delete-files`,
-      {
-        fileName,
-        containerType: "support",
-      },
-      { withCredentials: true }
-    );
-
-    if (data.success) {
-      if (type === "image") {
-        setFileData((prev) =>
-          prev.filter((file) => file.fileName !== fileName)
-        );
-        setImages((prev) => prev.filter((img) => img !== fileName));
-      } else if (type === "video") {
-        setVideoData((prev) =>
-          prev.filter((file) => file.fileName !== fileName)
-        );
-        setVideos((prev) => prev.filter((vid) => vid !== fileName));
-      }
-    }
-  } catch (error) {
-    console.error(`Error deleting ${type}:`, error);
-  }
-};
+  };
 
 
-useEffect(() => {
-  if(images.length ==0) return; // Avoid fetching if no images{
-  fetchUploadedFiles(images, "image");
-}, [images, fetchUploadedFiles]);
+  useEffect(() => {
+    if (images.length == 0) return; // Avoid fetching if no images{
+    fetchUploadedFiles(images, "image");
+  }, [images, fetchUploadedFiles]);
 
-useEffect(() => {
-  if(videos.length ==0) return; // Avoid fetching if no videos
-  fetchUploadedFiles(videos, "video");
-}, [videos, fetchUploadedFiles]);
+  useEffect(() => {
+    if (videos.length == 0) return; // Avoid fetching if no videos
+    fetchUploadedFiles(videos, "video");
+  }, [videos, fetchUploadedFiles]);
 
   // Function to load existing images and videos from attachment field
   const loadExistingFiles = async () => {
     if (formMode === 'edit' && ticket.attachment && ticket.attachment !== 'none') {
       try {
         let attachmentData = {};
-        
+
         // Parse attachment field - it can be string or object
         if (typeof ticket.attachment === 'string') {
           attachmentData = JSON.parse(ticket.attachment);
@@ -248,13 +248,13 @@ useEffect(() => {
     if (user) {
       // First fetch departments
       fetchDepartments();
-      
+
       // Only fetch branches if we have a customer ID
       const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
       if (customerIdToUse) {
         fetchBranches();
       }
-      
+
       // Set customer ID for customer users if not already set
       if (user.userType === 'customer' && !ticket.customerId) {
         setTicket(prev => ({
@@ -277,7 +277,7 @@ useEffect(() => {
     if (departments.length > 0 && ticket.assignedTeamMemberDept) {
       // Set the selected department from ticket data
       setSelectedDepartment(ticket.assignedTeamMemberDept);
-      
+
       // Fetch employees for this department
       fetchEmployees(ticket.assignedTeamMemberDept);
     }
@@ -351,7 +351,7 @@ useEffect(() => {
 
     // Use customer ID from ticket or user (for customer users)
     const customerIdToUse = user?.userType === 'customer' ? user.customerId : (ticket.customerId || user.customerId);
-    
+
     // Don't fetch branches if no customer ID is available
     if (!customerIdToUse) {
       console.log("No customer ID available for fetching branches");
@@ -444,7 +444,7 @@ useEffect(() => {
       }
 
       const result = await response.json();
-      
+
       if (result.data && result.data.data && Array.isArray(result.data.data)) {
         const employees = result.data.data;
         // Extract unique departments from employees
@@ -460,7 +460,7 @@ useEffect(() => {
       }
     } catch (err) {
       console.error("Failed to fetch departments:", err);
-   } finally {
+    } finally {
       setLoadingDepartments(false);
     }
   };
@@ -478,7 +478,7 @@ useEffect(() => {
       for (let file of images) {
         await handleRemoveFile(file, "image");
       }
-      for (let video of videos) {     
+      for (let video of videos) {
         await handleRemoveFile(video, "video");
       }
       navigate("/support");
@@ -566,7 +566,7 @@ useEffect(() => {
   // Rest of your existing state variables...
   // State for image popup
 
- 
+
 
 
   // Open file dialog
@@ -607,7 +607,7 @@ useEffect(() => {
       erpCustId: customer.erp_cust_id || customer.erpCustId
     }));
     setShowCustomerPopup(false);
-    
+
     // Reset branch when customer changes and fetch new branches
     setTicket(prev => ({ ...prev, branchId: "" }));
     setBranches([]);
@@ -713,7 +713,7 @@ useEffect(() => {
         assignedTeamMember: ticket.assignedTeamMember || "",
         assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
         status: formMode === "add" ? "New" : ticket.status,
-        attachment: formMode === "add" ? {images: images || [], videos: videos || []} : ticket.attachment,
+        attachment: formMode === "add" ? { images: images || [], videos: videos || [] } : ticket.attachment,
         comments: commentsArray,
         branchRegion: ticket.branchRegion || ""
       };
@@ -727,7 +727,7 @@ useEffect(() => {
       const method = formMode === "add" ? "POST" : "PATCH";
 
       const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}` : null;
-      
+
       if (!apiUrl) {
         throw new Error("API base URL is not configured");
       }
@@ -736,7 +736,7 @@ useEffect(() => {
       if (!Array.isArray(ticketData.comments)) {
         ticketData.comments = [];
       }
-const {createdAt,...filterdata}=ticketData
+      const { createdAt, ...filterdata } = ticketData
       const response = await fetch(apiUrl, {
         method: method,
         headers: { "Content-Type": "application/json" },
@@ -752,12 +752,12 @@ const {createdAt,...filterdata}=ticketData
 
       const result = await response.json();
       console.log("Save successful:", result);
-      
+
       const savedTicketId = formMode === "add" ? result.grievance.id : ticket.id;
 
       // Upload files if there are any images or videos
-    
-      
+
+
       // Show success message with SweetAlert and navigate after OK
       await Swal.fire({
         title: t("Success!"),
@@ -766,13 +766,13 @@ const {createdAt,...filterdata}=ticketData
         confirmButtonText: t("OK"),
         confirmButtonColor: "#28a745"
       });
-      
+
       // Set editing to false and redirect to support page
       setIsEditing(false);
       navigate("/support");
     } catch (error) {
       console.error("Error saving ticket:", error);
-      
+
       // Show error message with SweetAlert
       await Swal.fire({
         title: t("Error!"),
@@ -781,14 +781,14 @@ const {createdAt,...filterdata}=ticketData
         confirmButtonText: t("OK"),
         confirmButtonColor: "#dc3545"
       });
-      
+
       // Keep editing mode active on error
       setIsEditing(true);
     } finally {
       setSaving(false); // End saving
     }
   };
-console.log("Ticket data before save:", images);
+  console.log("Ticket data before save:", images);
   // Handle close ticket
   const handleCloseTicket = async () => {
     setClosing(true); // Start closing
@@ -813,7 +813,7 @@ console.log("Ticket data before save:", images);
 
       // Update ticket status to "Closed"
       const ticketData = {
-        id:ticket.id,
+        id: ticket.id,
         status: "Closed",
         // Ensure comments is always an array
         comments: Array.isArray(ticket.comments)
@@ -885,7 +885,7 @@ console.log("Ticket data before save:", images);
 
       // Create array of all files to upload
       const filesToUpload = [];
-      
+
       newImages.forEach(imageData => {
         const imageFile = dataURLtoFile(imageData.dataUrl, imageData.fileName);
         filesToUpload.push(imageFile);
@@ -997,14 +997,14 @@ console.log("Ticket data before save:", images);
     const department = e.target.value;
     console.log('Department selected:', department);
     setSelectedDepartment(department);
-    setTicket(prev => ({ 
-      ...prev, 
+    setTicket(prev => ({
+      ...prev,
       assignedTeamMemberDept: department,
       assignedTeamMember: "" // Reset selected employee when department changes
     }));
     setSelectedEmployee("");
     setEmployees([]); // Clear current employees
-    
+
     if (department) {
       console.log('Fetching employees for department:', department);
       fetchEmployees(department);
@@ -1029,8 +1029,8 @@ console.log("Ticket data before save:", images);
             {isV('customerName') && (
               <div className='support-details-field'>
                 <label>{t("Customer Name")}</label>
-                <input 
-                  value={companyNameToShow || ""} 
+                <input
+                  value={companyNameToShow || ""}
                   readOnly
                   style={{ cursor: (isE("customerName") && user?.userType !== 'customer') ? 'pointer' : 'default' }}
                   onClick={() => (isE("customerName") && user?.userType !== 'customer') && setShowCustomerPopup(true)}
@@ -1047,10 +1047,10 @@ console.log("Ticket data before save:", images);
                   style={{ cursor: isE("branch") ? 'pointer' : 'default' }}
                   onClick={() => isE("branch") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
                   placeholder={
-                    user?.userType === 'customer' 
-                      ? t("Click to select branch") 
-                      : ticket.customerId 
-                        ? t("Click to select branch") 
+                    user?.userType === 'customer'
+                      ? t("Click to select branch")
+                      : ticket.customerId
+                        ? t("Click to select branch")
                         : t("Please select a customer first")
                   }
                   disabled={user?.userType === 'customer' ? false : !ticket.customerId}
@@ -1060,11 +1060,11 @@ console.log("Ticket data before save:", images);
             {isV('issueType') && (
               <div className='support-details-field'>
                 <label>{t("Issue Type")}</label>
-                <select 
-                  id='grievanceType' 
-                  name='grievanceType' 
-                  value={ticket.grievanceType || ""} 
-                  onChange={handleInputChange} 
+                <select
+                  id='grievanceType'
+                  name='grievanceType'
+                  value={ticket.grievanceType || ""}
+                  onChange={handleInputChange}
                   disabled={!isE("issueType")}
                   style={{
                     color: ticket.grievanceType ? 'inherit' : '#999',
@@ -1106,42 +1106,42 @@ console.log("Ticket data before save:", images);
                   <label>{t("Images")}</label>
                   <div className='maintenance-images-list'>
                     {/* Add Image Button */}
-                    {isV('addImage') && isE('addImage') && images.length<=6 && (
+                    {isV('addImage') && isE('addImage') && images.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
                         +
                       </button>
                     )}
-                    { images.length<=6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"image")} />}
+                    {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
                     <div className="scrollable-image-row">
-  {fileData.map((imageData, idx) => (
-    <div
-      key={idx}
-      className="maintenance-image-placeholder"
-      onClick={() => imageData.url && setPopupImage(imageData.url)}
-      title={imageData.url ? "Click to view" : ""}
-    >
-      <img
-        width="100%"
-        height="100%"
-        style={{ objectFit: "cover" }}
-        src={imageData.url}
-        alt={`file-${idx}`}
-      />
-      {isV("removeImage") && isE("removeImage") && (
-        <button
-          className="maintenance-remove-btn"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveFile(imageData.fileName, "image");
-          }}
-          title={t("Remove Image")}
-        >
-          ×
-        </button>
-      )}
-    </div>
-  ))}
-</div>
+                      {fileData.map((imageData, idx) => (
+                        <div
+                          key={idx}
+                          className="maintenance-image-placeholder"
+                          onClick={() => imageData.url && setPopupImage(imageData.url)}
+                          title={imageData.url ? "Click to view" : ""}
+                        >
+                          <img
+                            width="100%"
+                            height="100%"
+                            style={{ objectFit: "cover" }}
+                            src={imageData.url}
+                            alt={`file-${idx}`}
+                          />
+                          {isV("removeImage") && isE("removeImage") && (
+                            <button
+                              className="maintenance-remove-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveFile(imageData.fileName, "image");
+                              }}
+                              title={t("Remove Image")}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
                   </div>
                 </div>
@@ -1151,29 +1151,29 @@ console.log("Ticket data before save:", images);
                   <label>{t("Videos")}</label>
                   <div className='maintenance-videos-list'>
                     {/* Add Video Button */}
-                    {isE('addVideo') &&  videos?.length<=6 && (
+                    {isE('addVideo') && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
                         +
                       </button>
                     )}
-                   {videos?.length<=6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"video")}  />}
-                     <div className="scrollable-image-row">
-                    {videoData.map((videoData, idx) => (
-                      <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
-                        <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
-                        {isV("removeVideo") && isE("removeVideo") && (
-                          <button
-                            className='maintenance-remove-btn'
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent opening the video
-                              handleRemoveFile(videoData.fileName,"video");
-                            }}
-                            title={t("Remove Video")}>
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    {videos?.length <= 6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "video")} />}
+                    <div className="scrollable-image-row">
+                      {videoData.map((videoData, idx) => (
+                        <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
+                          <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
+                          {isV("removeVideo") && isE("removeVideo") && (
+                            <button
+                              className='maintenance-remove-btn'
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent opening the video
+                                handleRemoveFile(videoData.fileName, "video");
+                              }}
+                              title={t("Remove Video")}>
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -1182,7 +1182,7 @@ console.log("Ticket data before save:", images);
           )}
         </div>
       </div>
-      <div className='support-details-footer'  style={{ alignItems: 'center'}}>
+      <div className='support-details-footer' style={{ alignItems: 'center' }}>
         {isV('ticketStatus') && (
           <div className='support-status'>
             <span>{t("Ticket Status:")}</span>
@@ -1190,76 +1190,76 @@ console.log("Ticket data before save:", images);
           </div>
         )}
         <div className='support-details-container-center'  >
-           {isV('assignedTo') && (
-              <div className="support-assign">
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
-                  {/* Assigned to Label */}
-                  <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
-                  
-                  {/* Department Selection */}
-                  <div>
-                    <span>{t("Department:")}</span>
-                    <SearchableDropdown
-                      name="assignedTeamMemberDept"
-                      options={departments}
-                      value={selectedDepartment || ""}
-                      onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
-                      disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status !== "New")}
-                      placeholder={t('Select Department')}
-                    />
-                  </div>
-                  
-                  {/* Assignee Selection */}
-                  <div>
-                    <span>{t("Employee:")}</span>
-                    <SearchableDropdown
-                      name="assignedTeamMember"
-                      options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
-                      value={ticket.assignedTeamMember || ""}
-                      onChange={handleInputChange}
-                      disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status !== "New")}
-                      placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
-                    />
-                  </div>
+          {isV('assignedTo') && (
+            <div className="support-assign">
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
+                {/* Assigned to Label */}
+                <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+
+                {/* Department Selection */}
+                <div>
+                  <span>{t("Department:")}</span>
+                  <SearchableDropdown
+                    name="assignedTeamMemberDept"
+                    options={departments}
+                    value={selectedDepartment || ""}
+                    onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
+                    disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status !== "New")}
+                    placeholder={t('Select Department')}
+                  />
+                </div>
+
+                {/* Assignee Selection */}
+                <div>
+                  <span>{t("Employee:")}</span>
+                  <SearchableDropdown
+                    name="assignedTeamMember"
+                    options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
+                    value={ticket.assignedTeamMember || ""}
+                    onChange={handleInputChange}
+                    disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status !== "New")}
+                    placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
+                  />
                 </div>
               </div>
-            )}
+            </div>
+          )}
         </div>
         <div className='support-details-container-right'>
-            <div className="support-details-actions" style={{ display: 'flex', gap: '10px', height: '60px' }}>
-              {isEditing ? (
-                <>
-                  {isV('btnSave') && isE('btnSave') && (
-                    <button
-                      className="support-action-btn save"
-                      onClick={handleSave}
-                      disabled={saving || closing || ticket.status === "Closed"}
-                    >
-                      {saving ? t("Saving...") : t("Save")}
-                    </button>
-                  )}
-                  {/* Close Ticket Button - only show for existing tickets that are not already closed */}
-                  {formMode === "edit" && ticket.status !== "Closed" && isV('btnCloseTicket') && isE('btnCloseTicket') && (
-                    <button
-                      className="support-action-btn close"
-                      onClick={handleCloseTicket}
-                      disabled={closing || saving}
-                      style={{ backgroundColor: "#ffdf4f" }}
-                    >
-                      {closing ? t("Closing...") : t("Close Ticket")}
-                    </button>
-                  )}
-                  {isV('btnCancel') && isE('btnCancel') && (
-                    <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed" || saving || closing}>
-                      {t("Cancel")}
-                    </button>
-                  )}
-                </>
-              ) : (
-                <>
-                </>
-              )}
-            </div>
+          <div className="support-details-actions" style={{ display: 'flex', gap: '10px', height: '60px' }}>
+            {isEditing ? (
+              <>
+                {isV('btnSave') && isE('btnSave') && (
+                  <button
+                    className="support-action-btn save"
+                    onClick={handleSave}
+                    disabled={saving || closing || ticket.status === "Closed"}
+                  >
+                    {saving ? t("Saving...") : t("Save")}
+                  </button>
+                )}
+                {/* Close Ticket Button - only show for existing tickets that are not already closed */}
+                {formMode === "edit" && ticket.status !== "Closed" && isV('btnCloseTicket') && isE('btnCloseTicket') && (
+                  <button
+                    className="support-action-btn close"
+                    onClick={handleCloseTicket}
+                    disabled={closing || saving}
+                    style={{ backgroundColor: "#ffdf4f" }}
+                  >
+                    {closing ? t("Closing...") : t("Close Ticket")}
+                  </button>
+                )}
+                {isV('btnCancel') && isE('btnCancel') && (
+                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed" || saving || closing}>
+                    {t("Cancel")}
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1310,6 +1310,13 @@ console.log("Ticket data before save:", images);
         onSelectCustomer={handleSelectCustomer}
         API_BASE_URL={API_BASE_URL}
         t={t}
+        apiEndpoint="/customers/pagination"
+        apiParams={{
+          page: 1,
+          pageSize: 10,
+          sortBy: 'id',
+          sortOrder: 'asc'
+        }}
       />
 
       {/* Branch Selection Popup */}
