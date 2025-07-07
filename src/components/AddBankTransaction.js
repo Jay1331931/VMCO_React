@@ -55,10 +55,10 @@ const AddBankTransaction = () => {
 
     for (let file of files) {
       //file Size less than 30MB
-       if (file.size > 30 * 1024 * 1024) { 
-      setError(t("File size exceeds 30MB limit"));
-      continue;
-    }
+      if (file.size > 30 * 1024 * 1024) {
+        setError(t("File size exceeds 30MB limit"));
+        continue;
+      }
       const formDataUpload = new FormData();
       formDataUpload.append("file", file);
       formDataUpload.append("containerType", "transactions");
@@ -204,7 +204,7 @@ const AddBankTransaction = () => {
         companyNameAr: data.data.companyNameAr,
         amountTransferred:
           data.data.paymentStatus.toLowerCase() !== "paid" &&
-          parseInt(data.data.paymentPercentage) === 100
+            parseInt(data.data.paymentPercentage) === 100
             ? parseInt(data.data.totalAmount)
             : parseInt(data.data.totalAmount) - parseInt(data.data.paidAmount),
         erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
@@ -408,7 +408,7 @@ const AddBankTransaction = () => {
               )}
 
               {(formData.entity && formData.erpCustId) ||
-              Object.keys(updateTransaction).length > 0 ? (
+                Object.keys(updateTransaction).length > 0 ? (
                 <>
                   <div className="form-group">
                     <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
@@ -530,123 +530,123 @@ const AddBankTransaction = () => {
                 </div>
               </div> */}
               <div className="form-group full-width">
-              <label htmlFor="bankDocuments">
-                {t("Upload Bank Documents")}<span style={{ color: "red" }}> *</span>
-              </label>
-              <div
-                // className="form-group  full-width"
-                style={{
-                  border: "1px solid #ccc",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  backgroundColor: "#f7f8fa",
-                }}
-              >
-                <div className="bank-doc-upload-wrapper">
-                  {Object.keys(updateTransaction).length === 0 && (
-                    <>
-                      <button
-                        type="button"
-                        className="maintenance-add-image-btn"
-                        onClick={() => fileInputRef.current.click()}
-                        title="Upload Documents"
-                      >
-                        +
-                      </button>
-                      <input
-                        id="bankDocuments"
-                        type="file"
-                        multiple
-                        accept="image/*,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                        ref={fileInputRef}
-                        style={{ display: "none" }}
-                        onChange={handleFileChange}
-                        disabled={!!updateTransaction?.bankDocuments}
-                      />
-                    </>
-                  )}
-                  <div className="scrollable-preview-container">
-                    {fileData?.map((file, index) => {
-                      const fileUrl = file.url;
-                      const extension = file.fileName
-                        .split(".")
-                        .pop()
-                        .toLowerCase();
-                      const isImage = [
-                        "png",
-                        "jpg",
-                        "jpeg",
-                        "gif",
-                        "webp",
-                      ].includes(extension);
-                      const isPdf = extension === "pdf";
-                      const isExcel = ["xls", "xlsx", "csv"].includes(
-                        extension
-                      );
-
-                      return (
-                        <div
-                          key={index}
-                          className="image-item"
-                          onClick={() => isImage && setPopupImage(fileUrl)}
-                          title={isImage ? "Click to view" : ""}
+                <label htmlFor="bankDocuments">
+                  {t("Upload Bank Documents")}<span style={{ color: "red" }}> *</span>
+                </label>
+                <div
+                  // className="form-group  full-width"
+                  style={{
+                    border: "1px solid #ccc",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    backgroundColor: "#f7f8fa",
+                  }}
+                >
+                  <div className="bank-doc-upload-wrapper">
+                    {Object.keys(updateTransaction).length === 0 && (
+                      <>
+                        <button
+                          type="button"
+                          className="maintenance-add-image-btn"
+                          onClick={() => fileInputRef.current.click()}
+                          title="Upload Documents"
                         >
-                          {isImage ? (
-                            <img
-                              src={fileUrl}
-                              alt={file.fileName}
-                              className="preview-image"
-                            />
-                          ) : isPdf ? (
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="file-link-button"
-                            >
-                              📄 View PDF
-                            </a>
-                          ) : isExcel ? (
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="file-link-button"
-                            >
-                              📊 Open Excel File
-                            </a>
-                          ) : (
-                            <a
-                              href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="file-link-button"
-                            >
-                              📁 Download File
-                            </a>
-                          )}
+                          +
+                        </button>
+                        <input
+                          id="bankDocuments"
+                          type="file"
+                          multiple
+                          accept="image/*,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                          ref={fileInputRef}
+                          style={{ display: "none" }}
+                          onChange={handleFileChange}
+                          disabled={!!updateTransaction?.bankDocuments}
+                        />
+                      </>
+                    )}
+                    <div className="scrollable-preview-container">
+                      {fileData?.map((file, index) => {
+                        const fileUrl = file.url;
+                        const extension = file.fileName
+                          .split(".")
+                          .pop()
+                          .toLowerCase();
+                        const isImage = [
+                          "png",
+                          "jpg",
+                          "jpeg",
+                          "gif",
+                          "webp",
+                        ].includes(extension);
+                        const isPdf = extension === "pdf";
+                        const isExcel = ["xls", "xlsx", "csv"].includes(
+                          extension
+                        );
 
-                          {Object.keys(updateTransaction).length === 0 && (
-                            <button
-                              type="button"
-                              className="remove-image-btn"
-                              onClick={(e) => {
-                                e.stopPropagation(); // prevent image popup
-                                handleRemoveImage(file.fileName);
-                              }}
-                              title="Remove File"
-                            >
-                              ✖
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
+                        return (
+                          <div
+                            key={index}
+                            className="image-item"
+                            onClick={() => isImage && setPopupImage(fileUrl)}
+                            title={isImage ? "Click to view" : ""}
+                          >
+                            {isImage ? (
+                              <img
+                                src={fileUrl}
+                                alt={file.fileName}
+                                className="preview-image"
+                              />
+                            ) : isPdf ? (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="file-link-button"
+                              >
+                                📄 View PDF
+                              </a>
+                            ) : isExcel ? (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="file-link-button"
+                              >
+                                📊 Open Excel File
+                              </a>
+                            ) : (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="file-link-button"
+                              >
+                                📁 Download File
+                              </a>
+                            )}
+
+                            {Object.keys(updateTransaction).length === 0 && (
+                              <button
+                                type="button"
+                                className="remove-image-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // prevent image popup
+                                  handleRemoveImage(file.fileName);
+                                }}
+                                title="Remove File"
+                              >
+                                ✖
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-              </div>
-     
+
               <div className="form-group full-width">
                 <label htmlFor="description">{t("Description")}</label>
                 <textarea
@@ -673,22 +673,29 @@ const AddBankTransaction = () => {
                 </div>
               )}
             </div>
- { popupImage && (
-        <div className='image-popup-overlay' onClick={() => setPopupImage(null)}>
-          <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
-            <img src={popupImage} style={{ maxWidth: "100%", maxHeight: "100%" }} />
-            <button className='image-popup-close' onClick={() => setPopupImage(null)}>
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+            {popupImage && (
+              <div className='image-popup-overlay' onClick={() => setPopupImage(null)}>
+                <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
+                  <img src={popupImage} style={{ maxWidth: "100%", maxHeight: "100%" }} />
+                  <button className='image-popup-close' onClick={() => setPopupImage(null)}>
+                    ×
+                  </button>
+                </div>
+              </div>
+            )}
             <GetCustomers
               open={showCustomerPopup}
               onClose={() => setShowCustomerPopup(false)}
               onSelectCustomer={handleSelectCustomer}
               API_BASE_URL={API_BASE_URL}
               t={t}
+              apiEndpoint="/customers/pagination"
+              apiParams={{
+                page: 1,
+                pageSize: 10,
+                sortBy: 'id',
+                sortOrder: 'asc'
+              }}
             />
             <GetSalesOrder
               open={showSalesOrderPopup}
@@ -724,7 +731,7 @@ const AddBankTransaction = () => {
                   </>
                 )}
 
-                {isE("btnVerify") && updateTransaction?.status?.toLowerCase()==="pending"&& (
+                {isE("btnVerify") && updateTransaction?.status?.toLowerCase() === "pending" && (
                   <button
                     className="submit-btn"
                     onClick={() => handleUpdate("verified", id)}
@@ -732,7 +739,7 @@ const AddBankTransaction = () => {
                     {t("Verify")}
                   </button>
                 )}
-                {isE("btnReject") &&updateTransaction?.status?.toLowerCase()==="pending"&&  (
+                {isE("btnReject") && updateTransaction?.status?.toLowerCase() === "pending" && (
                   <button
                     className="cancel-btn"
                     onClick={() => handleUpdate("rejected", id)}

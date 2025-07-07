@@ -574,60 +574,23 @@ useEffect(() => {
     setIsEditing(!isEditing);
   };
 
-  const handleCancel = () => {
-    // Reload the page to reset all changes
-    window.location.reload();
-  };
-
-  // Handle image add
-  const handleAddImage = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop() || 'jpg';
-        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'image';
-        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
-
-        setImages((prev) => [...prev, {
-          dataUrl: ev.target.result,
-          originalName: file.name,
-          fileName: newFileName
-        }]);
-      };
-      reader.readAsDataURL(file);
+  const handleCancel = async () => {
+    if (formMode === "add") {
+      // In add mode, just reload the page
+      for (let file of images) {
+        await handleRemoveFile(file, "image");
+      }
+      for (let video of videos) {
+        await handleRemoveFile(video, "video");
+      }
+      navigate("/maintenance");
+      // window.location.reload();
     }
-    // Reset input so same file can be selected again if needed
-    e.target.value = "";
   };
 
   // Open file dialog
   const openFileDialog = () => {
     if (fileInputRef.current) fileInputRef.current.click();
-  };
-
-  // Handle video add
-  const handleAddVideo = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const timestamp = Date.now();
-        const fileExtension = file.name.split('.').pop() || 'mp4';
-        const baseFileName = file.name.split('.').slice(0, -1).join('.') || 'video';
-        const newFileName = `${baseFileName}_${timestamp}.${fileExtension}`;
-
-        setVideos((prev) => [...prev, {
-          dataUrl: ev.target.result,
-          originalName: file.name,
-          fileName: newFileName
-        }]);
-      };
-      reader.readAsDataURL(file);
-    }
-    // Reset input so same file can be selected again if needed
-    e.target.value = "";
   };
 
   // Open file dialog for videos
@@ -737,28 +700,20 @@ useEffect(() => {
       // First, create the ticket to get the ID for file uploads
       const ticketData = {
         ...ticket,
-        // Ensure customer ID is set correctly
         customerId: customerIdToUse,
-        // Set creation date for new tickets
         createdAt: formMode === "add" ? new Date().toISOString() : ticket.createdAt,
-        // Set default status for new tickets
-        status: formMode === "add" ? "New" : ticket.status,
-        // Ensure comments is properly formatted and normalized
         comments: Array.isArray(ticket.comments)
           ? ticket.comments
           : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
             ? (() => { try { return JSON.parse(ticket.comments); } catch { return []; } })()
             : [],
-        // Always include warrantyEndDate in the payload
         warrantyEndDate: ticket.warrantyEndDate || null,
-        // Include maintenance charges in both maintenanceCharges and charges fields
         maintenanceCharges: ticket.maintenanceCharges || null,
         charges: ticket.maintenanceCharges || null,
         customerRegion: customerRegion,
         branchRegion: branchRegion
       };
 
-      // Update status to "In Progress" if an employee is assigned
       if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
         ticketData.status = "In Progress";
       }
@@ -803,12 +758,7 @@ useEffect(() => {
       const result = await response.json();
       console.log("Save successful:", result);
 
-      const ticketId = formMode === "add" ? result.maintenance.id : ticket.id;
-
-      // Upload files if there are any images or videos
-      // if (images.length > 0 || videos.length > 0) {
-      //   await uploadFilesAndUpdateAttachment(ticketId);
-      // }
+      const ticketId = formMode === "add" ? result.maintenance.id : ticket.id
 
       // Show success message with SweetAlert and navigate after OK
       await Swal.fire({
@@ -841,71 +791,6 @@ useEffect(() => {
     }
   };
 
-  // Function to upload files and update attachment field
-  const uploadFilesAndUpdateAttachment = async (ticketId) => {
-    try {
-      // Only upload new files (not existing ones)
-      const newImages = images.filter(img => !img.isExisting);
-      const newVideos = videos.filter(vid => !vid.isExisting);
-
-      if (newImages.length === 0 && newVideos.length === 0) {
-        console.log('No new files to upload');
-        return;
-      }
-
-      // Create array of all files to upload
-      const filesToUpload = [];
-
-      newImages.forEach(imageData => {
-        const imageFile = dataURLtoFile(imageData.dataUrl, imageData.fileName);
-        filesToUpload.push(imageFile);
-      });
-
-      newVideos.forEach(videoData => {
-        const videoFile = dataURLtoFile(videoData.dataUrl, videoData.fileName);
-        filesToUpload.push(videoFile);
-      });
-
-      // Upload all files in one request
-      if (filesToUpload.length > 0) {
-        const formData = new FormData();
-        filesToUpload.forEach(file => {
-          formData.append('file', file);
-        });
-        formData.append('fileType', 'attachment');
-
-        const uploadResponse = await fetch(`${API_BASE_URL}/maintenance/${ticketId}/file`, {
-          method: "PATCH",
-          credentials: "include",
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload files');
-        }
-
-        const uploadResult = await uploadResponse.json();
-        console.log('Files uploaded successfully:', uploadResult);
-      }
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      throw error;
-    }
-  };
-
-  // Helper function to convert data URL to File object
-  const dataURLtoFile = (dataurl, filename) => {
-    const arr = dataurl.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  };
-
   // Handle close ticket
   const handleCloseTicket = async () => {
     setClosing(true); // Start closing
@@ -928,11 +813,6 @@ useEffect(() => {
 
       setSaving(true);
 
-      // Only update the status field, not the entire ticket
-      const ticketData = {
-        status: "Closed"
-      };
-
       const endPoint = `/maintenance/id/${ticket.id}`;
       const apiUrl = `${API_BASE_URL}${endPoint}`;
 
@@ -940,7 +820,7 @@ useEffect(() => {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(ticketData),
+        body: JSON.stringify({ status: "Closed" }),
       });
 
       if (!response.ok) {
