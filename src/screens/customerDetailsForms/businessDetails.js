@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   fetchDropdownFromBasicsMaster,
@@ -10,6 +10,9 @@ import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+
 function BusinessDetails({
   customerData = {},
   originalCustomerData = {},
@@ -19,6 +22,7 @@ function BusinessDetails({
   setTabsHeight,
   setInterCompany,
   formErrors = {},
+  logosToUpload = {}, // <-- Pass this from CustomerDetails.js
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -73,129 +77,85 @@ function BusinessDetails({
     setTypeOfBusiness(customerData?.typeOfBusiness || "");
   }, [customerData?.typeOfBusiness]);
 
-  // Add state for logo files and previews
-  const [companyLogoFile, setCompanyLogoFile] = useState(null);
-  const [companyLogoPreview, setCompanyLogoPreview] = useState(null);
-  const [brandLogoFile, setBrandLogoFile] = useState(null);
-  const [brandLogoPreview, setBrandLogoPreview] = useState(null);
+  // Refs for file inputs
+  const companyLogoInputRef = useRef();
+  const brandLogoInputRef = useRef();
 
-  const handleCompanyLogoChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setCompanyLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Save base64 string (without prefix) to customerData
-        const base64String = reader.result.split(",")[1];
-        onChangeCustomerData({
-          target: { name: "companyLogo", value: base64String },
-        });
-        setCompanyLogoPreview(reader.result); // data URL for preview
-      };
-      reader.readAsDataURL(file);
+  // Add preview state for logos
+  const [logoPreviews, setLogoPreviews] = useState({
+    companyLogo: null,
+    brandLogo: null,
+  });
+
+  // Handle logo file selection (similar to documents.js)
+  const handleLogoChange = (e, logoType) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    // Optional: file size check (e.g., 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert(t("File size exceeds 2MB."));
+      return;
     }
-  };
-
-  const handleBrandLogoChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setBrandLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result.split(",")[1];
-        onChangeCustomerData({
-          target: { name: "brandLogo", value: base64String },
-        });
-        setBrandLogoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeCompanyLogo = () => {
-    setCompanyLogoFile(null);
-    setCompanyLogoPreview(null);
+    logosToUpload[logoType] = file;
+    // Save file name in customerData for display
     onChangeCustomerData({
-      target: { name: "companyLogo", value: "" },
+      target: { name: logoType, value: file.name },
+    });
+
+    // Generate preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setLogoPreviews((prev) => {
+      // Clean up previous URL if exists
+      if (prev[logoType]) URL.revokeObjectURL(prev[logoType]);
+      return { ...prev, [logoType]: previewUrl };
     });
   };
 
-  const removeBrandLogo = () => {
-    setBrandLogoFile(null);
-    setBrandLogoPreview(null);
+  // Clean up preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(logoPreviews).forEach(
+        (url) => url && URL.revokeObjectURL(url)
+      );
+    };
+  }, [logoPreviews]);
+
+  // Remove logo (clear from state and upload queue)
+  const handleLogoDelete = (logoType) => {
     onChangeCustomerData({
-      target: { name: "brandLogo", value: "" },
+      target: { name: logoType, value: originalCustomerData[logoType] || "" },
     });
+    delete logosToUpload[logoType];
   };
 
-  function arrayBufferToBase64(buffer) {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // View logo (same as handleViewFile in documents.js)
+  const handleViewLogo = async (customerId, fileName, fileType) => {
+    let fileURL = "";
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/customers/getfile/${customerId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ fileType, fileName }),
+          credentials: "include",
+        }
+      );
+      const res = await response.json();
+      if (res.status === "Ok") {
+        fileURL = res.data.url;
+        window.open(fileURL, "_blank", "noopener,noreferrer");
+      } else {
+        throw new Error("Failed to fetch file URL");
+      }
+    } catch (error) {
+      console.error("Error viewing file:", error);
     }
-    return window.btoa(binary);
-  }
-
-  // useEffect(() => {
-  //   // Helper function to handle logo data
-  //   const handleLogoData = (logoData, setPreview) => {
-  //     if (!logoData) return null;
-
-  //     if (typeof logoData === "string") {
-  //       return logoData.startsWith("data:")
-  //         ? logoData
-  //         : `data:image/png;base64,${logoData}`;
-  //     } else if (Array.isArray(logoData)) {
-  //       const uint8 = new Uint8Array(logoData);
-  //       const base64 = arrayBufferToBase64(uint8);
-  //       return `data:${logoData.type};base64,${base64}`;
-  //     } else if (
-  //       typeof logoData === "object" &&
-  //       logoData.data &&
-  //       logoData.type
-  //     ) {
-  //       // Handle object case where data might be in a specific format
-  //       // Example: { data: Uint8Array or array, type: "image/png" }
-  //       const dataArray = Array.isArray(logoData.data)
-  //         ? logoData.data
-  //         : Object.values(logoData.data);
-  //       const uint8 = new Uint8Array(dataArray);
-  //       const base64 = arrayBufferToBase64(uint8);
-  //       return `data:${logoData.type};base64,${base64}`;
-  //     }
-  //     return null;
-  //   };
-
-  //   // Company Logo
-  //   if (!companyLogoFile && customerData?.companyLogo) {
-  //     console.log("customerData.companyLogo:", customerData.companyLogo);
-  //     const preview = handleLogoData(
-  //       { data: customerData.companyLogo, type: "image/png" },
-  //       setCompanyLogoPreview
-  //     );
-  //     setCompanyLogoPreview(preview);
-  //   } else if (!customerData?.companyLogo && !companyLogoFile) {
-  //     setCompanyLogoPreview(null);
-  //   }
-
-  //   // Brand Logo
-  //   if (!brandLogoFile && customerData?.brandLogo) {
-  //     const preview = handleLogoData(
-  //       customerData.brandLogo,
-  //       setBrandLogoPreview
-  //     );
-  //     setBrandLogoPreview(preview);
-  //   } else if (!customerData?.brandLogo && !brandLogoFile) {
-  //     setBrandLogoPreview(null);
-  //   }
-  // }, [
-  //   customerData?.companyLogo,
-  //   customerData?.brandLogo,
-  //   companyLogoFile,
-  //   brandLogoFile,
-  // ]);
+  };
 
   return (
     <div className="customer-onboarding-form-grid">
@@ -780,14 +740,11 @@ function BusinessDetails({
           )}
       </div>
 
-      {/* Company Logo Upload
-      <div className="form-group file-upload">
+{/* Company Logo Upload */}
+      <div className="form-group">
         <label htmlFor="companyLogo">
           {t("Company Logo")}
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyLogo !== customerData?.companyLogo &&
-            customerData?.companyLogo &&
+          {originalCustomerData?.companyLogo !== customerData?.companyLogo &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
@@ -795,62 +752,100 @@ function BusinessDetails({
           id="companyLogo"
           name="companyLogo"
           accept="image/*"
-          className="hidden-file-input"
-          onChange={handleCompanyLogoChange}
+          style={{ display: "none" }}
+          ref={companyLogoInputRef}
+          onChange={(e) => handleLogoChange(e, "companyLogo")}
           disabled={
             mode === "edit" && customerData?.customerStatus !== "pending"
           }
         />
-        <label
-          htmlFor="companyLogo"
+        <button
+          type="button"
           className="custom-file-button"
-          style={{
-            display: "inline-block",
-            width: "30%",
-            textAlign: "center",
-          }}
+          onClick={() => companyLogoInputRef.current?.click()}
+          disabled={
+            mode === "edit" && customerData?.customerStatus !== "pending"
+          }
+          style={{ width: "100px" }}
         >
           {t("Upload")}
-        </label>
-        {companyLogoPreview && (
-          <div style={{ marginTop: 8, display: "flex" }}>
+        </button>
+        {/* Show preview if file is selected but not saved */}
+        {logoPreviews.companyLogo && (
+          <div className="logo-preview">
             <img
-              src={companyLogoPreview}
+              src={logoPreviews.companyLogo}
               alt="Company Logo Preview"
-              style={{ maxWidth: 150, maxHeight: 120, display: "block" }}
+              style={{
+                maxWidth: 120,
+                maxHeight: 120,
+                marginTop: 8,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
             />
             <button
               type="button"
               className="delete-file-button"
-              style={{ marginTop: 100 }}
-              onClick={removeCompanyLogo}
+              onClick={() => {
+                setLogoPreviews((prev) => {
+                  if (prev.companyLogo) URL.revokeObjectURL(prev.companyLogo);
+                  return { ...prev, companyLogo: null };
+                });
+                handleLogoDelete("companyLogo");
+              }}
+              style={{ marginLeft: 8, fontSize: "20px" }}
             >
               ×
             </button>
           </div>
         )}
-        {formErrors.companyLogo && (
-          <div className="error">{formErrors.companyLogo}</div>
+        {/* Show uploaded file name as link if present and no preview */}
+        {!logoPreviews.companyLogo && customerData?.companyLogo && (
+          <div className="logo-preview">
+            <a
+              href="#"
+              className="file-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleViewLogo(
+                  customerData.id,
+                  customerData.companyLogo,
+                  "companyLogo"
+                );
+              }}
+              style={{ marginRight: 8 }}
+            >
+              {typeof customerData.companyLogo === "string"
+                ? (() => {
+                    const name = customerData.companyLogo
+                      .split("_")
+                      .slice(0, 2)
+                      .join(" ");
+                    const maxLen = 20;
+                    return name.length > maxLen
+                      ? name.substring(0, maxLen) + "..."
+                      : name;
+                  })()
+                : "View Document"}
+            </a>
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => handleLogoDelete("companyLogo")}
+              style={{ marginLeft: 8, fontSize: "15px" }}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </div>
         )}
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.companyLogo !== customerData?.companyLogo &&
-          customerData?.companyLogo &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.companyLogo || "(no file)"}
-            </div>
-          )}
       </div>
 
       {/* Brand Logo Upload */}
-      {/* <div className="form-group file-upload">
+      <div className="form-group">
         <label htmlFor="brandLogo">
           {t("Brand Logo")}
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.brandLogo !== customerData?.brandLogo &&
-            customerData?.brandLogo &&
+          {originalCustomerData?.brandLogo !== customerData?.brandLogo &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <input
@@ -858,54 +853,94 @@ function BusinessDetails({
           id="brandLogo"
           name="brandLogo"
           accept="image/*"
-          className="hidden-file-input"
-          onChange={handleBrandLogoChange}
+          style={{ display: "none" }}
+          ref={brandLogoInputRef}
+          onChange={(e) => handleLogoChange(e, "brandLogo")}
           disabled={
             mode === "edit" && customerData?.customerStatus !== "pending"
           }
         />
-        <label
-          htmlFor="brandLogo"
+        <button
+          type="button"
           className="custom-file-button"
-          style={{
-            display: "inline-block",
-            width: "30%",
-            textAlign: "center",
-          }}
+          onClick={() => brandLogoInputRef.current?.click()}
+          disabled={
+            mode === "edit" && customerData?.customerStatus !== "pending"
+          }
+          style={{ width: "100px" }}
         >
           {t("Upload")}
-        </label>
-        {brandLogoPreview && (
-          <div style={{ marginTop: 8, display: "flex" }}>
+        </button>
+        {/* Show preview if file is selected but not saved */}
+        {logoPreviews.brandLogo && (
+          <div className="logo-preview">
             <img
-              src={brandLogoPreview}
+              src={logoPreviews.brandLogo}
               alt="Brand Logo Preview"
-              style={{ maxWidth: 150, maxHeight: 120, display: "block" }}
+              style={{
+                maxWidth: 120,
+                maxHeight: 120,
+                marginTop: 8,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
             />
             <button
               type="button"
               className="delete-file-button"
-              style={{ marginTop: 100 }}
-              onClick={removeBrandLogo}
+              onClick={() => {
+                setLogoPreviews((prev) => {
+                  if (prev.brandLogo) URL.revokeObjectURL(prev.brandLogo);
+                  return { ...prev, brandLogo: null };
+                });
+                handleLogoDelete("brandLogo");
+              }}
+              style={{ marginLeft: 8, fontSize: "20px" }}
             >
               ×
             </button>
           </div>
         )}
-        {formErrors.brandLogo && (
-          <div className="error">{formErrors.brandLogo}</div>
+        {/* Show uploaded file name as link if present and no preview */}
+        {!logoPreviews.brandLogo && customerData?.brandLogo && (
+          <div className="logo-preview">
+            <a
+              href="#"
+              className="file-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleViewLogo(
+                  customerData.id,
+                  customerData.brandLogo,
+                  "brandLogo"
+                );
+              }}
+              style={{ marginRight: 8 }}
+            >
+              {typeof customerData.brandLogo === "string"
+                ? (() => {
+                    const name = customerData.brandLogo
+                      .split("_")
+                      .slice(0, 2)
+                      .join(" ");
+                    const maxLen = 20;
+                    return name.length > maxLen
+                      ? name.substring(0, maxLen) + "..."
+                      : name;
+                  })()
+                : "View Document"}
+            </a>
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => handleLogoDelete("brandLogo")}
+              style={{ marginLeft: 8, fontSize: "15px" }}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </div>
         )}
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.brandLogo !== customerData?.brandLogo &&
-          customerData?.brandLogo &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.brandLogo || "(no file)"}
-            </div>
-          )}
-      </div>  */}
-
+      </div>
 
       {/* Customer Source */}
       {isV("customerSource") && (
@@ -936,12 +971,13 @@ function BusinessDetails({
             onChange={onChangeCustomerData}
             disabled={
               (originalCustomerData &&
-              customerData &&
-              originalCustomerData?.customerSource ===
-                customerData?.customerSource &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-      ) || true}
+                customerData &&
+                originalCustomerData?.customerSource ===
+                  customerData?.customerSource &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              true
+            }
           />
           {originalCustomerData &&
             customerData &&
@@ -957,422 +993,488 @@ function BusinessDetails({
 
       {isV("assignedToEntityWise") && (
         <>
-        <div className="form-header full-width">
+          <div className="form-header full-width">
             {t("Inter Company Account")}
           </div>
-{isV("assignedToEntityWise") && (
-        <div className="form-group">
-          <label className="checkbox-group-label">
-            <input
-              type="checkbox"
-              id="interCompany"
-              name="interCompany"
-              checked={customerData?.interCompany}
-              onChange={setInterCompany}
-              disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.interCompany ===
-                  customerData?.interCompany &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
-            />
-            {t("Inter Company")}
-          </label>
-        </div>
-      )}
-
-      {isV("assignedToEntityWise") && customerData?.interCompany && (
-        <div className="form-group">
-          <label htmlFor="entity">
-            {t("Entity")}
-            <span className="required-field">*</span>
-            {originalCustomerData &&
-              customerData &&
-              originalCustomerData?.entity != customerData?.entity &&
-              mode === "edit" && <span className="update-badge">Updated</span>}
-          </label>
-          <select
-            id="entity"
-            name="entity"
-            className={`dropdown ${
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.entity != customerData?.entity &&
-              mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
-            value={customerData?.entity || ""}
-            onChange={onChangeCustomerData}
-            disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.entity === customerData?.entity &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
-            required
-          >
-            <option value="" disabled>
-              {t("Select")}
-            </option>
-            {basicMasterLists?.entity?.map((loc) => (
-              <option key={loc} value={loc}>
-                {t(loc)}
-              </option>
-            ))}
-          </select>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.entity != customerData?.entity &&
-            mode === "edit" && (
-              <div className="current-value">
-                Previous: {originalCustomerData?.entity || "(empty)"}
-              </div>
-            )}
-          {formErrors.entity && (
-            <div className="error">{formErrors.entity}</div>
+          {isV("assignedToEntityWise") && (
+            <div className="form-group">
+              <label className="checkbox-group-label">
+                <input
+                  type="checkbox"
+                  id="interCompany"
+                  name="interCompany"
+                  checked={customerData?.interCompany}
+                  onChange={setInterCompany}
+                  disabled={
+                    originalCustomerData &&
+                    customerData &&
+                    originalCustomerData?.interCompany ===
+                      customerData?.interCompany &&
+                    mode === "edit" &&
+                    customerData?.customerStatus !== "pending"
+                  }
+                />
+                {`\t ${t("Inter Company")}`}
+              </label>
+            </div>
           )}
-        </div>
-      )}
+
+          {isV("assignedToEntityWise") && customerData?.interCompany && (
+            <div className="form-group">
+              <label htmlFor="entity">
+                {t("Entity")}
+                <span className="required-field">*</span>
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.entity != customerData?.entity &&
+                  mode === "edit" && (
+                    <span className="update-badge">Updated</span>
+                  )}
+              </label>
+              <select
+                id="entity"
+                name="entity"
+                className={`dropdown ${
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.entity != customerData?.entity &&
+                  mode === "edit"
+                    ? "update-field"
+                    : ""
+                }`}
+                value={customerData?.entity || ""}
+                onChange={onChangeCustomerData}
+                disabled={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.entity === customerData?.entity &&
+                  mode === "edit" &&
+                  customerData?.customerStatus !== "pending"
+                }
+                required
+              >
+                <option value="" disabled>
+                  {t("Select")}
+                </option>
+                {basicMasterLists?.entity?.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {t(loc)}
+                  </option>
+                ))}
+              </select>
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.entity != customerData?.entity &&
+                mode === "edit" && (
+                  <div className="current-value">
+                    Previous: {originalCustomerData?.entity || "(empty)"}
+                  </div>
+                )}
+              {formErrors.entity && (
+                <div className="error">{formErrors.entity}</div>
+              )}
+            </div>
+          )}
           {/* Entity Wise Employee Assignment Header */}
           <div className="form-header full-width">
             {t("Sales Person Assignment")}
           </div>
-{/* Assigned To Dropdown */}
-{isV("assignedTo") && (
-  <div className="form-group">
-    <label htmlFor="assignedTo">
-      {t("Assigned To")}
-      {originalCustomerData &&
-        customerData &&
-        originalCustomerData?.assignedTo != customerData?.assignedTo &&
-        mode === "edit" && <span className="update-badge">Updated</span>}
-    </label>
-    <SearchableDropdown
-      name="assignedTo"
-      options={
-        employeeList?.map((employee) => ({
-          value: employee.employeeId,
-          // Use 'name' property for label, since SearchableDropdown expects 'name'
-          name: employee.name || employee.label || employee.employeeId,
-        })) || []
-      }
-      value={customerData?.assignedTo || ""}
-      onChange={onChangeCustomerData}
-      disabled={
-        originalCustomerData &&
-        customerData &&
-        originalCustomerData?.assignedTo === customerData?.assignedTo &&
-        mode === "edit" &&
-        customerData?.customerStatus !== "pending"
-      }
-      className={
-        originalCustomerData &&
-        customerData &&
-        originalCustomerData?.assignedTo != customerData?.assignedTo &&
-        mode === "edit"
-          ? "update-field"
-          : ""
-      }
-      placeholder={t("Select")}
-      required
-    />
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedTo != customerData?.assignedTo &&
-      mode === "edit" && (
-        <div className="current-value">
-          Previous: {originalCustomerData?.assignedTo || "(empty)"}
-        </div>
-      )}
-    {formErrors.assignedTo && (
-      <div className="error">{formErrors.assignedTo}</div>
-    )}
-  </div>
-)}
+          {/* Assigned To Dropdown */}
+          {isV("assignedTo") && (
+            <div className="form-group">
+              <label htmlFor="assignedTo">
+                {t("Assigned To")}
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.assignedTo !=
+                    customerData?.assignedTo &&
+                  mode === "edit" && (
+                    <span className="update-badge">Updated</span>
+                  )}
+              </label>
+              <SearchableDropdown
+                name="assignedTo"
+                options={
+                  employeeList?.map((employee) => ({
+                    value: employee.employeeId,
+                    // Use 'name' property for label, since SearchableDropdown expects 'name'
+                    name:
+                      employee.name || employee.label || employee.employeeId,
+                  })) || []
+                }
+                value={customerData?.assignedTo || ""}
+                onChange={onChangeCustomerData}
+                disabled={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.assignedTo ===
+                    customerData?.assignedTo &&
+                  mode === "edit" &&
+                  customerData?.customerStatus !== "pending"
+                }
+                className={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.assignedTo !=
+                    customerData?.assignedTo &&
+                  mode === "edit"
+                    ? "update-field"
+                    : ""
+                }
+                placeholder={t("Select")}
+                required
+              />
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedTo != customerData?.assignedTo &&
+                mode === "edit" && (
+                  <div className="current-value">
+                    Previous: {originalCustomerData?.assignedTo || "(empty)"}
+                  </div>
+                )}
+              {formErrors.assignedTo && (
+                <div className="error">{formErrors.assignedTo}</div>
+              )}
+            </div>
+          )}
 
           {/* Entity Wise Employee Assignment */}
-          
-{/* Dar dropdown */}
-<div className="form-group">
-  <label htmlFor="assignedToEntityWise">
-    {t(Constants.ENTITY.DAR)}
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-      mode === "edit" && (
-        <span className="update-badge">Updated</span>
-      )}
-  </label>
-  <SearchableDropdown
-    name={Constants.ENTITY.DAR}
-    options={
-      employeeListWithManagers?.map((employee) => ({
-        value: employee.employeeId,
-        name: employee.name || employee.label || employee.employeeId,
-      })) || []
-    }
-    value={customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] || ""}
-    onChange={setEntityWiseAssignment}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] ===
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Select")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] !==
-      customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous:{" "}
-        {originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] ||
-          "(empty)"}
-      </div>
-    )}
-</div>
+
+          {/* Dar dropdown */}
+          <div className="form-group">
+            <label htmlFor="assignedToEntityWise">
+              {t(Constants.ENTITY.DAR)}
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.DAR
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
+                mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+            </label>
+            <SearchableDropdown
+              name={Constants.ENTITY.DAR}
+              options={
+                employeeListWithManagers?.map((employee) => ({
+                  value: employee.employeeId,
+                  name: employee.name || employee.label || employee.employeeId,
+                })) || []
+              }
+              value={
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] || ""
+              }
+              onChange={setEntityWiseAssignment}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.DAR
+                ] ===
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.DAR
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Select")}
+              required
+            />
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.assignedToEntityWise?.[
+                Constants.ENTITY.DAR
+              ] !==
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
+              mode === "edit" && (
+                <div className="current-value">
+                  Previous:{" "}
+                  {originalCustomerData?.assignedToEntityWise?.[
+                    Constants.ENTITY.DAR
+                  ] || "(empty)"}
+                </div>
+              )}
+          </div>
 
           {/* VMCO dropdown */}
-<div className="form-group">
-  <label htmlFor="assignedToEntityWise">
-    {t(Constants.ENTITY.VMCO)}
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-      mode === "edit" && (
-        <span className="update-badge">Updated</span>
-      )}
-  </label>
-  <SearchableDropdown
-    name={Constants.ENTITY.VMCO}
-    options={
-      employeeListWithManagers?.map((employee) => ({
-        value: employee.employeeId,
-        name: employee.name || employee.label || employee.employeeId,
-      })) || []
-    }
-    value={customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] || ""}
-    onChange={setEntityWiseAssignment}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] ===
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Select")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] !==
-      customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous:{" "}
-        {originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] ||
-          "(empty)"}
-      </div>
-    )}
-</div>
-         
-{/* Entity Wise Assignment for SHC */}
-<div className="form-group">
-  <label htmlFor="assignedToEntityWise">
-    {t(Constants.ENTITY.SHC)}
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-      mode === "edit" && (
-        <span className="update-badge">Updated</span>
-      )}
-  </label>
-  <SearchableDropdown
-    name={Constants.ENTITY.SHC}
-    options={
-      employeeListWithManagers?.map((employee) => ({
-        value: employee.employeeId,
-        name: employee.name || employee.label || employee.employeeId,
-      })) || []
-    }
-    value={customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] || ""}
-    onChange={setEntityWiseAssignment}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] ===
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Select")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] !==
-      customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous:{" "}
-        {originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] ||
-          "(empty)"}
-      </div>
-    )}
-</div>
+          <div className="form-group">
+            <label htmlFor="assignedToEntityWise">
+              {t(Constants.ENTITY.VMCO)}
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.VMCO
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
+                mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+            </label>
+            <SearchableDropdown
+              name={Constants.ENTITY.VMCO}
+              options={
+                employeeListWithManagers?.map((employee) => ({
+                  value: employee.employeeId,
+                  name: employee.name || employee.label || employee.employeeId,
+                })) || []
+              }
+              value={
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] ||
+                ""
+              }
+              onChange={setEntityWiseAssignment}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.VMCO
+                ] ===
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.VMCO
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Select")}
+              required
+            />
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.assignedToEntityWise?.[
+                Constants.ENTITY.VMCO
+              ] !==
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
+              mode === "edit" && (
+                <div className="current-value">
+                  Previous:{" "}
+                  {originalCustomerData?.assignedToEntityWise?.[
+                    Constants.ENTITY.VMCO
+                  ] || "(empty)"}
+                </div>
+              )}
+          </div>
+
+          {/* Entity Wise Assignment for SHC */}
+          <div className="form-group">
+            <label htmlFor="assignedToEntityWise">
+              {t(Constants.ENTITY.SHC)}
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.SHC
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
+                mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+            </label>
+            <SearchableDropdown
+              name={Constants.ENTITY.SHC}
+              options={
+                employeeListWithManagers?.map((employee) => ({
+                  value: employee.employeeId,
+                  name: employee.name || employee.label || employee.employeeId,
+                })) || []
+              }
+              value={
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] || ""
+              }
+              onChange={setEntityWiseAssignment}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.SHC
+                ] ===
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.SHC
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Select")}
+              required
+            />
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.assignedToEntityWise?.[
+                Constants.ENTITY.SHC
+              ] !==
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
+              mode === "edit" && (
+                <div className="current-value">
+                  Previous:{" "}
+                  {originalCustomerData?.assignedToEntityWise?.[
+                    Constants.ENTITY.SHC
+                  ] || "(empty)"}
+                </div>
+              )}
+          </div>
           {/* Entity Wise Assignment for NAQI */}
-<div className="form-group">
-  <label htmlFor="assignedToEntityWise">
-    {t(Constants.ENTITY.NAQI)}
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-      mode === "edit" && (
-        <span className="update-badge">Updated</span>
-      )}
-  </label>
-  <SearchableDropdown
-    name={Constants.ENTITY.NAQI}
-    options={
-      employeeListWithManagers?.map((employee) => ({
-        value: employee.employeeId,
-        name: employee.name || employee.label || employee.employeeId,
-      })) || []
-    }
-    value={customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] || ""}
-    onChange={setEntityWiseAssignment}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] ===
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Select")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] !==
-      customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous:{" "}
-        {originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] ||
-          "(empty)"}
-      </div>
-    )}
-</div>
+          <div className="form-group">
+            <label htmlFor="assignedToEntityWise">
+              {t(Constants.ENTITY.NAQI)}
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.NAQI
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
+                mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+            </label>
+            <SearchableDropdown
+              name={Constants.ENTITY.NAQI}
+              options={
+                employeeListWithManagers?.map((employee) => ({
+                  value: employee.employeeId,
+                  name: employee.name || employee.label || employee.employeeId,
+                })) || []
+              }
+              value={
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] ||
+                ""
+              }
+              onChange={setEntityWiseAssignment}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.NAQI
+                ] ===
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.NAQI
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Select")}
+              required
+            />
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.assignedToEntityWise?.[
+                Constants.ENTITY.NAQI
+              ] !==
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
+              mode === "edit" && (
+                <div className="current-value">
+                  Previous:{" "}
+                  {originalCustomerData?.assignedToEntityWise?.[
+                    Constants.ENTITY.NAQI
+                  ] || "(empty)"}
+                </div>
+              )}
+          </div>
 
           {/* Entity Wise Assignment for GMTC */}
-<div className="form-group">
-  <label htmlFor="assignedToEntityWise">
-    {t(Constants.ENTITY.GMTC)}
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-      mode === "edit" && (
-        <span className="update-badge">Updated</span>
-      )}
-  </label>
-  <SearchableDropdown
-    name={Constants.ENTITY.GMTC}
-    options={
-      employeeListWithManagers?.map((employee) => ({
-        value: employee.employeeId,
-        name: employee.name || employee.label || employee.employeeId,
-      })) || []
-    }
-    value={customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] || ""}
-    onChange={setEntityWiseAssignment}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] ===
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] !==
-        customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Select")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] !==
-      customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous:{" "}
-        {originalCustomerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] ||
-          "(empty)"}
-      </div>
-    )}
-</div>
+          <div className="form-group">
+            <label htmlFor="assignedToEntityWise">
+              {t(Constants.ENTITY.GMTC)}
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.GMTC
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
+                mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+            </label>
+            <SearchableDropdown
+              name={Constants.ENTITY.GMTC}
+              options={
+                employeeListWithManagers?.map((employee) => ({
+                  value: employee.employeeId,
+                  name: employee.name || employee.label || employee.employeeId,
+                })) || []
+              }
+              value={
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] ||
+                ""
+              }
+              onChange={setEntityWiseAssignment}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.GMTC
+                ] ===
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.assignedToEntityWise?.[
+                  Constants.ENTITY.GMTC
+                ] !==
+                  customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Select")}
+              required
+            />
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.assignedToEntityWise?.[
+                Constants.ENTITY.GMTC
+              ] !==
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
+              mode === "edit" && (
+                <div className="current-value">
+                  Previous:{" "}
+                  {originalCustomerData?.assignedToEntityWise?.[
+                    Constants.ENTITY.GMTC
+                  ] || "(empty)"}
+                </div>
+              )}
+          </div>
         </>
       )}
-      <div className="form-group"></div>
-      
+
+      {/* ...rest of your form... */}
     </div>
   );
 }

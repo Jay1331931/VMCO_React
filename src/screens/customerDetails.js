@@ -167,6 +167,9 @@ function CustomerDetails() {
   );
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
+  // Add this state for logo uploads (similar to tradingFilesToUpload)
+  const [logosToUpload, setLogosToUpload] = useState({});
+
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
   var updatedCustomerPaymentMethodsData = useRef({});
@@ -683,25 +686,26 @@ function CustomerDetails() {
   };
   const uploadDocuments = async (
     tradingFilesToUpload,
-    nonTradingFilesToUpload
+    nonTradingFilesToUpload,
+    logosToUpload // <-- Add this param
   ) => {
     const uploadedFiles = {};
     try {
+      // Trading files
       for (const fieldName of Object.keys(tradingFilesToUpload)) {
         const file = tradingFilesToUpload[fieldName];
         const uploadedFile = await uploadFile(fieldName, file, customerId);
         if (uploadedFile && uploadedFile.fileName) {
           uploadedFiles[fieldName] = uploadedFile.fileName;
-          // delete from tradingFilesToUpload
           delete tradingFilesToUpload[fieldName];
         }
       }
+      // Non-trading files
       for (const fieldName of Object.keys(nonTradingFilesToUpload)) {
         const file = nonTradingFilesToUpload[fieldName];
         if (fieldName !== "others") {
           uploadFile(fieldName, file, customerId);
         } else if (Array.isArray(file)) {
-          // file.forEach((f) => {
           uploadedFiles["nonTradingDocuments"] = [
             ...(customerData?.nonTradingDocuments || []),
           ];
@@ -713,12 +717,30 @@ function CustomerDetails() {
             );
             if (uploadedFile && uploadedFile.fileName) {
               uploadedFiles["nonTradingDocuments"].push(uploadedFile.fileName);
-              // delete from nonTradingFilesToUpload
               const index = nonTradingFilesToUpload["others"].indexOf(f);
               if (index > -1) {
                 nonTradingFilesToUpload["others"].splice(index, 1);
               }
             }
+          }
+        }
+      }
+      // --- Handle logo uploads ---
+      for (const logoField of ["companyLogo", "brandLogo"]) {
+        if (logosToUpload[logoField]) {
+          const uploadedLogo = await uploadFile(
+            logoField,
+            logosToUpload[logoField],
+            customerId
+          );
+          if (uploadedLogo && uploadedLogo.fileName) {
+            uploadedFiles[logoField] = uploadedLogo.fileName;
+            // Remove from upload queue
+            setLogosToUpload((prev) => {
+              const copy = { ...prev };
+              delete copy[logoField];
+              return copy;
+            });
           }
         }
       }
@@ -739,7 +761,8 @@ function CustomerDetails() {
     try {
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
-        nonTradingFilesToUpload
+        nonTradingFilesToUpload,
+        logosToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -842,7 +865,8 @@ function CustomerDetails() {
         customerData.customerStatus;
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
-        nonTradingFilesToUpload
+        nonTradingFilesToUpload,
+        logosToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -918,8 +942,15 @@ function CustomerDetails() {
       const mergedData = {
         updates: {
           ...wfCustomerData,
-          customer: { ...wfCustomerData?.customer, ...updatedCustomerData.current },
-          contacts: { ...wfCustomerData?.contacts, ...updatedCustomerContactsData.current },
+          ...updatedCustomerPaymentMethodsData.current,
+          customer: {
+            ...wfCustomerData?.customer,
+            ...updatedCustomerData.current,
+          },
+          contacts: {
+            ...wfCustomerData?.contacts,
+            ...updatedCustomerContactsData.current,
+          },
         },
         id: customerId,
       };
@@ -1040,7 +1071,6 @@ function CustomerDetails() {
         }
       );
       console.log("Response", response);
-
     } catch (error) {
       console.error("Error approving customer:", error.message);
     }
@@ -1081,7 +1111,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
       function showLoadingScreen(message) {
-          document.body.innerHTML = `
+        document.body.innerHTML = `
     <div class="loading-more-container" style="
       padding: 20px; 
       display: flex;
@@ -1109,11 +1139,11 @@ function CustomerDetails() {
       }
     </style>
   `;
-        }
+      }
 
-        // Usage:
-        showLoadingScreen("Updating...");
-        setTimeout(() => window.location.reload(true), 3000);
+      // Usage:
+      showLoadingScreen("Updating...");
+      setTimeout(() => window.location.reload(true), 3000);
     } catch (error) {
       alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
@@ -1259,6 +1289,7 @@ function CustomerDetails() {
                     setTabsHeight={setTabsHeight}
                     setInterCompany={setInterCompany}
                     formErrors={formErrors}
+                    logosToUpload={logosToUpload} // <-- pass to BusinessDetails
                   />
                 )}
               {activeTab === "Contact Details" && isV("contactDetailsTab") && (

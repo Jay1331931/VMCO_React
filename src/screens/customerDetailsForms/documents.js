@@ -5,6 +5,8 @@ import { not } from "ajv/dist/compile/codegen";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
+import Swal from "sweetalert2"; // Add this import at the top if not already present
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
@@ -56,7 +58,22 @@ function Documents({
     // Check if the file input has files
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-
+// Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "The following files exceed the maximum size of {{size}} MB: {{files}}",
+          {
+            size: MAX_FILE_SIZE / (1024 * 1024),
+            files: file.name,
+          }
+        ),
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
       // Update the specific document in state
       setTradingDocuments((prevDocs) => ({
         ...prevDocs,
@@ -75,9 +92,29 @@ function Documents({
   // Handle multiple file uploads
   const handleNonTradingDocumentsChange = (e) => {
     const fileList = e.target.files;
-    if (fileList.length > 0) {
-      // Convert FileList to array and append to existing files
-      const newFiles = Array.from(fileList);
+  if (fileList.length > 0) {
+    const files = Array.from(fileList);
+
+    // Check if any file exceeds the size limit
+    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+    if (oversizedFiles.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "The following files exceed the maximum size of {{size}} MB: {{files}}",
+          {
+            size: MAX_FILE_SIZE / (1024 * 1024),
+            files: oversizedFiles.map((file) => file.name).join(", "),
+          }
+        ),
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
+
+    // Convert FileList to array and append to existing files
+    const newFiles = files;
       setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
       // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
       const previousOthers = nonTradingFilesToUpload?.["others"] || [];

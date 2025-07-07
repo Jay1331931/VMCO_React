@@ -515,7 +515,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t("Is delivery charges applicable")}
+          {`\t ${t("Is delivery charges applicable")}`}
         </label>
       </div>
 
@@ -544,7 +544,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t("Pre-Payment")}
+          {`\t ${t("Pre-Payment")}`}
           {paymentMethods?.prePayment?.isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.prePayment?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -585,7 +585,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t("Cash on Delivery (COD)")}
+          {`\t ${t("Cash on Delivery (COD)")}`}
           {paymentMethods?.COD?.isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.COD?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -643,7 +643,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t(Constants.ENTITY.DAR)}
+          {`\t ${t(Constants.ENTITY.DAR)}`}
           {paymentMethods?.credit?.[Constants.ENTITY.DAR].isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -748,7 +748,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t(Constants.ENTITY.VMCO)}
+          {`\t ${t(Constants.ENTITY.VMCO)}`}
           {paymentMethods?.credit?.[Constants.ENTITY.VMCO].isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -854,7 +854,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t(Constants.ENTITY.SHC)}
+          {`\t ${t(Constants.ENTITY.SHC)}`}
           {paymentMethods?.credit?.[Constants.ENTITY.SHC].isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -958,7 +958,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t(Constants.ENTITY.NAQI)}
+          {`\t ${t(Constants.ENTITY.NAQI)}`}
           {paymentMethods?.credit?.[Constants.ENTITY.NAQI].isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}
@@ -1062,7 +1062,7 @@ function FinancialInformation({
               mode === "edit"
             }
           />
-          {t(Constants.ENTITY.GMTC)}
+          {`\t ${t(Constants.ENTITY.GMTC)}`}
           {paymentMethods?.credit?.[Constants.ENTITY.GMTC].isAllowed !== originalCustomerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]?.isAllowed && mode === "edit" && (
           <span className="update-badge">Updated</span>
         )}

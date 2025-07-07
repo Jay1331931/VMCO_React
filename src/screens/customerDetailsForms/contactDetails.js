@@ -445,7 +445,7 @@ function ContactDetails({
               customerContactsData?.businessHeadDesignation === customerContactsData?.primaryContactDesignation && customerContactsData?.businessHeadEmail === customerContactsData?.primaryContactEmail && customerContactsData?.businessHeadMobile === customerContactsData?.primaryContactMobile}
             onChange={(e) => setBusinessHeadSameAsPrimary(e.target.checked)}
           />
-          {t("Same as Primary Contact Details")}
+          {`\t  ${t("Same as Primary Contact Details")}`}
         </label>
       </div>
       <div className="form-group" />
@@ -1363,7 +1363,7 @@ function ContactDetails({
       </div>
 
 {/* branch dropdown */}
-<div className="form-group">
+{ isV("assignedToEntityWise") && (<div className="form-group">
   <label htmlFor="branch">
     {t("Branch")}
     <span className="required-field">*</span>
@@ -1406,7 +1406,7 @@ function ContactDetails({
   {formErrors.branch && (
     <div className="error">{formErrors.branch}</div>
   )}
-</div>
+  </div>)}
 
       {showMap && (
         <div className="map-modal">

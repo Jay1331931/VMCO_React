@@ -19,6 +19,35 @@ import { debounce, set } from "lodash";
 import Constants from "../../constants";
 import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
 
+// --- Entities (Tabs) like catalog.js ---
+const initialEntities = [
+  {
+    value: Constants.ENTITY.VMCO,
+    label: "VMCO",
+  },
+  {
+      value: Constants.CATEGORY.VMCO_CONSUMABLES,
+      entity: Constants.ENTITY.VMCO,
+      label: Constants.CATEGORY.VMCO_CONSUMABLES,
+    },
+  {
+    value: Constants.ENTITY.SHC,
+    label: "Saudi Hospitality Company",
+  },
+  {
+    value: Constants.ENTITY.GMTC,
+    label: "Green Mast Factory Ltd",
+  },
+  {
+    value: Constants.ENTITY.NAQI,
+    label: "Naqi Company",
+  },
+  {
+    value: Constants.ENTITY.DAR,
+    label: "DAR Company",
+  },
+];
+
 function Products({ customerId, customer, setTabsHeight }) {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [products, setProducts] = useState([]); // all products
@@ -28,23 +57,22 @@ function Products({ customerId, customer, setTabsHeight }) {
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
   const { t } = useTranslation();
-  const [entities, setEntities] = useState([]);
-  const [activeEntity, setActiveEntity] = useState("");
-  const [entitiesLoading, setEntitiesLoading] = useState(true);
+  const [entities] = useState(initialEntities);
+  const [activeEntity, setActiveEntity] = useState(initialEntities[0].value);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
+  const [search, setSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const [editingMoq, setEditingMoq] = useState(null);
 
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   // const totalPages = Math.ceil(currentItems.length / itemsPerPage);
   const [totalPages, setTotalPages] = useState(0);
   const [pageInput, setPageInput] = useState("");
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [subCategoryFilter, setSubCategoryFilter] = useState("");
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   // const currentItems = products.slice(startIndex, endIndex);
@@ -71,44 +99,6 @@ function Products({ customerId, customer, setTabsHeight }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
- 
-  
-  useEffect(() => {
-    const fetchEntities = async () => {
-      setEntitiesLoading(true);
-      const params = new URLSearchParams({
-        filters: JSON.stringify({ master_name: "entity" }),
-      });
-
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/basics-masters?${params.toString()}`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        const formatted = result.data.map((opt) => ({
-          value: opt.value,
-          label: opt.description || opt.value,
-        }));
-        setEntities(formatted);
-        setActiveEntity(formatted[0]?.value || "");
-        setEntitiesLoading(false);
-      } catch (err) {
-        console.error("Error fetching options:", err);
-        setEntitiesLoading(false);
-      }
-    };
-    fetchEntities();
   }, []);
 
   const fetchProducts = async () => {
@@ -321,27 +311,42 @@ function Products({ customerId, customer, setTabsHeight }) {
     setCurrentPage(1);
   }, 400);
 
-  const uniqueCategories = Array.from(
-    new Set(products.map((p) => p.category).filter(Boolean))
-  );
-  const uniqueSubCategories = Array.from(
-    new Set(
-      products
-        .filter((p) => !categoryFilter || p.category === categoryFilter)
-        .map((p) => p.subCategory)
-        .filter(Boolean)
-    )
-  );
+  // Filter products based on entity, category, subcategory, and search
+  const filteredProducts = products.filter((product) => {
+    const matchesEntity = !activeEntity || product.entity === activeEntity;
+    const matchesCategory =
+      !categoryFilter || product.category === categoryFilter;
+    const matchesSubCategory =
+      !subCategoryFilter || product.subCategory === subCategoryFilter;
+    const matchesSearch =
+      !search ||
+      (product.productName &&
+        product.productName.toLowerCase().includes(search.toLowerCase()));
+    return (
+      matchesEntity && matchesCategory && matchesSubCategory && matchesSearch
+    );
+  });
+
+  // Use filteredProducts for rendering and pagination
+  useEffect(() => {
+    setCurrentItems(filteredProducts.slice(startIndex, endIndex));
+    setTotalPages(Math.ceil(filteredProducts.length / itemsPerPage));
+  }, [filteredProducts, startIndex, endIndex, itemsPerPage]);
 
   return (
     <div className="products-content">
       <h3>{t("Products & MoQ - Company Name")}</h3>
 
       <div className="products-header-controls">
-        {/* Tabs */}
-        {entitiesLoading ? (
-          <div>{t("Loading entities...")}</div>
-        ) : (
+        {/* --- First row: Entity Tabs --- */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
           <Tabs
             tabs={entities}
             activeTab={activeEntity}
@@ -351,49 +356,38 @@ function Products({ customerId, customer, setTabsHeight }) {
               setCategoryFilter("");
               setSubCategoryFilter("");
               setSearch("");
-              // Do not call fetchProducts() here, let useEffect handle it
             }}
             variant="category"
           />
-        )}
-      </div>
-      <div className="products-page-header">
-        {/* Search */}
-        <input
-          type="text"
-          placeholder={t("Search...")}
-          className="product-search-input"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-            fetchProducts();
-          }}
+        </div>
+        </div>
+      <div className="products-header-controls">
+        {/* --- Second row: Category & Subcategory dropdowns --- */}
+        <div
           style={{
-            padding: "10px 15px",
-            width: "300px",
-            border: "2px solid #00205b",
-            borderRadius: "8px",
-            fontSize: "1rem",
-            backgroundColor: "#fff",
-            transition: "all 0.2s ease",
-            marginRight: "10px",
-            boxSizing: "border-box",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 12,
+            marginTop: 12,
+            flexDirection: "row",
           }}
-        />
-        {/* Category Filter */}
-        <div className="filters-container">
+        >
+          {/* Category Filter */}
           <select
             value={categoryFilter}
             onChange={(e) => {
               setCategoryFilter(e.target.value);
               setSubCategoryFilter("");
               setCurrentPage(1);
-              fetchProducts();
             }}
+            className="category-filter"
+            style={{ minWidth: 180 }}
           >
             <option value="">{t("All Categories")}</option>
-            {uniqueCategories.map((cat) => (
+            {Array.from(
+              new Set(products.map((p) => p.category).filter(Boolean))
+            ).map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>
@@ -406,16 +400,63 @@ function Products({ customerId, customer, setTabsHeight }) {
             onChange={(e) => {
               setSubCategoryFilter(e.target.value);
               setCurrentPage(1);
-              fetchProducts();
             }}
+            className="category-filter"
+            style={{ minWidth: 180 }}
           >
             <option value="">{t("All Subcategories")}</option>
-            {uniqueSubCategories.map((sub) => (
+            {Array.from(
+              new Set(
+                products
+                  .filter(
+                    (p) => !categoryFilter || p.category === categoryFilter
+                  )
+                  .map((p) => p.subCategory)
+                  .filter(Boolean)
+              )
+            ).map((sub) => (
               <option key={sub} value={sub}>
                 {sub}
               </option>
             ))}
           </select>
+        </div>
+
+        
+      </div>
+
+      {/* --- Toggle and Apply All below filters --- */}
+      <div className="products-page-header">
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            marginTop: 16,
+          }}
+        >
+          {/* Search */}
+          <input
+            type="text"
+            placeholder={t("Search...")}
+            className="product-search-input"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: "10px 15px",
+              width: "300px",
+              border: "2px solid #00205b",
+              borderRadius: "8px",
+              fontSize: "1rem",
+              backgroundColor: "#fff",
+              transition: "all 0.2s ease",
+              marginRight: "10px",
+              boxSizing: "border-box",
+            }}
+          />
         </div>
         <div className="toggle-container">
           <label>{t("All")}</label>
@@ -535,6 +576,46 @@ function Products({ customerId, customer, setTabsHeight }) {
           }}
         />
       </div>
+      <style jsx="true">{`
+        .product-search-input {
+          padding: 10px 15px;
+          width: 300px;
+          border: 2px solid #1d396d;
+          border-radius: 8px;
+          font-size: 1rem;
+          background-color: #fff;
+          box-shadow: 0 0 0 2px #e5e4e2;
+          transition: all 0.2s ease;
+          margin-right: 10px;
+          box-sizing: border-box;
+        }
+        .product-search-input:focus {
+          border-color: #1d396d;
+          box-shadow: 0 0 0 2px #e5e4e2;
+          outline: none;
+        }
+        .product-search-input::placeholder {
+          color: #d3d3d3;
+          opacity: 1;
+        }
+        .category-filter {
+          margin-right: 10px;
+          padding: 8px 12px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          font-size: 1rem;
+          background: #fff;
+        }
+        @media (max-width: 768px) {
+          .product-search-input {
+            width: 100%;
+            margin-bottom: 10px;
+          }
+          .products-header-controls {
+            flex-direction: column;
+          }
+        }
+      `}</style>
     </div>
   );
 }

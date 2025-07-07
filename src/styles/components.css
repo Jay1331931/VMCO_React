@@ -2191,10 +2191,10 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   background: #fff;
-  /* padding: 40px; */
-  /* padding-top: 20px; */
+  padding: 40px;
+  padding-top: 10px;
   border-radius: 10px;
-  /* border: 1px solid #ddd; */
+  border: 1px solid #ddd;
   gap: 10px;
   width: min-content;
 }
@@ -2210,11 +2210,13 @@
 
 .onboarding-container .form-group input {
   width: 250px;
-  height: 37px;
+  height: 40px;
+  font-size: small;
 }
 .onboarding-container .form-group select {
   width: 250px;
-  height: 37px;
+  height: 40px;
+  font-size: 0.8rem;
 }
 .onboarding-footer {
   margin-top: 20px;

@@ -53,7 +53,7 @@ function CustomersOnboarding() {
       name: "otp",
       label: t("OTP"),
       placeholder: t("Enter OTP"),
-      required: true,
+      required: false,
     },
     {   type: "empty" ,"name": "empty" },
    
@@ -199,7 +199,8 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
   
         const result = await response.json(); // Don't forget 'await' here
   
-        const options = result.data.map(item => item.value);
+        const options = result.data.map(item => item.value).map(opt => opt.charAt(0).toUpperCase() + opt.slice(1));
+         
         return options;
   
       } catch (err) {
@@ -215,7 +216,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10,15}$/;
+    const phoneRegex = /^(00966|966|\+966|0)?5\d{8}$/;
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -228,19 +229,19 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
 
     // Only proceed with additional validation if fields are filled
     if (
-      !newErrors.email &&
-      formData.email &&
-      !emailRegex.test(formData.email)
+      !newErrors.companyEmail &&
+      formData.companyEmail &&
+      !emailRegex.test(formData.companyEmail)
     ) {
-      newErrors.email = t("Please enter a valid email address");
+      newErrors.companyEmail = t("Please enter a valid email address");
     }
 
     if (
-      !newErrors.phoneNumber &&
-      formData.phoneNumber &&
-      !phoneRegex.test(formData.phoneNumber)
+      !newErrors.companyPhone &&
+      formData.companyPhone &&
+      !phoneRegex.test(formData.companyPhone)
     ) {
-      newErrors.phoneNumber = t("Please enter a valid phone number");
+      newErrors.companyPhone = t("Please enter a valid phone number");
     }
 
     if (!newErrors.password && formData.password) {
@@ -275,6 +276,9 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
     });
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if(!isOtpVerify)
@@ -334,7 +338,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 companyNameEn: formData.companyName,
-                region: formData.region,
+                region: formData.region.toLowerCase(),
                 customerStatus: "new",
                 pricingPolicy: {
                   [constants.ENTITY.VMCO]: "price A",
@@ -719,13 +723,21 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
             )})}
           </form>
           <div className="onboarding-footer">
-            <button
+          <button
               type="submit"
               className="login-button"
               disabled={isSubmitting}
               onClick={handleSubmit}
             >
               {t("Submit")}
+            </button>
+            <button
+              type="submit"
+              className="login-button"
+              disabled={isSubmitting}
+              onClick={handleLogin}
+            >
+              {t("Login")}
             </button>
           </div>
         </div>
