@@ -68,8 +68,8 @@ const Tabs = ({
                     padding: 12px 12px;
                     background: none;
                     border: none;
-                    font-size: 0.9rem;
-                    color: #6D787D;
+                    font-size: 0.8rem;
+                    color:rgb(99, 107, 110);
                     cursor: pointer;
                 }
                 .category-tab.active {

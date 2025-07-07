@@ -475,10 +475,10 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
         }
       }
@@ -937,9 +937,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -992,8 +992,8 @@ class RbacManager {
           orderFooter: { visible: true, editable: false },
           stock: { visible: false, editable: false },
           btnSave: { visible: true, editable: false },
-          btnCancel: { visible: true, editable: false },
-          btnInvoice: { visible: true, editable: false },
+          btnCancel: { visible: false, editable: false },
+          btnInvoice: { visible: false, editable: false },
           btnInventory: { visible: false, editable: false },
           actionButtons: { visible: true, editable: false },
           btnApprove: { visible: false, editable: false },
@@ -1098,8 +1098,8 @@ class RbacManager {
           images: { visible: true, editable: true },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: false, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -1340,9 +1340,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -1403,8 +1403,8 @@ class RbacManager {
           deleteCol: { visible: true, editable: true },
           orderFooter: { visible: true, editable: true },
           btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
-          btnInvoice: { visible: true, editable: true },
+          btnCancel: { visible: false, editable: false },
+          btnInvoice: { visible: false, editable: false },
           btnPay: { visible: false, editable: false },
           btnInventory: { visible: false, editable: true },
           actionButtons: { visible: false, editable: true },
@@ -1513,8 +1513,8 @@ class RbacManager {
           removeVideo: { visible: false, editable: false },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: false, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -1566,6 +1566,7 @@ class RbacManager {
           videoPopup: { visible: true, editable: true },
           commentPanel: { visible: false, editable: true },
           commentIcon: { visible: false, editable: true },
+          removeVideo: { visible: true, editable: true }
         },
       },
       maintDetailEdit: {
@@ -1596,6 +1597,7 @@ class RbacManager {
           videoPopup: { visible: true, editable: true },
           commentPanel: { visible: false, editable: true },
           commentIcon: { visible: false, editable: true },
+          removeVideo: { visible: false, editable: false }
         },
       },
       SidebarList: {
@@ -1750,20 +1752,20 @@ class RbacManager {
         fields: {
           BankContent: { visible: true, editable: false },
           TransactionIdCol: { visible: true, editable: false },
-          customerCol: {visible: true, editable: false },
-          erpCustIdCol: {visible: true, editable: false },
-          amountTransferredCol: {visible: true, editable: false },
-          transactionDateCol: {visible: true, editable: false },
-          statusCol: {visible: true, editable: false },
-          erpOrderIdCol: {visible: true, editable: false },
-          createdAtCol: {visible: true, editable: false },
+          customerCol: { visible: true, editable: false },
+          erpCustIdCol: { visible: true, editable: false },
+          amountTransferredCol: { visible: true, editable: false },
+          transactionDateCol: { visible: true, editable: false },
+          statusCol: { visible: true, editable: false },
+          erpOrderIdCol: { visible: true, editable: false },
+          createdAtCol: { visible: true, editable: false },
           BankTable: { visible: true, editable: false },
-          searchInput:{ visible: true, editable: false },
+          searchInput: { visible: true, editable: false },
           btnAdd: { visible: true, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: true, editable: false },
-            OrderIdCol: { visible: true, editable: false },
+          OrderIdCol: { visible: true, editable: false },
         }
       }
     },
@@ -1929,8 +1931,8 @@ class RbacManager {
           images: { visible: true, editable: true },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: false, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -2183,9 +2185,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -2630,9 +2632,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -3065,9 +3067,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -3244,13 +3246,13 @@ class RbacManager {
           removeVideo: { visible: false, editable: false },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: true, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
 
         },
       },
-       maintList: {
+      maintList: {
         fields: {
           maintenanceContent: { visible: false, editable: false },
           searchInput: { visible: false, editable: false },
@@ -3500,9 +3502,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -3659,8 +3661,8 @@ class RbacManager {
           removeVideo: { visible: false, editable: false },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: true, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -3749,7 +3751,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-           Bank: { visible: false, editable: false },
+          Bank: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -3764,9 +3766,9 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
@@ -3933,8 +3935,8 @@ class RbacManager {
           images: { visible: true, editable: true },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: false, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -4178,7 +4180,7 @@ class RbacManager {
     },
 
     [constants.DESIGNATIONS.MAINTENANCE_MANAGER]: {
-       orderList: {
+      orderList: {
         fields: {
           orderNumber: { visible: true, editable: true },
           companyName: { visible: true, editable: true },
@@ -4337,8 +4339,8 @@ class RbacManager {
           images: { visible: true, editable: true },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: false, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -4727,8 +4729,8 @@ class RbacManager {
           removeVideo: { visible: false, editable: false },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: true, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -4818,7 +4820,7 @@ class RbacManager {
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           Bank: { visible: false, editable: false },
-          
+
         },
       },
       BankTransactions: {
@@ -4833,12 +4835,12 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
-           btnVerify: { visible: false, editable: false },
+          btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
-          
+
         }
       }
     },
@@ -4989,8 +4991,8 @@ class RbacManager {
           removeVideo: { visible: false, editable: false },
           issueStatus: { visible: true, editable: false },
           assignedTo: { visible: true, editable: false },
-          btnSave: { visible: true, editable: true },
-          btnCancel: { visible: true, editable: true },
+          btnSave: { visible: false, editable: false },
+          btnCancel: { visible: false, editable: false },
           btnCloseTicket: { visible: false, editable: false },
         },
       },
@@ -5086,7 +5088,7 @@ class RbacManager {
           erpOrderIdCol: { visible: false, editable: false },
           createdAtCol: { visible: false, editable: false },
           BankTable: { visible: false, editable: false },
-          searchInput:{ visible: false, editable: false },
+          searchInput: { visible: false, editable: false },
           btnAdd: { visible: false, editable: false },
           btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
@@ -5094,7 +5096,8 @@ class RbacManager {
         }
       }
     },
-     [constants.DESIGNATIONS.BRANCH_ACCOUNTANT]: {
+
+    [constants.DESIGNATIONS.BRANCH_ACCOUNTANT]: {
       orderList: {
         fields: {
           orderNumber: { visible: false, editable: false },
@@ -5487,7 +5490,7 @@ class RbacManager {
           assignedTo: { visible: false, editable: false },
           btnSaveChanges: { visible: false, editable: false },
           customerApprovalChecklist: { visible: false, editable: false },
-          
+
           'Download terms & conditions and upload duly signed document': { visible: false, editable: false }
         },
       },
@@ -5495,15 +5498,15 @@ class RbacManager {
         fields: {
           BankContent: { visible: true, editable: false },
           TransactionIdCol: { visible: true, editable: false },
-          customerCol: {visible: true, editable: false },
-          erpCustIdCol: {visible: true, editable: false },
-          amountTransferredCol: {visible: true, editable: false },
-          transactionDateCol: {visible: true, editable: false },
-          statusCol: {visible: true, editable: false },
-          erpOrderIdCol: {visible: true, editable: false },
-          createdAtCol: {visible: true, editable: false },
+          customerCol: { visible: true, editable: false },
+          erpCustIdCol: { visible: true, editable: false },
+          amountTransferredCol: { visible: true, editable: false },
+          transactionDateCol: { visible: true, editable: false },
+          statusCol: { visible: true, editable: false },
+          erpOrderIdCol: { visible: true, editable: false },
+          createdAtCol: { visible: true, editable: false },
           BankTable: { visible: true, editable: false },
-          searchInput:{ visible: true, editable: false },
+          searchInput: { visible: true, editable: false },
           btnAdd: { visible: false, editable: false },
           btnVerify: { visible: true, editable: true },
           btnReject: { visible: true, editable: true },

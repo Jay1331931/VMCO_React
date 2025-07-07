@@ -944,7 +944,8 @@ function OrderDetails() {
           navigate('/orders');
         } catch (err) {
           console.error('Error saving product lines:', err);
-          console.log('Product line items creation failed, but order was created');          // Even if product lines failed, the order was created successfully
+          console.log('Product line items creation failed, but order was created successfully');
+          // Even if product lines failed, the order was created successfully
           Swal.fire({
             icon: 'warning',
             title: t('Order Created with Issues'),
@@ -1110,6 +1111,25 @@ function OrderDetails() {
     }
   };
 
+  const handleEntityChange = (e) => {
+  // Check if customer is selected
+  if (!formData.customerId && !formData.selectedCustomerName) {
+    // No customer selected, show alert
+    Swal.fire({
+      icon: 'warning',
+      title: t('Select Customer First'),
+      text: t('Please select a customer before choosing an entity.'),
+      confirmButtonText: t('OK')
+    });
+    // Reset the dropdown to empty value
+    e.target.value = '';
+    return;
+  }
+  
+  // Customer is selected, proceed with normal input handling
+  handleInputChange(e);
+};
+
   // Function to update product prices when pricing policy changes
   const updateProductPricesForPricingPolicy = async (pricingPolicy) => {
     if (!formData.products || !formData.products.length || !pricingPolicy || !formData.customerId) {
@@ -1253,7 +1273,7 @@ function OrderDetails() {
         quantity: parseInt(quantity, 10),
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
-        sales_tax_rate: Number(finalVat).toFixed(2),
+        sales_tax_amount: Number(finalVat).toFixed(2),
         product_name: productObj?.productName || productObj?.product_name_en || '',
         product_name_lc: productObj?.productNameLc || productObj?.product_name_lc || '',
         unit: productObj?.unit || '',
@@ -1351,11 +1371,7 @@ function OrderDetails() {
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
     console.log('Selected customer:', customer);
-    // Ensure the pricing policy is one of the allowed options and never undefined
-    let customerPricingPolicy = customer.pricingPolicy;
-    if (!pricingPolicyOptions.includes(customerPricingPolicy)) {
-      customerPricingPolicy = '';
-    }
+
     // Handle assignedToEntityWise which could be an object or a JSON string
     let assignedToEntityWise = {};
     if (customer.assignedToEntityWise) {
@@ -1374,6 +1390,29 @@ function OrderDetails() {
       }
     }
 
+    // Format the current user's employee ID to match the format in assignedToEntityWise
+    const currentEmployeeId = formatEmployeeId(user?.employeeId);
+    console.log('Current formatted employee ID:', currentEmployeeId);
+
+    const userAllowedEntities = [];
+    if (currentEmployeeId && assignedToEntityWise) {
+      // Find entities where this employee is assigned
+      Object.entries(assignedToEntityWise).forEach(([entity, empId]) => {
+        if (empId === currentEmployeeId) {
+          userAllowedEntities.push(entity);
+        }
+      });
+    }
+
+    console.log('User allowed entities:', userAllowedEntities);
+    setAllowedEntities(userAllowedEntities);
+
+    // Ensure the pricing policy is one of the allowed options and never undefined
+    let customerPricingPolicy = customer.pricingPolicy;
+    if (!pricingPolicyOptions.includes(customerPricingPolicy)) {
+      customerPricingPolicy = '';
+    }
+
     setCompanyType(customer.companyType || (customer.data && customer.data.companyType) || '');
     setFormData(prev => ({
       ...prev,
@@ -1387,6 +1426,7 @@ function OrderDetails() {
       assignedToEntityWise: assignedToEntityWise,
       customerRegion: customer.region || ''
     }));
+
     setShowCustomerPopup(false);
   };
   // Handle branch selection
@@ -1404,6 +1444,19 @@ function OrderDetails() {
     }));
     console.log('Updated form data with branch information');
     setShowBranchPopup(false);
+  };
+
+  // Add this to your state declarations section near the top of the component
+  const [allowedEntities, setAllowedEntities] = useState([]);
+
+  // Add this function inside the OrderDetails component, before the return statement
+  // Function to format employee ID to match assignedToEntityWise format
+  const formatEmployeeId = (id) => {
+    if (!id) return '';
+    // If it already has the format emp_XXXX, return as is
+    if (typeof id === 'string' && id.startsWith('emp_')) return id;
+    // Otherwise, add the prefix
+    return `emp_${id}`;
   };
 
   // Add this to your existing state declarations
@@ -1447,7 +1500,7 @@ function OrderDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Function to handle Product Stock Availability
-  const handleStack = async (productId, productName) => {
+  const handleStock = async (productId, productName) => {
     try {
       setInventoryLoading(true);
       const { data } = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
@@ -1531,7 +1584,7 @@ function OrderDetails() {
                 cursor: 'pointer'
               }}
               title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-              onClick={() => handleStack(row.id, i18n.language === 'ar'
+              onClick={() => handleStock(row.id, i18n.language === 'ar'
                 ? (row.productNameLc || row.product_name_lc || row.productName)
                 : (row.productName || row.product_name_en || row.productNameLc))
                 // Swal.fire({
@@ -1706,6 +1759,15 @@ function OrderDetails() {
 
   // Calculate totalAmount as the sum of netAmount of all products
   useEffect(() => {
+    // If it's a sample order, always set totalAmount to 0.00
+    if (sampleMode || formData.sample_order) {
+      if (formData.totalAmount !== '0.00') {
+        setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
+      }
+      return;
+    }
+
+    // For non-sample orders, calculate the total as before
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       const total = formData.products.reduce((sum, p) => {
         const net = parseFloat(p.netAmount) || 0;
@@ -1717,11 +1779,11 @@ function OrderDetails() {
     } else if (formData.totalAmount !== '0.00') {
       setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
     }
-  }, [formData.products, formData.totalAmount, formData.deliveryCharges]);
+  }, [formData.products, formData.totalAmount, formData.deliveryCharges, sampleMode, formData.sample_order]);
 
   // Calculate deliveryCharges and totalAmount based on entity and products
   useEffect(() => {
-    if (sampleMode) {
+    if (sampleMode || formData.sample_order) {
       // In sample mode, delivery charges and total amount are always 0
       setFormData(prev => ({
         ...prev,
@@ -1752,7 +1814,7 @@ function OrderDetails() {
         totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
       }));
     }
-  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount, sampleMode]);
+  }, [formData.products, formData.entity, formData.deliveryCharges, formData.totalAmount, sampleMode, formData.sample_order]);
 
   // Set payment percentage based on category
   useEffect(() => {
@@ -2380,16 +2442,30 @@ function OrderDetails() {
                           <select
                             name="entity"
                             value={formData.entity || ''}
+                            onClick={handleEntityChange}
                             onChange={handleInputChange}
                             className="entity-dropdown"
                             disabled={!isE('entity') || (formData.products && formData.products.length > 0)}
                           >
                             <option value="">{t('Select Entity')}</option>
-                            {entityOptions.map((entity, index) => (
-                              <option key={index} value={entity}>
-                                {t(entity)}
-                              </option>
-                            ))}
+                            {entityOptions.map((entity, index) => {
+                              // Check if this entity is in the allowed list (case-insensitive)
+                              const isEntityAllowed = allowedEntities.length === 0 ||
+                                allowedEntities.some(allowedEntity =>
+                                  allowedEntity.toLowerCase() === entity.toLowerCase()
+                                );
+
+                              return (
+                                <option
+                                  key={index}
+                                  value={entity}
+                                  disabled={!isEntityAllowed}
+                                  style={!isEntityAllowed ? { color: '#aaa', backgroundColor: '#f5f5f5' } : {}}
+                                >
+                                  {t(entity)}
+                                </option>
+                              );
+                            })}
                           </select>
                         ) : (
                           <input
@@ -2814,6 +2890,14 @@ function OrderDetails() {
                 onSelectCustomer={handleSelectCustomer}
                 API_BASE_URL={API_BASE_URL}
                 t={t}
+                apiEndpoint="/customers/pagination"
+                apiParams={{
+                  page: 1,
+                  pageSize: 10,
+                  sortBy: 'id',
+                  sortOrder: 'asc',
+                  purpose: 'order creation'
+                }}
               />
             )}
 
