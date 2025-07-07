@@ -465,14 +465,7 @@ function SupportDetails() {
     }
   };
 
-  // Fetch employees on component mount
-
-  // Toggle edit mode
-  const toggleEditMode = () => {
-    setIsEditing(!isEditing);
-  };
-
-  const handleCancel = async () => {
+    const handleCancel = async () => {
     if (formMode === "add") {
       // In add mode, just reload the page
       for (let file of images) {
@@ -572,24 +565,6 @@ function SupportDetails() {
   // Open file dialog
   const openFileDialog = () => {
     if (fileInputRef.current) fileInputRef.current.click();
-  };
-
-  // Handle video add
-  const handleAddVideo = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setVideos((prev) => [...prev, {
-          dataUrl: ev.target.result,
-          originalName: file.name,
-          fileName: file.name
-        }]);
-      };
-      reader.readAsDataURL(file);
-    }
-    // Reset input so same file can be selected again if needed
-    e.target.value = "";
   };
 
   // Open file dialog for videos
@@ -811,11 +786,6 @@ function SupportDetails() {
 
       setSaving(true);
 
-      // Only update the status field, not the entire ticket
-      const ticketData = {
-        status: "Closed"
-      };
-
       const endPoint = `/grievances/id/${ticket.id}`;
       const apiUrl = `${API_BASE_URL}${endPoint}`;
 
@@ -823,7 +793,7 @@ function SupportDetails() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(ticketData),
+        body: JSON.stringify({ status: "Closed" }),
       });
 
       if (!response.ok) {
@@ -865,97 +835,6 @@ function SupportDetails() {
     } finally {
       setClosing(false); // End closing
     }
-  };
-
-  // Function to upload files and update attachment field
-  const uploadFilesAndUpdateAttachment = async (ticketId) => {
-    try {
-      // Only upload new files (not existing ones)
-      const newImages = images.filter(img => !img.isExisting);
-      const newVideos = videos.filter(vid => !vid.isExisting);
-
-      if (newImages.length === 0 && newVideos.length === 0) {
-        console.log('No new files to upload');
-        return;
-      }
-
-      // Create array of all files to upload
-      const filesToUpload = [];
-
-      newImages.forEach(imageData => {
-        const imageFile = dataURLtoFile(imageData.dataUrl, imageData.fileName);
-        filesToUpload.push(imageFile);
-      });
-
-      newVideos.forEach(videoData => {
-        const videoFile = dataURLtoFile(videoData.dataUrl, videoData.fileName);
-        filesToUpload.push(videoFile);
-      });
-
-      // Upload all files in one request
-      if (filesToUpload.length > 0) {
-        const formData = new FormData();
-        filesToUpload.forEach(file => {
-          formData.append('file', file);
-        });
-        formData.append('fileType', 'attachment');
-
-        const uploadResponse = await fetch(`${API_BASE_URL}/grievances/${ticketId}/file`, {
-          method: "PATCH",
-          credentials: "include",
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload files');
-        }
-
-        const uploadResult = await uploadResponse.json();
-        console.log('Files uploaded successfully:', uploadResult);
-      }
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      throw error;
-    }
-  };
-
-  // Function to upload individual file to backend
-  const uploadFileToBackend = async (ticketId, file, fileType) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileType', fileType);
-
-      const uploadResponse = await fetch(`${API_BASE_URL}/grievances/${ticketId}/file`, {
-        method: "PATCH",
-        credentials: "include",
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error(`Failed to upload ${file.name}`);
-      }
-
-      const uploadResult = await uploadResponse.json();
-      console.log(`File ${file.name} uploaded successfully`);
-      return uploadResult.fileName;
-    } catch (error) {
-      console.error(`Error uploading file ${file.name}:`, error);
-      return null;
-    }
-  };
-
-  // Helper function to convert data URL to File object
-  const dataURLtoFile = (dataurl, filename) => {
-    const arr = dataurl.split(',');
-    const mime = arr[0].match(/:(.*?);/)[1];
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
   };
 
   // Add comment to ticket.comments in correct format and save to backend immediately
@@ -1047,14 +926,6 @@ function SupportDetails() {
       console.log('Fetching employees for department:', department);
       fetchEmployees(department);
     }
-  };
-
-  // Handle image removal
-
-
-  // Handle video removal
-  const handleRemoveVideo = (indexToRemove) => {
-    setVideos(videos.filter((_, index) => index !== indexToRemove));
   };
 
   return (
@@ -1242,7 +1113,7 @@ function SupportDetails() {
                     options={departments}
                     value={selectedDepartment || ""}
                     onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
-                    disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status !== "New")}
+                    disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status === "Closed")}
                     placeholder={t('Select Department')}
                   />
                 </div>
@@ -1255,7 +1126,7 @@ function SupportDetails() {
                     options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                     value={ticket.assignedTeamMember || ""}
                     onChange={handleInputChange}
-                    disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status !== "New")}
+                    disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status === "Closed")}
                     placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
                   />
                 </div>
