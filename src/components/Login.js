@@ -51,7 +51,12 @@ function Login({ title, userType }) {
             setError('Email or password is invalid')
             return;
         }
-        navigate('/catalog');
+        if(data?.data?.customerStatus === "new") {
+            navigate('/customerDetails', { state: { customerId: data?.data?.customerId, mode: 'add' } });
+        } else {
+            navigate('/catalog');
+        }
+
         setMessage(data.message);
         setError('');
 

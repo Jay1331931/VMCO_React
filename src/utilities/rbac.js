@@ -688,6 +688,8 @@ class RbacManager {
           btnSave: { visible: true, editable: true },
           btnBlock: { visible: false, editable: true },
           btnUnblock: { visible: false, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
           customerSource: { visible: false, editable: true },
           deliveryCost: { visible: false, editable: true },
           btnBranchSave: { visible: true, editable: true },
@@ -705,6 +707,7 @@ class RbacManager {
           [constants.ENTITY.GMTC]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
+          btnSelectItems: { visible: true, editable: true },
           customerApprovalChecklist: { visible: false, editable: true },
           'Download terms & conditions and upload duly signed document': { visible: true, editable: true },
           'Price Plan': { visible: false, editable: false }
@@ -787,7 +790,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: false, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1065,7 +1068,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: false, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1239,9 +1242,18 @@ class RbacManager {
           [constants.ENTITY.GMTC]: { visible: false, editable: true },
           isDeliveryChargesApplicable: { visible: false, editable: true },
           btnApplyAll: { visible: false, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           customerApprovalChecklist: { visible: false, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: true, editable: true }
-
+          "Download terms & conditions and upload duly signed document": {
+            visible: true,
+            editable: true,
+          },
+          businessDetailsTab: {visible: false, editable: false},
+          contactDetailsTab: {visible: false, editable: false},
+          financialInformationTab: {visible: false, editable: false},
+          documentsTab: {visible: false, editable: false},
+          productsTab: {visible: false, editable: false},
+          
         },
       },
       custDetailsEdit: {
@@ -1461,7 +1473,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -1663,6 +1675,7 @@ class RbacManager {
           pricingPolicyGMTC: { visible: true, editable: true },
           pricingPolicyVMCO: { visible: true, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: true, editable: true },
           customerApprovalChecklist: { visible: true, editable: true },
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
 
@@ -1888,7 +1901,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2074,6 +2087,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -2351,6 +2365,8 @@ class RbacManager {
           creditPeriod: { visible: true, editable: true },
           btnSave: { visible: false, editable: true },
           btnSubmit: { visible: false, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
           pricingPolicy: { visible: true, editable: true },
           pricingPolicySHC: { visible: true, editable: true },
           pricingPolicyDAR: { visible: true, editable: true },
@@ -2366,6 +2382,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -2433,6 +2450,7 @@ class RbacManager {
           credit: { visible: true, editable: true },
           creditLimit: { visible: true, editable: true },
           creditPeriod: { visible: true, editable: true },
+          btnSave: { visible: false, editable: true },
           btnBlock: { visible: false, editable: true },
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
@@ -2469,7 +2487,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2750,7 +2768,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -2937,6 +2955,8 @@ class RbacManager {
           btnBlock: { visible: true, editable: true },
           btnUnblock: { visible: true, editable: true },
           btnSubmit: { visible: false, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
           btnBranchSave: { visible: false, editable: true },
           btnBranchSaveChanges: { visible: true, editable: true },
           btnBranchBlock: { visible: false, editable: true },
@@ -2946,6 +2966,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -3186,7 +3207,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -3382,6 +3403,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -3599,7 +3621,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -4069,6 +4091,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -4472,6 +4495,7 @@ class RbacManager {
           btnBranchReject: { visible: false, editable: true },
           btnBranchAdd: { visible: false, editable: true },
           btnApplyAll: { visible: true, editable: true },
+          btnSelectItems: { visible: false, editable: true },
           [constants.ENTITY.VMCO]: { visible: true, editable: true },
           [constants.ENTITY.DIYAFA]: { visible: true, editable: true },
           [constants.ENTITY.DAR]: { visible: true, editable: true },
@@ -4665,7 +4689,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -4927,7 +4951,7 @@ class RbacManager {
           issueTypeCol: { visible: true, editable: true },
           createdDateCol: { visible: true, editable: true },
           assignedToCol: { visible: true, editable: true },
-          statusCol: { visible: true, editable: true }
+          statusCol: { visible: true, editable: true },
         },
       },
       supDetailAdd: {
@@ -5512,7 +5536,8 @@ class RbacManager {
    * @returns {object|undefined} The access definition object or undefined if not found
    */
   getFieldAccess(field) {
-    return RbacManager.roleformfieldmap?.[this.currentRole]?.[this.currentForm]?.fields?.[field];
+    return RbacManager.roleformfieldmap?.[this.currentRole]?.[this.currentForm]
+      ?.fields?.[field];
   }
 
   /**
@@ -5524,7 +5549,12 @@ class RbacManager {
     //console.log(field)
     const access = this.getFieldAccess(field);
     return (
-      (access == null ? true : access.visible) && (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true)
+      (access == null ? true : access.visible) &&
+      (approvalWF == true && fieldInWF == true
+        ? true
+        : approvalWF == true && fieldInWF == false
+        ? false
+        : true)
     );
   }
 
@@ -5546,7 +5576,11 @@ class RbacManager {
     return (
       (access == null ? true : access.editable) &&
       (this.itemInWF == null ? true : this.isUserOwner) &&
-      (approvalWF == true && fieldInWF == true ? true : approvalWF == true && fieldInWF == false ? false : true)
+      (approvalWF == true && fieldInWF == true
+        ? true
+        : approvalWF == true && fieldInWF == false
+        ? false
+        : true)
     );
   }
 }

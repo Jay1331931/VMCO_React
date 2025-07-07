@@ -14,6 +14,7 @@ import { getFinancialInformationForm } from "./customerDetailsForms/customerFina
 import { getDocumentsForm } from "./customerDetailsForms/customerDocuments";
 import CustomerProducts from "./customerDetailsForms/customerProducts";
 import CustomerBranches from "./customerDetailsForms/customerBranches2";
+import BusinessDetails from "./customerDetailsForms/businessDetails";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXmark,
@@ -34,7 +35,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import { useCustomer } from "../context/CustomerContext";
 import Constants from "../constants";
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
@@ -2957,10 +2957,10 @@ function CustomersDetails() {
                                     </div>
                                   )}
                                   {/* {console.log(field.name)}
-              {console.log(isV(field.name))}
-              {console.log(isE(field.name))}
-              {console.log("customer",customer)}
-              {console.log("formdata",formData)} */}
+                 {console.log(isV(field.name))}
+                 {console.log(isE(field.name))}
+                  {console.log("customer",customer)}
+                 {console.log("formdata",formData)} */}
                                   {/* {console.log("customer", customer)} */}
                                   {console.log(formErrors)}
                                 </>

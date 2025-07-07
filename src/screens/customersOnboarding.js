@@ -53,7 +53,7 @@ function CustomersOnboarding() {
       name: "otp",
       label: t("OTP"),
       placeholder: t("Enter OTP"),
-      required: true,
+      required: false,
     },
     {   type: "empty" ,"name": "empty" },
    
@@ -180,44 +180,43 @@ function CustomersOnboarding() {
     } catch (err) {
       console.error("Error fetching manager:", err);
     }
-  };
-  const getOptionsFromBasicsMaster = async (fieldName) => {
-    const params = new URLSearchParams({
-      filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
-    });
-
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/basics-masters?${params.toString()}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+  }
+const getOptionsFromBasicsMaster = async (fieldName) => {
+      const params = new URLSearchParams({
+        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
+      });
+  
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/basics-masters?${params.toString()}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+  
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+  
+        const result = await response.json(); // Don't forget 'await' here
+  
+        const options = result.data.map(item => item.value).map(opt => opt.charAt(0).toUpperCase() + opt.slice(1));
+         
+        return options;
+  
+      } catch (err) {
+        console.error('Error fetching options:', err);
+        return []; // Return empty array on error
       }
-
-      const result = await response.json(); // Don't forget 'await' here
-
-      const options = result.data.map((item) => item.value);
-      return options;
-    } catch (err) {
-      console.error("Error fetching options:", err);
-      return []; // Return empty array on error
-    }
-  };
-  useEffect(() => {
-    // Fetch region options on mount
-    getOptionsFromBasicsMaster("region").then(setRegionOptions);
-  }, []);
+    };
+    useEffect(() => {
+        // Fetch region options on mount
+        getOptionsFromBasicsMaster('region').then(setRegionOptions);
+    }, []);
 
   const validateForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^[0-9]{10,15}$/;
+    const phoneRegex = /^(00966|966|\+966|0)?5\d{8}$/;
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -230,19 +229,19 @@ function CustomersOnboarding() {
 
     // Only proceed with additional validation if fields are filled
     if (
-      !newErrors.email &&
-      formData.email &&
-      !emailRegex.test(formData.email)
+      !newErrors.companyEmail &&
+      formData.companyEmail &&
+      !emailRegex.test(formData.companyEmail)
     ) {
-      newErrors.email = t("Please enter a valid email address");
+      newErrors.companyEmail = t("Please enter a valid email address");
     }
 
     if (
-      !newErrors.phoneNumber &&
-      formData.phoneNumber &&
-      !phoneRegex.test(formData.phoneNumber)
+      !newErrors.companyPhone &&
+      formData.companyPhone &&
+      !phoneRegex.test(formData.companyPhone)
     ) {
-      newErrors.phoneNumber = t("Please enter a valid phone number");
+      newErrors.companyPhone = t("Please enter a valid phone number");
     }
 
     if (!newErrors.password && formData.password) {
@@ -277,6 +276,9 @@ function CustomersOnboarding() {
     });
   };
 
+  const handleLogin = () => {
+    navigate("/login");
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     if(!isOtpVerify)
@@ -336,7 +338,7 @@ function CustomersOnboarding() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 companyNameEn: formData.companyName,
-                region: formData.region,
+                region: formData.region.toLowerCase(),
                 customerStatus: "new",
                 pricingPolicy: {
                   [constants.ENTITY.VMCO]: "price A",
@@ -364,150 +366,121 @@ function CustomersOnboarding() {
           const contactTypesPrimary = ["primary"];
           const contactTypes = ["finance", "business", "purchasing"];
 
-          contactTypesPrimary.forEach(async (type) => {
-            const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                customerId: result.data.id,
-                contactType: type,
-                email: formData.companyEmail,
-                name: formData.leadName,
-                mobile: formData.companyPhone,
-              }),
-              credentials: "include",
-            });
-          });
+                    contactTypesPrimary.forEach(async (type) => {
+                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                customerId: result.data.id,
+                                contactType: type,
+                                email: formData.companyEmail,
+                                name: formData.leadName,
+                                mobile: formData.companyPhone
+                            }),
+                            credentials: 'include',
+                        });
+                    });
 
-          contactTypes.forEach(async (type) => {
-            const res = await fetch(`${API_BASE_URL}/customer-contacts`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                customerId: result.data.id,
-                contactType: type,
-              }),
-              credentials: "include",
-            });
-          });
+                    contactTypes.forEach(async (type) => {
 
-          const res = await fetch(`${API_BASE_URL}/payment-method`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              customerId: result.data.id,
-              methodDetails: {
-                prePayment: { isAllowed: true },
-                COD: { isAllowed: true, limit: "5000" },
-                credit: {
-                  [constants.ENTITY.VMCO]: {
-                    isAllowed: false,
-                    limit: "0",
-                    period: "0",
-                    balance: "0",
-                  },
-                  [constants.ENTITY.SHC]: {
-                    isAllowed: false,
-                    limit: "0",
-                    period: "0",
-                    balance: "0",
-                  },
-                  [constants.ENTITY.DAR]: {
-                    isAllowed: false,
-                    limit: "0",
-                    period: "0",
-                    balance: "0",
-                  },
-                  [constants.ENTITY.NAQI]: {
-                    isAllowed: false,
-                    limit: "0",
-                    period: "0",
-                    balance: "0",
-                  },
-                  [constants.ENTITY.GMTC]: {
-                    isAllowed: false,
-                    limit: "0",
-                    period: "0",
-                    balance: "0",
-                  },
-                },
-                partialPayment: { isAllowed: true },
-              },
-            }),
-            credentials: "include",
-          });
-        } catch (error) {
-          console.error("Error during registration:", error);
-        }
-        if (id) {
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/auth/registration/staging/id/${id}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  ...stagingData,
-                  registered: true,
-                }),
-                credentials: "include",
-              }
-            );
-            const result = await response.json();
-            console.log(result);
-            if (result.status === "Ok") {
-              setIsRegistered(true);
+                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                customerId: result.data.id,
+                                contactType: type,
+                            }),
+                            credentials: 'include',
+                        });
+                    });
+
+                    const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            customerId: result.data.id,
+                            methodDetails: { 
+                                prePayment: { isAllowed: true }, 
+                                COD: { isAllowed: true, limit: "5000" }, 
+                                credit: { 
+                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                            }, 
+                            // partialPayment: { isAllowed: true } 
+                        },
+                        }),
+                        credentials: 'include',
+                    });
+                } catch (error) {
+                    console.error('Error during registration:', error);
+                }
+                if (id) {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging/id/${id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...stagingData,
+                                registered: true
+                            }),
+                            credentials: 'include',
+                        });
+                        const result = await response.json();
+                        console.log(result);
+                        if (result.status === "Ok") {
+                            setIsRegistered(true);
+                        }
+                        navigate('/login');
+                    } catch (error) {
+                        console.error('Error during registration:', error);
+                    }
+                } else {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                ...stagingData,
+                                registered: true,
+                                source: 'portal',
+                            }),
+                            credentials: 'include',
+                        });
+                        const result = await response.json();
+                        console.log(result);
+                        navigate('/login');
+                    } catch (error) {
+                        console.error('Error during registration:', error);
+                    }
+                }
+
             }
-            navigate("/login");
-          } catch (error) {
-            console.error("Error during registration:", error);
-          }
-        } else {
-          try {
-            const response = await fetch(
-              `${API_BASE_URL}/auth/registration/staging`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  ...stagingData,
-                  registered: true,
-                  source: "portal",
-                }),
-                credentials: "include",
-              }
-            );
-            const result = await response.json();
-            console.log(result);
-            navigate("/login");
-          } catch (error) {
-            console.error("Error during registration:", error);
-          }
         }
-      }
-    }
-    if (isSubmitting) {
-      try {
-        console.log("Form submitted:", formData);
-        // Reset form after successful submission
-        setFormData({
-          leadName: "",
-          companyEmail: "",
-          companyPhone: "",
-          companyName: "",
-          region: "",
-          password: "",
-          confirmpassword: "",
-        });
-        setErrors({});
-        setIsSubmitting(false);
-      } catch (error) {
-        console.error("Submission error:", error);
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
-  };
+        if (isSubmitting) {
+            try {
+                console.log('Form submitted:', formData);
+                // Reset form after successful submission
+                setFormData({
+                    leadName: '',
+                    companyEmail: '',
+                    companyPhone: '',
+                    companyName: '',
+                    region: '',
+                    password: '',
+                    confirmpassword: ''
+                });
+                setErrors({});
+                setIsSubmitting(false);
+            } catch (error) {
+                console.error('Submission error:', error);
+            } finally {
+                setIsSubmitting(false);
+            }
+        }
+    };
 
   const handleOtp = async (type, email,otpType) => {
     const Reqbody = {};
@@ -750,13 +723,21 @@ function CustomersOnboarding() {
             )})}
           </form>
           <div className="onboarding-footer">
-            <button
+          <button
               type="submit"
               className="login-button"
               disabled={isSubmitting}
               onClick={handleSubmit}
             >
               {t("Submit")}
+            </button>
+            <button
+              type="submit"
+              className="login-button"
+              disabled={isSubmitting}
+              onClick={handleLogin}
+            >
+              {t("Login")}
             </button>
           </div>
         </div>

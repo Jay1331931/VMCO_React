@@ -72,16 +72,12 @@ function Sidebar({ children, title }) {
     }, {});
     let isApprovalMode;
     try {
-      const res = fetch(
-        `${API_BASE_URL}/workflow-instance/check/id/${
-          transformedCustomer?.id
-        }/module/${"customer"}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        }
-      );
+      const res = fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: customer?.id, module: "customer" }),
+        credentials: "include",
+      });
       if (res.ok) {
         isApprovalMode = true;
       }
@@ -340,19 +336,21 @@ function Sidebar({ children, title }) {
         navigate("/login");
         break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
-      case "Company":
-        try {
-          const customerData = await fetchApprovedCustomer(user);
-          navigate("/customersDetails", {
-            state: {
-              transformedCustomer: JSON.parse(JSON.stringify(customerData)),
-            },
-          });
-        } catch (err) {
-          console.error("Failed to fetch customer:", err);
-          // Handle error (e.g., show toast notification)
-        }
-        break;
+      case 'Company': 
+      try {
+        const customerData = await fetchApprovedCustomer(user);
+        // navigate('/customersDetails', { 
+        //   state: { 
+        //     transformedCustomer: JSON.parse(JSON.stringify(customerData)) 
+        //   }
+        // });
+        navigate('/customerDetails', {
+          state: { customerId: customerData?.id, workflowId: customerData?.workflowInstanceId, mode: 'add' }
+        });
+      } catch (err) {
+        console.error("Failed to fetch customer:", err);
+      }
+      break;
       default:
         // If no match is found, stay on current page
         break;
