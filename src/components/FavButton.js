@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdFavoriteBorder, MdFavorite } from "react-icons/md";
 
 const FavoritesButton = ({ initialState = false, onToggle = null }) => {
     const [isFavorite, setIsFavorite] = useState(initialState);
+    
+    // Update when initialState changes (for example when the product changes)
+    useEffect(() => {
+        setIsFavorite(initialState);
+    }, [initialState]);
     
     const styles = {
         favoriteBtn: {
@@ -12,13 +17,20 @@ const FavoritesButton = ({ initialState = false, onToggle = null }) => {
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            zIndex: 2,
+            zIndex: 10,  // Ensure high z-index
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            padding: '5px',
+            padding: '5px',  // Slightly larger padding
             borderRadius: '50%',
-            transition: 'background-color 0.2s'
+            transition: 'transform 0.2s, background-color 0.2s',
+            opacity: 1,  // Ensure it's fully visible
+            visibility: 'visible',  // Explicitly set visibility
+            ':hover': {
+                transform: 'scale(1.1)',
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',  // Add subtle shadow
+            }
         },
         favoriteIcon: {
             fontSize: '24px',
