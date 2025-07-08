@@ -193,6 +193,7 @@ function OrderDetails() {
         ...product,
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
+        isMachine: product.isMachine,
         quantity: product.quantity,
       }));
 
@@ -247,6 +248,7 @@ function OrderDetails() {
             ...product,
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
+            isMachine: product.isMachine,
             quantity: product.quantity,
           }));
 
@@ -479,6 +481,7 @@ function OrderDetails() {
           const productId = product.id || product.productId;
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
+          const isMachine = product.isMachine;
           const netAmount = parseFloat(product.netAmount);
           //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
           const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -861,6 +864,7 @@ function OrderDetails() {
             product_name: product.productName || product.product_name_en,
             product_name_lc: product.productNameLc || product.product_name_lc || '', // <-- post productNameLc
             erp_prod_id: product.erpProdId || product.erp_prod_id || '',
+            isMachine: product.is_machine,
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || '',
             unit_price: parseFloat(product.unitPrice),
@@ -1112,23 +1116,23 @@ function OrderDetails() {
   };
 
   const handleEntityChange = (e) => {
-  // Check if customer is selected
-  if (!formData.customerId && !formData.selectedCustomerName) {
-    // No customer selected, show alert
-    Swal.fire({
-      icon: 'warning',
-      title: t('Select Customer First'),
-      text: t('Please select a customer before choosing an entity.'),
-      confirmButtonText: t('OK')
-    });
-    // Reset the dropdown to empty value
-    e.target.value = '';
-    return;
-  }
-  
-  // Customer is selected, proceed with normal input handling
-  handleInputChange(e);
-};
+    // Check if customer is selected
+    if (!formData.customerId && !formData.selectedCustomerName) {
+      // No customer selected, show alert
+      Swal.fire({
+        icon: 'warning',
+        title: t('Select Customer First'),
+        text: t('Please select a customer before choosing an entity.'),
+        confirmButtonText: t('OK')
+      });
+      // Reset the dropdown to empty value
+      e.target.value = '';
+      return;
+    }
+
+    // Customer is selected, proceed with normal input handling
+    handleInputChange(e);
+  };
 
   // Function to update product prices when pricing policy changes
   const updateProductPricesForPricingPolicy = async (pricingPolicy) => {
@@ -1158,6 +1162,7 @@ function OrderDetails() {
           if (result.status === 'Ok' && result.data) {
             // Update product with new price information
             const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
+            const isMachine = result.data.isMachine || product.isMachine;
             const quantity = parseInt(product.quantity, 10);
             //const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
@@ -1571,35 +1576,32 @@ function OrderDetails() {
               }
             }}
           />
-          {isV('stock') && (<span>
-            <button
-              type="button"
-              style={{
-                background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
-                borderRadius: '4px',
-                fontSize: '12px',
-                padding: '2px 8px',
-                marginLeft: '6px',
-                marginRight: '6px',
-                cursor: 'pointer'
-              }}
-              title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-              onClick={() => handleStock(row.id, i18n.language === 'ar'
-                ? (row.productNameLc || row.product_name_lc || row.productName)
-                : (row.productName || row.product_name_en || row.productNameLc))
-                // Swal.fire({
-                //   title: t('Stock Information'),
-                //   text: t(`Showing stock for ${row.productName || row.id}`),
-                //   icon: 'info',
-                //   confirmButtonText: t('OK')
-
-                //   //  alert(`Show stock for ${row.productName || row.id}`)
-                // })
-              }
-            >
-              {t('Stock')}
-            </button>
-          </span>)}
+          {isV('stock') &&
+            formData.entity &&
+            formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+            row.isMachine === true && (
+              <span>
+                <button
+                  type="button"
+                  style={{
+                    background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    padding: '2px 8px',
+                    marginLeft: '6px',
+                    marginRight: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+                  onClick={() => handleStock(row.id, i18n.language === 'ar'
+                    ? (row.productNameLc || row.product_name_lc || row.productName)
+                    : (row.productName || row.product_name_en || row.productNameLc))
+                  }
+                >
+                  {t('Stock')}
+                </button>
+              </span>
+            )}
           {InventoryLoading && <LoadingSpinner />}
         </div>
       ),
@@ -1860,6 +1862,7 @@ function OrderDetails() {
             ...product,
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
+            isMachine: product.isMachine,
             quantity: product.quantity,
           }));
 
@@ -2040,6 +2043,7 @@ function OrderDetails() {
           for (const product of formData.products) {
             const productId = product.id || product.product_id;
             const unitPrice = parseFloat(product.unitPrice);
+            const isMachine = product.isMachine;
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -2078,6 +2082,7 @@ function OrderDetails() {
                   productId: productId,
                   productName: product.productName || product.product_name_en || '',
                   productNameLc: product.productNameLc || product.product_name_lc || '',
+                  isMachine: product.isMachine,
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
@@ -2251,6 +2256,7 @@ function OrderDetails() {
         ...product,
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
+        isMachine: product.isMachine,
         quantity: product.quantity,
       }));
 
