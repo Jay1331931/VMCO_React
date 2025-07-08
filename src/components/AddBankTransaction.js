@@ -55,8 +55,8 @@ const AddBankTransaction = () => {
 
     for (let file of files) {
       //file Size less than 30MB
-      if (file.size > 30 * 1024 * 1024) {
-        setError(t("File size exceeds 30MB limit"));
+      if (file.size > 10 * 1024 * 1024) {
+        setError(t("File size exceeds 10MB limit"));
         continue;
       }
       const formDataUpload = new FormData();
