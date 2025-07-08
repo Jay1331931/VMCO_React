@@ -333,11 +333,8 @@ function OrderDetails() {
       showCancelButton: true,
       confirmButtonText: t('OK')
     })
+  };
 
-    // alert(`Downloading invoice for order ID: ${orderId}`);
-    // Implement download logic here
-  };  // Handle saving order with special rules:  // 1. Prevent editing existing orders with Pre Payment method
-  // 2. Skip existing order check when creating new orders with Pre Payment method
   const handleSave = async (action, selectedMethod) => {
     // Prevent EDITING if payment method is Pre Payment (only applies to existing orders)
     if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
@@ -358,20 +355,15 @@ function OrderDetails() {
     const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
 
     if (isVmcoMachinesCategory && formMode === 'add') {
-      // Set payment method to Pre Payment for VMCO Machines
-      selectedMethod = 'Pre Payment';
-    }    // Only show popup in add mode and if payment method is not selected and not VMCO Machines
-    if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
-      // Check if credit payment is allowed for the customer
-      const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId);
+       selectedMethod = 'Pre Payment';
+    }  
+     if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
+       const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId);
 
       if (isCreditAllowed) {
-        // Automatically select credit payment method
-        console.log('Auto-selecting Credit payment method as it is allowed for customer');
-        selectedMethod = 'Credit';
-        // Continue with save using Credit payment method
+       console.log('Auto-selecting Credit payment method as it is allowed for customer');
+       selectedMethod = 'Credit';
       } else {
-        // Show payment popup for manual selection
         setPendingSaveAction(action);
         setShowPaymentPopup(true);
         setSaving(false);
@@ -638,7 +630,7 @@ function OrderDetails() {
     }
     console.log('Starting order creation process with data:', {
       customerId: formData.customerId,
-      branchId: formData.erpBranchId,
+      branchId: formData.branchId,
       entity: formData.entity,
       category: formData.category,
       paymentMethod: selectedMethod || formData.paymentMethod
@@ -764,7 +756,8 @@ function OrderDetails() {
         erpBranchId: formData.erpBranchId || '',
         branchNameEn: formData.branchNameEn || '', // Always use value from formData      
         branchNameLc: formData.branchNameLc || '', // Always use value from formData        
-        branchRegion: formData.branchRegion || '', // Include branch region        
+        branchRegion: formData.branchRegion || '', // Include branch region
+        branchCity: formData.branchCity || '', // Include branch city        
         orderBy: orderByName, // <-- Use fetched employee name here
         paymentMethod: formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
           ? 'Pre Payment'
@@ -864,7 +857,7 @@ function OrderDetails() {
             product_name: product.productName || product.product_name_en,
             product_name_lc: product.productNameLc || product.product_name_lc || '', // <-- post productNameLc
             erp_prod_id: product.erpProdId || product.erp_prod_id || '',
-            isMachine: product.is_machine,
+            is_machine: product.isMachine || product.is_machine,
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || '',
             unit_price: parseFloat(product.unitPrice),
@@ -873,7 +866,8 @@ function OrderDetails() {
           };
         });
 
-        console.log('Submitting products payload:', productsPayload); if (productsPayload.length === 0) {
+        console.log('Submitting products payload:', productsPayload); 
+        if (productsPayload.length === 0) {
           console.warn('No valid products to submit');
           Swal.fire({
             icon: 'info',
@@ -894,6 +888,7 @@ function OrderDetails() {
 
         console.log(`Prepared ${productsPayload.length} product line items for submission`); try {
           console.log('Making API call to create sales order line items');
+         // productsPayload[0].is_machine=true
           const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1275,6 +1270,7 @@ function OrderDetails() {
       const payload = {
         order_id: orderId,
         product_id: productId,
+        isMachine: productObj?.isMachine || productObj?.is_machine,
         quantity: parseInt(quantity, 10),
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
@@ -1424,7 +1420,7 @@ function OrderDetails() {
       erpCustId: customer.erp_cust_id || customer.erpCustId || '', // Handle both property naming formats
       customerId: customer.id, // Use the database ID for the customer
       selectedCustomerName: i18n.language === 'ar' ? (customer.company_name_ar || customer.companyNameAr) : (customer.company_name_en || customer.companyNameEn),
-      pricingPolicy: customerPricingPolicy,
+      pricingPolicy: customer.pricingPolicy,
       companyNameEn: customer.company_name_en || customer.companyNameEn || '', // Set companyNameEn
       companyNameAr: customer.company_name_ar || customer.companyNameAr || '', // Set companyNameAr
       salesExecutive: customer.assignedToEntityWise,
@@ -1440,12 +1436,12 @@ function OrderDetails() {
     setFormData(prev => ({
       ...prev,
       branchId: branch.id, // Set branchId (important for API calls)
-      erpBranchId: branch.id, // Database branch ID
-      erpBranchIdValue: branch.erp_branch_id || branch.erpBranchId || '', // Store ERP branch ID
+      erpBranchId: branch.erp_branch_id || branch.erpBranchId,
       selectedBranchName: branch.branch_name_en || branch.branchNameEn || '',
       branchNameEn: branch.branch_name_en || branch.branchNameEn || '', // Set branchNameEn
       branchNameLc: branch.branch_name_lc || branch.branchNameLc || '', // Set branchNameLc
       branchRegion: branch.region, // Set branchRegion
+      branchCity: branch.city // Set branchCity
     }));
     console.log('Updated form data with branch information');
     setShowBranchPopup(false);
@@ -2082,7 +2078,7 @@ function OrderDetails() {
                   productId: productId,
                   productName: product.productName || product.product_name_en || '',
                   productNameLc: product.productNameLc || product.product_name_lc || '',
-                  isMachine: product.isMachine,
+                  isMachine: product.isMachine || product.is_machine,
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
