@@ -25,6 +25,7 @@ const ProductCard = ({
         'catalog'
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr); // <-- Add this line
 
     // Initialize with MOQ when product is loaded or changed
     useEffect(() => {
@@ -68,11 +69,12 @@ const ProductCard = ({
             style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
             dir={dir}
         >
-            {/* Use the FavButton component */}
-            <FavButton 
-                initialState={product.favorite || false}
-                onToggle={handleFavoriteToggle}
-            />
+            {isV('favoriteButton') && isE('favoriteButton') && (
+                <FavButton
+                    initialState={product.favorite || false}
+                    onToggle={handleFavoriteToggle}
+                />
+            )}
 
             <div className="product-image-container">
                 {product.image ? (
