@@ -168,7 +168,7 @@ function Maintenance() {
   };
 
   return (
-    <Sidebar title={t("Maintenance Support - Tickets")}>
+    <Sidebar title={t("Maintenance - Tickets")}>
       {isV('maintenanceContent') && (
         <div className='maintenance-content'>
           <div className='maintenance-header'>

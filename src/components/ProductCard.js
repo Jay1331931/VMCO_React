@@ -323,7 +323,7 @@ const ProductCard = ({
                 button[style*="position: absolute"] {
                   opacity: 1 !important;
                   visibility: visible !important;
-                  z-index: 10 !important;
+                  z-index: 8 !important;
                 }
             `}</style>
         </div>

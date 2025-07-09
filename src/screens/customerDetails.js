@@ -5,6 +5,7 @@ import "../styles/forms.css";
 import CommentPopup from "../components/commentPanel";
 import "../i18n";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import {
   getBusinessDetailsForm,
   getBusinessDetailsFormData,
@@ -786,7 +787,13 @@ function CustomerDetails() {
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         if (action !== "submit") {
-          alert("Please fix the errors before saving.");
+          Swal.fire({
+            title: t("Validation Error"),
+            text: t("Please fix the errors before saving."),
+            icon: "warning",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#3085d6"
+          });
         }
         return;
       }
@@ -808,7 +815,13 @@ function CustomerDetails() {
         setOriginalCustomerData(result.data);
       }
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer:", error.message);
       return false;
     }
@@ -829,7 +842,13 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer:", error.message);
       return false;
     }
@@ -848,11 +867,23 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer payment methods:", error.message);
       return false;
     }
-    alert("Customer data saved successfully.");
+    Swal.fire({
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      icon: "success",
+      confirmButtonText: t("OK"),
+      confirmButtonColor: "#28a745"
+    });
     return true;
   };
 
@@ -879,7 +910,13 @@ function CustomerDetails() {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please fix the errors before saving."),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
         return;
       }
 
@@ -897,7 +934,13 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer:", error.message);
     }
 
@@ -915,10 +958,22 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer payment methods:", error.message);
     }
-    alert("Customer data saved successfully.");
+    Swal.fire({
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      icon: "success",
+      confirmButtonText: t("OK"),
+      confirmButtonColor: "#28a745"
+    });
     window.location.reload();
   };
 
@@ -961,7 +1016,13 @@ function CustomerDetails() {
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please fix the errors before saving."),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
         return;
       }
       const response = await fetch(
@@ -1015,7 +1076,13 @@ function CustomerDetails() {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please fix the errors before saving."),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
         return;
       }
       const response = await fetch(
@@ -1093,7 +1160,13 @@ function CustomerDetails() {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before submitting.");
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please fix the errors before submitting."),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
         return;
       }
       customerData["customerStatus"] = "pending";
@@ -1145,7 +1218,13 @@ function CustomerDetails() {
       showLoadingScreen("Updating...");
       setTimeout(() => window.location.reload(true), 3000);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Error updating customer data:") + " " + error.message,
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
       console.error("Error updating customer:", error.message);
     }
   };
