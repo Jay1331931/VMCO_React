@@ -291,7 +291,7 @@ const AddBankTransaction = () => {
   const isRTL = dir === "rtl";
   return (
     <Sidebar title={t("Bank Transactions")}>
-      {isV("BankContent") && (
+ 
         <div className="bank-add-container">
           <div className="bank-add-form">
             <div className="form-grid">
@@ -751,7 +751,7 @@ const AddBankTransaction = () => {
             </div>
           </>
         </div>
-      )}
+    
 
       <style>
         {`.full-width {
