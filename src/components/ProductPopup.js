@@ -11,11 +11,11 @@ function ProductPopup({
     onQuantityChange,
     onInputChange,
     onClose,
-    onAddToCart
+    onAddToCart,
+    onToggleFavorite
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-    const [isFavorite, setIsFavorite] = useState(false);
 
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
@@ -37,8 +37,8 @@ function ProductPopup({
     };
 
     const handleFavoriteToggle = (newState) => {
-        setIsFavorite(newState);
-        // Add any additional logic for when favorite state changes
+        // Call the parent component's toggle function
+        onToggleFavorite(product.id, newState);
     };
 
     if (!product) return null;
@@ -51,7 +51,7 @@ function ProductPopup({
                     <div className="popup-image-section">
                         <div className="popup-image-container">
                             <FavButton 
-                                initialState={isFavorite}
+                                initialState={product.favorite || false}
                                 onToggle={handleFavoriteToggle}
                             />
                             {selectedImage ? (

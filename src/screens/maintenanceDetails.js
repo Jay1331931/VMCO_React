@@ -133,9 +133,9 @@ const handleFileUpload = async (e, type) => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
 
-  if (file.size > 30 * 1024 * 1024) {
+  if (file.size > 10 * 1024 * 1024) {
     Swal.fire({
-      title: t("File size exceeds 30MB limit"),
+      title: t("File size exceeds 10MB limit"),
       text: t("Please select a smaller file."),
       icon: "error",
       confirmButtonText: t("OK"),
@@ -1276,6 +1276,67 @@ useEffect(() => {
         API_BASE_URL={API_BASE_URL}
         t={t}
       />
+      <style>
+        {
+            `
+.image-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.image-popup-content {
+  position: relative;
+  max-width: 50%;
+  
+  background: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.25s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.image-popup-content img {
+  width: 100%;
+  max-width: 400px;
+  max-height: 400px;
+  height: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.image-popup-close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: red;
+  color: white;
+  border: none;
+  font-size: 20px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s;
+}
+
+.image-popup-close:hover {
+  background: #c00;
+}`
+        }
+      </style>
     </Sidebar>
   );
 }
