@@ -253,9 +253,9 @@ function ContactDetails({
                           </div>
                         )}
       {/* Primary Contact Details Header */}
-      <div className="form-header full-width">
+      <h3 className="form-header full-width">
         {t("Primary Contact Details")}
-      </div>
+      </h3>
       <div className="form-group">
         <label htmlFor="primaryContactName">
           {t("Primary Contact Name")}
@@ -434,7 +434,7 @@ function ContactDetails({
       </div>
 
       {/* Business Head Header */}
-      <div className="form-header full-width">{t("Business Head")}</div>
+      <h3 className="form-header full-width">{t("Business Head")}</h3>
       <div className="form-group">
         <label className="checkbox-group-label">
           <input
@@ -627,7 +627,7 @@ function ContactDetails({
       </div>
 
       {/* Finance Head Header */}
-      <div className="form-header full-width">{t("Finance Head")}</div>
+      <h3 className="form-header full-width">{t("Finance Head")}</h3>
       <div className="form-group">
         <label htmlFor="financeHeadName">
           {t("Finance Head Name")}
@@ -806,7 +806,7 @@ function ContactDetails({
       </div>
 
       {/* Purchasing Head Header */}
-      <div className="form-header full-width">{t("Purchasing Head")}</div>
+      <h3 className="form-header full-width">{t("Purchasing Head")}</h3>
       <div className="form-group">
         <label htmlFor="purchasingHeadName">
           {t("Purchasing Head Name")}
@@ -990,7 +990,7 @@ function ContactDetails({
       </div>
 
       {/* Business Address Header */}
-      <div className="form-header full-width">{t("Business Address")}</div>
+      <h3 className="form-header full-width">{t("Business Address")}</h3>
       <div className="form-group">
         <label htmlFor="buildingName">
           {t("Building Name")}

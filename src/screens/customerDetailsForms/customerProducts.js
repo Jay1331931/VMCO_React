@@ -23,13 +23,13 @@ import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
 const initialEntities = [
   {
     value: Constants.ENTITY.VMCO,
-    label: "VMCO",
+    label: Constants.CATEGORY.VMCO_MACHINES,
   },
   {
       value: Constants.CATEGORY.VMCO_CONSUMABLES,
       entity: Constants.ENTITY.VMCO,
       label: Constants.CATEGORY.VMCO_CONSUMABLES,
-    },
+  },
   {
     value: Constants.ENTITY.SHC,
     label: "Saudi Hospitality Company",
@@ -108,6 +108,7 @@ function Products({ customerId, customer, setTabsHeight }) {
     const filters = {
       customer_id: customerId,
       entity: activeEntity,
+      visible: isApprovalMode ? true : undefined, // Only show selected if in approval mode
     };
     if (categoryFilter) filters.category = categoryFilter;
     if (subCategoryFilter) filters.subCategory = subCategoryFilter;
@@ -136,9 +137,10 @@ function Products({ customerId, customer, setTabsHeight }) {
       }
 
       const data = await response.json();
-      setProducts(data.data);
-      setCurrentItems(data.data);
-      setTotalPages(data.totalPages);
+      return data;
+      // setProducts(data.data);
+      // setCurrentItems(data.data);
+      // setTotalPages(data.totalPages);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -148,10 +150,16 @@ function Products({ customerId, customer, setTabsHeight }) {
 
   useEffect(() => {
     if (customerId && activeEntity) {
-      fetchProducts();
+      const fetchData = async () => {
+        const products = await fetchProducts();
+        setProducts(products.data);
+        setCurrentItems(products.data);
+        setTotalPages(products.totalPages);
+      };
+      fetchData();
     }
     setTabsHeight("auto");
-  }, [customer, activeEntity, currentPage, isApprovalMode, search]);
+  }, [customer, activeEntity, currentPage, isApprovalMode, search, categoryFilter, subCategoryFilter]);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -327,15 +335,15 @@ function Products({ customerId, customer, setTabsHeight }) {
     );
   });
 
-  // Use filteredProducts for rendering and pagination
-  useEffect(() => {
-    setCurrentItems(filteredProducts.slice(startIndex, endIndex));
-    setTotalPages(Math.ceil(filteredProducts.length / itemsPerPage));
-  }, [filteredProducts, startIndex, endIndex, itemsPerPage]);
+  // // Use filteredProducts for rendering and pagination
+  // useEffect(() => {
+  //   setCurrentItems(filteredProducts.slice(startIndex, endIndex));
+  //   setTotalPages(Math.ceil(filteredProducts.length / itemsPerPage));
+  // }, [filteredProducts, startIndex, endIndex, itemsPerPage]);
 
   return (
     <div className="products-content">
-      <h3>{t("Products & MoQ - Company Name")}</h3>
+      <h3>{t("Products")}</h3>
 
       <div className="products-header-controls">
         {/* --- First row: Entity Tabs --- */}

@@ -417,7 +417,8 @@ function Customers() {
     { key: 'workflowName', header: 'Workflow Name' },
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
-    { key: 'customerStatus', header: 'Status' }
+    { key: 'customerStatus', header: 'Status' },
+    { key: 'createdBy', header: 'Created By' },
   ];
   const inviteColumns = [
     { key: 'createdAt', header: 'Date' },

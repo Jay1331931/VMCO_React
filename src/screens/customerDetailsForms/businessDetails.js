@@ -159,6 +159,16 @@ function BusinessDetails({
 
   return (
     <div className="customer-onboarding-form-grid">
+      {customerData?.customerStatus === "blocked" && mode === "edit" && (
+        <h3 className="form-header full-width">
+          {t("Customer Blocked")}
+        </h3>
+      )}
+      {originalCustomerData?.customerStatus === "blocked" && mode === "edit" && (
+        <h3 className="form-header full-width">
+          {t("Customer Unblocked")}
+        </h3>
+      )}
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a href="#">{t("Customer Approval Checklist")}</a>
@@ -993,9 +1003,9 @@ function BusinessDetails({
 
       {isV("assignedToEntityWise") && (
         <>
-          <div className="form-header full-width">
+          <h3 className="form-header full-width">
             {t("Inter Company Account")}
-          </div>
+          </h3>
           {isV("assignedToEntityWise") && (
             <div className="form-group">
               <label className="checkbox-group-label">
@@ -1076,9 +1086,10 @@ function BusinessDetails({
             </div>
           )}
           {/* Entity Wise Employee Assignment Header */}
-          <div className="form-header full-width">
+          <h3 className="form-header full-width">
             {t("Sales Person Assignment")}
-          </div>
+          </h3>
+          
           {/* Assigned To Dropdown */}
           {isV("assignedTo") && (
             <div className="form-group">
@@ -1204,6 +1215,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
+              {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`] && (
+  <div className="error">
+    {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`]}
+  </div>
+)}
           </div>
 
           {/* VMCO dropdown */}
@@ -1271,7 +1287,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
-          </div>
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`]}
+              </div>
+            )}
 
           {/* Entity Wise Assignment for SHC */}
           <div className="form-group">
@@ -1337,7 +1357,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
-          </div>
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`]}
+              </div>
+            )}
           {/* Entity Wise Assignment for NAQI */}
           <div className="form-group">
             <label htmlFor="assignedToEntityWise">
@@ -1403,6 +1427,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`]}
+                </div>
+            )}
           </div>
 
           {/* Entity Wise Assignment for GMTC */}
@@ -1468,9 +1497,17 @@ function BusinessDetails({
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.GMTC
                   ] || "(empty)"}
+                  {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`]}
+                </div>
+            )}
                 </div>
               )}
+              
           </div>
+          </div>
+        </div>
         </>
       )}
 

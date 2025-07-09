@@ -76,7 +76,7 @@ function FinancialInformation({
                           </div>
                         )}
       {/* Bank Details Header */}
-      <div className="form-header full-width">{t("Bank Details")}</div>
+      <h3 className="form-header full-width">{t("Bank Details")}</h3>
       <div className="form-group">
         <label htmlFor="bankName">
           {t("Bank Name")}
@@ -197,9 +197,9 @@ function FinancialInformation({
 
         {isV("assignedToEntityWise") && (<>
       {/* Entity Wise Price Plan Assignment Header */}
-      <div className="form-header full-width">
+      <h3 className="form-header full-width">
         {t("Pricing Plan")}
-      </div>
+      </h3>
       {/* Entity Wise Price Plan Assignment */}
       <div className="form-group">
         <label htmlFor="pricingPolicy">
@@ -495,9 +495,9 @@ function FinancialInformation({
       </div>
       <div className="form-group" />
 
-<div className="form-header full-width">
+<h3 className="form-header full-width">
         {t("Delivery Charges")}
-      </div>
+      </h3>
       {/* Delivery Charges Applicable */}
       <div className="form-group">
         <label className="checkbox-group-label">
@@ -516,13 +516,16 @@ function FinancialInformation({
             }
           />
           {`\t ${t("Is delivery charges applicable")}`}
+          {customerData?.isDeliveryChargesApplicable !== originalCustomerData?.isDeliveryChargesApplicable && mode === "edit" && (
+          <span className="update-badge">Updated</span>
+        )}
         </label>
       </div>
 
       {/* Payment Methods Header */}
-      <div className="form-header full-width">
+      <h3 className="form-header full-width">
         {t("Payment Methods")}
-      </div>
+      </h3>
 
       {/* Payment Methods */}
       <div className="form-group">
