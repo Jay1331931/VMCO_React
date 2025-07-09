@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import QuantityController from './QuantityController';
 import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
-import FavButton from './FavButton';
+import FavButton from './FavButton'; // Keep this import
 
 const ProductCard = ({
     product,
@@ -11,11 +11,11 @@ const ProductCard = ({
     onQuantityChange,
     onProductClick,
     setQuantities,
-    onAddToCart // Destructure onAddToCart prop
+    onAddToCart,
+    onToggleFavorite
 }) => {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-    const [isFavorite, setIsFavorite] = useState(false);
 
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
@@ -25,6 +25,7 @@ const ProductCard = ({
         'catalog'
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
+    const isE = rbacMgr.isE.bind(rbacMgr); // <-- Add this line
 
     // Initialize with MOQ when product is loaded or changed
     useEffect(() => {
@@ -53,8 +54,8 @@ const ProductCard = ({
     }
 
     const handleFavoriteToggle = (newState) => {
-        setIsFavorite(newState);
-        // Add any additional logic for when favorite state changes
+        // Call the parent component's toggle function
+        onToggleFavorite(product.id, newState);
     };
 
     // Determine direction and alignment
@@ -68,11 +69,14 @@ const ProductCard = ({
             style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
             dir={dir}
         >
-            <div className="product-image-container">
+            {isV('favoriteButton') && isE('favoriteButton') && (
                 <FavButton
-                    initialState={isFavorite}
+                    initialState={product.favorite || false}
                     onToggle={handleFavoriteToggle}
                 />
+            )}
+
+            <div className="product-image-container">
                 {product.image ? (
                     <img
                         src={product.image}
@@ -127,6 +131,7 @@ const ProductCard = ({
                     )}
                 </div>
             </div>
+            {/* Keep existing styles */}
             <style>{`
             .product-image-container {
                 position: relative;
@@ -157,6 +162,7 @@ const ProductCard = ({
   height: 100%;
   /* Ensure consistent height */
   transition: 200ms;
+  position: relative; /* Ensure relative positioning for absolute children */
 }
 
 .product-card:hover {
@@ -310,6 +316,14 @@ const ProductCard = ({
                 .product-card.rtl {
                   direction: rtl;
                   text-align: right;
+                }
+
+                /* If your favorite button has a specific class, ensure it's always visible */
+                .favorite-btn, 
+                button[style*="position: absolute"] {
+                  opacity: 1 !important;
+                  visibility: visible !important;
+                  z-index: 10 !important;
                 }
             `}</style>
         </div>

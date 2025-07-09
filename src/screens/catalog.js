@@ -373,23 +373,16 @@ function Catalog() {
         entity: product.entity,
         unit: product.unit,
         vat: product.vatPercentage || product.VAT_percentage,
-        //sugarTaxPrice: product.sugarTaxPrice,
         moq: product.moq || product.minimumOrderQuantity || 0,
+        favorite: product.favorite || false, // Add this line to include favorite status
         ...product,
       };
     },
     [i18n.language]
-  ); // Keep i18n.language as dependency to refresh on language change
-
-  // Fetch products from backend - now loads all pages from 1 to currentPage
-
-  // Filter products based on tab, category, and subcategory
+  );
 
   useEffect(() => {
-    // We're already filtering server-side via API params, but we also handle client-side filtering
-    // for better UX while waiting for API responses
-    // Get the entity value for the selected category tab
-    const selectedCategory = categories.find(
+   const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
@@ -953,6 +946,90 @@ function Catalog() {
     }
   };
 
+  // Add this function to your Catalog component
+
+  const handleToggleFavorite = async (productId, isFavorite) => {
+    try {
+      if (!isAuthenticated || !user) {
+        Swal.fire({
+          icon: "warning",
+          title: t("Please Log In"),
+          text: t("You need to be logged in to add products to favorites."),
+          confirmButtonText: t("OK"),
+        });
+        return;
+      }
+
+      if (isFavorite) {
+        // Add to favorites
+        const response = await fetch(`${API_BASE_URL}/favorites`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            userId: user.userId,
+            customerId: selectedCustomerId || user.customerId,
+            productId: productId,
+            favorite: true
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add to favorites");
+        }
+      } else {
+        // Remove from favorites
+        const response = await fetch(
+          `${API_BASE_URL}/favorites/${user.userId}/${productId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to remove from favorites");
+        }
+      }
+
+      // Update local state to reflect changes immediately
+      setProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, favorite: isFavorite } 
+            : product
+        )
+      );
+
+      // Also update filtered/displayed products
+      setFilteredProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, favorite: isFavorite } 
+            : product
+        )
+      );
+      setDisplayedProducts(prevProducts => 
+        prevProducts.map(product => 
+          product.id === productId 
+            ? { ...product, favorite: isFavorite } 
+            : product
+        )
+      );
+
+    } catch (error) {
+      console.error("Error toggling favorite status:", error);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t("Failed to update favorite status. Please try again."),
+        confirmButtonText: t("OK"),
+      });
+    }
+  };
+
   // Get unique categories filtered by the current entity tab
   const getFilteredCategories = () => {
     // Get the entity for the current active tab
@@ -1315,6 +1392,7 @@ function Catalog() {
                 onAddToCart={() => handleAddToCart(product.id)}
                 onProductClick={() => handleProductClick(product)}
                 setQuantities={setQuantities}
+                onToggleFavorite={handleToggleFavorite} // Add this prop
               />
             ))
             : !isLoading && (
@@ -1379,11 +1457,20 @@ function Catalog() {
       <style jsx="true">{`
         .no-products-message {
           width: 100%;
+          height: 200px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
           text-align: center;
           padding: 40px 0;
           color: #666;
           font-size: 1.1rem;
           grid-column: 1 / -1;
+          margin: 40px auto;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .product-search-input {
