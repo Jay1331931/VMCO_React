@@ -712,7 +712,8 @@ class RbacManager {
           btnSelectItems: { visible: true, editable: true },
           customerApprovalChecklist: { visible: false, editable: true },
           'Download terms & conditions and upload duly signed document': { visible: true, editable: true },
-          'Price Plan': { visible: false, editable: false }
+          'Price Plan': { visible: false, editable: false },
+          branch: { visible: false, editable: true },
         },
       },
       custDetailsEdit: {

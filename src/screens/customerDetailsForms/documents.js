@@ -228,7 +228,7 @@ function Documents({
         </div>
       )}
       {/* Documents Header */}
-      <div className="form-header full-width">{t("Documents")}</div>
+      <h3 className="form-header full-width">{t("Documents")}</h3>
       <div className="form-group" />
       <div className="form-header full-width">
         {t("Download terms & conditions and upload duly signed document")}
@@ -1343,9 +1343,7 @@ function Documents({
               >
                 {t("Upload")}
               </label>
-              {formErrors?.contractAgreement && (
-                <div className="error">{formErrors.contractAgreement}</div>
-              )}
+              
             </td>
             <td className="file-display-cell">
               {tradingFilesToUpload?.contractAgreement && (
@@ -1442,6 +1440,9 @@ function Documents({
                   <span className="update-badge">Updated</span>
                 )}
               </label>
+              {formErrors?.creditApplication && (
+                <div className="error">{formErrors.creditApplication}</div>
+              )}
             </td>
             <td
               className="upload-cell"

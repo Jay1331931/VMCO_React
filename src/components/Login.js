@@ -28,7 +28,8 @@ function Login({ title, userType }) {
                 const requestBody = {
             email,
             password,
-            ...(title === 'Customer Login' && { user_type: 'customer' })  // 👈 Conditional addition
+            ...(title === 'Customer Login' && { user_type: 'customer' }),  // 👈 Conditional addition
+            ...(title === 'Employee Login' && { user_type: 'employee' })  // 👈 Conditional addition
         };
         // const res = await fetch('https://vmcoservertest-cyf3gyg4hpb9h7ek.southindia-01.azurewebsites.net/api/user/email-password', {
         const res = await fetch(`${API_SERVER_URL}/auth/login`, {
