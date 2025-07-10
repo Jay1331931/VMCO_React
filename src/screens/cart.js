@@ -466,7 +466,7 @@ function Cart() {
                         orderIds.push(machineOrderId);
                         console.log('Added machine order ID to array:', machineOrderId);
                         // Delete machine products from cart after successful order
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, machineProducts);
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
                         console.log('Deleted machine products from cart after order:', machineProducts);
                     } else {
                         console.error('Machine order failed - no order ID returned');
@@ -496,7 +496,7 @@ function Cart() {
                         orderIds.push(nonMachineOrderId);
                         console.log('Added non-machine order ID to array:', nonMachineOrderId);
                         // Delete non-machine products from cart after successful order
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, nonMachineProducts);
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
                         console.log('Deleted non-machine products from cart after order:', nonMachineProducts);
                     } else {
                         console.error('Non-machine order failed - no order ID returned');
@@ -521,8 +521,109 @@ function Cart() {
                         window.location.reload();
                     });
                 }
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                // Separate SHC products into fresh and non-fresh products
+                const freshProducts = categoryItems.filter(item => {
+                    const isFresh = item.isFresh === true;
+                    console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}`);
+                    return isFresh;
+                });
+                const nonFreshProducts = categoryItems.filter(item => {
+                    const isFresh = item.isFresh === true;
+                    console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}, isNonFresh=${!isFresh}`);
+                    return !isFresh;
+                });
+                
+                console.log('SHC products separated:', {
+                    total: categoryItems.length,
+                    fresh: freshProducts.length,
+                    nonFresh: nonFreshProducts.length,
+                    freshProductIds: freshProducts.map(p => p.product_id),
+                    nonFreshProductIds: nonFreshProducts.map(p => p.product_id)
+                });
+
+                const orderIds = [];
+
+                // Place order for fresh products
+                if (freshProducts.length > 0) {
+                    // Calculate total amount for fresh products
+                    let freshTotal = 0;
+                    freshProducts.forEach(item => {
+                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                        const vatPercentage = Number(item.vatPercentage) || 0;
+                        const vatAmount = (baseAmount * vatPercentage) / 100;
+                        const totalAmount = baseAmount + vatAmount;
+                        freshTotal += totalAmount;
+                    });
+
+                    // Determine payment method for fresh products
+                    const freshPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, freshTotal, entity);
+                    
+                    console.log('Placing order for SHC fresh products with determined payment method:', freshPaymentMethod);
+                    // Use a specific category name for fresh products to ensure separate orders
+                    const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', freshPaymentMethod, false);
+                    console.log('Fresh order result:', freshOrderId);
+                    if (freshOrderId) {
+                        orderIds.push(freshOrderId);
+                        console.log('Added fresh order ID to array:', freshOrderId);
+                        // Delete fresh products from cart after successful order
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, null, freshProducts);
+                        console.log('Deleted fresh products from cart after order:', freshProducts);
+                    } else {
+                        console.error('Fresh order failed - no order ID returned');
+                    }
+                }
+
+                // Place order for non-fresh products
+                if (nonFreshProducts.length > 0) {
+                    // Calculate total amount for non-fresh products
+                    let nonFreshTotal = 0;
+                    nonFreshProducts.forEach(item => {
+                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                        const vatPercentage = Number(item.vatPercentage) || 0;
+                        const vatAmount = (baseAmount * vatPercentage) / 100;
+                        const totalAmount = baseAmount + vatAmount;
+                        nonFreshTotal += totalAmount;
+                    });
+
+                    // Determine payment method for non-fresh products
+                    const nonFreshPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, nonFreshTotal, entity);
+                    
+                    console.log('Placing order for SHC non-fresh products with determined payment method:', nonFreshPaymentMethod);
+                    // Use a specific category name for non-fresh products to ensure separate orders
+                    const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', nonFreshPaymentMethod, false);
+                    console.log('Non-fresh order result:', nonFreshOrderId);
+                    if (nonFreshOrderId) {
+                        orderIds.push(nonFreshOrderId);
+                        console.log('Added non-fresh order ID to array:', nonFreshOrderId);
+                        // Delete non-fresh products from cart after successful order
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, null, nonFreshProducts);
+                        console.log('Deleted non-fresh products from cart after order:', nonFreshProducts);
+                    } else {
+                        console.error('Non-fresh order failed - no order ID returned');
+                    }
+                }
+
+                // Show combined success message for SHC orders
+                if (orderIds.length > 0) {
+                    console.log('Order IDs collected:', orderIds);
+                    const orderText = orderIds.length === 1 
+                        ? t(`Your order has been placed successfully! Order #${orderIds[0]}`) 
+                        : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                    
+                    console.log('Order success message:', orderText);
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: t('Order Placed'),
+                        text: orderText,
+                        confirmButtonText: t('OK')
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                }
             } else {
-                // For non-VMCO categories, place order as usual
+                // For other categories, place order as usual
                 await placeOrderForCategory(categoryItems, categoryName, selectedPaymentMethod, true);
             }
         } catch (err) {
@@ -628,7 +729,8 @@ function Cart() {
 
             if (!isPrePayment) {
                 // Only check for existing orders if NOT using Pre Payment
-                const orderFiltersObj = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+                const orderFiltersObj = (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) || 
+                                      (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())
                     ? {
                         customerId: selectedCustomerId,
                         branchId: selectedBranchId,
@@ -663,18 +765,20 @@ function Cart() {
                 console.log('Existing order search result:', existingOrderResult);
 
                 if (existingOrderResult.data?.data?.length > 0) {
-                    // For VMCO orders, ensure we match the exact productCategory
+                    // For VMCO and SHC orders, ensure we match the exact productCategory
                     const matchingOrders = existingOrderResult.data.data.filter(order => {
-                        if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() || 
+                                     entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
                             console.log('Checking order:', { 
                                 orderId: order.id, 
                                 orderCategory: order.productCategory, 
                                 searchCategory: categoryName,
+                                entity: entity,
                                 match: order.productCategory === categoryName
                             });
                             return order.productCategory === categoryName;
                         }
-                        return true; // For non-VMCO orders, any matching order is fine
+                        return true; // For other entities, any matching order is fine
                     });
 
                     if (matchingOrders.length > 0) {
@@ -730,11 +834,17 @@ function Cart() {
                     }
                 }
 
-                // Determine if this is a machine order based on category name
+                // Determine if this is a machine order or fresh order based on category name and entity
                 const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
+                const isFreshOrder = categoryName.toLowerCase().includes('fresh') || categoryName.toLowerCase().includes('طازج');
                 
                 // Determine status based on entity
-                const orderStatus = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ? 'Pending' : 'Open';
+                let orderStatus = 'Open'; // Default status
+                if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                    orderStatus = 'Pending';
+                } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                    orderStatus = 'Open';
+                }
                 
                 const finalTotalAmount = initialTotalAmount + deliveryCharges;
                 const orderPayload = {
@@ -761,7 +871,7 @@ function Cart() {
                     productCategory: categoryName,
                     paymentPercentage: '100.00',
                     isMachine: isMachineOrder,
-                    isFresh: false
+                    isFresh: isFreshOrder
                     //createdBy: userId // <-- Add createdBy field
                 };
 
@@ -880,14 +990,30 @@ function Cart() {
                     const productName = item.productName || item.name || 'Product';
                     const productNameLc = item.productNameLc || item.nameLc || productName;
 
+                    // Determine isMachine and isFresh for this line based on the category and item
+                    let lineMachine = false;
+                    let lineFresh = false;
+                    
+                    if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                        lineMachine = item.isMachine === true;
+                        lineFresh = false; // VMCO products don't have fresh flag
+                    } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                        lineMachine = false; // SHC products are never machines
+                        lineFresh = item.isFresh === true; // Use the item's isFresh flag
+                    } else {
+                        // For other entities, use the item's flags as-is
+                        lineMachine = item.isMachine === true;
+                        lineFresh = item.isFresh === true;
+                    }
+
                     const newLinePayload = {
                         order_id: orderId,
                         product_id: productId,
                         productName: productName,
                         productNameLc: productNameLc,
-                        is_machine: item.isMachine,
-                        isMachine: item.isMachine, // for backend compatibility
-                        isFresh: item.isFresh, // add isFresh field if present
+                        is_machine: lineMachine,
+                        isMachine: lineMachine, // for backend compatibility
+                        isFresh: lineFresh, // set based on entity and item
                         quantity: newQuantity,
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,
@@ -1029,8 +1155,9 @@ function Cart() {
                     window.location.reload();
                 });
                 
-                // Delete cart items for non-VMCO categories
-                if (entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()) {
+                // Delete cart items for non-VMCO and non-SHC categories
+                if (entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() && 
+                    entity.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase()) {
                     try {
                         const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
                         deleteUrl.searchParams.append('customer_id', selectedCustomerId);
@@ -1331,13 +1458,13 @@ function Cart() {
                 if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
                     const codLimit = methodDetails.COD.limit || 0;
                     if (totalAmount < codLimit) {
-                        console.log(`COD is allowed and total amount ${totalAmount} is less than limit ${codLimit}, using COD`);
-                        return 'Cash on Delivery';
+                        console.log(`Cash On Delivery is allowed and total amount ${totalAmount} is less than limit ${codLimit}, using Cash On Delivery`);
+                        return 'Cash On Delivery';
                     }
                 }
 
                 // Neither credit nor COD applicable, use Pre Payment
-                console.log('Neither credit nor COD applicable, using Pre Payment');
+                console.log('Neither credit nor Cash On Delivery applicable, using Pre Payment');
                 return 'Pre Payment';
             }
 
@@ -1348,15 +1475,70 @@ function Cart() {
         }
     };
 
+    // Helper function to determine payment method for SHC products (fresh and non-fresh)
+    const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to fetch payment method details');
+                return 'Pre Payment'; // Default fallback
+            }
+
+            const result = await response.json();
+            console.log('Payment method details response for SHC:', result);
+
+            if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+                const methodDetails = result.data.methodDetails;
+                
+                // Check if credit is allowed for SHC entity
+                if (methodDetails.credit && methodDetails.credit.SHC && methodDetails.credit.SHC.isAllowed === true) {
+                    console.log('Credit payment is allowed for SHC entity');
+                    return 'Credit';
+                }
+
+                // Check Cash on Delivery limits if credit is not allowed
+                if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
+                    const codLimit = methodDetails.COD.limit || 0;
+                    if (totalAmount <= codLimit) {
+                        console.log(`Cash On Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
+                        return 'Cash On Delivery';
+                    } else {
+                        console.log(`Total amount ${totalAmount} exceeds Cash On Delivery limit ${codLimit}, using Pre Payment`);
+                        return 'Pre Payment';
+                    }
+                } else {
+                    console.log('Cash On Delivery is not allowed, using Pre Payment');
+                    return 'Pre Payment';
+                }
+            }
+
+            console.log('Defaulting to Pre Payment for SHC');
+            return 'Pre Payment';
+        } catch (error) {
+            console.error('Error determining payment method for SHC:', error);
+            return 'Pre Payment';
+        }
+    };
+
     // Helper function to delete cart items with specific parameters
-    const deleteCartItems = async (customerId, branchId, entity, isMachine, products) => {
+    const deleteCartItems = async (customerId, branchId, entity, isFresh, isMachine, products) => {
         try {
             const deletePromises = products.map(async (product) => {
                 const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
                 deleteUrl.searchParams.append('customer_id', customerId);
                 deleteUrl.searchParams.append('branch_id', branchId);
                 deleteUrl.searchParams.append('entity', entity);
-                deleteUrl.searchParams.append('isMachine', isMachine);
+                if (isFresh !== null && isFresh !== undefined) {
+                    deleteUrl.searchParams.append('isFresh', isFresh);
+                }
+                if (isMachine !== null && isMachine !== undefined) {
+                    deleteUrl.searchParams.append('isMachine', isMachine);
+                }
                 deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
 
                 console.log(`Deleting cart item with params: ${deleteUrl}`);
@@ -1376,7 +1558,7 @@ function Cart() {
             });
 
             await Promise.all(deletePromises);
-            console.log(`Successfully deleted ${products.length} cart items with isMachine=${isMachine}`);
+            console.log(`Successfully deleted ${products.length} cart items`);
         } catch (err) {
             console.error('Error during cart cleanup:', err);
             throw err;
@@ -1517,13 +1699,14 @@ function Cart() {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
 
-                                                        // Check if this is a VMCO category
+                                                        // Check if this is a VMCO or SHC category
                                                         const entity = getEntityFromCategory(category.category);
-                                                        if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                                                            // For VMCO, let handlePlaceOrder handle the payment method determination
+                                                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() || 
+                                                                     entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                                                            // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
                                                             handlePlaceOrder(category.items, category.category, null);
                                                         } else {
-                                                            // Non-VMCO categories - existing logic
+                                                            // Other categories - existing logic
                                                             let categoryTotal = 0;
                                                             category.items.forEach(item => {
                                                                 const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
@@ -1540,7 +1723,7 @@ function Cart() {
                                                                     handlePlaceOrder(category.items, category.category, 'Credit');
                                                                 }
                                                             } else {
-                                                                // For other categories (SHC, Green Mast, Naqui), show payment method popup
+                                                                // For other categories (Green Mast, Naqi, DAR), show payment method popup
                                                                 setShowPaymentPopup(true);
                                                             }
                                                         }
