@@ -4,6 +4,7 @@ import "../styles/components.css";
 import CommentPopup from "../components/commentPanel";
 import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utilities/dateFormatter";
@@ -75,6 +76,8 @@ function MaintenanceDetails() {
   // State for employees dropdown
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || "");
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
@@ -144,6 +147,13 @@ function MaintenanceDetails() {
       return;
     }
 
+    // Set loading state based on file type
+    if (type === "image") {
+      setUploadingImage(true);
+    } else if (type === "video") {
+      setUploadingVideo(true);
+    }
+
     const formDataUpload = new FormData();
     formDataUpload.append("file", file);
     formDataUpload.append("containerType", "maintenance");
@@ -167,6 +177,20 @@ function MaintenanceDetails() {
       }
     } catch (err) {
       console.error("Upload error:", err);
+      Swal.fire({
+        title: t("Upload Error"),
+        text: t("Failed to upload file. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    } finally {
+      // Reset loading state
+      if (type === "image") {
+        setUploadingImage(false);
+      } else if (type === "video") {
+        setUploadingVideo(false);
+      }
     }
 
     e.target.value = "";
@@ -1210,6 +1234,12 @@ function MaintenanceDetails() {
                       </button>
                     )}
                     {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
+                    {/* Loading spinner for image upload */}
+                    {uploadingImage && (
+                      <div className='maintenance-image-placeholder upload-loading'>
+                        <LoadingSpinner size="small" />
+                        </div>
+                    )}
                     {fileData?.map((imageData, idx) => (
                       <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.url && setPopupImage(imageData.url)} title={imageData.url ? "Click to view" : ""}>
                         <img width='100%' height='100%' style={{ objectFit: "cover" }} src={imageData.url} />
@@ -1240,6 +1270,12 @@ function MaintenanceDetails() {
                       </button>
                     )}
                     {videos?.length <= 6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "video")} />}
+                    {/* Loading spinner for video upload */}
+                    {uploadingVideo && (
+                      <div className='maintenance-video-placeholder upload-loading'>
+                        <LoadingSpinner size="small" />
+                     </div>
+                    )}
                     {videoData?.map((videoData, idx) => (
                       <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
                         <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
@@ -1445,6 +1481,22 @@ function MaintenanceDetails() {
 
 .image-popup-close:hover {
   background: #c00;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px dashed #ccc;
+  text-align: center;
+  cursor: default;
+}
+
+.upload-loading .loading-spinner-outer {
+  background: transparent;
+  margin-bottom: 0;
 }`
         }
       </style>
