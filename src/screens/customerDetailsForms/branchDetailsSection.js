@@ -499,10 +499,12 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
               className={`form-group ${hasUpdate ? "pending-update" : ""}`}
               key={index}
             >
-              <label>
-                {t(field.label)}
-                {field.required && <span className="required-field">*</span>}
-              </label>
+              {isV(field.name) && (
+                <label>
+                  {t(field.label)}
+                  {field.required && <span className="required-field">*</span>}
+                </label>
+              )}
 
               {field?.isLocation ? (
                 <div className="location-input-container">
@@ -586,6 +588,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                               customerFormMode === "custDetailsEdit" &&
                               !hasUpdate
                             }
+              hidden={!isV(field.name)}
                           >
                             <option value="">{t(field.placeholder)}</option>
                             {dropdownOptions[field.name]

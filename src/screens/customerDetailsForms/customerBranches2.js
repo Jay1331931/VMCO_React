@@ -27,6 +27,7 @@ import ContactSection from "./contactSection";
 import OperatingHours from "./operatingHours";
 import BranchDetailsForm from "./branchDetailsForm";
 import { debounce, set } from "lodash";
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t } = useTranslation();
   const contentRef = useRef(null);
@@ -291,8 +292,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   // Update tabs height when expanded rows change
   useEffect(() => {
     const baseRowHeight = 80;
-    const collapsedExtraHeight = 40;
-    const expandedExtraHeight = 1300;
+    const collapsedExtraHeight = 100;
+    const expandedExtraHeight = 1600;
     const numRows = branches.length || 3;
     const rowHeightTotal = numRows * baseRowHeight;
     const contentHeight =
@@ -974,8 +975,20 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     <div className="branches-content" ref={contentRef}>
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
-          <a href="#">{t("Customer Approval Checklist")}</a>
-        </div>
+          <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
+    </div>
       )}
       <div className="branches-page-header">
         <div className="branches-header-controls">

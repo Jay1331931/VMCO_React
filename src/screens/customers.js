@@ -418,7 +418,7 @@ function Customers() {
     { key: 'companyType', header: 'Company Type' },
     { key: 'typeOfBusiness', header: 'Type Of Business' },
     { key: 'customerStatus', header: 'Status' },
-    { key: 'createdBy', header: 'Created By' },
+    { key: 'createdByUsername', header: 'Created By' },
   ];
   const inviteColumns = [
     { key: 'createdAt', header: 'Date' },

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "../../styles/forms.css";
 import { not } from "ajv/dist/compile/codegen";
@@ -7,7 +7,7 @@ import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2"; // Add this import at the top if not already present
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
   isTrading = true,
@@ -47,6 +47,17 @@ function Documents({
   });
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
   const [nonTradingFilePreviews, setNonTradingFilePreviews] = useState({});
+  const fileInputRefs = {
+    acknowledgementSignature: useRef(),
+    crCertificate: useRef(),
+    vatCertificate: useRef(),
+    nationalId: useRef(),
+    bankLetter: useRef(),
+    nationalAddress: useRef(),
+    contractAgreement: useRef(),
+    creditApplication: useRef(),
+    nonTradingDocuments: useRef(),
+  };
   useEffect(() => {
     setTabsHeight("auto");
   }, []);
@@ -58,22 +69,22 @@ function Documents({
     // Check if the file input has files
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-// Check file size
-    if (file.size > MAX_FILE_SIZE) {
-      Swal.fire({
-        icon: "error",
-        title: t("Error"),
-        text: t(
-          "The following files exceed the maximum size of {{size}} MB: {{files}}",
-          {
-            size: MAX_FILE_SIZE / (1024 * 1024),
-            files: file.name,
-          }
-        ),
-        confirmButtonText: t("OK"),
-      });
-      return;
-    }
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t(
+            "The following files exceed the maximum size of {{size}} MB: {{files}}",
+            {
+              size: MAX_FILE_SIZE / (1024 * 1024),
+              files: file.name,
+            }
+          ),
+          confirmButtonText: t("OK"),
+        });
+        return;
+      }
       // Update the specific document in state
       setTradingDocuments((prevDocs) => ({
         ...prevDocs,
@@ -92,29 +103,29 @@ function Documents({
   // Handle multiple file uploads
   const handleNonTradingDocumentsChange = (e) => {
     const fileList = e.target.files;
-  if (fileList.length > 0) {
-    const files = Array.from(fileList);
+    if (fileList.length > 0) {
+      const files = Array.from(fileList);
 
-    // Check if any file exceeds the size limit
-    const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
-    if (oversizedFiles.length > 0) {
-      Swal.fire({
-        icon: "error",
-        title: t("Error"),
-        text: t(
-          "The following files exceed the maximum size of {{size}} MB: {{files}}",
-          {
-            size: MAX_FILE_SIZE / (1024 * 1024),
-            files: oversizedFiles.map((file) => file.name).join(", "),
-          }
-        ),
-        confirmButtonText: t("OK"),
-      });
-      return;
-    }
+      // Check if any file exceeds the size limit
+      const oversizedFiles = files.filter((file) => file.size > MAX_FILE_SIZE);
+      if (oversizedFiles.length > 0) {
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t(
+            "The following files exceed the maximum size of {{size}} MB: {{files}}",
+            {
+              size: MAX_FILE_SIZE / (1024 * 1024),
+              files: oversizedFiles.map((file) => file.name).join(", "),
+            }
+          ),
+          confirmButtonText: t("OK"),
+        });
+        return;
+      }
 
-    // Convert FileList to array and append to existing files
-    const newFiles = files;
+      // Convert FileList to array and append to existing files
+      const newFiles = files;
       setNonTradingFiles((prevFiles) => [...prevFiles, ...newFiles]);
       // Assign a new array containing all files in state to nonTradingFilesToUpload["others"]
       const previousOthers = nonTradingFilesToUpload?.["others"] || [];
@@ -136,18 +147,18 @@ function Documents({
   const removeTradingFile = (documentType) => {
     setTradingDocuments((prevDocs) => ({
       ...prevDocs,
-      [documentType]: null, // Set the specific document to null
+      [documentType]: null,
     }));
-    // Remove the file from tradingFilesToUpload
     delete tradingFilesToUpload[documentType];
-
-    // Remove the file from tradingFilePreviews
     setTradingFilePreviews((prevPreviews) => {
       const updatedPreviews = { ...prevPreviews };
       delete updatedPreviews[documentType];
       return updatedPreviews;
     });
-    // console.log("Updated tradingFilesToUpload:", tradingFilesToUpload);
+    // Reset the file input value so the same file can be uploaded again
+    if (fileInputRefs[documentType]?.current) {
+      fileInputRefs[documentType].current.value = "";
+    }
   };
 
   // Remove a specific file
@@ -167,6 +178,10 @@ function Documents({
     }
     nonTradingFilesToUpload["others"] = updatedFiles;
     console.log("Updated nonTradingFilesToUpload:", nonTradingFilesToUpload);
+    // Reset the file input value
+    if (fileInputRefs.nonTradingDocuments?.current) {
+      fileInputRefs.nonTradingDocuments.current.value = "";
+    }
   };
 
   const handleViewFile = async (customerId, fileName, fileType) => {
@@ -224,8 +239,20 @@ function Documents({
     <div className="customer-onboarding-form-grid">
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
-          <a href="#">{t("Customer Approval Checklist")}</a>
-        </div>
+          <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
+    </div>
       )}
       {/* Documents Header */}
       <h3 className="form-header full-width">{t("Documents")}</h3>
@@ -268,6 +295,7 @@ function Documents({
             id="acknowledgementSignature"
             name="acknowledgementSignature"
             className="hidden-file-input"
+            ref={fileInputRefs.acknowledgementSignature}
             onChange={(e) =>
               handleTradingDocumentChange(e, "acknowledgementSignature")
             }
@@ -293,17 +321,17 @@ function Documents({
               className="uploaded-file-item"
             >
               {tradingFilePreviews?.acknowledgementSignature && (
-            <a
-              href={tradingFilePreviews.acknowledgementSignature}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="file-link"
-              style={{ marginLeft: 8 }}
-            >
-            {tradingFilesToUpload.acknowledgementSignature.name}
-            </a>
-          )}
-          <button
+                <a
+                  href={tradingFilePreviews.acknowledgementSignature}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="file-link"
+                  style={{ marginLeft: 8 }}
+                >
+                  {tradingFilesToUpload.acknowledgementSignature.name}
+                </a>
+              )}
+              <button
                 type="button"
                 className="delete-file-button"
                 onClick={() => removeTradingFile("acknowledgementSignature")}
@@ -313,28 +341,28 @@ function Documents({
             </li>
           )}
 
-          {tradingFilePreviews?.acknowledgementSignature && !tradingFilesToUpload?.acknowledgementSignature && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.acknowledgementSignature,
-                            "acknowledgementSignature"
-                          );
-                        }}
-                      >
-                        {typeof customerData.acknowledgementSignature === "string"
-                          ? customerData.acknowledgementSignature
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+          {tradingFilePreviews?.acknowledgementSignature &&
+            !tradingFilesToUpload?.acknowledgementSignature && (
+              <a
+                href="#"
+                className="file-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleViewFile(
+                    customerData.id,
+                    customerData.acknowledgementSignature,
+                    "acknowledgementSignature"
+                  );
+                }}
+              >
+                {typeof customerData.acknowledgementSignature === "string"
+                  ? customerData.acknowledgementSignature
+                      .split("_")
+                      .slice(0, 2)
+                      .join(" ")
+                  : "View Document"}
+              </a>
+            )}
 
           {customerData?.acknowledgementSignature && (
             <div className="file-actions">
@@ -404,6 +432,7 @@ function Documents({
                 id="crCertificate"
                 name="crCertificate"
                 className="hidden-file-input"
+                ref={fileInputRefs.crCertificate}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "crCertificate")
                 }
@@ -449,28 +478,28 @@ function Documents({
                 </li>
               )}
 
-              {tradingFilePreviews?.crCertificate && !tradingFilesToUpload?.crCertificate && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.crCertificate,
-                            "crCertificate"
-                          );
-                        }}
-                      >
-                        {typeof customerData.crCertificate === "string"
-                          ? customerData.crCertificate
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.crCertificate &&
+                !tradingFilesToUpload?.crCertificate && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.crCertificate,
+                        "crCertificate"
+                      );
+                    }}
+                  >
+                    {typeof customerData.crCertificate === "string"
+                      ? customerData.crCertificate
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.crCertificate && (
                 <div className="file-actions">
                   {!tradingDocuments.crCertificate &&
@@ -537,6 +566,7 @@ function Documents({
                 id="vatCertificate"
                 name="vatCertificate"
                 className="hidden-file-input"
+                ref={fileInputRefs.vatCertificate}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "vatCertificate")
                 }
@@ -569,7 +599,7 @@ function Documents({
                       className="file-link"
                       style={{ marginLeft: 8 }}
                     >
-                    {tradingFilesToUpload.vatCertificate.name}
+                      {tradingFilesToUpload.vatCertificate.name}
                     </a>
                   )}
                   <button
@@ -582,28 +612,28 @@ function Documents({
                 </li>
               )}
 
-              {tradingFilePreviews?.vatCertificate && !tradingFilesToUpload?.vatCertificate && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.vatCertificate,
-                            "vatCertificate"
-                          );
-                        }}
-                      >
-                        {typeof customerData.vatCertificate === "string"
-                          ? customerData.vatCertificate
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.vatCertificate &&
+                !tradingFilesToUpload?.vatCertificate && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.vatCertificate,
+                        "vatCertificate"
+                      );
+                    }}
+                  >
+                    {typeof customerData.vatCertificate === "string"
+                      ? customerData.vatCertificate
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.vatCertificate && (
                 <div className="file-actions">
                   {!tradingDocuments.vatCertificate &&
@@ -670,6 +700,7 @@ function Documents({
                 id="nationalId"
                 name="nationalId"
                 className="hidden-file-input"
+                ref={fileInputRefs.nationalId}
                 onChange={(e) => handleTradingDocumentChange(e, "nationalId")}
                 required
                 disabled={mode === "edit"}
@@ -712,28 +743,25 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.nationalId && !tradingFilesToUpload?.nationalId && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.nationalId,
-                            "nationalId"
-                          );
-                        }}
-                      >
-                        {typeof customerData.nationalId === "string"
-                          ? customerData.nationalId
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.nationalId &&
+                !tradingFilesToUpload?.nationalId && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.nationalId,
+                        "nationalId"
+                      );
+                    }}
+                  >
+                    {typeof customerData.nationalId === "string"
+                      ? customerData.nationalId.split("_").slice(0, 2).join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.nationalId && (
                 <div className="file-actions">
                   {!tradingDocuments.nationalId && customerData?.nationalId && (
@@ -799,6 +827,7 @@ function Documents({
                 id="bankLetter"
                 name="bankLetter"
                 className="hidden-file-input"
+                ref={fileInputRefs.bankLetter}
                 onChange={(e) => handleTradingDocumentChange(e, "bankLetter")}
                 required
                 disabled={mode === "edit"}
@@ -841,28 +870,25 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.bankLetter && !tradingFilesToUpload?.bankLetter && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.bankLetter,
-                            "bankLetter"
-                          );
-                        }}
-                      >
-                        {typeof customerData.bankLetter === "string"
-                          ? customerData.bankLetter
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.bankLetter &&
+                !tradingFilesToUpload?.bankLetter && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.bankLetter,
+                        "bankLetter"
+                      );
+                    }}
+                  >
+                    {typeof customerData.bankLetter === "string"
+                      ? customerData.bankLetter.split("_").slice(0, 2).join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.bankLetter && (
                 <div className="file-actions">
                   {!tradingDocuments.bankLetter && customerData?.bankLetter && (
@@ -928,6 +954,7 @@ function Documents({
                 id="nationalAddress"
                 name="nationalAddress"
                 className="hidden-file-input"
+                ref={fileInputRefs.nationalAddress}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "nationalAddress")
                 }
@@ -972,28 +999,28 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.nationalAddress && !tradingFilesToUpload?.nationalAddress && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.nationalAddress,
-                            "nationalAddress"
-                          );
-                        }}
-                      >
-                        {typeof customerData.nationalAddress === "string"
-                          ? customerData.nationalAddress
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.nationalAddress &&
+                !tradingFilesToUpload?.nationalAddress && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.nationalAddress,
+                        "nationalAddress"
+                      );
+                    }}
+                  >
+                    {typeof customerData.nationalAddress === "string"
+                      ? customerData.nationalAddress
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.nationalAddress && (
                 <div className="file-actions">
                   {!tradingDocuments.nationalAddress &&
@@ -1060,6 +1087,7 @@ function Documents({
                 id="contractAgreement"
                 name="contractAgreement"
                 className="hidden-file-input"
+                ref={fileInputRefs.contractAgreement}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "contractAgreement")
                 }
@@ -1104,28 +1132,28 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.contractAgreement && !tradingFilesToUpload?.contractAgreement && (
-            
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.contractAgreement,
-                            "contractAgreement"
-                          );
-                        }}
-                      >
-                        {typeof customerData.contractAgreement === "string"
-                          ? customerData.contractAgreement
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.contractAgreement &&
+                !tradingFilesToUpload?.contractAgreement && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreement,
+                        "contractAgreement"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreement === "string"
+                      ? customerData.contractAgreement
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.contractAgreement && (
                 <div className="file-actions">
                   {!tradingDocuments.contractAgreement &&
@@ -1192,6 +1220,7 @@ function Documents({
                 id="creditApplication"
                 name="creditApplication"
                 className="hidden-file-input"
+                ref={fileInputRefs.creditApplication}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "creditApplication")
                 }
@@ -1236,28 +1265,28 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.creditApplication && !tradingFilesToUpload?.creditApplication && (
-
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.creditApplication,
-                            "creditApplication"
-                          );
-                        }}
-                      >
-                        {typeof customerData.creditApplication === "string"
-                          ? customerData.creditApplication
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.creditApplication &&
+                !tradingFilesToUpload?.creditApplication && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplication,
+                        "creditApplication"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplication === "string"
+                      ? customerData.creditApplication
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.creditApplication && (
                 <div className="file-actions">
                   {!tradingDocuments.creditApplication &&
@@ -1326,6 +1355,7 @@ function Documents({
                 id="contractAgreement"
                 name="contractAgreement"
                 className="hidden-file-input"
+                ref={fileInputRefs.contractAgreement}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "contractAgreement")
                 }
@@ -1343,7 +1373,6 @@ function Documents({
               >
                 {t("Upload")}
               </label>
-              
             </td>
             <td className="file-display-cell">
               {tradingFilesToUpload?.contractAgreement && (
@@ -1371,28 +1400,28 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.contractAgreement && !tradingFilesToUpload?.contractAgreement && (
-
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.contractAgreement,
-                            "contractAgreement"
-                          );
-                        }}
-                      >
-                        {typeof customerData.contractAgreement === "string"
-                          ? customerData.contractAgreement
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.contractAgreement &&
+                !tradingFilesToUpload?.contractAgreement && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreement,
+                        "contractAgreement"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreement === "string"
+                      ? customerData.contractAgreement
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.contractAgreement && (
                 <div className="file-actions">
                   {!tradingDocuments.contractAgreement &&
@@ -1459,6 +1488,7 @@ function Documents({
                 id="creditApplication"
                 name="creditApplication"
                 className="hidden-file-input"
+                ref={fileInputRefs.creditApplication}
                 onChange={(e) =>
                   handleTradingDocumentChange(e, "creditApplication")
                 }
@@ -1503,28 +1533,28 @@ function Documents({
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.creditApplication && !tradingFilesToUpload?.creditApplication && (
-
-            <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.creditApplication,
-                            "creditApplication"
-                          );
-                        }}
-                      >
-                        {typeof customerData.creditApplication === "string"
-                          ? customerData.creditApplication
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-          )}
+              {tradingFilePreviews?.creditApplication &&
+                !tradingFilesToUpload?.creditApplication && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplication,
+                        "creditApplication"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplication === "string"
+                      ? customerData.creditApplication
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
               {customerData?.creditApplication && (
                 <div className="file-actions">
                   {!tradingDocuments.creditApplication &&
@@ -1590,6 +1620,7 @@ function Documents({
                 className="hidden-file-input"
                 multiple
                 accept=".pdf,.doc,.docx,.jpg,.png"
+                ref={fileInputRefs.nonTradingDocuments}
                 onChange={handleNonTradingDocumentsChange}
                 disabled={mode === "edit"}
               />
@@ -1613,16 +1644,16 @@ function Documents({
                   <ul className="uploaded-files-list">
                     {nonTradingFilesToUpload["others"].map((file, index) => (
                       <li key={index} className="uploaded-file-item">
-                    <a
-                      href={nonTradingFilePreviews[file.name]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="file-link"
-                      style={{ marginLeft: 8 }}
-                    >
-                      {file.name}
-                    </a>
-                
+                        <a
+                          href={nonTradingFilePreviews[file.name]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="file-link"
+                          style={{ marginLeft: 8 }}
+                        >
+                          {file.name}
+                        </a>
+
                         <button
                           type="button"
                           className="delete-file-button"
