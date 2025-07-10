@@ -130,10 +130,11 @@ function Maintenance() {
   const columns = [
     { key: "requestId", header: "Request #", include: isV('requestIdCol') },
     { key: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
-    { key: currentLanguage === "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
+    { key: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", header: "Branch", include: isV('branchCol') },
     { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
     { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
+    { key: "CreatedByUserName", header: "Created By", include: isV('createdByCol') },
     { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
@@ -213,105 +214,3 @@ function Maintenance() {
 }
 
 export default Maintenance;
-
-/*
-{
-    "status": "Ok",
-    "data": {
-        "page": 1,
-        "pageSize": 10,
-        "totalRecords": 2,
-        "totalPages": 1,
-        "data": [
-            {
-                "id": 1,
-                "requestId": "M-1234",
-                "customerId": 1,
-                "branchId": 1,
-                "issueType": "Machine Maintenance",
-                "issueName": "Machine depensation Issue",
-                "issueDetails": "Regular maintenance check required",
-                "urgencyLevel": "Medium",
-                "machineSerialNumber": "F-123444334321",
-                "warrantyEndDate": {},
-                "attachment": null,
-                "status": "Open",
-                "assignedTeamMember": 1,
-                "assignedTeamMemberDept": "Maintenance",
-                "comments": [
-                    {
-                        "userid": 2,
-                        "comment": "Scheduled for next week",
-                        "createdAt": "2025-04-01T11:00:00Z"
-                    }
-                ],
-                "chargers": {
-                    "maintenance": 150,
-                    "partsCharges": [
-                        {
-                            "qty": 1,
-                            "amount": 50,
-                            "partName": "Filter"
-                        }
-                    ]
-                },
-                "customerRegion": "jeddah",
-                "branchRegion": "jeddah",
-                "createdAt": "2025-05-20T02:08:02.701Z",
-                "updatedAt": "2025-05-20T02:08:02.701Z",
-                "createdBy": 1,
-                "modifiedBy": 1,
-                "companyNameEn": "Al Khaleej Trading",
-                "companyNameAr": "الخليج التجارية",
-                "branchNameEn": "Khaleej Riyadh Branch",
-                "branchNameLc": "فرع الخليج الرياض",
-                "assignedTo": "SE1"
-            },
-            {
-                "id": 2,
-                "requestId": "M-2133",
-                "customerId": 1,
-                "branchId": 1,
-                "issueType": "Machine Maintenance",
-                "issueName": "Machine Noise",
-                "issueDetails": "Machine makes noise while dispensing coffee",
-                "urgencyLevel": "Medium",
-                "machineSerialNumber": "F-321444334321",
-                "warrantyEndDate": {},
-                "attachment": null,
-                "status": "Open",
-                "assignedTeamMember": 1,
-                "assignedTeamMemberDept": "Maintenance",
-                "comments": [
-                    {
-                        "userid": 2,
-                        "comment": "Scheduled for next week",
-                        "createdAt": "2025-04-01T11:00:00Z"
-                    }
-                ],
-                "chargers": {
-                    "maintenance": 150,
-                    "partsCharges": [
-                        {
-                            "qty": 1,
-                            "amount": 50,
-                            "partName": "Filter"
-                        }
-                    ]
-                },
-                "customerRegion": "jeddah",
-                "branchRegion": "jeddah",
-                "createdAt": "2025-05-20T02:08:02.701Z",
-                "updatedAt": "2025-05-20T02:08:02.701Z",
-                "createdBy": 1,
-                "modifiedBy": 1,
-                "companyNameEn": "Al Khaleej Trading",
-                "companyNameAr": "الخليج التجارية",
-                "branchNameEn": "Khaleej Riyadh Branch",
-                "branchNameLc": "فرع الخليج الرياض",
-                "assignedTo": "SE1"
-            }
-        ]
-    }
-}
-*/

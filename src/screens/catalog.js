@@ -1359,7 +1359,7 @@ function Catalog() {
                 ? "tab-linked-filter"
                 : ""
                 }`}
-              placeholder="Category"
+              placeholder={t("Category")}
               value={categoryFilter}
               onChange={(e) => {
                 // Always set category filter from dropdown selection only
@@ -1373,7 +1373,7 @@ function Catalog() {
               name="subCategoryFilter"
               options={subCategoryOptions}
               className="category-filter"
-              placeholder="Sub category"
+              placeholder={t("Sub category")}
               value={subCategoryFilter}
               onChange={(e) => {
                 // Always set subcategory filter from dropdown selection only

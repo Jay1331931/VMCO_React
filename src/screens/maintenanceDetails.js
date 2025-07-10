@@ -403,11 +403,19 @@ function MaintenanceDetails() {
         const result = await response.json();
         if (result.status === 'Ok' && result.data) {
           const options = result.data;
-          const issueTypeValues = options.map(item => item.value);
+          // Extract issue type values from the response data and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
           const options = result.data;
-          const issueTypeValues = options.map(item => item.value);
+          // Handle the actual response structure and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else {
           throw new Error('Unexpected response format for issue type options');
@@ -426,7 +434,7 @@ function MaintenanceDetails() {
       }
     };
     fetchIssueTypeOptions();
-  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches]);
+  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches, currentLanguage, t]);
 
   // Add a separate useEffect to trigger calculation when warranty end date changes
   useEffect(() => {
@@ -1098,8 +1106,8 @@ function MaintenanceDetails() {
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
                   {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType} style={{ color: 'inherit' }}>
-                      {issueType}
+                    <option key={index} value={issueType.value || issueType} style={{ color: 'inherit' }}>
+                      {issueType.displayText || issueType}
                     </option>
                   ))}
                 </select>
@@ -1125,9 +1133,9 @@ function MaintenanceDetails() {
                   }}
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Urgency Level")}</option>
-                  <option value="Low" style={{ color: 'inherit' }}>Low</option>
-                  <option value="Medium" style={{ color: 'inherit' }}>Medium</option>
-                  <option value="High" style={{ color: 'inherit' }}>High</option>
+                  <option value="Low" style={{ color: 'inherit' }}>{t("Low")}</option>
+                  <option value="Medium" style={{ color: 'inherit' }}>{t("Medium")}</option>
+                  <option value="High" style={{ color: 'inherit' }}>{t("High")}</option>
                 </select>
               </div>
             )}

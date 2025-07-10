@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
+import { useTranslation } from 'react-i18next';
 
 function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, t = (x) => x }) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -93,7 +96,7 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           <button
             className="gb-close-btn"
             onClick={onClose}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
             {t("Close")}
           </button>

@@ -109,10 +109,11 @@ function Support() {
   const columns = [
     { key: "ticketId", header: "Ticket #", include: isV('ticketIdCol') },
     { key: currentLanguage == "en" ? "companyNameEn" : "companyNameAr", header: "Customer", include: isV('customerCol') },
-    { key: currentLanguage == "en" ? "branchNameEn" : "branchNameAr", header: "Branch", include: isV('branchCol') },
+    { key: currentLanguage == "en" ? "branchNameEn" : "branchNameLc", header: "Branch", include: isV('branchCol') },
     { key: "grievanceName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "grievanceType", header: "Issue Type", include: isV('issueTypeCol') },
     { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
+    { key: "CreatedByUserName", header: "Created By", include: isV('createdByCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
   ];

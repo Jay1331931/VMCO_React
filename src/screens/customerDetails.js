@@ -35,7 +35,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Swal from "sweetalert2";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const fetchCurrentDataOfCustomerContacts = async (customerId) => {

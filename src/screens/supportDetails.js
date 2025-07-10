@@ -300,13 +300,19 @@ function SupportDetails() {
 
         if (result.status === 'Ok' && result.data) {
           const options = result.data;
-          // Extract issue type values from the response data
-          const issueTypeValues = options.map(item => item.value);
+          // Extract issue type values from the response data and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
           const options = result.data;
-          // Handle the actual response structure we're seeing in the logs
-          const issueTypeValues = options.map(item => item.value);
+          // Handle the actual response structure and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else {
           throw new Error('Unexpected response format for issue type options');
@@ -317,7 +323,7 @@ function SupportDetails() {
     };
 
     fetchIssueTypeOptions();
-  }, []);
+  }, [currentLanguage, t]);
 
   // Check loading state first
   if (loading) {
@@ -1016,8 +1022,8 @@ function SupportDetails() {
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
                   {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType} style={{ color: 'inherit' }}>
-                      {issueType}
+                    <option key={index} value={issueType.value || issueType} style={{ color: 'inherit' }}>
+                      {issueType.displayText || issueType}
                     </option>
                   ))}
                 </select>
@@ -1137,7 +1143,7 @@ function SupportDetails() {
             <div className="support-assign">
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
                 {/* Assigned to Label */}
-                <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+                <span>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
 
                 {/* Department Selection */}
                 <div>
