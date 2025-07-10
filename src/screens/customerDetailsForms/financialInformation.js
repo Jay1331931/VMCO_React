@@ -5,7 +5,7 @@ import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
-
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 function FinancialInformation({
   customerData = {},
   originalCustomerData = {},
@@ -72,7 +72,19 @@ function FinancialInformation({
     <div className="customer-onboarding-form-grid">
       {isV("customerApprovalChecklist") && (
                           <div className="form-main-header">
-                            <a href="#">{t("Customer Approval Checklist")}</a>
+                            <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
                           </div>
                         )}
       {/* Bank Details Header */}

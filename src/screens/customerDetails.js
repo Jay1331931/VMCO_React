@@ -35,6 +35,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
+import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionConfirmation";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const fetchCurrentDataOfCustomerContacts = async (customerId) => {
@@ -229,13 +230,7 @@ const financialInfoCustomerFields = [
 ];
 
 // Pricing policy fields (these are keys inside pricingPolicy object)
-const pricingPolicyEntities = [
-  "DAR",
-  "VMCO",
-  "SHC",
-  "NAQI",
-  "GMTC"
-];
+const pricingPolicyEntities = ["DAR", "VMCO", "SHC", "NAQI", "GMTC"];
 
 // Fields from customerPaymentMethodsData for Financial Information
 const financialInfoPaymentFields = [
@@ -244,11 +239,16 @@ const financialInfoPaymentFields = [
   "partialPayment",
   "COD",
   // Credit for each entity
-  "DARCreditLimit", "DARCreditPeriod",
-  "VMCOCreditLimit", "VMCOCreditPeriod",
-  "SHCCreditLimit", "SHCCreditPeriod",
-  "NAQICreditLimit", "NAQICreditPeriod",
-  "GMTCreditLimit", "GMTCreditPeriod",
+  "DARCreditLimit",
+  "DARCreditPeriod",
+  "VMCOCreditLimit",
+  "VMCOCreditPeriod",
+  "SHCCreditLimit",
+  "SHCCreditPeriod",
+  "NAQICreditLimit",
+  "NAQICreditPeriod",
+  "GMTCreditLimit",
+  "GMTCreditPeriod",
   // ...add more if needed
 ];
 
@@ -275,7 +275,8 @@ function countPaymentMethodUpdates(original = {}, current = {}) {
     if (
       original?.methodDetails?.[method]?.isAllowed !== undefined &&
       current?.methodDetails?.[method]?.isAllowed !== undefined &&
-      original?.methodDetails?.[method]?.isAllowed !== current?.methodDetails?.[method]?.isAllowed
+      original?.methodDetails?.[method]?.isAllowed !==
+        current?.methodDetails?.[method]?.isAllowed
     ) {
       count++;
     }
@@ -284,7 +285,8 @@ function countPaymentMethodUpdates(original = {}, current = {}) {
       if (
         original?.methodDetails?.COD?.limit !== undefined &&
         current?.methodDetails?.COD?.limit !== undefined &&
-        original?.methodDetails?.COD?.limit !== current?.methodDetails?.COD?.limit
+        original?.methodDetails?.COD?.limit !==
+          current?.methodDetails?.COD?.limit
       ) {
         count++;
       }
@@ -295,21 +297,24 @@ function countPaymentMethodUpdates(original = {}, current = {}) {
     if (
       original?.methodDetails?.credit?.[entity]?.isAllowed !== undefined &&
       current?.methodDetails?.credit?.[entity]?.isAllowed !== undefined &&
-      original?.methodDetails?.credit?.[entity]?.isAllowed !== current?.methodDetails?.credit?.[entity]?.isAllowed
+      original?.methodDetails?.credit?.[entity]?.isAllowed !==
+        current?.methodDetails?.credit?.[entity]?.isAllowed
     ) {
       count++;
     }
     if (
       original?.methodDetails?.credit?.[entity]?.limit !== undefined &&
       current?.methodDetails?.credit?.[entity]?.limit !== undefined &&
-      original?.methodDetails?.credit?.[entity]?.limit !== current?.methodDetails?.credit?.[entity]?.limit
+      original?.methodDetails?.credit?.[entity]?.limit !==
+        current?.methodDetails?.credit?.[entity]?.limit
     ) {
       count++;
     }
     if (
       original?.methodDetails?.credit?.[entity]?.period !== undefined &&
       current?.methodDetails?.credit?.[entity]?.period !== undefined &&
-      original?.methodDetails?.credit?.[entity]?.period !== current?.methodDetails?.credit?.[entity]?.period
+      original?.methodDetails?.credit?.[entity]?.period !==
+        current?.methodDetails?.credit?.[entity]?.period
     ) {
       count++;
     }
@@ -321,13 +326,18 @@ function countPaymentMethodUpdates(original = {}, current = {}) {
 const assignedToEntityWiseEntities = ["DAR", "VMCO", "SHC", "NAQI", "GMTC"];
 
 // Helper to count assignedToEntityWise updates
-function countAssignedToEntityWiseUpdates(original = {}, current = {}, entities = []) {
+function countAssignedToEntityWiseUpdates(
+  original = {},
+  current = {},
+  entities = []
+) {
   let count = 0;
   entities.forEach((entity) => {
     if (
       original?.assignedToEntityWise?.[entity] !== undefined &&
       current?.assignedToEntityWise?.[entity] !== undefined &&
-      original?.assignedToEntityWise?.[entity] !== current?.assignedToEntityWise?.[entity]
+      original?.assignedToEntityWise?.[entity] !==
+        current?.assignedToEntityWise?.[entity]
     ) {
       count++;
     }
@@ -344,7 +354,7 @@ const documentFields = [
   "bankLetter",
   "nationalAddress",
   "contractAgreement",
-  "creditApplication"
+  "creditApplication",
 ];
 
 // Helper to count updated document fields (excluding nonTradingDocuments)
@@ -377,8 +387,6 @@ function countNonTradingDocumentsUpdates(original = [], current = []) {
   return 0;
 }
 
-
-
 function CustomerDetails() {
   const { t } = useTranslation();
   const [tabsHeight, setTabsHeight] = useState("auto");
@@ -403,12 +411,16 @@ function CustomerDetails() {
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
   const [logosToUpload, setLogosToUpload] = useState({});
-  const [businessDetailsUpdateCount, setBusinessDetailsUpdateCount] = useState(0);
+  const [signatureToUpload, setSignatureToUpload] = useState({});
+  const [businessDetailsUpdateCount, setBusinessDetailsUpdateCount] =
+    useState(0);
   const [contactDetailsUpdateCount, setContactDetailsUpdateCount] = useState(0);
   // State for update count
-const [financialInformationUpdateCount, setFinancialInformationUpdateCount] = useState(0);
-// State for update count
-const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
+  const [financialInformationUpdateCount, setFinancialInformationUpdateCount] =
+    useState(0);
+  // State for update count
+  const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
+  const [confirmationData, setConfirmationData] = useState({});
 
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
@@ -505,21 +517,20 @@ const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
       setOriginalCustomerPaymentMethodsData(paymentMethodsRes);
     };
     fetchData();
-    
   }, [customerId]);
 
   useEffect(() => {
-  const businessDetailsUpdateCount = countUpdatedFields(
-  originalCustomerData,
-  customerData,
-  businessDetailsFields
-);
-  const countAssigned = countAssignedToEntityWiseUpdates(
-    originalCustomerData,
-    customerData,
-    assignedToEntityWiseEntities
-  );
-  setBusinessDetailsUpdateCount(businessDetailsUpdateCount + countAssigned);
+    const businessDetailsUpdateCount = countUpdatedFields(
+      originalCustomerData,
+      customerData,
+      businessDetailsFields
+    );
+    const countAssigned = countAssignedToEntityWiseUpdates(
+      originalCustomerData,
+      customerData,
+      assignedToEntityWiseEntities
+    );
+    setBusinessDetailsUpdateCount(businessDetailsUpdateCount + countAssigned);
   }, [customerData, originalCustomerData]);
   useEffect(() => {
     const countContacts = countUpdatedFields(
@@ -540,44 +551,46 @@ const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
     originalCustomerData,
   ]);
   // Count updates in customerData and customerPaymentMethodsData for Financial Information tab
-useEffect(() => {
-  // Count simple fields in customerData
-  const countCustomer = countUpdatedFields(
-    originalCustomerData,
+  useEffect(() => {
+    // Count simple fields in customerData
+    const countCustomer = countUpdatedFields(
+      originalCustomerData,
+      customerData,
+      financialInfoCustomerFields
+    );
+    // Count pricing policy updates
+    const countPricing = countPricingPolicyUpdates(
+      originalCustomerData,
+      customerData,
+      pricingPolicyEntities
+    );
+    // Count payment method updates
+    const countPayment = countPaymentMethodUpdates(
+      originalCustomerPaymentMethodsData,
+      customerPaymentMethodsData
+    );
+    setFinancialInformationUpdateCount(
+      countCustomer + countPricing + countPayment
+    );
+  }, [
     customerData,
-    financialInfoCustomerFields
-  );
-  // Count pricing policy updates
-  const countPricing = countPricingPolicyUpdates(
     originalCustomerData,
-    customerData,
-    pricingPolicyEntities
-  );
-  // Count payment method updates
-  const countPayment = countPaymentMethodUpdates(
+    customerPaymentMethodsData,
     originalCustomerPaymentMethodsData,
-    customerPaymentMethodsData
-  );
-  setFinancialInformationUpdateCount(countCustomer + countPricing + countPayment);
-}, [
-  customerData,
-  originalCustomerData,
-  customerPaymentMethodsData,
-  originalCustomerPaymentMethodsData,
-]);
-// Count updates in customerData for Documents tab
-useEffect(() => {
-  const countDocs = countUpdatedDocumentFields(
-    originalCustomerData,
-    customerData,
-    documentFields
-  );
-  const countNonTrading = countNonTradingDocumentsUpdates(
-    originalCustomerData?.nonTradingDocuments,
-    customerData?.nonTradingDocuments
-  );
-  setDocumentsUpdateCount(countDocs + countNonTrading);
-}, [customerData, originalCustomerData]);
+  ]);
+  // Count updates in customerData for Documents tab
+  useEffect(() => {
+    const countDocs = countUpdatedDocumentFields(
+      originalCustomerData,
+      customerData,
+      documentFields
+    );
+    const countNonTrading = countNonTradingDocumentsUpdates(
+      originalCustomerData?.nonTradingDocuments,
+      customerData?.nonTradingDocuments
+    );
+    setDocumentsUpdateCount(countDocs + countNonTrading);
+  }, [customerData, originalCustomerData]);
 
   const handleCustomerDataChange = (e) => {
     const { name, value } = e.target;
@@ -755,8 +768,8 @@ useEffect(() => {
     // "contractAgreement",
     // "customerContract",
     // "creditApplication",
-    // "declarationName",
-    // "declarationSignature",
+    "declarationName",
+    "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
     // "customerStatus",
@@ -821,8 +834,8 @@ useEffect(() => {
     // "contractAgreement",
     // "customerContract",
     // "creditApplication",
-    // "declarationName",
-    // "declarationSignature",
+    "declarationName",
+    "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
     // "customerStatus",
@@ -852,7 +865,6 @@ useEffect(() => {
     "purchasingHeadDesignation",
   ];
 
-
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
@@ -878,9 +890,10 @@ useEffect(() => {
       "customerContract",
       "creditApplication",
     ];
-    const documentList = customerData?.companyType === "trading"
-      ? tradingDocumentList
-      : nonTradingDocumentList;
+    const documentList =
+      customerData?.companyType === "trading"
+        ? tradingDocumentList
+        : nonTradingDocumentList;
     const uniqueFieldsList = [
       "crNumber",
       "vatNumber",
@@ -889,9 +902,9 @@ useEffect(() => {
       "bankAccountNumber",
     ];
     // If mandatoryCheckReguired is true, check all mandatory fields
-
+    console.log("check mandtaory fields has assigned to entity wise", mandatoryFields.includes("assignedToEntityWise"));
     if (mandatoryCheckRequired) {
-      mandatoryFields.forEach((field) => {
+      mandatoryFields?.forEach((field) => {
         if (field === "assignedToEntityWise") {
           // Skip here, handle below
           return;
@@ -906,7 +919,7 @@ useEffect(() => {
       });
 
       // Special check for assignedToEntityWise
-      if (
+      if (mandatoryFields.includes("assignedToEntityWise") &&
         dataToValidate.assignedToEntityWise &&
         typeof dataToValidate.assignedToEntityWise === "object"
       ) {
@@ -921,7 +934,7 @@ useEffect(() => {
             );
           }
         });
-      } else {
+      } else if (mandatoryFields.includes("assignedToEntityWise")) {
         // If the whole object is missing
         assignedToEntityWiseEntities.forEach((entity) => {
           errors[`assignedToEntityWise.${entity}`] = t(
@@ -949,7 +962,9 @@ useEffect(() => {
       ) {
         const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
         if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = t("Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted");
+          errors[field] = t(
+            "Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted"
+          );
         }
       }
 
@@ -984,17 +999,13 @@ useEffect(() => {
       if (field.toLowerCase().includes("crnumber")) {
         const crNumberRegex = /^[1-9]\d{9}$/;
         if (value && !crNumberRegex.test(value)) {
-          errors[field] = t(
-            "Invalid format! 10 digits required"
-          );
+          errors[field] = t("Invalid format! 10 digits required");
         }
       }
       if (field.toLowerCase().includes("governmentregistrationnumber")) {
         const govRegNumberRegex = /^[1-9]\d{8,9}$/;
         if (value && !govRegNumberRegex.test(value)) {
-          errors[field] = t(
-            "Invalid format! 8 to 9 digits accepted"
-          );
+          errors[field] = t("Invalid format! 8 to 9 digits accepted");
         }
       }
 
@@ -1105,7 +1116,8 @@ useEffect(() => {
   const uploadDocuments = async (
     tradingFilesToUpload,
     nonTradingFilesToUpload,
-    logosToUpload // <-- Add this param
+    logosToUpload,
+    signatureToUpload // <-- Add this param
   ) => {
     const uploadedFiles = {};
     try {
@@ -1139,7 +1151,9 @@ useEffect(() => {
               // if (index > -1) {
               //   nonTradingFilesToUpload["others"].splice(index, 1);
               // }
-              nonTradingFilesToUpload["others"] = nonTradingFilesToUpload["others"].filter(file => file !== f);
+              nonTradingFilesToUpload["others"] = nonTradingFilesToUpload[
+                "others"
+              ].filter((file) => file !== f);
             }
           }
         }
@@ -1163,6 +1177,25 @@ useEffect(() => {
           }
         }
       }
+
+      // --- Handle signature upload ---
+      if (signatureToUpload.declarationSignature) {
+        const uploadedSignature = await uploadFile(
+          "declarationSignature",
+          signatureToUpload.declarationSignature,
+          customerId
+        );
+        if (uploadedSignature && uploadedSignature.fileName) {
+          uploadedFiles["declarationSignature"] = uploadedSignature.fileName;
+          // Remove from upload queue
+          setSignatureToUpload((prev) => {
+            const copy = { ...prev };
+            delete copy.declarationSignature;
+            return copy;
+          });
+        }
+      }
+
       if (uploadedFiles?.["nonTradingDocuments"])
         uploadedFiles["nonTradingDocuments"] = JSON.stringify(
           uploadedFiles["nonTradingDocuments"]
@@ -1176,12 +1209,15 @@ useEffect(() => {
   const handleSave = async (action) => {
     console.log("^^^^^Saving customer data:", updatedCustomerData.current);
     console.log(nonTradingFilesToUpload);
-
+    // if(action === "submit") {
+    //   customerData["declarationDate"] = new Date().toISOString();
+    // }
     try {
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
         nonTradingFilesToUpload,
-        logosToUpload // <-- pass here
+        logosToUpload,
+        signatureToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -1199,20 +1235,19 @@ useEffect(() => {
           ...updatedCustomerData.current,
           ...updatedCustomerContactsData.current,
         },
-        false
+        false,
+        []
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         if (action !== "submit") {
           Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    "Please fix the errors before saving."
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+            icon: "error",
+            title: t("Error"),
+            text: t("Please fix the errors before saving."),
+            confirmButtonText: t("OK"),
+          });
           // alert("Please fix the errors before saving.");
         }
         return;
@@ -1236,13 +1271,11 @@ useEffect(() => {
       }
     } catch (error) {
       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
       return false;
@@ -1265,13 +1298,11 @@ useEffect(() => {
       console.log("Response", response);
     } catch (error) {
       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
       return false;
@@ -1292,25 +1323,21 @@ useEffect(() => {
       console.log("Response", response);
     } catch (error) {
       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
       return false;
     }
     Swal.fire({
-            icon: "success",
-            title: t("Success"),
-            text: t(
-              "Customer data saved successfully."
-            ),
-            confirmButtonText: t("OK"),
-          });
+      icon: "success",
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      confirmButtonText: t("OK"),
+    });
     // alert("Customer data saved successfully.");
     return true;
   };
@@ -1325,7 +1352,8 @@ useEffect(() => {
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
         nonTradingFilesToUpload,
-        logosToUpload // <-- pass here
+        logosToUpload,
+        signatureToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -1340,13 +1368,11 @@ useEffect(() => {
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    "Please fix the errors before saving."
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
         // alert("Please fix the errors before saving.");
         return;
       }
@@ -1366,13 +1392,11 @@ useEffect(() => {
       console.log("Response", response);
     } catch (error) {
       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
     }
@@ -1392,26 +1416,24 @@ useEffect(() => {
       console.log("Response", response);
     } catch (error) {
       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
     }
     Swal.fire({
-            icon: "success",
-            title: t("Success"),
-            text: t(
-              "Customer data saved successfully."
-            ),
-            confirmButtonText: t("OK"),
-          });
+      icon: "success",
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      confirmButtonText: t("OK"),
+    }).then(() => {
+      window.location.reload();
+    });
     // alert("Customer data saved successfully.");
-    window.location.reload();
+    // window.location.reload();
   };
 
   const handleApprovalClick = (action) => {
@@ -1446,22 +1468,30 @@ useEffect(() => {
         },
         id: customerId,
       };
-
+      var dataToBeValidated = {};
+      if(customerData?.customerStatus === "pending") {
+        dataToBeValidated = {...customerData,...customerContactsData}
+      }
+      else {
+        dataToBeValidated = {
+          ...mergedData?.updates?.customer,
+          ...mergedData?.updates?.contacts,
+        };
+      }
+      console.log("Data to be validated:", dataToBeValidated);
       const errors = await validateData(
-        { ...mergedData?.updates?.customer, ...mergedData?.updates?.contacts },
+        dataToBeValidated,
         true,
         mandatoryFieldsForApproval
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    "Please fix the errors before saving."
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
         // alert("Please fix the errors before saving.");
         return;
       }
@@ -1511,19 +1541,18 @@ useEffect(() => {
 
       const errors = await validateData(
         { ...mergedData?.updates?.customer, ...mergedData?.updates?.contacts },
-        true
+        true,
+        mandatoryFieldsForApproval
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    "Please fix the errors before saving."
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
         // alert("Please fix the errors before saving.");
         return;
       }
@@ -1588,8 +1617,12 @@ useEffect(() => {
   const handleSubmit = async (action) => {
     try {
       // uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
+      customerData["declarationDate"] = new Date().toISOString();
+      updatedCustomerData.current = {
+        ...updatedCustomerData.current,
+        declarationDate: customerData.declarationDate,
+      };
       const saved = await handleSave("submit");
-
       const errors = await validateData(
         {
           ...customerData,
@@ -1603,18 +1636,17 @@ useEffect(() => {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-         Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    "Please fix the errors before saving."
-                  ),
-                  confirmButtonText: t("OK"),
-          });
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
         // alert("Please fix the errors before submitting.");
         return;
       }
       customerData["customerStatus"] = "pending";
+
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -1663,14 +1695,12 @@ useEffect(() => {
       showLoadingScreen("Updating...");
       setTimeout(() => window.location.reload(true), 3000);
     } catch (error) {
-       Swal.fire({
-                  icon: "error",
-                  title: t("Error"),
-                  text: t(
-                    `Error updating customer data. ${error.message}`
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
     }
@@ -1683,7 +1713,10 @@ useEffect(() => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ customer: { customerStatus: "blocked", isBlocked: true }, contacts: {} }),
+          body: JSON.stringify({
+            customer: { customerStatus: "blocked", isBlocked: true },
+            contacts: {},
+          }),
           credentials: "include",
         }
       );
@@ -1802,6 +1835,18 @@ useEffect(() => {
                   </div>
                 )}
 
+                {(isV("finalSubmissionTab") || (customerData?.customerStatus === "new" || customerData?.customerStatus === "pending")) && (
+                  <div
+                    key={"Final Submission"}
+                    className={`tab ${
+                      activeTab === "Final Submission" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Final Submission")}
+                  >
+                    {t("Final Submission")}
+                  </div>
+                )}
+
                 {isV("productsTab") &&
                   customerData?.customerStatus !== "new" && (
                     <div
@@ -1827,6 +1872,7 @@ useEffect(() => {
                       {t("Branches")}
                     </div>
                   )}
+                
               </div>
 
               {activeTab === "Business Details" &&
@@ -1915,6 +1961,16 @@ useEffect(() => {
                   setTabsHeight={setTabsHeight}
                 />
               )}
+              {activeTab === "Final Submission" && (
+                <FinalSubmissionConfirmation
+                  customerData={customerData}
+                  originalCustomerData={originalCustomerData}
+                  onChangeCustomerData={handleCustomerDataChange}
+                  formErrors={formErrors}
+                  mode={mode}
+                  signatureToUpload={signatureToUpload}
+                />
+              )}
             </div>
           </div>
           <div className="customer-onboarding-form-actions">
@@ -1932,6 +1988,7 @@ useEffect(() => {
               "Contact Details",
               "Financial Information",
               "Documents",
+              "Final Submission",
             ].includes(activeTab) && (
               <div className="action-buttons">
                 {isV("btnSave") && customerData?.customerStatus === "new" && (
@@ -1987,7 +2044,7 @@ useEffect(() => {
                   <button
                     className="block"
                     onClick={() => handleBlock()}
-                    disabled={(mode === "add" && inApproval)}
+                    disabled={mode === "add" && inApproval}
                   >
                     {t("Block")}
                   </button>
@@ -1996,7 +2053,7 @@ useEffect(() => {
                   <button
                     className="unblock"
                     onClick={() => handleUnblock()}
-                    disabled={(mode === "add" && inApproval)}
+                    disabled={mode === "add" && inApproval}
                   >
                     {t("Unblock")}
                   </button>

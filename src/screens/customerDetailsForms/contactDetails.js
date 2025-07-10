@@ -15,6 +15,7 @@ import maplibregl from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 function ContactDetails({
   customerData = {},
   customerContactsData = {},
@@ -249,8 +250,20 @@ function ContactDetails({
     <div className="customer-onboarding-form-grid">
        {isV("customerApprovalChecklist") && (
                           <div className="form-main-header">
-                            <a href="#">{t("Customer Approval Checklist")}</a>
-                          </div>
+                            <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
+    </div>
                         )}
       {/* Primary Contact Details Header */}
       <h3 className="form-header full-width">

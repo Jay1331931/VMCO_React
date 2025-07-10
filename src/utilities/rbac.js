@@ -769,6 +769,8 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: true, editable: true },
           'Price Plan': { visible: false, editable: false },
           branch: { visible: false, editable: true },
+          declarationName: { visible: true, editable: false },
+          finalSubmissionTab: {visible: false, editable: true}
         },
       },
       custDetailsEdit: {
@@ -1350,7 +1352,7 @@ class RbacManager {
           financialInformationTab: {visible: false, editable: false},
           documentsTab: {visible: false, editable: false},
           productsTab: {visible: false, editable: false},
-          
+          finalSubmissionTab: {visible: false, editable: true}
         },
       },
       custDetailsEdit: {
@@ -2489,7 +2491,8 @@ class RbacManager {
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerApprovalChecklist: { visible: true, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
+          'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
+          finalSubmissionTab: { visible: true, editable: true } 
         }
       },
       custDetailsEdit: {
@@ -2570,8 +2573,8 @@ class RbacManager {
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
           customerApprovalChecklist: { visible: true, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-
+          'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
+          finalSubmissionTab: { visible: true, editable: true }
         },
       },
       supList: {
@@ -3074,8 +3077,8 @@ class RbacManager {
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerApprovalChecklist: { visible: true, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-
+          'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
+          finalSubmissionTab: { visible: true, editable: true }
         }
       },
       custDetailsEdit: {
@@ -3152,7 +3155,8 @@ class RbacManager {
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerSource: { visible: true, editable: false },
           customerApprovalChecklist: { visible: true, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
+          'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
+          finalSubmissionTab: { visible: true, editable: true }
 
         }
       },

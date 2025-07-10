@@ -414,12 +414,36 @@ const BranchDetailsForm = ({
     // "supervisorContactEmail",
     // "supervisorContactMobile",
   ];
+  const mandatoryFieldsForApproval = [
+    "branchNameEn",
+    "branchNameLc",
+    "buildingName",
+    "street",
+    "city",
+    "locationType",
+    "region",
+    "geolocation",
+    "primaryContactName",
+    "primaryContactDesignation",
+    "primaryContactEmail",
+    "primaryContactMobile",
+    "secondaryContactName",
+    "secondaryContactDesignation",
+    "secondaryContactEmail",
+    "secondaryContactMobile",
+    "branch",
+    // "supervisorContactName",
+    // "supervisorContactDesignation",
+    // "supervisorContactEmail",
+    // "supervisorContactMobile",
+  ];
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
   const validateData = async (
     dataToValidate,
-    mandatoryCheckRequired = false
+    mandatoryCheckRequired = false,
+    mandatoryFields = mandatoryFields
   ) => {
     const errors = {};
     const arabicList = ["branchNameLc"];
@@ -464,7 +488,8 @@ const BranchDetailsForm = ({
 
     const errors = await validateData(
       { ...branchDetails, ...branchContacts },
-      true
+      true,
+      mandatoryFields
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -564,7 +589,8 @@ const BranchDetailsForm = ({
     const isNewBranch = id < 0; // Negative IDs are temporary
     const errors = await validateData(
       { ...updatedBranchData.current, ...updatedBranchContactsData.current },
-      false
+      false,
+      []
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -684,7 +710,8 @@ const BranchDetailsForm = ({
   const handleSaveChanges = async (id) => {
     const errors = await validateData(
       { ...branchDetails, ...branchContacts },
-      true
+      true,
+      mandatoryFields
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
@@ -899,7 +926,33 @@ const BranchDetailsForm = ({
       },
       id: branchId,
     };
-
+var dataToBeValidated = {};
+      if(branch?.branchStatus === "pending") {
+        dataToBeValidated = {...branch, ...branchContacts, ...hoursDetails, ...updatedBranchData.current, ...updatedBranchContactsData.current, ...mergedData?.updates?.branch, ...mergedData?.updates?.contacts};
+      }
+      else {
+        dataToBeValidated = {
+          ...mergedData?.updates?.branch,
+          ...mergedData?.updates?.contacts,
+        };
+      }
+      console.log("Data to be validated:", dataToBeValidated);
+      const errors = await validateData(
+        dataToBeValidated,
+        true,
+        mandatoryFieldsForApproval
+      );
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
+        return;
+      }
     try {
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
