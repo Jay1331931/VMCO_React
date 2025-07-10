@@ -1208,7 +1208,24 @@ function Catalog() {
         return;
       }
       try {
-        const response = await fetch(`${API_BASE_URL}/product-categories?entity=${encodeURIComponent(entity)}`, {
+        // Build query parameters
+        const params = new URLSearchParams({
+          entity: entity
+        });
+
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if(activeCategory === Constants.CATEGORY.VMCO_MACHINES){
+          const isMachine = true;
+          params.append('isMachine', isMachine);
+          }
+          else {
+            const isMachine = false;
+            params.append('isMachine', isMachine);
+          }
+        }
+
+        const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
