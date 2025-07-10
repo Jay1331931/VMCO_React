@@ -134,7 +134,7 @@ function Maintenance() {
     { key: "issueName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "issueType", header: "Issue Type", include: isV('issueTypeCol') },
     { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
-    { key: "CreatedByUserName", header: "Created By", include: isV('createdByCol') },
+    { key: "createdByUsername", header: "Created By", include: isV('createdByCol') },
     { key: "urgencyLevel", header: "Urgency Level", include: isV('urgencyLevelCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },

@@ -292,6 +292,7 @@ function Orders() {
     },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
+    { key: 'createdByUsername', header: () => t('Created By'), include: isV('createdBy') },
     { 
       key: 'deliveryDate', 
       header: () => t('Delivery Date'), 
@@ -318,9 +319,10 @@ function Orders() {
     { key: 'workflowName', header: () => t('Workflow Name'), include: isV('workflowName') },
     { key: 'entity', header: () => t('Entity'), include: isV('entity') },
     { key: 'paymentMethod', header: () => t('Payment Method'), include: isV('paymentMethod') },
-    { 
-      key: 'deliveryDate', 
-      header: () => t('Delivery Date'), 
+    { key: 'createdByUsername', header: () => t('Created By'), include: isV('createdBy') },
+    {
+      key: 'deliveryDate',
+      header: () => t('Delivery Date'),
       include: isV('expectedDeliveryDate'),
       render: (item) => item.expectedDeliveryDate ? formatDate(item.expectedDeliveryDate, 'DD/MM/YYYY') : ' '
     },

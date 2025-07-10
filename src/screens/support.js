@@ -113,7 +113,7 @@ function Support() {
     { key: "grievanceName", header: "Issue Name", include: isV('issueNameCol') },
     { key: "grievanceType", header: "Issue Type", include: isV('issueTypeCol') },
     { key: "createdAt", header: "Created Date", include: isV('createdDateCol') },
-    { key: "CreatedByUserName", header: "Created By", include: isV('createdByCol') },
+    { key: "createdByUsername", header: "Created By", include: isV('createdByCol') },
     { key: "assignedTo", header: "Assigned To", include: isV('assignedToCol') },
     { key: "status", header: "Status", include: isV('statusCol') },
   ];
