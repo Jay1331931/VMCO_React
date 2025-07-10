@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
+import { useTranslation } from 'react-i18next';
 
 
 function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoint, apiParams, t = (x) => x }) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,7 +89,7 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
           <button
             className="gp-close-btn"
             onClick={onClose}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
             {t("Close")}
           </button>

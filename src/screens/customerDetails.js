@@ -5,6 +5,7 @@ import "../styles/forms.css";
 import CommentPopup from "../components/commentPanel";
 import "../i18n";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import {
   getBusinessDetailsForm,
   getBusinessDetailsFormData,
@@ -34,7 +35,6 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
-import Swal from "sweetalert2";
 import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionConfirmation";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 

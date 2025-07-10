@@ -4,6 +4,7 @@ import "../styles/components.css";
 import CommentPopup from "../components/commentPanel";
 import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import formatDate from "../utilities/dateFormatter"; // Import the date formatter
@@ -102,6 +103,10 @@ function SupportDetails() {
   // State for branch popup
   const [showBranchPopup, setShowBranchPopup] = useState(false);
 
+  // State for file upload loading
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
   // State for issue type options
   const [issueTypeOptions, setIssueTypeOptions] = useState([]);
 
@@ -118,13 +123,20 @@ function SupportDetails() {
 
     if (file.size > 10 * 1024 * 1024) {
       Swal.fire({
-        title: t("File size exceeds 30MB limit"),
+        title: t("File size exceeds 10MB limit"),
         text: t("Please select a smaller file."),
         icon: "error",
         confirmButtonText: t("OK"),
         confirmButtonColor: "#dc3545"
       });
       return;
+    }
+
+    // Set loading state based on file type
+    if (type === "image") {
+      setUploadingImage(true);
+    } else if (type === "video") {
+      setUploadingVideo(true);
     }
 
     const formDataUpload = new FormData();
@@ -150,6 +162,20 @@ function SupportDetails() {
       }
     } catch (err) {
       console.error("Upload error:", err);
+      Swal.fire({
+        title: t("Upload Error"),
+        text: t("Failed to upload file. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    } finally {
+      // Reset loading state
+      if (type === "image") {
+        setUploadingImage(false);
+      } else if (type === "video") {
+        setUploadingVideo(false);
+      }
     }
 
     e.target.value = "";
@@ -300,13 +326,19 @@ function SupportDetails() {
 
         if (result.status === 'Ok' && result.data) {
           const options = result.data;
-          // Extract issue type values from the response data
-          const issueTypeValues = options.map(item => item.value);
+          // Extract issue type values from the response data and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
           const options = result.data;
-          // Handle the actual response structure we're seeing in the logs
-          const issueTypeValues = options.map(item => item.value);
+          // Handle the actual response structure and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else {
           throw new Error('Unexpected response format for issue type options');
@@ -317,7 +349,7 @@ function SupportDetails() {
     };
 
     fetchIssueTypeOptions();
-  }, []);
+  }, [currentLanguage, t]);
 
   // Check loading state first
   if (loading) {
@@ -344,6 +376,9 @@ function SupportDetails() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
+  // Check if ticket is in read-only state (closed or cancelled)
+  const isReadOnly = ticket.status === "Closed" || ticket.status === "Cancelled";
 
   // Fetch branches when dropdown is clicked
   const fetchBranches = async () => {
@@ -579,13 +614,15 @@ function SupportDetails() {
       customerId: customer.id,
       companyNameEn: customer.company_name_en || customer.companyNameEn,
       companyNameAr: customer.company_name_ar || customer.companyNameAr,
-      erpCustId: customer.erp_cust_id || customer.erpCustId
+      erpCustId: customer.erp_cust_id || customer.erpCustId,
+      branchId: "", // Reset branchId when customer changes
+      branchNameEn: "", // Optionally reset branch name fields
+      branchNameLc: ""
     }));
     setShowCustomerPopup(false);
 
-    // Reset branch when customer changes and fetch new branches
-    setTicket(prev => ({ ...prev, branchId: "" }));
-    setBranches([]);
+    setBranches([]); // Clear branches list
+    setSelectedBranch(""); // Reset selected branch UI field
     if (customer.id) {
       fetchBranchesForCustomer(customer.id);
     }
@@ -601,6 +638,7 @@ function SupportDetails() {
       erpBranchId: branch.erp_branch_id || branch.erpBranchId,
       branchRegion: branch.region || branch.branchRegion
     }));
+    setSelectedBranch(currentLanguage === "en" ? (branch.branch_name_en || branch.branchNameEn) : (branch.branch_name_lc || branch.branchNameLc));
     setShowBranchPopup(false);
   };
 
@@ -642,19 +680,47 @@ function SupportDetails() {
     setSaving(true); // Start saving
     // Basic validation
     if (!ticket.branchId) {
-      alert(t("Please select a branch"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a branch"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.grievanceType) {
-      alert(t("Please select an issue type"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select an issue type"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.grievanceName?.trim()) {
-      alert(t("Please enter an issue name"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter an issue name"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.description?.trim()) {
-      alert(t("Please enter issue details"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter issue details"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
       return;
     }
 
@@ -784,8 +850,6 @@ function SupportDetails() {
         return; // User cancelled
       }
 
-      setSaving(true);
-
       const endPoint = `/grievances/id/${ticket.id}`;
       const apiUrl = `${API_BASE_URL}${endPoint}`;
 
@@ -793,7 +857,10 @@ function SupportDetails() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status: "Closed" }),
+        body: JSON.stringify({ 
+          status: "Closed",
+          comments: ticket.comments // Explicitly preserve comments
+        }),
       });
 
       if (!response.ok) {
@@ -839,7 +906,7 @@ function SupportDetails() {
 
   // Add comment to ticket.comments in correct format and save to backend immediately
   const handleAddComment = async (commentText, newCommentObj) => {
-    if (!commentText || !user) return;
+    if (!commentText || !user || isReadOnly) return;
     
     // Create the new comment object
     const newComment = {
@@ -929,7 +996,7 @@ function SupportDetails() {
   };
 
   return (
-    <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}${isCommentPanelOpen ? "collapsed" : ""}`}>
+    <Sidebar title={`${formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}`}>
       <div className='support-details-container'>
         <h2 className='support-details-title'>{formMode === "add" ? t("New Ticket") : `${t("Ticket# ")}${ticket.ticketId}`}</h2>
         <div className='support-details-section'>
@@ -937,12 +1004,12 @@ function SupportDetails() {
           <div className='support-details-grid'>
             {isV('customerName') && (
               <div className='support-details-field'>
-                <label>{t("Customer Name")}</label>
+                <label>{t("Customer Name")} *</label>
                 <input
                   value={companyNameToShow || ""}
                   readOnly
-                  style={{ cursor: (isE("customerName") && user?.userType !== 'customer') ? 'pointer' : 'default' }}
-                  onClick={() => (isE("customerName") && user?.userType !== 'customer') && setShowCustomerPopup(true)}
+                  style={{ cursor: (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) ? 'pointer' : 'default' }}
+                  onClick={() => (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) && setShowCustomerPopup(true)}
                   placeholder={user?.userType === 'customer' ? "" : t("Click to select customer")}
                 />
               </div>
@@ -953,8 +1020,8 @@ function SupportDetails() {
                 <input
                   value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
                   readOnly
-                  style={{ cursor: isE("branch") ? 'pointer' : 'default' }}
-                  onClick={() => isE("branch") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
+                  style={{ cursor: (isE("branchName") && !isReadOnly) ? 'pointer' : 'default' }}
+                  onClick={() => (isE("branchName") && !isReadOnly) && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
                   placeholder={
                     user?.userType === 'customer'
                       ? t("Click to select branch")
@@ -968,21 +1035,21 @@ function SupportDetails() {
             )}
             {isV('issueType') && (
               <div className='support-details-field'>
-                <label>{t("Issue Type")}</label>
+                <label>{t("Issue Type")} *</label>
                 <select
                   id='grievanceType'
                   name='grievanceType'
                   value={ticket.grievanceType || ""}
                   onChange={handleInputChange}
-                  disabled={!isE("issueType")}
+                  disabled={!isE("issueType") || isReadOnly}
                   style={{
                     color: ticket.grievanceType ? 'inherit' : '#999',
                   }}
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
                   {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType} style={{ color: 'inherit' }}>
-                      {issueType}
+                    <option key={index} value={issueType.value || issueType} style={{ color: 'inherit' }}>
+                      {issueType.displayText || issueType}
                     </option>
                   ))}
                 </select>
@@ -990,8 +1057,8 @@ function SupportDetails() {
             )}
             {isV('issueName') && (
               <div className='support-details-field'>
-                <label>{t("Issue Name")}</label>
-                <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName || ""} disabled={!isE("issueName")} />
+                <label>{t("Issue Name")} *</label>
+                <input id='grievanceName' name='grievanceName' onChange={handleInputChange} value={ticket.grievanceName || ""} disabled={!isE("issueName") || isReadOnly} />
               </div>
             )}
             {isV('createdDate') ? (
@@ -1003,8 +1070,8 @@ function SupportDetails() {
           </div>
           {isV('issueDetails') && (
             <div className='support-details-field support-details-textarea'>
-              <label>{t("Issue Details")}</label>
-              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description || ""} disabled={!isE("issueDetails")} />
+              <label>{t("Issue Details")} *</label>
+              <textarea id='description' name='description' onChange={handleInputChange} value={ticket.description || ""} disabled={!isE("issueDetails") || isReadOnly} />
             </div>
           )}
 
@@ -1014,14 +1081,19 @@ function SupportDetails() {
                 <div className='maintenance-details-images'>
                   <label>{t("Images")}</label>
                   <div className='maintenance-images-list'>
-                    {/* Add Image Button */}
-                    {isV('addImage') && isE('addImage') && images.length <= 6 && (
+                    {isV('addImage') && isE('addImage') && !isReadOnly && images.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
                         +
                       </button>
                     )}
                     {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
                     <div className="scrollable-image-row">
+                      {/* Loading spinner for image upload */}
+                      {uploadingImage && (
+                        <div className='maintenance-image-placeholder upload-loading'>
+                          <LoadingSpinner size="small" />
+                         </div>
+                      )}
                       {fileData.map((imageData, idx) => (
                         <div
                           key={idx}
@@ -1036,7 +1108,7 @@ function SupportDetails() {
                             src={imageData.url}
                             alt={`file-${idx}`}
                           />
-                          {isV("removeImage") && isE("removeImage") && (
+                          {isV("removeImage") && isE("removeImage") && !isReadOnly && (
                             <button
                               className="maintenance-remove-btn"
                               onClick={(e) => {
@@ -1060,17 +1132,23 @@ function SupportDetails() {
                   <label>{t("Videos")}</label>
                   <div className='maintenance-videos-list'>
                     {/* Add Video Button */}
-                    {isE('addVideo') && videos?.length <= 6 && (
+                    {isE('addVideo') && !isReadOnly && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
                         +
                       </button>
                     )}
                     {videos?.length <= 6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "video")} />}
                     <div className="scrollable-image-row">
+                      {/* Loading spinner for video upload */}
+                      {uploadingVideo && (
+                        <div className='maintenance-video-placeholder upload-loading'>
+                          <LoadingSpinner size="small" />
+                        </div>
+                      )}
                       {videoData.map((videoData, idx) => (
                         <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
                           <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
-                          {isV("removeVideo") && isE("removeVideo") && (
+                          {isV("removeVideo") && isE("removeVideo") && !isReadOnly && (
                             <button
                               className='maintenance-remove-btn'
                               onClick={(e) => {
@@ -1103,7 +1181,7 @@ function SupportDetails() {
             <div className="support-assign">
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px' }}>
                 {/* Assigned to Label */}
-                <span>{formMode === "add" ? t("Assign to:") : t("Assigned to:")}</span>
+                <span>{formMode === "add" ? t("Assign To:") : t("Assigned To:")}</span>
 
                 {/* Department Selection */}
                 <div>
@@ -1113,7 +1191,7 @@ function SupportDetails() {
                     options={departments}
                     value={selectedDepartment || ""}
                     onChange={(e) => handleDepartmentChange({ target: { value: e.target.value } })}
-                    disabled={!isEditing || loadingDepartments || (ticket.status && ticket.status === "Closed")}
+                    disabled={!isEditing || loadingDepartments || isReadOnly || !isE('assignedTo')}
                     placeholder={t('Select Department')}
                   />
                 </div>
@@ -1126,7 +1204,7 @@ function SupportDetails() {
                     options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                     value={ticket.assignedTeamMember || ""}
                     onChange={handleInputChange}
-                    disabled={!isEditing || !selectedDepartment || (ticket.status && ticket.status === "Closed")}
+                    disabled={!isEditing || !selectedDepartment || isReadOnly || !isE('assignedTo')}
                     placeholder={!selectedDepartment ? t('Select department first') : t('Select Assignee')}
                   />
                 </div>
@@ -1142,13 +1220,13 @@ function SupportDetails() {
                   <button
                     className="support-action-btn save"
                     onClick={handleSave}
-                    disabled={saving || closing || ticket.status === "Closed"}
+                    disabled={saving || closing || isReadOnly}
                   >
                     {saving ? t("Saving...") : t("Save")}
                   </button>
                 )}
                 {/* Close Ticket Button - only show for existing tickets that are not already closed */}
-                {formMode === "edit" && ticket.status !== "Closed" && isV('btnCloseTicket') && isE('btnCloseTicket') && (
+                {formMode === "edit" && !isReadOnly && isV('btnCloseTicket') && isE('btnCloseTicket') && (
                   <button
                     className="support-action-btn close"
                     onClick={handleCloseTicket}
@@ -1159,7 +1237,7 @@ function SupportDetails() {
                   </button>
                 )}
                 {isV('btnCancel') && isE('btnCancel') && (
-                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={ticket.status === "Closed" || saving || closing}>
+                  <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
                     {t("Cancel")}
                   </button>
                 )}
@@ -1200,7 +1278,7 @@ function SupportDetails() {
           isOpen={isCommentPanelOpen}
           setIsOpen={setIsCommentPanelOpen}
           onAddComment={handleAddComment}
-          showCommentForm={true}
+          showCommentForm={!isReadOnly}
           externalComments={
             Array.isArray(ticket.comments)
               ? ticket.comments
@@ -1297,6 +1375,22 @@ function SupportDetails() {
 
 .image-popup-close:hover {
   background: #c00;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px dashed #ccc;
+  text-align: center;
+  cursor: default;
+}
+
+.upload-loading .loading-spinner-outer {
+  background: transparent;
+  margin-bottom: 0;
 }`
         }
       </style>
@@ -1306,41 +1400,3 @@ function SupportDetails() {
 
 export default SupportDetails;
 
-/** the object structure for ticket
-     {
-                "id": 1,
-                "ticketId": "TKT-000000001",
-                "customerId": 1,
-                "branchId": 1,
-                "grievanceType": "Machine Issue",
-                "description": "Coffee machine not dispensing correctly",
-                "dateOfComplaint": {},
-                "assignedTeamMember": 1,
-                "assignedTeamMemberDept": "Technical",
-                "status": "Open",
-                "attachment": "issue_photo.jpg",
-                "slaDueDate": null,
-                "criticalLevel": "High",
-                "comments": [
-                    {
-                        "action": "Approved",
-                        "userid": 1,
-                        "message": "Technician assigned",
-                        userName: "SE1",
-                        "userId": 1,
-                        "createdAt": "2025-04-01T10:00:00Z"
-                    }
-                ],
-                "feedbackRating": null,
-                "feedbackComment": null,
-                "createdAt": "2025-05-12T09:40:35.699Z",
-                "updatedAt": "2025-05-12T09:40:35.699Z",
-                "createdBy": 1,
-                "modifiedBy": 1,
-                "companyNameEn": "Al Khaleej Trading",
-                "companyNameAr": "الخليج التجارية",
-                "branchNameEn": "Khaleej Riyadh Branch",
-                "branchNameLc": "فرع الخليج الرياض",
-                "assignedTo": "SE1"
-            }
-     */

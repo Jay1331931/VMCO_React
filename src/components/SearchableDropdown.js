@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+
+
 
 function SearchableDropdown({
   name,
@@ -12,6 +15,7 @@ function SearchableDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
+  const { t, i18n } = useTranslation(); 
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,11 +99,11 @@ function SearchableDropdown({
                   className="dropdown-option"
                   onClick={() => handleOptionSelect(opt)}
                 >
-                  {typeof opt === "object" ? opt.name : opt}
+                  {typeof opt === "object" ? t(opt.name) : t(opt)}
                 </div>
               ))
             ) : (
-              <div className="no-options">No matches found</div>
+              <div className="no-options">{t("No matches found")}</div>
             )}
           </div>
         </div>

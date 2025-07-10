@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import Pagination from "./Pagination";
+import { useTranslation } from 'react-i18next';
 
 function GetProducts({
   open,
@@ -11,7 +12,9 @@ function GetProducts({
   entity,
   category,
   t = (x) => x // fallback translation
-}) {  
+}) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';  
   const [backendProducts, setBackendProducts] = useState([]);
   const [productLoading, setProductLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -122,7 +125,7 @@ function GetProducts({
           <button
             className="gp-close-btn"
             onClick={onClose}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
             {t("Close")}
           </button>

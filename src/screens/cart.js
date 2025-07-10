@@ -457,26 +457,34 @@ function Cart() {
             });
             // alert(t('No items in this category to order.'));
             return;
-        } try {
+        }
+        try {
             const entity = getEntityFromCategory(categoryName);
 
-            // --- Fetch the customer contact name using user email ---
+            // --- Fetch the user name using userId for orderBy field (same as orderDetails.js) ---
             let orderByName = '';
-            const userEmail = user?.email;
-            if (userEmail) {
+            const userId = user?.userId;
+            if (userId) {
                 try {
-                    const response = await fetch(`http://localhost:3000/api/customer-contacts/email/${userEmail}`, {
+                    const usernameRes = await fetch(`${API_BASE_URL}/user/get-username-by-id/${userId}`, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                     });
-                    if (response.ok) {
-                        const result = await response.json();
-                        if (result && result.data.name) {
-                            orderByName = result.data.name;
+                    if (usernameRes.ok) {
+                        const contentType = usernameRes.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const usernameResult = await usernameRes.json();
+                            if (usernameResult && (usernameResult.userName || usernameResult.username)) {
+                                orderByName = usernameResult.userName || usernameResult.username;
+                            } else {
+                                console.warn('Username API did not return userName field:', usernameResult);
+                            }
                         }
+                    } else {
+                        console.error('Failed to fetch username: HTTP', usernameRes.status);
                     }
                 } catch (error) {
-                    console.error('Failed to fetch customer contact name:', error);
+                    console.error('Failed to fetch userName for orderBy:', error);
                 }
             }
 
@@ -732,6 +740,8 @@ function Cart() {
                         productName: productName,
                         productNameLc: productNameLc,
                         is_machine: item.isMachine,
+                        isMachine: item.isMachine, // for backend compatibility
+                        isFresh: item.isFresh, // add isFresh field if present
                         quantity: newQuantity,
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,

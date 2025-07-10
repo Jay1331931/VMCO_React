@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Constants from '../constants';
+import { useTranslation } from 'react-i18next';
 
 function GetPaymentMethods({
   open,
@@ -11,6 +12,8 @@ function GetPaymentMethods({
   customerId,
   totalAmount
 }) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [methods, setMethods] = useState([]);
   const [balances, setBalances] = useState({});
   const [loading, setLoading] = useState(false);
@@ -96,7 +99,11 @@ function GetPaymentMethods({
       <div className="gp-modal">
         <div className="gp-header">
           <span className="gp-title">{t("Select Payment Method")}</span>
-          <button className="gp-close-btn" onClick={onClose} style={{ marginLeft: 'auto' }}>
+          <button 
+            className="gp-close-btn" 
+            onClick={onClose} 
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
+          >
             {t("Close")}
           </button>
         </div>

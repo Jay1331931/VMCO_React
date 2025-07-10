@@ -3,9 +3,12 @@ import '../styles/components.css';
 import Pagination from './Pagination';
 import axios from 'axios';
 import { BiHandicap } from 'react-icons/bi';
+import { useTranslation } from 'react-i18next';
 
 
 function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x }) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,7 +87,11 @@ const handleSelect = (customer) => {
       <div className="gp-modal">
         <div className="gp-header">
           <span className="gp-title">{t("Select a Customer Order")}</span>
-          <button className="gp-close-btn" onClick={onClose}>
+          <button 
+            className="gp-close-btn" 
+            onClick={onClose}
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
+          >
             {t("Close")}
           </button>
         </div>
@@ -177,6 +184,7 @@ const handleSelect = (customer) => {
   z-index: 1001;
   overflow: hidden;
   animation: gp-fadein 0.2s ease;
+  direction: ${isRTL ? 'rtl' : 'ltr'};
 }
 
 @keyframes gp-fadein {
@@ -189,6 +197,7 @@ const handleSelect = (customer) => {
   justify-content: space-between;
   align-items: center;
   padding: 18px 28px 10px 28px;
+  direction: ${isRTL ? 'rtl' : 'ltr'};
   // background: #f8f8f8;
   // border-bottom: 1px solid #ddd;
 }

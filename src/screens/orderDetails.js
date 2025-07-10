@@ -194,6 +194,7 @@ function OrderDetails() {
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
+        isFresh: product.isFresh, // Add isFresh field if present
         quantity: product.quantity,
       }));
 
@@ -249,6 +250,7 @@ function OrderDetails() {
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
             isMachine: product.isMachine,
+            isFresh: product.isFresh, // Add isFresh field if present
             quantity: product.quantity,
           }));
 
@@ -474,6 +476,7 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const isMachine = product.isMachine;
+          const isFresh = product.isFresh;
           const netAmount = parseFloat(product.netAmount);
           //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
           const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -711,40 +714,31 @@ function OrderDetails() {
 
     let attempt = 0;
     let maxAttempts = 2;
-    // Step 0: If user is employee, fetch empId from employees table using email
+    // Step 0: Fetch username by user id for orderBy field
     let orderByName = '';
-    const userEmail = user?.email;
-    if (userEmail) {
-      try {
-        if (user?.userType === 'employee') {
-          const empRes = await fetch(`http://localhost:3000/api/employees/email/${encodeURIComponent(userEmail)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (empRes.ok) {
-            const empResult = await empRes.json();
-            if (empResult && empResult.data && empResult.data.name) {
-              orderByName = empResult.data.name;
+    // Try to get userId from user object (userId or id)
+    const userId = user?.userId;
+  
+        let usernameApiUrl = `/user/get-username-by-id/${userId}`;
+
+        const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (usernameRes.ok) {
+          const contentType = usernameRes.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const usernameResult = await usernameRes.json();
+            if (usernameResult && (usernameResult.userName || usernameResult.username)) {
+              orderByName = usernameResult.userName || usernameResult.username;
+            } else {
+              console.warn('Username API did not return userName field:', usernameResult);
             }
           }
-        } else if (user?.userType === 'customer') {
-          const response = await fetch(`http://localhost:3000/api/customer-contacts/email/${encodeURIComponent(userEmail)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (response.ok) {
-            const result = await response.json();
-            if (result && result.data && result.data.name) {
-              orderByName = result.data.name;
-            }
-          }
+        } else {
+          console.error('Failed to fetch username: HTTP', usernameRes.status);
         }
-      } catch (error) {
-        console.error('Failed to fetch orderBy name:', error);
-      }
-    }
+
     while (attempt < maxAttempts) {
       // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
       const payload = {
@@ -764,7 +758,7 @@ function OrderDetails() {
           : (selectedMethod || formData.paymentMethod || ''),
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         //status: formData.entity && formData.entity.toLowerCase() === 'vmco' ? 'Pending' : 'Open',
-        status: sampleMode ? 'approved' : 'Open',
+        status: sampleMode ? 'Open' : (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ? 'Pending' : 'Open'),
         sales_executive: user.employeeId,
         paymentStatus: (selectedMethod || formData.paymentMethod) === 'Credit' ? 'Paid' : 'Pending', // <-- Use selectedMethod for logic
         entity: formData.entity || '',
@@ -855,9 +849,10 @@ function OrderDetails() {
             erp_line_number: index + 1,
             product_id: product.id || product.product_id,
             product_name: product.productName || product.product_name_en,
-            product_name_lc: product.productNameLc || product.product_name_lc || '', // <-- post productNameLc
+            product_name_lc: product.productNameLc || product.product_name_lc || '',
             erp_prod_id: product.erpProdId || product.erp_prod_id || '',
             is_machine: product.isMachine || product.is_machine,
+            is_fresh: product.isFresh,
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || '',
             unit_price: parseFloat(product.unitPrice),
@@ -1157,9 +1152,7 @@ function OrderDetails() {
           if (result.status === 'Ok' && result.data) {
             // Update product with new price information
             const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
-            const isMachine = result.data.isMachine || product.isMachine;
-            const quantity = parseInt(product.quantity, 10);
-            //const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
+             const quantity = parseInt(product.quantity, 10);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
 
             // Calculate new net amount with updated price
@@ -1859,6 +1852,7 @@ function OrderDetails() {
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
             isMachine: product.isMachine,
+            isFresh: product.isFresh,
             quantity: product.quantity,
           }));
 
@@ -2039,7 +2033,6 @@ function OrderDetails() {
           for (const product of formData.products) {
             const productId = product.id || product.product_id;
             const unitPrice = parseFloat(product.unitPrice);
-            const isMachine = product.isMachine;
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -2079,6 +2072,7 @@ function OrderDetails() {
                   productName: product.productName || product.product_name_en || '',
                   productNameLc: product.productNameLc || product.product_name_lc || '',
                   isMachine: product.isMachine || product.is_machine,
+                  isFresh: product.isFresh || product.is_fresh,
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
@@ -2253,6 +2247,7 @@ function OrderDetails() {
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
+        isFresh: product.isFresh,
         quantity: product.quantity,
       }));
 

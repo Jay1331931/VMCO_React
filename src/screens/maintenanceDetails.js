@@ -4,6 +4,7 @@ import "../styles/components.css";
 import CommentPopup from "../components/commentPanel";
 import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatDate } from "../utilities/dateFormatter";
@@ -75,6 +76,8 @@ function MaintenanceDetails() {
   // State for employees dropdown
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(ticket.assignedTo || "");
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
@@ -90,8 +93,8 @@ function MaintenanceDetails() {
 
   // Videos state (allow dynamic add) - store both data URL and original filename
   const [videos, setVideos] = useState([]);
- const [videoData, setVideoData] = useState([]);
-const [fileData, setFileData] = useState([]);
+  const [videoData, setVideoData] = useState([]);
+  const [fileData, setFileData] = useState([]);
   // File input ref for videos
   const videoInputRef = useRef(null);
 
@@ -104,7 +107,7 @@ const [fileData, setFileData] = useState([]);
   // State for issue type options
   const [issueTypeOptions, setIssueTypeOptions] = useState([]);
 
-  
+
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -129,116 +132,137 @@ const [fileData, setFileData] = useState([]);
 
     return dateStr;
   };
-const handleFileUpload = async (e, type) => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
+  const handleFileUpload = async (e, type) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
 
-  if (file.size > 10 * 1024 * 1024) {
-    Swal.fire({
-      title: t("File size exceeds 10MB limit"),
-      text: t("Please select a smaller file."),
-      icon: "error",
-      confirmButtonText: t("OK"),
-      confirmButtonColor: "#dc3545"
-    });
-    return;
-  }
+    if (file.size > 10 * 1024 * 1024) {
+      Swal.fire({
+        title: t("File size exceeds 10MB limit"),
+        text: t("Please select a smaller file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+      return;
+    }
 
-  const formDataUpload = new FormData();
-  formDataUpload.append("file", file);
-  formDataUpload.append("containerType", "maintenance");
+    // Set loading state based on file type
+    if (type === "image") {
+      setUploadingImage(true);
+    } else if (type === "video") {
+      setUploadingVideo(true);
+    }
 
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/upload-files`,
-      formDataUpload,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
+    const formDataUpload = new FormData();
+    formDataUpload.append("file", file);
+    formDataUpload.append("containerType", "maintenance");
+
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/upload-files`,
+        formDataUpload,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+
+      if (data.success && data.files) {
+        if (type === "image") {
+          setImages((prev) => [...prev, data.files]);
+        } else if (type === "video") {
+          setVideos((prev) => [...prev, data.files]);
+        }
       }
-    );
-
-    if (data.success && data.files) {
+    } catch (err) {
+      console.error("Upload error:", err);
+      Swal.fire({
+        title: t("Upload Error"),
+        text: t("Failed to upload file. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    } finally {
+      // Reset loading state
       if (type === "image") {
-        setImages((prev) => [...prev, data.files]);
+        setUploadingImage(false);
       } else if (type === "video") {
-        setVideos((prev) => [...prev, data.files]);
+        setUploadingVideo(false);
       }
     }
-  } catch (err) {
-    console.error("Upload error:", err);
-  }
 
-  e.target.value = "";
-};
+    e.target.value = "";
+  };
 
-const fetchUploadedFiles = useCallback(async (fileNames, type) => {
-  try {
-    if (!fileNames || fileNames.length === 0) return;
+  const fetchUploadedFiles = useCallback(async (fileNames, type) => {
+    try {
+      if (!fileNames || fileNames.length === 0) return;
 
-    const fetched = [];
+      const fetched = [];
 
-    for (let fileName of fileNames) {
+      for (let fileName of fileNames) {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/get-files`,
+          { fileName, containerType: "maintenance" },
+          { withCredentials: true }
+        );
+
+        if (data?.status === "Ok" && data.data) {
+          fetched.push(data.data);
+        }
+      }
+
+      if (type === "image") {
+        setFileData(fetched);
+      } else if (type === "video") {
+        setVideoData(fetched);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${type} files:`, error);
+    }
+  }, []);
+
+  const handleRemoveFile = async (fileName, type) => {
+    try {
       const { data } = await axios.post(
-        `${API_BASE_URL}/get-files`,
-        { fileName, containerType: "maintenance" },
+        `${API_BASE_URL}/delete-files`,
+        {
+          fileName,
+          containerType: "maintenance",
+        },
         { withCredentials: true }
       );
 
-      if (data?.status === "Ok" && data.data) {
-        fetched.push(data.data);
+      if (data.success) {
+        if (type === "image") {
+          setFileData((prev) =>
+            prev.filter((file) => file.fileName !== fileName)
+          );
+          setImages((prev) => prev.filter((img) => img !== fileName));
+        } else if (type === "video") {
+          setVideoData((prev) =>
+            prev.filter((file) => file.fileName !== fileName)
+          );
+          setVideos((prev) => prev.filter((vid) => vid !== fileName));
+        }
       }
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error);
     }
-
-    if (type === "image") {
-      setFileData(fetched);
-    } else if (type === "video") {
-      setVideoData(fetched);
-    }
-  } catch (error) {
-    console.error(`Error fetching ${type} files:`, error);
-  }
-}, []);
-
-const handleRemoveFile = async (fileName, type) => {
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/delete-files`,
-      {
-        fileName,
-        containerType: "maintenance",
-      },
-      { withCredentials: true }
-    );
-
-    if (data.success) {
-      if (type === "image") {
-        setFileData((prev) =>
-          prev.filter((file) => file.fileName !== fileName)
-        );
-        setImages((prev) => prev.filter((img) => img !== fileName));
-      } else if (type === "video") {
-        setVideoData((prev) =>
-          prev.filter((file) => file.fileName !== fileName)
-        );
-        setVideos((prev) => prev.filter((vid) => vid !== fileName));
-      }
-    }
-  } catch (error) {
-    console.error(`Error deleting ${type}:`, error);
-  }
-};
+  };
 
 
-useEffect(() => {
-  if(images.length ==0) return; // Avoid fetching if no images{
-  fetchUploadedFiles(images, "image");
-}, [images, fetchUploadedFiles]);
+  useEffect(() => {
+    if (images.length == 0) return; // Avoid fetching if no images{
+    fetchUploadedFiles(images, "image");
+  }, [images, fetchUploadedFiles]);
 
-useEffect(() => {
-  if(videos.length ==0) return; // Avoid fetching if no videos
-  fetchUploadedFiles(videos, "video");
-}, [videos, fetchUploadedFiles]);
+  useEffect(() => {
+    if (videos.length == 0) return; // Avoid fetching if no videos
+    fetchUploadedFiles(videos, "video");
+  }, [videos, fetchUploadedFiles]);
   // State for closing ticket (MOVED UP to fix React Hooks order)
   const [closing, setClosing] = useState(false); // Track closing state
 
@@ -256,7 +280,7 @@ useEffect(() => {
         }
         setImages([...attachmentData.images || []]);
         setVideos([...attachmentData.videos || []]);
-       
+
       } catch (error) {
         console.error('Error parsing attachment data:', error);
       }
@@ -307,7 +331,7 @@ useEffect(() => {
     // Use current date for comparison in add mode
     const currentDate = new Date();
     const currentDateFormatted = formatDate(currentDate.toISOString(), "DD/MM/YYYY");
-    
+
     // Convert warranty end date to DD/MM/YYYY format for comparison
     const warrantyDateFormatted = formatDate(ticket.warrantyEndDate, "DD/MM/YYYY");
 
@@ -320,16 +344,16 @@ useEffect(() => {
 
     console.log('[Charges] warrantyEndDate (DD/MM/YYYY):', warrantyDateFormatted, 'currentDate (DD/MM/YYYY):', currentDateFormatted);
     console.log('[Charges] warrantyDate >= currentDate?', warrantyDate >= todayDate);
-    
+
     const regions = await fetchRegions();
     console.log('[Charges] Regions from basics master:', regions);
-    
+
     const branchCity = getSelectedBranchCity();
     console.log('[Charges] Branch city:', branchCity);
-    
+
     const cityMatchesRegion = regions.includes(branchCity);
     console.log('[Charges] City matches region?', cityMatchesRegion);
-    
+
     let charges = 0;
     if (warrantyDate >= todayDate) {
       // Warranty is still valid (not expired)
@@ -340,7 +364,7 @@ useEffect(() => {
       charges = cityMatchesRegion ? 200.00 : 300.00;
       console.log('[Charges] Warranty expired, charges:', charges);
     }
-    
+
     setTicket(prev => ({ ...prev, maintenanceCharges: charges.toFixed(2) }));
     console.log('[Charges] Final maintenanceCharges set:', charges.toFixed(2));
   };
@@ -403,11 +427,19 @@ useEffect(() => {
         const result = await response.json();
         if (result.status === 'Ok' && result.data) {
           const options = result.data;
-          const issueTypeValues = options.map(item => item.value);
+          // Extract issue type values from the response data and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
           const options = result.data;
-          const issueTypeValues = options.map(item => item.value);
+          // Handle the actual response structure and make them language-aware
+          const issueTypeValues = options.map(item => ({
+            value: item.value,
+            displayText: t(item.value)
+          }));
           setIssueTypeOptions(issueTypeValues);
         } else {
           throw new Error('Unexpected response format for issue type options');
@@ -426,7 +458,7 @@ useEffect(() => {
       }
     };
     fetchIssueTypeOptions();
-  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches]);
+  }, [API_BASE_URL, formMode, ticket.warrantyEndDate, ticket.branchId, branches, currentLanguage, t]);
 
   // Add a separate useEffect to trigger calculation when warranty end date changes
   useEffect(() => {
@@ -486,7 +518,9 @@ useEffect(() => {
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-  
+  // Check if ticket is in read-only state (closed or cancelled)
+  const isReadOnly = ticket.status === "Closed" || ticket.status === "Cancelled";
+
   console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
   // Place columns definition here, after isV/currentLanguage are defined
@@ -586,6 +620,76 @@ useEffect(() => {
       navigate("/maintenance");
       // window.location.reload();
     }
+    else {
+      // In edit mode, update the status to "Cancelled"
+      try {
+        // Show confirmation dialog
+        const result = await Swal.fire({
+          title: t("Cancel Ticket?"),
+          text: t("Are you sure you want to cancel this maintenance request? This action cannot be undone."),
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: t("Yes, Cancel Request"),
+          cancelButtonText: t("No, Go Back"),
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#6c757d"
+        });
+
+        if (!result.isConfirmed) {
+          return; // User cancelled
+        }
+
+        const endPoint = `/maintenance/id/${ticket.id}`;
+        const apiUrl = `${API_BASE_URL}${endPoint}`;
+
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            status: "Cancelled",
+            comments: ticket.comments // Explicitly preserve comments
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", errorText);
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const responseResult = await response.json();
+        console.log("Cancel ticket successful:", responseResult);
+
+        // Show success message
+        await Swal.fire({
+          title: t("Success!"),
+          text: t("Maintenance request cancelled successfully!"),
+          icon: "success",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#28a745"
+        });
+
+        // Update local state and redirect
+        setTicket(prev => ({
+          ...prev,
+          status: "Cancelled"
+        }));
+        setIsEditing(false);
+        navigate("/maintenance");
+      } catch (error) {
+        console.error("Error cancelling maintenance request:", error);
+
+        // Show error message
+        await Swal.fire({
+          title: t("Error!"),
+          text: t("Failed to cancel maintenance request. Please try again."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#dc3545"
+        });
+      }
+    }
   };
 
   // Open file dialog
@@ -662,7 +766,7 @@ useEffect(() => {
   };
 
   // Track saving state
-  
+
 
   // Handle save
   const handleSave = async (e) => {
@@ -671,22 +775,46 @@ useEffect(() => {
 
     // Basic validation
     if (!ticket.branchId) {
-      alert(t("Please select a branch"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a branch"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
       setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueType) {
-      alert(t("Please select an issue type"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select an issue type"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
       setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueName?.trim()) {
-      alert(t("Please enter an issue name"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter an issue name"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
       setSaving(false); // End saving if validation fails
       return;
     }
     if (!ticket.issueDetails?.trim()) {
-      alert(t("Please enter issue details"));
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter issue details"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
       setSaving(false); // End saving if validation fails
       return;
     }
@@ -711,11 +839,13 @@ useEffect(() => {
         maintenanceCharges: ticket.maintenanceCharges || null,
         charges: ticket.maintenanceCharges || null,
         customerRegion: customerRegion,
-        branchRegion: branchRegion
+        branchRegion: branchRegion,
       };
 
       if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
         ticketData.status = "In Progress";
+      } else {
+        ticketData.status = "New";
       }
 
       // Remove id and requestId for new tickets (let database auto-generate them)
@@ -723,7 +853,7 @@ useEffect(() => {
         ticketData.id = undefined;
         ticketData.requestId = undefined;
         // Set initial attachment to "none" for new tickets
-        ticketData.attachment = { images: images || [], videos:videos|| [] };
+        ticketData.attachment = { images: images || [], videos: videos || [] };
       }
 
       console.log('Ticket data being sent:', {
@@ -811,8 +941,6 @@ useEffect(() => {
         return; // User cancelled
       }
 
-      setSaving(true);
-
       const endPoint = `/maintenance/id/${ticket.id}`;
       const apiUrl = `${API_BASE_URL}${endPoint}`;
 
@@ -820,7 +948,10 @@ useEffect(() => {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ status: "Closed" }),
+        body: JSON.stringify({ 
+          status: "Closed",
+          comments: ticket.comments // Explicitly preserve comments
+        }),
       });
 
       if (!response.ok) {
@@ -866,8 +997,8 @@ useEffect(() => {
 
   // Add comment to ticket.comments in correct format and save to backend immediately
   const handleAddComment = async (commentText, newCommentObj) => {
-    if (!commentText || !user) return;
-    
+    if (!commentText || !user || isReadOnly) return;
+
     // Create the new comment object
     const newComment = {
       date: formatDate(new Date(), "DD/MM/YYYY HH:MM"),
@@ -876,41 +1007,41 @@ useEffect(() => {
       message: commentText,
       userName: user.userName
     };
-    
+
     // Update local state first for immediate UI feedback
-    const updatedComments = Array.isArray(ticket.comments) 
-      ? [...ticket.comments] 
+    const updatedComments = Array.isArray(ticket.comments)
+      ? [...ticket.comments]
       : [newComment];
-      
+
     setTicket(prev => ({
       ...prev,
       comments: updatedComments
     }));
-    
+
     try {
       // Only attempt to save to backend if we're in edit mode and have a ticket ID
       if (formMode === "edit" && ticket.id) {
         const apiUrl = `${API_BASE_URL}/maintenance/id/${ticket.id}`;
-        
+
         const response = await fetch(apiUrl, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ 
-            comments: updatedComments 
+          body: JSON.stringify({
+            comments: updatedComments
           })
         });
-        
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         // Optional: show a small success notification
         console.log("Comment saved successfully to backend");
       }
     } catch (error) {
       console.error("Failed to save comment to backend:", error);
-      
+
       // Optional: show error notification to user
       Swal.fire({
         title: t("Error"),
@@ -947,7 +1078,7 @@ useEffect(() => {
   };
 
   return (
-    <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}${isCommentPanelOpen ? "collapsed" : ""}`}>
+    <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
       <div className='maintenance-details-container'>
         <h2 className='maintenance-details-title'>{formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}</h2>
         <div className='maintenance-details-section'>
@@ -955,12 +1086,12 @@ useEffect(() => {
           <div className='maintenance-details-grid'>
             {isV('customerName') && (
               <div className='maintenance-details-field'>
-                <label>{t("Customer Name")}</label>
+                <label>{t("Customer Name")} *</label>
                 <input
                   value={companyNameToShow || ""}
                   readOnly
-                  style={{ cursor: (isE("customerName") && user?.userType !== 'customer') ? 'pointer' : 'default' }}
-                  onClick={() => (isE("customerName") && user?.userType !== 'customer') && setShowCustomerPopup(true)}
+                  style={{ cursor: (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) ? 'pointer' : 'default' }}
+                  onClick={() => (isE("customerName") && user?.userType !== 'customer' && !isReadOnly) && setShowCustomerPopup(true)}
                   placeholder={user?.userType === 'customer' ? "" : t("Click to select customer")}
                 />
               </div>
@@ -971,8 +1102,8 @@ useEffect(() => {
                 <input
                   value={currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || "")}
                   readOnly
-                  style={{ cursor: isE("branchName") ? 'pointer' : 'default' }}
-                  onClick={() => isE("branchName") && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
+                  style={{ cursor: (isE("branchName") && !isReadOnly) ? 'pointer' : 'default' }}
+                  onClick={() => (isE("branchName") && !isReadOnly) && (user?.userType === 'customer' || ticket.customerId) && setShowBranchPopup(true)}
                   placeholder={
                     user?.userType === 'customer'
                       ? t("Click to select branch")
@@ -986,21 +1117,21 @@ useEffect(() => {
             )}
             {isV('issueType') && (
               <div className='maintenance-details-field'>
-                <label>{t("Issue Type")}</label>
+                <label>{t("Issue Type")} *</label>
                 <select
                   id='issueType'
                   name='issueType'
                   value={ticket.issueType || ""}
                   onChange={handleInputChange}
-                  disabled={!isE("issueType")}
+                  disabled={!isE("issueType") || isReadOnly}
                   style={{
                     color: ticket.issueType ? 'inherit' : '#999',
                   }}
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
                   {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType} style={{ color: 'inherit' }}>
-                      {issueType}
+                    <option key={index} value={issueType.value || issueType} style={{ color: 'inherit' }}>
+                      {issueType.displayText || issueType}
                     </option>
                   ))}
                 </select>
@@ -1008,39 +1139,39 @@ useEffect(() => {
             )}
             {isV('issueName') && (
               <div className='maintenance-details-field'>
-                <label>{t("Issue Name")}</label>
-                <input id='issueName' name='issueName' onChange={handleInputChange} value={ticket.issueName || ""} disabled={!isE("issueName")} />
+                <label>{t("Issue Name")} *</label>
+                <input id='issueName' name='issueName' onChange={handleInputChange} value={ticket.issueName || ""} disabled={!isE("issueName") || isReadOnly} />
               </div>
             )}
             {isV('urgencyLevel') && (
               <div className='maintenance-details-field'>
-                <label>{t("Urgency Level")}</label>
+                <label>{t("Urgency Level")} *</label>
                 <select
                   id='urgencyLevel'
                   name='urgencyLevel'
                   value={ticket.urgencyLevel || ""}
                   onChange={handleInputChange}
-                  disabled={!isE("urgencyLevel")}
+                  disabled={!isE("urgencyLevel") || isReadOnly}
                   style={{
                     color: ticket.urgencyLevel ? 'inherit' : '#999',
                   }}
                 >
                   <option value="" style={{ color: '#999' }}>{t("Select Urgency Level")}</option>
-                  <option value="Low" style={{ color: 'inherit' }}>Low</option>
-                  <option value="Medium" style={{ color: 'inherit' }}>Medium</option>
-                  <option value="High" style={{ color: 'inherit' }}>High</option>
+                  <option value="Low" style={{ color: 'inherit' }}>{t("Low")}</option>
+                  <option value="Medium" style={{ color: 'inherit' }}>{t("Medium")}</option>
+                  <option value="High" style={{ color: 'inherit' }}>{t("High")}</option>
                 </select>
               </div>
             )}
             {isV('machineSerialNumber') && (
               <div className='maintenance-details-field'>
-                <label>{t("Machine Serial Number")}</label>
+                <label>{t("Machine Serial Number")} *</label>
                 <input
                   id='machineSerialNumber'
                   name='machineSerialNumber'
                   onChange={handleInputChange}
                   value={ticket.machineSerialNumber || ""}
-                  disabled={!isE("machineSerialNumber")}
+                  disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
               </div>
             )}
@@ -1058,7 +1189,7 @@ useEffect(() => {
                       ticket.warrantyEndDate :
                       convertDateFormat(formatDate(ticket.warrantyEndDate, "DD/MM/YYYY"), "DD/MM/YYYY", "YYYY-MM-DD")
                   ) : ""}
-                  disabled={!isE("warrantyEndDate")}
+                  disabled={!isE("warrantyEndDate") || isReadOnly}
                 />
               </div>
             )}
@@ -1071,7 +1202,7 @@ useEffect(() => {
                   type='string'
                   onChange={handleInputChange}
                   value={ticket.maintenanceCharges || ''}
-                  disabled={!isE("maintenanceCharges")}
+                  disabled={!isE("maintenanceCharges") || isReadOnly}
                   placeholder={formMode === 'add' ? t("Auto-calculated") : ""}
                 />
               </div>
@@ -1085,8 +1216,8 @@ useEffect(() => {
           </div>
           {isV('issueDetails') && (
             <div className='maintenance-details-field maintenance-details-textarea'>
-              <label>{t("Issue Details")}</label>
-              <textarea id='issueDetails' name='issueDetails' onChange={handleInputChange} value={ticket.issueDetails || ""} disabled={!isE("issueDetails")} />
+              <label>{t("Issue Details")} *</label>
+              <textarea id='issueDetails' name='issueDetails' onChange={handleInputChange} value={ticket.issueDetails || ""} disabled={!isE("issueDetails") || isReadOnly} />
             </div>
           )}
 
@@ -1097,21 +1228,27 @@ useEffect(() => {
                   <label>{t("Images")}</label>
                   <div className='maintenance-images-list'>
                     {/* Add Image Button */}
-                    {isV('addImage') && isE('addImage') && images.length<=6 &&  (
+                    {isV('addImage') && isE('addImage') && !isReadOnly && images.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openFileDialog} title='Add Image'>
                         +
                       </button>
                     )}
-                    {images.length<=6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"image")}  />}
+                    {images.length <= 6 && <input type='file' accept='image/*' ref={fileInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "image")} />}
+                    {/* Loading spinner for image upload */}
+                    {uploadingImage && (
+                      <div className='maintenance-image-placeholder upload-loading'>
+                        <LoadingSpinner size="small" />
+                        </div>
+                    )}
                     {fileData?.map((imageData, idx) => (
                       <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.url && setPopupImage(imageData.url)} title={imageData.url ? "Click to view" : ""}>
                         <img width='100%' height='100%' style={{ objectFit: "cover" }} src={imageData.url} />
-                        {isV("removeImage") && isE("removeImage") && (
+                        {isV("removeImage") && isE("removeImage") && !isReadOnly && (
                           <button
                             className='maintenance-remove-btn'
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening the image
-                             handleRemoveFile(imageData.fileName, "image");
+                              handleRemoveFile(imageData.fileName, "image");
                             }}
                             title={t("Remove Image")}>
                             ×
@@ -1127,21 +1264,27 @@ useEffect(() => {
                   <label>{t("Videos")}</label>
                   <div className='maintenance-videos-list'>
                     {/* Add Video Button */}
-                    {isV('addVideo') && isE('addVideo') && videos?.length<=6 &&  (
+                    {isV('addVideo') && isE('addVideo') && !isReadOnly && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
                         +
                       </button>
                     )}
-                    { videos?.length<=6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e)=>handleFileUpload(e,"video")}  />}
+                    {videos?.length <= 6 && <input type='file' accept='video/*' ref={videoInputRef} style={{ display: "none" }} onChange={(e) => handleFileUpload(e, "video")} />}
+                    {/* Loading spinner for video upload */}
+                    {uploadingVideo && (
+                      <div className='maintenance-video-placeholder upload-loading'>
+                        <LoadingSpinner size="small" />
+                     </div>
+                    )}
                     {videoData?.map((videoData, idx) => (
                       <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
                         <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
-                        {isV("removeVideo") && isE("removeVideo") && (
+                        {isV("removeVideo") && isE("removeVideo") && !isReadOnly && (
                           <button
                             className='maintenance-remove-btn'
                             onClick={(e) => {
                               e.stopPropagation(); // Prevent opening the video
-                            handleRemoveFile(videoData.fileName,"video");
+                              handleRemoveFile(videoData.fileName, "video");
                             }}
                             title={t("Remove Video")}>
                             ×
@@ -1157,12 +1300,14 @@ useEffect(() => {
         </div>
       </div>
       <div className='support-details-footer'>
+        <div className='support-status '>
         {isV('ticketStatus') && (
           <div className='support-status'>
             <span>{t("Ticket Status:")}</span>
             <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
           </div>
         )}
+        </div>
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
             <div className="support-assign">
@@ -1172,48 +1317,50 @@ useEffect(() => {
                 name="assignedTeamMember"
                 value={ticket.assignedTeamMember ? String(ticket.assignedTeamMember) : ""}
                 onChange={handleInputChange}
-                disabled={!isE('assignedTo')}
+                disabled={!isE('assignedTo') || isReadOnly}
                 options={employees.map(emp => ({ name: emp.name, employeeId: emp.employeeId }))}
                 placeholder={t('Select Employee')}
                 loading={loadingEmployees}
               />
             </div>
           )}
-          <div className="support-details-actions" style={{ paddingRight: "20px" }}>
-            {isEditing ? (
-              <>
-                {isV('btnSave') && isE('btnSave') && 
-                  <button 
-                    className="support-action-btn save" 
-                    onClick={handleSave}
-                    disabled={saving || closing || ticket.status === "Closed"}
-                  >
-                    {saving ? t("Saving...") : t("Save")}
-                  </button>
-                }
-                {isV('btnCancel') && isE('btnCancel') && 
-                  <button 
-                    className="support-action-btn cancel" 
-                    onClick={handleCancel}
-                    disabled={ticket.status === "In Progress" || saving || closing}
-                  >
-                    {t("Cancel")}
-                  </button>
-                }
-                {isV('btnClose') && isE('btnClose') && 
-                  <button 
-                    className="support-action-btn close" 
-                    onClick={handleCloseTicket} 
-                    disabled={closing || saving || ticket.status === 'Closed'}
-                  >
-                    {closing ? t("Closing...") : t("Close Ticket")}
-                  </button>
-                }
-              </>
-            ) : (
-              <>
-              </>
-            )}
+          <div className='support-details-container-right'>
+            <div className="support-details-actions">
+              {isEditing ? (
+                <>
+                  {isV('btnSave') && isE('btnSave') &&
+                    <button
+                      className="support-action-btn save"
+                      onClick={handleSave}
+                      disabled={saving || closing || isReadOnly}
+                    >
+                      {saving ? t("Saving...") : t("Save")}
+                    </button>
+                  }
+                  {isV('btnCancel') && isE('btnCancel') &&
+                    <button
+                      className="support-action-btn cancel"
+                      onClick={handleCancel}
+                      disabled={isReadOnly || saving || closing}
+                    >
+                      {t("Cancel")}
+                    </button>
+                  }
+                  {isV('btnClose') && isE('btnClose') &&
+                    <button
+                      className="support-action-btn close"
+                      onClick={handleCloseTicket}
+                      disabled={closing || saving || isReadOnly}
+                    >
+                      {closing ? t("Closing...") : t("Close Ticket")}
+                    </button>
+                  }
+                </>
+              ) : (
+                <>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1242,7 +1389,7 @@ useEffect(() => {
           isOpen={isCommentPanelOpen}
           setIsOpen={setIsCommentPanelOpen}
           onAddComment={handleAddComment}
-          showCommentForm={true}
+          showCommentForm={!isReadOnly}
           externalComments={
             Array.isArray(ticket.comments)
               ? ticket.comments
@@ -1278,7 +1425,7 @@ useEffect(() => {
       />
       <style>
         {
-            `
+          `
 .image-popup-overlay {
   position: fixed;
   top: 0;
@@ -1334,6 +1481,22 @@ useEffect(() => {
 
 .image-popup-close:hover {
   background: #c00;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: 2px dashed #ccc;
+  text-align: center;
+  cursor: default;
+}
+
+.upload-loading .loading-spinner-outer {
+  background: transparent;
+  margin-bottom: 0;
 }`
         }
       </style>
