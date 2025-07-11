@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Constants from "../constants";
 import Swal from "sweetalert2";
 import axios from "axios";
-import { FaUniversity, FaCreditCard, FaApple } from "react-icons/fa";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const OpationsPage = () => {
-  const navigate = useNavigate();
   const [OrderDetails, setOrderDetails] = useState([]);
   const { orderId } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
@@ -50,7 +50,7 @@ const OpationsPage = () => {
     if (orderId && !token) {
       generateToken();
     } 
-  }, [orderId]);
+  }, [orderId, token]);
   const fetchDecodeddata = useCallback(async () => {
     try {
       const { data } = await axios.get(
@@ -64,7 +64,7 @@ const OpationsPage = () => {
     } catch (error) {
       console.error("Failed to fetch decoded data", error);
     }
-  }, []);
+  }, [orderId]);
   useEffect(() => {
     fetchDecodeddata();
   }, [fetchDecodeddata]);
@@ -113,7 +113,7 @@ const OpationsPage = () => {
     if (decodedOrderID) {
       fetchSaleOrder();
     }
-  }, [fetchSaleOrder]);
+  }, [decodedOrderID, fetchSaleOrder]);
   //   useEffect(() => {
   //     console.log("OrderDetails:", OrderDetails);
   //   if (!OrderDetails || OrderDetails.length === 0) return;
@@ -181,7 +181,6 @@ const OpationsPage = () => {
       (sum, order) => sum + (parseFloat(order.paidAmount) || 0),
       0
     );
-    const paidPercentage = (paidAmount / totalAmount) * 100;
 
     // Check if all orders are fully paid
     const allPaid = OrderDetails.every(
@@ -441,15 +440,15 @@ try {
   return (
     <div className="options-container">
       <div className="button-wrapper">
-        {(OrderDetails[0]?.entity?.toLowerCase() ==
+        {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.VMCO?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ==
+          OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.NAQI?.toLowerCase()) && (
           <button
             onClick={() => handleBankTransaction(amount, decodedOrderID)}
             className="option-button blue"
           >
-            <FaUniversity style={{ marginRight: "10px" }} />
+            <FontAwesomeIcon icon={faBuilding} style={{ marginRight: "10px" }} />
             Bank Transaction
           </button>
         )}
@@ -457,20 +456,20 @@ try {
           onClick={() => handlePayment("CardPay")}
           className="option-button card"
         >
-          <FaCreditCard style={{ marginRight: "10px" }} />
+          <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {(OrderDetails[0]?.entity?.toLowerCase() ==
+        {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ==
+          OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ==
+          OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.SHC?.toLowerCase()) && (
           <button
             onClick={() => handlePayment("Apple Pay")}
             className="option-button black"
           >
-            <FaApple style={{ marginRight: "10px" }} />
+            <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
         )}
