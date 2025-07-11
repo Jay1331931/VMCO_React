@@ -30,7 +30,7 @@ const Constants = {
         VMCO_MACHINES: 'VMCO Machines',
         VMCO_CONSUMABLES: 'VMCO Consumables'
     },
-    REGION:{
+    MAINTENANCE_REGION:{
         RIYADH: 'Riyadh',
         JEDDAH: 'Jeddah',
         DAMMAM: 'Dammam',
