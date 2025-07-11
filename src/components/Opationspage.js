@@ -8,6 +8,17 @@ import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const getCookie = (name) => {
+  const cookies = document.cookie
+    .split(";")
+    .map(cookie => cookie.trim())
+    .reduce((acc, cookie) => {
+      const [key, ...rest] = cookie.split("=");
+      acc[key] = decodeURIComponent(rest.join("="));
+      return acc;
+    }, {});
+  return cookies[name] || null;
+};
 const OpationsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
   const { orderId } = useParams();
@@ -45,9 +56,9 @@ const OpationsPage = () => {
       }
     };
   useEffect(() => {
+     const cookieToken = getCookie("token");
    
-
-    if (orderId && !token) {
+    if (orderId && !cookieToken) {
       generateToken();
     } 
   }, [orderId, token]);

@@ -11,6 +11,17 @@ import GetSalesOrder from "./GetSalesOrder";
 import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
+const getCookie = (name) => {
+  const cookies = document.cookie
+    .split(";")
+    .map(cookie => cookie.trim())
+    .reduce((acc, cookie) => {
+      const [key, ...rest] = cookie.split("=");
+      acc[key] = decodeURIComponent(rest.join("="));
+      return acc;
+    }, {});
+  return cookies[name] || null;
+};
 const AddBankTransaction = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -64,7 +75,9 @@ const AddBankTransaction = () => {
     }
   };
   useEffect(() => {
-    if (orderId && !token) {
+  const cookieToken = getCookie("token");
+   
+    if (orderId && !cookieToken) {
       generateToken();
     }
   }, [orderId]);
