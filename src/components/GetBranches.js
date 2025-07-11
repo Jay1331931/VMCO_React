@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
+import { useTranslation } from 'react-i18next';
 
 function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, t = (x) => x }) {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,52 +45,35 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
     setLoading(true);
     setError(null);
     try {
-      // Use the correct API endpoint to fetch branches by customer ID
-      const response = await fetch(`${API_BASE_URL}/customer-branches/cust-id/${customerId}`, {
+      // Use the same API as Catalog: /customer-branches/pagination with filters
+      const filters = encodeURIComponent(JSON.stringify({ customerId: customerId }));
+      const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+      const url = `${API_BASE_URL}/customer-branches/pagination?filters=${filters}&page=${pagination.page}&pageSize=${pagination.pageSize}${searchParam}`;
+      const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         credentials: 'include'
       });
-      
       if (!response.ok) throw new Error('Failed to fetch branches');
-      
       const result = await response.json();
-      console.log('API Response:', result); // Add this for debugging
-      
       // Handle different possible response structures
-      if (result.status === 'Ok' && result.data) {
-        // Standard response format with status and data
-        setBranches(Array.isArray(result.data) ? result.data : [result.data]);
-      } else if (Array.isArray(result)) {
-        // Direct array response
-        setBranches(result);
-      } else if (result && typeof result === 'object') {
-        // Single object or different structure
-        const branchesData = result.branches || result.items || result;
-        setBranches(Array.isArray(branchesData) ? branchesData : [branchesData]);
+      let branchesData = [];
+      let totalRecords = 0;
+      if (Array.isArray(result)) {
+        branchesData = result;
+        totalRecords = result.length;
+      } else if (result.status === 'Ok' && Array.isArray(result.data)) {
+        branchesData = result.data;
+        totalRecords = result.totalRecords || result.data.length;
+      } else if (result && Array.isArray(result.data)) {
+        branchesData = result.data;
+        totalRecords = result.data.length;
       } else {
-        console.error('Unexpected API response structure:', result);
-        throw new Error('Unexpected response format');
+        branchesData = [];
+        totalRecords = 0;
       }
-      
-      // Update pagination based on branches length
-      if (Array.isArray(result.data)) {
-        setPagination(prev => ({
-          ...prev,
-          total: result.data.totalRecords
-        }));
-      } else if (Array.isArray(result)) {
-        setPagination(prev => ({
-          ...prev,
-          total: result.length
-        }));
-      } else {
-        const branchesData = result.branches || result.items || result.data || [];
-        setPagination(prev => ({
-          ...prev,
-          total: Array.isArray(branchesData) ? branchesData.length : 1
-        }));
-      }
+      setBranches(branchesData);
+      setPagination(prev => ({ ...prev, total: totalRecords }));
     } catch (err) {
       console.error('Error fetching branches:', err);
       setError(err.message);
@@ -110,7 +96,7 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           <button
             className="gb-close-btn"
             onClick={onClose}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
           >
             {t("Close")}
           </button>

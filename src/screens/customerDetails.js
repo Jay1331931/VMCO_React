@@ -5,6 +5,7 @@ import "../styles/forms.css";
 import CommentPopup from "../components/commentPanel";
 import "../i18n";
 import { useTranslation } from "react-i18next";
+import Swal from "sweetalert2";
 import {
   getBusinessDetailsForm,
   getBusinessDetailsFormData,
@@ -34,6 +35,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
+import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionConfirmation";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const fetchCurrentDataOfCustomerContacts = async (customerId) => {
@@ -145,6 +147,246 @@ const checkInApproval = async (customerId) => {
   }
 };
 
+function countUpdatedFields(original = {}, current = {}, fields = []) {
+  let count = 0;
+  fields.forEach((field) => {
+    if (
+      original?.[field] !== undefined &&
+      current?.[field] !== undefined &&
+      original?.[field] !== current?.[field]
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+const businessDetailsFields = [
+  "companyNameEn",
+  "companyNameAr",
+  "companyType",
+  "crNumber",
+  "vatNumber",
+  "baladeahLicenseNumber",
+  "governmentRegistrationNumber",
+  "typeOfBusiness",
+  "typeOfBusinessOther",
+  "deliveryLocations",
+  "companyLogo",
+  "brandLogo",
+  "brandNameEn",
+  "brandNameAr",
+  "customerSource",
+  "interCompany",
+  "entity",
+  "assignedTo",
+  "assignedToEntityWise",
+  // "pricingPolicy",
+  "zone",
+  // ...add more as needed
+];
+
+// Fields from customerContactsData
+const contactDetailsFields = [
+  "primaryContactName",
+  "primaryContactDesignation",
+  "primaryContactEmail",
+  "primaryContactMobile",
+  "businessHeadName",
+  "businessHeadDesignation",
+  "businessHeadEmail",
+  "businessHeadMobile",
+  "financeHeadName",
+  "financeHeadDesignation",
+  "financeHeadEmail",
+  "financeHeadMobile",
+  "purchasingHeadName",
+  "purchasingHeadDesignation",
+  "purchasingHeadEmail",
+  "purchasingHeadMobile",
+  // ...add more if needed
+];
+
+// Fields from customerData used in ContactDetails form
+const contactDetailsCustomerFields = [
+  "buildingName",
+  "street",
+  "city",
+  "district",
+  "region",
+  "pincode",
+  "geolocation",
+  "zone",
+  "branch",
+  // ...add more if needed
+];
+
+// Fields from customerData for Financial Information
+const financialInfoCustomerFields = [
+  "bankName",
+  "bankAccountNumber",
+  "iban",
+  "isDeliveryChargesApplicable",
+  // ...add more if needed
+];
+
+// Pricing policy fields (these are keys inside pricingPolicy object)
+const pricingPolicyEntities = ["DAR", "VMCO", "SHC", "NAQI", "GMTC"];
+
+// Fields from customerPaymentMethodsData for Financial Information
+const financialInfoPaymentFields = [
+  // Payment methods
+  "prePayment",
+  "partialPayment",
+  "COD",
+  // Credit for each entity
+  "DARCreditLimit",
+  "DARCreditPeriod",
+  "VMCOCreditLimit",
+  "VMCOCreditPeriod",
+  "SHCCreditLimit",
+  "SHCCreditPeriod",
+  "NAQICreditLimit",
+  "NAQICreditPeriod",
+  "GMTCreditLimit",
+  "GMTCreditPeriod",
+  // ...add more if needed
+];
+
+// Helper to count pricing policy updates
+function countPricingPolicyUpdates(original = {}, current = {}, entities = []) {
+  let count = 0;
+  entities.forEach((entity) => {
+    if (
+      original?.pricingPolicy?.[entity] !== undefined &&
+      current?.pricingPolicy?.[entity] !== undefined &&
+      original?.pricingPolicy?.[entity] !== current?.pricingPolicy?.[entity]
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Helper to count payment method updates (checkboxes and limits/periods)
+function countPaymentMethodUpdates(original = {}, current = {}) {
+  let count = 0;
+  // PrePayment, PartialPayment, COD
+  ["prePayment", "partialPayment", "COD"].forEach((method) => {
+    if (
+      original?.methodDetails?.[method]?.isAllowed !== undefined &&
+      current?.methodDetails?.[method]?.isAllowed !== undefined &&
+      original?.methodDetails?.[method]?.isAllowed !==
+        current?.methodDetails?.[method]?.isAllowed
+    ) {
+      count++;
+    }
+    // For COD, check limit
+    if (method === "COD") {
+      if (
+        original?.methodDetails?.COD?.limit !== undefined &&
+        current?.methodDetails?.COD?.limit !== undefined &&
+        original?.methodDetails?.COD?.limit !==
+          current?.methodDetails?.COD?.limit
+      ) {
+        count++;
+      }
+    }
+  });
+  // Credit for each entity
+  ["DAR", "VMCO", "SHC", "NAQI", "GMTC"].forEach((entity) => {
+    if (
+      original?.methodDetails?.credit?.[entity]?.isAllowed !== undefined &&
+      current?.methodDetails?.credit?.[entity]?.isAllowed !== undefined &&
+      original?.methodDetails?.credit?.[entity]?.isAllowed !==
+        current?.methodDetails?.credit?.[entity]?.isAllowed
+    ) {
+      count++;
+    }
+    if (
+      original?.methodDetails?.credit?.[entity]?.limit !== undefined &&
+      current?.methodDetails?.credit?.[entity]?.limit !== undefined &&
+      original?.methodDetails?.credit?.[entity]?.limit !==
+        current?.methodDetails?.credit?.[entity]?.limit
+    ) {
+      count++;
+    }
+    if (
+      original?.methodDetails?.credit?.[entity]?.period !== undefined &&
+      current?.methodDetails?.credit?.[entity]?.period !== undefined &&
+      original?.methodDetails?.credit?.[entity]?.period !==
+        current?.methodDetails?.credit?.[entity]?.period
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Add this array for assignedToEntityWise entities
+const assignedToEntityWiseEntities = ["DAR", "VMCO", "SHC", "NAQI", "GMTC"];
+
+// Helper to count assignedToEntityWise updates
+function countAssignedToEntityWiseUpdates(
+  original = {},
+  current = {},
+  entities = []
+) {
+  let count = 0;
+  entities.forEach((entity) => {
+    if (
+      original?.assignedToEntityWise?.[entity] !== undefined &&
+      current?.assignedToEntityWise?.[entity] !== undefined &&
+      original?.assignedToEntityWise?.[entity] !==
+        current?.assignedToEntityWise?.[entity]
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Document fields to track for updates
+const documentFields = [
+  "acknowledgementSignature",
+  "crCertificate",
+  "vatCertificate",
+  "nationalId",
+  "bankLetter",
+  "nationalAddress",
+  "contractAgreement",
+  "creditApplication",
+];
+
+// Helper to count updated document fields (excluding nonTradingDocuments)
+function countUpdatedDocumentFields(original = {}, current = {}, fields = []) {
+  let count = 0;
+  fields.forEach((field) => {
+    if (
+      original?.[field] !== undefined &&
+      current?.[field] !== undefined &&
+      original?.[field] !== current?.[field]
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Helper to count updates in nonTradingDocuments array
+function countNonTradingDocumentsUpdates(original = [], current = []) {
+  if (!Array.isArray(original)) original = [];
+  if (!Array.isArray(current)) current = [];
+  // Count as updated if the arrays are different in length or content
+  if (original.length !== current.length) return 1;
+  // Compare contents (order-insensitive)
+  const originalSorted = [...original].sort();
+  const currentSorted = [...current].sort();
+  for (let i = 0; i < originalSorted.length; i++) {
+    if (originalSorted[i] !== currentSorted[i]) return 1;
+  }
+  return 0;
+}
+
 function CustomerDetails() {
   const { t } = useTranslation();
   const [tabsHeight, setTabsHeight] = useState("auto");
@@ -169,6 +411,16 @@ function CustomerDetails() {
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
   const [logosToUpload, setLogosToUpload] = useState({});
+  const [signatureToUpload, setSignatureToUpload] = useState({});
+  const [businessDetailsUpdateCount, setBusinessDetailsUpdateCount] =
+    useState(0);
+  const [contactDetailsUpdateCount, setContactDetailsUpdateCount] = useState(0);
+  // State for update count
+  const [financialInformationUpdateCount, setFinancialInformationUpdateCount] =
+    useState(0);
+  // State for update count
+  const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
+  const [confirmationData, setConfirmationData] = useState({});
 
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
@@ -266,6 +518,80 @@ function CustomerDetails() {
     };
     fetchData();
   }, [customerId]);
+
+  useEffect(() => {
+    const businessDetailsUpdateCount = countUpdatedFields(
+      originalCustomerData,
+      customerData,
+      businessDetailsFields
+    );
+    const countAssigned = countAssignedToEntityWiseUpdates(
+      originalCustomerData,
+      customerData,
+      assignedToEntityWiseEntities
+    );
+    setBusinessDetailsUpdateCount(businessDetailsUpdateCount + countAssigned);
+  }, [customerData, originalCustomerData]);
+  useEffect(() => {
+    const countContacts = countUpdatedFields(
+      originalCustomerContactsData,
+      customerContactsData,
+      contactDetailsFields
+    );
+    const countCustomer = countUpdatedFields(
+      originalCustomerData,
+      customerData,
+      contactDetailsCustomerFields
+    );
+    setContactDetailsUpdateCount(countContacts + countCustomer);
+  }, [
+    customerContactsData,
+    originalCustomerContactsData,
+    customerData,
+    originalCustomerData,
+  ]);
+  // Count updates in customerData and customerPaymentMethodsData for Financial Information tab
+  useEffect(() => {
+    // Count simple fields in customerData
+    const countCustomer = countUpdatedFields(
+      originalCustomerData,
+      customerData,
+      financialInfoCustomerFields
+    );
+    // Count pricing policy updates
+    const countPricing = countPricingPolicyUpdates(
+      originalCustomerData,
+      customerData,
+      pricingPolicyEntities
+    );
+    // Count payment method updates
+    const countPayment = countPaymentMethodUpdates(
+      originalCustomerPaymentMethodsData,
+      customerPaymentMethodsData
+    );
+    setFinancialInformationUpdateCount(
+      countCustomer + countPricing + countPayment
+    );
+  }, [
+    customerData,
+    originalCustomerData,
+    customerPaymentMethodsData,
+    originalCustomerPaymentMethodsData,
+  ]);
+  // Count updates in customerData for Documents tab
+  useEffect(() => {
+    const countDocs = countUpdatedDocumentFields(
+      originalCustomerData,
+      customerData,
+      documentFields
+    );
+    const countNonTrading = countNonTradingDocumentsUpdates(
+      originalCustomerData?.nonTradingDocuments,
+      customerData?.nonTradingDocuments
+    );
+    setDocumentsUpdateCount(countDocs + countNonTrading);
+  }, [customerData, originalCustomerData]);
+
   const handleCustomerDataChange = (e) => {
     const { name, value } = e.target;
     updatedCustomerData.current[name] = value;
@@ -432,18 +758,18 @@ function CustomerDetails() {
     "bankName",
     "bankAccountNumber",
     "iban",
-    "crCertificate",
-    "vatCertificate",
-    "nationalId",
-    "bankLetter",
-    "nationalAddress",
-    "customerSource",
-    "acknowledgementSignature",
-    "contractAgreement",
+    // "crCertificate",
+    // "vatCertificate",
+    // "nationalId",
+    // "bankLetter",
+    // "nationalAddress",
+    // "customerSource",
+    // "acknowledgementSignature",
+    // "contractAgreement",
     // "customerContract",
-    "creditApplication",
-    // "declarationName",
-    // "declarationSignature",
+    // "creditApplication",
+    "declarationName",
+    "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
     // "customerStatus",
@@ -473,16 +799,83 @@ function CustomerDetails() {
     "purchasingHeadDesignation",
   ];
 
+  const mandatoryFieldsForApproval = [
+    "companyNameEn",
+    "companyNameAr",
+    "companyType",
+    "crNumber",
+    "vatNumber",
+    "baladeahLicenseNumber",
+    "governmentRegistrationNumber",
+    "typeOfBusiness",
+    // "typeOfBusinessOther",
+    "deliveryLocations",
+    // "companyLogo",
+    // "brandLogo",
+    // "brandNameEn",
+    // "brandNameAr",
+    "buildingName",
+    "street",
+    "city",
+    "district",
+    "region",
+    "pincode",
+    "geolocation",
+    "bankName",
+    "bankAccountNumber",
+    "iban",
+    // "crCertificate",
+    // "vatCertificate",
+    // "nationalId",
+    // "bankLetter",
+    // "nationalAddress",
+    // "customerSource",
+    // "acknowledgementSignature",
+    // "contractAgreement",
+    // "customerContract",
+    // "creditApplication",
+    "declarationName",
+    "declarationSignature",
+    // "declarationDate",
+    "pricingPolicy",
+    // "customerStatus",
+    // "isDeliveryChargesApplicable",
+    // "isBlocked",
+    "assignedTo",
+    "assignedToEntityWise",
+    // "nonTradingDocuments",
+    // "interCompany",
+    // "entity",
+    "zone",
+    "primaryContactName",
+    "primaryContactEmail",
+    "primaryContactMobile",
+    "primaryContactDesignation",
+    "businessHeadName",
+    "businessHeadEmail",
+    "businessHeadMobile",
+    "businessHeadDesignation",
+    "financeHeadName",
+    "financeHeadEmail",
+    "financeHeadMobile",
+    "financeHeadDesignation",
+    "purchasingHeadName",
+    "purchasingHeadEmail",
+    "purchasingHeadMobile",
+    "purchasingHeadDesignation",
+  ];
+
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
   const validateData = async (
     dataToValidate,
-    mandatoryCheckRequired = false
+    mandatoryCheckRequired = false,
+    mandatoryFields = mandatoryFields
   ) => {
     const errors = {};
     const arabicList = ["companyNameAr", "brandNameAr"];
-    const documentList = [
+    const tradingDocumentList = [
       "acknowledgementSignature",
       "crCertificate",
       "vatCertificate",
@@ -492,17 +885,30 @@ function CustomerDetails() {
       "contractAgreement",
       "creditApplication",
     ];
-
+    const nonTradingDocumentList = [
+      "acknowledgementSignature",
+      "customerContract",
+      "creditApplication",
+    ];
+    const documentList =
+      customerData?.companyType === "trading"
+        ? tradingDocumentList
+        : nonTradingDocumentList;
     const uniqueFieldsList = [
       "crNumber",
       "vatNumber",
       "baladeahLicenseNumber",
       "governmentRegistrationNumber",
+      "bankAccountNumber",
     ];
     // If mandatoryCheckReguired is true, check all mandatory fields
-
+    console.log("check mandtaory fields has assigned to entity wise", mandatoryFields.includes("assignedToEntityWise"));
     if (mandatoryCheckRequired) {
-      mandatoryFields.forEach((field) => {
+      mandatoryFields?.forEach((field) => {
+        if (field === "assignedToEntityWise") {
+          // Skip here, handle below
+          return;
+        }
         if (field in dataToValidate && !dataToValidate[field]) {
           if (documentList.includes(field)) {
             errors[field] = t("This document is required.");
@@ -511,6 +917,31 @@ function CustomerDetails() {
           }
         }
       });
+
+      // Special check for assignedToEntityWise
+      if (mandatoryFields.includes("assignedToEntityWise") &&
+        dataToValidate.assignedToEntityWise &&
+        typeof dataToValidate.assignedToEntityWise === "object"
+      ) {
+        assignedToEntityWiseEntities.forEach((entity) => {
+          if (
+            !dataToValidate.assignedToEntityWise[entity] ||
+            dataToValidate.assignedToEntityWise[entity] === ""
+          ) {
+            // Set error for each missing entity assignment
+            errors[`assignedToEntityWise.${entity}`] = t(
+              `Sales person for ${entity} is required.`
+            );
+          }
+        });
+      } else if (mandatoryFields.includes("assignedToEntityWise")) {
+        // If the whole object is missing
+        assignedToEntityWiseEntities.forEach((entity) => {
+          errors[`assignedToEntityWise.${entity}`] = t(
+            `Sales person for ${entity} is required.`
+          );
+        });
+      }
     }
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
@@ -531,59 +962,57 @@ function CustomerDetails() {
       ) {
         const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
         if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = t("Invalid mobile number format");
+          errors[field] = t(
+            "Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted"
+          );
         }
       }
 
       if (field.toLowerCase().includes("iban")) {
         const saudiIbanRegex = /^SA\d{22}$/;
         if (value && !saudiIbanRegex.test(value)) {
-          errors[field] = t("Invalid Saudi IBAN format");
+          errors[field] = t("Invalid format! SAXXXXXXXXXXXXXX accepted");
         }
       }
 
       if (field.toLowerCase().includes("bankaccountnumber")) {
         const saudiBankAccountRegex = /^\d{15,20}$/;
         if (value && !saudiBankAccountRegex.test(value)) {
-          errors[field] = t("Invalid Saudi bank account number format");
+          errors[field] = t("Invalid format! 15 to 20 digits accepted");
         }
       }
 
       if (field.toLowerCase().includes("baladeahlicensenumber")) {
         const baladeahLicenseRegex = /^\d{9,10}$/;
         if (value && !baladeahLicenseRegex.test(value)) {
-          errors[field] = t("Invalid Baladeah license number format");
+          errors[field] = t("Invalid format! 9 to 10 digits accepted");
         }
       }
 
       if (field.toLowerCase().includes("vatnumber")) {
         const saudiVatRegex = /^\d{15}$/;
         if (value && !saudiVatRegex.test(value)) {
-          errors[field] = t("Invalid Saudi VAT registration number format");
+          errors[field] = t("Invalid format! 15 digits required");
         }
       }
 
       if (field.toLowerCase().includes("crnumber")) {
         const crNumberRegex = /^[1-9]\d{9}$/;
         if (value && !crNumberRegex.test(value)) {
-          errors[field] = t(
-            "Invalid Saudi Commercial Registration number format"
-          );
+          errors[field] = t("Invalid format! 10 digits required");
         }
       }
       if (field.toLowerCase().includes("governmentregistrationnumber")) {
         const govRegNumberRegex = /^[1-9]\d{8,9}$/;
         if (value && !govRegNumberRegex.test(value)) {
-          errors[field] = t(
-            "Invalid Saudi Government Registration number format"
-          );
+          errors[field] = t("Invalid format! 8 to 9 digits accepted");
         }
       }
 
       if (field.toLowerCase().includes("pincode")) {
         const saudiPincodeRegex = /^\d{5}$/;
         if (value && !saudiPincodeRegex.test(value)) {
-          errors[field] = t("Invalid Saudi pincode format");
+          errors[field] = t("Invalid format! 5 digits required");
         }
       }
       if (
@@ -687,7 +1116,8 @@ function CustomerDetails() {
   const uploadDocuments = async (
     tradingFilesToUpload,
     nonTradingFilesToUpload,
-    logosToUpload // <-- Add this param
+    logosToUpload,
+    signatureToUpload // <-- Add this param
   ) => {
     const uploadedFiles = {};
     try {
@@ -717,10 +1147,13 @@ function CustomerDetails() {
             );
             if (uploadedFile && uploadedFile.fileName) {
               uploadedFiles["nonTradingDocuments"].push(uploadedFile.fileName);
-              const index = nonTradingFilesToUpload["others"].indexOf(f);
-              if (index > -1) {
-                nonTradingFilesToUpload["others"].splice(index, 1);
-              }
+              // const index = nonTradingFilesToUpload["others"].indexOf(f);
+              // if (index > -1) {
+              //   nonTradingFilesToUpload["others"].splice(index, 1);
+              // }
+              nonTradingFilesToUpload["others"] = nonTradingFilesToUpload[
+                "others"
+              ].filter((file) => file !== f);
             }
           }
         }
@@ -744,6 +1177,25 @@ function CustomerDetails() {
           }
         }
       }
+
+      // --- Handle signature upload ---
+      if (signatureToUpload.declarationSignature) {
+        const uploadedSignature = await uploadFile(
+          "declarationSignature",
+          signatureToUpload.declarationSignature,
+          customerId
+        );
+        if (uploadedSignature && uploadedSignature.fileName) {
+          uploadedFiles["declarationSignature"] = uploadedSignature.fileName;
+          // Remove from upload queue
+          setSignatureToUpload((prev) => {
+            const copy = { ...prev };
+            delete copy.declarationSignature;
+            return copy;
+          });
+        }
+      }
+
       if (uploadedFiles?.["nonTradingDocuments"])
         uploadedFiles["nonTradingDocuments"] = JSON.stringify(
           uploadedFiles["nonTradingDocuments"]
@@ -757,12 +1209,15 @@ function CustomerDetails() {
   const handleSave = async (action) => {
     console.log("^^^^^Saving customer data:", updatedCustomerData.current);
     console.log(nonTradingFilesToUpload);
-
+    // if(action === "submit") {
+    //   customerData["declarationDate"] = new Date().toISOString();
+    // }
     try {
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
         nonTradingFilesToUpload,
-        logosToUpload // <-- pass here
+        logosToUpload,
+        signatureToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -780,13 +1235,20 @@ function CustomerDetails() {
           ...updatedCustomerData.current,
           ...updatedCustomerContactsData.current,
         },
-        false
+        false,
+        []
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         if (action !== "submit") {
-          alert("Please fix the errors before saving.");
+          Swal.fire({
+            icon: "error",
+            title: t("Error"),
+            text: t("Please fix the errors before saving."),
+            confirmButtonText: t("OK"),
+          });
+          // alert("Please fix the errors before saving.");
         }
         return;
       }
@@ -808,7 +1270,13 @@ function CustomerDetails() {
         setOriginalCustomerData(result.data);
       }
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
       return false;
     }
@@ -829,7 +1297,13 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
       return false;
     }
@@ -848,11 +1322,23 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
       return false;
     }
-    alert("Customer data saved successfully.");
+    Swal.fire({
+      icon: "success",
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      confirmButtonText: t("OK"),
+    });
+    // alert("Customer data saved successfully.");
     return true;
   };
 
@@ -866,7 +1352,8 @@ function CustomerDetails() {
       const uploadedFiles = await uploadDocuments(
         tradingFilesToUpload,
         nonTradingFilesToUpload,
-        logosToUpload // <-- pass here
+        logosToUpload,
+        signatureToUpload // <-- pass here
       );
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
@@ -874,12 +1361,19 @@ function CustomerDetails() {
       };
       const errors = await validateData(
         { ...customerData, ...customerContactsData },
-        true
+        true,
+        mandatoryFields
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
         return;
       }
 
@@ -897,7 +1391,13 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
     }
 
@@ -915,11 +1415,25 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
     }
-    alert("Customer data saved successfully.");
-    window.location.reload();
+    Swal.fire({
+      icon: "success",
+      title: t("Success"),
+      text: t("Customer data saved successfully."),
+      confirmButtonText: t("OK"),
+    }).then(() => {
+      window.location.reload();
+    });
+    // alert("Customer data saved successfully.");
+    // window.location.reload();
   };
 
   const handleApprovalClick = (action) => {
@@ -954,14 +1468,31 @@ function CustomerDetails() {
         },
         id: customerId,
       };
-
+      var dataToBeValidated = {};
+      if(customerData?.customerStatus === "pending") {
+        dataToBeValidated = {...customerData,...customerContactsData}
+      }
+      else {
+        dataToBeValidated = {
+          ...mergedData?.updates?.customer,
+          ...mergedData?.updates?.contacts,
+        };
+      }
+      console.log("Data to be validated:", dataToBeValidated);
       const errors = await validateData(
-        { ...mergedData?.updates?.customer, ...mergedData?.updates?.contacts },
-        true
+        dataToBeValidated,
+        true,
+        mandatoryFieldsForApproval
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
         return;
       }
       const response = await fetch(
@@ -1010,12 +1541,19 @@ function CustomerDetails() {
 
       const errors = await validateData(
         { ...mergedData?.updates?.customer, ...mergedData?.updates?.contacts },
-        true
+        true,
+        mandatoryFieldsForApproval
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before saving.");
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
         return;
       }
       const response = await fetch(
@@ -1079,8 +1617,12 @@ function CustomerDetails() {
   const handleSubmit = async (action) => {
     try {
       // uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
+      customerData["declarationDate"] = new Date().toISOString();
+      updatedCustomerData.current = {
+        ...updatedCustomerData.current,
+        declarationDate: customerData.declarationDate,
+      };
       const saved = await handleSave("submit");
-
       const errors = await validateData(
         {
           ...customerData,
@@ -1088,15 +1630,23 @@ function CustomerDetails() {
           ...updatedCustomerData.current,
           ...updatedCustomerContactsData.current,
         },
-        true
+        true,
+        mandatoryFields
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
-        alert("Please fix the errors before submitting.");
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before submitting.");
         return;
       }
       customerData["customerStatus"] = "pending";
+
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
@@ -1145,7 +1695,13 @@ function CustomerDetails() {
       showLoadingScreen("Updating...");
       setTimeout(() => window.location.reload(true), 3000);
     } catch (error) {
-      alert("Error updating customer data:", error.message);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(`Error updating customer data. ${error.message}`),
+        confirmButtonText: t("OK"),
+      });
+      // alert("Error updating customer data:", error.message);
       console.error("Error updating customer:", error.message);
     }
   };
@@ -1157,11 +1713,15 @@ function CustomerDetails() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ customerStatus: "blocked", isBlocked: true }),
+          body: JSON.stringify({
+            customer: { customerStatus: "blocked", isBlocked: true },
+            contacts: {},
+          }),
           credentials: "include",
         }
       );
       console.log("Response", response);
+      window.location.reload();
     } catch (error) {
       console.error("Error blocking customer:", error.message);
     }
@@ -1175,13 +1735,17 @@ function CustomerDetails() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            customerStatus: "approved",
-            isBlocked: false,
+            customer: {
+              customerStatus: "approved",
+              isBlocked: false,
+            },
+            contacts: {},
           }),
           credentials: "include",
         }
       );
       console.log("Response", response);
+      window.location.reload();
     } catch (error) {
       console.error("Error unblocking customer:", error.message);
     }
@@ -1212,6 +1776,11 @@ function CustomerDetails() {
                     onClick={() => setActiveTab("Business Details")}
                   >
                     {t("Business Details")}
+                    {businessDetailsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {businessDetailsUpdateCount}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -1224,6 +1793,11 @@ function CustomerDetails() {
                     onClick={() => setActiveTab("Contact Details")}
                   >
                     {t("Contact Details")}
+                    {contactDetailsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {contactDetailsUpdateCount}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -1236,6 +1810,11 @@ function CustomerDetails() {
                     onClick={() => setActiveTab("Financial Information")}
                   >
                     {t("Financial Information")}
+                    {financialInformationUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {financialInformationUpdateCount}
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -1248,6 +1827,23 @@ function CustomerDetails() {
                     onClick={() => setActiveTab("Documents")}
                   >
                     {t("Documents")}
+                    {documentsUpdateCount > 0 && mode === "edit" && (
+                      <span className="update-badge" style={{ marginLeft: 8 }}>
+                        {documentsUpdateCount}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {(isV("finalSubmissionTab") || (customerData?.customerStatus === "new" || customerData?.customerStatus === "pending")) && (
+                  <div
+                    key={"Final Submission"}
+                    className={`tab ${
+                      activeTab === "Final Submission" ? "active" : ""
+                    }`}
+                    onClick={() => setActiveTab("Final Submission")}
+                  >
+                    {t("Final Submission")}
                   </div>
                 )}
 
@@ -1276,6 +1872,7 @@ function CustomerDetails() {
                       {t("Branches")}
                     </div>
                   )}
+                
               </div>
 
               {activeTab === "Business Details" &&
@@ -1348,6 +1945,7 @@ function CustomerDetails() {
                 <CustomerBranches
                   customer={{
                     ...customerData,
+                    ...customerContactsData,
                     workflowId: workflowId,
                     workflowInstanceId: workflowInstanceId,
                   }}
@@ -1361,6 +1959,16 @@ function CustomerDetails() {
                   customerId={customerId}
                   customer={customerData}
                   setTabsHeight={setTabsHeight}
+                />
+              )}
+              {activeTab === "Final Submission" && (
+                <FinalSubmissionConfirmation
+                  customerData={customerData}
+                  originalCustomerData={originalCustomerData}
+                  onChangeCustomerData={handleCustomerDataChange}
+                  formErrors={formErrors}
+                  mode={mode}
+                  signatureToUpload={signatureToUpload}
                 />
               )}
             </div>
@@ -1380,6 +1988,7 @@ function CustomerDetails() {
               "Contact Details",
               "Financial Information",
               "Documents",
+              "Final Submission",
             ].includes(activeTab) && (
               <div className="action-buttons">
                 {isV("btnSave") && customerData?.customerStatus === "new" && (
@@ -1435,7 +2044,7 @@ function CustomerDetails() {
                   <button
                     className="block"
                     onClick={() => handleBlock()}
-                    disabled={false}
+                    disabled={mode === "add" && inApproval}
                   >
                     {t("Block")}
                   </button>
@@ -1444,7 +2053,7 @@ function CustomerDetails() {
                   <button
                     className="unblock"
                     onClick={() => handleUnblock()}
-                    disabled={false}
+                    disabled={mode === "add" && inApproval}
                   >
                     {t("Unblock")}
                   </button>

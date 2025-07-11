@@ -1,10 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, use } from "react";
 import { useTranslation } from "react-i18next";
 import BranchDetailsSection from "./branchDetailsSection";
 import ContactSection from "./contactSection";
 import OperatingHours from "./operatingHours";
+import ApprovalDialog from "../../components/ApprovalDialog";
 import "../../styles/forms.css";
 import "../../styles/components.css";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const BranchDetailsForm = ({
   branchId, // required
@@ -12,28 +15,36 @@ const BranchDetailsForm = ({
   customer, // required
   branchChanges,
   handleBranchFieldChange,
+  isApprovalMode,
   mode,
+  setExpandedRows,
   isFirstBranch,
-  onSave,
-  onSubmit,
-  onBlock,
-  onUnblock,
 }) => {
   const { t } = useTranslation();
-  const [branchDetails, setBranchDetails] = useState({});
+  const navigate = useNavigate();
+  const [branchDetails, setBranchDetails] = useState({...branch});
   const [originalBranchDetails, setOriginalBranchDetails] = useState({});
   const [branchContacts, setBranchContacts] = useState([]);
   const [originalBranchContacts, setOriginalBranchContacts] = useState([]);
   const [hoursDetails, setHoursDetails] = useState({});
   const [originalHoursData, setOriginalHoursData] = useState({});
   const [workflowData, setWorkflowData] = useState({});
-  const [isApprovalMode, setIsApprovalMode] = useState(false);
+  // const [isApprovalMode, setIsApprovalMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
-  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
+  const [approvalAction, setApprovalAction] = useState(null);
+  const weekdays = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
   var updatedBranchData = useRef({});
   var updatedBranchContactsData = useRef({});
   const fetchBranchDetails = async () => {
-
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${branchId}`,
@@ -165,8 +176,12 @@ const BranchDetailsForm = ({
     };
 
     weekdays.forEach((day) => {
-      result.operatingHours[day] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
-      result.deliveryHours[day] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
+      result.operatingHours[
+        day
+      ] = `${hoursData[day].operating.from}-${hoursData[day].operating.to}`;
+      result.deliveryHours[
+        day
+      ] = `${hoursData[day].delivery.from}-${hoursData[day].delivery.to}`;
     });
 
     return JSON.stringify(result);
@@ -186,7 +201,8 @@ const BranchDetailsForm = ({
     console.log("#### Enter");
     try {
       if (hoursData !== null && hoursData !== undefined) {
-        const parsedData = typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
+        const parsedData =
+          typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
         let convertedData = {};
         weekdays.forEach((day) => {
           convertedData[day] = {
@@ -203,7 +219,7 @@ const BranchDetailsForm = ({
     }
   };
 
-  const handleHoursChange = (day,type, field, value) => {
+  const handleHoursChange = (day, type, field, value) => {
     // const {day, type, field, value} = e.target;
     const updatedHours = {
       ...hoursDetails,
@@ -243,54 +259,96 @@ const BranchDetailsForm = ({
     // setModifiedDays({});
     // handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
   };
-const handleDeliveryChargesChange = (e) => {
-  const {name} = e.target;
-  const value = e.target.checked;
-  updatedBranchData.current["isDeliveryChargesApplicable"] = value;
-  setBranchDetails((prev) => ({
-    ...prev,
-    isDeliveryChargesApplicable: value
-  }));
-};
+  const handleDeliveryChargesChange = (e) => {
+    const { name } = e.target;
+    const value = e.target.checked;
+    updatedBranchData.current["isDeliveryChargesApplicable"] = value;
+    setBranchDetails((prev) => ({
+      ...prev,
+      isDeliveryChargesApplicable: value,
+    }));
+  };
 
-const setSameAsCustomer = (e) => {
-  updatedBranchData.current.street = customer?.street || "";
-  updatedBranchData.current.buildingName = customer?.buildingName || "";
-  updatedBranchData.current.city = customer?.city || "";
-  updatedBranchData.current.region = customer?.region || "";
-  updatedBranchData.current.locationType = customer?.locationType || "";
-  updatedBranchData.current.geolocation = customer?.geolocation || "";
-  setBranchDetails((prev) => ({
-    ...prev,
-    street: customer?.street || "",
-    buildingName: customer?.buildingName || "",
-    city: customer?.city || "",
-    region: customer?.region || "",
-    geolocation: customer?.geolocation || ""
-  }));
-}
+  const setSameAsCustomer = (e) => {
+    updatedBranchData.current.street = customer?.street || "";
+    updatedBranchData.current.buildingName = customer?.buildingName || "";
+    updatedBranchData.current.city = customer?.city || "";
+    updatedBranchData.current.region = customer?.region || "";
+    updatedBranchData.current.locationType = customer?.locationType || "";
+    updatedBranchData.current.geolocation = customer?.geolocation || "";
+    updatedBranchContactsData.current.primaryContactName = customer?.primaryContactName || "";
+    updatedBranchContactsData.current.primaryContactDesignation =
+      customer?.primaryContactDesignation || "";
+    updatedBranchContactsData.current.primaryContactEmail =
+      customer?.primaryContactEmail || "";
+    updatedBranchContactsData.current.primaryContactMobile =
+      customer?.primaryContactMobile || "";
+    updatedBranchContactsData.current.secondaryContactName =
+      customer?.businessHeadName || "";
+    updatedBranchContactsData.current.secondaryContactDesignation =
+      customer?.businessHeadDesignation || "";
+    updatedBranchContactsData.current.secondaryContactEmail =
+      customer?.businessHeadEmail || "";
+    updatedBranchContactsData.current.secondaryContactMobile =
+      customer?.businessHeadMobile || "";
+    setBranchDetails((prev) => ({
+      ...prev,
+      street: customer?.street || "",
+      buildingName: customer?.buildingName || "",
+      city: customer?.city || "",
+      region: customer?.region || "",
+      geolocation: customer?.geolocation || "",
+    }));
+    setBranchContacts((prev) => ({
+      ...prev,
+      primaryContactName: customer?.primaryContactName || "",
+      primaryContactDesignation: customer?.primaryContactDesignation || "",
+      primaryContactEmail: customer?.primaryContactEmail || "",
+      primaryContactMobile: customer?.primaryContactMobile || "",
+      secondaryContactName: customer?.businessHeadName || "",
+      secondaryContactDesignation: customer?.businessHeadDesignation || "",
+      secondaryContactEmail: customer?.businessHeadEmail || "",
+      secondaryContactMobile: customer?.businessHeadMobile || "",
+    }));
+  };
   useEffect(() => {
     const fetchData = async () => {
       // if (branchId > 0) {
-        // Existing code for fetching data for existing branches
-        const branchData = await fetchBranchDetails();
-        const hoursData = getBranchTimeSlotsInStringHours(branchData?.hours || {});
-        const contactsData = await fetchBranchContacts();
-        const isAppMode = await checkIfBranchIsInApproval(branchId);
-        var temp;
-        if (isAppMode && customer?.workflowInstanceId) {
-          const wfData = await fetchWorkflowDataOfBranch(customer?.workflowInstanceId);
-          setWorkflowData(wfData);
-          temp = { ...branchData, ...wfData };
-          setIsApprovalMode(isAppMode);
-        }
+      // Existing code for fetching data for existing branches
+      const branchData = await fetchBranchDetails() || branch;
+      const hoursData = getBranchTimeSlotsInStringHours(
+        branchData?.hours || {}
+      );
+      const contactsData = await fetchBranchContacts();
+      const isAppMode = await checkIfBranchIsInApproval(branchId);
+      var temp;
+      if (isAppMode && customer?.workflowInstanceId) {
+        const wfData = await fetchWorkflowDataOfBranch(
+          customer?.workflowInstanceId
+        );
+        setWorkflowData(wfData);
+        temp = { ...branchData, ...wfData };
+        // setIsApprovalMode(isAppMode);
+      }
 
-        setBranchDetails(isAppMode &&(temp && Object.keys(temp?.branch).length > 0) ? {...branchData, ...temp?.branch} : branchData);
-        setOriginalBranchDetails(branchData);
-        setBranchContacts(isAppMode &&(temp && Object.keys(temp?.contacts).length > 0) ? {...contactsData, ...temp?.contacts} : contactsData);
-        setOriginalBranchContacts(contactsData);
-        setHoursDetails((temp && temp?.branch?.hours) ? getBranchTimeSlotsInStringHours(temp?.branch?.hours) : hoursData);
-        setOriginalHoursData(hoursData);
+      setBranchDetails(
+        isAppMode && temp && Object.keys(temp?.branch).length > 0
+          ? { ...branchData, ...temp?.branch }
+          : branchData
+      );
+      setOriginalBranchDetails(branchData);
+      setBranchContacts(
+        isAppMode && temp && Object.keys(temp?.contacts).length > 0
+          ? { ...contactsData, ...temp?.contacts }
+          : contactsData
+      );
+      setOriginalBranchContacts(contactsData);
+      setHoursDetails(
+        temp && temp?.branch?.hours
+          ? getBranchTimeSlotsInStringHours(temp?.branch?.hours)
+          : hoursData
+      );
+      setOriginalHoursData(hoursData);
       // } else if (branchId < 0) {
       //   // For new branches (negative IDs), use the branch prop directly
       //   console.log("Initializing new branch with ID:", branchId);
@@ -300,7 +358,7 @@ const setSameAsCustomer = (e) => {
       //   setOriginalBranchContacts([]);
       //   setHoursDetails({});
       //   setIsApprovalMode(false);
-        
+
       //   // Initialize updatedBranchData with basic branch info
       //   updatedBranchData.current = {
       //     ...branch,
@@ -315,13 +373,15 @@ const setSameAsCustomer = (e) => {
   }, [branchId, branch, customer]); // Add dependencies to re-run effect when they change
   const handleBranchDataChange = (e) => {
     const { name, value } = e.target;
+    console.log("#####handleBranchDataChange called", branchDetails);
     updatedBranchData.current[name] = value;
     setBranchDetails((prev) => ({ ...prev, [name]: value }));
+    console.log("#####handleBranchDataChange called", e.target);
   };
   const setGeoLocation = (location) => {
     updatedBranchData.current.geolocation = location;
-    setBranchDetails((prev) => ({...prev, geolocation: location }));
-    console.log("^^^^^^^^", branchDetails)
+    setBranchDetails((prev) => ({ ...prev, geolocation: location }));
+    console.log("^^^^^^^^", branchDetails);
   };
 
   const handleBranchContactsDataChange = (e) => {
@@ -331,67 +391,75 @@ const setSameAsCustomer = (e) => {
     updatedBranchContactsData.current[name] = value;
     setBranchContacts((prev) => ({ ...prev, [name]: value }));
   };
-  
-  // useEffect(() => {
-    //   const fetchWorkflowData = async () => {
-    //   if (isApprovalMode) {
-  //     const wfData = await fetchWorkflowDataOfBranch(customer?.workflowId);
-  //     setWorkflowData(wfData);
-  //     const temp = { ...branchDetails, ...wfData };
-  //     setBranchDetails(temp);
-  //   }
-  // };
-  // fetchWorkflowData();
-  // }, [customer?.workflowId, isApprovalMode]);
+
   const mandatoryFields = [
     "branchNameEn",
-  "branchNameLc",
-  "buildingName",
-  "street",
-  "city",
-  "locationType",
-  "region",
-  "geolocation",
-  "primaryContactName",
-  "primaryContactDesignation",
-  "primaryContactEmail",
-  "primaryContactMobile",
-  "secondaryContactName",
-  "secondaryContactDesignation",
-  "secondaryContactEmail",
-  "secondaryContactMobile",
-  // "supervisorContactName",
-  // "supervisorContactDesignation",
-  // "supervisorContactEmail",
-  // "supervisorContactMobile",
-];
+    "branchNameLc",
+    "buildingName",
+    "street",
+    "city",
+    "locationType",
+    "region",
+    "geolocation",
+    "primaryContactName",
+    "primaryContactDesignation",
+    "primaryContactEmail",
+    "primaryContactMobile",
+    "secondaryContactName",
+    "secondaryContactDesignation",
+    "secondaryContactEmail",
+    "secondaryContactMobile",
+    // "supervisorContactName",
+    // "supervisorContactDesignation",
+    // "supervisorContactEmail",
+    // "supervisorContactMobile",
+  ];
+  const mandatoryFieldsForApproval = [
+    "branchNameEn",
+    "branchNameLc",
+    "buildingName",
+    "street",
+    "city",
+    "locationType",
+    "region",
+    "geolocation",
+    "primaryContactName",
+    "primaryContactDesignation",
+    "primaryContactEmail",
+    "primaryContactMobile",
+    "secondaryContactName",
+    "secondaryContactDesignation",
+    "secondaryContactEmail",
+    "secondaryContactMobile",
+    "branch",
+    // "supervisorContactName",
+    // "supervisorContactDesignation",
+    // "supervisorContactEmail",
+    // "supervisorContactMobile",
+  ];
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
-  const validateData = async (dataToValidate, mandatoryCheckRequired = false) => {
-    const errors = {};    
-    const arabicList = [
-      "branchNameLc",
-    ]
-    
+  const validateData = async (
+    dataToValidate,
+    mandatoryCheckRequired = false,
+    mandatoryFields = mandatoryFields
+  ) => {
+    const errors = {};
+    const arabicList = ["branchNameLc"];
+
     // If mandatoryCheckReguired is true, check all mandatory fields
 
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
         if (field in dataToValidate && !dataToValidate[field]) {
-          
-            errors[field] = t("This field is required");
-          
+          errors[field] = t("This field is required");
         }
       });
     }
-   for (const field in dataToValidate) {
+    for (const field in dataToValidate) {
       const value = dataToValidate[field];
-      if (
-        arabicList.includes(field) &&
-        value &&
-        !isArabicText(value)
-      ) {
+      if (arabicList.includes(field) && value && !isArabicText(value)) {
         errors[field] = t("Please enter Arabic text.");
       }
 
@@ -402,26 +470,32 @@ const setSameAsCustomer = (e) => {
         }
       }
 
-      if (field.toLowerCase().includes("mobile") || field.toLowerCase().includes("phone")) {
-  const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
-  if (value && !saudiMobileRegex.test(value)) {
-    errors[field] = t("Invalid mobile number format");
-  }
-}
+      if (
+        field.toLowerCase().includes("mobile") ||
+        field.toLowerCase().includes("phone")
+      ) {
+        const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
+        if (value && !saudiMobileRegex.test(value)) {
+          errors[field] = t("Invalid mobile number format");
+        }
+      }
+    }
+    return errors;
+  };
 
-   }
-  return errors;
-};
-  
   const handleSubmit = async (id) => {
     handleSave(id);
-    
-const errors = await validateData({...branchDetails, ...branchContacts}, true);
-      setFormErrors(errors);
-      if (Object.keys(errors).length > 0) {
-        // Handle errors (e.g., show error messages)
-        return;
-      }
+
+    const errors = await validateData(
+      { ...branchDetails, ...branchContacts },
+      true,
+      mandatoryFields
+    );
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      // Handle errors (e.g., show error messages)
+      return;
+    }
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
@@ -429,13 +503,11 @@ const errors = await validateData({...branchDetails, ...branchContacts}, true);
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            branch : {
+            branch: {
               branchStatus: "pending",
               customerId: customer?.id,
             },
-            contacts: {
-            },
-            
+            contacts: {},
           }),
           credentials: "include",
         }
@@ -515,12 +587,16 @@ const errors = await validateData({...branchDetails, ...branchContacts}, true);
 
   const handleSave = async (id) => {
     const isNewBranch = id < 0; // Negative IDs are temporary
-    const errors = await validateData({...updatedBranchData.current, ...updatedBranchContactsData.current}, false);
-      setFormErrors(errors);
-      if (Object.keys(errors).length > 0) {
-        // Handle errors (e.g., show error messages)
-        return;
-      }
+    const errors = await validateData(
+      { ...updatedBranchData.current, ...updatedBranchContactsData.current },
+      false,
+      []
+    );
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      // Handle errors (e.g., show error messages)
+      return;
+    }
     if (isNewBranch) {
       try {
         const response = await fetch(`${API_BASE_URL}/customer-branches`, {
@@ -555,6 +631,20 @@ const errors = await validateData({...branchDetails, ...branchContacts}, true);
                 credentials: "include",
               }
             );
+            if (res.ok) {
+              const contactResult = await res.json();
+              Swal.fire({
+                          icon: "success",
+                          title: t("Success"),
+                          text: t(
+                            "Branch saved successfully."
+                          ),
+                          confirmButtonText: t("OK"),
+                        });
+              // alert(
+              //   "Branch saved successfully"
+              // );
+            }
           } catch (error) {
             console.error("Error saving contacts for new branch:", error);
           }
@@ -578,8 +668,7 @@ const errors = await validateData({...branchDetails, ...branchContacts}, true);
                 customerId: customer.id,
                 branchStatus: branchDetails?.branchStatus,
               },
-              contacts: {
-              },
+              contacts: {},
             }),
             credentials: "include",
           }
@@ -606,56 +695,153 @@ const errors = await validateData({...branchDetails, ...branchContacts}, true);
       } catch (error) {
         console.error("Error saving contacts for updated branch:", error);
       }
+      Swal.fire({
+                  icon: "success",
+                  title: t("Success"),
+                  text: t(
+                    "Branch saved successfully."
+                  ),
+                  confirmButtonText: t("OK"),
+                });
+      //  alert("Branch saved successfully.");
     }
-
-    // Clear changes for this branch
-    // setBranchChanges(prev => {
-    //     const newChanges = { ...prev };
-    //     delete newChanges[id];
-    //     return newChanges;
-    // });
-
-    // Refresh data
-    // await fetchBranches();
-    // } catch (error) {
-    //   console.error("Error saving branch:", error);
-    // }
+   
   };
-const handleSaveChanges = async (id) => {
-    const errors = await validateData({...branchDetails, ...branchContacts}, true);
-      setFormErrors(errors);
-      if (Object.keys(errors).length > 0) {
-        // Handle errors (e.g., show error messages)
-        return;
-      }
-      try {
-        // if (Object.keys(branchPayload).length > 0) {
-        const response = await fetch(
-          `${API_BASE_URL}/customer-branches/id/${id}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              branch: {
+  const handleSaveChanges = async (id) => {
+    const errors = await validateData(
+      { ...branchDetails, ...branchContacts },
+      true,
+      mandatoryFields
+    );
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      // Handle errors (e.g., show error messages)
+      return;
+    }
+    try {
+      // if (Object.keys(branchPayload).length > 0) {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-branches/id/${id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch: {
               ...updatedBranchData.current,
               customerId: customer.id,
               branchStatus: branchDetails?.branchStatus,
             },
             contacts: {
               ...updatedBranchContactsData.current,
-            }
+            },
           }),
-            credentials: "include",
-          }
-        );
-      } catch (error) {
-        console.error("Error updating branch:", error);
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        Swal.fire({
+                    icon: "success",
+                    title: t("Success"),
+                    text: t(
+                      "Branch updated successfully."
+                    ),
+                    confirmButtonText: t("OK"),
+                  });
+        // alert("Branch updated successfully.");
+        // setExpandedRows((prev) => ({
+        //   ...prev,
+        //   [id]: false, // Collapse the row after saving
+        // }));
+        setExpandedRows([])
       }
-      
+
+    } catch (error) {
+      console.error("Error updating branch:", error);
+    }
   };
+
+  const handleBlock = async (id) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-branches/id/${id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch: {
+              branchStatus: "blocked",
+              customerId: customer?.id,
+              isBlocked: true,
+            },
+          }),
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        Swal.fire({
+                    icon: "success",
+                    title: t("Success"),
+                    text: t(
+                      "Branch blocked successfully."
+                    ),
+                    confirmButtonText: t("OK"),
+                  });
+        // alert("Branch blocked successfully.");
+        setExpandedRows([]);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error blocking branch:", error);
+    }
+  };
+
+  const handleUnblock = async (id) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-branches/id/${id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch: {
+              branchStatus: "approved",
+              customerId: customer?.id,
+              isBlocked: false,
+            },
+          }),
+          credentials: "include",
+        }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        Swal.fire({
+                    icon: "success",
+                    title: t("Success"),
+                    text: t(
+                      "Branch unblocked successfully."
+                    ),
+                    confirmButtonText: t("OK"),
+                  });
+        // alert("Branch unblocked successfully.");
+        setExpandedRows([]);
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Error unblocking branch:", error);
+    }
+  };
+
   const handleApprove = async () => {
     const mergedData = {
-      updates: { branch:{...workflowData.branch, ...updatedBranchData.current } , contacts: {...workflowData.contacts, ...updatedBranchContactsData.current} },
+      updates: {
+        branch: { ...workflowData.branch, ...updatedBranchData.current },
+        contacts: {
+          ...workflowData.contacts,
+          ...updatedBranchContactsData.current,
+        },
+      },
       id: branchId,
     };
 
@@ -686,7 +872,13 @@ const handleSaveChanges = async (id) => {
   };
   const handleReject = async () => {
     const mergedData = {
-      updates: { branch:{...workflowData.branch, ...updatedBranchData.current } , contacts: {...workflowData.contacts, ...updatedBranchContactsData.current} },
+      updates: {
+        branch: { ...workflowData.branch, ...updatedBranchData.current },
+        contacts: {
+          ...workflowData.contacts,
+          ...updatedBranchContactsData.current,
+        },
+      },
       id: branchId,
     };
 
@@ -716,14 +908,78 @@ const handleSaveChanges = async (id) => {
     }
   };
 
+  // Open dialog with action
+  const handleApprovalClick = (action) => {
+    setApprovalAction(action);
+    setIsApprovalDialogOpen(true);
+  };
+
+  // Approval dialog submit handler
+  const handleApprovalDialogSubmit = async (comment) => {
+    const mergedData = {
+      updates: {
+        branch: { ...workflowData.branch, ...updatedBranchData.current },
+        contacts: {
+          ...workflowData.contacts,
+          ...updatedBranchContactsData.current,
+        },
+      },
+      id: branchId,
+    };
+var dataToBeValidated = {};
+      if(branch?.branchStatus === "pending") {
+        dataToBeValidated = {...branch, ...branchContacts, ...hoursDetails, ...updatedBranchData.current, ...updatedBranchContactsData.current, ...mergedData?.updates?.branch, ...mergedData?.updates?.contacts};
+      }
+      else {
+        dataToBeValidated = {
+          ...mergedData?.updates?.branch,
+          ...mergedData?.updates?.contacts,
+        };
+      }
+      console.log("Data to be validated:", dataToBeValidated);
+      const errors = await validateData(
+        dataToBeValidated,
+        true,
+        mandatoryFieldsForApproval
+      );
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
+        return;
+      }
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approvedStatus:
+              approvalAction === "approve" ? "approved" : "rejected",
+            comment,
+            workflowData: mergedData,
+          }),
+          credentials: "include",
+        }
+      );
+      setIsApprovalDialogOpen(false);
+      // Optionally reload or navigate
+      // window.location.reload();
+      navigate("/customers");
+    } catch (error) {
+      console.error("Error approving/rejecting branch:", error.message);
+      setIsApprovalDialogOpen(false);
+    }
+  };
+
   return (
     <div className="expanded-form-container">
-      {/* {isApprovalMode && (
-        <div className="approval-notice">
-          <h3>{t("Branch is currently under approval")}</h3>
-        </div>
-      )} */}
-
       {/* Branch Details Section */}
       <BranchDetailsSection
         branch={branchDetails}
@@ -746,7 +1002,7 @@ const handleSaveChanges = async (id) => {
       <ContactSection
         branch={branchContacts}
         originalBranchContacts={originalBranchContacts}
-        branchDetails={branchDetails}
+        branchDetails={branchDetails || branch}
         customer={customer}
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchContactsDataChange}
@@ -791,7 +1047,8 @@ const handleSaveChanges = async (id) => {
               </>
             ) : (
               branch?.branchStatus !== "pending" &&
-              !branch?.isNew && mode === "add" && (
+              !branch?.isNew &&
+              mode === "add" && (
                 <>
                   <button
                     className="save changes"
@@ -809,7 +1066,7 @@ const handleSaveChanges = async (id) => {
                     <button
                       className="block"
                       disabled={isApprovalMode || customer?.isBlocked}
-                      onClick={() => onBlock && onBlock(branch?.id, branch)}
+                      onClick={() => handleBlock(branch?.id)}
                     >
                       {t("Block")}
                     </button>
@@ -817,27 +1074,52 @@ const handleSaveChanges = async (id) => {
                     <button
                       className="block"
                       disabled={isApprovalMode || customer?.isBlocked}
-                      onClick={() => onUnblock && onUnblock(branch?.id, branch)}
+                      onClick={() => handleUnblock(branch?.id)}
                     >
                       {t("Unblock")}
                     </button>
                   )}
                 </>
-              ))}
+              )
+            )}
 
             {mode === "edit" && isApprovalMode && (
-              <button className="approve" onClick={() => handleApprove()}>
+              <button
+                className="approve"
+                onClick={() => handleApprovalClick("approve")}
+              >
                 {t("Approve")}
               </button>
             )}
             {mode === "edit" && isApprovalMode && (
-              <button className="reject" onClick={() => handleReject()}>
+              <button
+                className="reject"
+                onClick={() => handleApprovalClick("reject")}
+              >
                 {t("Reject")}
               </button>
             )}
           </div>
         </div>
       </div>
+      {/* Approval dialog for comment input */}
+      <ApprovalDialog
+        isOpen={isApprovalDialogOpen}
+        onClose={() => setIsApprovalDialogOpen(false)}
+        action={approvalAction}
+        onSubmit={handleApprovalDialogSubmit}
+        customerName={branchDetails?.branchNameEn || "this branch"}
+        title={
+          approvalAction === "approve"
+            ? t("Approve Branch")
+            : t("Reject Branch")
+        }
+        subtitle={
+          approvalAction === "approve"
+            ? t("Are you sure you want to approve this branch?")
+            : t("Are you sure you want to reject this branch?")
+        }
+      />
     </div>
   );
 };

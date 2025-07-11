@@ -2774,7 +2774,7 @@
 .support-details-footer {
   display: flex;
   justify-content: space-between;
-  gap: 32px;
+  gap: 24px;
   margin: 20px 0px;
   padding: 0 20px 0px 0px;
   align-items: flex-start;
@@ -2811,6 +2811,7 @@
 }
 
 .support-details-actions {
+  justify-self: flex-end;
   display: flex;
   gap: 16px;
 }

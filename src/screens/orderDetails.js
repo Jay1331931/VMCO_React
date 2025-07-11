@@ -194,6 +194,7 @@ function OrderDetails() {
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
+        isFresh: product.isFresh, // Add isFresh field if present
         quantity: product.quantity,
       }));
 
@@ -249,6 +250,7 @@ function OrderDetails() {
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
             isMachine: product.isMachine,
+            isFresh: product.isFresh, // Add isFresh field if present
             quantity: product.quantity,
           }));
 
@@ -351,43 +353,73 @@ function OrderDetails() {
     }
 
     // Disable save button to prevent multiple submissions
-    setSaving(true);    // For VMCO Machines category, automatically set payment method to "Pre Payment"
-    const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+    setSaving(true);
 
-    if (isVmcoMachinesCategory && formMode === 'add') {
-       selectedMethod = 'Pre Payment';
-    }  
-     if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
-       const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId);
-
-      if (isCreditAllowed) {
-       console.log('Auto-selecting Credit payment method as it is allowed for customer');
-       selectedMethod = 'Credit';
-      } else {
-        setPendingSaveAction(action);
-        setShowPaymentPopup(true);
-        setSaving(false);
-        return;
-      }
-    }
-
-    // Validate product list
+    // Validate product list early
     if (!formData.products || formData.products.length === 0) {
       Swal.fire({
         icon: 'warning',
         title: t('Validation Error'),
         text: t('Please add at least one product'),
       });
-      // alert(t('Please add at least one product'));
       setSaving(false);
       return;
     }
+
+    // Enhanced payment method determination logic based on cart page logic
+    if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
+      // Check entity type and product composition
+      const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+      const isShcEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase();
+      
+      if (isVmcoEntity) {
+        // For VMCO entity, check if all products are machines
+        const allProductsAreMachines = formData.products.length > 0 && formData.products.every(product => product.is_machine === true);
+        
+        if (allProductsAreMachines) {
+          // All products are machines - use Pre Payment
+          console.log('All products are VMCO machines - using Pre Payment');
+          selectedMethod = 'Pre Payment';
+        } else {
+          // Mixed products or all non-machines - determine payment method based on customer settings
+          console.log('VMCO entity with non-machine products - determining payment method');
+          const totalAmount = parseFloat(formData.totalAmount || 0);
+          selectedMethod = await determinePaymentMethodForNonMachines(formData.customerId, totalAmount, formData.entity);
+        }
+      } else if (isShcEntity) {
+        // For SHC entity, use SHC-specific payment method determination
+        console.log('SHC entity - determining payment method');
+        const totalAmount = parseFloat(formData.totalAmount || 0);
+        selectedMethod = await determinePaymentMethodForSHC(formData.customerId, totalAmount, formData.entity);
+      } else {
+        // For other entities, use existing logic
+        const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId);
+        
+        if (isCreditAllowed) {
+          console.log('Auto-selecting Credit payment method as it is allowed for customer');
+          selectedMethod = 'Credit';
+        } else {
+          setPendingSaveAction(action);
+          setShowPaymentPopup(true);
+          setSaving(false);
+          return;
+        }
+      }
+    }
+
+    // For VMCO Machines category, automatically set payment method to "Pre Payment"
+    const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+
+    if (isVmcoMachinesCategory && formMode === 'add') {
+       selectedMethod = 'Pre Payment';
+    }
+
     // Check if we're editing an existing order or creating a new one
     if (formData.id && isEditMode) {
       const fieldsToUpdate = [
         'erpCustId', 'erpBranchId', 'orderBy', 'entity',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
-        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion'];
+        'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion', 'branchCity'];
 
       const payload = {};    // Check if category is VMCO Machines
       const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase(); fieldsToUpdate.forEach(field => {
@@ -474,6 +506,7 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const isMachine = product.isMachine;
+          const isFresh = product.isFresh;
           const netAmount = parseFloat(product.netAmount);
           //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
           const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -522,6 +555,56 @@ function OrderDetails() {
           }
         });        // Wait for all product line updates to complete
         await Promise.all(updatePromises);
+        
+        // After updating sales order lines, calculate and update totalSalesTaxAmount
+        let totalSalesTaxAmount = 0;
+        formData.products.forEach(product => {
+          const unitPrice = parseFloat(product.unitPrice || 0);
+          const quantity = parseInt(product.quantity || 0, 10);
+          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const baseAmount = unitPrice * quantity;
+          const vatAmount = (baseAmount * vatPercentage) / 100;
+          totalSalesTaxAmount += vatAmount;
+        });
+        
+        console.log('Total sales tax amount for updated order:', totalSalesTaxAmount);
+        
+        // Check if any product is a machine (isMachine = true)
+        const hasAnyMachine = formData.products.length > 0 && formData.products.some(product => product.isMachine === true);
+        
+        // Check if any product is fresh (isFresh = true)
+        const hasAnyFresh = formData.products.length > 0 && formData.products.some(product => product.isFresh === true);
+        
+        console.log('Product analysis:', {
+          totalProducts: formData.products.length,
+          hasAnyMachine,
+          hasAnyFresh,
+          productFlags: formData.products.map(p => ({ id: p.id, isMachine: p.isMachine, isFresh: p.isFresh }))
+        });
+        
+        // Update the sales order with the total sales tax amount and product flags
+        const orderUpdatePayload = {
+          total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
+          isMachine: hasAnyMachine,
+          isFresh: hasAnyFresh
+        };
+        
+        const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderUpdatePayload),
+          credentials: 'include',
+        });
+        
+        if (!updateOrderResponse.ok) {
+          console.warn('Failed to update order with total sales tax amount and product flags');
+        } else {
+          console.log('Successfully updated order with total sales tax amount and product flags:', {
+            totalSalesTaxAmount,
+            isMachine: hasAnyMachine,
+            isFresh: hasAnyFresh
+          });
+        }
       }
 
       // Track if any products were deleted for success message
@@ -711,40 +794,31 @@ function OrderDetails() {
 
     let attempt = 0;
     let maxAttempts = 2;
-    // Step 0: If user is employee, fetch empId from employees table using email
+    // Step 0: Fetch username by user id for orderBy field
     let orderByName = '';
-    const userEmail = user?.email;
-    if (userEmail) {
-      try {
-        if (user?.userType === 'employee') {
-          const empRes = await fetch(`http://localhost:3000/api/employees/email/${encodeURIComponent(userEmail)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (empRes.ok) {
-            const empResult = await empRes.json();
-            if (empResult && empResult.data && empResult.data.name) {
-              orderByName = empResult.data.name;
+    // Try to get userId from user object (userId or id)
+    const userId = user?.userId;
+  
+        let usernameApiUrl = `/user/get-username-by-id/${userId}`;
+
+        const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (usernameRes.ok) {
+          const contentType = usernameRes.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const usernameResult = await usernameRes.json();
+            if (usernameResult && (usernameResult.userName || usernameResult.username)) {
+              orderByName = usernameResult.userName || usernameResult.username;
+            } else {
+              console.warn('Username API did not return userName field:', usernameResult);
             }
           }
-        } else if (user?.userType === 'customer') {
-          const response = await fetch(`http://localhost:3000/api/customer-contacts/email/${encodeURIComponent(userEmail)}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (response.ok) {
-            const result = await response.json();
-            if (result && result.data && result.data.name) {
-              orderByName = result.data.name;
-            }
-          }
+        } else {
+          console.error('Failed to fetch username: HTTP', usernameRes.status);
         }
-      } catch (error) {
-        console.error('Failed to fetch orderBy name:', error);
-      }
-    }
+
     while (attempt < maxAttempts) {
       // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
       const payload = {
@@ -764,7 +838,7 @@ function OrderDetails() {
           : (selectedMethod || formData.paymentMethod || ''),
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         //status: formData.entity && formData.entity.toLowerCase() === 'vmco' ? 'Pending' : 'Open',
-        status: sampleMode ? 'approved' : 'Open',
+        status: sampleMode ? 'Open' : (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ? 'Pending' : 'Open'),
         sales_executive: user.employeeId,
         paymentStatus: (selectedMethod || formData.paymentMethod) === 'Credit' ? 'Paid' : 'Pending', // <-- Use selectedMethod for logic
         entity: formData.entity || '',
@@ -849,19 +923,26 @@ function OrderDetails() {
           if (companyType && companyType.toLowerCase() === 'non trading') {
             vat = 0.00;
           }
+          
+          // Calculate vatAmount (salesTaxAmount)
+          const baseAmount = parseFloat(product.unitPrice) * parseInt(product.quantity || 1, 10);
+          const vatAmount = (baseAmount * vat) / 100;
+          
           return {
             order_id: result.data.id,
             line_number: index + 1,
             erp_line_number: index + 1,
             product_id: product.id || product.product_id,
             product_name: product.productName || product.product_name_en,
-            product_name_lc: product.productNameLc || product.product_name_lc || '', // <-- post productNameLc
+            product_name_lc: product.productNameLc || product.product_name_lc || '',
             erp_prod_id: product.erpProdId || product.erp_prod_id || '',
             is_machine: product.isMachine || product.is_machine,
+            is_fresh: product.isFresh,
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || '',
             unit_price: parseFloat(product.unitPrice),
             net_amount: parseFloat(product.netAmount),
+            sales_tax_amount: vatAmount.toFixed(2),
             vat_percentage: Number(vat).toFixed(2),
           };
         });
@@ -909,7 +990,51 @@ function OrderDetails() {
             }
           }
 
-          console.log('Sales order line items created successfully');              // If we get here, both order and products were saved successfully
+          console.log('Sales order line items created successfully');
+          
+          // After successfully creating sales order lines, calculate and update totalSalesTaxAmount
+          const totalSalesTaxAmount = productsPayload.reduce((sum, product) => {
+            return sum + parseFloat(product.sales_tax_amount || 0);
+          }, 0);
+          
+          console.log('Total sales tax amount:', totalSalesTaxAmount);
+          
+          // Check if any product is a machine (is_machine = true)
+          const hasAnyMachine = productsPayload.length > 0 && productsPayload.some(product => product.is_machine === true);
+          
+          // Check if any product is fresh (is_fresh = true)
+          const hasAnyFresh = productsPayload.length > 0 && productsPayload.some(product => product.is_fresh === true);
+          
+          console.log('Product analysis for new order:', {
+            totalProducts: productsPayload.length,
+            hasAnyMachine,
+            hasAnyFresh,
+            productFlags: productsPayload.map(p => ({ id: p.product_id, is_machine: p.is_machine, is_fresh: p.is_fresh }))
+          });
+          
+          // Update the sales order with the total sales tax amount and product flags
+          const orderUpdatePayload = {
+            total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
+            isMachine: hasAnyMachine,
+            isFresh: hasAnyFresh
+          };
+          
+          const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderUpdatePayload),
+            credentials: 'include',
+          });
+          
+          if (!updateOrderResponse.ok) {
+            console.warn('Failed to update order with total sales tax amount and product flags');
+          } else {
+            console.log('Successfully updated order with total sales tax amount and product flags:', {
+              totalSalesTaxAmount,
+              isMachine: hasAnyMachine,
+              isFresh: hasAnyFresh
+            });
+          }              // If we get here, both order and products were saved successfully
           console.log('Complete order creation process finished successfully');          // Check if this is a VMCO Machines order that needs discount workflow approval
           if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
             (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
@@ -1157,9 +1282,7 @@ function OrderDetails() {
           if (result.status === 'Ok' && result.data) {
             // Update product with new price information
             const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
-            const isMachine = result.data.isMachine || product.isMachine;
-            const quantity = parseInt(product.quantity, 10);
-            //const sugarTaxPrice = parseFloat(result.data.sugarTaxPrice || product.sugarTaxPrice || 0);
+             const quantity = parseInt(product.quantity, 10);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
 
             // Calculate new net amount with updated price
@@ -1208,6 +1331,11 @@ function OrderDetails() {
       if (companyType && companyType.toLowerCase() === 'non trading') {
         finalVat = 0.00;
       }
+      
+      // Calculate vatAmount (salesTaxAmount)
+      const baseAmount = unitPrice * quantity;
+      const vatAmount = (baseAmount * finalVat) / 100;
+      
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1216,6 +1344,7 @@ function OrderDetails() {
           quantity,
           unitPrice,
           net_amount: netAmount.toFixed(2),
+          sales_tax_amount: vatAmount.toFixed(2),
           //sugarTaxPrice: sugarTaxPrice.toFixed(2),
           vatPercentage: Number(finalVat).toFixed(2)
         })
@@ -1263,6 +1392,11 @@ function OrderDetails() {
       if (companyType && companyType.toLowerCase() === 'non trading') {
         finalVat = 0.00;
       }
+      
+      // Calculate vatAmount (salesTaxAmount)
+      const baseAmount = unitPrice * quantity;
+      const vatAmount = (baseAmount * finalVat) / 100;
+      
       // Find the product object to get productName, productNameLc, unit
       const productObj = formData.products.find(
         p => (p.id || p.product_id) === productId
@@ -1274,7 +1408,7 @@ function OrderDetails() {
         quantity: parseInt(quantity, 10),
         unit_price: parseFloat(unitPrice),
         net_amount: parseFloat(netAmount),
-        sales_tax_amount: Number(finalVat).toFixed(2),
+        sales_tax_amount: vatAmount.toFixed(2),
         product_name: productObj?.productName || productObj?.product_name_en || '',
         product_name_lc: productObj?.productNameLc || productObj?.product_name_lc || '',
         unit: productObj?.unit || '',
@@ -1859,6 +1993,7 @@ function OrderDetails() {
             id: product.productId,
             productName: product.productName || product.product_name || product.erp_prod_id,
             isMachine: product.isMachine,
+            isFresh: product.isFresh,
             quantity: product.quantity,
           }));
 
@@ -2039,7 +2174,6 @@ function OrderDetails() {
           for (const product of formData.products) {
             const productId = product.id || product.product_id;
             const unitPrice = parseFloat(product.unitPrice);
-            const isMachine = product.isMachine;
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -2079,6 +2213,7 @@ function OrderDetails() {
                   productName: product.productName || product.product_name_en || '',
                   productNameLc: product.productNameLc || product.product_name_lc || '',
                   isMachine: product.isMachine || product.is_machine,
+                  isFresh: product.isFresh || product.is_fresh,
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
@@ -2253,6 +2388,7 @@ function OrderDetails() {
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
+        isFresh: product.isFresh,
         quantity: product.quantity,
       }));
 
@@ -2265,6 +2401,106 @@ function OrderDetails() {
       console.log('Late-loaded pre-fetched sales order lines:', processedProducts);
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
+
+  // Helper function to determine payment method for non-machine products (based on cart logic)
+  const determinePaymentMethodForNonMachines = async (customerId, totalAmount, entity) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch payment method details');
+        return 'Pre Payment'; // Default fallback
+      }
+
+      const result = await response.json();
+      console.log('Payment method details response:', result);
+
+      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+        const methodDetails = result.data.methodDetails;
+        
+        // Check if credit is allowed for this entity
+        if (methodDetails.credit && methodDetails.credit[entity]) {
+          const entityCreditDetails = methodDetails.credit[entity];
+          if (entityCreditDetails.isAllowed === true) {
+            console.log(`Credit is allowed for entity ${entity}, using Credit payment method`);
+            return 'Credit';
+          }
+        }
+
+        // Credit not allowed, check COD
+        if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
+          const codLimit = methodDetails.COD.limit || 0;
+          if (totalAmount < codLimit) {
+            console.log(`Cash On Delivery is allowed and total amount ${totalAmount} is less than limit ${codLimit}, using Cash On Delivery`);
+            return 'Cash On Delivery';
+          }
+        }
+
+        // Neither credit nor COD applicable, use Pre Payment
+        console.log('Neither credit nor Cash On Delivery applicable, using Pre Payment');
+        return 'Pre Payment';
+      }
+
+      return 'Pre Payment'; // Default fallback
+    } catch (error) {
+      console.error('Error determining payment method:', error);
+      return 'Pre Payment'; // Default fallback
+    }
+  };
+
+  // Helper function to determine payment method for SHC products (based on cart logic)
+  const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch payment method details');
+        return 'Pre Payment'; // Default fallback
+      }
+
+      const result = await response.json();
+      console.log('Payment method details response for SHC:', result);
+
+      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+        const methodDetails = result.data.methodDetails;
+        
+        // Check if credit is allowed for SHC entity
+        if (methodDetails.credit && methodDetails.credit.SHC && methodDetails.credit.SHC.isAllowed === true) {
+          console.log('Credit payment is allowed for SHC entity');
+          return 'Credit';
+        }
+
+        // Check Cash on Delivery limits if credit is not allowed
+        if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
+          const codLimit = methodDetails.COD.limit || 0;
+          if (totalAmount <= codLimit) {
+            console.log(`Cash On Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
+            return 'Cash On Delivery';
+          } else {
+            console.log(`Total amount ${totalAmount} exceeds Cash On Delivery limit ${codLimit}, using Pre Payment`);
+            return 'Pre Payment';
+          }
+        } else {
+          console.log('Cash On Delivery is not allowed, using Pre Payment');
+          return 'Pre Payment';
+        }
+      }
+
+      console.log('Defaulting to Pre Payment for SHC');
+      return 'Pre Payment';
+    } catch (error) {
+      console.error('Error determining payment method for SHC:', error);
+      return 'Pre Payment';
+    }
+  };
 
   // Function to check if credit payment is allowed for the customer (without balance check)
   const isCreditPaymentAllowed = async (customerId) => {

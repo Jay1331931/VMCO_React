@@ -12,6 +12,7 @@ import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 
 function BusinessDetails({
   customerData = {},
@@ -126,6 +127,13 @@ function BusinessDetails({
       target: { name: logoType, value: originalCustomerData[logoType] || "" },
     });
     delete logosToUpload[logoType];
+    // Reset the file input value so the same file can be uploaded again
+    if (logoType === "companyLogo" && companyLogoInputRef.current) {
+      companyLogoInputRef.current.value = "";
+    }
+    if (logoType === "brandLogo" && brandLogoInputRef.current) {
+      brandLogoInputRef.current.value = "";
+    }
   };
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -159,9 +167,31 @@ function BusinessDetails({
 
   return (
     <div className="customer-onboarding-form-grid">
+      {customerData?.customerStatus === "blocked" && mode === "edit" && (
+        <h3 className="form-header full-width">
+          {t("Customer Blocked")}
+        </h3>
+      )}
+      {originalCustomerData?.customerStatus === "blocked" && mode === "edit" && (
+        <h3 className="form-header full-width">
+          {t("Customer Unblocked")}
+        </h3>
+      )}
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
-          <a href="#">{t("Customer Approval Checklist")}</a>
+          <a
+          href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+        >
+          {t("Customer Approval Checklist")}
+        </a>
         </div>
       )}
       {/* Company Name (English) */}
@@ -764,7 +794,7 @@ function BusinessDetails({
           className="custom-file-button"
           onClick={() => companyLogoInputRef.current?.click()}
           disabled={
-            mode === "edit" && customerData?.customerStatus !== "pending"
+            mode === "edit" && customerData?.customerStatus === "pending"
           }
           style={{ width: "100px" }}
         >
@@ -865,7 +895,7 @@ function BusinessDetails({
           className="custom-file-button"
           onClick={() => brandLogoInputRef.current?.click()}
           disabled={
-            mode === "edit" && customerData?.customerStatus !== "pending"
+            mode === "edit" && customerData?.customerStatus === "pending"
           }
           style={{ width: "100px" }}
         >
@@ -993,9 +1023,9 @@ function BusinessDetails({
 
       {isV("assignedToEntityWise") && (
         <>
-          <div className="form-header full-width">
+          <h3 className="form-header full-width">
             {t("Inter Company Account")}
-          </div>
+          </h3>
           {isV("assignedToEntityWise") && (
             <div className="form-group">
               <label className="checkbox-group-label">
@@ -1076,9 +1106,10 @@ function BusinessDetails({
             </div>
           )}
           {/* Entity Wise Employee Assignment Header */}
-          <div className="form-header full-width">
+          <h3 className="form-header full-width">
             {t("Sales Person Assignment")}
-          </div>
+          </h3>
+          
           {/* Assigned To Dropdown */}
           {isV("assignedTo") && (
             <div className="form-group">
@@ -1204,6 +1235,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
+              {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`] && (
+  <div className="error">
+    {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`]}
+  </div>
+)}
           </div>
 
           {/* VMCO dropdown */}
@@ -1271,7 +1307,12 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
-          </div>
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`]}
+              </div>
+            )}
+            </div>
 
           {/* Entity Wise Assignment for SHC */}
           <div className="form-group">
@@ -1337,7 +1378,12 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
-          </div>
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`]}
+              </div>
+            )}
+            </div>
           {/* Entity Wise Assignment for NAQI */}
           <div className="form-group">
             <label htmlFor="assignedToEntityWise">
@@ -1403,6 +1449,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`]}
+                </div>
+            )}
           </div>
 
           {/* Entity Wise Assignment for GMTC */}
@@ -1468,8 +1519,15 @@ function BusinessDetails({
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.GMTC
                   ] || "(empty)"}
+                  
                 </div>
               )}
+              {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`]}
+                </div>
+            )}
+              
           </div>
         </>
       )}

@@ -75,6 +75,7 @@ function Catalog() {
   const [selectedCustomerId, setSelectedCustomerId] = useState(""); // Initialize empty
   const [branches, setBranches] = useState([]);
   const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
+  const [selectedBranchCity, setSelectedBranchCity] = useState("");
   const [quantities, setQuantities] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
@@ -93,6 +94,8 @@ function Catalog() {
   console.log("User Dataaaaa:", user);
 
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]); // For category dropdown options
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]); // For subcategory dropdown options
 
   const fetchAllPages = async () => {
     // Show loading state
@@ -149,10 +152,8 @@ function Catalog() {
             // Special handling for VMCO entity tabs
             if (entityToFilter === Constants.ENTITY.VMCO) {
               if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
-                // For VMCO Machines tab
                 params.append("isMachine", "true");
               } else {
-                // For other VMCO tabs (consumables, etc.)
                 params.append("isMachine", "false");
               }
             }
@@ -555,6 +556,7 @@ function Catalog() {
           selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
+        selectedBranchCity
       },
     });
   };
@@ -614,6 +616,7 @@ function Catalog() {
               branch.branchNameEn,
           erpBranchId: branch.erpBranchId || branch.erp_branch_id,
           branchRegion: branch.region || branch.region,
+          branchCity: branch.city || branch.branchCity || branch.branch_city,
           raw: branch,
         }));
         setBranches(branchOptions);
@@ -670,15 +673,19 @@ function Catalog() {
       if (cartBranchIds.length === 0) {
         // No items in cart, allow any branch selection
         setSelectedLocation(newBranchId);
-        if (selectedBranch)
+        if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
         return;
       }
       if (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId) {
         // Only items for this branch, allow selection
         setSelectedLocation(newBranchId);
-        if (selectedBranch)
+        if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
         return;
       }
       // If there are items for a different branch, alert the user
@@ -722,8 +729,10 @@ function Catalog() {
             );
 
             setSelectedLocation(newBranchId);
-            if (selectedBranch)
+            if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
+              setSelectedBranchCity(selectedBranch.branchCity || "");
+            }
 
             await Swal.fire({
               icon: "success",
@@ -1152,81 +1161,7 @@ function Catalog() {
       }
     }
   }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
-  useEffect(() => {
-    // Skip if no products, not a VMCO tab, or if category is already set
-    if (
-      !products.length ||
-      ![
-        Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
-        Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
-      ].includes(activeCategory.toLowerCase()) ||
-      categoryFilter
-    ) {
-      return;
-    }
-
-    // Get the entity for the current active tab
-    const selectedCategoryTab = categories.find(
-      (cat) => cat.value === activeCategory
-    );
-    const entityToFilter = selectedCategoryTab
-      ? selectedCategoryTab.entity
-      : null;
-
-    if (!entityToFilter) return;
-
-    // Filter products by entity
-    let filteredProductsByEntity = products.filter(
-      (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
-    ); // Apply additional filtering based on tab
-    let availableCategories = [];
-    if (
-      activeCategory.toLowerCase() ===
-      Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
-    ) {
-      // For VMCO Machines tab, exclude categories that have "consumable" in their name
-      availableCategories = Array.from(
-        new Set(
-          filteredProductsByEntity
-            .map((p) => p.category)
-            .filter(Boolean)
-            .filter(
-              (category) =>
-                !(
-                  category.toLowerCase().includes("consumable") ||
-                  category.toLowerCase().includes("supply") ||
-                  category.toLowerCase().includes("accessory")
-                )
-            )
-        )
-      );
-    } else if (
-      activeCategory.toLowerCase() ===
-      Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()
-    ) {
-      // For VMCO Consumables tab, exclude categories that have "machine" in their name
-      availableCategories = Array.from(
-        new Set(
-          filteredProductsByEntity
-            .map((p) => p.category)
-            .filter(Boolean)
-            .filter(
-              (category) =>
-                !(
-                  category.toLowerCase().includes("machine") ||
-                  category.toLowerCase().includes("equipment") ||
-                  category.toLowerCase().includes("device")
-                )
-            )
-        )
-      );
-    }
-
-    if (availableCategories.length > 0) {
-      // Set default category when products are loaded for VMCO tabs
-      setCategoryFilter(availableCategories[0]);
-    }
-  }, [products, activeCategory, categoryFilter, categories]);
+  // Removed effect that auto-selects category filter based on tab or products.
 
   // Determine direction and alignment
   const dir = i18n.dir();
@@ -1271,6 +1206,97 @@ function Catalog() {
       setActiveCategory(tabsToShow[0].value);
     }
   }, [user, categories.entity, categoryTabs.values, activeCategory]);
+
+  // Fetch categories from API when active tab/entity changes
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const selectedCategory = categories.find(cat => cat.value === activeCategory);
+      const entity = selectedCategory?.entity;
+      if (!entity) {
+        setCategoryOptions([]);
+        return;
+      }
+      try {
+        // Build query parameters
+        const params = new URLSearchParams({
+          entity: entity
+        });
+
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if(activeCategory === Constants.CATEGORY.VMCO_MACHINES){
+          const isMachine = true;
+          params.append('isMachine', isMachine);
+          }
+          else {
+            const isMachine = false;
+            params.append('isMachine', isMachine);
+          }
+        }
+
+        const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to fetch categories");
+        const result = await response.json();
+        // Assuming result.data is an array of category names/objects
+        const options = Array.isArray(result.data)
+          ? result.data.map(cat => ({
+              name: cat.category || cat.name || cat, // adapt as per API response
+              value: cat.category || cat.name || cat,
+            }))
+          : [];
+        setCategoryOptions(options);
+        // Do not select any category by default
+      } catch (err) {
+        setCategoryOptions([]);
+        console.error("Error fetching categories:", err);
+      }
+    };
+    fetchCategories();
+    // eslint-disable-next-line
+  }, [activeCategory, categories, API_BASE_URL]);
+
+  // Fetch subcategories from API when category or active tab/entity changes
+  useEffect(() => {
+    const fetchSubCategories = async () => {
+      const selectedCategoryObj = categories.find(cat => cat.value === activeCategory);
+      const entity = selectedCategoryObj?.entity;
+      if (!entity || !categoryFilter) {
+        setSubCategoryOptions([]);
+        return;
+      }
+      try {
+        const params = new URLSearchParams({
+          entity: entity,
+          category: categoryFilter,
+        });
+        const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to fetch subcategories");
+        const result = await response.json();
+        // Assuming result.data is an array of subcategory names/objects
+        const options = Array.isArray(result.data)
+          ? result.data.map(sub => ({
+              name: sub.subCategory || sub.sub_category || sub.name || sub,
+              value: sub.subCategory || sub.sub_category || sub.name || sub,
+            }))
+          : [];
+        setSubCategoryOptions(options);
+        // Do not select any subcategory by default
+      } catch (err) {
+        setSubCategoryOptions([]);
+        console.error("Error fetching subcategories:", err);
+      }
+    };
+    fetchSubCategories();
+    // eslint-disable-next-line
+  }, [activeCategory, categoryFilter, categories, API_BASE_URL]);
 
   return (
     <Sidebar title={t("Catalog")}>
@@ -1351,7 +1377,7 @@ function Catalog() {
             <SearchableDropdown
               id={`category-filter-${catalogId}`}
               name="categoryFilter"
-              options={getFilteredCategories().map((cat) => ({ name: cat, value: cat }))}
+              options={categoryOptions}
               className={`category-filter ${[
                 Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
                 Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
@@ -1359,9 +1385,10 @@ function Catalog() {
                 ? "tab-linked-filter"
                 : ""
                 }`}
-              placeholder="Category"
+              placeholder={t("Category")}
               value={categoryFilter}
               onChange={(e) => {
+                // Always set category filter from dropdown selection only
                 setCategoryFilter(e.target.value);
                 setSubCategoryFilter(""); // Reset subcategory when category changes
                 setCurrentPage(1);
@@ -1370,14 +1397,16 @@ function Catalog() {
             <SearchableDropdown
               id={`subcategory-filter-${catalogId}`}
               name="subCategoryFilter"
-              options={getFilteredSubcategories().map((sub) => ({ name: sub, value: sub }))}
+              options={subCategoryOptions}
               className="category-filter"
-              placeholder="Sub category"
+              placeholder={t("Sub category")}
               value={subCategoryFilter}
               onChange={(e) => {
+                // Always set subcategory filter from dropdown selection only
                 setSubCategoryFilter(e.target.value);
                 setCurrentPage(1);
               }}
+              disabled={!categoryFilter}
             />
           </div>
         </div>

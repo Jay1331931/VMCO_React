@@ -421,9 +421,8 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
   console.log("customer", customer);
   const hasCheckboxUpdate =
     inApproval &&
-    customer.module === "branch" &&
-    customer?.workflowData?.updates &&
-    "isDeliveryChargesApplicable" in customer.workflowData.updates;
+    workflowData &&
+    "isDeliveryChargesApplicable" in workflowData;
   return (
     <div className="form-section">
       {console.log(isUnderApproval)}
@@ -471,7 +470,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
               />
               {"\t" + t("Is Delivery Charges Applicable")}
               {hasCheckboxUpdate && (
-                <span className="update-badge"> Pending Update</span>
+                <span className="update-badge">Updated</span>
               )}
             </label>
           </div>
@@ -500,13 +499,14 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
               className={`form-group ${hasUpdate ? "pending-update" : ""}`}
               key={index}
             >
-              <label>
-                {t(field.label)}
-                {field.required && <span className="required-field">*</span>}
-              </label>
-              
+              {isV(field.name) && (
+                <label>
+                  {t(field.label)}
+                  {field.required && <span className="required-field">*</span>}
+                </label>
+              )}
 
-              {field.isLocation ? (
+              {field?.isLocation ? (
                 <div className="location-input-container">
                   <input
                     name={field.name}
@@ -545,12 +545,12 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                   </button>
                 </div>
               ) : (
-                <div className="form-row">
-                  {(() => {
-                    switch (field.type) {
-                      case "text":
-                        return (
-                          <input
+                  <div className="form-row">
+                    {(() => {
+                      switch (field.type) {
+                        case "text":
+                          return (
+                            <input
                             type="text"
                             name={field.name}
                             value={branch?.[field.name]}
@@ -588,6 +588,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                               customerFormMode === "custDetailsEdit" &&
                               !hasUpdate
                             }
+              hidden={!isV(field.name)}
                           >
                             <option value="">{t(field.placeholder)}</option>
                             {dropdownOptions[field.name]
@@ -604,7 +605,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     }
                   })()}
                 </div>
-              )}
+            )}
               {hasUpdate && (
                 <div className="current-value">
                   Previous:{" "}

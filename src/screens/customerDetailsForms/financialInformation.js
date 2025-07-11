@@ -5,7 +5,7 @@ import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
-
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 function FinancialInformation({
   customerData = {},
   originalCustomerData = {},
@@ -72,11 +72,23 @@ function FinancialInformation({
     <div className="customer-onboarding-form-grid">
       {isV("customerApprovalChecklist") && (
                           <div className="form-main-header">
-                            <a href="#">{t("Customer Approval Checklist")}</a>
+                            <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
                           </div>
                         )}
       {/* Bank Details Header */}
-      <div className="form-header full-width">{t("Bank Details")}</div>
+      <h3 className="form-header full-width">{t("Bank Details")}</h3>
       <div className="form-group">
         <label htmlFor="bankName">
           {t("Bank Name")}
@@ -197,9 +209,9 @@ function FinancialInformation({
 
         {isV("assignedToEntityWise") && (<>
       {/* Entity Wise Price Plan Assignment Header */}
-      <div className="form-header full-width">
+      <h3 className="form-header full-width">
         {t("Pricing Plan")}
-      </div>
+      </h3>
       {/* Entity Wise Price Plan Assignment */}
       <div className="form-group">
         <label htmlFor="pricingPolicy">
@@ -495,9 +507,9 @@ function FinancialInformation({
       </div>
       <div className="form-group" />
 
-<div className="form-header full-width">
+<h3 className="form-header full-width">
         {t("Delivery Charges")}
-      </div>
+      </h3>
       {/* Delivery Charges Applicable */}
       <div className="form-group">
         <label className="checkbox-group-label">
@@ -516,13 +528,16 @@ function FinancialInformation({
             }
           />
           {`\t ${t("Is delivery charges applicable")}`}
+          {customerData?.isDeliveryChargesApplicable !== originalCustomerData?.isDeliveryChargesApplicable && mode === "edit" && (
+          <span className="update-badge">Updated</span>
+        )}
         </label>
       </div>
 
       {/* Payment Methods Header */}
-      <div className="form-header full-width">
+      <h3 className="form-header full-width">
         {t("Payment Methods")}
-      </div>
+      </h3>
 
       {/* Payment Methods */}
       <div className="form-group">

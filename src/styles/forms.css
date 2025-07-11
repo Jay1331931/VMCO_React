@@ -58,6 +58,7 @@
   font-weight: bold;
   border-left: 4px solid blue;
   color: blue;
+  width: max-content;
 }
 
 .customer-onboarding-tabs-vertical .tabs-title {

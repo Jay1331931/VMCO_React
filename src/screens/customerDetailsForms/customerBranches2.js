@@ -26,7 +26,8 @@ import BranchDetailsSection from "./branchDetailsSection";
 import ContactSection from "./contactSection";
 import OperatingHours from "./operatingHours";
 import BranchDetailsForm from "./branchDetailsForm";
-import { debounce, set } from 'lodash';
+import { debounce, set } from "lodash";
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t } = useTranslation();
   const contentRef = useRef(null);
@@ -42,7 +43,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [temporaryBranches, setTemporaryBranches] = useState([]);
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
-  // let isApprovalMode = false;
+  var inApprovalMode = useRef(false); // Use ref to track approval mode
   const [isApprovalMode, setIsApprovalMode] = useState(false);
   const [nextTempId, setNextTempId] = useState(-1);
   const [isFirstBranch, setIsFirstBranch] = useState(false);
@@ -74,6 +75,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     const tempId = nextTempId;
     setNextTempId((prev) => prev - 1); // Decrement for next temporary ID
     setIsApprovalMode(false); // Reset approval mode when adding a new branch
+    inApprovalMode.current = false;
     const newBranch = {
       id: tempId,
       erp_branch_id: `TEMP_${Math.abs(tempId)}`,
@@ -90,7 +92,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     setBranches((prev) => [newBranch, ...prev]);
     setExpandedRows([tempId]); // Expand the new branch row
   };
-const handleSearchChange = debounce((e) => {
+  const handleSearchChange = debounce((e) => {
     search = e.target.value;
     setCurrentPage(1);
   }, 400);
@@ -163,6 +165,8 @@ const handleSearchChange = debounce((e) => {
             `Workflow check result for branch ${branchId}:`,
             isAppMode
           );
+          setIsApprovalMode(isAppMode);
+          inApprovalMode.current = isAppMode;
           return isAppMode;
         } catch (parseError) {
           // If not valid JSON, check if it's a direct 't' or 'f' string
@@ -172,6 +176,8 @@ const handleSearchChange = debounce((e) => {
             "Using direct string match, is approval mode:",
             isAppMode
           );
+          // setIsApprovalMode(isAppMode);
+
           return isAppMode;
         }
       } else {
@@ -280,15 +286,15 @@ const handleSearchChange = debounce((e) => {
     }
     setExpandedRows((prev) => (prev.includes(branchId) ? [] : [branchId]));
     const isAppMode = await checkIfBranchIsInApproval(branchId);
-    setIsApprovalMode(isAppMode);
+    // setIsApprovalMode(isAppMode);
   };
 
   // Update tabs height when expanded rows change
   useEffect(() => {
     const baseRowHeight = 80;
-    const collapsedExtraHeight = 40;
-    const expandedExtraHeight = 1100;
-    const numRows = branches.length;
+    const collapsedExtraHeight = 100;
+    const expandedExtraHeight = 1600;
+    const numRows = branches.length || 3;
     const rowHeightTotal = numRows * baseRowHeight;
     const contentHeight =
       rowHeightTotal +
@@ -676,7 +682,7 @@ const handleSearchChange = debounce((e) => {
       console.error("Error saving branch:", error);
     }
   };
-const handleSaveChanges = async (id, branch, action) => {
+  const handleSaveChanges = async (id, branch, action) => {
     // const isNewBranch = id < 0; // Negative IDs are temporary
     const branchData = branchChanges[id] || {};
 
@@ -794,28 +800,31 @@ const handleSaveChanges = async (id, branch, action) => {
       //     }
       //   }
       // } else {
-        // UPDATE existing branch
-        console.log("branchPayload:", branchPayload);
-        if (Object.keys(branchPayload).length > 0) {
-          await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({branch:{ ...branchPayload, customerId: customer.id }, contacts: { ...contactPayload}}),
-            credentials: "include",
-          });
-        }
-        // console.log("Contact payload:", contactPayload);
-        // if (Object.keys(contactPayload).length > 0) {
-        //   await fetch(
-        //     `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
-        //     {
-        //       method: "POST",
-        //       headers: { "Content-Type": "application/json" },
-        //       body: JSON.stringify(contactPayload),
-        //       credentials: "include",
-        //     }
-        //   );
-        // }
+      // UPDATE existing branch
+      console.log("branchPayload:", branchPayload);
+      if (Object.keys(branchPayload).length > 0) {
+        await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branch: { ...branchPayload, customerId: customer.id },
+            contacts: { ...contactPayload },
+          }),
+          credentials: "include",
+        });
+      }
+      // console.log("Contact payload:", contactPayload);
+      // if (Object.keys(contactPayload).length > 0) {
+      //   await fetch(
+      //     `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
+      //     {
+      //       method: "POST",
+      //       headers: { "Content-Type": "application/json" },
+      //       body: JSON.stringify(contactPayload),
+      //       credentials: "include",
+      //     }
+      //   );
+      // }
       // }
 
       // Clear changes for this branch
@@ -965,10 +974,22 @@ const handleSaveChanges = async (id, branch, action) => {
   return (
     <div className="branches-content" ref={contentRef}>
       {isV("customerApprovalChecklist") && (
-                    <div className="form-main-header">
-                      <a href="#">{t("Customer Approval Checklist")}</a>
-                    </div>
-                  )}
+        <div className="form-main-header">
+          <a
+      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={e => {
+        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+          e.preventDefault();
+          alert(t("No checklist URL configured."));
+        }
+      }}
+    >
+      {t("Customer Approval Checklist")}
+    </a>
+    </div>
+      )}
       <div className="branches-page-header">
         <div className="branches-header-controls">
           <input
@@ -979,7 +1000,14 @@ const handleSaveChanges = async (id, branch, action) => {
           />
           <div className="branches-action-buttons">
             {isV("btnBranchAdd") && (
-              <button className="branches-add-button" onClick={handleAddBranch} disabled={customer?.isBlocked || branches.some(branch => branch.id < 0)}>
+              <button
+                className="branches-add-button"
+                onClick={handleAddBranch}
+                disabled={
+                  customer?.isBlocked ||
+                  branches.some((branch) => branch.id < 0)
+                }
+              >
                 {t("+ Add")}
               </button>
             )}
@@ -1144,19 +1172,22 @@ const handleSaveChanges = async (id, branch, action) => {
                             customerFormMode === "custDetailsAdd" && (
                               <h3>{t("Branch is currently under approval")}</h3>
                             )}
-                          
+
                           <BranchDetailsForm
                             branchId={branch?.id}
                             branch={branch}
                             customer={customer}
                             branchChanges={branchChanges}
                             handleBranchFieldChange={handleBranchFieldChange}
-                            isApprovalMode={isApprovalMode}
+                            isApprovalMode={
+                              isApprovalMode || inApprovalMode.current
+                            }
                             mode={mode}
+                            setExpandedRows={setExpandedRows}
                             isFirstBranch={isFirstBranch}
                           />
                           {console.log(branch)}
-                          
+
                           <ApprovalDialog
                             isOpen={isApprovalDialogOpen}
                             onClose={() => setIsApprovalDialogOpen(false)}
