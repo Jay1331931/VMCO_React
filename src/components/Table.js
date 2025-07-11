@@ -8,7 +8,7 @@ const Table = ({
     actionButtons,
     customCellRenderer,
     onRowClick,
-    onPay
+    onPay,
 }) => {
     const { t } = useTranslation();
  
@@ -46,17 +46,31 @@ const Table = ({
             return actionButtons(item);
         }
           // Handle pay button
-        if (column.key === 'pay' && onPay) {
+        if (column.key === 'pay' && onPay && item.paymentStatus?.toLowerCase() !== 'paid' ) {
             return (
                 <button 
                     className="action-button pay"
                     onClick={(e) => {
                         console.log('Pay button clicked for item:', item);
                         e.stopPropagation(); // Prevent row click event
-                        onPay(item);
+                        onPay(item,false);
                     }}
                 >
                     {t('Pay')}
+                </button>
+            );
+        }
+        if (column.key?.toLowerCase() === 'sendlink'  && item.paymentStatus?.toLowerCase() !== 'paid' ) {
+            return (
+                <button 
+                    className="action-button pay"
+                    onClick={(e) => {
+                        console.log('Pay button clicked for item:', item);
+                        e.stopPropagation(); // Prevent row click event
+                        onPay(item,true);
+                    }}
+                >
+                    {t('Send Link')}
                 </button>
             );
         }

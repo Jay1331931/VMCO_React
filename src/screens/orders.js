@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import RbacManager from '../utilities/rbac';
 import Swal from 'sweetalert2';
 import { formatDate } from '../utilities/dateFormatter';
+import axios from 'axios';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -36,7 +37,6 @@ function Orders() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -240,13 +240,22 @@ function Orders() {
     }
   };
 
-  const handlePay = (order) => {
-    // navigate('/checkout', { state: { order } });
-    const paymentWindow = window.open(
-      `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,
-      '_blank',
-      'width=500,height=600'
-    );
+  const handlePay = async(order,email=false) => {
+    console.log('Pay button clicked for order:', order);
+    // navigate(`/payment-opations/order/${order.id}`,{
+    //     state: {
+    //       order}})
+    const {data}=await axios.post(`${API_BASE_URL}/generatePayment-link`, {id: order.id,endPoint:"payment-opations/order",IsEmail:email}, {withCredentials: true});
+     if(!email){
+    window.open(data.details.url,'_blank','width=500,height=600');
+     }
+    // navigate(data.details.url)
+  
+    // const paymentWindow = window.open(
+    //   `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,
+    //   '_blank',
+    //   'width=500,height=600'
+    // );
     // window.location.href = '/payment?orderId=' + order.id + '&amount=' + order.totalAmount;
   };
 
@@ -303,7 +312,9 @@ function Orders() {
     //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     { key: 'paymentStatus', header: () => t('Payment Status'), include: isV('paymentStatus') },
     { key: 'status', header: () => t('Status'), include: isV('status') },
-    { key: 'pay', header: () => t('Pay'), include: isV('action') }
+    { key: 'pay', header: () => t('Action'), include: isV('action') },
+     {key:"sendLink", header: () => t('Action'), include: isV('sendLink')}
+    
   ];  const approvalColumns = [
     { key: 'id', header: () => t('Order #'), include: isV('orderNumber') },
     {

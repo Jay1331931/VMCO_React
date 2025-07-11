@@ -22,6 +22,7 @@ import CustomerDetails from "./screens/customerDetails";
 import Payment from './screens/payment';
 import BankTransactions from './screens/BankTransactions';
 import AddBankTransaction from './components/AddBankTransaction';
+import OpationsPage from "./components/Opationspage";
 
 function App() {
   return (
@@ -56,8 +57,9 @@ function App() {
         <Route path="/bankTransactions" element={<BankTransactions/>} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
         <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
-        <Route path="/bankTransactions/order/:orderId" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/order/:amount/:orderId" element={<AddBankTransaction />} />
         <Route path="/customerDetails" element={<CustomerDetails />} />
+        <Route path="/payment-opations/order/:orderId" element={<OpationsPage/>} />
       </Routes>
     </Router>
   );
