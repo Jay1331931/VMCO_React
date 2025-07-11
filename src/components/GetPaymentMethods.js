@@ -10,7 +10,8 @@ function GetPaymentMethods({
   t = (x) => x,
   category,
   customerId,
-  totalAmount
+  totalAmount,
+  isSimpleMode = false // New prop to indicate simple mode for SHC, NAQI, GMTC, DAR
 }) {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
@@ -23,6 +24,14 @@ function GetPaymentMethods({
   useEffect(() => {
     console.log('Passed items:', category, customerId, totalAmount)
     if (!open) return;
+    
+    // If in simple mode, just set the two options directly
+    if (isSimpleMode) {
+      setMethods(['Cash on Delivery', 'Pre Payment']);
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
@@ -58,12 +67,13 @@ function GetPaymentMethods({
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [open, API_BASE_URL, category, customerId, totalAmount]);
+  }, [open, API_BASE_URL, category, customerId, totalAmount, isSimpleMode]);
 
   // Fetch payment method balances for the customer
   useEffect(() => {
     console.log('Open:', open, 'Customer ID:', customerId);
-    if (!open || !customerId) return;
+    if (!open || !customerId || isSimpleMode) return; // Skip balance fetching in simple mode
+    
     fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
@@ -89,7 +99,7 @@ function GetPaymentMethods({
         }
       })
       .catch(() => setBalances({}));
-    }, [open, API_BASE_URL, customerId]);
+    }, [open, API_BASE_URL, customerId, isSimpleMode]);
 
   if (!open) return null;
 
@@ -117,35 +127,38 @@ function GetPaymentMethods({
               <thead>
                 <tr>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Payment Method')}</th>
-                  <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Balance')}</th>
+                  {!isSimpleMode && <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Balance')}</th>}
                   <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {methods.length === 0 ? (
                   <tr>
-                    <td colSpan="2" style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
+                    <td colSpan={isSimpleMode ? "2" : "3"} style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
                   </tr>
                 ) : (
                   methods.map((method, idx) => {
                     let isDisabled = false;
-                    if (method === 'Cash on Delivery' && balances['Cash on Delivery'] !== undefined) {
-                      // Disable if totalAmount >= COD limit
-                      isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
-                    }
+                    if (!isSimpleMode) {
+                      if (method === 'Cash on Delivery' && balances['Cash on Delivery'] !== undefined) {
+                        // Disable if totalAmount >= COD limit
+                        isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
+                      }
 
-                    if (method === 'Credit' && balances['Credit'] !== undefined) {
-                      // Disable if totalAmount >= Credit limit
-                      isDisabled = Number(totalAmount) >= Number(balances['Credit']);
+                      if (method === 'Credit' && balances['Credit'] !== undefined) {
+                        // Disable if totalAmount >= Credit limit
+                        isDisabled = Number(totalAmount) >= Number(balances['Credit']);
+                      }
                     }
-
 
                     return (
                       <tr key={idx}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                          {balances[method] !== undefined ? balances[method] : '-'}
-                        </td>
+                        {!isSimpleMode && (
+                          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                            {balances[method] !== undefined ? balances[method] : '-'}
+                          </td>
+                        )}
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
                             className="gp-product-btn"

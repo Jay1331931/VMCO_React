@@ -16,6 +16,11 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Simple helper function that doesn't depend on component state
 const getEntityFromCategory = (categoryName) => {
+    // Check if categoryName is null or undefined
+    if (!categoryName) {
+        return null;
+    }
+    
     // Just use the fallback logic which doesn't require cartItems
     const category = categoryName.toLowerCase();
     
@@ -53,7 +58,9 @@ function Cart() {
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
-    const [selectedBranchRegion, setSelectedBranchRegion] = useState(''); const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+    const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
+    const [selectedBranchCity, setSelectedBranchCity] = useState('');
+    const [showPaymentPopup, setShowPaymentPopup] = useState(false);
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
     const [entityDescriptions, setEntityDescriptions] = useState({});
     const [pendingOrderItems, setPendingOrderItems] = useState([]);
@@ -202,7 +209,10 @@ function Cart() {
                 const isMachine = isProductMachine(product);
                 
                 // Add isMachine flag to formattedItem
-                formattedItem.isMachine = isMachine;                // Categorize based on entity and product type
+                formattedItem.isMachine = isMachine;
+                
+                // Add isFresh flag to formattedItem (preserve from original product data)
+                formattedItem.isFresh = product.isFresh === true;                // Categorize based on entity and product type
                 if (entity === Constants.ENTITY.VMCO.toLowerCase()) {
                     vmco.push(formattedItem);
                 } else if (entity === Constants.ENTITY.SHC.toLowerCase()) {
@@ -395,13 +405,116 @@ function Cart() {
                 selectedBranchNameLc,
                 selectedBranchErpId,
                 selectedBranchRegion,
+                selectedBranchCity,
                 selectedCustomerId
             }
         });
     }; const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
         console.log('selected payment:', method)
-        handlePlaceOrder(pendingOrderItems, pendingOrderCategory, method);
+        
+        // Check if this is SHC entity - if so, handle fresh/non-fresh splitting
+        const entity = getEntityFromCategory(pendingOrderCategory);
+        if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+            handleSHCOrderSplitting(pendingOrderItems, pendingOrderCategory, method);
+        } else {
+            // For NAQI, GMTC, DAR - directly place order with selected payment method
+            placeOrderForCategory(pendingOrderItems, pendingOrderCategory, method, true);
+        }
+    };
+
+    // Handle SHC order splitting into fresh and non-fresh products
+    const handleSHCOrderSplitting = async (categoryItems, categoryName, selectedPaymentMethod) => {
+        try {
+            setIsPlacingOrder(true);
+            const entity = getEntityFromCategory(categoryName);
+            
+            // Separate SHC products into fresh and non-fresh products
+            const freshProducts = categoryItems.filter(item => {
+                const isFresh = item.isFresh === true;
+                console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}`);
+                return isFresh;
+            });
+            const nonFreshProducts = categoryItems.filter(item => {
+                const isFresh = item.isFresh === true;
+                console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}, isNonFresh=${!isFresh}`);
+                return !isFresh;
+            });
+            
+            console.log('SHC products separated:', {
+                total: categoryItems.length,
+                fresh: freshProducts.length,
+                nonFresh: nonFreshProducts.length,
+                freshProductIds: freshProducts.map(p => p.product_id),
+                nonFreshProductIds: nonFreshProducts.map(p => p.product_id)
+            });
+
+            const orderIds = [];
+
+            // Place order for fresh products
+            if (freshProducts.length > 0) {
+                console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
+                // Use a specific category name for fresh products to ensure separate orders
+                const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false);
+                console.log('Fresh order result:', freshOrderId);
+                if (freshOrderId) {
+                    orderIds.push(freshOrderId);
+                    console.log('Added fresh order ID to array:', freshOrderId);
+                    // Delete fresh products from cart after successful order
+                    await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, null, freshProducts);
+                    console.log('Deleted fresh products from cart after order:', freshProducts);
+                } else {
+                    console.error('Fresh order failed - no order ID returned');
+                }
+            }
+
+            // Place order for non-fresh products
+            if (nonFreshProducts.length > 0) {
+                console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
+                // Use a specific category name for non-fresh products to ensure separate orders
+                const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false);
+                console.log('Non-fresh order result:', nonFreshOrderId);
+                if (nonFreshOrderId) {
+                    orderIds.push(nonFreshOrderId);
+                    console.log('Added non-fresh order ID to array:', nonFreshOrderId);
+                    // Delete non-fresh products from cart after successful order
+                    await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, null, nonFreshProducts);
+                    console.log('Deleted non-fresh products from cart after order:', nonFreshProducts);
+                } else {
+                    console.error('Non-fresh order failed - no order ID returned');
+                }
+            }
+
+            // Show combined success message for SHC orders
+            if (orderIds.length > 0) {
+                console.log('Order IDs collected:', orderIds);
+                const orderText = orderIds.length === 1 
+                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`) 
+                    : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                
+                console.log('Order success message:', orderText);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Order Placed'),
+                    text: orderText,
+                    confirmButtonText: t('OK')
+                }).then(() => {
+                    window.location.reload();
+                });
+            }
+        } catch (err) {
+            console.error('Error in SHC order splitting:', err);
+            setError(err.message);
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Failed'),
+                text: t(`Failed to place order: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
+        } finally {
+            setIsPlacingOrder(false);
+        }
     };
 
     // Handle place order button click
@@ -522,105 +635,75 @@ function Cart() {
                     });
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                // Separate SHC products into fresh and non-fresh products
-                const freshProducts = categoryItems.filter(item => {
-                    const isFresh = item.isFresh === true;
-                    console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}`);
-                    return isFresh;
+                // For SHC entity, handle fresh/non-fresh splitting with payment method determination
+                // Calculate total amount for all products
+                let totalAmount = 0;
+                categoryItems.forEach(item => {
+                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                    const vatPercentage = Number(item.vatPercentage) || 0;
+                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                    const itemTotal = baseAmount + vatAmount;
+                    totalAmount += itemTotal;
                 });
-                const nonFreshProducts = categoryItems.filter(item => {
-                    const isFresh = item.isFresh === true;
-                    console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}, isNonFresh=${!isFresh}`);
-                    return !isFresh;
-                });
+
+                // First check if credit is allowed for SHC entity
+                const isAllowed = await checkCreditAllowed(selectedCustomerId, entity);
                 
-                console.log('SHC products separated:', {
-                    total: categoryItems.length,
-                    fresh: freshProducts.length,
-                    nonFresh: nonFreshProducts.length,
-                    freshProductIds: freshProducts.map(p => p.product_id),
-                    nonFreshProductIds: nonFreshProducts.map(p => p.product_id)
+                if (isAllowed) {
+                    // Split and place orders with Credit
+                    console.log(`Credit is allowed for SHC entity, splitting and placing orders with Credit`);
+                    await handleSHCOrderSplitting(categoryItems, categoryName, 'Credit');
+                } else {
+                    // Check COD limit
+                    const codLimit = await getCODLimit(selectedCustomerId);
+                    
+                    if (totalAmount > codLimit) {
+                        // Split and place orders with Pre Payment
+                        console.log(`Total amount ${totalAmount} exceeds COD limit ${codLimit}, splitting and placing orders with Pre Payment`);
+                        await handleSHCOrderSplitting(categoryItems, categoryName, 'Pre Payment');
+                    } else {
+                        // Show payment method selection popup, then split and place orders with selected method
+                        console.log(`Total amount ${totalAmount} is within COD limit ${codLimit}, showing payment method selection for SHC splitting`);
+                        setPendingOrderCategory(categoryName);
+                        setPendingOrderItems(categoryItems);
+                        setShowPaymentPopup(true);
+                        return; // Exit function to wait for user selection
+                    }
+                }
+            } else if (entity && [Constants.ENTITY.NAQI.toLowerCase(), Constants.ENTITY.GMTC.toLowerCase(), Constants.ENTITY.DAR.toLowerCase()].includes(entity.toLowerCase())) {
+                // Calculate total amount for all products
+                let totalAmount = 0;
+                categoryItems.forEach(item => {
+                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                    const vatPercentage = Number(item.vatPercentage) || 0;
+                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                    const itemTotal = baseAmount + vatAmount;
+                    totalAmount += itemTotal;
                 });
 
-                const orderIds = [];
-
-                // Place order for fresh products
-                if (freshProducts.length > 0) {
-                    // Calculate total amount for fresh products
-                    let freshTotal = 0;
-                    freshProducts.forEach(item => {
-                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                        const vatPercentage = Number(item.vatPercentage) || 0;
-                        const vatAmount = (baseAmount * vatPercentage) / 100;
-                        const totalAmount = baseAmount + vatAmount;
-                        freshTotal += totalAmount;
-                    });
-
-                    // Determine payment method for fresh products
-                    const freshPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, freshTotal, entity);
+                // First check if credit is allowed for this entity
+                const isAllowed = await checkCreditAllowed(selectedCustomerId, entity);
+                
+                if (isAllowed) {
+                    // Place order with Credit
+                    console.log(`Credit is allowed for ${entity} entity, placing order with Credit`);
+                    await placeOrderForCategory(categoryItems, categoryName, 'Credit', true);
+                } else {
+                    // Check COD limit
+                    const codLimit = await getCODLimit(selectedCustomerId);
                     
-                    console.log('Placing order for SHC fresh products with determined payment method:', freshPaymentMethod);
-                    // Use a specific category name for fresh products to ensure separate orders
-                    const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', freshPaymentMethod, false);
-                    console.log('Fresh order result:', freshOrderId);
-                    if (freshOrderId) {
-                        orderIds.push(freshOrderId);
-                        console.log('Added fresh order ID to array:', freshOrderId);
-                        // Delete fresh products from cart after successful order
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, null, freshProducts);
-                        console.log('Deleted fresh products from cart after order:', freshProducts);
+                    if (totalAmount > codLimit) {
+                        // Place order with Pre Payment
+                        console.log(`Total amount ${totalAmount} exceeds COD limit ${codLimit}, placing order with Pre Payment`);
+                        await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
                     } else {
-                        console.error('Fresh order failed - no order ID returned');
+                        // Show payment method selection popup with only COD and Pre Payment
+                        console.log(`Total amount ${totalAmount} is within COD limit ${codLimit}, showing payment method selection`);
+                        setPendingOrderCategory(categoryName);
+                        setPendingOrderItems(categoryItems);
+                        setShowPaymentPopup(true);
+                        return; // Exit function to wait for user selection
                     }
-                }
-
-                // Place order for non-fresh products
-                if (nonFreshProducts.length > 0) {
-                    // Calculate total amount for non-fresh products
-                    let nonFreshTotal = 0;
-                    nonFreshProducts.forEach(item => {
-                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                        const vatPercentage = Number(item.vatPercentage) || 0;
-                        const vatAmount = (baseAmount * vatPercentage) / 100;
-                        const totalAmount = baseAmount + vatAmount;
-                        nonFreshTotal += totalAmount;
-                    });
-
-                    // Determine payment method for non-fresh products
-                    const nonFreshPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, nonFreshTotal, entity);
-                    
-                    console.log('Placing order for SHC non-fresh products with determined payment method:', nonFreshPaymentMethod);
-                    // Use a specific category name for non-fresh products to ensure separate orders
-                    const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', nonFreshPaymentMethod, false);
-                    console.log('Non-fresh order result:', nonFreshOrderId);
-                    if (nonFreshOrderId) {
-                        orderIds.push(nonFreshOrderId);
-                        console.log('Added non-fresh order ID to array:', nonFreshOrderId);
-                        // Delete non-fresh products from cart after successful order
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, null, nonFreshProducts);
-                        console.log('Deleted non-fresh products from cart after order:', nonFreshProducts);
-                    } else {
-                        console.error('Non-fresh order failed - no order ID returned');
-                    }
-                }
-
-                // Show combined success message for SHC orders
-                if (orderIds.length > 0) {
-                    console.log('Order IDs collected:', orderIds);
-                    const orderText = orderIds.length === 1 
-                        ? t(`Your order has been placed successfully! Order #${orderIds[0]}`) 
-                        : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-                    
-                    console.log('Order success message:', orderText);
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: t('Order Placed'),
-                        text: orderText,
-                        confirmButtonText: t('OK')
-                    }).then(() => {
-                        window.location.reload();
-                    });
                 }
             } else {
                 // For other categories, place order as usual
@@ -855,6 +938,7 @@ function Cart() {
                     branchId: selectedBranchId,
                     branchNameEn: selectedBranchName,
                     branchNameLc: selectedBranchNameLc,
+                    branchCity: selectedBranchCity,
                     erpBranchId: selectedBranchErpId,
                     branchRegion: selectedBranchRegion,
                     orderBy: orderByName,
@@ -913,6 +997,7 @@ function Cart() {
             }
 
             // Create or Update Order Lines
+            let lineNumber = 1; // Initialize line number counter
             for (const item of categoryItems) {
                 // Make sure we properly identify the product ID - check all possible fields in priority order
                 const productId = item.product_id || item.productId || item.id;
@@ -951,7 +1036,9 @@ function Cart() {
                     // Update existing line with new quantity and recalculated net amount
                     const patchPayload = {
                         quantity: totalQuantity,
-                        net_amount: netAmount.toFixed(2)
+                        sales_tax_amount: vatAmount.toFixed(2),
+                        net_amount: netAmount.toFixed(2),
+                        line_number: lineNumber
                     };
 
                     console.log(`Updating existing line for orderId ${orderId} and productId ${productId}:`, {
@@ -1018,8 +1105,10 @@ function Cart() {
                         unit: item.unit || 'EA',
                         unit_price: unitPrice,
                         vat_percentage: vatPercentage || 0,
+                        sales_tax_amount: vatAmount.toFixed(2),
                         net_amount: netAmount.toFixed(2),
-                        erp_line_number: item.erp_line_number || 1,
+                        line_number: lineNumber,
+                        erp_line_number: item.erp_line_number || lineNumber,
                         erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
                     };
 
@@ -1059,6 +1148,9 @@ function Cart() {
                         // Continue with the process - don't let one line failure stop the entire order
                     }
                 }
+                
+                // Increment line number for next iteration
+                lineNumber++;
             }
 
             // Recalculate totalAmount after line inserts/updates
@@ -1079,15 +1171,19 @@ function Cart() {
             const allLines = recalcLinesData?.data?.data?.filter(line => line.orderId === orderId) || [];
             console.log(`All order lines for orderId ${orderId}:`, allLines);
 
-            // Calculate the sum of all order line net amounts - ensure we parse all values correctly
+            // Calculate the sum of all order line net amounts and sales tax amounts - ensure we parse all values correctly
             let linesTotal = 0;
+            let totalSalesTaxAmount = 0;
             for (const line of allLines) {
                 const netAmount = parseFloat(line.netAmount);
-                console.log(`Line for product ${line.productId}: net_amount=${line.netAmount}, parsed=${netAmount}`);
+                const salesTaxAmount = parseFloat(line.salesTaxAmount || line.sales_tax_amount || 0);
+                console.log(`Line for product ${line.productId}: net_amount=${line.netAmount}, parsed=${netAmount}, sales_tax_amount=${salesTaxAmount}`);
                 linesTotal += netAmount;
+                totalSalesTaxAmount += salesTaxAmount;
             }
 
             console.log('Recalculated lines total:', linesTotal);
+            console.log('Total sales tax amount:', totalSalesTaxAmount);
 
             // Get existing delivery charges if updating an order
             let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;
@@ -1114,6 +1210,7 @@ function Cart() {
             const finalTotalAmount = linesTotal + deliveryCharges;
             console.log('Final order totals:', {
                 linesTotal,
+                totalSalesTaxAmount,
                 deliveryCharges,
                 finalTotalAmount,
                 details: {
@@ -1126,6 +1223,7 @@ function Cart() {
                 id: orderId,
                 paymentMethod: selectedPaymentMethod,
                 totalAmount: finalTotalAmount.toFixed(2),
+                total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
                 deliveryCharges: deliveryCharges.toFixed(2),
                 paymentPercentage: '100.00',
                 // modifiedBy: userId // Removed to avoid backend 500 error
@@ -1305,6 +1403,7 @@ function Cart() {
             setSelectedBranchErpId(location.state.selectedBranchErpId || '');
             setSelectedBranchRegion(location.state.selectedBranchRegion || '');
             setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
+            setSelectedBranchCity(location.state.selectedBranchCity || '');
         }
     }, [location.state]);
 
@@ -1349,6 +1448,13 @@ function Cart() {
         console.log("=== END DEBUG ===");
 
         setFilteredCartItems(sectionsToShow);
+        
+        // Collapse all sections by default when cart items are loaded
+        if (sectionsToShow.length > 0) {
+            const allCategories = new Set(sectionsToShow.map(item => item.category));
+            setCollapsedCategories(allCategories);
+            console.log("Collapsed all sections by default:", Array.from(allCategories));
+        }
     }, [cartItems, user]);
 
     // Add this effect to fetch entity descriptions
@@ -1565,6 +1671,76 @@ function Cart() {
         }
     };
 
+    // Helper function to check if credit is allowed for specific entity
+    const checkCreditAllowed = async (customerId, entity) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to fetch payment method details');
+                return false;
+            }
+
+            const result = await response.json();
+            console.log('Payment method details response for credit check:', result);
+
+            if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+                const methodDetails = result.data.methodDetails;
+                
+                // Check if credit is allowed for specific entity
+                if (methodDetails.credit && methodDetails.credit[entity.toUpperCase()]) {
+                    const isAllowed = methodDetails.credit[entity.toUpperCase()].isAllowed;
+                    console.log(`Credit isAllowed for ${entity} entity:`, isAllowed);
+                    return isAllowed === true;
+                }
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Error checking credit allowance:', error);
+            return false;
+        }
+    };
+
+    // Helper function to get COD limit
+    const getCODLimit = async (customerId) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                console.error('Failed to fetch payment method details');
+                return 0;
+            }
+
+            const result = await response.json();
+            console.log('Payment method details response for COD limit:', result);
+
+            if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+                const methodDetails = result.data.methodDetails;
+                
+                // Get COD limit
+                if (methodDetails.COD && methodDetails.COD.limit) {
+                    const limit = Number(methodDetails.COD.limit);
+                    console.log('COD limit:', limit);
+                    return limit;
+                }
+            }
+
+            return 0;
+        } catch (error) {
+            console.error('Error getting COD limit:', error);
+            return 0;
+        }
+    };
+
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
@@ -1759,15 +1935,26 @@ function Cart() {
                     // Calculate totalAmount for the pending order category
                     if (!pendingOrderCategory || !pendingOrderItems || pendingOrderItems.length === 0) return 0;
                     let sum = 0;
-                    pendingOrderItems.forEach(item => {
-                        const qty = Number(quantities[item.id] || item.quantity || 1);
-                        const price = Number(item.price || item.unitPrice || 0);
-                        const vat = Number(item.vatPercentage || 0);
-                        const base = price * qty;
-                        const vatAmount = (base * vat) / 100;
-                        sum += base + vatAmount;
-                    });
+                    try {
+                        pendingOrderItems.forEach((item) => {
+                            const qty = Number(quantities[item.id] || item.quantity || 1);
+                            const price = Number(item.price || item.unitPrice || 0);
+                            const vat = Number(item.vatPercentage || 0);
+                            const base = price * qty;
+                            const vatAmount = (base * vat) / 100;
+                            sum += base + vatAmount;
+                        });
+                    } catch (error) {
+                        console.error('Error calculating totalAmount:', error);
+                        return 0;
+                    }
                     return sum;
+                })()}
+                isSimpleMode={(() => {
+                    // Check if this is for SHC, NAQI, GMTC, or DAR entities
+                    if (!pendingOrderCategory) return false;
+                    const entity = getEntityFromCategory(pendingOrderCategory);
+                    return entity && [Constants.ENTITY.SHC.toLowerCase(), Constants.ENTITY.NAQI.toLowerCase(), Constants.ENTITY.GMTC.toLowerCase(), Constants.ENTITY.DAR.toLowerCase()].includes(entity.toLowerCase());
                 })()}
             />
 
