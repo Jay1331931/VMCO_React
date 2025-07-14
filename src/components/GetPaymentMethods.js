@@ -84,16 +84,25 @@ function GetPaymentMethods({
         console.log('Fetched payment method balances:', result);
         if (result.status === 'Ok' && result.data) {
           const methodDetails = result.data.methodDetails;
+          const currentBalance = result.data.currentBalance || {};
           if (methodDetails) {
             console.log('Raw balances data fetched:', methodDetails);
+            console.log('Current balance data:', currentBalance);
             // Map method names to balances
-            //const details = customerData.methodDetails;
             const map = {};
             // Normalize method names to match those in methods array
             map['Cash on Delivery'] = methodDetails.COD.limit ? Number(methodDetails.COD.limit).toFixed(2) : 'NA';
-            if (methodDetails.credit) map['Credit'] = methodDetails.credit.balance ? Number(methodDetails.credit.balance).toFixed(2) : 'NA';
-            if (methodDetails.prePayment) map['Pre Payment'] = methodDetails.prePayment.balance ? Number(methodDetails.prePayment.balance).toFixed(2) : 'NA';
-            if (methodDetails.partialPayment) map['Partial Payment'] = methodDetails.partialPayment.balance ? Number(methodDetails.partialPayment.balance).toFixed(2) : 'NA';
+            
+            // For credit, use the currentBalance which shows the actual available balance
+            // The currentBalance can be negative (representing available credit)
+            if (methodDetails.credit) {
+              // For now, we'll show 'Credit Available' for credit methods since the balance structure is entity-specific
+              // In a more sophisticated implementation, we would need to know which entity this is for
+              map['Credit'] = 'Available';
+            }
+            
+            if (methodDetails.prePayment) map['Pre Payment'] = 'Available';
+            if (methodDetails.partialPayment) map['Partial Payment'] = 'Available';
             setBalances(map);
           }
         }
@@ -145,10 +154,8 @@ function GetPaymentMethods({
                         isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
                       }
 
-                      if (method === 'Credit' && balances['Credit'] !== undefined) {
-                        // Disable if totalAmount >= Credit limit
-                        isDisabled = Number(totalAmount) >= Number(balances['Credit']);
-                      }
+                      // For credit, we don't disable here since the balance check is done in cart.js
+                      // The cart.js functions will handle the credit balance validation and show appropriate alerts
                     }
 
                     return (
