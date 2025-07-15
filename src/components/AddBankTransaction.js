@@ -11,6 +11,17 @@ import GetSalesOrder from "./GetSalesOrder";
 import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
+const getCookie = (name) => {
+  const cookies = document.cookie
+    .split(";")
+    .map(cookie => cookie.trim())
+    .reduce((acc, cookie) => {
+      const [key, ...rest] = cookie.split("=");
+      acc[key] = decodeURIComponent(rest.join("="));
+      return acc;
+    }, {});
+  return cookies[name] || null;
+};
 const AddBankTransaction = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -28,7 +39,7 @@ const AddBankTransaction = () => {
     bankDocuments: [],
     orderId: [],
   });
-  const { id, orderId } = useParams();
+  const { id, orderId, amount } = useParams();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [updateTransaction, setUpdateTransaction] = useState({});
@@ -36,6 +47,8 @@ const AddBankTransaction = () => {
   const [imageUrls, setImageUrls] = useState([]);
   const [fileData, setFileData] = useState([]);
   const [popupImage, setPopupImage] = useState(null);
+  const [orderIds, setOrderIds] = useState();
+  const [totalamount, setAmount] = useState(0);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -45,6 +58,29 @@ const AddBankTransaction = () => {
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   console.log("isV:", isV("BankContent"));
+  const generateToken = async () => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/auth/temporary-token-generation`,
+        {
+          role: "Guest",
+          userId: 0,
+          userName: "payment",
+        },
+        { withCredentials: true }
+      );
+      console.log("Temporary Token Response:", data.details);
+    } catch (error) {
+      console.error("Error generating temporary token:", error);
+    }
+  };
+  useEffect(() => {
+  const cookieToken = getCookie("token");
+   
+    if (orderId && !cookieToken) {
+      generateToken();
+    }
+  }, [orderId]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -111,11 +147,41 @@ const AddBankTransaction = () => {
         payload,
         { withCredentials: true }
       );
+      if (orderIds && response.data.status === "success") {
+        Swal.fire({
+          title: t("Success"),
+          text: t("Transaction created successfully"),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        }).then(() => {
+          window.close();
+        });
+      }
 
-      if (response.data.status === "success") {
+      if (response.data.status === "success" && !orderIds) {
         navigate("/banktransactions");
       }
     } catch (error) {
+      if (error?.response?.status === 401 && orderIds) {
+        Swal.fire({
+          title: t("Session Expired"),
+          text: t("Please click Ok Session will be restarted"),
+          icon: "warning",
+          confirmButtonText: "OK",
+          cancelButtonText: "Close",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              await generateToken();
+            } catch (err) {
+              console.error("Token regeneration failed:", err);
+              window.close();
+            }
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            window.close();
+          }
+        });
+      }
       console.error("Submission error:", error);
       const msg =
         error?.response?.data?.message ||
@@ -186,27 +252,40 @@ const AddBankTransaction = () => {
       console.error("Failed to fetch transaction", error);
     }
   }, [id]);
-  const fetchSaleOrder = useCallback(async () => {
+  const fetchDecodeddata = useCallback(async () => {
     try {
-      if (!orderId) return;
       const { data } = await axios.get(
-        `${API_BASE_URL}/sales-order/id/${parseInt(orderId)}`,
+        `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}&amount=${amount}`,
         {
           withCredentials: true,
         }
       );
-      console.log("Sale Order Data:", data.data);
+      setOrderIds(parseInt(data?.details?.orderIds));
+      setAmount(parseFloat(data?.details?.amount));
+    } catch (error) {
+      console.error("Failed to fetch decoded data", error);
+    }
+  }, [orderId]);
+  useEffect(() => {
+    fetchDecodeddata();
+  }, [fetchDecodeddata]);
+  const fetchSaleOrder = useCallback(async () => {
+    try {
+      if (!orderIds) return;
+      const { data } = await axios.get(
+        `${API_BASE_URL}/sales-order/id/${orderIds}`,
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Sale Order Data:", amount);
       setFormData((prev) => ({
         ...prev,
         entity: data.data.entity,
         erpCustId: data.data.erpCustId,
         companyNameEn: data.data.companyNameEn,
         companyNameAr: data.data.companyNameAr,
-        amountTransferred:
-          data.data.paymentStatus.toLowerCase() !== "paid" &&
-            parseInt(data.data.paymentPercentage) === 100
-            ? parseInt(data.data.totalAmount)
-            : parseInt(data.data.totalAmount) - parseInt(data.data.paidAmount),
+        amountTransferred: totalamount,
         erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
         orderId: [data.data.id] || [],
       }));
@@ -214,9 +293,9 @@ const AddBankTransaction = () => {
     } catch (error) {
       console.error("Failed to fetch sales order", error);
     }
-  }, [orderId]);
+  }, [orderIds]);
   useEffect(() => {
-    if (orderId) {
+    if (orderIds) {
       fetchSaleOrder();
     }
   }, [fetchSaleOrder]);
@@ -279,6 +358,16 @@ const AddBankTransaction = () => {
     for (let fileName of imageUrls) {
       handleRemoveImage(fileName);
     }
+    if (orderIds) {
+      Swal.fire({
+        title: t("Cancelled"),
+        text: t("Transaction cancelled successfully"),
+        icon: "info",
+        confirmButtonText: t("OK"),
+      }).then(() => {
+        window.close();
+      });
+    }
     navigate("/banktransactions");
   };
   const fileInputRef = useRef(null);
@@ -289,165 +378,169 @@ const AddBankTransaction = () => {
   // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
-  return (
-    <Sidebar title={t("Bank Transactions")}>
-      {isV("BankContent") && (
-        <div className="bank-add-container">
-          <div className="bank-add-form">
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="erpCustId">{t("ERP Customer ID ")}<span style={{ color: "red" }}> *</span></label>
-                <input
-                  id="erpCustId"
-                  name="erpCustId"
-                  placeholder={t("ERP Customer ID")}
-                  value={
-                    formData?.erpCustId || updateTransaction?.erpCustId || ""
-                  }
-                  onClick={() => setShowCustomerPopup(true)}
-                  disabled={!!updateTransaction?.erpCustId || orderId}
-                />
-              </div>
+  const renderTemplate = () => {
+    return (
+      <div className="bank-add-container">
+        <div className="bank-add-form">
+          <div className="form-grid">
+            <div className="form-group">
+              <label htmlFor="erpCustId">
+                {t("ERP Customer ID ")}
+                <span style={{ color: "red" }}> *</span>
+              </label>
+              <input
+                id="erpCustId"
+                name="erpCustId"
+                placeholder={t("ERP Customer ID")}
+                value={
+                  formData?.erpCustId || updateTransaction?.erpCustId || ""
+                }
+                onClick={() => setShowCustomerPopup(true)}
+                disabled={!!updateTransaction?.erpCustId || orderId}
+              />
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="companyNameEn">{t("Company Name (EN)")}</label>
-                <input
-                  id="companyNameEn"
-                  name="companyNameEn"
-                  placeholder={t("Company Name (EN)")}
-                  value={
-                    formData?.companyNameEn ||
-                    updateTransaction?.companyNameEn ||
-                    ""
-                  }
-                  disabled={
-                    !!(
-                      formData?.companyNameEn ||
-                      updateTransaction?.companyNameEn
-                    )
-                  }
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="companyNameEn">{t("Company Name (EN)")}</label>
+              <input
+                id="companyNameEn"
+                name="companyNameEn"
+                placeholder={t("Company Name (EN)")}
+                value={
+                  formData?.companyNameEn ||
+                  updateTransaction?.companyNameEn ||
+                  ""
+                }
+                disabled={
+                  !!(
+                    formData?.companyNameEn || updateTransaction?.companyNameEn
+                  )
+                }
+                onChange={handleChange}
+              />
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="companyNameAr">{t("Company Name (AR)")}</label>
-                <input
-                  id="companyNameAr"
-                  name="companyNameAr"
-                  placeholder={t("Company Name (AR)")}
-                  value={
-                    formData?.companyNameAr ||
-                    updateTransaction?.companyNameAr ||
-                    ""
-                  }
-                  disabled={
-                    !!(
-                      formData?.companyNameAr ||
-                      updateTransaction?.companyNameAr
-                    )
-                  }
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="companyNameAr">{t("Company Name (AR)")}</label>
+              <input
+                id="companyNameAr"
+                name="companyNameAr"
+                placeholder={t("Company Name (AR)")}
+                value={
+                  formData?.companyNameAr ||
+                  updateTransaction?.companyNameAr ||
+                  ""
+                }
+                disabled={
+                  !!(
+                    formData?.companyNameAr || updateTransaction?.companyNameAr
+                  )
+                }
+                onChange={handleChange}
+              />
+            </div>
 
+            <div className="form-group">
+              <label htmlFor="amountTransferred">
+                {t("Amount Transferred")}
+                <span style={{ color: "red" }}> *</span>
+              </label>
+              <input
+                id="amountTransferred"
+                name="amountTransferred"
+                type="number"
+                placeholder={t("Amount")}
+                min={0}
+                value={
+                  formData?.amountTransferred ||
+                  updateTransaction?.amountTransferred ||
+                  ""
+                }
+                disabled={!!updateTransaction?.amountTransferred || orderId}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="transactionDate">
+                {t("Transaction Date")}
+                <span style={{ color: "red" }}> *</span>
+              </label>
+              <input
+                id="transactionDate"
+                name="transactionDate"
+                type="date"
+                value={
+                  formData?.transactionDate ||
+                  updateTransaction?.transactionDate ||
+                  ""
+                }
+                onChange={handleChange}
+                disabled={!!updateTransaction?.transactionDate}
+                max={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+
+            {Object.keys(updateTransaction).length === 0 && (
               <div className="form-group">
-                <label htmlFor="amountTransferred">
-                  {t("Amount Transferred")}<span style={{ color: "red" }}> *</span>
+                <label htmlFor="entity">
+                  {t("Entity")} <span style={{ color: "red" }}> *</span>
                 </label>
-                <input
-                  id="amountTransferred"
-                  name="amountTransferred"
-                  type="number"
-                  placeholder={t("Amount")}
-                  min={0}
-                  value={
-                    formData?.amountTransferred ||
-                    updateTransaction?.amountTransferred ||
-                    ""
-                  }
-                  disabled={!!updateTransaction?.amountTransferred || orderId}
+                <select
+                  id="entity"
+                  name="entity"
+                  value={formData.entity}
                   onChange={handleChange}
-                />
+                  disabled={orderId}
+                >
+                  <option value="">{t("Select Entity")}</option>
+                  <option value="VMCO">VMCO</option>
+                  <option value="NAQI">NAQI</option>
+                </select>
               </div>
+            )}
 
-              <div className="form-group">
-                <label htmlFor="transactionDate">
-                  {t("Transaction Date")}<span style={{ color: "red" }}> *</span>
-                </label>
-                <input
-                  id="transactionDate"
-                  name="transactionDate"
-                  type="date"
-                  value={
-                    formData?.transactionDate ||
-                    updateTransaction?.transactionDate ||
-                    ""
-                  }
-                  onChange={handleChange}
-                  disabled={!!updateTransaction?.transactionDate}
-                  max={new Date().toISOString().split("T")[0]}
-                />
-              </div>
-
-              {Object.keys(updateTransaction).length === 0 && (
+            {(formData.entity && formData.erpCustId) ||
+            Object.keys(updateTransaction).length > 0 ? (
+              <>
                 <div className="form-group">
-                  <label htmlFor="entity">{t("Entity")} <span style={{ color: "red" }}> *</span></label>
-                  <select
-                    id="entity"
-                    name="entity"
-                    value={formData.entity}
-                    onChange={handleChange}
-                    disabled={orderId}
-                  >
-                    <option value="">{t("Select Entity")}</option>
-                    <option value="VMCO">VMCO</option>
-                    <option value="NAQI">NAQI</option>
-                  </select>
+                  <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
+                  <input
+                    id="erpOrderId"
+                    name="erpOrderId"
+                    placeholder={t("ERP Order ID")}
+                    value={
+                      formData?.erpOrderId?.join(", ") ||
+                      updateTransaction?.erpOrderId?.join(", ") ||
+                      ""
+                    }
+                    disabled={!!updateTransaction?.erpOrderId || orderId}
+                    onClick={() => setshowSalesOrderPopup(true)}
+                  />
                 </div>
-              )}
-
-              {(formData.entity && formData.erpCustId) ||
-                Object.keys(updateTransaction).length > 0 ? (
-                <>
-                  <div className="form-group">
-                    <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
-                    <input
-                      id="erpOrderId"
-                      name="erpOrderId"
-                      placeholder={t("ERP Order ID")}
-                      value={
-                        formData?.erpOrderId?.join(", ") ||
-                        updateTransaction?.erpOrderId?.join(", ") ||
-                        ""
-                      }
-                      disabled={!!updateTransaction?.erpOrderId || orderId}
-                      onClick={() => setshowSalesOrderPopup(true)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="orderId">{t("Order ID")}</label>
-                    <input
-                      id="orderId"
-                      name="orderId"
-                      type="text"
-                      placeholder={t("Order Id")}
-                      min={0}
-                      // value={
-                      //   formData?.orderId || updateTransaction?.orderId || ""
-                      // }
-                      value={
-                        formData?.orderId?.join(", ") ||
-                        updateTransaction?.orderId?.join(", ") ||
-                        ""
-                      }
-                      disabled={!!updateTransaction?.orderId || orderId}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </>
-              ) : null}
-              {/* {Object.keys(updateTransaction).length === 0  &&
+                <div className="form-group">
+                  <label htmlFor="orderId">{t("Order ID")}</label>
+                  <input
+                    id="orderId"
+                    name="orderId"
+                    type="text"
+                    placeholder={t("Order Id")}
+                    min={0}
+                    // value={
+                    //   formData?.orderId || updateTransaction?.orderId || ""
+                    // }
+                    value={
+                      formData?.orderId?.join(", ") ||
+                      updateTransaction?.orderId?.join(", ") ||
+                      ""
+                    }
+                    disabled={!!updateTransaction?.orderId || orderId}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            ) : null}
+            {/* {Object.keys(updateTransaction).length === 0  &&
               <div className="form-group">
                 <label htmlFor="bankDocuments">
                   {t("Upload Bank Documents *")}
@@ -529,209 +622,218 @@ const AddBankTransaction = () => {
                   })}
                 </div>
               </div> */}
-              <div className="form-group full-width">
-                <label htmlFor="bankDocuments">
-                  {t("Upload Bank Documents")}<span style={{ color: "red" }}> *</span>
-                </label>
-                <div
-                  // className="form-group  full-width"
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: "10px",
-                    borderRadius: "6px",
-                    backgroundColor: "#f7f8fa",
-                  }}
-                >
-                  <div className="bank-doc-upload-wrapper">
-                    {Object.keys(updateTransaction).length === 0 && (
-                      <>
-                        <button
-                          type="button"
-                          className="maintenance-add-image-btn"
-                          onClick={() => fileInputRef.current.click()}
-                          title="Upload Documents"
+            <div className="form-group full-width">
+              <label htmlFor="bankDocuments">
+                {t("Upload Bank Documents")}
+                <span style={{ color: "red" }}> *</span>
+              </label>
+              <div
+                // className="form-group  full-width"
+                style={{
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  backgroundColor: "#f7f8fa",
+                }}
+              >
+                <div className="bank-doc-upload-wrapper">
+                  {Object.keys(updateTransaction).length === 0 && (
+                    <>
+                      <button
+                        type="button"
+                        className="maintenance-add-image-btn"
+                        onClick={() => fileInputRef.current.click()}
+                        title="Upload Documents"
+                      >
+                        +
+                      </button>
+                      <input
+                        id="bankDocuments"
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                        disabled={!!updateTransaction?.bankDocuments}
+                      />
+                    </>
+                  )}
+                  <div className="scrollable-preview-container">
+                    {fileData?.map((file, index) => {
+                      const fileUrl = file.url;
+                      const extension = file.fileName
+                        .split(".")
+                        .pop()
+                        .toLowerCase();
+                      const isImage = [
+                        "png",
+                        "jpg",
+                        "jpeg",
+                        "gif",
+                        "webp",
+                      ].includes(extension);
+                      const isPdf = extension === "pdf";
+                      const isExcel = ["xls", "xlsx", "csv"].includes(
+                        extension
+                      );
+
+                      return (
+                        <div
+                          key={index}
+                          className="image-item"
+                          onClick={() => isImage && setPopupImage(fileUrl)}
+                          title={isImage ? "Click to view" : ""}
                         >
-                          +
-                        </button>
-                        <input
-                          id="bankDocuments"
-                          type="file"
-                          multiple
-                          accept="image/*,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-                          ref={fileInputRef}
-                          style={{ display: "none" }}
-                          onChange={handleFileChange}
-                          disabled={!!updateTransaction?.bankDocuments}
-                        />
-                      </>
-                    )}
-                    <div className="scrollable-preview-container">
-                      {fileData?.map((file, index) => {
-                        const fileUrl = file.url;
-                        const extension = file.fileName
-                          .split(".")
-                          .pop()
-                          .toLowerCase();
-                        const isImage = [
-                          "png",
-                          "jpg",
-                          "jpeg",
-                          "gif",
-                          "webp",
-                        ].includes(extension);
-                        const isPdf = extension === "pdf";
-                        const isExcel = ["xls", "xlsx", "csv"].includes(
-                          extension
-                        );
+                          {isImage ? (
+                            <img
+                              src={fileUrl}
+                              alt={file.fileName}
+                              className="preview-image"
+                            />
+                          ) : isPdf ? (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📄 View PDF
+                            </a>
+                          ) : isExcel ? (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📊 Open Excel File
+                            </a>
+                          ) : (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="file-link-button"
+                            >
+                              📁 Download File
+                            </a>
+                          )}
 
-                        return (
-                          <div
-                            key={index}
-                            className="image-item"
-                            onClick={() => isImage && setPopupImage(fileUrl)}
-                            title={isImage ? "Click to view" : ""}
-                          >
-                            {isImage ? (
-                              <img
-                                src={fileUrl}
-                                alt={file.fileName}
-                                className="preview-image"
-                              />
-                            ) : isPdf ? (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="file-link-button"
-                              >
-                                📄 View PDF
-                              </a>
-                            ) : isExcel ? (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="file-link-button"
-                              >
-                                📊 Open Excel File
-                              </a>
-                            ) : (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="file-link-button"
-                              >
-                                📁 Download File
-                              </a>
-                            )}
-
-                            {Object.keys(updateTransaction).length === 0 && (
-                              <button
-                                type="button"
-                                className="remove-image-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // prevent image popup
-                                  handleRemoveImage(file.fileName);
-                                }}
-                                title="Remove File"
-                              >
-                                ✖
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
+                          {Object.keys(updateTransaction).length === 0 && (
+                            <button
+                              type="button"
+                              className="remove-image-btn"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent image popup
+                                handleRemoveImage(file.fileName);
+                              }}
+                              title="Remove File"
+                            >
+                              ✖
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="description">{t("Description")}</label>
-                <textarea
-                  id="description"
-                  name="description"
-                  placeholder={t("Description")}
-                  rows={3}
-                  value={
-                    formData?.description ||
-                    updateTransaction?.description ||
-                    ""
-                  }
-                  disabled={!!updateTransaction?.description}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {error && (
-                <div
-                  className="error-message full-width"
-                  style={{ color: "red" }}
-                >
-                  {error}
-                </div>
-              )}
             </div>
-            {popupImage && (
-              <div className='image-popup-overlay' onClick={() => setPopupImage(null)}>
-                <div className='image-popup-content' onClick={(e) => e.stopPropagation()}>
-                  <img src={popupImage} style={{ maxWidth: "100%", maxHeight: "100%" }} />
-                  <button className='image-popup-close' onClick={() => setPopupImage(null)}>
-                    ×
-                  </button>
-                </div>
+
+            <div className="form-group full-width">
+              <label htmlFor="description">{t("Description")}</label>
+              <textarea
+                id="description"
+                name="description"
+                placeholder={t("Description")}
+                rows={3}
+                value={
+                  formData?.description || updateTransaction?.description || ""
+                }
+                disabled={!!updateTransaction?.description}
+                onChange={handleChange}
+              />
+            </div>
+
+            {error && (
+              <div
+                className="error-message full-width"
+                style={{ color: "red" }}
+              >
+                {error}
               </div>
             )}
-            <GetCustomers
-              open={showCustomerPopup}
-              onClose={() => setShowCustomerPopup(false)}
-              onSelectCustomer={handleSelectCustomer}
-              API_BASE_URL={API_BASE_URL}
-              t={t}
-              apiEndpoint="/customers/pagination"
-              apiParams={{
-                page: 1,
-                pageSize: 10,
-                sortBy: 'id',
-                sortOrder: 'asc'
-              }}
-            />
-            <GetSalesOrder
-              open={showSalesOrderPopup}
-              onClose={() => setshowSalesOrderPopup(false)}
-              formData={formData}
-              API_BASE_URL={API_BASE_URL}
-              setFormData={setFormData}
-              t={t}
-            />
           </div>
-          <>
-            <div className="form-footer">
-              {Object.keys(updateTransaction).length !== 0 ? (
-                <button className="status-btn" disabled>
-                  {t("Status")}: {t(updateTransaction?.status)}
+          {popupImage && (
+            <div
+              className="image-popup-overlay"
+              onClick={() => setPopupImage(null)}
+            >
+              <div
+                className="image-popup-content"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <img
+                  src={popupImage}
+                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                />
+                <button
+                  className="image-popup-close"
+                  onClick={() => setPopupImage(null)}
+                >
+                  ×
                 </button>
-              ) : (
-                <div></div>
+              </div>
+            </div>
+          )}
+          <GetCustomers
+            open={showCustomerPopup}
+            onClose={() => setShowCustomerPopup(false)}
+            onSelectCustomer={handleSelectCustomer}
+            API_BASE_URL={API_BASE_URL}
+            t={t}
+            apiEndpoint="/customers/pagination"
+            apiParams={{
+              page: 1,
+              pageSize: 10,
+              sortBy: "id",
+              sortOrder: "asc",
+            }}
+          />
+          <GetSalesOrder
+            open={showSalesOrderPopup}
+            onClose={() => setshowSalesOrderPopup(false)}
+            formData={formData}
+            API_BASE_URL={API_BASE_URL}
+            setFormData={setFormData}
+            t={t}
+          />
+        </div>
+        <>
+          <div className="form-footer">
+            {Object.keys(updateTransaction).length !== 0 ? (
+              <button className="status-btn" disabled>
+                {t("Status")}: {t(updateTransaction?.status)}
+              </button>
+            ) : (
+              <div></div>
+            )}
+
+            <div className="form-actions">
+              {!id && (
+                <>
+                  <button className="submit-btn" onClick={handleSubmit}>
+                    {t("Submit")}
+                  </button>
+                  <button className="cancel-btn" onClick={() => handleCancel()}>
+                    {t("Cancel")}
+                  </button>{" "}
+                </>
               )}
 
-              <div className="form-actions">
-                {isV("btnSubmit") && !id && (
-                  <>
-                    <button className="submit-btn" onClick={handleSubmit}>
-                      {t("Submit")}
-                    </button>
-                    <button
-                      className="cancel-btn"
-                      onClick={() => handleCancel()}
-                    >
-                      {t("Cancel")}
-                    </button>{" "}
-                  </>
-                )}
-
-                {isE("btnVerify") && updateTransaction?.status?.toLowerCase() === "pending" && (
+              {isE("btnVerify") &&
+                updateTransaction?.status?.toLowerCase() === "pending" && (
                   <button
                     className="submit-btn"
                     onClick={() => handleUpdate("verified", id)}
@@ -739,7 +841,8 @@ const AddBankTransaction = () => {
                     {t("Verify")}
                   </button>
                 )}
-                {isE("btnReject") && updateTransaction?.status?.toLowerCase() === "pending" && (
+              {isE("btnReject") &&
+                updateTransaction?.status?.toLowerCase() === "pending" && (
                   <button
                     className="cancel-btn"
                     onClick={() => handleUpdate("rejected", id)}
@@ -747,14 +850,11 @@ const AddBankTransaction = () => {
                     {t("Reject")}
                   </button>
                 )}
-              </div>
             </div>
-          </>
-        </div>
-      )}
-
-      <style>
-        {`.full-width {
+          </div>
+        </>
+        <style>
+          {`.full-width {
   width: 100%;
 }
 
@@ -885,7 +985,20 @@ const AddBankTransaction = () => {
 
 
 `}
-      </style>
+        </style>
+      </div>
+    );
+  };
+  return orderId ? (
+    <div>
+      <h1 style={{ textAlign: "center", padding: "10px" }}>Bank Transaction</h1>
+      {renderTemplate()}
+    </div>
+  ) : (
+    <Sidebar title={t("Bank Transactions")}>
+      {/* <div className="bank-transaction-form"> */}
+      {renderTemplate()}
+      {/* </div> */}
     </Sidebar>
   );
 };

@@ -75,6 +75,7 @@ function Catalog() {
   const [selectedCustomerId, setSelectedCustomerId] = useState(""); // Initialize empty
   const [branches, setBranches] = useState([]);
   const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
+  const [selectedBranchCity, setSelectedBranchCity] = useState("");
   const [quantities, setQuantities] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
@@ -555,6 +556,7 @@ function Catalog() {
           selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
+        selectedBranchCity
       },
     });
   };
@@ -614,6 +616,7 @@ function Catalog() {
               branch.branchNameEn,
           erpBranchId: branch.erpBranchId || branch.erp_branch_id,
           branchRegion: branch.region || branch.region,
+          branchCity: branch.city || branch.branchCity || branch.branch_city,
           raw: branch,
         }));
         setBranches(branchOptions);
@@ -670,15 +673,19 @@ function Catalog() {
       if (cartBranchIds.length === 0) {
         // No items in cart, allow any branch selection
         setSelectedLocation(newBranchId);
-        if (selectedBranch)
+        if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
         return;
       }
       if (cartBranchIds.length === 1 && cartBranchIds[0] === newBranchId) {
         // Only items for this branch, allow selection
         setSelectedLocation(newBranchId);
-        if (selectedBranch)
+        if (selectedBranch) {
           setSelectedBranchRegion(selectedBranch.branchRegion || "");
+          setSelectedBranchCity(selectedBranch.branchCity || "");
+        }
         return;
       }
       // If there are items for a different branch, alert the user
@@ -722,8 +729,10 @@ function Catalog() {
             );
 
             setSelectedLocation(newBranchId);
-            if (selectedBranch)
+            if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
+              setSelectedBranchCity(selectedBranch.branchCity || "");
+            }
 
             await Swal.fire({
               icon: "success",
@@ -1208,7 +1217,24 @@ function Catalog() {
         return;
       }
       try {
-        const response = await fetch(`${API_BASE_URL}/product-categories?entity=${encodeURIComponent(entity)}`, {
+        // Build query parameters
+        const params = new URLSearchParams({
+          entity: entity
+        });
+
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if(activeCategory === Constants.CATEGORY.VMCO_MACHINES){
+          const isMachine = true;
+          params.append('isMachine', isMachine);
+          }
+          else {
+            const isMachine = false;
+            params.append('isMachine', isMachine);
+          }
+        }
+
+        const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

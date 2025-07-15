@@ -24,6 +24,7 @@ import BankTransactions from "./screens/BankTransactions";
 import AddBankTransaction from "./components/AddBankTransaction";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import OpationsPage from "./components/Opationspage";
 
 function App() {
   return (
@@ -62,12 +63,13 @@ function App() {
           element={<AddBankTransaction />}
         />
         <Route
-          path="/bankTransactions/order/:orderId"
+          path="/bankTransactions/order/:amount/:orderId"
           element={<AddBankTransaction />}
         />
         <Route path="/customerDetails" element={<ProtectedRoute><CustomerDetails /></ProtectedRoute>} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
+        <Route path="/payment-opations/order/:orderId" element={<OpationsPage/>} />
       </Routes>
     </Router>
   );
