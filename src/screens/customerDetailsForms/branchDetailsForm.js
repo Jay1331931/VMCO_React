@@ -23,7 +23,7 @@ const BranchDetailsForm = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [branchDetails, setBranchDetails] = useState({...branch});
+  const [branchDetails, setBranchDetails] = useState({ ...branch });
   const [originalBranchDetails, setOriginalBranchDetails] = useState({});
   const [branchContacts, setBranchContacts] = useState([]);
   const [originalBranchContacts, setOriginalBranchContacts] = useState([]);
@@ -43,6 +43,15 @@ const BranchDetailsForm = ({
     "saturday",
     "sunday",
   ];
+  // Add these state variables after the existing useState declarations
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingChanges, setIsSavingChanges] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [isUnblocking, setIsUnblocking] = useState(false);
+
   var updatedBranchData = useRef({});
   var updatedBranchContactsData = useRef({});
   const fetchBranchDetails = async () => {
@@ -194,12 +203,12 @@ const BranchDetailsForm = ({
       if (day === "friday") {
         acc[day] = {
           operating: { from: "08:00", to: "23:00" }, // 8am to 11pm
-          delivery: { from: "13:00", to: "16:00" },  // 1pm to 4pm
+          delivery: { from: "13:00", to: "16:00" }, // 1pm to 4pm
         };
       } else {
-      acc[day] = {
-        operating: { from: "09:00", to: "18:00" },
-        delivery: { from: "09:00", to: "18:00" },
+        acc[day] = {
+          operating: { from: "09:00", to: "18:00" },
+          delivery: { from: "09:00", to: "18:00" },
         };
       }
       return acc;
@@ -285,7 +294,8 @@ const BranchDetailsForm = ({
     updatedBranchData.current.region = customer?.region || "";
     updatedBranchData.current.locationType = customer?.locationType || "";
     updatedBranchData.current.geolocation = customer?.geolocation || "";
-    updatedBranchContactsData.current.primaryContactName = customer?.primaryContactName || "";
+    updatedBranchContactsData.current.primaryContactName =
+      customer?.primaryContactName || "";
     updatedBranchContactsData.current.primaryContactDesignation =
       customer?.primaryContactDesignation || "";
     updatedBranchContactsData.current.primaryContactEmail =
@@ -324,7 +334,7 @@ const BranchDetailsForm = ({
     const fetchData = async () => {
       // if (branchId > 0) {
       // Existing code for fetching data for existing branches
-      const branchData = await fetchBranchDetails() || branch;
+      const branchData = (await fetchBranchDetails()) || branch;
       const hoursData = getBranchTimeSlotsInStringHours(
         branchData?.hours || {}
       );
@@ -493,25 +503,28 @@ const BranchDetailsForm = ({
   };
 
   const handleSubmit = async (id) => {
-    handleSave(id, "submit");
+    setIsSubmitting(true);
 
-    const errors = await validateData(
-      { ...branchDetails, ...branchContacts },
-      true,
-      mandatoryFields
-    );
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
+    try {
+      handleSave(id, "submit");
+
+      const errors = await validateData(
+        { ...branchDetails, ...branchContacts },
+        true,
+        mandatoryFields
+      );
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        setIsSubmitting(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
-        // alert("Please fix the errors before saving.");
         return;
       }
-    try {
+
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
@@ -531,39 +544,42 @@ const BranchDetailsForm = ({
       const result = await response.json();
       function showLoadingScreen(message) {
         document.body.innerHTML = `
-    <div class="loading-more-container" style="
-      padding: 20px; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 16px;
-    ">
-      <div class="loading-spinner" style="
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      "></div>
-      <div class="loading-more-text">${message}</div>
-    </div>
-    
-    <style>
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-  `;
+          <div class="loading-more-container" style="
+            padding: 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            gap: 16px;
+          ">
+            <div class="loading-spinner" style="
+              width: 40px;
+              height: 40px;
+              border: 4px solid #f3f3f3;
+              border-top: 4px solid #3498db;
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            "></div>
+            <div class="loading-more-text">${message}</div>
+          </div>
+          
+          <style>
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          </style>
+        `;
       }
 
-      // Usage:
       showLoadingScreen("Updating...");
-      setTimeout(() => window.location.reload(true), 3000);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        window.location.reload(true);
+      }, 3000);
     } catch (error) {
+      setIsSubmitting(false);
       console.error("Error saving branch:", error);
     }
 
@@ -601,169 +617,178 @@ const BranchDetailsForm = ({
   };
 
   const handleSave = async (id, action) => {
-    const isNewBranch = id < 0; // Negative IDs are temporary
-    const errors = await validateData(
-      { ...updatedBranchData.current, ...updatedBranchContactsData.current },
-      false,
-      []
-    );
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
+    setIsSaving(true);
+
+    try {
+      const isNewBranch = id < 0;
+      const errors = await validateData(
+        { ...updatedBranchData.current, ...updatedBranchContactsData.current },
+        false,
+        []
+      );
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        setIsSaving(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
-        // alert("Please fix the errors before saving.");
         return;
       }
-    if (isNewBranch) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/customer-branches`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...updatedBranchData.current,
-            customer_id: customer?.id, // Set initial status to 'new'
-            isDeliveryChargesApplicable: customer?.isDeliveryChargesApplicable,
-            erpCustId: customer?.erpCustId,
-            hours: hoursDetails,
-          }),
-          credentials: "include",
-        });
 
-        const result = await response.json();
-
-        if (response.ok) {
-          // branch.id = result?.data?.id; // Update branch ID with the newly created branch ID
-          // branch = result?.data;
-          // remove branch with id < 0 from branches
-          setBranches((prevBranches) =>
-            prevBranches.filter((branch) => branch.id !== id)
-          );
-          setBranches((prevBranches) => [
-            ...prevBranches,
-            { ...result?.data, id: result?.data?.id },
-          ]);
-          setExpandedRows([]);
-          console.log(
-            "$$$$ updatedBranchContactsData:",
-            updatedBranchContactsData.current
-          );
-          try {
-            const res = await fetch(
-              `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  ...updatedBranchContactsData.current,
-                  customer_id: customer.id,
-                  branch_id: result.data.id,
-                }),
-                credentials: "include",
-              }
-            );
-            if (res.ok) {
-              const contactResult = await res.json();
-              if(action !== "submit") {
-              Swal.fire({
-                          icon: "success",
-                          title: t("Success"),
-                          text: t(
-                            "Branch saved successfully."
-                          ),
-                          confirmButtonText: t("OK"),
-                        });
-                      }
-              // alert(
-              //   "Branch saved successfully"
-              // );
-            }
-          } catch (error) {
-            console.error("Error saving contacts for new branch:", error);
-          }
-        }
-      } catch (error) {
-        console.error("Error creating new branch:", error);
-      }
-    } else {
-      // UPDATE existing branch
-      // console.log("branchPayload:", branchPayload);
-      try {
-        // if (Object.keys(branchPayload).length > 0) {
-        const response = await fetch(
-          `${API_BASE_URL}/customer-branches/id/${id}`,
-          {
+      if (isNewBranch) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/customer-branches`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              branch: {
-                ...updatedBranchData.current,
-                customerId: customer.id,
-                branchStatus: branchDetails?.branchStatus,
-              },
-              contacts: {},
+              ...updatedBranchData.current,
+              customer_id: customer?.id, // Set initial status to 'new'
+              isDeliveryChargesApplicable:
+                customer?.isDeliveryChargesApplicable,
+              erpCustId: customer?.erpCustId,
+              hours: hoursDetails,
             }),
             credentials: "include",
-          }
-        );
-      } catch (error) {
-        console.error("Error updating branch:", error);
-      }
-      // console.log("Contact payload:", contactPayload);
-      // if (Object.keys(contactPayload).length > 0) {
-      console.log(
-        "$$$$ updatedBranchContactsData:",
-        updatedBranchContactsData.current
-      );
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...updatedBranchContactsData.current }),
-            credentials: "include",
-          }
-        );
-      } catch (error) {
-        console.error("Error saving contacts for updated branch:", error);
-      }
-      if (action !== "submit") {
-      Swal.fire({
-                  icon: "success",
-                  title: t("Success"),
-                  text: t(
-                    "Branch saved successfully."
-                  ),
-                  confirmButtonText: t("OK"),
-                });
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            // branch.id = result?.data?.id; // Update branch ID with the newly created branch ID
+            // branch = result?.data;
+            // remove branch with id < 0 from branches
+            setBranches((prevBranches) =>
+              prevBranches.filter((branch) => branch.id !== id)
+            );
+            setBranches((prevBranches) => [
+              ...prevBranches,
+              { ...result?.data, id: result?.data?.id },
+            ]);
+            setExpandedRows([]);
+            console.log(
+              "$$$$ updatedBranchContactsData:",
+              updatedBranchContactsData.current
+            );
+            try {
+              const res = await fetch(
+                `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    ...updatedBranchContactsData.current,
+                    customer_id: customer.id,
+                    branch_id: result.data.id,
+                  }),
+                  credentials: "include",
+                }
+              );
+              if (res.ok) {
+                const contactResult = await res.json();
+                if (action !== "submit") {
+                  Swal.fire({
+                    icon: "success",
+                    title: t("Success"),
+                    text: t("Branch saved successfully."),
+                    confirmButtonText: t("OK"),
+                  });
+                }
+                // alert(
+                //   "Branch saved successfully"
+                // );
               }
-      //  alert("Branch saved successfully.");
+            } catch (error) {
+              console.error("Error saving contacts for new branch:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Error creating new branch:", error);
+        }
+      } else {
+        // UPDATE existing branch
+        // console.log("branchPayload:", branchPayload);
+        try {
+          // if (Object.keys(branchPayload).length > 0) {
+          const response = await fetch(
+            `${API_BASE_URL}/customer-branches/id/${id}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                branch: {
+                  ...updatedBranchData.current,
+                  customerId: customer.id,
+                  branchStatus: branchDetails?.branchStatus,
+                },
+                contacts: {},
+              }),
+              credentials: "include",
+            }
+          );
+        } catch (error) {
+          console.error("Error updating branch:", error);
+        }
+        // console.log("Contact payload:", contactPayload);
+        // if (Object.keys(contactPayload).length > 0) {
+        console.log(
+          "$$$$ updatedBranchContactsData:",
+          updatedBranchContactsData.current
+        );
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...updatedBranchContactsData.current }),
+              credentials: "include",
+            }
+          );
+        } catch (error) {
+          console.error("Error saving contacts for updated branch:", error);
+        }
+        if (action !== "submit") {
+          Swal.fire({
+            icon: "success",
+            title: t("Success"),
+            text: t("Branch saved successfully."),
+            confirmButtonText: t("OK"),
+          });
+        }
+      }
+    } catch (error) {
+      setIsSaving(false);
+      console.error("Error creating/updating branch:", error);
+    } finally {
+      if (action !== "submit") {
+        setIsSaving(false);
+      }
     }
-   
   };
   const handleSaveChanges = async (id) => {
-    const errors = await validateData(
-      { ...branchDetails, ...branchContacts },
-      true,
-      mandatoryFields
-    );
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
+    setIsSavingChanges(true);
+
+    try {
+      const errors = await validateData(
+        { ...branchDetails, ...branchContacts },
+        true,
+        mandatoryFields
+      );
+      setFormErrors(errors);
+      if (Object.keys(errors).length > 0) {
+        setIsSavingChanges(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
-        // alert("Please fix the errors before saving.");
         return;
       }
-    try {
-      // if (Object.keys(branchPayload).length > 0) {
+
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
@@ -782,31 +807,27 @@ const BranchDetailsForm = ({
           credentials: "include",
         }
       );
+
       if (response.ok) {
         const result = await response.json();
-        
         Swal.fire({
-                    icon: "success",
-                    title: t("Success"),
-                    text: t(
-                      "Branch updated successfully."
-                    ),
-                    confirmButtonText: t("OK"),
-                  });
-        // alert("Branch updated successfully.");
-        // setExpandedRows((prev) => ({
-        //   ...prev,
-        //   [id]: false, // Collapse the row after saving
-        // }));
-        setExpandedRows([])
+          icon: "success",
+          title: t("Success"),
+          text: t("Branch updated successfully."),
+          confirmButtonText: t("OK"),
+        });
+        setExpandedRows([]);
       }
-
     } catch (error) {
       console.error("Error updating branch:", error);
+    } finally {
+      setIsSavingChanges(false);
     }
   };
 
   const handleBlock = async (id) => {
+    setIsBlocking(true);
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
@@ -823,26 +844,28 @@ const BranchDetailsForm = ({
           credentials: "include",
         }
       );
+
       if (response.ok) {
         const result = await response.json();
         Swal.fire({
-                    icon: "success",
-                    title: t("Success"),
-                    text: t(
-                      "Branch blocked successfully."
-                    ),
-                    confirmButtonText: t("OK"),
-                  });
-        // alert("Branch blocked successfully.");
+          icon: "success",
+          title: t("Success"),
+          text: t("Branch blocked successfully."),
+          confirmButtonText: t("OK"),
+        });
         setExpandedRows([]);
         window.location.reload();
       }
     } catch (error) {
       console.error("Error blocking branch:", error);
+    } finally {
+      setIsBlocking(false);
     }
   };
 
   const handleUnblock = async (id) => {
+    setIsUnblocking(true);
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
@@ -859,22 +882,22 @@ const BranchDetailsForm = ({
           credentials: "include",
         }
       );
+
       if (response.ok) {
         const result = await response.json();
         Swal.fire({
-                    icon: "success",
-                    title: t("Success"),
-                    text: t(
-                      "Branch unblocked successfully."
-                    ),
-                    confirmButtonText: t("OK"),
-                  });
-        // alert("Branch unblocked successfully.");
+          icon: "success",
+          title: t("Success"),
+          text: t("Branch unblocked successfully."),
+          confirmButtonText: t("OK"),
+        });
         setExpandedRows([]);
         window.location.reload();
       }
     } catch (error) {
       console.error("Error unblocking branch:", error);
+    } finally {
+      setIsUnblocking(false);
     }
   };
 
@@ -961,26 +984,42 @@ const BranchDetailsForm = ({
 
   // Approval dialog submit handler
   const handleApprovalDialogSubmit = async (comment) => {
-    const mergedData = {
-      updates: {
-        branch: { ...workflowData.branch, ...updatedBranchData.current },
-        contacts: {
-          ...workflowData.contacts,
-          ...updatedBranchContactsData.current,
+    if (approvalAction === "approve") {
+      setIsApproving(true);
+    } else {
+      setIsRejecting(true);
+    }
+
+    try {
+      const mergedData = {
+        updates: {
+          branch: { ...workflowData.branch, ...updatedBranchData.current },
+          contacts: {
+            ...workflowData.contacts,
+            ...updatedBranchContactsData.current,
+          },
         },
-      },
-      id: branchId,
-    };
-var dataToBeValidated = {};
-      if(branch?.branchStatus === "pending") {
-        dataToBeValidated = {...branch, ...branchContacts, ...hoursDetails, ...updatedBranchData.current, ...updatedBranchContactsData.current, ...mergedData?.updates?.branch, ...mergedData?.updates?.contacts};
-      }
-      else {
+        id: branchId,
+      };
+
+      var dataToBeValidated = {};
+      if (branch?.branchStatus === "pending") {
+        dataToBeValidated = {
+          ...branch,
+          ...branchContacts,
+          ...hoursDetails,
+          ...updatedBranchData.current,
+          ...updatedBranchContactsData.current,
+          ...mergedData?.updates?.branch,
+          ...mergedData?.updates?.contacts,
+        };
+      } else {
         dataToBeValidated = {
           ...mergedData?.updates?.branch,
           ...mergedData?.updates?.contacts,
         };
       }
+
       console.log("Data to be validated:", dataToBeValidated);
       const errors = await validateData(
         dataToBeValidated,
@@ -989,16 +1028,17 @@ var dataToBeValidated = {};
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
+        setIsApproving(false);
+        setIsRejecting(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
-        // alert("Please fix the errors before saving.");
         return;
       }
-    try {
+
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
         {
@@ -1013,12 +1053,14 @@ var dataToBeValidated = {};
           credentials: "include",
         }
       );
+
       setIsApprovalDialogOpen(false);
-      // Optionally reload or navigate
-      // window.location.reload();
       navigate("/customers");
     } catch (error) {
       console.error("Error approving/rejecting branch:", error.message);
+    } finally {
+      setIsApproving(false);
+      setIsRejecting(false);
       setIsApprovalDialogOpen(false);
     }
   };
@@ -1080,16 +1122,35 @@ var dataToBeValidated = {};
                 <button
                   className="save"
                   onClick={() => handleSave(branch?.id, "save")}
-                  disabled={customer?.isBlocked}
+                  disabled={
+                    isSaving ||
+                    isSubmitting ||
+                    isSavingChanges ||
+                    isApproving ||
+                    isRejecting ||
+                    isBlocking ||
+                    isUnblocking ||
+                    customer?.isBlocked
+                  }
                 >
-                  {t("Save")}
+                  {isSaving ? t("Saving...") : t("Save")}
                 </button>
                 <button
                   className="save"
                   onClick={() => handleSubmit(branch?.id)}
-                  disabled={branch?.id < 0 || customer?.isBlocked}
+                  disabled={
+                    isSaving ||
+                    isSubmitting ||
+                    isSavingChanges ||
+                    isApproving ||
+                    isRejecting ||
+                    isBlocking ||
+                    isUnblocking ||
+                    branch?.id < 0 ||
+                    customer?.isBlocked
+                  }
                 >
-                  {t("Submit")}
+                  {isSubmitting ? t("Submitting...") : t("Submit")}
                 </button>
               </>
             ) : (
@@ -1101,29 +1162,56 @@ var dataToBeValidated = {};
                     className="save changes"
                     onClick={() => handleSaveChanges(branch?.id)}
                     disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking ||
                       isApprovalMode ||
                       branch?.branchStatus === "blocked" ||
                       customer?.isBlocked
                     }
                   >
-                    {t("Save Changes")}
+                    {isSavingChanges ? t("Saving...") : t("Save Changes")}
                   </button>
 
                   {branch?.branchStatus !== "blocked" ? (
                     <button
                       className="block"
-                      disabled={isApprovalMode || customer?.isBlocked}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking ||
+                        isApprovalMode ||
+                        customer?.isBlocked
+                      }
                       onClick={() => handleBlock(branch?.id)}
                     >
-                      {t("Block")}
+                      {isBlocking ? t("Blocking...") : t("Block")}
                     </button>
                   ) : (
                     <button
                       className="block"
-                      disabled={isApprovalMode || customer?.isBlocked}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking ||
+                        isApprovalMode ||
+                        customer?.isBlocked
+                      }
                       onClick={() => handleUnblock(branch?.id)}
                     >
-                      {t("Unblock")}
+                      {isUnblocking ? t("Unblocking...") : t("Unblock")}
                     </button>
                   )}
                 </>
@@ -1134,16 +1222,34 @@ var dataToBeValidated = {};
               <button
                 className="approve"
                 onClick={() => handleApprovalClick("approve")}
+                disabled={
+                  isSaving ||
+                  isSubmitting ||
+                  isSavingChanges ||
+                  isApproving ||
+                  isRejecting ||
+                  isBlocking ||
+                  isUnblocking
+                }
               >
-                {t("Approve")}
+                {isApproving ? t("Approving...") : t("Approve")}
               </button>
             )}
             {mode === "edit" && isApprovalMode && (
               <button
                 className="reject"
                 onClick={() => handleApprovalClick("reject")}
+                disabled={
+                  isSaving ||
+                  isSubmitting ||
+                  isSavingChanges ||
+                  isApproving ||
+                  isRejecting ||
+                  isBlocking ||
+                  isUnblocking
+                }
               >
-                {t("Reject")}
+                {isRejecting ? t("Rejecting...") : t("Reject")}
               </button>
             )}
           </div>
