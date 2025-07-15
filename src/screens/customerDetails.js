@@ -646,8 +646,8 @@ function CustomerDetails() {
   const handleCustomerCreditChange = (e) => {
     const { name, value } = e.target;
     const allowedPaymentMethods = ["DAR", "VMCO", "NAQI", "GMTC", "SHC"];
-    let paymentMethods = customerPaymentMethodsData.methodDetails.credit;
-    if (allowedPaymentMethods.includes(name)) {
+    let paymentMethods = customerPaymentMethodsData?.methodDetails?.credit;
+    if (allowedPaymentMethods?.includes(name)) {
       paymentMethods[name].isAllowed = e.target.checked;
     }
 
