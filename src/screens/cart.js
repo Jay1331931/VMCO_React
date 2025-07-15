@@ -546,7 +546,11 @@ function Cart() {
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(() => {
-                    window.location.reload();
+                      setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                   items: category.items.filter(
+      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
                 });
             }
         } catch (err) {
@@ -683,7 +687,11 @@ function Cart() {
                         text: orderText,
                         confirmButtonText: t('OK')
                     }).then(() => {
-                        window.location.reload();
+                        setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                   items: category.items.filter(
+      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
                     });
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -1296,7 +1304,11 @@ function Cart() {
                     text: t(`Your order has been placed successfully! Order #${orderId}. Payment Method: ${selectedPaymentMethod}`),
                     confirmButtonText: t('OK')
                 }).then(() => {
-                    window.location.reload();
+                     setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                   items: category.items.filter(
+      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
                 });
                 
                 // Delete cart items for non-VMCO and non-SHC categories
