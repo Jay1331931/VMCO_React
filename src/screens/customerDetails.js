@@ -1593,11 +1593,11 @@ function CustomerDetails() {
           wfCustomerData.customer.nonTradingDocuments
         );
       }
-      if (customerData?.nonTradingDocuments) {
-        wfCustomerData.customer.nonTradingDocuments = JSON.stringify(
-          customerData.nonTradingDocuments
-        );
-      }
+      // if (customerData?.nonTradingDocuments) {
+      //   wfCustomerData.customer.nonTradingDocuments = JSON.stringify(
+      //     customerData.nonTradingDocuments
+      //   );
+      // }
       const mergedData = {
         updates: {
           ...wfCustomerData,
