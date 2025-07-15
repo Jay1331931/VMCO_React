@@ -626,6 +626,8 @@ const BranchDetailsForm = ({
             ...updatedBranchData.current,
             customer_id: customer?.id, // Set initial status to 'new'
             isDeliveryChargesApplicable: customer?.isDeliveryChargesApplicable,
+            erpCustId: customer?.erpCustId,
+            hours: hoursDetails,
           }),
           credentials: "include",
         });
