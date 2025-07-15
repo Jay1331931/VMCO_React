@@ -12,6 +12,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const BranchDetailsForm = ({
   branchId, // required
   branch,
+  setBranches,
   customer, // required
   branchChanges,
   handleBranchFieldChange,
@@ -635,8 +636,16 @@ const BranchDetailsForm = ({
         const result = await response.json();
 
         if (response.ok) {
-          branch.id = result?.data?.id; // Update branch ID with the newly created branch ID
-          branch = result?.data;
+          // branch.id = result?.data?.id; // Update branch ID with the newly created branch ID
+          // branch = result?.data;
+          // remove branch with id < 0 from branches
+          setBranches((prevBranches) =>
+            prevBranches.filter((branch) => branch.id !== id)
+          );
+          setBranches((prevBranches) => [
+            ...prevBranches,
+            { ...result?.data, id: result?.data?.id },
+          ]);
           setExpandedRows([]);
           console.log(
             "$$$$ updatedBranchContactsData:",

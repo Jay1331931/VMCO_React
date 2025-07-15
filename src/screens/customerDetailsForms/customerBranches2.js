@@ -1185,6 +1185,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                           <BranchDetailsForm
                             branchId={branch?.id}
                             branch={branch}
+                            setBranches={setBranches}
                             customer={customer}
                             branchChanges={branchChanges}
                             handleBranchFieldChange={handleBranchFieldChange}
