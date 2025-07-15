@@ -8,6 +8,8 @@ import "../../styles/forms.css";
 import "../../styles/components.css";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import LoadingSpinner from "../../components/LoadingSpinner"; // Import the LoadingSpinner component
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const BranchDetailsForm = ({
   branchId, // required
@@ -542,38 +544,8 @@ const BranchDetailsForm = ({
       );
 
       const result = await response.json();
-      function showLoadingScreen(message) {
-        document.body.innerHTML = `
-          <div class="loading-more-container" style="
-            padding: 20px; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            gap: 16px;
-          ">
-            <div class="loading-spinner" style="
-              width: 40px;
-              height: 40px;
-              border: 4px solid #f3f3f3;
-              border-top: 4px solid #3498db;
-              border-radius: 50%;
-              animation: spin 1s linear infinite;
-            "></div>
-            <div class="loading-more-text">${message}</div>
-          </div>
-          
-          <style>
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          </style>
-        `;
-      }
 
-      showLoadingScreen("Updating...");
+      // Keep loading for 3 seconds then reload
       setTimeout(() => {
         setIsSubmitting(false);
         window.location.reload(true);
@@ -1273,6 +1245,13 @@ const BranchDetailsForm = ({
             : t("Are you sure you want to reject this branch?")
         }
       />
+
+      {/* Add this to show the overlay spinner */}
+      {isSubmitting && (
+        <div className="loading-container">
+          <LoadingSpinner size="medium" />
+        </div>
+      )}
     </div>
   );
 };
