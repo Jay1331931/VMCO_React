@@ -1,5 +1,4 @@
 import maplibregl from "maplibre-gl";
-
 import React, {
   useState,
   useCallback,
@@ -27,6 +26,7 @@ import ContactSection from "./contactSection";
 import OperatingHours from "./operatingHours";
 import BranchDetailsForm from "./branchDetailsForm";
 import { debounce, set } from "lodash";
+import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t } = useTranslation();
@@ -71,6 +71,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const handleAddBranch = () => {
     if (branches.length === 0) {
       setIsFirstBranch(true); // Set flag for first branch
+    }
+    if(!customer?.erpCustId) {
+      Swal.fire({
+        title: t("Customer not synced with ERP"),
+        text: t("Please sync the customer with ERP before adding branches."),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+      });
+      return; // Stop adding branch if customer is not synced
     }
     const tempId = nextTempId;
     setNextTempId((prev) => prev - 1); // Decrement for next temporary ID
