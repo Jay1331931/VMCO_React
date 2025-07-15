@@ -1114,7 +1114,7 @@ function BusinessDetails({
           {isV("assignedTo") && (
             <div className="form-group">
               <label htmlFor="assignedTo">
-                {t("Assigned To")}
+                {t("Primary Sales Person")}
                 {originalCustomerData &&
                   customerData &&
                   originalCustomerData?.assignedTo !=

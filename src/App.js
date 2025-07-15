@@ -19,9 +19,11 @@ import MaintenanceDetails from "./screens/maintenanceDetails";
 import Logout from "./screens/logout";
 import RbacEditor from "./screens/rbacEditor";
 import CustomerDetails from "./screens/customerDetails";
-import Payment from './screens/payment';
-import BankTransactions from './screens/BankTransactions';
-import AddBankTransaction from './components/AddBankTransaction';
+import Payment from "./screens/payment";
+import BankTransactions from "./screens/BankTransactions";
+import AddBankTransaction from "./components/AddBankTransaction";
+import NotFound from "./components/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -52,12 +54,20 @@ function App() {
         <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
         <Route path="/rbacEditor" element={<RbacEditor />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/payment" element={<Payment />} />        
-        <Route path="/bankTransactions" element={<BankTransactions/>} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
-        <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
-        <Route path="/bankTransactions/order/:orderId" element={<AddBankTransaction />} />
-        <Route path="/customerDetails" element={<CustomerDetails />} />
+        <Route
+          path="/bankTransactions/edit/:id"
+          element={<AddBankTransaction />}
+        />
+        <Route
+          path="/bankTransactions/order/:orderId"
+          element={<AddBankTransaction />}
+        />
+        <Route path="/customerDetails" element={<ProtectedRoute><CustomerDetails /></ProtectedRoute>} />
+        {/* Catch-all route for 404 Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

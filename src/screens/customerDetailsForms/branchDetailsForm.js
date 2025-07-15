@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, use } from "react";
+import React, { useEffect, useState, useRef, use, act } from "react";
 import { useTranslation } from "react-i18next";
 import BranchDetailsSection from "./branchDetailsSection";
 import ContactSection from "./contactSection";
@@ -189,10 +189,18 @@ const BranchDetailsForm = ({
 
   const getDefaultTimeSlotsInStringHours = () => {
     return weekdays.reduce((acc, day) => {
+      // Check if the current day is Friday, set special hours
+      if (day === "friday") {
+        acc[day] = {
+          operating: { from: "08:00", to: "23:00" }, // 8am to 11pm
+          delivery: { from: "13:00", to: "16:00" },  // 1pm to 4pm
+        };
+      } else {
       acc[day] = {
         operating: { from: "09:00", to: "18:00" },
         delivery: { from: "09:00", to: "18:00" },
-      };
+        };
+      }
       return acc;
     }, {});
   };
@@ -484,7 +492,7 @@ const BranchDetailsForm = ({
   };
 
   const handleSubmit = async (id) => {
-    handleSave(id);
+    handleSave(id, "submit");
 
     const errors = await validateData(
       { ...branchDetails, ...branchContacts },
@@ -493,9 +501,15 @@ const BranchDetailsForm = ({
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      // Handle errors (e.g., show error messages)
-      return;
-    }
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
+        return;
+      }
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/id/${id}`,
@@ -585,7 +599,7 @@ const BranchDetailsForm = ({
     }
   };
 
-  const handleSave = async (id) => {
+  const handleSave = async (id, action) => {
     const isNewBranch = id < 0; // Negative IDs are temporary
     const errors = await validateData(
       { ...updatedBranchData.current, ...updatedBranchContactsData.current },
@@ -594,9 +608,15 @@ const BranchDetailsForm = ({
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      // Handle errors (e.g., show error messages)
-      return;
-    }
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
+        return;
+      }
     if (isNewBranch) {
       try {
         const response = await fetch(`${API_BASE_URL}/customer-branches`, {
@@ -613,6 +633,9 @@ const BranchDetailsForm = ({
         const result = await response.json();
 
         if (response.ok) {
+          branch.id = result?.data?.id; // Update branch ID with the newly created branch ID
+          branch = result?.data;
+          setExpandedRows([]);
           console.log(
             "$$$$ updatedBranchContactsData:",
             updatedBranchContactsData.current
@@ -633,6 +656,7 @@ const BranchDetailsForm = ({
             );
             if (res.ok) {
               const contactResult = await res.json();
+              if(action !== "submit") {
               Swal.fire({
                           icon: "success",
                           title: t("Success"),
@@ -641,6 +665,7 @@ const BranchDetailsForm = ({
                           ),
                           confirmButtonText: t("OK"),
                         });
+                      }
               // alert(
               //   "Branch saved successfully"
               // );
@@ -695,6 +720,7 @@ const BranchDetailsForm = ({
       } catch (error) {
         console.error("Error saving contacts for updated branch:", error);
       }
+      if (action !== "submit") {
       Swal.fire({
                   icon: "success",
                   title: t("Success"),
@@ -703,6 +729,7 @@ const BranchDetailsForm = ({
                   ),
                   confirmButtonText: t("OK"),
                 });
+              }
       //  alert("Branch saved successfully.");
     }
    
@@ -715,9 +742,15 @@ const BranchDetailsForm = ({
     );
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      // Handle errors (e.g., show error messages)
-      return;
-    }
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before saving.");
+        return;
+      }
     try {
       // if (Object.keys(branchPayload).length > 0) {
       const response = await fetch(
@@ -740,6 +773,7 @@ const BranchDetailsForm = ({
       );
       if (response.ok) {
         const result = await response.json();
+        
         Swal.fire({
                     icon: "success",
                     title: t("Success"),
@@ -1007,6 +1041,7 @@ var dataToBeValidated = {};
         branchChanges={branchChanges}
         handleBranchFieldChange={handleBranchContactsDataChange}
         inApproval={isApprovalMode}
+        mode={mode}
         workflowInstanceId={customer?.workflowInstanceId}
         formErrors={formErrors}
       />
@@ -1018,6 +1053,7 @@ var dataToBeValidated = {};
         branchId={branch?.id}
         handleBranchFieldChange={handleBranchDataChange}
         inApproval={isApprovalMode}
+        mode={mode}
         handleHoursChange={handleHoursChange}
         applyAllHours={applyAllHours}
         workflowInstanceId={customer?.workflowInstanceId}
@@ -1032,7 +1068,7 @@ var dataToBeValidated = {};
               <>
                 <button
                   className="save"
-                  onClick={() => handleSave(branch?.id)}
+                  onClick={() => handleSave(branch?.id, "save")}
                   disabled={customer?.isBlocked}
                 >
                   {t("Save")}

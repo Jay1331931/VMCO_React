@@ -6,14 +6,14 @@ const parseTimeRange = (timeRange) => {
   return { from, to };
 };
 
-const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer, branchId, handleBranchFieldChange, inApproval, handleHoursChange, applyAllHours, workflowInstanceId }) => {
+const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer, branchId, handleBranchFieldChange, inApproval, mode, handleHoursChange, applyAllHours, workflowInstanceId }) => {
   const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   const { t } = useTranslation();
   const [hours, setHours] = useState({});
 
   let customerFormMode;
 
-  if (inApproval) {
+  if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";
@@ -208,6 +208,7 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
                   }}
                   onApplyAll={() => applyAllHours(day, "operating")}
                   customerFormMode={customerFormMode}
+                  mode={mode}
                 />
                 {inApproval && (hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending") && (
                   <div className="current-value">
@@ -235,6 +236,7 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
                   }}
                   onApplyAll={() => applyAllHours(day, "delivery")}
                   customerFormMode={customerFormMode}
+                  mode={mode}
                 />
                 {inApproval && (hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending") && (
                   <div className="current-value">
@@ -249,7 +251,7 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
     </div>
   );
 };
-const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onChange, onFocus, onApplyAll, customerFormMode }) => {
+const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onChange, onFocus, onApplyAll, customerFormMode, mode }) => {
   return (
     <div className={`time-input-group ${day === "friday" ? "friday-time-input-group" : ""}`}>
       <input
@@ -260,7 +262,7 @@ const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onC
         onBlur={() => {}}
         disabled={inApproval && !isModified}
         style={
-                              inApproval && isModified
+                              inApproval && isModified && mode === "edit"
                                 ? {
                                     backgroundColor: "#fff8e1",
                                   }
@@ -276,7 +278,7 @@ const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onC
         onBlur={() => {}}
         disabled={inApproval && !isModified}
         style={
-                              inApproval && isModified
+                              inApproval && isModified && mode === "edit"
                                 ? {
                                     backgroundColor: "#fff8e1",
                                   }

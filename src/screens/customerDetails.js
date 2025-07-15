@@ -421,6 +421,14 @@ function CustomerDetails() {
   // State for update count
   const [documentsUpdateCount, setDocumentsUpdateCount] = useState(0);
   const [confirmationData, setConfirmationData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingChanges, setIsSavingChanges] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [isUnblocking, setIsUnblocking] = useState(false);
 
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
@@ -863,6 +871,7 @@ function CustomerDetails() {
     "purchasingHeadEmail",
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
+    "branch",
   ];
 
   const isArabicText = (text) => {
@@ -902,7 +911,10 @@ function CustomerDetails() {
       "bankAccountNumber",
     ];
     // If mandatoryCheckReguired is true, check all mandatory fields
-    console.log("check mandtaory fields has assigned to entity wise", mandatoryFields.includes("assignedToEntityWise"));
+    console.log(
+      "check mandtaory fields has assigned to entity wise",
+      mandatoryFields.includes("assignedToEntityWise")
+    );
     if (mandatoryCheckRequired) {
       mandatoryFields?.forEach((field) => {
         if (field === "assignedToEntityWise") {
@@ -919,7 +931,8 @@ function CustomerDetails() {
       });
 
       // Special check for assignedToEntityWise
-      if (mandatoryFields.includes("assignedToEntityWise") &&
+      if (
+        mandatoryFields.includes("assignedToEntityWise") &&
         dataToValidate.assignedToEntityWise &&
         typeof dataToValidate.assignedToEntityWise === "object"
       ) {
@@ -1087,6 +1100,10 @@ function CustomerDetails() {
 
   const uploadFile = async (fieldName, fileData, customerId) => {
     try {
+      if (!fileData) {
+        throw new Error("No file data provided");
+      }
+
       const formData = new FormData();
       formData.append("file", fileData);
       formData.append("fileType", fieldName);
@@ -1096,9 +1113,16 @@ function CustomerDetails() {
         body: formData,
         credentials: "include",
       });
+
       if (res.ok) {
         const responseData = await res.json();
-        // return responseData;
+
+        // Check if response contains the expected fileName
+        if (!responseData.fileName) {
+          throw new Error("Server response missing fileName");
+        }
+
+        // Update the customer data reference
         if (fieldName === "nonTradingDocuments") {
           updatedCustomerData.current[fieldName] = [
             ...(customerData?.nonTradingDocuments || []),
@@ -1108,9 +1132,20 @@ function CustomerDetails() {
           updatedCustomerData.current[fieldName] = responseData.fileName;
         }
         return responseData;
+      } else {
+        // Handle HTTP error responses
+        let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (jsonError) {
+          // If response is not JSON, use the status text
+        }
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error("Error uploading files:", error.message);
+      console.error(`Error uploading file ${fieldName}:`, error.message);
+      throw error; // Re-throw to handle in calling function
     }
   };
   const uploadDocuments = async (
@@ -1120,79 +1155,123 @@ function CustomerDetails() {
     signatureToUpload // <-- Add this param
   ) => {
     const uploadedFiles = {};
+    const failedUploads = [];
+    const errorMessages = [];
+
     try {
       // Trading files
       for (const fieldName of Object.keys(tradingFilesToUpload)) {
         const file = tradingFilesToUpload[fieldName];
-        const uploadedFile = await uploadFile(fieldName, file, customerId);
-        if (uploadedFile && uploadedFile.fileName) {
-          uploadedFiles[fieldName] = uploadedFile.fileName;
-          delete tradingFilesToUpload[fieldName];
+        try {
+          const uploadedFile = await uploadFile(fieldName, file, customerId);
+          if (uploadedFile && uploadedFile.fileName) {
+            uploadedFiles[fieldName] = uploadedFile.fileName;
+            delete tradingFilesToUpload[fieldName];
+          } else {
+            failedUploads.push(`Trading document: ${fieldName}`);
+          }
+        } catch (error) {
+          failedUploads.push(`Trading document: ${fieldName}`);
+          errorMessages.push(error.message);
         }
       }
+
       // Non-trading files
       for (const fieldName of Object.keys(nonTradingFilesToUpload)) {
         const file = nonTradingFilesToUpload[fieldName];
         if (fieldName !== "others") {
-          uploadFile(fieldName, file, customerId);
+          try {
+            const uploadedFile = await uploadFile(fieldName, file, customerId);
+            if (uploadedFile && uploadedFile.fileName) {
+              uploadedFiles[fieldName] = uploadedFile.fileName;
+            }
+            // else {
+            //   failedUploads.push(`Non-trading document: ${fieldName}`);
+            // }
+          } catch (error) {
+            // failedUploads.push(`Non-trading document: ${fieldName}`);
+            // errorMessages.push(error.message);
+          }
         } else if (Array.isArray(file)) {
           uploadedFiles["nonTradingDocuments"] = [
             ...(customerData?.nonTradingDocuments || []),
           ];
           for (const f of file) {
-            const uploadedFile = await uploadFile(
-              "nonTradingDocuments",
-              f,
-              customerId
-            );
-            if (uploadedFile && uploadedFile.fileName) {
-              uploadedFiles["nonTradingDocuments"].push(uploadedFile.fileName);
-              // const index = nonTradingFilesToUpload["others"].indexOf(f);
-              // if (index > -1) {
-              //   nonTradingFilesToUpload["others"].splice(index, 1);
-              // }
-              nonTradingFilesToUpload["others"] = nonTradingFilesToUpload[
-                "others"
-              ].filter((file) => file !== f);
+            try {
+              const uploadedFile = await uploadFile(
+                "nonTradingDocuments",
+                f,
+                customerId
+              );
+              if (uploadedFile && uploadedFile.fileName) {
+                uploadedFiles["nonTradingDocuments"].push(
+                  uploadedFile.fileName
+                );
+                nonTradingFilesToUpload["others"] = nonTradingFilesToUpload[
+                  "others"
+                ].filter((file) => file !== f);
+              } else {
+                failedUploads.push(
+                  `Other document: ${f.name || "Unknown file"}`
+                );
+              }
+            } catch (error) {
+              failedUploads.push(`Other document: ${f.name || "Unknown file"}`);
+              errorMessages.push(error.message);
             }
           }
         }
       }
+
       // --- Handle logo uploads ---
       for (const logoField of ["companyLogo", "brandLogo"]) {
         if (logosToUpload[logoField]) {
-          const uploadedLogo = await uploadFile(
-            logoField,
-            logosToUpload[logoField],
-            customerId
-          );
-          if (uploadedLogo && uploadedLogo.fileName) {
-            uploadedFiles[logoField] = uploadedLogo.fileName;
-            // Remove from upload queue
-            setLogosToUpload((prev) => {
-              const copy = { ...prev };
-              delete copy[logoField];
-              return copy;
-            });
+          try {
+            const uploadedLogo = await uploadFile(
+              logoField,
+              logosToUpload[logoField],
+              customerId
+            );
+            if (uploadedLogo && uploadedLogo.fileName) {
+              uploadedFiles[logoField] = uploadedLogo.fileName;
+              // Remove from upload queue
+              setLogosToUpload((prev) => {
+                const copy = { ...prev };
+                delete copy[logoField];
+                return copy;
+              });
+            } else {
+              failedUploads.push(`Logo: ${logoField}`);
+            }
+          } catch (error) {
+            failedUploads.push(`Logo: ${logoField}`);
+            errorMessages.push(error.message);
           }
         }
       }
 
       // --- Handle signature upload ---
       if (signatureToUpload.declarationSignature) {
-        const uploadedSignature = await uploadFile(
-          "declarationSignature",
-          signatureToUpload.declarationSignature,
-          customerId
-        );
-        if (uploadedSignature && uploadedSignature.fileName) {
-          uploadedFiles["declarationSignature"] = uploadedSignature.fileName;
-          // Remove from upload queue
-          setSignatureToUpload((prev) => {
-            const copy = { ...prev };
-            delete copy.declarationSignature;
-            return copy;
-          });
+        try {
+          const uploadedSignature = await uploadFile(
+            "declarationSignature",
+            signatureToUpload.declarationSignature,
+            customerId
+          );
+          if (uploadedSignature && uploadedSignature.fileName) {
+            uploadedFiles["declarationSignature"] = uploadedSignature.fileName;
+            // Remove from upload queue
+            setSignatureToUpload((prev) => {
+              const copy = { ...prev };
+              delete copy.declarationSignature;
+              return copy;
+            });
+          } else {
+            failedUploads.push("Declaration signature");
+          }
+        } catch (error) {
+          failedUploads.push("Declaration signature");
+          errorMessages.push(error.message);
         }
       }
 
@@ -1201,24 +1280,54 @@ function CustomerDetails() {
           uploadedFiles["nonTradingDocuments"]
         );
 
-      return uploadedFiles;
+      // Remove duplicate error messages
+      const uniqueErrorMessages = [...new Set(errorMessages)];
+
+      return {
+        uploadedFiles,
+        failedUploads,
+        errorMessages: uniqueErrorMessages,
+      };
     } catch (error) {
       console.error("Error uploading files:", error.message);
+      throw new Error(`Upload process failed: ${error.message}`);
     }
   };
   const handleSave = async (action) => {
+    setIsSaving(true);
     console.log("^^^^^Saving customer data:", updatedCustomerData.current);
     console.log(nonTradingFilesToUpload);
     // if(action === "submit") {
     //   customerData["declarationDate"] = new Date().toISOString();
     // }
     try {
-      const uploadedFiles = await uploadDocuments(
-        tradingFilesToUpload,
-        nonTradingFilesToUpload,
-        logosToUpload,
-        signatureToUpload // <-- pass here
-      );
+      const { uploadedFiles, failedUploads, errorMessages } =
+        await uploadDocuments(
+          tradingFilesToUpload,
+          nonTradingFilesToUpload,
+          logosToUpload,
+          signatureToUpload // <-- pass here
+        );
+
+      // Show error for failed uploads if any
+      if (failedUploads.length > 0) {
+        setIsSaving(false);
+        const errorText = failedUploads.join(", ");
+        const additionalErrors =
+          errorMessages.length > 0
+            ? `\n\nError details: ${errorMessages.join(", ")}`
+            : "";
+        Swal.fire({
+          icon: "error",
+          title: t("Upload Failed"),
+          text: t(
+            `The following files failed to upload: ${errorText}${additionalErrors}`
+          ),
+          confirmButtonText: t("OK"),
+        });
+        return false;
+      }
+
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
         ...uploadedFiles,
@@ -1242,6 +1351,7 @@ function CustomerDetails() {
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
         if (action !== "submit") {
+          setIsSaving(false);
           Swal.fire({
             icon: "error",
             title: t("Error"),
@@ -1270,6 +1380,7 @@ function CustomerDetails() {
         setOriginalCustomerData(result.data);
       }
     } catch (error) {
+      setIsSaving(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1297,6 +1408,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
+      setIsSaving(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1322,6 +1434,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
+      setIsSaving(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1332,6 +1445,7 @@ function CustomerDetails() {
       console.error("Error updating customer payment methods:", error.message);
       return false;
     }
+    setIsSaving(false);
     Swal.fire({
       icon: "success",
       title: t("Success"),
@@ -1343,18 +1457,40 @@ function CustomerDetails() {
   };
 
   const handleSaveChanges = async (action) => {
+    setIsSavingChanges(true);
     console.log("^^^^^Saving customer data:", updatedCustomerData.current);
     console.log(nonTradingFilesToUpload);
 
     try {
       updatedCustomerData.current["customerStatus"] =
         customerData.customerStatus;
-      const uploadedFiles = await uploadDocuments(
-        tradingFilesToUpload,
-        nonTradingFilesToUpload,
-        logosToUpload,
-        signatureToUpload // <-- pass here
-      );
+      const { uploadedFiles, failedUploads, errorMessages } =
+        await uploadDocuments(
+          tradingFilesToUpload,
+          nonTradingFilesToUpload,
+          logosToUpload,
+          signatureToUpload // <-- pass here
+        );
+
+      // Show error for failed uploads if any
+      if (failedUploads.length > 0) {
+        setIsSavingChanges(false);
+        const errorText = failedUploads.join(", ");
+        const additionalErrors =
+          errorMessages.length > 0
+            ? `\n\nError details: ${errorMessages.join(", ")}`
+            : "";
+        Swal.fire({
+          icon: "error",
+          title: t("Upload Failed"),
+          text: t(
+            `The following files failed to upload: ${errorText}${additionalErrors}`
+          ),
+          confirmButtonText: t("OK"),
+        });
+        return;
+      }
+
       updatedCustomerData.current = {
         ...updatedCustomerData.current,
         ...uploadedFiles,
@@ -1367,6 +1503,7 @@ function CustomerDetails() {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
+        setIsSavingChanges(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
@@ -1391,6 +1528,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
+      setIsSavingChanges(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1415,6 +1553,7 @@ function CustomerDetails() {
       );
       console.log("Response", response);
     } catch (error) {
+      setIsSavingChanges(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1424,6 +1563,7 @@ function CustomerDetails() {
       // alert("Error updating customer data:", error.message);
       console.error("Error updating customer payment methods:", error.message);
     }
+    setIsSavingChanges(false);
     Swal.fire({
       icon: "success",
       title: t("Success"),
@@ -1442,6 +1582,11 @@ function CustomerDetails() {
   };
 
   const handleApprovalDialogSubmit = async (comment) => {
+    if (approvalAction === "approve") {
+      setIsApproving(true);
+    } else {
+      setIsRejecting(true);
+    }
     try {
       if (wfCustomerData?.customer?.nonTradingDocuments) {
         wfCustomerData.customer.nonTradingDocuments = JSON.stringify(
@@ -1469,10 +1614,9 @@ function CustomerDetails() {
         id: customerId,
       };
       var dataToBeValidated = {};
-      if(customerData?.customerStatus === "pending") {
-        dataToBeValidated = {...customerData,...customerContactsData}
-      }
-      else {
+      if (customerData?.customerStatus === "pending") {
+        dataToBeValidated = { ...customerData, ...customerContactsData };
+      } else {
         dataToBeValidated = {
           ...mergedData?.updates?.customer,
           ...mergedData?.updates?.contacts,
@@ -1486,6 +1630,8 @@ function CustomerDetails() {
       );
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
+        setIsApproving(false);
+        setIsRejecting(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
@@ -1511,10 +1657,14 @@ function CustomerDetails() {
       );
       console.log("Response", response);
       setIsApprovalDialogOpen(false);
+      setIsApproving(false);
+      setIsRejecting(false);
       navigate("/customers");
     } catch (error) {
       console.error("Error approving/rejecting customer:", error.message);
       setIsApprovalDialogOpen(false);
+      setIsApproving(false);
+      setIsRejecting(false);
     }
   };
 
@@ -1615,6 +1765,8 @@ function CustomerDetails() {
   };
 
   const handleSubmit = async (action) => {
+    setIsSubmitting(true);
+    setIsLoading(true);
     try {
       // uploadDocuments(tradingFilesToUpload, nonTradingFilesToUpload);
       customerData["declarationDate"] = new Date().toISOString();
@@ -1636,6 +1788,8 @@ function CustomerDetails() {
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
+        setIsSubmitting(false);
+        setIsLoading(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
@@ -1660,41 +1814,16 @@ function CustomerDetails() {
         }
       );
       console.log("Response", response);
-      function showLoadingScreen(message) {
-        document.body.innerHTML = `
-    <div class="loading-more-container" style="
-      padding: 20px; 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      gap: 16px;
-    ">
-      <div class="loading-spinner" style="
-        width: 40px;
-        height: 40px;
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      "></div>
-      <div class="loading-more-text">${message}</div>
-    </div>
-    
-    <style>
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-  `;
-      }
 
-      // Usage:
-      showLoadingScreen("Updating...");
-      setTimeout(() => window.location.reload(true), 3000);
+      // Keep loading for 3 seconds then reload
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsLoading(false);
+        window.location.reload(true);
+      }, 3000);
     } catch (error) {
+      setIsSubmitting(false);
+      setIsLoading(false);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1707,6 +1836,7 @@ function CustomerDetails() {
   };
 
   const handleBlock = async () => {
+    setIsBlocking(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
@@ -1721,13 +1851,16 @@ function CustomerDetails() {
         }
       );
       console.log("Response", response);
+      setIsBlocking(false);
       window.location.reload();
     } catch (error) {
+      setIsBlocking(false);
       console.error("Error blocking customer:", error.message);
     }
   };
 
   const handleUnblock = async () => {
+    setIsUnblocking(true);
     try {
       const response = await fetch(
         `${API_BASE_URL}/customers/id/${customerId}`,
@@ -1745,14 +1878,21 @@ function CustomerDetails() {
         }
       );
       console.log("Response", response);
+      setIsUnblocking(false);
       window.location.reload();
     } catch (error) {
+      setIsUnblocking(false);
       console.error("Error unblocking customer:", error.message);
     }
   };
 
   return (
-    <Sidebar>
+    <Sidebar title={t("Company")}>
+      {isLoading && (
+        <div className="loading-container">
+          <LoadingSpinner size="medium" />
+        </div>
+      )}
       <div className="customers">
         <div
           className={`customer-onboarding-content ${
@@ -1835,7 +1975,9 @@ function CustomerDetails() {
                   </div>
                 )}
 
-                {(isV("finalSubmissionTab") || (customerData?.customerStatus === "new" || customerData?.customerStatus === "pending")) && (
+                {(isV("finalSubmissionTab") ||
+                  customerData?.customerStatus === "new" ||
+                  customerData?.customerStatus === "pending") && (
                   <div
                     key={"Final Submission"}
                     className={`tab ${
@@ -1848,7 +1990,8 @@ function CustomerDetails() {
                 )}
 
                 {isV("productsTab") &&
-                  customerData?.customerStatus !== "new" && (
+                  customerData?.customerStatus !== "new" &&
+                  customerData?.customerStatus !== "pending" && (
                     <div
                       key={"Products"}
                       className={`tab ${
@@ -1861,7 +2004,8 @@ function CustomerDetails() {
                   )}
 
                 {isV("branchesTab") &&
-                  customerData?.customerStatus !== "new" && (
+                  customerData?.customerStatus !== "new" &&
+                  customerData?.customerStatus !== "pending" && (
                     <div
                       key={"Branches"}
                       className={`tab ${
@@ -1870,9 +2014,18 @@ function CustomerDetails() {
                       onClick={() => setActiveTab("Branches")}
                     >
                       {t("Branches")}
+                      {wfCustomerData?.branch?.customerId ===
+                        originalCustomerData?.id &&
+                        mode === "edit" && (
+                          <span
+                            className="update-badge"
+                            style={{ marginLeft: 8 }}
+                          >
+                            {1}
+                          </span>
+                        )}
                     </div>
                   )}
-                
               </div>
 
               {activeTab === "Business Details" &&
@@ -1995,18 +2148,34 @@ function CustomerDetails() {
                   <button
                     className="save"
                     onClick={() => handleSave("save")}
-                    disabled={false}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking
+                    }
                   >
-                    {t("Save")}
+                    {isSaving ? t("Saving...") : t("Save")}
                   </button>
                 )}
                 {isV("btnSubmit") && customerData?.customerStatus === "new" && (
                   <button
                     className="save"
                     onClick={() => handleSubmit("save")}
-                    disabled={false}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking
+                    }
                   >
-                    {t("Submit")}
+                    {isSubmitting ? t("Submitting...") : t("Submit")}
                   </button>
                 )}
                 {isV("btnSaveChanges") &&
@@ -2015,47 +2184,88 @@ function CustomerDetails() {
                       className="save"
                       onClick={() => handleSaveChanges("save")}
                       disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking ||
                         (mode === "add" && inApproval) ||
                         customerData?.isBlocked
                       }
                     >
-                      {t("Save Changes")}
+                      {isSavingChanges ? t("Saving...") : t("Save Changes")}
                     </button>
                   )}
                 {isV("btnApprove") && inApproval && (
                   <button
                     className="approve"
                     onClick={() => handleApprovalClick("approve")}
-                    disabled={false}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking
+                    }
                   >
-                    {t("Approve")}
+                    {isApproving ? t("Approving...") : t("Approve")}
                   </button>
                 )}
                 {isV("btnReject") && inApproval && (
                   <button
                     className="reject"
                     onClick={() => handleApprovalClick("reject")}
-                    disabled={false}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking
+                    }
                   >
-                    {t("Reject")}
+                    {isRejecting ? t("Rejecting...") : t("Reject")}
                   </button>
                 )}
                 {isV("btnBlock") && !customerData?.isBlocked && (
                   <button
                     className="block"
                     onClick={() => handleBlock()}
-                    disabled={mode === "add" && inApproval}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking ||
+                      (mode === "add" && inApproval)
+                    }
                   >
-                    {t("Block")}
+                    {isBlocking ? t("Blocking...") : t("Block")}
                   </button>
                 )}
                 {isV("btnUnblock") && customerData?.isBlocked && (
                   <button
                     className="unblock"
                     onClick={() => handleUnblock()}
-                    disabled={mode === "add" && inApproval}
+                    disabled={
+                      isSaving ||
+                      isSubmitting ||
+                      isSavingChanges ||
+                      isApproving ||
+                      isRejecting ||
+                      isBlocking ||
+                      isUnblocking ||
+                      (mode === "add" && inApproval)
+                    }
                   >
-                    {t("Unblock")}
+                    {isUnblocking ? t("Unblocking...") : t("Unblock")}
                   </button>
                 )}
               </div>

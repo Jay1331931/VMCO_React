@@ -53,7 +53,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   let customerFormMode;
-  if (inApproval) {
+  if (mode === "edit" ) {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";

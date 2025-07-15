@@ -49,6 +49,7 @@ const ContactSection = ({
   branchChanges,
   handleBranchFieldChange,
   inApproval,
+  mode,
   workflowInstanceId,
   formErrors = {},
 }) => {
@@ -57,7 +58,7 @@ const ContactSection = ({
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
   let customerFormMode;
-  if (inApproval) {
+  if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";
@@ -153,8 +154,8 @@ const ContactSection = ({
             <div className="form-row">
               {fields.map(({ name, field }) => {
                 // const hasUpdate = (inApproval && workflowData ? field.name in workflowData : false) || (inApproval && branchDetails.branchStatus === "pending");
-                const hasUpdate = (inApproval && branch?.[field] !==
-                  originalBranchContacts?.[field]) || (inApproval && branchDetails?.branchStatus === "pending");
+                const hasUpdate = (mode === "edit" && inApproval && branch?.[field] !==
+                  originalBranchContacts?.[field]) || (mode === "edit" && inApproval && branchDetails?.branchStatus === "pending");
                 return (
                   <div className="form-group" key={field}>
                     <input

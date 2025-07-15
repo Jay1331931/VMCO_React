@@ -46,7 +46,7 @@ const BranchDetailsForm = ({
   const { token, user, isAuthenticated, logout } = useAuth();
   const [workflowData, setWorkflowData] = useState(null);
   let customerFormMode;
-  if (inApproval) {
+  if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";
@@ -479,7 +479,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
 
       <div className="form-row">
         {fields.map((field, index) => {
-          const hasUpdate = (inApproval && workflowData ? field.name in workflowData : false) || (inApproval && branch.branchStatus === "pending");
+          const hasUpdate = (mode === "edit" && inApproval && workflowData ? field.name in workflowData : false) || (mode==="edit" &&inApproval && branch.branchStatus === "pending");
             // inApproval &&
             // customer.module === "branch" &&
             // customer?.workflowData?.updates &&
@@ -518,7 +518,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     // value={getLocationDisplay(branch[field.name])}
                     placeholder={t(field.placeholder)}
                     disabled={
-                      customerFormMode === "custDetailsEdit" && !hasUpdate
+                      (customerFormMode === "custDetailsEdit" && !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
                     }
                     style={
                               hasUpdate
@@ -564,8 +564,8 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                                 : {}
                             }
                             disabled={
-                              customerFormMode === "custDetailsEdit" &&
-                              !hasUpdate
+                              (customerFormMode === "custDetailsEdit" &&
+                              !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
                             }
                           />
                           
@@ -585,8 +585,8 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                                 : {}
                             }
                             disabled={
-                              customerFormMode === "custDetailsEdit" &&
-                              !hasUpdate
+                              (customerFormMode === "custDetailsEdit" &&
+                              !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
                             }
               hidden={!isV(field.name)}
                           >

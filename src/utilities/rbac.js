@@ -1352,7 +1352,8 @@ class RbacManager {
           financialInformationTab: {visible: false, editable: false},
           documentsTab: {visible: false, editable: false},
           productsTab: {visible: false, editable: false},
-          finalSubmissionTab: {visible: false, editable: true}
+          finalSubmissionTab: {visible: false, editable: true},
+          branch: { visible: false, editable: true },
         },
       },
       custDetailsEdit: {
@@ -2195,8 +2196,9 @@ class RbacManager {
           [constants.ENTITY.NAQI]: { visible: true, editable: true },
           [constants.ENTITY.GREEN_MAST]: { visible: true, editable: true },
           customerApprovalChecklist: { visible: true, editable: true },
-          'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
-
+          'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
+          btnApprove: { visible: false, editable: true },
+          btnReject: { visible: false, editable: true },
         }
       },
       custDetailsEdit: {
