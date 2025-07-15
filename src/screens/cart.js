@@ -73,7 +73,9 @@ function Cart() {
 
     const userId = user?.userId;
     const customerId = user?.customerId;
-    const erpCustId = user?.erpCustomerId; useEffect(() => {
+    const erpCustId = user?.erpCustomerId; 
+    
+    useEffect(() => {
         // Set user and customer IDs from context
         if (userId) { setSelectedUserId(userId); }
         if (customerId) { setSelectedCustomerId(customerId); }
@@ -86,6 +88,18 @@ function Cart() {
 
     // Fetch cart items from the backend using fetch API
     const fetchCartItems = React.useCallback(async () => {
+        // Don't fetch if we don't have the required user data
+        if (!userId || !customerId) {
+            console.log('Missing required user data for cart fetch:', { 
+                userId, 
+                customerId,
+                userObject: user 
+            });
+            return;
+        }
+
+        console.log('Starting cart fetch with data:', { userId, customerId, selectedBranchId });
+        
         setIsLoading(true);
         setError(null);
 
@@ -98,12 +112,16 @@ function Cart() {
                 sortOrder: 'asc'
             });
 
-            // Create a single filters object with all required fields
+            // Create a single filters object with all required fields - use actual user data
             const filters = {
-                user_id: selectedUserId, // Make sure userId is defined, fallback to user.id if available
-                customer_id: selectedCustomerId,
-                branch_id: selectedBranchId
+                user_id: userId,
+                customer_id: customerId
             };
+
+            // Only add branch_id if it's available
+            if (selectedBranchId) {
+                filters.branch_id = selectedBranchId;
+            }
 
             // Log the filters to ensure userId is included
             console.log('Cart filters:', filters);
@@ -142,6 +160,8 @@ function Cart() {
             // Extract cart items from the response with better error handling
             const cartProducts = Array.isArray(result.data.data) ? result.data.data :
                 (result.data && Array.isArray(result.data)) ? result.data : [];
+
+            console.log('Extracted cart products:', cartProducts.length, 'items');
 
             // Map initial quantities from fetched data
             const initialQuantities = {};
@@ -255,13 +275,24 @@ function Cart() {
             // Initialize quantities from fetched data
             setQuantities(initialQuantities);
 
+            console.log('Cart items successfully loaded:', {
+                vmco: vmco.length,
+                shc: shc.length,
+                greenMast: greenMast.length,
+                naqui: naqui.length,
+                dar: dar.length
+            });
+
         } catch (err) {
             console.error('Error fetching cart items:', err);
             setError('Failed to load cart items. Please try again.');
+            
+            // Don't clear existing cart items if there's an error
+            // This prevents the cart from being cleared due to temporary network issues
         } finally {
             setIsLoading(false);
         }
-    }, [selectedUserId, selectedCustomerId, selectedBranchId, token, t, currentLanguage, isArabic]);
+    }, [userId, customerId, selectedBranchId, token, t, currentLanguage, isArabic]);
 
     useEffect(() => {
         if (loading) {
@@ -274,13 +305,26 @@ function Cart() {
             logout();
             navigate('/login');
             return; // Return while logout is processing
-        } if (user && user.userType) {
+        } 
+        
+        // Only fetch cart items if we have user data
+        if (user && user.userType && userId && customerId) {
+            console.log('Required user data available, fetching cart items:', {
+                userId, customerId, selectedBranchId
+            });
             const fetchData = async () => {
                 await fetchCartItems();
             };
             fetchData();
+        } else {
+            console.log('Missing required user data for cart fetch:', {
+                userType: user?.userType,
+                userId,
+                customerId,
+                selectedBranchId
+            });
         }
-    }, [user, loading, logout, navigate, fetchCartItems]
+    }, [user, loading, logout, navigate, fetchCartItems, userId, customerId, selectedBranchId]
     );
 
 
@@ -327,7 +371,9 @@ function Cart() {
             // Build the URL for the delete request with correct query params
             const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
             deleteUrl.searchParams.append('customer_id', customerId);
-            deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            if (selectedBranchId) {
+                deleteUrl.searchParams.append('branch_id', selectedBranchId);
+            }
             if (item.entity) deleteUrl.searchParams.append('entity', item.entity);
             if (item.category) deleteUrl.searchParams.append('category', item.category);
             deleteUrl.searchParams.append('product_id', item.productId);
@@ -1397,7 +1443,12 @@ function Cart() {
         }
     };    // Initialize from navigation state if available
     useEffect(() => {
+        console.log('Location state useEffect triggered:', location.state);
         if (location.state) {
+            console.log('Setting branch data from location state:', {
+                selectedBranchId: location.state.selectedBranchId,
+                selectedCustomerId: location.state.selectedCustomerId
+            });
             setSelectedCustomerId(location.state.selectedCustomerId || '');
             setSelectedBranchId(location.state.selectedBranchId || '');
             setSelectedBranchName(location.state.selectedBranchName || 'No location selected');
@@ -1405,11 +1456,28 @@ function Cart() {
             setSelectedBranchRegion(location.state.selectedBranchRegion || '');
             setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
             setSelectedBranchCity(location.state.selectedBranchCity || '');
+        } else {
+            console.log('No location state available - user might have navigated directly to cart');
+            // Don't clear existing branch data if no location state is available
+            // This prevents losing branch information when the user refreshes the page
         }
     }, [location.state]);
 
     // Add a new effect to filter cart sections based on interCompany status
     useEffect(() => {
+        // Don't filter if cart items are still loading
+        if (isLoading) {
+            console.log("Skipping filtering - cart is loading");
+            return;
+        }
+
+        // If cart items are empty, clear filtered cart items
+        if (cartItems.length === 0) {
+            console.log("Cart items are empty, clearing filtered cart items");
+            setFilteredCartItems([]);
+            return;
+        }
+
         // Default to showing all sections
         let sectionsToShow = cartItems;
 
@@ -1419,7 +1487,7 @@ function Cart() {
             interCompany: user?.interCompany,
             entity: user?.entity
         });
-        console.log("Original cart sections:", cartItems.map(item => item.category));
+        console.log("Original cart sections:", cartItems.map(item => ({ category: item.category, itemCount: item.items.length })));
 
         // If user is a customer with interCompany set to true, filter out matching entity sections
         if (user?.userType === "customer" && user?.interCompany === true && user?.entity) {
@@ -1445,7 +1513,7 @@ function Cart() {
             console.log("Not applying interCompany filtering - user is not an interCompany customer");
         }
 
-        console.log("Filtered sections:", sectionsToShow.map(item => item.category));
+        console.log("Filtered sections:", sectionsToShow.map(item => ({ category: item.category, itemCount: item.items.length })));
         console.log("=== END DEBUG ===");
 
         setFilteredCartItems(sectionsToShow);
@@ -1456,7 +1524,7 @@ function Cart() {
             setCollapsedCategories(allCategories);
             console.log("Collapsed all sections by default:", Array.from(allCategories));
         }
-    }, [cartItems, user]);
+    }, [cartItems, user, isLoading]);
 
     // Add this effect to fetch entity descriptions
     useEffect(() => {
