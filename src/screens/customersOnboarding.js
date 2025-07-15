@@ -403,11 +403,11 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
                                 prePayment: { isAllowed: true }, 
                                 COD: { isAllowed: true, limit: "5000" }, 
                                 credit: { 
-                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
-                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
-                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
-                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
-                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0", balance: "0" },
+                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0" },
+                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0" },
+                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0"},
+                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0" },
+                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0" },
                             }, 
                             // partialPayment: { isAllowed: true } 
                         },
