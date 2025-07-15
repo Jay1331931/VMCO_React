@@ -947,14 +947,15 @@ function CustomerDetails() {
             );
           }
         });
-      } else if (mandatoryFields.includes("assignedToEntityWise")) {
-        // If the whole object is missing
-        assignedToEntityWiseEntities.forEach((entity) => {
-          errors[`assignedToEntityWise.${entity}`] = t(
-            `Sales person for ${entity} is required.`
-          );
-        });
-      }
+      } 
+      // else if (mandatoryFields.includes("assignedToEntityWise")) {
+      //   // If the whole object is missing
+      //   assignedToEntityWiseEntities.forEach((entity) => {
+      //     errors[`assignedToEntityWise.${entity}`] = t(
+      //       `Sales person for ${entity} is required.`
+      //     );
+      //   });
+      // }
     }
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
