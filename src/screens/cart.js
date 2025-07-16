@@ -551,6 +551,15 @@ function Cart() {
                     ...category,
                    items: category.items.filter(
       cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
+                   
+                   // Clean up quantities state for removed items
+                   setQuantities(prevQuantities => {
+                       const newQuantities = { ...prevQuantities };
+                       categoryItems.forEach(item => {
+                           delete newQuantities[item.id];
+                       });
+                       return newQuantities;
+                   });
                 });
             }
         } catch (err) {
@@ -692,6 +701,15 @@ function Cart() {
                     ...category,
                    items: category.items.filter(
       cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
+                   
+                   // Clean up quantities state for removed items
+                   setQuantities(prevQuantities => {
+                       const newQuantities = { ...prevQuantities };
+                       categoryItems.forEach(item => {
+                           delete newQuantities[item.id];
+                       });
+                       return newQuantities;
+                   });
                     });
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -954,14 +972,48 @@ function Cart() {
                 // First calculate the initial totalAmount from cart items
                 let initialTotalAmount = 0;
                 for (const item of categoryItems) {
-                    const newQuantity = Number(quantities[item.id] || item.quantity || 1);
+                    const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
+                    
+                    // Validate values to prevent NaN
+                    if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
+                        console.warn('Invalid values detected in order calculation:', {
+                            itemId: item.id,
+                            newQuantity,
+                            unitPrice,
+                            vatPercentage,
+                            available_quantities: quantities[item.id],
+                            item_quantity: item.quantity,
+                            item_moq: item.moq,
+                            item: item
+                        });
+                        continue; // Skip this item if values are invalid
+                    }
+                    
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
                     const netAmount = baseAmount + vatAmount;
+                    
                     initialTotalAmount += netAmount;
+                    
+                    console.log(`Item ${item.id} calculation:`, {
+                        quantity: newQuantity,
+                        unitPrice,
+                        vatPercentage,
+                        baseAmount,
+                        vatAmount,
+                        netAmount
+                    });
                 }
+                
+                // Validate initial total
+                if (isNaN(initialTotalAmount) || initialTotalAmount < 0) {
+                    console.error('Invalid initialTotalAmount calculated:', initialTotalAmount);
+                    throw new Error(`Invalid initial total amount: ${initialTotalAmount}`);
+                }
+                
+                console.log('Initial total amount calculated:', initialTotalAmount);
 
                 let deliveryCharges = 0.00;
                 const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
@@ -1066,9 +1118,24 @@ function Cart() {
                     }
                 });
 
-                const newQuantity = parseInt(quantities[item.id] || item.quantity || 1);
+                const newQuantity = parseInt(quantities[item.id] || item.quantity || item.moq || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
+                
+                // Validate order line values
+                if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
+                    console.error('Invalid order line values:', {
+                        itemId: item.id,
+                        productId,
+                        newQuantity,
+                        unitPrice,
+                        vatPercentage,
+                        available_quantities: quantities[item.id],
+                        item_quantity: item.quantity,
+                        item_moq: item.moq
+                    });
+                    continue; // Skip this item if values are invalid
+                }
 
                 // Check if this product already exists in the order (only if not using Pre Payment)
                 const existingLine = isPrePayment ? null : existingProductMap[productId];
@@ -1207,37 +1274,157 @@ function Cart() {
                 lineNumber++;
             }
 
-            // Recalculate totalAmount after line inserts/updates
-            const recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
+            // Small delay to ensure order lines are committed to the database
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-            if (!recalcLinesResponse.ok) {
-                throw new Error('Failed to fetch order lines for recalculating total amount');
+            // Recalculate totalAmount after line inserts/updates
+            // Try multiple approaches to fetch the correct order lines
+            let recalcLinesResponse;
+            let recalcLinesData;
+            
+            // First try with orderId filter
+            try {
+                recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                
+                if (!recalcLinesResponse.ok) {
+                    throw new Error('Failed to fetch order lines for recalculating total amount');
+                }
+                
+                recalcLinesData = await recalcLinesResponse.json();
+                console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
+            } catch (error) {
+                console.error('Error fetching order lines with orderId filter:', error);
+                // Fallback: try with order_id filter
+                try {
+                    recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ order_id: orderId }))}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                    });
+                    
+                    if (!recalcLinesResponse.ok) {
+                        throw new Error('Failed to fetch order lines for recalculating total amount');
+                    }
+                    
+                    recalcLinesData = await recalcLinesResponse.json();
+                    console.log('Fetched order lines data with order_id filter for orderId ' + orderId + ':', recalcLinesData);
+                } catch (secondError) {
+                    console.error('Error fetching order lines with order_id filter:', secondError);
+                    throw new Error('Failed to fetch order lines for recalculating total amount');
+                }
             }
 
-            const recalcLinesData = await recalcLinesResponse.json();
-            console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
-
             // Verify we have the correct lines for this order
-            const allLines = recalcLinesData?.data?.data?.filter(line => line.orderId === orderId) || [];
+            // Try multiple field names for orderId comparison
+            const allLines = recalcLinesData?.data?.data?.filter(line => 
+                Number(line.orderId) === Number(orderId) || 
+                Number(line.order_id) === Number(orderId) ||
+                Number(line.OrderId) === Number(orderId)
+            ) || [];
             console.log(`All order lines for orderId ${orderId}:`, allLines);
+            
+            // Additional debugging to understand the filtering issue
+            if (allLines.length === 0) {
+                console.log('No lines found for orderId. Debugging info:');
+                console.log('Looking for orderId:', orderId, 'Type:', typeof orderId);
+                console.log('Available order lines:', recalcLinesData?.data?.data?.map(line => ({
+                    id: line.id,
+                    orderId: line.orderId,
+                    order_id: line.order_id,
+                    OrderId: line.OrderId,
+                    orderIdType: typeof line.orderId,
+                    productId: line.productId,
+                    netAmount: line.netAmount || line.net_amount
+                })));
+                
+                // Try a direct API call to get lines for this specific order
+                try {
+                    console.log('Attempting direct API call for order lines...');
+                    const directResponse = await fetch(`${API_BASE_URL}/sales-order-lines/order/${orderId}`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                    });
+                    
+                    if (directResponse.ok) {
+                        const directData = await directResponse.json();
+                        console.log('Direct API call successful:', directData);
+                        if (directData.data && Array.isArray(directData.data)) {
+                            allLines.push(...directData.data);
+                        }
+                    }
+                } catch (directError) {
+                    console.log('Direct API call failed:', directError);
+                    // This is expected if the endpoint doesn't exist - not a real error
+                }
+            }
 
             // Calculate the sum of all order line net amounts and sales tax amounts - ensure we parse all values correctly
             let linesTotal = 0;
             let totalSalesTaxAmount = 0;
-            for (const line of allLines) {
-                const netAmount = parseFloat(line.netAmount);
-                const salesTaxAmount = parseFloat(line.salesTaxAmount || line.sales_tax_amount || 0);
-                console.log(`Line for product ${line.productId}: net_amount=${line.netAmount}, parsed=${netAmount}, sales_tax_amount=${salesTaxAmount}`);
-                linesTotal += netAmount;
-                totalSalesTaxAmount += salesTaxAmount;
+            
+            if (allLines.length > 0) {
+                for (const line of allLines) {
+                    // Handle multiple possible field names and ensure we get valid numbers
+                    const netAmountRaw = line.netAmount || line.net_amount || 0;
+                    const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
+                    
+                    const netAmount = parseFloat(netAmountRaw);
+                    const salesTaxAmount = parseFloat(salesTaxAmountRaw);
+                    
+                    // Check for NaN values and handle them appropriately
+                    const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
+                    const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
+                    
+                    console.log(`Line for product ${line.productId}: net_amount_raw=${netAmountRaw}, parsed=${validNetAmount}, sales_tax_amount_raw=${salesTaxAmountRaw}, parsed=${validSalesTaxAmount}`);
+                    
+                    linesTotal += validNetAmount;
+                    totalSalesTaxAmount += validSalesTaxAmount;
+                }
+            } else {
+                // Fallback: calculate totals based on cart items since we couldn't fetch order lines
+                console.log('Using fallback calculation based on cart items');
+                for (const item of categoryItems) {
+                    const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
+                    const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                    const vatPercentage = parseFloat(item.vatPercentage || 0);
+                    
+                    if (!isNaN(newQuantity) && !isNaN(unitPrice) && !isNaN(vatPercentage) && newQuantity > 0 && unitPrice >= 0) {
+                        const baseAmount = unitPrice * newQuantity;
+                        const vatAmount = (baseAmount * vatPercentage) / 100;
+                        const netAmount = baseAmount + vatAmount;
+                        
+                        linesTotal += netAmount;
+                        totalSalesTaxAmount += vatAmount;
+                        
+                        console.log(`Fallback calculation for item ${item.id}:`, {
+                            quantity: newQuantity,
+                            unitPrice,
+                            vatPercentage,
+                            baseAmount,
+                            vatAmount,
+                            netAmount
+                        });
+                    }
+                }
             }
 
             console.log('Recalculated lines total:', linesTotal);
             console.log('Total sales tax amount:', totalSalesTaxAmount);
+            
+            // Additional validation to ensure we have valid totals
+            if (isNaN(linesTotal) || linesTotal < 0) {
+                console.error('Invalid linesTotal detected:', linesTotal, 'Setting to 0');
+                linesTotal = 0;
+            }
+            if (isNaN(totalSalesTaxAmount) || totalSalesTaxAmount < 0) {
+                console.error('Invalid totalSalesTaxAmount detected:', totalSalesTaxAmount, 'Setting to 0');
+                totalSalesTaxAmount = 0;
+            }
 
             // Get existing delivery charges if updating an order
             let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;
@@ -1262,6 +1449,13 @@ function Cart() {
 
             // Calculate final total amount (lines total + delivery charges)
             const finalTotalAmount = linesTotal + deliveryCharges;
+            
+            // Additional validation for final total
+            if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
+                console.error('Invalid finalTotalAmount detected:', finalTotalAmount, 'Components:', { linesTotal, deliveryCharges });
+                throw new Error(`Invalid total amount calculation: linesTotal=${linesTotal}, deliveryCharges=${deliveryCharges}, finalTotal=${finalTotalAmount}`);
+            }
+            
             console.log('Final order totals:', {
                 linesTotal,
                 totalSalesTaxAmount,
@@ -1282,6 +1476,88 @@ function Cart() {
                 paymentPercentage: '100.00',
                 // modifiedBy: userId // Removed to avoid backend 500 error
             };
+            
+            console.log('Update order payload:', updateOrderPayload);
+            
+            // Validate payload before sending
+            if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
+                console.error('Invalid totalAmount in update payload:', updateOrderPayload.totalAmount);
+                console.error('Debug info:', {
+                    linesTotal,
+                    totalSalesTaxAmount,
+                    deliveryCharges,
+                    finalTotalAmount,
+                    allLinesCount: allLines.length,
+                    categoryItemsCount: categoryItems.length
+                });
+                
+                // If we have cart items but no order lines, this might be a timing issue
+                // Let's try one more time with a longer delay
+                if (categoryItems.length > 0 && allLines.length === 0) {
+                    console.log('Retrying order line fetch after longer delay...');
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    try {
+                        const retryResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                        });
+                        
+                        if (retryResponse.ok) {
+                            const retryData = await retryResponse.json();
+                            const retryLines = retryData?.data?.data?.filter(line => 
+                                Number(line.orderId) === Number(orderId) || 
+                                Number(line.order_id) === Number(orderId) ||
+                                Number(line.OrderId) === Number(orderId)
+                            ) || [];
+                            
+                            if (retryLines.length > 0) {
+                                console.log('Retry successful, found order lines:', retryLines);
+                                // Recalculate with the retry data
+                                let retryLinesTotal = 0;
+                                let retryTotalSalesTaxAmount = 0;
+                                
+                                for (const line of retryLines) {
+                                    const netAmountRaw = line.netAmount || line.net_amount || 0;
+                                    const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
+                                    
+                                    const netAmount = parseFloat(netAmountRaw);
+                                    const salesTaxAmount = parseFloat(salesTaxAmountRaw);
+                                    
+                                    const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
+                                    const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
+                                    
+                                    retryLinesTotal += validNetAmount;
+                                    retryTotalSalesTaxAmount += validSalesTaxAmount;
+                                }
+                                
+                                if (retryLinesTotal > 0) {
+                                    linesTotal = retryLinesTotal;
+                                    totalSalesTaxAmount = retryTotalSalesTaxAmount;
+                                    const retryFinalTotalAmount = linesTotal + deliveryCharges;
+                                    
+                                    updateOrderPayload.totalAmount = retryFinalTotalAmount.toFixed(2);
+                                    updateOrderPayload.total_sales_tax_amount = totalSalesTaxAmount.toFixed(2);
+                                    
+                                    console.log('Updated totals after retry:', {
+                                        retryLinesTotal,
+                                        retryTotalSalesTaxAmount,
+                                        retryFinalTotalAmount
+                                    });
+                                }
+                            }
+                        }
+                    } catch (retryError) {
+                        console.error('Retry failed:', retryError);
+                    }
+                }
+                
+                // Final check - if still zero, something is wrong
+                if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
+                    throw new Error(`Cannot update order with totalAmount of ${updateOrderPayload.totalAmount}. This indicates a problem with order line creation or fetching.`);
+                }
+            }
 
             const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
                 method: 'PATCH',
@@ -1309,6 +1585,15 @@ function Cart() {
                     ...category,
                    items: category.items.filter(
       cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
+                   
+                   // Clean up quantities state for removed items
+                   setQuantities(prevQuantities => {
+                       const newQuantities = { ...prevQuantities };
+                       categoryItems.forEach(item => {
+                           delete newQuantities[item.id];
+                       });
+                       return newQuantities;
+                   });
                 });
                 
                 // Delete cart items for non-VMCO and non-SHC categories
