@@ -71,16 +71,29 @@ function Cart() {
     const { token, user, logout, loading } = useAuth();
     console.log('User data:', user);
 
-    const userId = user?.userId;
-    const customerId = user?.customerId;
-    const erpCustId = user?.erpCustomerId; 
-    
+    // Use location.state to initialize userId, customerId, branchId if present
     useEffect(() => {
-        // Set user and customer IDs from context
-        if (userId) { setSelectedUserId(userId); }
-        if (customerId) { setSelectedCustomerId(customerId); }
-        if (erpCustId) { setSelectedErpCustId(erpCustId); }
-    }, [userId, customerId, erpCustId]);
+        if (location.state) {
+            if (location.state.selectedUserId) setSelectedUserId(location.state.selectedUserId);
+            else if (user?.userId) setSelectedUserId(user.userId);
+            if (location.state.selectedCustomerId) setSelectedCustomerId(location.state.selectedCustomerId);
+            else if (user?.customerId) setSelectedCustomerId(user.customerId);
+            if (location.state.selectedBranchId) setSelectedBranchId(location.state.selectedBranchId);
+            if (location.state.selectedBranchName) setSelectedBranchName(location.state.selectedBranchName);
+            if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
+            if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
+            if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
+            if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
+        } else {
+            if (user?.userId) setSelectedUserId(user.userId);
+            if (user?.customerId) setSelectedCustomerId(user.customerId);
+        }
+    }, [location.state, user]);
+
+    // Use the selectedUserId, selectedCustomerId, selectedBranchId for fetching cart items
+    const userId = selectedUserId || user?.userId;
+    const customerId = selectedCustomerId || user?.customerId;
+    const erpCustId = user?.erpCustomerId;
 
     // Get current language
     const currentLanguage = i18n.language;
@@ -89,10 +102,11 @@ function Cart() {
     // Fetch cart items from the backend using fetch API
     const fetchCartItems = React.useCallback(async () => {
         // Don't fetch if we don't have the required user data
-        if (!userId || !customerId) {
+        if (!userId || !customerId || !selectedBranchId) {
             console.log('Missing required user data for cart fetch:', { 
                 userId, 
                 customerId,
+                selectedBranchId,
                 userObject: user 
             });
             return;
@@ -106,8 +120,6 @@ function Cart() {
         try {
             // Set up parameters for pagination
             const params = new URLSearchParams({
-                //page: 1,
-                //pageSize: 200, // Fetch a large number to get all cart items
                 sortBy: 'id',
                 sortOrder: 'asc'
             });
@@ -115,13 +127,9 @@ function Cart() {
             // Create a single filters object with all required fields - use actual user data
             const filters = {
                 user_id: userId,
-                customer_id: customerId
+                customer_id: customerId,
+                branch_id: selectedBranchId
             };
-
-            // Only add branch_id if it's available
-            if (selectedBranchId) {
-                filters.branch_id = selectedBranchId;
-            }
 
             // Log the filters to ensure userId is included
             console.log('Cart filters:', filters);
@@ -150,14 +158,14 @@ function Cart() {
             const result = await response.json();
             console.log('Fetched cart data:', result);
 
-            // Initialize arrays for each category
+            // Declare category arrays before use
             const vmco = [];
             const shc = [];
             const greenMast = [];
             const naqui = [];
             const dar = [];
 
-            // Extract cart items from the response with better error handling
+            // ...existing code...
             const cartProducts = Array.isArray(result.data.data) ? result.data.data :
                 (result.data && Array.isArray(result.data)) ? result.data : [];
 
@@ -295,37 +303,17 @@ function Cart() {
     }, [userId, customerId, selectedBranchId, token, t, currentLanguage, isArabic]);
 
     useEffect(() => {
-        if (loading) {
-            return;
-        }
-
+        if (loading) return;
         if (!user) {
-            console.log("$$$$$$$$$$$ logging out");
-            // Logout instead of showing loading message
             logout();
             navigate('/login');
-            return; // Return while logout is processing
-        } 
-        
-        // Only fetch cart items if we have user data
-        if (user && user.userType && userId && customerId) {
-            console.log('Required user data available, fetching cart items:', {
-                userId, customerId, selectedBranchId
-            });
-            const fetchData = async () => {
-                await fetchCartItems();
-            };
-            fetchData();
-        } else {
-            console.log('Missing required user data for cart fetch:', {
-                userType: user?.userType,
-                userId,
-                customerId,
-                selectedBranchId
-            });
+            return;
         }
-    }, [user, loading, logout, navigate, fetchCartItems, userId, customerId, selectedBranchId]
-    );
+        // Only fetch cart items if we have user data and required IDs
+        if (user && user.userType && userId && customerId && selectedBranchId) {
+            fetchCartItems();
+        }
+    }, [user, loading, logout, navigate, fetchCartItems, userId, customerId, selectedBranchId]);
 
 
     //Rbac and other access based on user object to follow below lik this

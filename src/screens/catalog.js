@@ -221,13 +221,10 @@ function Catalog() {
       let allProducts = [];
       let newLoadedPages = [];
 
-      // Reset products if we're starting fresh
       if (pagesToFetch.includes(1)) {
-        // Just prepare to reset - don't call setState yet
         allProducts = [];
         newLoadedPages = [];
       } else {
-        // If not resetting, start with existing data
         allProducts = [...products];
         newLoadedPages = [...loadedPages];
       }
@@ -534,7 +531,6 @@ function Catalog() {
     const currentQuantity = quantities[productId] || 0;
     const newQuantity = Math.max(moq, currentQuantity + value);
 
-    // Update local state only for immediate UI feedback
     setQuantities((prev) => ({
       ...prev,
       [productId]: newQuantity,
@@ -550,10 +546,8 @@ function Catalog() {
         selectedBranchName: selectedBranch?.label || "",
         selectedBranchNameLc:
           selectedBranch?.branch_name_lc ||
-          selectedBranch?.raw?.branchNameLc ||
-          "",
-        selectedBranchNameEn:
-          selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
+          selectedBranch?.raw?.branchNameLc || "",
+        selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
         selectedBranchCity
