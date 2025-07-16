@@ -46,7 +46,7 @@ const Table = ({
             return actionButtons(item);
         }
           // Handle pay button
-        if (column.key === 'pay' && onPay && item.paymentStatus?.toLowerCase() !== 'paid' ) {
+        if (column.key === 'pay' && onPay && item.paymentStatus?.toLowerCase() !== 'paid' && item.status?.toLowerCase() === 'approved') {
             return (
                 <button 
                     className="action-button pay"
@@ -60,7 +60,7 @@ const Table = ({
                 </button>
             );
         }
-        if (column.key?.toLowerCase() === 'sendlink'  && item.paymentStatus?.toLowerCase() !== 'paid' ) {
+        if (column.key?.toLowerCase() === 'sendlink'  && item.paymentStatus?.toLowerCase() !== 'paid' && item.status?.toLowerCase() === 'approved') {
             return (
                 <button 
                     className="action-button pay"
