@@ -53,6 +53,7 @@ function Cart() {
     const [collapsedCategories, setCollapsedCategories] = useState(new Set());
     const [quantities, setQuantities] = useState({}); const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
+    const [selectedCustomerStatus, setSelectedCustomerStatus] = useState('');
     const [selectedErpCustId, setSelectedErpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
@@ -60,6 +61,7 @@ function Cart() {
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
     const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [selectedBranchCity, setSelectedBranchCity] = useState('');
+    const [selectedBranchStatus, setSelectedBranchStatus] = useState('');
     const [showPaymentPopup, setShowPaymentPopup] = useState(false);
     const [pendingOrderCategory, setPendingOrderCategory] = useState(null);
     const [entityDescriptions, setEntityDescriptions] = useState({});
@@ -566,11 +568,32 @@ function Cart() {
 
     // Handle place order button click
     const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
+
         if (categoryItems.length === 0) {
             Swal.fire({
                 icon: 'info',
                 title: t('No Items'),
                 text: t('No items in this category to order.'),
+                confirmButtonText: t('OK')
+            });
+            return;
+        }
+
+        // Check customer and branch status before placing order
+        if ((selectedCustomerStatus || '').toLowerCase() !== 'approved') {
+            Swal.fire({
+                icon: 'warning',
+                title: t('Order Blocked'),
+                text: t('The Customer is not approved to place order.'),
+                confirmButtonText: t('OK')
+            });
+            return;
+        }
+        if ((selectedBranchStatus || '').toLowerCase() !== 'approved') {
+            Swal.fire({
+                icon: 'warning',
+                title: t('Order Blocked'),
+                text: t('The branch is not approved to place order.'),
                 confirmButtonText: t('OK')
             });
             return;
@@ -1627,7 +1650,7 @@ function Cart() {
     };    // Function to check if credit payment is allowed for the customer (entity-specific)
     const isCreditPaymentAllowed = async (customerId, entity = null) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -1670,7 +1693,7 @@ function Cart() {
     // Function to validate credit balance and show warning if insufficient (entity-specific)
     const validateCreditBalance = async (customerId, totalAmount, entity = null) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -1735,12 +1758,14 @@ function Cart() {
                 selectedCustomerId: location.state.selectedCustomerId
             });
             setSelectedCustomerId(location.state.selectedCustomerId || '');
+            setSelectedCustomerStatus(location.state.selectedCustomerStatus || '');
             setSelectedBranchId(location.state.selectedBranchId || '');
             setSelectedBranchName(location.state.selectedBranchName || 'No location selected');
             setSelectedBranchErpId(location.state.selectedBranchErpId || '');
             setSelectedBranchRegion(location.state.selectedBranchRegion || '');
             setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
             setSelectedBranchCity(location.state.selectedBranchCity || '');
+            setSelectedBranchStatus(location.state.selectedBranchStatus || '');
         } else {
             console.log('No location state available - user might have navigated directly to cart');
             // Don't clear existing branch data if no location state is available
@@ -1890,7 +1915,7 @@ function Cart() {
     // Helper function to determine payment method for non-machine products
     const determinePaymentMethodForNonMachines = async (customerId, totalAmount, entity) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -1955,7 +1980,7 @@ function Cart() {
     // Helper function to determine payment method for SHC products (fresh and non-fresh)
     const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -2060,7 +2085,7 @@ function Cart() {
     // Helper function to check if credit is allowed for specific entity
     const checkCreditAllowed = async (customerId, entity) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'
@@ -2095,7 +2120,7 @@ function Cart() {
     // Helper function to get COD limit
     const getCODLimit = async (customerId) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+            const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include'

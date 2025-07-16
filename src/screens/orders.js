@@ -246,10 +246,10 @@ function Orders() {
     //     state: {
     //       order}})
     const {data}=await axios.post(`${API_BASE_URL}/generatePayment-link`, {id: order.id,endPoint:"payment-opations/order",IsEmail:email}, {withCredentials: true});
-     if(!email){
-    window.open(data.details.url,'_blank','width=500,height=600');
-     }
-    // navigate(data.details.url)
+    //  if(!email){
+    // window.open(data.details.url,'_blank','width=500,height=600');
+    //  }
+    navigate(data.details.url)
   
     // const paymentWindow = window.open(
     //   `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,

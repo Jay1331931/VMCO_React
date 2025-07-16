@@ -93,15 +93,22 @@ function SearchableDropdown({
 
           <div className="dropdown-options">
             {filteredOptions.length > 0 ? (
-              filteredOptions.map((opt, idx) => (
-                <div
-                  key={idx}
-                  className="dropdown-option"
-                  onClick={() => handleOptionSelect(opt)}
-                >
-                  {typeof opt === "object" ? t(opt.name) : t(opt)}
-                </div>
-              ))
+              filteredOptions.map((opt, idx) => {
+                const isOptDisabled = typeof opt === 'object' && opt.disabled;
+                return (
+                  <div
+                    key={idx}
+                    className={`dropdown-option${isOptDisabled ? ' disabled' : ''}`}
+                    onClick={() => {
+                      if (!isOptDisabled) handleOptionSelect(opt);
+                    }}
+                    style={isOptDisabled ? { color: '#aaa', cursor: 'not-allowed', background: '#eae9e9ff' } : {}}
+                    aria-disabled={isOptDisabled}
+                  >
+                    {typeof opt === "object" ? t(opt.name) : t(opt)}
+                  </div>
+                );
+              })
             ) : (
               <div className="no-options">{t("No matches found")}</div>
             )}

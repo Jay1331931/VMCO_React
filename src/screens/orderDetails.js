@@ -2478,7 +2478,7 @@ function OrderDetails() {
   // Helper function to determine payment method for non-machine products
   const determinePaymentMethodForNonMachines = async (customerId, totalAmount, entity) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -2555,7 +2555,7 @@ function OrderDetails() {
   // Helper function to determine payment method for SHC products (fresh and non-fresh)
   const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -2620,7 +2620,7 @@ function OrderDetails() {
   // Function to check if credit payment is allowed for the customer (entity-specific)
   const isCreditPaymentAllowed = async (customerId, entity = null) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
@@ -2663,7 +2663,7 @@ function OrderDetails() {
   // Function to validate credit balance and show warning if insufficient (entity-specific)
   const validateCreditBalance = async (customerId, totalAmount, entity = null) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
+      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'

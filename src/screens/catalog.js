@@ -542,6 +542,7 @@ function Catalog() {
     navigate("/Cart", {
       state: {
         selectedCustomerId,
+        selectedCustomerStatus: user?.customerStatus,
         selectedBranchId: selectedLocation,
         selectedBranchName: selectedBranch?.label || "",
         selectedBranchNameLc:
@@ -550,7 +551,8 @@ function Catalog() {
         selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
-        selectedBranchCity
+        selectedBranchCity,
+        selectedBranchStatus: selectedBranch?.raw?.branchStatus || "",
       },
     });
   };
@@ -596,23 +598,30 @@ function Catalog() {
           branchData = result.data;
         } else if (result && Array.isArray(result.data)) {
           branchData = result.data;
+          console.log("Fetched branch data:", branchData);
+          console.log("Status of branches:", branchData.map(b => b.branchStatus));
         } else {
           branchData = [];
         }
-        const branchOptions = branchData.map((branch) => ({
-          value: String(branch.id || branch.branch_id),
-          label:
-            i18n.language === "en"
-              ? branch.branch_name_en || branch.branchNameEn
-              : branch.branch_name_lc ||
-              branch.branchNameLc ||
-              branch.branch_name_en ||
-              branch.branchNameEn,
-          erpBranchId: branch.erpBranchId || branch.erp_branch_id,
-          branchRegion: branch.region || branch.region,
-          branchCity: branch.city || branch.branchCity || branch.branch_city,
-          raw: branch,
-        }));
+        const branchOptions = branchData.map((branch) => {
+          const status = (branch.branchStatus).toLowerCase();
+          const isApproved = status === 'approved';
+          return {
+            value: String(branch.id || branch.branch_id),
+            label:
+              i18n.language === "en"
+                ? branch.branch_name_en || branch.branchNameEn
+                : branch.branch_name_lc ||
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
+            erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+            branchRegion: branch.region || branch.region,
+            branchCity: branch.city || branch.branchCity || branch.branch_city,
+            raw: branch,
+            disabled: !isApproved,
+          };
+        });
         setBranches(branchOptions);
       } catch (error) {
         console.error("Error fetching branches:", error);
@@ -1307,7 +1316,7 @@ function Catalog() {
                 name="locationSelect"
                 value={selectedLocation}
                 onChange={handleBranchSelect}
-                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value }))}
+                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value, disabled: b.disabled }))}
                 className="location-select"
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}
