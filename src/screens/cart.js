@@ -1298,7 +1298,28 @@ function Cart() {
                         }
                     } catch (error) {
                         console.error(`Error creating line for product ${productId}:`, error);
-                        // Continue with the process - don't let one line failure stop the entire order
+                        // Delete the sales order with orderId if line creation fails
+                        try {
+                            const deleteResponse = await fetch(`${API_BASE_URL}/sales-order/hard-delete/${orderId}`, {
+                                method: 'DELETE',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                            });
+                            if (!deleteResponse.ok) {
+                                console.error(`Failed to hard delete sales order ${orderId}:`, await deleteResponse.text());
+                            } else {
+                                console.log(`Successfully hard deleted sales order ${orderId} after line creation failure.`);
+                            }
+                        } catch (deleteError) {
+                            console.error(`Error during hard delete of sales order ${orderId}:`, deleteError);
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: t('Order Failed'),
+                            text: t('Creation of sales order failed.'),
+                            confirmButtonText: t('OK')
+                        });
+                        return;
                     }
                 }
 
@@ -1479,6 +1500,7 @@ function Cart() {
 
             console.log('Delivery Charges calculated:', deliveryCharges);
 
+
             // Calculate final total amount (lines total + delivery charges)
             const finalTotalAmount = linesTotal + deliveryCharges;
 
@@ -1486,6 +1508,21 @@ function Cart() {
             if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
                 console.error('Invalid finalTotalAmount detected:', finalTotalAmount, 'Components:', { linesTotal, deliveryCharges });
                 throw new Error(`Invalid total amount calculation: linesTotal=${linesTotal}, deliveryCharges=${deliveryCharges}, finalTotal=${finalTotalAmount}`);
+            }
+
+            // Ensure orderStatus is defined in this scope
+            let orderStatusUpdate = 'Open';
+            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                orderStatusUpdate = 'Pending';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                orderStatusUpdate = 'Open';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+                const pm = (selectedPaymentMethod || '').toLowerCase();
+                if (pm === 'credit' || pm === 'cash on delivery') {
+                    orderStatusUpdate = 'Approved';
+                } else if (pm === 'pre payment') {
+                    orderStatusUpdate = 'Pending';
+                }
             }
 
             console.log('Final order totals:', {
@@ -1498,12 +1535,14 @@ function Cart() {
                     isDeliveryChargesApplicable,
                     categoryName
                 }
-            });        // Update the order with final calculated amounts
+            });
+            // Update the order with final calculated amounts
             const updateOrderPayload = {
                 id: orderId,
                 paymentMethod: selectedPaymentMethod,
                 totalAmount: finalTotalAmount.toFixed(2),
                 total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
+                status: orderStatusUpdate, // Always send the current orderStatus
                 deliveryCharges: deliveryCharges.toFixed(2),
                 paymentPercentage: '100.00',
                 // modifiedBy: userId // Removed to avoid backend 500 error
