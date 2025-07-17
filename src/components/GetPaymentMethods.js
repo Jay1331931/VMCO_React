@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Constants from '../constants';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,6 @@ function GetPaymentMethods({
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const [methods, setMethods] = useState([]);
-  const [balances, setBalances] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -27,6 +27,14 @@ function GetPaymentMethods({
     
     // If in simple mode, just set the two options directly
     if (isSimpleMode) {
+      setMethods(['Cash on Delivery', 'Pre Payment']);
+      setLoading(false);
+      return;
+    }
+
+    // For VMCO non-machine products, show only COD and Pre Payment
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('vending machine company') && !cat.includes('machines')) {
       setMethods(['Cash on Delivery', 'Pre Payment']);
       setLoading(false);
       return;
@@ -69,46 +77,7 @@ function GetPaymentMethods({
       .finally(() => setLoading(false));
   }, [open, API_BASE_URL, category, customerId, totalAmount, isSimpleMode]);
 
-  // Fetch payment method balances for the customer
-  useEffect(() => {
-    console.log('Open:', open, 'Customer ID:', customerId);
-    if (!open || !customerId || isSimpleMode) return; // Skip balance fetching in simple mode
-    
-    fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
-      })
-      .then(res => res.json())
-      .then(result => {
-        console.log('Fetched payment method balances:', result);
-        if (result.status === 'Ok' && result.data) {
-          const methodDetails = result.data.methodDetails;
-          const currentBalance = result.data.currentBalance || {};
-          if (methodDetails) {
-            console.log('Raw balances data fetched:', methodDetails);
-            console.log('Current balance data:', currentBalance);
-            // Map method names to balances
-            const map = {};
-            // Normalize method names to match those in methods array
-            map['Cash on Delivery'] = methodDetails.COD.limit ? Number(methodDetails.COD.limit).toFixed(2) : 'NA';
-            
-            // For credit, use the currentBalance which shows the actual available balance
-            // The currentBalance can be negative (representing available credit)
-            if (methodDetails.credit) {
-              // For now, we'll show 'Credit Available' for credit methods since the balance structure is entity-specific
-              // In a more sophisticated implementation, we would need to know which entity this is for
-              map['Credit'] = 'Available';
-            }
-            
-            if (methodDetails.prePayment) map['Pre Payment'] = 'Available';
-            if (methodDetails.partialPayment) map['Partial Payment'] = 'Available';
-            setBalances(map);
-          }
-        }
-      })
-      .catch(() => setBalances({}));
-    }, [open, API_BASE_URL, customerId, isSimpleMode]);
+
 
   if (!open) return null;
 
@@ -136,48 +105,28 @@ function GetPaymentMethods({
               <thead>
                 <tr>
                   <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Payment Method')}</th>
-                  {!isSimpleMode && <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>{t('Balance')}</th>}
                   <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
               <tbody>
                 {methods.length === 0 ? (
                   <tr>
-                    <td colSpan={isSimpleMode ? "2" : "3"} style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
+                    <td colSpan={2} style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
                   </tr>
                 ) : (
-                  methods.map((method, idx) => {
-                    let isDisabled = false;
-                    if (!isSimpleMode) {
-                      if (method === 'Cash on Delivery' && balances['Cash on Delivery'] !== undefined) {
-                        // Disable if totalAmount >= COD limit
-                        isDisabled = Number(totalAmount) >= Number(balances['Cash on Delivery']);
-                      }
-
-                      // For credit, we don't disable here since the balance check is done in cart.js
-                      // The cart.js functions will handle the credit balance validation and show appropriate alerts
-                    }
-
-                    return (
-                      <tr key={idx}>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
-                        {!isSimpleMode && (
-                          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                            {balances[method] !== undefined ? balances[method] : '-'}
-                          </td>
-                        )}
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                          <button
-                            className="gp-product-btn"
-                            onClick={() => onSelectPaymentMethod(method)}
-                            disabled={isDisabled}
-                          >
-                            {t('Select')}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
+                  methods.map((method, idx) => (
+                    <tr key={idx}>
+                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
+                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                        <button
+                          className="gp-product-btn"
+                          onClick={() => onSelectPaymentMethod(method)}
+                        >
+                          {t('Select')}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>

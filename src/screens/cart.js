@@ -619,16 +619,8 @@ function Cart() {
             const entity = getEntityFromCategory(categoryName);
             if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                 // Separate VMCO products into machines and consumables
-                const machineProducts = categoryItems.filter(item => {
-                    const isMachine = item.isMachine === true;
-                    console.log(`Product ${item.name} (${item.product_id}): isMachine=${isMachine}`);
-                    return isMachine;
-                });
-                const nonMachineProducts = categoryItems.filter(item => {
-                    const isMachine = item.isMachine === true;
-                    console.log(`Product ${item.name} (${item.product_id}): isMachine=${isMachine}, isNonMachine=${!isMachine}`);
-                    return !isMachine;
-                });
+                const machineProducts = categoryItems.filter(item => item.isMachine === true);
+                const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
 
                 console.log('VMCO products separated:', {
                     total: categoryItems.length,
@@ -643,21 +635,15 @@ function Cart() {
                 // First, place order for machines with Pre Payment
                 if (machineProducts.length > 0) {
                     console.log('Placing order for VMCO machines with Pre Payment');
-                    // Use a specific category name for machines to ensure separate orders
                     const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
                     console.log('Machine order result:', machineOrderId);
                     if (machineOrderId) {
                         orderIds.push(machineOrderId);
-                        console.log('Added machine order ID to array:', machineOrderId);
-                        // Delete machine products from cart after successful order
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
-                        console.log('Deleted machine products from cart after order:', machineProducts);
-                    } else {
-                        console.error('Machine order failed - no order ID returned');
                     }
                 }
 
-                // Then, place order for non-machine products with determined payment method
+                // Then, place order for non-machine products with payment method logic like GMTC, SHC, DAR
                 if (nonMachineProducts.length > 0) {
                     // Calculate total amount for non-machine products
                     let nonMachineTotal = 0;
@@ -669,38 +655,48 @@ function Cart() {
                         nonMachineTotal += totalAmount;
                     });
 
-                    // Determine payment method for non-machine products
-                    const nonMachinePaymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, nonMachineTotal, entity);
+                    // Use the same payment method determination as GMTC, SHC, DAR
+                    const paymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, nonMachineTotal, entity);
 
                     // If payment method determination returned null (insufficient balance), cancel the order
-                    if (nonMachinePaymentMethod === null) {
+                    if (paymentMethod === null) {
                         console.log('Payment method determination cancelled due to insufficient balance');
                         return; // Exit the function early
                     }
 
-                    console.log('Placing order for VMCO non-machine products with determined payment method:', nonMachinePaymentMethod);
-                    // Use a specific category name for non-machines to ensure separate orders
-                    const nonMachineOrderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', nonMachinePaymentMethod, false);
-                    console.log('Non-machine order result:', nonMachineOrderId);
-                    if (nonMachineOrderId) {
-                        orderIds.push(nonMachineOrderId);
-                        console.log('Added non-machine order ID to array:', nonMachineOrderId);
-                        // Delete non-machine products from cart after successful order
+                    // If a specific payment method was determined, use it directly
+                    if (paymentMethod === 'SHOW_COD_POPUP') {
+                        // Only allow COD and Pre Payment in the popup
+                        setPendingOrderCategory(categoryName + ' - Consumables');
+                        setPendingOrderItems(nonMachineProducts);
+                        setShowPaymentPopup(true);
+                        return;
+                    } else if (paymentMethod === 'Pre Payment') {
+                        // Directly place order with Pre Payment, do not show popup
+                        console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for VMCO entity`);
+                        await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', 'Pre Payment', false);
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
-                        console.log('Deleted non-machine products from cart after order:', nonMachineProducts);
+                        // Optionally, collect orderId if needed
+                        // orderIds.push(orderId);
+                    } else if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
+                        console.log(`Using determined payment method ${paymentMethod} for VMCO entity`);
+                        await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', paymentMethod, false);
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
                     } else {
-                        console.error('Non-machine order failed - no order ID returned');
+                        // For COD or when payment method needs user selection, show popup
+                        console.log(`Showing payment method selection for VMCO entity`);
+                        setPendingOrderCategory(categoryName + ' - Consumables');
+                        setPendingOrderItems(nonMachineProducts);
+                        setShowPaymentPopup(true);
+                        return;
                     }
                 }
 
                 // Show combined success message for VMCO orders
                 if (orderIds.length > 0) {
-                    console.log('Order IDs collected:', orderIds);
                     const orderText = orderIds.length === 1
                         ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                         : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-
-                    console.log('Order success message:', orderText);
 
                     Swal.fire({
                         icon: 'success',
@@ -715,7 +711,6 @@ function Cart() {
                                     cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
                             })));
 
-                        // Clean up quantities state for removed items
                         setQuantities(prevQuantities => {
                             const newQuantities = { ...prevQuantities };
                             categoryItems.forEach(item => {
