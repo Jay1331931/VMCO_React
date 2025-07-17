@@ -6,6 +6,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
@@ -25,6 +26,7 @@ const OpationsPage = () => {
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [amount, setAmount] = useState(0);
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   // if (orderId &&!token ){
   //   try {
@@ -406,7 +408,6 @@ const OpationsPage = () => {
   };
 try {
     const response = await makeRequest();
-
     window.open(response.data.InvoiceURL, "_blank", "width=500,height=600");
     window.close();
   } catch (error) {
