@@ -20,28 +20,28 @@ const getEntityFromCategory = (categoryName) => {
     if (!categoryName) {
         return null;
     }
-    
+
     // Just use the fallback logic which doesn't require cartItems
     const category = categoryName.toLowerCase();
-    
+
     // Direct mapping from section to entity
-    if (category.includes(Constants.ENTITY.VMCO.toLowerCase()) || 
+    if (category.includes(Constants.ENTITY.VMCO.toLowerCase()) ||
         category.includes('vending machine company')) {
         return Constants.ENTITY.VMCO;
-    } else if (category.includes(Constants.ENTITY.SHC.toLowerCase()) || 
-               category.includes('saudi hospitality company')) {
+    } else if (category.includes(Constants.ENTITY.SHC.toLowerCase()) ||
+        category.includes('saudi hospitality company')) {
         return Constants.ENTITY.SHC;
-    } else if (category.includes(Constants.ENTITY.GMTC.toLowerCase()) || 
-               category.includes('green mast factory ltd')) {
+    } else if (category.includes(Constants.ENTITY.GMTC.toLowerCase()) ||
+        category.includes('green mast factory ltd')) {
         return Constants.ENTITY.GMTC;
-    } else if (category.includes(Constants.ENTITY.NAQI.toLowerCase()) || 
-               category.includes('naqi company')) {
+    } else if (category.includes(Constants.ENTITY.NAQI.toLowerCase()) ||
+        category.includes('naqi company')) {
         return Constants.ENTITY.NAQI;
-    } else if (category.includes(Constants.ENTITY.DAR.toLowerCase()) || 
-               category.includes('dar company')) {
+    } else if (category.includes(Constants.ENTITY.DAR.toLowerCase()) ||
+        category.includes('dar company')) {
         return Constants.ENTITY.DAR;
     }
-    
+
     // If no match is found, return null or a default entity
     return null;
 };
@@ -105,17 +105,17 @@ function Cart() {
     const fetchCartItems = React.useCallback(async () => {
         // Don't fetch if we don't have the required user data
         if (!userId || !customerId || !selectedBranchId) {
-            console.log('Missing required user data for cart fetch:', { 
-                userId, 
+            console.log('Missing required user data for cart fetch:', {
+                userId,
                 customerId,
                 selectedBranchId,
-                userObject: user 
+                userObject: user
             });
             return;
         }
 
         console.log('Starting cart fetch with data:', { userId, customerId, selectedBranchId });
-        
+
         setIsLoading(true);
         setError(null);
 
@@ -237,10 +237,10 @@ function Cart() {
                 // Categorize based on entity and product type
                 const entity = (product.entity || '').toLowerCase();
                 const isMachine = isProductMachine(product);
-                
+
                 // Add isMachine flag to formattedItem
                 formattedItem.isMachine = isMachine;
-                
+
                 // Add isFresh flag to formattedItem (preserve from original product data)
                 formattedItem.isFresh = product.isFresh === true;                // Categorize based on entity and product type
                 if (entity === Constants.ENTITY.VMCO.toLowerCase()) {
@@ -296,7 +296,7 @@ function Cart() {
         } catch (err) {
             console.error('Error fetching cart items:', err);
             setError('Failed to load cart items. Please try again.');
-            
+
             // Don't clear existing cart items if there's an error
             // This prevents the cart from being cleared due to temporary network issues
         } finally {
@@ -448,7 +448,7 @@ function Cart() {
     }; const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
         console.log('selected payment:', method)
-        
+
         // Check if this is SHC entity - if so, handle fresh/non-fresh splitting
         const entity = getEntityFromCategory(pendingOrderCategory);
         if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -464,7 +464,7 @@ function Cart() {
         try {
             setIsPlacingOrder(true);
             const entity = getEntityFromCategory(categoryName);
-            
+
             // Separate SHC products into fresh and non-fresh products
             const freshProducts = categoryItems.filter(item => {
                 const isFresh = item.isFresh === true;
@@ -476,7 +476,7 @@ function Cart() {
                 console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}, isNonFresh=${!isFresh}`);
                 return !isFresh;
             });
-            
+
             console.log('SHC products separated:', {
                 total: categoryItems.length,
                 fresh: freshProducts.length,
@@ -524,32 +524,33 @@ function Cart() {
             // Show combined success message for SHC orders
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
-                const orderText = orderIds.length === 1 
-                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`) 
+                const orderText = orderIds.length === 1
+                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                     : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-                
+
                 console.log('Order success message:', orderText);
-                
+
                 Swal.fire({
                     icon: 'success',
                     title: t('Order Placed'),
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(() => {
-                      setCartItems(prevCartItems =>
-                prevCartItems.map(category => ({
-                    ...category,
-                   items: category.items.filter(
-      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
-                   
-                   // Clean up quantities state for removed items
-                   setQuantities(prevQuantities => {
-                       const newQuantities = { ...prevQuantities };
-                       categoryItems.forEach(item => {
-                           delete newQuantities[item.id];
-                       });
-                       return newQuantities;
-                   });
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(
+                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                        })));
+
+                    // Clean up quantities state for removed items
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        categoryItems.forEach(item => {
+                            delete newQuantities[item.id];
+                        });
+                        return newQuantities;
+                    });
                 });
             }
         } catch (err) {
@@ -612,7 +613,7 @@ function Cart() {
 
         setIsPlacingOrder(true);
         setError(null);
-        
+
         try {
             // Check if this is a VMCO category and handle special logic
             const entity = getEntityFromCategory(categoryName);
@@ -628,7 +629,7 @@ function Cart() {
                     console.log(`Product ${item.name} (${item.product_id}): isMachine=${isMachine}, isNonMachine=${!isMachine}`);
                     return !isMachine;
                 });
-                
+
                 console.log('VMCO products separated:', {
                     total: categoryItems.length,
                     machines: machineProducts.length,
@@ -670,13 +671,13 @@ function Cart() {
 
                     // Determine payment method for non-machine products
                     const nonMachinePaymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, nonMachineTotal, entity);
-                    
+
                     // If payment method determination returned null (insufficient balance), cancel the order
                     if (nonMachinePaymentMethod === null) {
                         console.log('Payment method determination cancelled due to insufficient balance');
                         return; // Exit the function early
                     }
-                    
+
                     console.log('Placing order for VMCO non-machine products with determined payment method:', nonMachinePaymentMethod);
                     // Use a specific category name for non-machines to ensure separate orders
                     const nonMachineOrderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', nonMachinePaymentMethod, false);
@@ -695,12 +696,12 @@ function Cart() {
                 // Show combined success message for VMCO orders
                 if (orderIds.length > 0) {
                     console.log('Order IDs collected:', orderIds);
-                    const orderText = orderIds.length === 1 
-                        ? t(`Your order has been placed successfully! Order #${orderIds[0]}`) 
+                    const orderText = orderIds.length === 1
+                        ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                         : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-                    
+
                     console.log('Order success message:', orderText);
-                    
+
                     Swal.fire({
                         icon: 'success',
                         title: t('Order Placed'),
@@ -708,19 +709,20 @@ function Cart() {
                         confirmButtonText: t('OK')
                     }).then(() => {
                         setCartItems(prevCartItems =>
-                prevCartItems.map(category => ({
-                    ...category,
-                   items: category.items.filter(
-      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
-                   
-                   // Clean up quantities state for removed items
-                   setQuantities(prevQuantities => {
-                       const newQuantities = { ...prevQuantities };
-                       categoryItems.forEach(item => {
-                           delete newQuantities[item.id];
-                       });
-                       return newQuantities;
-                   });
+                            prevCartItems.map(category => ({
+                                ...category,
+                                items: category.items.filter(
+                                    cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                            })));
+
+                        // Clean up quantities state for removed items
+                        setQuantities(prevQuantities => {
+                            const newQuantities = { ...prevQuantities };
+                            categoryItems.forEach(item => {
+                                delete newQuantities[item.id];
+                            });
+                            return newQuantities;
+                        });
                     });
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -737,7 +739,7 @@ function Cart() {
 
                 // Determine payment method for SHC products
                 const shcPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, totalAmount, entity);
-                
+
                 // If payment method determination returned null (insufficient balance), cancel the order
                 if (shcPaymentMethod === null) {
                     console.log('Payment method determination cancelled due to insufficient balance');
@@ -769,7 +771,7 @@ function Cart() {
 
                 // Determine payment method for non-machine products
                 const paymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, totalAmount, entity);
-                
+
                 // If payment method determination returned null (insufficient balance), cancel the order
                 if (paymentMethod === null) {
                     console.log('Payment method determination cancelled due to insufficient balance');
@@ -777,7 +779,18 @@ function Cart() {
                 }
 
                 // If a specific payment method was determined, use it directly
-                if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
+                if (paymentMethod === 'SHOW_COD_POPUP') {
+                    // Only allow COD and Pre Payment in the popup
+                    setPendingOrderCategory(categoryName);
+                    setPendingOrderItems(categoryItems);
+                    setShowPaymentPopup(true);
+                    return;
+                } else if (paymentMethod === 'Pre Payment') {
+                    // Directly place order with Pre Payment, do not show popup
+                    console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
+                    await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
+                    return;
+                } else if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
                     console.log(`Using determined payment method ${paymentMethod} for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, paymentMethod, true);
                 } else {
@@ -786,7 +799,7 @@ function Cart() {
                     setPendingOrderCategory(categoryName);
                     setPendingOrderItems(categoryItems);
                     setShowPaymentPopup(true);
-                    return; // Exit function to wait for user selection
+                    return;
                 }
             } else {
                 // For other categories, place order as usual
@@ -884,7 +897,7 @@ function Cart() {
 
             // Check if payment method is "Pre Payment" - if so, always create a new order
             const isPrePayment = selectedPaymentMethod === 'Pre Payment';
-            
+
             console.log(`placeOrderForCategory called with:`, {
                 categoryName,
                 selectedPaymentMethod,
@@ -895,8 +908,8 @@ function Cart() {
 
             if (!isPrePayment) {
                 // Only check for existing orders if NOT using Pre Payment
-                const orderFiltersObj = (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) || 
-                                      (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())
+                const orderFiltersObj = (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) ||
+                    (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())
                     ? {
                         customerId: selectedCustomerId,
                         branchId: selectedBranchId,
@@ -933,11 +946,11 @@ function Cart() {
                 if (existingOrderResult.data?.data?.length > 0) {
                     // For VMCO and SHC orders, ensure we match the exact productCategory
                     const matchingOrders = existingOrderResult.data.data.filter(order => {
-                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() || 
-                                     entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
-                            console.log('Checking order:', { 
-                                orderId: order.id, 
-                                orderCategory: order.productCategory, 
+                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
+                            entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                            console.log('Checking order:', {
+                                orderId: order.id,
+                                orderCategory: order.productCategory,
                                 searchCategory: categoryName,
                                 entity: entity,
                                 match: order.productCategory === categoryName
@@ -951,7 +964,7 @@ function Cart() {
                         existingOrderData = matchingOrders[0];
                         orderId = existingOrderData.id;
                         console.log(`Found existing order: ${orderId} for category: ${categoryName}`);
-                        
+
                         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
                             method: 'GET',
                             headers: { 'Content-Type': 'application/json' },
@@ -986,7 +999,7 @@ function Cart() {
                     const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
-                    
+
                     // Validate values to prevent NaN
                     if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
                         console.warn('Invalid values detected in order calculation:', {
@@ -1001,13 +1014,13 @@ function Cart() {
                         });
                         continue; // Skip this item if values are invalid
                     }
-                    
+
                     const baseAmount = unitPrice * newQuantity;
                     const vatAmount = (baseAmount * vatPercentage) / 100;
                     const netAmount = baseAmount + vatAmount;
-                    
+
                     initialTotalAmount += netAmount;
-                    
+
                     console.log(`Item ${item.id} calculation:`, {
                         quantity: newQuantity,
                         unitPrice,
@@ -1017,13 +1030,13 @@ function Cart() {
                         netAmount
                     });
                 }
-                
+
                 // Validate initial total
                 if (isNaN(initialTotalAmount) || initialTotalAmount < 0) {
                     console.error('Invalid initialTotalAmount calculated:', initialTotalAmount);
                     throw new Error(`Invalid initial total amount: ${initialTotalAmount}`);
                 }
-                
+
                 console.log('Initial total amount calculated:', initialTotalAmount);
 
                 let deliveryCharges = 0.00;
@@ -1037,15 +1050,23 @@ function Cart() {
                 // Determine if this is a machine order or fresh order based on category name and entity
                 const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
                 const isFreshOrder = categoryName.toLowerCase().includes('fresh') || categoryName.toLowerCase().includes('طازج');
-                
-                // Determine status based on entity
+
+                // Determine status based on entity and payment method (case-insensitive)
                 let orderStatus = 'Open'; // Default status
                 if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                     orderStatus = 'Pending';
                 } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                     orderStatus = 'Open';
+                } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+                    // For Naqi entity, set status based on payment method
+                    const pm = (selectedPaymentMethod || '').toLowerCase();
+                    if (pm === 'credit' || pm === 'cash on delivery') {
+                        orderStatus = 'Approved';
+                    } else if (pm === 'pre payment') {
+                        orderStatus = 'Pending';
+                    }
                 }
-                
+
                 const finalTotalAmount = initialTotalAmount + deliveryCharges;
                 const orderPayload = {
                     customerId: selectedCustomerId,
@@ -1064,7 +1085,7 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2),
                     paidAmount: '0.00',
                     deliveryCharges: deliveryCharges.toFixed(2),
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending', 
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: orderStatus,
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,
@@ -1132,7 +1153,7 @@ function Cart() {
                 const newQuantity = parseInt(quantities[item.id] || item.quantity || item.moq || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
-                
+
                 // Validate order line values
                 if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
                     console.error('Invalid order line values:', {
@@ -1212,7 +1233,7 @@ function Cart() {
                     // Determine isMachine and isFresh for this line based on the category and item
                     let lineMachine = false;
                     let lineFresh = false;
-                    
+
                     if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                         lineMachine = item.isMachine === true;
                         lineFresh = false; // VMCO products don't have fresh flag
@@ -1280,7 +1301,7 @@ function Cart() {
                         // Continue with the process - don't let one line failure stop the entire order
                     }
                 }
-                
+
                 // Increment line number for next iteration
                 lineNumber++;
             }
@@ -1292,7 +1313,7 @@ function Cart() {
             // Try multiple approaches to fetch the correct order lines
             let recalcLinesResponse;
             let recalcLinesData;
-            
+
             // First try with orderId filter
             try {
                 recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
@@ -1300,11 +1321,11 @@ function Cart() {
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
-                
+
                 if (!recalcLinesResponse.ok) {
                     throw new Error('Failed to fetch order lines for recalculating total amount');
                 }
-                
+
                 recalcLinesData = await recalcLinesResponse.json();
                 console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
             } catch (error) {
@@ -1316,11 +1337,11 @@ function Cart() {
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                     });
-                    
+
                     if (!recalcLinesResponse.ok) {
                         throw new Error('Failed to fetch order lines for recalculating total amount');
                     }
-                    
+
                     recalcLinesData = await recalcLinesResponse.json();
                     console.log('Fetched order lines data with order_id filter for orderId ' + orderId + ':', recalcLinesData);
                 } catch (secondError) {
@@ -1331,13 +1352,13 @@ function Cart() {
 
             // Verify we have the correct lines for this order
             // Try multiple field names for orderId comparison
-            const allLines = recalcLinesData?.data?.data?.filter(line => 
-                Number(line.orderId) === Number(orderId) || 
+            const allLines = recalcLinesData?.data?.data?.filter(line =>
+                Number(line.orderId) === Number(orderId) ||
                 Number(line.order_id) === Number(orderId) ||
                 Number(line.OrderId) === Number(orderId)
             ) || [];
             console.log(`All order lines for orderId ${orderId}:`, allLines);
-            
+
             // Additional debugging to understand the filtering issue
             if (allLines.length === 0) {
                 console.log('No lines found for orderId. Debugging info:');
@@ -1351,7 +1372,7 @@ function Cart() {
                     productId: line.productId,
                     netAmount: line.netAmount || line.net_amount
                 })));
-                
+
                 // Try a direct API call to get lines for this specific order
                 try {
                     console.log('Attempting direct API call for order lines...');
@@ -1360,7 +1381,7 @@ function Cart() {
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                     });
-                    
+
                     if (directResponse.ok) {
                         const directData = await directResponse.json();
                         console.log('Direct API call successful:', directData);
@@ -1377,22 +1398,22 @@ function Cart() {
             // Calculate the sum of all order line net amounts and sales tax amounts - ensure we parse all values correctly
             let linesTotal = 0;
             let totalSalesTaxAmount = 0;
-            
+
             if (allLines.length > 0) {
                 for (const line of allLines) {
                     // Handle multiple possible field names and ensure we get valid numbers
                     const netAmountRaw = line.netAmount || line.net_amount || 0;
                     const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
-                    
+
                     const netAmount = parseFloat(netAmountRaw);
                     const salesTaxAmount = parseFloat(salesTaxAmountRaw);
-                    
+
                     // Check for NaN values and handle them appropriately
                     const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
                     const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
-                    
+
                     console.log(`Line for product ${line.productId}: net_amount_raw=${netAmountRaw}, parsed=${validNetAmount}, sales_tax_amount_raw=${salesTaxAmountRaw}, parsed=${validSalesTaxAmount}`);
-                    
+
                     linesTotal += validNetAmount;
                     totalSalesTaxAmount += validSalesTaxAmount;
                 }
@@ -1403,15 +1424,15 @@ function Cart() {
                     const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                     const vatPercentage = parseFloat(item.vatPercentage || 0);
-                    
+
                     if (!isNaN(newQuantity) && !isNaN(unitPrice) && !isNaN(vatPercentage) && newQuantity > 0 && unitPrice >= 0) {
                         const baseAmount = unitPrice * newQuantity;
                         const vatAmount = (baseAmount * vatPercentage) / 100;
                         const netAmount = baseAmount + vatAmount;
-                        
+
                         linesTotal += netAmount;
                         totalSalesTaxAmount += vatAmount;
-                        
+
                         console.log(`Fallback calculation for item ${item.id}:`, {
                             quantity: newQuantity,
                             unitPrice,
@@ -1426,7 +1447,7 @@ function Cart() {
 
             console.log('Recalculated lines total:', linesTotal);
             console.log('Total sales tax amount:', totalSalesTaxAmount);
-            
+
             // Additional validation to ensure we have valid totals
             if (isNaN(linesTotal) || linesTotal < 0) {
                 console.error('Invalid linesTotal detected:', linesTotal, 'Setting to 0');
@@ -1460,13 +1481,13 @@ function Cart() {
 
             // Calculate final total amount (lines total + delivery charges)
             const finalTotalAmount = linesTotal + deliveryCharges;
-            
+
             // Additional validation for final total
             if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
                 console.error('Invalid finalTotalAmount detected:', finalTotalAmount, 'Components:', { linesTotal, deliveryCharges });
                 throw new Error(`Invalid total amount calculation: linesTotal=${linesTotal}, deliveryCharges=${deliveryCharges}, finalTotal=${finalTotalAmount}`);
             }
-            
+
             console.log('Final order totals:', {
                 linesTotal,
                 totalSalesTaxAmount,
@@ -1487,9 +1508,9 @@ function Cart() {
                 paymentPercentage: '100.00',
                 // modifiedBy: userId // Removed to avoid backend 500 error
             };
-            
+
             console.log('Update order payload:', updateOrderPayload);
-            
+
             // Validate payload before sending
             if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
                 console.error('Invalid totalAmount in update payload:', updateOrderPayload.totalAmount);
@@ -1501,56 +1522,56 @@ function Cart() {
                     allLinesCount: allLines.length,
                     categoryItemsCount: categoryItems.length
                 });
-                
+
                 // If we have cart items but no order lines, this might be a timing issue
                 // Let's try one more time with a longer delay
                 if (categoryItems.length > 0 && allLines.length === 0) {
                     console.log('Retrying order line fetch after longer delay...');
                     await new Promise(resolve => setTimeout(resolve, 500));
-                    
+
                     try {
                         const retryResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
                             method: 'GET',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
                         });
-                        
+
                         if (retryResponse.ok) {
                             const retryData = await retryResponse.json();
-                            const retryLines = retryData?.data?.data?.filter(line => 
-                                Number(line.orderId) === Number(orderId) || 
+                            const retryLines = retryData?.data?.data?.filter(line =>
+                                Number(line.orderId) === Number(orderId) ||
                                 Number(line.order_id) === Number(orderId) ||
                                 Number(line.OrderId) === Number(orderId)
                             ) || [];
-                            
+
                             if (retryLines.length > 0) {
                                 console.log('Retry successful, found order lines:', retryLines);
                                 // Recalculate with the retry data
                                 let retryLinesTotal = 0;
                                 let retryTotalSalesTaxAmount = 0;
-                                
+
                                 for (const line of retryLines) {
                                     const netAmountRaw = line.netAmount || line.net_amount || 0;
                                     const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
-                                    
+
                                     const netAmount = parseFloat(netAmountRaw);
                                     const salesTaxAmount = parseFloat(salesTaxAmountRaw);
-                                    
+
                                     const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
                                     const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
-                                    
+
                                     retryLinesTotal += validNetAmount;
                                     retryTotalSalesTaxAmount += validSalesTaxAmount;
                                 }
-                                
+
                                 if (retryLinesTotal > 0) {
                                     linesTotal = retryLinesTotal;
                                     totalSalesTaxAmount = retryTotalSalesTaxAmount;
                                     const retryFinalTotalAmount = linesTotal + deliveryCharges;
-                                    
+
                                     updateOrderPayload.totalAmount = retryFinalTotalAmount.toFixed(2);
                                     updateOrderPayload.total_sales_tax_amount = totalSalesTaxAmount.toFixed(2);
-                                    
+
                                     console.log('Updated totals after retry:', {
                                         retryLinesTotal,
                                         retryTotalSalesTaxAmount,
@@ -1563,7 +1584,7 @@ function Cart() {
                         console.error('Retry failed:', retryError);
                     }
                 }
-                
+
                 // Final check - if still zero, something is wrong
                 if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
                     throw new Error(`Cannot update order with totalAmount of ${updateOrderPayload.totalAmount}. This indicates a problem with order line creation or fetching.`);
@@ -1591,24 +1612,25 @@ function Cart() {
                     text: t(`Your order has been placed successfully! Order #${orderId}. Payment Method: ${selectedPaymentMethod}`),
                     confirmButtonText: t('OK')
                 }).then(() => {
-                     setCartItems(prevCartItems =>
-                prevCartItems.map(category => ({
-                    ...category,
-                   items: category.items.filter(
-      cartItem => !categoryItems.some(ci => ci.id === cartItem.id)  )})));
-                   
-                   // Clean up quantities state for removed items
-                   setQuantities(prevQuantities => {
-                       const newQuantities = { ...prevQuantities };
-                       categoryItems.forEach(item => {
-                           delete newQuantities[item.id];
-                       });
-                       return newQuantities;
-                   });
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(
+                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                        })));
+
+                    // Clean up quantities state for removed items
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        categoryItems.forEach(item => {
+                            delete newQuantities[item.id];
+                        });
+                        return newQuantities;
+                    });
                 });
-                
+
                 // Delete cart items for non-VMCO and non-SHC categories
-                if (entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() && 
+                if (entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
                     entity.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase()) {
                     try {
                         const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
@@ -1666,7 +1688,7 @@ function Cart() {
 
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
-                
+
                 // If entity is provided, check entity-specific credit allowance
                 if (entity && methodDetails.credit && methodDetails.credit[entity]) {
                     const entityCreditDetails = methodDetails.credit[entity];
@@ -1674,7 +1696,7 @@ function Cart() {
                     console.log(`Credit payment is ${isAllowed ? 'allowed' : 'not allowed'} for entity ${entity}`);
                     return isAllowed;
                 }
-                
+
                 // Fallback: check if credit is generally allowed (legacy support)
                 if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
                     console.log('Credit payment is allowed for customer (general)');
@@ -1714,7 +1736,7 @@ function Cart() {
                 // Check if totalAmount is provided and compare with credit balance
                 if (totalAmount !== undefined && methodDetails.credit) {
                     let creditBalance = 0;
-                    
+
                     // If entity is provided, check entity-specific credit balance from currentBalance
                     if (entity && currentBalance[entity] !== undefined) {
                         creditBalance = Math.abs(currentBalance[entity] || 0);
@@ -1827,7 +1849,7 @@ function Cart() {
         console.log("=== END DEBUG ===");
 
         setFilteredCartItems(sectionsToShow);
-        
+
         // Collapse all sections by default when cart items are loaded
         if (sectionsToShow.length > 0) {
             const allCategories = new Set(sectionsToShow.map(item => item.category));
@@ -1858,7 +1880,7 @@ function Cart() {
                     result.data.forEach(entity => {
                         // Use current language for description
                         const description = entity.description;
-                        
+
                         // Use the entity code/value as the key, not the entity object itself
                         const entityCode = entity.value || entity.code || entity.name;
                         if (entityCode) {
@@ -1932,11 +1954,11 @@ function Cart() {
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
                 const currentBalance = result.data.currentBalance || {};
-                
-                // Check if credit is allowed for this entity
+                let creditAllowed = false;
                 if (methodDetails.credit && methodDetails.credit[entity]) {
                     const entityCreditDetails = methodDetails.credit[entity];
-                    if (entityCreditDetails.isAllowed === true) {
+                    creditAllowed = entityCreditDetails.isAllowed === true;
+                    if (creditAllowed) {
                         // Check if current balance is sufficient
                         const entityBalance = currentBalance[entity] || 0;
                         if (totalAmount <= Math.abs(entityBalance)) {
@@ -1944,24 +1966,28 @@ function Cart() {
                             return 'Credit';
                         } else {
                             console.log(`Credit is allowed for entity ${entity} but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
-                            // Show insufficient balance alert
                             Swal.fire({
                                 icon: 'warning',
                                 title: t('Insufficient Balance'),
                                 text: t(`Insufficient Balance! Your current credit balance is: ${Math.abs(entityBalance).toFixed(2)}`),
                                 confirmButtonText: t('OK')
                             });
-                            return null; // Return null to indicate payment method selection should be cancelled
+                            return null;
                         }
                     }
                 }
 
-                // Credit not allowed or insufficient, check COD
-                if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
+                // If credit is not allowed, check COD limit logic
+                if (!creditAllowed && methodDetails.COD && methodDetails.COD.isAllowed === true) {
                     const codLimit = methodDetails.COD.limit || 0;
-                    if (totalAmount < codLimit) {
-                        console.log(`Cash On Delivery is allowed and total amount ${totalAmount} is less than limit ${codLimit}, using Cash On Delivery`);
-                        return 'Cash On Delivery';
+                    if (totalAmount >= codLimit) {
+                        // If totalAmount is greater than or equal to COD limit, force Pre Payment
+                        console.log(`Credit not allowed, COD allowed but totalAmount ${totalAmount} >= codLimit ${codLimit}, using Pre Payment`);
+                        return 'Pre Payment';
+                    } else {
+                        // If totalAmount is strictly less than COD limit, show only COD/Pre Payment options in popup
+                        console.log(`Credit not allowed, COD allowed and totalAmount ${totalAmount} < codLimit ${codLimit}, show COD/Pre Payment popup`);
+                        return 'SHOW_COD_POPUP';
                     }
                 }
 
@@ -1997,7 +2023,7 @@ function Cart() {
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
                 const currentBalance = result.data.currentBalance || {};
-                
+
                 // Check if credit is allowed for SHC entity
                 if (methodDetails.credit && methodDetails.credit.SHC && methodDetails.credit.SHC.isAllowed === true) {
                     // Check if current balance is sufficient
@@ -2101,7 +2127,7 @@ function Cart() {
 
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
-                
+
                 // Check if credit is allowed for specific entity
                 if (methodDetails.credit && methodDetails.credit[entity.toUpperCase()]) {
                     const isAllowed = methodDetails.credit[entity.toUpperCase()].isAllowed;
@@ -2136,7 +2162,7 @@ function Cart() {
 
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
-                
+
                 // Get COD limit
                 if (methodDetails.COD && methodDetails.COD.limit) {
                     const limit = Number(methodDetails.COD.limit);
@@ -2288,8 +2314,8 @@ function Cart() {
 
                                                         // Check if this is a VMCO or SHC category
                                                         const entity = getEntityFromCategory(category.category);
-                                                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() || 
-                                                                     entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                                                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
+                                                            entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
                                                             // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
                                                             handlePlaceOrder(category.items, category.category, null);
                                                         } else {
@@ -2302,7 +2328,7 @@ function Cart() {
                                                                 const totalAmount = baseAmount + vatAmount;
                                                                 categoryTotal += totalAmount;
                                                             });
-                                                            
+
                                                             const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId, entity);
                                                             if (isCreditAllowed) {
                                                                 const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal, entity);
@@ -2310,8 +2336,15 @@ function Cart() {
                                                                     handlePlaceOrder(category.items, category.category, 'Credit');
                                                                 }
                                                             } else {
-                                                                // For other categories (Green Mast, Naqi, DAR), show payment method popup
-                                                                setShowPaymentPopup(true);
+                                                                // COD limit logic for non-credit entities
+                                                                const codLimit = await getCODLimit(selectedCustomerId);
+                                                                if (categoryTotal >= codLimit) {
+                                                                    // Place order directly with Pre Payment
+                                                                    handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                                } else {
+                                                                    // Show payment method popup (COD/Pre Payment)
+                                                                    setShowPaymentPopup(true);
+                                                                }
                                                             }
                                                         }
                                                     }}
