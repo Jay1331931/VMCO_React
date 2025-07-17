@@ -153,7 +153,7 @@ function Catalog() {
             if (entityToFilter === Constants.ENTITY.VMCO) {
               if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
                 params.append("isMachine", "true");
-              } else {
+              } else if (activeCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
                 params.append("isMachine", "false");
               }
             }

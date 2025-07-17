@@ -12,6 +12,9 @@ function SearchableDropdown({
   className,
   placeholder = "Value",
 }) {
+  // Add default 'All' option at the top
+  const allOption = { name: "All", value: null };
+  const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
@@ -33,16 +36,23 @@ function SearchableDropdown({
   }, []);
 
   // Get filtered options based on search term
-  const filteredOptions = options
-    ? options.filter((opt) => {
-        const optionText = typeof opt === "object" ? (opt.name || opt.label || "") : (opt || "");
-        return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
-      })
-    : [];
+  const filteredOptions = mergedOptions.filter((opt) => {
+    const optionText = typeof opt === "object" ? (opt.name || opt.label || "") : (opt || "");
+    return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
+  });
 
   // Handle option selection
   const handleOptionSelect = (opt) => {
-    const optValue = typeof opt === "object" ? opt.employeeId || opt.value || opt.name : opt;
+    let optValue;
+    if (typeof opt === "object") {
+      if (Object.prototype.hasOwnProperty.call(opt, "value")) {
+        optValue = opt.value;
+      } else {
+        optValue = opt.employeeId || opt.name;
+      }
+    } else {
+      optValue = opt;
+    }
     setIsOpen(false);
     setSearchTerm("");
     onChange({
@@ -54,13 +64,18 @@ function SearchableDropdown({
   };
 
   // Find display text for current value
-  const selectedOption = options?.find(
-    (opt) => (typeof opt === "object" ? opt.employeeId || opt.value || opt.name : opt) === value
-  );
+  let selectedOption;
+  if (value == null) {
+    selectedOption = allOption;
+  } else {
+    selectedOption = mergedOptions.find(
+      (opt) => (typeof opt === "object" ? opt.employeeId || opt.value || opt.name : opt) === value
+    );
+  }
   const displayText = selectedOption
     ? typeof selectedOption === "object"
-      ? selectedOption.name
-      : selectedOption
+      ? t(selectedOption.name)
+      : t(selectedOption)
     : placeholder;
 
   return (
