@@ -408,8 +408,7 @@ const OpationsPage = () => {
   };
 try {
     const response = await makeRequest();
-navigate(response.data.details.url);
-    // window.open(response.data.InvoiceURL, "_blank", "width=500,height=600");
+    window.open(response.data.InvoiceURL, "_blank", "width=500,height=600");
     window.close();
   } catch (error) {
     console.error("Error generating payment link:", error);
