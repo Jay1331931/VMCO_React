@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import Constants from '../constants';
 
 const Table = ({
     columns,
@@ -46,7 +47,10 @@ const Table = ({
             return actionButtons(item);
         }
           // Handle pay button
-        if (column.key === 'pay' && onPay && item.paymentStatus?.toLowerCase() !== 'paid' ) {
+        if (column.key === 'pay' && onPay && item.paymentStatus?.toLowerCase() !== 'paid'  
+        && (item.status?.toLowerCase() === 'approved' || (item.status?.toLowerCase() === 'open' 
+        && (item.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||item.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| item.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
+        (item.status?.toLowerCase() === 'pending' && item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() ))) {
             return (
                 <button 
                     className="action-button pay"
@@ -60,7 +64,7 @@ const Table = ({
                 </button>
             );
         }
-        if (column.key?.toLowerCase() === 'sendlink'  && item.paymentStatus?.toLowerCase() !== 'paid' ) {
+        if (column.key?.toLowerCase() === 'sendlink'  && item.paymentStatus?.toLowerCase() !== 'paid' && (item.status?.toLowerCase() === 'approved' || (item.status?.toLowerCase() === 'pending' && item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() ))) {
             return (
                 <button 
                     className="action-button pay"

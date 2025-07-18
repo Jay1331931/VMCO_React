@@ -136,21 +136,27 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
                     <td colSpan="4" style={{ padding: '10px', textAlign: 'center' }}>{t('No customers found')}</td>
                   </tr>
                 ) : (
-                  customers.map((customer) => (
-                    <tr key={customer.id}>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.id}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.erp_cust_id || customer.erpCustId || '-'}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.company_name_en || customer.companyNameEn}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                        <button
-                          className="gp-product-btn"
-                          onClick={() => onSelectCustomer(customer)}
-                        >
-                          {t('Select')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  customers.map((customer) => {
+                    const status = (customer.customerStatus || '').toLowerCase();
+                    const isApproved = status === 'approved';
+                    return (
+                      <tr key={customer.id}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.id}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.erp_cust_id || customer.erpCustId || '-'}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.company_name_en || customer.companyNameEn}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          <button
+                            className="gp-product-btn"
+                            onClick={() => onSelectCustomer(customer)}
+                            disabled={!isApproved}
+                            title={isApproved ? '' : t('Customer is either inactive or not approved')}
+                          >
+                            {t('Select')}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

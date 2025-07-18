@@ -145,21 +145,27 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                     </td>
                   </tr>
                 ) : (
-                  branches.map((branch) => (
-                    <tr key={branch.id}>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.id}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.erp_branch_id || branch.erpBranchId || '-'}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.branch_name_en || branch.branchNameEn}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                        <button
-                          className="gb-branch-btn"
-                          onClick={() => onSelectBranch(branch)}
-                        >
-                          {t('Select')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  branches.map((branch) => {
+                    const status = (branch.branchStatus || '').toLowerCase();
+                    const isApproved = status === 'approved';
+                    return (
+                      <tr key={branch.id}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.id}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.erp_branch_id || branch.erpBranchId || '-'}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.branch_name_en || branch.branchNameEn}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          <button
+                            className="gb-branch-btn"
+                            onClick={() => onSelectBranch(branch)}
+                            disabled={!isApproved}
+                            title={isApproved ? '' : t('Branch is either inactive or not approved')}
+                          >
+                            {t('Select')}
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

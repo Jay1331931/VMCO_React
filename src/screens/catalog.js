@@ -153,7 +153,7 @@ function Catalog() {
             if (entityToFilter === Constants.ENTITY.VMCO) {
               if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
                 params.append("isMachine", "true");
-              } else {
+              } else if (activeCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
                 params.append("isMachine", "false");
               }
             }
@@ -221,13 +221,10 @@ function Catalog() {
       let allProducts = [];
       let newLoadedPages = [];
 
-      // Reset products if we're starting fresh
       if (pagesToFetch.includes(1)) {
-        // Just prepare to reset - don't call setState yet
         allProducts = [];
         newLoadedPages = [];
       } else {
-        // If not resetting, start with existing data
         allProducts = [...products];
         newLoadedPages = [...loadedPages];
       }
@@ -534,7 +531,6 @@ function Catalog() {
     const currentQuantity = quantities[productId] || 0;
     const newQuantity = Math.max(moq, currentQuantity + value);
 
-    // Update local state only for immediate UI feedback
     setQuantities((prev) => ({
       ...prev,
       [productId]: newQuantity,
@@ -546,17 +542,17 @@ function Catalog() {
     navigate("/Cart", {
       state: {
         selectedCustomerId,
+        selectedCustomerStatus: user?.customerStatus,
         selectedBranchId: selectedLocation,
         selectedBranchName: selectedBranch?.label || "",
         selectedBranchNameLc:
           selectedBranch?.branch_name_lc ||
-          selectedBranch?.raw?.branchNameLc ||
-          "",
-        selectedBranchNameEn:
-          selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
+          selectedBranch?.raw?.branchNameLc || "",
+        selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
-        selectedBranchCity
+        selectedBranchCity,
+        selectedBranchStatus: selectedBranch?.raw?.branchStatus || "",
       },
     });
   };
@@ -602,23 +598,30 @@ function Catalog() {
           branchData = result.data;
         } else if (result && Array.isArray(result.data)) {
           branchData = result.data;
+          console.log("Fetched branch data:", branchData);
+          console.log("Status of branches:", branchData.map(b => b.branchStatus));
         } else {
           branchData = [];
         }
-        const branchOptions = branchData.map((branch) => ({
-          value: String(branch.id || branch.branch_id),
-          label:
-            i18n.language === "en"
-              ? branch.branch_name_en || branch.branchNameEn
-              : branch.branch_name_lc ||
-              branch.branchNameLc ||
-              branch.branch_name_en ||
-              branch.branchNameEn,
-          erpBranchId: branch.erpBranchId || branch.erp_branch_id,
-          branchRegion: branch.region || branch.region,
-          branchCity: branch.city || branch.branchCity || branch.branch_city,
-          raw: branch,
-        }));
+        const branchOptions = branchData.map((branch) => {
+          const status = (branch.branchStatus).toLowerCase();
+          const isApproved = status === 'approved';
+          return {
+            value: String(branch.id || branch.branch_id),
+            label:
+              i18n.language === "en"
+                ? branch.branch_name_en || branch.branchNameEn
+                : branch.branch_name_lc ||
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
+            erpBranchId: branch.erpBranchId || branch.erp_branch_id,
+            branchRegion: branch.region || branch.region,
+            branchCity: branch.city || branch.branchCity || branch.branch_city,
+            raw: branch,
+            disabled: !isApproved,
+          };
+        });
         setBranches(branchOptions);
       } catch (error) {
         console.error("Error fetching branches:", error);
@@ -837,7 +840,7 @@ function Catalog() {
 
       // First check if this item already exists in the cart
       const checkResponse = await fetch(
-        `${API_BASE_URL}/cart/pagination?filters={"user_id":${user.userId}, "customer_id":3,"branch_id":${selectedLocation}, "product_id":${productId}}`,
+        `${API_BASE_URL}/cart/pagination?filters={"userId":${user.userId}, "customerId":3,"branchId":${selectedLocation}, "productId":${productId}}`,
         {
           method: "GET",
           headers: {
@@ -1313,7 +1316,7 @@ function Catalog() {
                 name="locationSelect"
                 value={selectedLocation}
                 onChange={handleBranchSelect}
-                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value }))}
+                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value, disabled: b.disabled }))}
                 className="location-select"
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}

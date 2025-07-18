@@ -27,7 +27,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
       filteredData.entity= formData.entity;
       filteredData.paymentStatus="Pending";
       const filter=JSON.stringify(filteredData);
-      const { data } = await axios.get(`${API_BASE_URL}/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&perpose=banktransactions&filters=${filter}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
         withCredentials: true,
       });
       setCustomerOrders(data.data.data || []);
