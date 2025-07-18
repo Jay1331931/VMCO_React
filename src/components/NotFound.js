@@ -14,7 +14,7 @@ const NotFound = () => {
       <div className="not-found-content">
         <div className="error-code">404</div>
         <h1 className="error-title">Page Not Found</h1>
-        <p className="error-message">
+        <p className="error-message-not-found">
           Sorry, the page you are looking for doesn't exist or has been moved.
         </p>
         <div className="error-actions">

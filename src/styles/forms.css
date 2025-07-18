@@ -1111,8 +1111,7 @@ body::-webkit-scrollbar {
 .products-page-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
+  gap: 10px;
 }
 
 .products-header-controls {
@@ -1363,6 +1362,9 @@ td.file-display-cell {
   margin-top: 4px;
   font-style: italic;
   text-align: left;
+}
+[dir="rtl"] .current-value {
+  text-align: right;
 }
 
 @media (max-width: 768px) {

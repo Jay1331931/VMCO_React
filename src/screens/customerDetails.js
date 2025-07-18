@@ -179,9 +179,9 @@ const businessDetailsFields = [
   "interCompany",
   "entity",
   "assignedTo",
-  "assignedToEntityWise",
+  // "assignedToEntityWise",
   // "pricingPolicy",
-  "zone",
+  // "zone",
   // ...add more as needed
 ];
 
@@ -910,6 +910,13 @@ function CustomerDetails() {
       "governmentRegistrationNumber",
       "bankAccountNumber",
     ];
+
+    const uniqueContactFieldsList = [
+      {name: "primaryContactEmail", field: "email"},
+      {name: "businessHeadEmail", field: "email"},
+      {name: "financeHeadEmail", field: "email"},
+      {name: "purchasingHeadEmail", field: "email"},
+    ]
     // If mandatoryCheckReguired is true, check all mandatory fields
     console.log(
       "check mandtaory fields has assigned to entity wise",
@@ -922,7 +929,7 @@ function CustomerDetails() {
           return;
         }
         if (field in dataToValidate && !dataToValidate[field]) {
-          if (documentList.includes(field)) {
+          if (documentList.includes(field) || field === "declarationSignature") {
             errors[field] = t("This document is required.");
           } else {
             errors[field] = t("This field is required.");
@@ -1079,6 +1086,26 @@ function CustomerDetails() {
           }
         }
       }
+      
+      if(uniqueContactFieldsList.some(item => item.name === field)) {
+        const { name, field: contactField } = uniqueContactFieldsList.find(item => item.name === field);
+        const res = await fetch(`${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ customerId, field: contactField, value }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data.isUnique) {
+            // Field is valid
+          } else {
+            errors[name] = t(`This ${contactField} is already registered.`);
+          }
+        }
+      }
+       
+
       if (uniqueFieldsList.includes(field)) {
         const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
           method: "POST",
@@ -1094,6 +1121,10 @@ function CustomerDetails() {
             errors[field] = t("This number is registered.");
           }
         }
+      }
+
+      if( dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" && !dataToValidate?.typeOfBusinessOther) {
+        errors.typeOfBusinessOther = t("This field is required.");
       }
     }
     return errors;
@@ -2137,6 +2168,15 @@ function CustomerDetails() {
                 {t(customerData.customerStatus) || t("Pending")}
               </span>
             </div>
+            {mode === "add" && inApproval && (
+                  
+                  <div
+              className="action-buttons"
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <span className="status-label">{t("This customer is in approval process.")}</span>
+            </div>
+                )}
             {[
               "Business Details",
               "Contact Details",
@@ -2179,6 +2219,7 @@ function CustomerDetails() {
                     {isSubmitting ? t("Submitting...") : t("Submit")}
                   </button>
                 )}
+                
                 {isV("btnSaveChanges") &&
                   customerData?.customerStatus !== "new" && (
                     <button

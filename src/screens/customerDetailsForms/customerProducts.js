@@ -5,6 +5,7 @@ import Tabs from "../../components/Tabs";
 import "../../styles/pagination.css";
 import "../../styles/components.css";
 import "../../styles/forms.css";
+import ToggleButton from "../../components/ToggleButton";
 import RbacManager from "../../utilities/rbac";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { debounce, set } from "lodash";
 import Constants from "../../constants";
 import { getOptionsFromBasicsMaster } from "../../utilities/commonServices";
+import SearchableDropdown from "../../components/SearchableDropdown"; // Add this import
 
 // --- Entities (Tabs) like catalog.js ---
 const initialEntities = [
@@ -110,8 +112,8 @@ function Products({ customerId, customer, setTabsHeight }) {
       entity: activeEntity,
       visible: isApprovalMode ? true : undefined, // Only show selected if in approval mode
     };
-    if (categoryFilter) filters.category = categoryFilter;
-    if (subCategoryFilter) filters.subCategory = subCategoryFilter;
+    if (categoryFilter && categoryFilter !== t("All Categories")) filters.category = categoryFilter;
+    if (subCategoryFilter && subCategoryFilter !== t("All Subcategories")) filters.subCategory = subCategoryFilter;
 
     const query = new URLSearchParams({
       page: currentPage,
@@ -341,6 +343,45 @@ function Products({ customerId, customer, setTabsHeight }) {
   //   setTotalPages(Math.ceil(filteredProducts.length / itemsPerPage));
   // }, [filteredProducts, startIndex, endIndex, itemsPerPage]);
 
+  // Add state for category and subcategory options
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+
+  // Fetch category options when products or activeEntity changes
+  useEffect(() => {
+    const options = Array.from(
+      new Set(products.map((p) => p.category).filter(Boolean))
+    ).map((cat) => ({
+      name: cat,
+      value: cat,
+    }));
+    // Add "All Categories" option at the top
+    setCategoryOptions([
+      { name: t("All Categories"), value: "" },
+      ...options,
+    ]);
+  }, [products, activeEntity, t]);
+
+  // Fetch subcategory options when products, activeEntity, or categoryFilter changes
+  useEffect(() => {
+    const options = Array.from(
+      new Set(
+        products
+          .filter((p) => !categoryFilter || p.category === categoryFilter)
+          .map((p) => p.subCategory)
+          .filter(Boolean)
+      )
+    ).map((sub) => ({
+      name: sub,
+      value: sub,
+    }));
+    // Add "All Subcategories" option at the top
+    setSubCategoryOptions([
+      { name: t("All Subcategories"), value: "" },
+      ...options,
+    ]);
+  }, [products, activeEntity, categoryFilter, t]);
+
   return (
     <div className="products-content">
       <h3>{t("Products")}</h3>
@@ -371,78 +412,7 @@ function Products({ customerId, customer, setTabsHeight }) {
         </div>
       <div className="products-header-controls">
         {/* --- Second row: Category & Subcategory dropdowns --- */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 12,
-            marginTop: 12,
-            flexDirection: "row",
-          }}
-        >
-          {/* Category Filter */}
-          <select
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setSubCategoryFilter("");
-              setCurrentPage(1);
-            }}
-            className="category-filter"
-            style={{ minWidth: 180 }}
-          >
-            <option value="">{t("All Categories")}</option>
-            {Array.from(
-              new Set(products.map((p) => p.category).filter(Boolean))
-            ).map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          {/* Subcategory Filter */}
-          <select
-            value={subCategoryFilter}
-            onChange={(e) => {
-              setSubCategoryFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="category-filter"
-            style={{ minWidth: 180 }}
-          >
-            <option value="">{t("All Subcategories")}</option>
-            {Array.from(
-              new Set(
-                products
-                  .filter(
-                    (p) => !categoryFilter || p.category === categoryFilter
-                  )
-                  .map((p) => p.subCategory)
-                  .filter(Boolean)
-              )
-            ).map((sub) => (
-              <option key={sub} value={sub}>
-                {sub}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        
-      </div>
-
-      {/* --- Toggle and Apply All below filters --- */}
-      <div className="products-page-header">
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            marginTop: 16,
-          }}
-        >
+        <div className="products-page-header">
           {/* Search */}
           <input
             type="text"
@@ -465,21 +435,48 @@ function Products({ customerId, customer, setTabsHeight }) {
               boxSizing: "border-box",
             }}
           />
-        </div>
-        <div className="toggle-container">
-          <label>{t("All")}</label>
-          <FontAwesomeIcon
-            icon={isApprovalMode ? faToggleOn : faToggleOff}
-            className="product-toggle-icon"
-            onClick={toggleApprovalMode}
-            aria-label={
-              isApprovalMode
-                ? t("Switch to All Orders")
-                : t("Switch to My Approvals")
-            }
+          {/* Category Filter - use SearchableDropdown */}
+          <SearchableDropdown
+            id="category-filter"
+            name="categoryFilter"
+            options={categoryOptions}
+            className="category-filter"
+            placeholder={t("All Categories")}
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setSubCategoryFilter("");
+              setCurrentPage(1);
+            }}
           />
-          <label>{t("Selected")}</label>
+          {/* Subcategory Filter - use SearchableDropdown */}
+          <SearchableDropdown
+            id="subcategory-filter"
+            name="subCategoryFilter"
+            options={subCategoryOptions}
+            className="category-filter"
+            placeholder={t("All Subcategories")}
+            value={subCategoryFilter}
+            onChange={(e) => {
+              setSubCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            disabled={!categoryFilter}
+          />
         </div>
+
+        
+      </div>
+
+      {/* --- Toggle and Apply All below filters --- */}
+      <div className="products-page-header">
+       
+        <ToggleButton
+                            isToggled={isApprovalMode}
+                            onToggle={toggleApprovalMode}
+                            leftLabel={t("All")}
+                            rightLabel={t("Selected")}
+                          />
         <div className="toggle-container">
           {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
           {isV("btnApplyAll") && (

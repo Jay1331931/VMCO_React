@@ -12,7 +12,8 @@ import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 
 function BusinessDetails({
   customerData = {},
@@ -58,7 +59,7 @@ function BusinessDetails({
         dropdownFields
       );
       const listOfEmployeesWithManagers =
-        await getOptionsFromEmployeesWithManager(customerData?.region);
+        await getOptionsFromEmployeesWithManager(customerData?.branch);
 
       const listOfEmployees = await getOptionsFromEmployees();
       setBasicMasterLists(listOfBasicsMaster);
@@ -168,30 +169,27 @@ function BusinessDetails({
   return (
     <div className="customer-onboarding-form-grid">
       {customerData?.customerStatus === "blocked" && mode === "edit" && (
-        <h3 className="form-header full-width">
-          {t("Customer Blocked")}
-        </h3>
+        <h3 className="form-header full-width">{t("Customer Blocked")}</h3>
       )}
-      {originalCustomerData?.customerStatus === "blocked" && mode === "edit" && (
-        <h3 className="form-header full-width">
-          {t("Customer Unblocked")}
-        </h3>
-      )}
+      {originalCustomerData?.customerStatus === "blocked" &&
+        mode === "edit" && (
+          <h3 className="form-header full-width">{t("Customer Unblocked")}</h3>
+        )}
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
-          href={CUSTOMER_APPROVAL_CHECKLIST_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={e => {
-        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-          e.preventDefault();
-          alert(t("No checklist URL configured."));
-        }
-      }}
-        >
-          {t("Customer Approval Checklist")}
-        </a>
+            href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+                e.preventDefault();
+                alert(t("No checklist URL configured."));
+              }
+            }}
+          >
+            {t("Customer Approval Checklist")}
+          </a>
         </div>
       )}
       {/* Company Name (English) */}
@@ -203,7 +201,9 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.companyNameEn !=
               customerData?.companyNameEn &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -253,7 +253,9 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.companyNameAr !=
               customerData?.companyNameAr &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -302,7 +304,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.crNumber != customerData?.crNumber &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -349,7 +353,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.vatNumber != customerData?.vatNumber &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -397,7 +403,9 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.governmentRegistrationNumber !=
               customerData?.governmentRegistrationNumber &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -449,7 +457,9 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.baladeahLicenseNumber !=
               customerData?.baladeahLicenseNumber &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -500,7 +510,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.companyType != customerData?.companyType &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <SearchableDropdown
           name="companyType"
@@ -536,7 +548,56 @@ function BusinessDetails({
           <div className="error">{formErrors.companyType}</div>
         )}
       </div>
-
+      {/* Delivery Locations Dropdown */}
+      <div className="form-group">
+        <label htmlFor="deliveryLocations">
+          {t("Delivery Locations")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.deliveryLocations !=
+              customerData?.deliveryLocations &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="deliveryLocations"
+          options={basicMasterLists?.deliveryLocations || []}
+          value={customerData?.deliveryLocations || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.deliveryLocations ===
+              customerData?.deliveryLocations &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.deliveryLocations !=
+              customerData?.deliveryLocations &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Select")}
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.deliveryLocations !=
+            customerData?.deliveryLocations &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.deliveryLocations || "(empty)"}
+            </div>
+          )}
+        {formErrors.deliveryLocations && (
+          <div className="error">{formErrors.deliveryLocations}</div>
+        )}
+      </div>
       {/* Type of Business Dropdown */}
       <div className="form-group">
         <label htmlFor="typeOfBusiness">
@@ -545,7 +606,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.typeOfBusiness != typeOfBusiness &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <SearchableDropdown
           name="typeOfBusiness"
@@ -584,15 +647,18 @@ function BusinessDetails({
       </div>
 
       {/* Type of Business (Other) - Conditional */}
-      {typeOfBusiness === "Others" && (
+      {typeOfBusiness === "Others (Specify)" ? (
         <div className="form-group">
           <label htmlFor="typeOfBusinessOther">
             {t("Type of Business (Other)")}
+            <span className="required-field">*</span>
             {originalCustomerData &&
               customerData &&
               originalCustomerData?.typeOfBusinessOther !=
                 customerData?.typeOfBusinessOther &&
-              mode === "edit" && <span className="update-badge">Updated</span>}
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
           </label>
           <input
             type="text"
@@ -633,58 +699,9 @@ function BusinessDetails({
             <div className="error">{formErrors.typeOfBusinessOther}</div>
           )}
         </div>
+      ) : (
+        <div className="form-group"></div>
       )}
-
-      {/* Delivery Locations Dropdown */}
-      <div className="form-group">
-        <label htmlFor="deliveryLocations">
-          {t("Delivery Locations")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.deliveryLocations !=
-              customerData?.deliveryLocations &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
-        </label>
-        <SearchableDropdown
-          name="deliveryLocations"
-          options={basicMasterLists?.deliveryLocations || []}
-          value={customerData?.deliveryLocations || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.deliveryLocations ===
-              customerData?.deliveryLocations &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.deliveryLocations !=
-              customerData?.deliveryLocations &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Select")}
-        />
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.deliveryLocations !=
-            customerData?.deliveryLocations &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.deliveryLocations || "(empty)"}
-            </div>
-          )}
-        {formErrors.deliveryLocations && (
-          <div className="error">{formErrors.deliveryLocations}</div>
-        )}
-      </div>
-      {/*Empty div*/}
-      <div className="form-group"></div>
 
       {/* Brand Name (English) */}
       <div className="form-group">
@@ -693,7 +710,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.brandNameEn != customerData?.brandNameEn &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -735,7 +754,9 @@ function BusinessDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.brandNameAr != customerData?.brandNameAr &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -770,12 +791,14 @@ function BusinessDetails({
           )}
       </div>
 
-{/* Company Logo Upload */}
+      {/* Company Logo Upload */}
       <div className="form-group">
         <label htmlFor="companyLogo">
           {t("Company Logo")}
           {originalCustomerData?.companyLogo !== customerData?.companyLogo &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="file"
@@ -876,7 +899,9 @@ function BusinessDetails({
         <label htmlFor="brandLogo">
           {t("Brand Logo")}
           {originalCustomerData?.brandLogo !== customerData?.brandLogo &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="file"
@@ -981,7 +1006,9 @@ function BusinessDetails({
               customerData &&
               originalCustomerData?.customerSource !=
                 customerData?.customerSource &&
-              mode === "edit" && <span className="update-badge">Updated</span>}
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
           </label>
           <input
             type="text"
@@ -1058,7 +1085,7 @@ function BusinessDetails({
                   customerData &&
                   originalCustomerData?.entity != customerData?.entity &&
                   mode === "edit" && (
-                    <span className="update-badge">Updated</span>
+                    <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
               <select
@@ -1109,7 +1136,7 @@ function BusinessDetails({
           <h3 className="form-header full-width">
             {t("Sales Person Assignment")}
           </h3>
-          
+
           {/* Assigned To Dropdown */}
           {isV("assignedTo") && (
             <div className="form-group">
@@ -1120,7 +1147,7 @@ function BusinessDetails({
                   originalCustomerData?.assignedTo !=
                     customerData?.assignedTo &&
                   mode === "edit" && (
-                    <span className="update-badge">Updated</span>
+                    <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
               <SearchableDropdown
@@ -1182,7 +1209,7 @@ function BusinessDetails({
                 ] !==
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
                 mode === "edit" && (
-                  <span className="update-badge">Updated</span>
+                  <span className="update-badge">{t("Updated")}</span>
                 )}
             </label>
             <SearchableDropdown
@@ -1235,11 +1262,11 @@ function BusinessDetails({
                   ] || "(empty)"}
                 </div>
               )}
-              {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`] && (
-  <div className="error">
-    {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`]}
-  </div>
-)}
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`] && (
+              <div className="error">
+                {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`]}
+              </div>
+            )}
           </div>
 
           {/* VMCO dropdown */}
@@ -1253,7 +1280,7 @@ function BusinessDetails({
                 ] !==
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
                 mode === "edit" && (
-                  <span className="update-badge">Updated</span>
+                  <span className="update-badge">{t("Updated")}</span>
                 )}
             </label>
             <SearchableDropdown
@@ -1312,7 +1339,7 @@ function BusinessDetails({
                 {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`]}
               </div>
             )}
-            </div>
+          </div>
 
           {/* Entity Wise Assignment for SHC */}
           <div className="form-group">
@@ -1325,7 +1352,7 @@ function BusinessDetails({
                 ] !==
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
                 mode === "edit" && (
-                  <span className="update-badge">Updated</span>
+                  <span className="update-badge">{t("Updated")}</span>
                 )}
             </label>
             <SearchableDropdown
@@ -1383,7 +1410,7 @@ function BusinessDetails({
                 {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`]}
               </div>
             )}
-            </div>
+          </div>
           {/* Entity Wise Assignment for NAQI */}
           <div className="form-group">
             <label htmlFor="assignedToEntityWise">
@@ -1395,7 +1422,7 @@ function BusinessDetails({
                 ] !==
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
                 mode === "edit" && (
-                  <span className="update-badge">Updated</span>
+                  <span className="update-badge">{t("Updated")}</span>
                 )}
             </label>
             <SearchableDropdown
@@ -1452,7 +1479,7 @@ function BusinessDetails({
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`] && (
               <div className="error">
                 {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`]}
-                </div>
+              </div>
             )}
           </div>
 
@@ -1467,7 +1494,7 @@ function BusinessDetails({
                 ] !==
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
                 mode === "edit" && (
-                  <span className="update-badge">Updated</span>
+                  <span className="update-badge">{t("Updated")}</span>
                 )}
             </label>
             <SearchableDropdown
@@ -1519,15 +1546,13 @@ function BusinessDetails({
                   {originalCustomerData?.assignedToEntityWise?.[
                     Constants.ENTITY.GMTC
                   ] || "(empty)"}
-                  
                 </div>
               )}
-              {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`] && (
+            {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`] && (
               <div className="error">
                 {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`]}
-                </div>
+              </div>
             )}
-              
           </div>
         </>
       )}
