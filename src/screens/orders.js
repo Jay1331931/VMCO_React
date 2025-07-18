@@ -240,24 +240,32 @@ function Orders() {
     }
   };
 
-  const handlePay = async(order,email=false) => {
-    console.log('Pay button clicked for order:', order);
-    // navigate(`/payment-opations/order/${order.id}`,{
-    //     state: {
-    //       order}})
-    const {data}=await axios.post(`${API_BASE_URL}/generatePayment-link`, {id: order.id,endPoint:"payment-opations/order",IsEmail:email}, {withCredentials: true});
-     if(!email){
-    window.open(data.details.url,'_blank','width=500,height=600');
-     }
-   
-  
-    // const paymentWindow = window.open(
-    //   `/payment?orderId=${order.id}&amount=${order.totalAmount}&customerName=${encodeURIComponent(order.companyNameEn || order.erpCustId || '')}&linkExpiryDays=1`,
-    //   '_blank',
-    //   'width=500,height=600'
-    // );
-    // window.location.href = '/payment?orderId=' + order.id + '&amount=' + order.totalAmount;
-  };
+  const handlePay = async (order, email = false) => {
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/generatePayment-link`,
+      {
+        id: order.id,
+        endPoint: "payment-opations/order",
+        IsEmail: email,
+      },
+      { withCredentials: true }
+    );
+
+    if (!email && data?.details?.url) {
+      window.open(data.details.url, "_blank", "width=500,height=600");
+    }
+  } catch (error) {
+    console.error("Error generating payment link:", error);
+    Swal.fire({
+      title: t('Error'),
+      text: t('Failed to generate payment link. Please try again later.'),
+      icon: 'error',
+      confirmButtonText: t('OK')
+    });
+  }
+};
+
 
   // Action menu for Orders page
   const orderMenuItems = [
