@@ -67,7 +67,7 @@ function MaintenanceDetails() {
     // Set maintenance charges from backend charges field in edit mode
     maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
   });
-
+const serialNumberDebounceRef = useRef(null);
   // State for branches dropdown
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
@@ -112,26 +112,6 @@ function MaintenanceDetails() {
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  // Date conversion helper function
-  const convertDateFormat = (dateStr, fromFormat, toFormat) => {
-    if (!dateStr) return "";
-
-    if (fromFormat === "DD/MM/YYYY" && toFormat === "YYYY-MM-DD") {
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-      }
-    }
-
-    if (fromFormat === "YYYY-MM-DD" && toFormat === "DD/MM/YYYY") {
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
-      }
-    }
-
-    return dateStr;
-  };
   const handleFileUpload = async (e, type) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
@@ -1067,15 +1047,44 @@ function MaintenanceDetails() {
     }
   };
 
-  // Handle image removal
-  const handleRemoveImage = (indexToRemove) => {
-    setImages(images.filter((_, index) => index !== indexToRemove));
-  };
+ 
+const convertToDateInputFormat = (dateStr) => {
+  if (!dateStr || !/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return "";
+  const [day, month, year] = dateStr.split("-");
+  return `${year}-${month}-${day}`;
+};
+ const handleSerialNumberChange = (e) => {
+  const value = e.target.value;
+setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
+  // Clear any existing timeout
+  if (serialNumberDebounceRef.current) {
+    clearTimeout(serialNumberDebounceRef.current);
+  }
 
-  // Handle video removal
-  const handleRemoveVideo = (indexToRemove) => {
-    setVideos(videos.filter((_, index) => index !== indexToRemove));
-  };
+  // Set new timeout
+  serialNumberDebounceRef.current = setTimeout(async () => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/warranty-end-date/${user?.erpCustomerId}/${value}`,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      setTicket((prev) => ({
+        ...prev,
+        warrantyEndDate: data.details?.warrantdate
+          ? convertToDateInputFormat(data.details?.warrantdate)
+          : "",
+       
+      }));
+    } catch (error) {
+      console.error("Error handling serial number change:", error);
+    }
+  }, 500); 
+};
+ 
 
   return (
     <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
@@ -1169,7 +1178,7 @@ function MaintenanceDetails() {
                 <input
                   id='machineSerialNumber'
                   name='machineSerialNumber'
-                  onChange={handleInputChange}
+                  onChange={handleSerialNumberChange}
                   value={ticket.machineSerialNumber || ""}
                   disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
@@ -1182,14 +1191,9 @@ function MaintenanceDetails() {
                   id='warrantyEndDate'
                   name='warrantyEndDate'
                   type='date'
-                  onChange={handleInputChange}
-                  value={ticket.warrantyEndDate ? (
-                    // For date inputs, we need YYYY-MM-DD format
-                    ticket.warrantyEndDate.includes('-') && ticket.warrantyEndDate.match(/^\d{4}-\d{2}-\d{2}$/) ?
-                      ticket.warrantyEndDate :
-                      convertDateFormat(formatDate(ticket.warrantyEndDate, "DD/MM/YYYY"), "DD/MM/YYYY", "YYYY-MM-DD")
-                  ) : ""}
-                  disabled={!isE("warrantyEndDate") || isReadOnly}
+                  // onChange={handleInputChange}
+                  value={ticket.warrantyEndDate}
+                  disabled
                 />
               </div>
             )}

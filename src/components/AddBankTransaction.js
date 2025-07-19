@@ -14,7 +14,7 @@ import "../styles/addBankTransaction.css";
 const getCookie = (name) => {
   const cookies = document.cookie
     .split(";")
-    .map(cookie => cookie.trim())
+    .map((cookie) => cookie.trim())
     .reduce((acc, cookie) => {
       const [key, ...rest] = cookie.split("=");
       acc[key] = decodeURIComponent(rest.join("="));
@@ -32,13 +32,14 @@ const AddBankTransaction = () => {
     erpCustId: "",
     companyNameEn: "",
     companyNameAr: "",
-    amountTransferred: "",
+    amountTransferred: 0,
     transactionDate: "",
     erpOrderId: [],
     description: "",
     bankDocuments: [],
     orderId: [],
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const { id, orderId, amount } = useParams();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
@@ -75,8 +76,8 @@ const AddBankTransaction = () => {
     }
   };
   useEffect(() => {
-  const cookieToken = getCookie("token");
-   
+    const cookieToken = getCookie("token");
+
     if (orderId && !cookieToken) {
       generateToken();
     }
@@ -120,13 +121,19 @@ const AddBankTransaction = () => {
 
   const handleSubmit = async () => {
     try {
-      if (
-        !formData.erpCustId ||
-        !formData.entity ||
-        !formData.transactionDate ||
-        imageUrls?.length == 0 ||
-        !formData.amountTransferred
-      ) {
+      const errors = {};
+      if (!formData.erpCustId)
+        errors.erpCustId = "ERP Customer ID is required";
+      if (!formData.entity) errors.entity = "Entity is required";
+      if (!formData.transactionDate)
+        errors.transactionDate = "Transaction Date is required";
+      if (imageUrls?.length === 0)
+        errors.bankDocuments = "Bank Documents are required";
+      if (!formData.amountTransferred)
+        errors.amountTransferred = "Amount Transferred is required";
+
+      setFieldErrors(errors);
+      if (Object.keys(errors).length > 0) {
         setError(t("Please fill all required fields"));
         return;
       }
@@ -197,6 +204,12 @@ const AddBankTransaction = () => {
       companyNameEn: customer.company_name_en || customer?.companyNameEn,
       companyNameAr: customer.company_name_ar || customer?.companyNameAr,
       erpCustId: customer.erp_cust_id || customer.erpCustId,
+      amountTransferred: 0,
+      transactionDate: "",
+      erpOrderId: [],
+      description: "",
+      bankDocuments: [],
+      orderId: [],
     }));
     setShowCustomerPopup(false);
   };
@@ -267,6 +280,7 @@ const AddBankTransaction = () => {
     }
   }, [orderId]);
   useEffect(() => {
+    if (!orderId) return;
     fetchDecodeddata();
   }, [fetchDecodeddata]);
   const fetchSaleOrder = useCallback(async () => {
@@ -385,7 +399,7 @@ const AddBankTransaction = () => {
           <div className="form-grid">
             <div className="form-group">
               <label htmlFor="erpCustId">
-                {t("ERP Customer ID ")}
+                {t("ERP Customer ID")}
                 <span style={{ color: "red" }}> *</span>
               </label>
               <input
@@ -398,6 +412,11 @@ const AddBankTransaction = () => {
                 onClick={() => setShowCustomerPopup(true)}
                 disabled={!!updateTransaction?.erpCustId || orderId}
               />
+              {fieldErrors.erpCustId && (
+                <div className="error-message" style={{ color: "red" }}>
+                  {t(fieldErrors.erpCustId)}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -459,6 +478,11 @@ const AddBankTransaction = () => {
                 disabled={!!updateTransaction?.amountTransferred || orderId}
                 onChange={handleChange}
               />
+              {fieldErrors.amountTransferred && (
+                <div className="error-message" style={{ color: "red" }}>
+                  {t(fieldErrors.amountTransferred)}
+                </div>
+              )}
             </div>
 
             <div className="form-group">
@@ -479,6 +503,11 @@ const AddBankTransaction = () => {
                 disabled={!!updateTransaction?.transactionDate}
                 max={new Date().toISOString().split("T")[0]}
               />
+              {fieldErrors.transactionDate && (
+                <div className="error-message" style={{ color: "red" }}>
+                  {t(fieldErrors.transactionDate)}
+                </div>
+              )}
             </div>
 
             {Object.keys(updateTransaction).length === 0 && (
@@ -497,6 +526,11 @@ const AddBankTransaction = () => {
                   <option value="VMCO">VMCO</option>
                   <option value="NAQI">NAQI</option>
                 </select>
+                {fieldErrors.entity && (
+                  <div className="error-message" style={{ color: "red" }}>
+                    {t(fieldErrors.entity)}
+                  </div>
+                )}
               </div>
             )}
 
@@ -504,7 +538,7 @@ const AddBankTransaction = () => {
             Object.keys(updateTransaction).length > 0 ? (
               <>
                 <div className="form-group">
-                  <label htmlFor="erpOrderId">{t("ERP Order ID ")}</label>
+                  <label htmlFor="erpOrderId">{t("ERP Order ID")} </label>
                   <input
                     id="erpOrderId"
                     name="erpOrderId"
@@ -514,6 +548,7 @@ const AddBankTransaction = () => {
                       updateTransaction?.erpOrderId?.join(", ") ||
                       ""
                     }
+                    style={{ cursor: "pointer" }}
                     disabled={!!updateTransaction?.erpOrderId || orderId}
                     onClick={() => setshowSalesOrderPopup(true)}
                   />
@@ -524,6 +559,7 @@ const AddBankTransaction = () => {
                     id="orderId"
                     name="orderId"
                     type="text"
+                    style={{ cursor: "pointer" }}
                     placeholder={t("Order Id")}
                     min={0}
                     // value={
@@ -535,6 +571,7 @@ const AddBankTransaction = () => {
                       ""
                     }
                     disabled={!!updateTransaction?.orderId || orderId}
+                    onClick={() => setshowSalesOrderPopup(true)}
                     onChange={handleChange}
                   />
                 </div>
@@ -698,7 +735,7 @@ const AddBankTransaction = () => {
                               rel="noopener noreferrer"
                               className="file-link-button"
                             >
-                              📄 View PDF
+                              📄 {t("View PDF")}
                             </a>
                           ) : isExcel ? (
                             <a
@@ -707,7 +744,7 @@ const AddBankTransaction = () => {
                               rel="noopener noreferrer"
                               className="file-link-button"
                             >
-                              📊 Open Excel File
+                              📊 {t("Open Excel File")}
                             </a>
                           ) : (
                             <a
@@ -716,7 +753,7 @@ const AddBankTransaction = () => {
                               rel="noopener noreferrer"
                               className="file-link-button"
                             >
-                              📁 Download File
+                              📁 {t("Download File")}
                             </a>
                           )}
 
@@ -739,6 +776,11 @@ const AddBankTransaction = () => {
                   </div>
                 </div>
               </div>
+              {fieldErrors.bankDocuments && (
+                <div className="error-message" style={{ color: "red" }}>
+                  {t(fieldErrors.bankDocuments)}
+                </div>
+              )}
             </div>
 
             <div className="form-group full-width">
@@ -756,14 +798,14 @@ const AddBankTransaction = () => {
               />
             </div>
 
-            {error && (
+            {/* {error && (
               <div
                 className="error-message full-width"
                 style={{ color: "red" }}
               >
                 {error}
               </div>
-            )}
+            )} */}
           </div>
           {popupImage && (
             <div
