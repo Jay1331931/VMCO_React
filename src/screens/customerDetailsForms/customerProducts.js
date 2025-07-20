@@ -48,6 +48,10 @@ const initialEntities = [
     value: Constants.ENTITY.DAR,
     label: "DAR Company",
   },
+  {
+    value: "Special Products",
+    label: "Special Products"
+  }
 ];
 
 function Products({ customerId, customer, setTabsHeight }) {
@@ -103,18 +107,32 @@ function Products({ customerId, customer, setTabsHeight }) {
     };
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (activeEntity) => {
     setLoading(true);
     setError(null);
 
     const filters = {
       customer_id: customerId,
       entity: activeEntity,
+      active: true,
       visible: isApprovalMode ? true : undefined, // Only show selected if in approval mode
     };
-    if (categoryFilter && categoryFilter !== t("All Categories")) filters.category = categoryFilter;
-    if (subCategoryFilter && subCategoryFilter !== t("All Subcategories")) filters.subCategory = subCategoryFilter;
-
+    if (categoryFilter) filters.category = categoryFilter;
+    if (subCategoryFilter) filters.subCategory = subCategoryFilter;
+    if (activeEntity?.toLowerCase() === "vmco") {
+      filters.is_machine = true;
+    }
+    if (activeEntity?.toLowerCase() === "vmco consumables") {
+      filters.entity = "VMCO";
+      filters.is_machine = false;
+    }
+    if(activeEntity?.toLowerCase() === "special products") {
+      filters.special_product = true;
+      filters.erp_cust_id = customer?.erpCustId;
+      // remove entity from filters
+      delete filters.customer_id;
+      delete filters.entity;
+    }
     const query = new URLSearchParams({
       page: currentPage,
       pageSize: itemsPerPage,
@@ -136,6 +154,7 @@ function Products({ customerId, customer, setTabsHeight }) {
 
       if (!response.ok) {
         throw new Error("Failed to fetch products");
+        return;
       }
 
       const data = await response.json();
@@ -153,7 +172,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   useEffect(() => {
     if (customerId && activeEntity) {
       const fetchData = async () => {
-        const products = await fetchProducts();
+        const products = await fetchProducts(activeEntity);
         setProducts(products.data);
         setCurrentItems(products.data);
         setTotalPages(products.totalPages);
@@ -357,7 +376,7 @@ function Products({ customerId, customer, setTabsHeight }) {
     }));
     // Add "All Categories" option at the top
     setCategoryOptions([
-      { name: t("All Categories"), value: "" },
+      
       ...options,
     ]);
   }, [products, activeEntity, t]);
@@ -377,7 +396,7 @@ function Products({ customerId, customer, setTabsHeight }) {
     }));
     // Add "All Subcategories" option at the top
     setSubCategoryOptions([
-      { name: t("All Subcategories"), value: "" },
+      
       ...options,
     ]);
   }, [products, activeEntity, categoryFilter, t]);

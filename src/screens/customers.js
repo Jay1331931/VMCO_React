@@ -26,7 +26,7 @@ const getStatusClass = (status) => {
 };
 
 function Customers() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("customers");
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [filteredApprovals, setFilteredApprovals] = useState([]);
@@ -526,7 +526,7 @@ function Customers() {
   const customerColumns = [
     { key: "id", header: "Registration ID" },
     { key: "erpCustId", header: "ERP ID" },
-    { key: "companyNameEn", header: "Company" },
+    { key: i18n.language === 'ar' ? "companyNameAr" : "companyNameEn", header: "Company" },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
     { key: "customerStatus", header: "Status" },
@@ -535,7 +535,7 @@ function Customers() {
   const approvalColumns = [
     { key: "id", header: "Registration ID" },
     { key: "erpCustId", header: "ERP ID" },
-    { key: "companyNameEn", header: "Company" },
+    { key: i18n.language === 'ar' ? "companyNameAr" : "companyNameEn", header: "Company" },
     { key: "workflowName", header: "Workflow Name" },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
