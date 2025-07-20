@@ -57,6 +57,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
   if (!open) return null;
 
 const handleSelect = (customer) => {
+  console.log("Selected customer:", customer);
   setFormData(prev => {
     const updated = { ...prev };
     if (customer.erpOrderId) {
@@ -67,6 +68,7 @@ const handleSelect = (customer) => {
       }
     }
 
+
     if (customer?.id) {
       if (prev.orderId?.includes(customer.id)) {
         updated.orderId = prev.orderId.filter(id => id !== customer.id);
@@ -74,7 +76,7 @@ const handleSelect = (customer) => {
         updated.orderId = [...(prev.orderId || []), customer.id];
       }
     }
-
+    updated.amountTransferred += parseFloat(customer.totalAmount) || 0;
     return updated;
   });
 };
@@ -130,7 +132,7 @@ const handleSelect = (customer) => {
             <tbody>
               {customerOrders?.length === 0 ? (
                 <tr>
-                  <td colSpan="4" style={{ padding: '10px', textAlign: 'center' }}>{t('No customers found')}</td>
+                  <td colSpan="4" style={{ padding: '10px', textAlign: 'center' }}>{t('No Sales Order Found for this customer')}</td>
                 </tr>
               ) : (
                 customerOrders?.map((customer) => (

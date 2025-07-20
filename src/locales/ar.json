@@ -546,5 +546,16 @@
   "Remember password?": "تذكر كلمة المرور؟",
   "Updated": "تم التحديث",
   "Previous:": "السابق:",
-  "No comments yet": "لا توجد تعليقات حتى الآن"
+  "No comments yet": "لا توجد تعليقات حتى الآن",
+  "Order ID": "معرف الطلب",
+  "ERP Customer ID is required": "معرف العميل ERP مطلوب",
+  "Entity is required": "الكيان مطلوب",
+  "Transaction Date is required": "تاريخ المعاملة مطلوب",
+  "Bank Documents are required": "مستندات البنك مطلوبة",
+  "Amount Transferred is required": "المبلغ المحول مطلوب",
+  "Amount": "المبلغ",
+  "View PDF": "عرض PDF",
+  "Open Excel File": "فتح ملف Excel",
+  "Download File": "تحميل الملف"
+
 }
