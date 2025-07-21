@@ -95,7 +95,7 @@ const BranchDetailsForm = ({
       const options = {};
       console.log("branch", branch);
       // Find all dropdown fields and fetch their options
-      const dropdownFields = ["city", "locationType", "region", "branch"];
+      const dropdownFields = ["city", "locationType", "region", "branch", "district"];
       console.log("dropdownFields", dropdownFields);
       for (const field of dropdownFields) {
         try {
@@ -387,6 +387,14 @@ const BranchDetailsForm = ({
         label: "City",
         name: "city",
         placeholder: "City",
+        required: true,
+        options: ["Jeddah", "Riyadh", "Dammam"],
+      },
+{
+        type: "dropdown",
+        label: "District",
+        name: "district",
+        placeholder: "District",
         required: true,
         options: ["Jeddah", "Riyadh", "Dammam"],
       },
