@@ -69,6 +69,16 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleAddBranch = () => {
+    if (customer?.isBlocked) {
+      Swal.fire({
+        title: t("Customer is blocked"),
+        text: t("You cannot add branches to a blocked customer."),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
+
     if (branches.length === 0) {
       setIsFirstBranch(true); // Set flag for first branch
     }
@@ -1013,7 +1023,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 className="branches-add-button"
                 onClick={handleAddBranch}
                 disabled={
-                  customer?.isBlocked ||
                   branches.some((branch) => branch.id < 0)
                 }
               >
@@ -1094,7 +1103,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                           {t("Save")}
                         </button>
                       )}
-                      <button className="block">{t("Block")}</button>
+                      {(<button className="block">{t("Block")}</button>)}
                     </div>
                   </div>
                 </div>
@@ -1108,6 +1117,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             <thead>
               <tr>
                 <th className="desktop-only">{t("Branch ID")}</th>
+                <th className="desktop-only">{t("ERP ID")}</th>
                 <th className="desktop-only">{t("Branch Name")}</th>
                 <th className="desktop-only">{t("City")}</th>
                 <th className="desktop-only">{t("Location Type")}</th>
@@ -1141,7 +1151,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     <td className="mobile-secondary">
                       <span
                         className={`branches-status-badge ${getStatusClass(
-                          branch.branch_status
+                          branch.branchStatus
                         )}`}
                       >
                         {t(branch.branch_status)}
@@ -1149,6 +1159,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     </td>
                     <td className="desktop-only">
                       {branch.erp_branch_id || branch.id}
+                    </td>
+                    <td className="desktop-only">
+                      {branch.erpBranchId}
                     </td>
                     <td className="desktop-only">{branch.branchNameEn}</td>
                     <td className="desktop-only">{branch.city}</td>

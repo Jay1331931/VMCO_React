@@ -110,13 +110,13 @@ const fetchCurrentDataOfCustomer = async (customerId) => {
 
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
 
-const checkInApproval = async (customerId) => {
+const checkInApproval = async (customerId, module) => {
   let isAppMode = false;
   try {
     const response = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: customerId, module: "customer" }),
+      body: JSON.stringify({ id: customerId, module: module }),
       credentials: "include",
     });
 
@@ -489,7 +489,13 @@ function CustomerDetails() {
       console.log("@@@@@@customerId:", customerId);
       console.log("@@@@@workflowId:", workflowId);
       console.log("@@@@@mode:", mode);
-      const isUnderApproval = await checkInApproval(customerId);
+      let isUnderApproval = false;
+      // Check if the customer is under approval
+      isUnderApproval = await checkInApproval(customerId, "customer");
+      if(!isUnderApproval) {
+        isUnderApproval = await checkInApproval(customerId, "branch");
+      }
+      // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
       setInApproval(isUnderApproval);
       var temp;
       if (isUnderApproval) {
@@ -766,16 +772,16 @@ function CustomerDetails() {
     "bankName",
     "bankAccountNumber",
     "iban",
-    // "crCertificate",
-    // "vatCertificate",
-    // "nationalId",
-    // "bankLetter",
-    // "nationalAddress",
-    // "customerSource",
-    // "acknowledgementSignature",
-    // "contractAgreement",
+    "crCertificate",
+    "vatCertificate",
+    "nationalId",
+    "bankLetter",
+    "nationalAddress",
+    "customerSource",
+    "acknowledgementSignature",
+    "contractAgreement",
     // "customerContract",
-    // "creditApplication",
+    "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -832,16 +838,16 @@ function CustomerDetails() {
     "bankName",
     "bankAccountNumber",
     "iban",
-    // "crCertificate",
-    // "vatCertificate",
-    // "nationalId",
-    // "bankLetter",
-    // "nationalAddress",
-    // "customerSource",
-    // "acknowledgementSignature",
-    // "contractAgreement",
+    "crCertificate",
+    "vatCertificate",
+    "nationalId",
+    "bankLetter",
+    "nationalAddress",
+    "customerSource",
+    "acknowledgementSignature",
+    "contractAgreement",
     // "customerContract",
-    // "creditApplication",
+    "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -896,7 +902,7 @@ function CustomerDetails() {
     ];
     const nonTradingDocumentList = [
       "acknowledgementSignature",
-      "customerContract",
+      "contractAgreement",
       "creditApplication",
     ];
     const documentList =

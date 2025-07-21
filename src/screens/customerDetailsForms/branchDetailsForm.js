@@ -7,9 +7,10 @@ import ApprovalDialog from "../../components/ApprovalDialog";
 import "../../styles/forms.css";
 import "../../styles/components.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import LoadingSpinner from "../../components/LoadingSpinner"; // Import the LoadingSpinner component
-
+import RbacManager from "../../utilities/rbac";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const BranchDetailsForm = ({
   branchId, // required
@@ -53,7 +54,21 @@ const BranchDetailsForm = ({
   const [isRejecting, setIsRejecting] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [isUnblocking, setIsUnblocking] = useState(false);
-
+  const { token, user, isAuthenticated, logout } = useAuth();
+    let customerFormMode;
+  if (mode === "edit") {
+    customerFormMode = "custDetailsEdit";
+  } else {
+    customerFormMode = "custDetailsAdd";
+  }
+const rbacMgr = new RbacManager(
+    user?.userType == "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    customerFormMode
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   var updatedBranchData = useRef({});
   var updatedBranchContactsData = useRef({});
   const fetchBranchDetails = async () => {
@@ -1151,7 +1166,7 @@ const BranchDetailsForm = ({
                     {isSavingChanges ? t("Saving...") : t("Save Changes")}
                   </button>
 
-                  {branch?.branchStatus !== "blocked" ? (
+                  {isV("btnBranchBlock") && branch?.branchStatus !== "blocked" ? (
                     <button
                       className="block"
                       disabled={

@@ -173,9 +173,9 @@ function Products({ customerId, customer, setTabsHeight }) {
     if (customerId && activeEntity) {
       const fetchData = async () => {
         const products = await fetchProducts(activeEntity);
-        setProducts(products.data);
-        setCurrentItems(products.data);
-        setTotalPages(products.totalPages);
+        setProducts(products?.data);
+        setCurrentItems(products?.data);
+        setTotalPages(products?.totalPages);
       };
       fetchData();
     }
@@ -278,7 +278,7 @@ function Products({ customerId, customer, setTabsHeight }) {
     }
   };
   const isAllSelected =
-    currentItems.length > 0 && currentItems.every((item) => item.visible);
+    currentItems?.length > 0 && currentItems.every((item) => item.visible);
   const handleMoqChange = (id, value) => {
     setCurrentItems((prevItems) =>
       prevItems.map((item) => (item.id === id ? { ...item, moq: value } : item))
@@ -341,7 +341,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   }, 400);
 
   // Filter products based on entity, category, subcategory, and search
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products?.filter((product) => {
     const matchesEntity = !activeEntity || product.entity === activeEntity;
     const matchesCategory =
       !categoryFilter || product.category === categoryFilter;
@@ -369,7 +369,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   // Fetch category options when products or activeEntity changes
   useEffect(() => {
     const options = Array.from(
-      new Set(products.map((p) => p.category).filter(Boolean))
+      new Set(products?.map((p) => p.category).filter(Boolean))
     ).map((cat) => ({
       name: cat,
       value: cat,
@@ -385,8 +385,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   useEffect(() => {
     const options = Array.from(
       new Set(
-        products
-          .filter((p) => !categoryFilter || p.category === categoryFilter)
+        products?.filter((p) => !categoryFilter || p.category === categoryFilter)
           .map((p) => p.subCategory)
           .filter(Boolean)
       )
@@ -504,7 +503,7 @@ function Products({ customerId, customer, setTabsHeight }) {
           {isV("btnApplyAll") && (
             <button
               className="branches-approve-button"
-              disabled={currentItems.filter((item) => item.visible).length < 2}
+              disabled={currentItems?.filter((item) => item.visible).length < 2}
               onClick={handleApplyAll}
             >
               {t("Apply All")}
@@ -529,7 +528,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             </tr>
           </thead>
           <tbody>
-            {currentItems.map((product) => (
+            {currentItems?.map((product) => (
               <tr key={product.id}>
                 <td className="checkbox-cell">
                   <input

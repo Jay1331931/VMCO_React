@@ -493,33 +493,38 @@ function Customers() {
 
     const searchLower = searchTerm.toLowerCase();
 
+    // if (activeTab === "customers") {
+    //   const filtered = filteredCustomers.filter((customer) => {
+    //     if (!customer) return false; // Skip null/undefined customers
+
+    //     return Object.values(customer).some((value) => {
+    //       if (value === null || value === undefined) return false;
+
+    //       if (typeof value === "object") {
+    //         const nestedValues = Object.values(value || {});
+    //         return nestedValues.some((v) =>
+    //           v?.toString().toLowerCase().includes(searchLower)
+    //         );
+    //       }
+
+    //       return value?.toString().toLowerCase().includes(searchLower);
+    //     });
+    //   });
+    //   setFilteredCustomers(filtered);
+    // } else {
+    //   const filtered = filteredInvites.filter((invite) => {
+    //     if (!invite) return false; // Skip null/undefined invites
+
+    //     return Object.values(invite).some((value) =>
+    //       value?.toString().toLowerCase().includes(searchLower)
+    //     );
+    //   });
+    //   setFilteredInvites(filtered);
+    // }
     if (activeTab === "customers") {
-      const filtered = filteredCustomers.filter((customer) => {
-        if (!customer) return false; // Skip null/undefined customers
-
-        return Object.values(customer).some((value) => {
-          if (value === null || value === undefined) return false;
-
-          if (typeof value === "object") {
-            const nestedValues = Object.values(value || {});
-            return nestedValues.some((v) =>
-              v?.toString().toLowerCase().includes(searchLower)
-            );
-          }
-
-          return value?.toString().toLowerCase().includes(searchLower);
-        });
-      });
-      setFilteredCustomers(filtered);
+      fetchCustomers(1, searchLower);
     } else {
-      const filtered = filteredInvites.filter((invite) => {
-        if (!invite) return false; // Skip null/undefined invites
-
-        return Object.values(invite).some((value) =>
-          value?.toString().toLowerCase().includes(searchLower)
-        );
-      });
-      setFilteredInvites(filtered);
+      fetchInvites(1, searchLower);
     }
   };
 
@@ -997,6 +1002,7 @@ function Customers() {
 
             {activeTab === t("invites") && isV("btnAddInvite") && (
               <>
+              <SearchInput onSearch={handleSearch} />
                 {
                   <button className="add-button" onClick={handleInvite}>
                     {t("+ Invite")}
