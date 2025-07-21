@@ -1837,6 +1837,27 @@ function CustomerDetails() {
         // alert("Please fix the errors before submitting.");
         return;
       }
+
+      const customerDataSubmit = await fetchCurrentDataOfCustomer(customerId);
+      const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(customerId);
+      const errorsSubmit = await validateData({
+        ...customerDataSubmit,
+        ...contactsDataSubmit,
+      }, true, mandatoryFields);
+      setFormErrors(errorsSubmit);
+      if (Object.keys(errorsSubmit).length > 0) {
+        // Handle errors (e.g., show error messages)
+        setIsSubmitting(false);
+        setIsLoading(false);
+        Swal.fire({
+          icon: "error",
+          title: t("Error"),
+          text: t("Please fix the errors before saving."),
+          confirmButtonText: t("OK"),
+        });
+        // alert("Please fix the errors before submitting.");
+        return;
+      }
       customerData["customerStatus"] = "pending";
 
       const response = await fetch(
