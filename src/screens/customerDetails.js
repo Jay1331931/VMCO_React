@@ -489,7 +489,13 @@ function CustomerDetails() {
       console.log("@@@@@@customerId:", customerId);
       console.log("@@@@@workflowId:", workflowId);
       console.log("@@@@@mode:", mode);
-      const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
+      let isUnderApproval = false;
+      // Check if the customer is under approval
+      isUnderApproval = await checkInApproval(customerId, "customer");
+      if(!isUnderApproval) {
+        isUnderApproval = await checkInApproval(customerId, "branch");
+      }
+      // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
       setInApproval(isUnderApproval);
       var temp;
       if (isUnderApproval) {
