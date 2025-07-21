@@ -1822,6 +1822,7 @@ function CustomerDetails() {
         // Handle errors (e.g., show error messages)
         setIsSubmitting(false);
         setIsLoading(false);
+        setIsSaving(false);
         Swal.fire({
           icon: "error",
           title: t("Error"),
