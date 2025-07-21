@@ -524,6 +524,8 @@ const BranchDetailsForm = ({
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
+        setIsSaving(false);
+        setIsSubmitting(false);
         return;
       }
 

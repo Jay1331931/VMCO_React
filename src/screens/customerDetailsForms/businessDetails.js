@@ -48,6 +48,7 @@ function BusinessDetails({
     "deliveryLocations",
     "customerSource",
     "entity",
+    "branch"
   ];
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const [employeeListWithManagers, setEmployeeListWithManagers] = useState([]);
@@ -68,7 +69,7 @@ function BusinessDetails({
     };
     fetchData();
     setTabsHeight("auto");
-  }, [customerData?.region]);
+  }, [customerData?.branch]);
 
   // Example state for conditional fields
   const [typeOfBusiness, setTypeOfBusiness] = useState(
@@ -1132,10 +1133,64 @@ function BusinessDetails({
               )}
             </div>
           )}
+          {/* VMCO Branch Assignment Header */}
+          <h3 className="form-header full-width">
+            {t("Branch")}
+          </h3>
+ {/* branch dropdown */}
+      {isV("assignedToEntityWise") && (
+        <div className="form-group">
+          <label htmlFor="branch">
+            {t("Branch")}
+            <span className="required-field">*</span>
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.branch != customerData?.branch &&
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
+          </label>
+          <SearchableDropdown
+            name="branch"
+            options={basicMasterLists?.branch || []}
+            value={customerData?.branch || ""}
+            onChange={onChangeCustomerData}
+            disabled={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.branch === customerData?.branch &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            className={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.branch != customerData?.branch &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }
+            placeholder={t("Enter branch")}
+            required
+          />
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.branch != customerData?.branch &&
+            mode === "edit" && (
+              <div className="current-value">
+                Previous: {originalCustomerData?.branch || "(empty)"}
+              </div>
+            )}
+          {formErrors.branch && (
+            <div className="error">{formErrors.branch}</div>
+          )}
+        </div>
+      )}
           {/* Entity Wise Employee Assignment Header */}
           <h3 className="form-header full-width">
             {t("Sales Person Assignment")}
           </h3>
+ 
 
           {/* Assigned To Dropdown */}
           {isV("assignedTo") && (
