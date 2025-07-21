@@ -1065,17 +1065,16 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
   serialNumberDebounceRef.current = setTimeout(async () => {
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/warranty-end-date/${user?.erpCustomerId}/${value}`,
+        `${API_BASE_URL}/warranty-end-date/C-000002/${value}`,
         {
           headers: { "Content-Type": "application/json" },
           withCredentials: true,
         }
       );
-
       setTicket((prev) => ({
         ...prev,
-        warrantyEndDate: data.details?.warrantdate
-          ? convertToDateInputFormat(data.details?.warrantdate)
+        warrantyEndDate: data?.details?.warrantdate
+          ? convertToDateInputFormat(data?.details?.warrantdate)
           : "",
        
       }));
