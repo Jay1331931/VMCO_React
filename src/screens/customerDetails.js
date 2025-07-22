@@ -2247,7 +2247,8 @@ function CustomerDetails() {
                       {isSavingChanges ? t("Saving...") : t("Save Changes")}
                     </button>
                   )}
-                {isV("btnApprove") && inApproval && (
+                {isV("btnApprove") && inApproval && wfCustomerData?.branch?.customerId !==
+                        originalCustomerData?.id && (
                   <button
                     className="approve"
                     onClick={() => handleApprovalClick("approve")}
@@ -2258,13 +2259,14 @@ function CustomerDetails() {
                       isApproving ||
                       isRejecting ||
                       isBlocking ||
-                      isUnblocking
+                      isUnblocking 
                     }
                   >
                     {isApproving ? t("Approving...") : t("Approve")}
                   </button>
                 )}
-                {isV("btnReject") && inApproval && (
+                {isV("btnReject") && inApproval &&  wfCustomerData?.branch?.customerId !==
+                        originalCustomerData?.id &&  (
                   <button
                     className="reject"
                     onClick={() => handleApprovalClick("reject")}
