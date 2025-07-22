@@ -9,9 +9,6 @@ function GetPaymentMethods({
   onSelectPaymentMethod,
   API_BASE_URL,
   t = (x) => x,
-  category,
-  customerId,
-  totalAmount,
   isSimpleMode = false // New prop to indicate simple mode for SHC, NAQI, GMTC, DAR
 }) {
   const { i18n } = useTranslation();
@@ -22,7 +19,6 @@ function GetPaymentMethods({
 
   // Fetch payment methods
   useEffect(() => {
-    console.log('Passed items:', category, customerId, totalAmount)
     if (!open) return;
     
     // If in simple mode, just set the two options directly
@@ -32,14 +28,6 @@ function GetPaymentMethods({
       return;
     }
 
-    // For VMCO non-machine products, show only COD and Pre Payment
-    const cat = (category || '').toLowerCase();
-    if (cat.includes('vending machine company') && !cat.includes('machines')) {
-      setMethods(['Cash on Delivery', 'Pre Payment']);
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
     setError(null);
     fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
@@ -59,23 +47,15 @@ function GetPaymentMethods({
           paymentMethods = result.data.map(item => item.value);
         } else {
           throw new Error('Unexpected response format for payment method options');
-        }        // Filter payment methods based on category (match Cart logic)
-        let allowedMethods = paymentMethods;
-        const cat = (category || '').toLowerCase();
-        if (cat.includes(Constants.ENTITY.VMCO.toLowerCase()) && cat.includes(Constants.CATEGORY.VMCO_MACHINES.toLowerCase())) {
-          allowedMethods = paymentMethods.filter(
-            m => m === 'Pre Payment' || m === 'Partial Payment'
+        }        
+        let allowedMethods = paymentMethods.filter(
+            m => m.toLowerCase() === 'pre payment' || m.toLowerCase() === 'cash on delivery'
           );
-        } else {
-          allowedMethods = paymentMethods.filter(
-            m => m === 'Pre Payment' || m === 'Credit' || m === 'Cash on Delivery'
-          );
-        }
         setMethods(allowedMethods);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [open, API_BASE_URL, category, customerId, totalAmount, isSimpleMode]);
+  }, [open, API_BASE_URL, isSimpleMode]);
 
 
 

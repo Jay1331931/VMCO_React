@@ -78,8 +78,9 @@ const safeDateValue = (dateValue) => {
   return dateValue;
 };
 
+
+
 function OrderDetails() {
-  // Existing code...
   const { i18n } = useTranslation();
   const { t } = useTranslation();
   const location = useLocation();
@@ -87,11 +88,9 @@ function OrderDetails() {
   const { user, token } = useAuth();  // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || 'view';
   const orderFromNav = location.state?.order || {};
-  // Get pre-fetched sales order lines from navigation state with safety check
   const salesOrderLinesFromNav = (orderFromNav && orderFromNav.salesOrderLines && Array.isArray(orderFromNav.salesOrderLines))
     ? orderFromNav.salesOrderLines
     : [];
-  // Detect if coming from approval mode
   const fromApproval = location.state?.fromApproval;
   const wfid = location.state?.wfid || null;
   const approvalHistory = location.state?.approvalHistory || [];  // Initialize form data
@@ -99,9 +98,7 @@ function OrderDetails() {
     ...defaultOrder,
     ...orderFromNav,
     id: orderFromNav.id || '',
-    // Convert payment percentage from decimal to dropdown format if needed
     paymentPercentage: convertPaymentPercentageToDropdown(orderFromNav.paymentPercentage) || orderFromNav.paymentPercentage || '',
-    // Don't set products initially - let useEffect handle it to avoid race conditions
     products: []
   });
   // Effect to keep orderId in sync with formData.id
@@ -111,6 +108,7 @@ function OrderDetails() {
 
   // State variables
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState(null);
   const [showInventory, setShowInventory] = useState(false);
   const [showRemarks, setShowRemarks] = useState(false);
@@ -120,7 +118,9 @@ function OrderDetails() {
   const [showCustomerPopup, setShowCustomerPopup] = useState(false);
   const [showBranchPopup, setShowBranchPopup] = useState(false);
   const [popupImage, setPopupImage] = useState(null);
-  const [nextOrderId, setNextOrderId] = useState(''); const [saving, setSaving] = useState(false); // New saving state
+  const [nextOrderId, setNextOrderId] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [checkedSave, setCheckedSave] = useState(false);
   const [isEditMode, setIsEditMode] = useState(formMode === 'edit'); // Determine edit mode from formMode
   const [originalProducts, setOriginalProducts] = useState([]); // Track original products for comparison
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
@@ -128,11 +128,8 @@ function OrderDetails() {
   const [InventoryData, setInventoryData] = useState([]);
   const [InventoryLoading, setInventoryLoading] = useState(false);
   const [productName, setProductName] = useState('');
-  const [sampleMode, setSampleMode] = useState(false); // Add this line
-  // Store companyType in state
+  const [sampleMode, setSampleMode] = useState(false);
   const [companyType, setCompanyType] = useState('');
-
-  // Add state for payment method popup and selected method
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null);  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
   // Use VMCO categories from constants
@@ -143,50 +140,11 @@ function OrderDetails() {
     { label: '100%', value: '100%' },
     { label: '30%', value: '30%' },
   ];
-
-  // Pricing policy options
   const pricingPolicyOptions = ['Price A', 'Price B', 'Price C', 'Price D'];
 
-  // Fetch next order ID when in add mode
-  useEffect(() => {
-    const fetchNextOrderId = async () => {
-      if (formMode !== 'add') return;
-      try {
-        // Fetch all sales order ids (only ids, not full data)
-        console.log('Fetching next order ID...');
-        const response = await fetch(`${API_BASE_URL}/sales-order/pagination`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        const result = await response.json();
-        console.log('Orders', result);
-        let newOrderId = 0;
-        if (result.status === 'Ok' && result.data && Array.isArray(result.data.data) && result.data.data.length > 0) {
-          // Find the max id from the list
-          const ids = result.data.data.map(order => parseInt(order.id, 10));
-          const maxId = Math.max(...ids);
-          console.log('Max order ID found:', maxId);
-          newOrderId = maxId + 1;
-        }
-        setNextOrderId(newOrderId.toString());
-        setFormData(prev => ({
-          ...prev,
-          id: newOrderId.toString()
-        }));
-      } catch (err) {
-        console.error('Failed to get next order number:', err);
-        setError('Failed to get next order number');
-      }
-    };
-    fetchNextOrderId();
-  }, [formMode]);
   useEffect(() => {
     if (formMode === 'add') return;
 
-    console.log('Loading sales order lines - orderFromNav.id:', orderFromNav.id);
-    console.log('Pre-fetched salesOrderLinesFromNav:', salesOrderLinesFromNav);
-    // If sales order lines were already provided from navigation, use them and skip fetching
     if (salesOrderLinesFromNav && Array.isArray(salesOrderLinesFromNav) && salesOrderLinesFromNav.length > 0) {
       console.log('Using pre-fetched sales order lines:', salesOrderLinesFromNav.length, 'items');
       const processedProducts = salesOrderLinesFromNav.map(product => ({
@@ -198,7 +156,6 @@ function OrderDetails() {
         quantity: product.quantity,
       }));
 
-      // Update formData with pre-fetched products
       setFormData(prev => ({
         ...prev,
         products: processedProducts
@@ -209,7 +166,6 @@ function OrderDetails() {
       return;
     }
 
-    // If no pre-fetched data, fetch from API
     const fetchOrderProducts = async () => {
       if (!orderFromNav.id) {
         console.log('No order ID available, skipping sales order lines fetch');
@@ -287,6 +243,55 @@ function OrderDetails() {
     // eslint-disable-next-line
   }, [orderFromNav.id, formMode, (salesOrderLinesFromNav ? salesOrderLinesFromNav.length : 0)]); // Use length with safety check
 
+  // Refactored isCreditPaymentAllowed to include COD limit logic
+  const isCreditPaymentAllowed = async (customerId, entity, totalAmount = formData.totalAmount) => {
+    try {
+      // 1. Check if credit is allowed (simulate API call)
+      const creditUrl = `${API_BASE_URL}/payment-method-balances/id/${customerId}`;
+      const creditRes = await fetch(creditUrl, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!creditRes.ok) {
+        console.warn('Failed to fetch credit eligibility:', creditRes.statusText);
+        return false;
+      }
+      const creditResult = await creditRes.json();
+      const isCreditUser = creditResult?.data?.methodDetails?.credit?.[entity]?.isAllowed;
+      if (!isCreditUser) {
+        let codLimit = creditResult?.data?.methodDetails?.COD?.limit || 0;
+        if (totalAmount > codLimit) {
+          console.log(`Total amount exceeds COD limit.`);
+          return false;
+        } else {
+          console.log(`Total amount is within COD limit. Showing payment popup.`);
+          setShowPaymentPopup(true);
+          setPendingSaveAction(true);
+          return "Payment popup"; // Indicate that payment popup should be shown
+        }
+      }
+      else {
+        console.log(`Credit is allowed for customer. checking for current balance`);
+        const currentCreditBalance = creditResult?.data?.currentBalance?.[entity] || 0;
+        if (totalAmount > currentCreditBalance) {
+          Swal.fire({
+            icon: 'warning',
+            title: t('Insuffiecient Credit balance'),
+            text: t(`Your credit balance is ${currentCreditBalance}.`)
+          });
+          return "Insufficient balance";
+        }
+        else {
+          return true;
+        }
+      }
+    } catch (err) {
+      console.error('Error in isCreditPaymentAllowed:', err);
+      return false;
+    }
+  };
+
   // Add a default product row in add mode
   useEffect(() => {
     if (formMode === 'add' && formData.products.length === 0) {
@@ -338,24 +343,20 @@ function OrderDetails() {
   };
 
   const handleSave = async (action, selectedMethod) => {
-    // Prevent EDITING if payment method is Pre Payment (only applies to existing orders)
+    setPendingSaveAction(false);
     if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
       alert(t('The payment method is Pre Payment. The order cannot be altered.'));
       setSaving(false);
       return;
     }
 
-    // Perform validation before saving
     if (!formData.customerId) {
       alert(t('Please select a customer'));
       setSaving(false);
       return;
     }
-
-    // Disable save button to prevent multiple submissions
     setSaving(true);
 
-    // Validate product list early
     if (!formData.products || formData.products.length === 0) {
       Swal.fire({
         icon: 'warning',
@@ -370,83 +371,54 @@ function OrderDetails() {
     if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
       // Check entity type and product composition
       const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
-      const isShcEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase();
-      const isNaqiEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase();
-      
+
       if (isVmcoEntity) {
         // For VMCO entity, check if all products are machines
-        const allProductsAreMachines = formData.products.length > 0 && formData.products.every(product => product.is_machine === true);
-        
-        if (allProductsAreMachines) {
+        const machineProducts = formData.products.length > 0 && formData.products.every(product => product.isMachine === true);
+
+        if (machineProducts) {
           // All products are machines - use Pre Payment
           console.log('All products are VMCO machines - using Pre Payment');
           selectedMethod = 'Pre Payment';
         } else {
-          // Mixed products or all non-machines - determine payment method based on customer settings
-          console.log('VMCO entity with non-machine products (Consumables) - determining payment method');
-          console.log('Checking for VMCO-specific credit allowance (methodDetails.credit.VMCO.isAllowed)');
-          const totalAmount = parseFloat(formData.totalAmount || 0);
-          selectedMethod = await determinePaymentMethodForNonMachines(formData.customerId, totalAmount, formData.entity);
-          
-          // If payment method determination returned null (insufficient balance), don't auto-select
-          if (selectedMethod === null) {
-            console.log('Payment method determination cancelled due to insufficient balance');
+          // Non-machine products: check credit user and COD limit
+          console.log('VMCO entity with non-machine products - determining payment method');
+          const totalAmount = parseFloat(formData.totalAmount);
+          const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId, formData.entity, totalAmount, action);
+          if(isCreditAllowed === "Payment popup") {
             setSaving(false);
-            return; // Exit early, don't auto-select payment method
+            return
           }
-          
-          // If payment method determination returned 'SHOW_POPUP', show payment popup
-          if (selectedMethod === 'SHOW_POPUP') {
-            console.log('Payment method determination requires payment popup');
-            setPendingSaveAction(action);
-            setShowPaymentPopup(true);
+          if (isCreditAllowed === "Insufficient balance") {
+            console.log('Credit not allowed - insufficient balance');
             setSaving(false);
             return;
           }
+          else if (isCreditAllowed === false) {
+            selectedMethod = 'Pre Payment';
+          }
+
         }
-      } else if (isShcEntity) {
-        // For SHC entity, use SHC-specific payment method determination
-        console.log('SHC entity - determining payment method');
-        const totalAmount = parseFloat(formData.totalAmount || 0);
-        selectedMethod = await determinePaymentMethodForSHC(formData.customerId, totalAmount, formData.entity);
-        
-        // If payment method determination returned null (insufficient balance), don't auto-select
-        if (selectedMethod === null) {
-          console.log('Payment method determination cancelled due to insufficient balance');
-          setSaving(false);
-          return; // Exit early, don't auto-select payment method
-        }
-      } else {
-        // For other entities (including NAQI), use payment method determination
+      }
+      else {
         console.log('Other entity - determining payment method');
-        const totalAmount = parseFloat(formData.totalAmount || 0);
-        selectedMethod = await determinePaymentMethodForNonMachines(formData.customerId, totalAmount, formData.entity);
-        
-        // If payment method determination returned null (insufficient balance), don't auto-select
-        if (selectedMethod === null) {
-          console.log('Payment method determination cancelled due to insufficient balance');
-          setSaving(false);
-          return; // Exit early, don't auto-select payment method
-        }
-        
-        // If payment method determination returned 'SHOW_POPUP', show payment popup
-        if (selectedMethod === 'SHOW_POPUP') {
-          console.log('Payment method determination requires payment popup');
-          setPendingSaveAction(action);
-          setShowPaymentPopup(true);
+        const totalAmount = parseFloat(formData.totalAmount);
+        const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId, formData.entity, totalAmount, action);
+        if(isCreditAllowed === "Payment popup") {
+            setSaving(false);
+            return
+          }
+        else if (isCreditAllowed === "Insufficient balance") {
+          console.log('Credit not allowed - insufficient balance');
           setSaving(false);
           return;
         }
+        else if (!isCreditAllowed) {
+          selectedMethod = 'Pre Payment';
+        }
       }
     }
-
-    // For VMCO Machines category, automatically set payment method to "Pre Payment"
-    const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
-
-    if (isVmcoMachinesCategory && formMode === 'add') {
-       selectedMethod = 'Pre Payment';
-    }
-
+    //setPendingSaveAction(true);
     // Check if we're editing an existing order or creating a new one
     if (formData.id && isEditMode) {
       const fieldsToUpdate = [
@@ -485,7 +457,6 @@ function OrderDetails() {
       }); if (!orderResponse.ok) {
         const errorData = await orderResponse.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Server response:', errorData);
-
         // Show user-friendly error message
         Swal.fire({
           icon: 'error',
@@ -556,7 +527,6 @@ function OrderDetails() {
               unitPrice,
               quantity,
               netAmount,
-              //sugarTaxPrice,
               vatPercentage
             );
           }
@@ -569,26 +539,25 @@ function OrderDetails() {
               unitPrice,
               quantity,
               netAmount,
-              //sugarTaxPrice,
               vatPercentage
             );
           }
           // New products need to be added
           else {
             console.log(`Creating new line for product ID ${productId}`);
+
             return createSalesOrderLine(
               formData.id,
               productId,
               unitPrice,
               quantity,
               netAmount,
-              //sugarTaxPrice,
               vatPercentage
             );
           }
-        });        // Wait for all product line updates to complete
+        });
         await Promise.all(updatePromises);
-        
+
         // After updating sales order lines, calculate and update totalSalesTaxAmount
         let totalSalesTaxAmount = 0;
         formData.products.forEach(product => {
@@ -599,36 +568,36 @@ function OrderDetails() {
           const vatAmount = (baseAmount * vatPercentage) / 100;
           totalSalesTaxAmount += vatAmount;
         });
-        
+
         console.log('Total sales tax amount for updated order:', totalSalesTaxAmount);
-        
+
         // Check if any product is a machine (isMachine = true)
         const hasAnyMachine = formData.products.length > 0 && formData.products.some(product => product.isMachine === true);
-        
+
         // Check if any product is fresh (isFresh = true)
         const hasAnyFresh = formData.products.length > 0 && formData.products.some(product => product.isFresh === true);
-        
+
         console.log('Product analysis:', {
           totalProducts: formData.products.length,
           hasAnyMachine,
           hasAnyFresh,
           productFlags: formData.products.map(p => ({ id: p.id, isMachine: p.isMachine, isFresh: p.isFresh }))
         });
-        
+
         // Update the sales order with the total sales tax amount and product flags
         const orderUpdatePayload = {
           total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
           isMachine: hasAnyMachine,
           isFresh: hasAnyFresh
         };
-        
+
         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(orderUpdatePayload),
           credentials: 'include',
         });
-        
+
         if (!updateOrderResponse.ok) {
           console.warn('Failed to update order with total sales tax amount and product flags');
         } else {
@@ -677,8 +646,6 @@ function OrderDetails() {
           console.log('No products were removed from the order');
         }
       }
-      // Refresh order details after update
-      // await getOrderById(formData.id);
       // Check if this is a VMCO Machines order that needs discount workflow approval
       if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
         (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
@@ -719,12 +686,9 @@ function OrderDetails() {
           window.location.reload();
         });
       }
-      // alert(t('Order updated successfully!'));
       return; // Exit function after successful update
     }
 
-    // Create a new order if not in edit mode
-    // Create a new order
     // Validation - check if essential fields are filled
     if (!formData.selectedCustomerName || !formData.selectedBranchName) {
       Swal.fire({
@@ -749,25 +713,17 @@ function OrderDetails() {
       branchId: formData.branchId,
       entity: formData.entity,
       category: formData.category,
-      paymentMethod: selectedMethod || formData.paymentMethod
+      paymentMethod: selectedMethod
     });
 
     // Skip existing order check if payment method is Pre Payment
     const isPrePayment = (selectedMethod || formData.paymentMethod) === 'Pre Payment';
-
-    // IMPORTANT: Pre Payment orders can be created regardless of existing orders 
-    // for the same customer/branch/entity. This allows multiple Pre Payment orders
-    // which is the desired behavior for immediate payments.
     if (isPrePayment) {
       console.log('Payment method is Pre Payment - skipping existing order check');
-    } else {
-      // Check if there is an existing order with the same customer, branch, entity and appropriate status
-      // For VMCO entity, also check the category
-      // Make sure to use branchId field as it's being used in the API
       const branchIdForFilter = formData.branchId || formData.erpBranchId;
 
       // Determine the status to check for existing orders based on entity
-      const statusToCheck = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() 
+      const statusToCheck = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
         ? 'Pending'  // VMCO orders use Pending status
         : 'Open';    // Other entities use Open status
 
@@ -787,8 +743,14 @@ function OrderDetails() {
         };
 
       console.log('Order filter object created:', orderFiltersObj);
+
+      // Always include status: 'Open' in the filters for existing order check
+      const orderFiltersObjWithOpenStatus = {
+        ...orderFiltersObj,
+        status: 'Open'
+      };
       const orderFilters = new URLSearchParams({
-        filters: JSON.stringify(orderFiltersObj)
+        filters: JSON.stringify(orderFiltersObjWithOpenStatus)
       });
 
       console.log('Checking for existing orders with filters:', orderFiltersObj);
@@ -832,62 +794,55 @@ function OrderDetails() {
 
     let attempt = 0;
     let maxAttempts = 2;
-    // Step 0: Fetch username by user id for orderBy field
     let orderByName = '';
-    // Try to get userId from user object (userId or id)
     const userId = user?.userId;
-  
-        let usernameApiUrl = `/user/get-username-by-id/${userId}`;
-
-        const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (usernameRes.ok) {
-          const contentType = usernameRes.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const usernameResult = await usernameRes.json();
-            if (usernameResult && (usernameResult.userName || usernameResult.username)) {
-              orderByName = usernameResult.userName || usernameResult.username;
-            } else {
-              console.warn('Username API did not return userName field:', usernameResult);
-            }
-          }
+    let usernameApiUrl = `/user/get-username-by-id/${userId}`;
+    const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (usernameRes.ok) {
+      const contentType = usernameRes.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const usernameResult = await usernameRes.json();
+        if (usernameResult && (usernameResult.userName || usernameResult.username)) {
+          orderByName = usernameResult.userName || usernameResult.username;
         } else {
-          console.error('Failed to fetch username: HTTP', usernameRes.status);
+          console.warn('Username API did not return userName field:', usernameResult);
         }
+      }
+    } else {
+      console.error('Failed to fetch username: HTTP', usernameRes.status);
+    }
 
     while (attempt < maxAttempts) {
-      // Determine order status based on entity and payment method
       let orderStatus = 'Open'; // Default status
       let paymentStatus = 'Pending'; // Default payment status
-      
+
       const finalPaymentMethod = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
         ? 'Pre Payment'
         : (selectedMethod || formData.paymentMethod || '');
-      
+
       // Determine status based on entity and payment method
       if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-        // For VMCO entity - ALL VMCO orders should have status = Pending regardless of payment method
-        orderStatus = 'Pending';
-        
-        if (formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) {
-          // VMCO Machines: Pre Payment, status = Pending, paymentStatus = Pending
+        if (finalPaymentMethod.toLowerCase() === 'pre payment') {
+          // For VMCO entity with Pre Payment
+          orderStatus = 'Pending';
           paymentStatus = 'Pending';
-        } else {
-          // VMCO Consumables: status = Pending, paymentStatus = Pending regardless of payment method
-          paymentStatus = 'Pending';
+        } else if (finalPaymentMethod.toLowerCase() === 'credit') {
+          orderStatus = 'Pending';
+          paymentStatus = 'Paid';
         }
       } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
         // For NAQI entity
-        if (finalPaymentMethod === 'Pre Payment') {
+        if (finalPaymentMethod.toLowerCase() === 'pre payment') {
           orderStatus = 'Pending';
           paymentStatus = 'Pending';
-        } else if (finalPaymentMethod === 'Credit' || finalPaymentMethod === 'Cash On Delivery') {
+        } else if (finalPaymentMethod.toLowerCase() === 'credit' || finalPaymentMethod.toLowerCase() === 'cash on delivery') {
           orderStatus = 'Approved';
-          paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
+          paymentStatus = finalPaymentMethod.toLowerCase() === 'credit' ? 'Paid' : 'Pending';
         } else {
-          orderStatus = 'Open';
+          orderStatus = 'Approved';
           paymentStatus = 'Pending';
         }
       } else {
@@ -996,11 +951,11 @@ function OrderDetails() {
           if (companyType && companyType.toLowerCase() === 'non trading') {
             vat = 0.00;
           }
-          
+
           // Calculate vatAmount (salesTaxAmount)
           const baseAmount = parseFloat(product.unitPrice) * parseInt(product.quantity || 1, 10);
           const vatAmount = (baseAmount * vat) / 100;
-          
+
           return {
             order_id: result.data.id,
             line_number: index + 1,
@@ -1020,7 +975,7 @@ function OrderDetails() {
           };
         });
 
-        console.log('Submitting products payload:', productsPayload); 
+        console.log('Submitting products payload:', productsPayload);
         if (productsPayload.length === 0) {
           console.warn('No valid products to submit');
           Swal.fire({
@@ -1042,7 +997,7 @@ function OrderDetails() {
 
         console.log(`Prepared ${productsPayload.length} product line items for submission`); try {
           console.log('Making API call to create sales order line items');
-         // productsPayload[0].is_machine=true
+          // productsPayload[0].is_machine=true
           const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1064,41 +1019,41 @@ function OrderDetails() {
           }
 
           console.log('Sales order line items created successfully');
-          
+
           // After successfully creating sales order lines, calculate and update totalSalesTaxAmount
           const totalSalesTaxAmount = productsPayload.reduce((sum, product) => {
             return sum + parseFloat(product.sales_tax_amount || 0);
           }, 0);
-          
+
           console.log('Total sales tax amount:', totalSalesTaxAmount);
-          
+
           // Check if any product is a machine (is_machine = true)
           const hasAnyMachine = productsPayload.length > 0 && productsPayload.some(product => product.is_machine === true);
-          
+
           // Check if any product is fresh (is_fresh = true)
           const hasAnyFresh = productsPayload.length > 0 && productsPayload.some(product => product.is_fresh === true);
-          
+
           console.log('Product analysis for new order:', {
             totalProducts: productsPayload.length,
             hasAnyMachine,
             hasAnyFresh,
             productFlags: productsPayload.map(p => ({ id: p.product_id, is_machine: p.is_machine, is_fresh: p.is_fresh }))
           });
-          
+
           // Update the sales order with the total sales tax amount and product flags
           const orderUpdatePayload = {
             total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh
           };
-          
+
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderUpdatePayload),
             credentials: 'include',
           });
-          
+
           if (!updateOrderResponse.ok) {
             console.warn('Failed to update order with total sales tax amount and product flags');
           } else {
@@ -1194,7 +1149,7 @@ function OrderDetails() {
     };
 
     try {
-      setLoading(true);
+      setCancelling(true);
 
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
@@ -1232,7 +1187,7 @@ function OrderDetails() {
       });
       // alert(t(err.message));
     } finally {
-      setLoading(false);
+      setCancelling(false);
     }
   };
 
@@ -1355,7 +1310,7 @@ function OrderDetails() {
           if (result.status === 'Ok' && result.data) {
             // Update product with new price information
             const unitPrice = parseFloat(result.data.unitPrice || product.unitPrice);
-             const quantity = parseInt(product.quantity, 10);
+            const quantity = parseInt(product.quantity, 10);
             const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage || 0);
 
             // Calculate new net amount with updated price
@@ -1404,11 +1359,11 @@ function OrderDetails() {
       if (companyType && companyType.toLowerCase() === 'non trading') {
         finalVat = 0.00;
       }
-      
+
       // Calculate vatAmount (salesTaxAmount)
       const baseAmount = unitPrice * quantity;
       const vatAmount = (baseAmount * finalVat) / 100;
-      
+
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -1465,11 +1420,11 @@ function OrderDetails() {
       if (companyType && companyType.toLowerCase() === 'non trading') {
         finalVat = 0.00;
       }
-      
+
       // Calculate vatAmount (salesTaxAmount)
       const baseAmount = unitPrice * quantity;
       const vatAmount = (baseAmount * finalVat) / 100;
-      
+
       // Find the product object to get productName, productNameLc, unit
       const productObj = formData.products.find(
         p => (p.id || p.product_id) === productId
@@ -1825,12 +1780,6 @@ function OrderDetails() {
       },
       include: isV('unitPriceCol'),
     },
-    // {
-    //   key: 'sugarTaxPrice',
-    //   header: () => t('Sugar Tax'),
-    //   render: (row) => row.sugarTaxPrice ? parseFloat(row.sugarTaxPrice).toFixed(2) : '0.00',
-    //   include: isV('sugarTaxPriceCol'),
-    // },
     {
       key: 'vatPercentage',
       header: () => t('VAT'),
@@ -1843,8 +1792,10 @@ function OrderDetails() {
       render: (row) => parseFloat(row.netAmount).toFixed(2),
       include: isV('netAmountCol'),
     },
+    // Spread the actions column if enabled
     ...(isE('deleteCol') ? [{ key: 'actions', header: () => t('Actions') }] : [])
   ];
+
 
   // Add this useEffect to fetch entity options
   useEffect(() => {
@@ -2439,6 +2390,7 @@ function OrderDetails() {
       setPendingSaveAction(null);
     }
   }
+
   // Debug effect to monitor products loading
   useEffect(() => {
     console.log('formData.products changed:', {
@@ -2475,278 +2427,7 @@ function OrderDetails() {
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
 
-  // Helper function to determine payment method for non-machine products
-  const determinePaymentMethodForNonMachines = async (customerId, totalAmount, entity) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
 
-      if (!response.ok) {
-        console.error('Failed to fetch payment method details');
-        return 'Pre Payment'; // Default fallback
-      }
-
-      const result = await response.json();
-      console.log('Payment method details response:', result);
-      console.log(`Checking payment method for entity: ${entity} (for VMCO Consumables this should check methodDetails.credit.VMCO.isAllowed)`);
-
-      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-        const methodDetails = result.data.methodDetails;
-        const currentBalance = result.data.currentBalance || {};
-        
-        // Check if credit is allowed for this entity
-        if (methodDetails.credit && methodDetails.credit[entity]) {
-          const entityCreditDetails = methodDetails.credit[entity];
-          console.log(`Credit details for entity ${entity}:`, entityCreditDetails);
-          
-          if (entityCreditDetails.isAllowed === true) {
-            // Check if current balance is sufficient
-            const entityBalance = currentBalance[entity] || 0;
-            console.log(`Entity ${entity} credit balance: ${entityBalance}, Order total: ${totalAmount}`);
-            
-            if (totalAmount <= Math.abs(entityBalance)) {
-              console.log(`Credit is allowed for entity ${entity} and balance ${entityBalance} is sufficient for amount ${totalAmount}, using Credit payment method`);
-              return 'Credit';
-            } else {
-              console.log(`Credit is allowed for entity ${entity} but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
-              // Show insufficient balance alert
-              Swal.fire({
-                icon: 'warning',
-                title: t('Insufficient Balance'),
-                text: t(`Insufficient Credit Balance! The customer's current credit balance is: ${Math.abs(entityBalance).toFixed(2)}`),
-                confirmButtonText: t('OK')
-              });
-              return null; // Return null to indicate payment method selection should be cancelled
-            }
-          } else {
-            console.log(`Credit is not allowed for entity ${entity} (isAllowed: ${entityCreditDetails.isAllowed})`);
-          }
-        } else {
-          console.log(`Credit details not found for entity ${entity}`);
-        }
-
-        // Credit not allowed or insufficient, check COD
-        if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
-          const codLimit = methodDetails.COD.limit || 0;
-          if (totalAmount <= codLimit) {
-            console.log(`Cash On Delivery is allowed and total amount ${totalAmount} is less than or equal to limit ${codLimit}, using Cash On Delivery`);
-            return 'Cash On Delivery';
-          } else {
-            console.log(`Total amount ${totalAmount} exceeds Cash On Delivery limit ${codLimit}, need to show payment popup`);
-            return 'SHOW_POPUP'; // Special return value to indicate payment popup should be shown
-          }
-        }
-
-        // Neither credit nor COD applicable, use Pre Payment
-        console.log('Neither credit nor Cash On Delivery applicable, using Pre Payment');
-        return 'Pre Payment';
-      }
-
-      return 'Pre Payment'; // Default fallback
-    } catch (error) {
-      console.error('Error determining payment method:', error);
-      return 'Pre Payment'; // Default fallback
-    }
-  };
-
-  // Helper function to determine payment method for SHC products (fresh and non-fresh)
-  const determinePaymentMethodForSHC = async (customerId, totalAmount, entity) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error('Failed to fetch payment method details');
-        return 'Pre Payment'; // Default fallback
-      }
-
-      const result = await response.json();
-      console.log('Payment method details response for SHC:', result);
-
-      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-        const methodDetails = result.data.methodDetails;
-        const currentBalance = result.data.currentBalance || {};
-        
-        // Check if credit is allowed for SHC entity
-        if (methodDetails.credit && methodDetails.credit.SHC && methodDetails.credit.SHC.isAllowed === true) {
-          // Check if current balance is sufficient
-          const entityBalance = currentBalance.SHC || 0;
-          if (totalAmount <= Math.abs(entityBalance)) {
-            console.log(`Credit payment is allowed for SHC entity and balance ${entityBalance} is sufficient for amount ${totalAmount}`);
-            return 'Credit';
-          } else {
-            console.log(`Credit is allowed for SHC but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
-            // Show insufficient balance alert
-            Swal.fire({
-              icon: 'warning',
-              title: t('Insufficient Balance'),
-              text: t(`Insufficient Credit Balance! The customer's current credit balance is: ${Math.abs(entityBalance).toFixed(2)}`),
-              confirmButtonText: t('OK')
-            });
-            return null; // Return null to indicate payment method selection should be cancelled
-          }
-        }
-
-        // Check Cash on Delivery limits if credit is not allowed or insufficient
-        if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
-          const codLimit = methodDetails.COD.limit || 0;
-          if (totalAmount <= codLimit) {
-            console.log(`Cash On Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
-            return 'Cash On Delivery';
-          } else {
-            console.log(`Total amount ${totalAmount} exceeds Cash On Delivery limit ${codLimit}, using Pre Payment`);
-            return 'Pre Payment';
-          }
-        } else {
-          console.log('Cash On Delivery is not allowed, using Pre Payment');
-          return 'Pre Payment';
-        }
-      }
-
-      console.log('Defaulting to Pre Payment for SHC');
-      return 'Pre Payment';
-    } catch (error) {
-      console.error('Error determining payment method for SHC:', error);
-      return 'Pre Payment';
-    }
-  };
-
-  // Function to check if credit payment is allowed for the customer (entity-specific)
-  const isCreditPaymentAllowed = async (customerId, entity = null) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error('Failed to fetch payment method details');
-        return false;
-      }
-
-      const result = await response.json();
-      console.log('Payment method details response:', result);
-
-      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-        const methodDetails = result.data.methodDetails;
-        
-        // If entity is provided, check entity-specific credit allowance
-        if (entity && methodDetails.credit && methodDetails.credit[entity]) {
-          const entityCreditDetails = methodDetails.credit[entity];
-          const isAllowed = entityCreditDetails.isAllowed === true;
-          console.log(`Credit payment is ${isAllowed ? 'allowed' : 'not allowed'} for entity ${entity}`);
-          return isAllowed;
-        }
-        
-        // Fallback: check if credit is generally allowed (legacy support)
-        if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
-          console.log('Credit payment is allowed for customer (general)');
-          return true;
-        }
-      }
-
-      console.log('Credit payment is not allowed for customer');
-      return false;
-    } catch (error) {
-      console.error('Error checking credit payment allowance:', error);
-      return false;
-    }
-  };
-
-  // Function to validate credit balance and show warning if insufficient (entity-specific)
-  const validateCreditBalance = async (customerId, totalAmount, entity = null) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        console.error('Failed to fetch payment method details');
-        return false;
-      }
-
-      const result = await response.json();
-      console.log('Payment method details response:', result);
-
-      if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-        const methodDetails = result.data.methodDetails;
-        const currentBalance = result.data.currentBalance || {};
-
-        // Check if totalAmount is provided and compare with credit balance
-        if (totalAmount !== undefined && methodDetails.credit) {
-          let creditBalance = 0;
-          
-          // If entity is provided, check entity-specific credit balance from currentBalance
-          if (entity && currentBalance[entity] !== undefined) {
-            creditBalance = Math.abs(currentBalance[entity] || 0);
-          } else if (methodDetails.credit.balance !== undefined) {
-            // Fallback to general credit balance (legacy support)
-            creditBalance = Number(methodDetails.credit.balance);
-          }
-
-          const orderTotal = Number(totalAmount);
-
-          console.log(`Checking credit balance: ${creditBalance} vs order total: ${orderTotal} for entity: ${entity || 'general'}`);
-
-          if (orderTotal > creditBalance) {
-            console.log('Order total exceeds credit balance');
-            Swal.fire({
-              icon: 'warning',
-              title: t('Insufficient Balance'),
-              text: t(`Insufficient Credit Balance! Your current credit balance is: ${creditBalance.toFixed(2)}`),
-              confirmButtonText: t('OK')
-            }).then(() => {
-              //
-            });
-            return false;
-          }
-        }
-
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error validating credit balance:', error);
-      return false;
-    }
-  };
-
-  // Auto-select credit payment method when customer is selected and credit is allowed
-  useEffect(() => {
-    const autoSelectCreditPayment = async () => {
-      // Only auto-select in add mode and when no payment method is already selected
-      if (formMode === 'add' && formData.customerId && !formData.paymentMethod) {
-        // Skip auto-selection for VMCO Machines category as it should use Pre Payment
-        const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
-        if (isVmcoMachinesCategory) {
-          return;
-        }
-
-        try {
-          // Check if credit is allowed for this entity
-          const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId, formData.entity);
-          if (isCreditAllowed) {
-            console.log('Auto-selecting Credit payment method for customer:', formData.customerId, 'entity:', formData.entity);
-            setFormData(prev => ({ ...prev, paymentMethod: 'Credit' }));
-          }
-        } catch (error) {
-          console.error('Error checking credit payment allowance for auto-selection:', error);
-        }
-      }
-    };
-
-    autoSelectCreditPayment();
-  }, [formData.customerId, formData.category, formMode, formData.paymentMethod]);
 
   return (
     <Sidebar>
@@ -3396,9 +3077,6 @@ function OrderDetails() {
               onSelectPaymentMethod={handleSelectPaymentMethod}
               API_BASE_URL={API_BASE_URL}
               t={t}
-              category={formData.category}
-              customerId={formData.customerId}
-              totalAmount={formData.totalAmount}
             />
           </div>
           {isV('orderFooter') && (
@@ -3428,7 +3106,7 @@ function OrderDetails() {
                     onClick={() => handleCancelOrder('cancel order')}
                     disabled={loading || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
                   >
-                    {loading ? t('Cancelling...') : t('Cancel Order')}
+                    {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
                 )}
 
@@ -3481,5 +3159,4 @@ function OrderDetails() {
     </Sidebar>
   );
 }
-
 export default OrderDetails;
