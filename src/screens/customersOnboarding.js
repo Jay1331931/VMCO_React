@@ -3,7 +3,11 @@ import "../styles/components.css";
 import "../i18n";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLanguage, faLocationDot,faCheckCircle} from "@fortawesome/free-solid-svg-icons";
+import {
+  faLanguage,
+  faLocationDot,
+  faCheckCircle,
+} from "@fortawesome/free-solid-svg-icons";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import constants from "../constants";
@@ -31,14 +35,20 @@ function CustomersOnboarding() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [regionOptions, setRegionOptions] = useState([]);
   const navigate = useNavigate();
+
+  const [leadData, setLeadData] = useState(null);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isOtpVerify, setIsOtpVerify] = useState(false);
+
+  // Add loading states
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
+  const [isVerifyLoading, setIsVerifyLoading] = useState(false);
+
   const toggleLanguage = () => {
     const newLang = isRTL ? "en" : "ar";
     i18n.changeLanguage(newLang);
     document.body.dir = newLang === "ar" ? "rtl" : "ltr";
   };
-  const [leadData, setLeadData] = useState(null);
-  const [isOtpSent, setIsOtpSent] = useState(false);
-  const [isOtpVerify, setIsOtpVerify] = useState(false);
   const fields = [
     // { type: 'empty' },
     {
@@ -55,8 +65,8 @@ function CustomersOnboarding() {
       placeholder: t("Enter OTP"),
       required: false,
     },
-    {   type: "empty" ,"name": "empty" },
-   
+    { type: "empty", name: "empty" },
+
     {
       type: "text",
       name: "leadName",
@@ -126,6 +136,10 @@ function CustomersOnboarding() {
           const result = await response.json();
           console.log(response);
           console.log(result);
+          if (result?.data?.registered) {
+            navigate("/login");
+            return;
+          }
           if (result.status === "Ok") {
             // setFormData(prev => ({
             //     ...prev,
@@ -180,40 +194,44 @@ function CustomersOnboarding() {
     } catch (err) {
       console.error("Error fetching manager:", err);
     }
-  }
-const getOptionsFromBasicsMaster = async (fieldName) => {
-      const params = new URLSearchParams({
-        filters: JSON.stringify({ master_name: fieldName }) // Properly stringify the filter
-      });
-  
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/basics-masters?${params.toString()}`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-  
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-  
-        const result = await response.json(); // Don't forget 'await' here
-  
-        const options = result.data.map(item => item.value).map(opt => opt.charAt(0).toUpperCase() + opt.slice(1));
-         
-        return options;
-  
-      } catch (err) {
-        console.error('Error fetching options:', err);
-        return []; // Return empty array on error
-      }
-    };
-    useEffect(() => {
-        // Fetch region options on mount
-        getOptionsFromBasicsMaster('region').then(setRegionOptions);
-    }, []);
+  };
+  const getOptionsFromBasicsMaster = async (fieldName) => {
+    const params = new URLSearchParams({
+      filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
+    });
 
-  const validateForm = () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/basics-masters?${params.toString()}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json(); // Don't forget 'await' here
+
+      const options = result.data
+        .map((item) => item.value)
+        .map((opt) => opt.charAt(0).toUpperCase() + opt.slice(1));
+
+      return options;
+    } catch (err) {
+      console.error("Error fetching options:", err);
+      return []; // Return empty array on error
+    }
+  };
+  useEffect(() => {
+    // Fetch region options on mount
+    getOptionsFromBasicsMaster("region").then(setRegionOptions);
+  }, []);
+
+  const validateForm = async () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(00966|966|\+966|0)?5\d{8}$/;
@@ -223,7 +241,7 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
     // Check all required fields are filled
     fields.forEach((field) => {
       if (field.required && !formData[field.name]?.trim()) {
-        newErrors[field.name] = t("This field is required");
+        newErrors["password"] = t("Please fill out all required fields");
       }
     });
 
@@ -234,6 +252,36 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
       !emailRegex.test(formData.companyEmail)
     ) {
       newErrors.companyEmail = t("Please enter a valid email address");
+    }
+
+    // --- Unique email check (refer customerDetails.js validateData) ---
+    if (
+      !newErrors.companyEmail &&
+      formData.companyEmail &&
+      emailRegex.test(formData.companyEmail)
+    ) {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              field: "email",
+              value: formData.companyEmail,
+            }),
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (!data.data.isUnique) {
+            newErrors.companyEmail = t("This email is already registered.");
+          }
+        }
+      } catch (err) {
+        // Optionally handle API error
+      }
     }
 
     if (
@@ -264,16 +312,29 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
 
     setErrors(newErrors);
     let validForm = Object.keys(newErrors).length === 0;
-    console.log(validForm);
     return validForm;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+
+    // If email is being changed, reset OTP verification states
+    if (name === "companyEmail") {
+      // Reset OTP states when email changes
+      setIsOtpSent(false);
+      setIsOtpVerify(false);
+      // Also clear OTP field
+      setFormData({
+        ...formData,
+        [name]: value,
+        otp: "", // Clear OTP when email changes
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleLogin = () => {
@@ -281,19 +342,20 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(!isOtpVerify)
-    {
-        // Swal.fire({
-        //   title: t("Please verify the Email"),
-        //     text: t("Please verify the email by clicking on the Verify Otp button."),
-        //     icon: "warning",
-        //     confirmButtonText: t("OK"),
-        // });
-        setErrors(t("Please verify the email by clicking on the Verify Otp button."))
-        return;
+    if (!isOtpVerify) {
+      // Swal.fire({
+      //   title: t("Please verify the Email"),
+      //     text: t("Please verify the email by clicking on the Verify Otp button."),
+      //     icon: "warning",
+      //     confirmButtonText: t("OK"),
+      // });
+      setErrors(
+        t("Please verify the email by clicking on the Verify Otp button.")
+      );
+      return;
     }
     // Validate form only on submit
-    let isValid = validateForm();
+    let isValid = await validateForm();
     if (isValid) {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/registration/user`, {
@@ -366,149 +428,196 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
           const contactTypesPrimary = ["primary"];
           const contactTypes = ["finance", "business", "purchasing"];
 
-                    contactTypesPrimary.forEach(async (type) => {
-                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                customerId: result.data.id,
-                                contactType: type,
-                                email: formData.companyEmail,
-                                name: formData.leadName,
-                                mobile: formData.companyPhone
-                            }),
-                            credentials: 'include',
-                        });
-                    });
+          contactTypesPrimary.forEach(async (type) => {
+            const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                customerId: result.data.id,
+                contactType: type,
+                email: formData.companyEmail,
+                name: formData.leadName,
+                mobile: formData.companyPhone,
+              }),
+              credentials: "include",
+            });
+          });
 
-                    contactTypes.forEach(async (type) => {
+          contactTypes.forEach(async (type) => {
+            const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                customerId: result.data.id,
+                contactType: type,
+              }),
+              credentials: "include",
+            });
+          });
 
-                        const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                customerId: result.data.id,
-                                contactType: type,
-                            }),
-                            credentials: 'include',
-                        });
-                    });
-
-                    const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            customerId: result.data.id,
-                            methodDetails: { 
-                                prePayment: { isAllowed: true }, 
-                                COD: { isAllowed: true, limit: "5000" }, 
-                                credit: { 
-                                [constants.ENTITY.VMCO]: { isAllowed: false, limit: "0", period: "0" },
-                                [constants.ENTITY.SHC]: { isAllowed: false, limit: "0", period: "0" },
-                                [constants.ENTITY.DAR]: { isAllowed: false, limit: "0", period: "0"},
-                                [constants.ENTITY.NAQI]: { isAllowed: false, limit: "0", period: "0" },
-                                [constants.ENTITY.GMTC]: { isAllowed: false, limit: "0", period: "0" },
-                            }, 
-                            // partialPayment: { isAllowed: true } 
-                        },
-                        }),
-                        credentials: 'include',
-                    });
-                } catch (error) {
-                    console.error('Error during registration:', error);
-                }
-                if (id) {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging/id/${id}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                ...stagingData,
-                                registered: true
-                            }),
-                            credentials: 'include',
-                        });
-                        const result = await response.json();
-                        console.log(result);
-                        if (result.status === "Ok") {
-                            setIsRegistered(true);
-                        }
-                        navigate('/login');
-                    } catch (error) {
-                        console.error('Error during registration:', error);
-                    }
-                } else {
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/auth/registration/staging`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                ...stagingData,
-                                registered: true,
-                                source: 'portal',
-                            }),
-                            credentials: 'include',
-                        });
-                        const result = await response.json();
-                        console.log(result);
-                        navigate('/login');
-                    } catch (error) {
-                        console.error('Error during registration:', error);
-                    }
-                }
-
-            }
+          const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerId: result.data.id,
+              methodDetails: {
+                prePayment: { isAllowed: true },
+                COD: { isAllowed: true, limit: "5000" },
+                credit: {
+                  [constants.ENTITY.VMCO]: {
+                    isAllowed: false,
+                    limit: "0",
+                    period: "0",
+                  },
+                  [constants.ENTITY.SHC]: {
+                    isAllowed: false,
+                    limit: "0",
+                    period: "0",
+                  },
+                  [constants.ENTITY.DAR]: {
+                    isAllowed: false,
+                    limit: "0",
+                    period: "0",
+                  },
+                  [constants.ENTITY.NAQI]: {
+                    isAllowed: false,
+                    limit: "0",
+                    period: "0",
+                  },
+                  [constants.ENTITY.GMTC]: {
+                    isAllowed: false,
+                    limit: "0",
+                    period: "0",
+                  },
+                },
+                // partialPayment: { isAllowed: true }
+              },
+            }),
+            credentials: "include",
+          });
+        } catch (error) {
+          console.error("Error during registration:", error);
         }
-        if (isSubmitting) {
-            try {
-                console.log('Form submitted:', formData);
-                // Reset form after successful submission
-                setFormData({
-                    leadName: '',
-                    companyEmail: '',
-                    companyPhone: '',
-                    companyName: '',
-                    region: '',
-                    password: '',
-                    confirmpassword: ''
-                });
-                setErrors({});
-                setIsSubmitting(false);
-            } catch (error) {
-                console.error('Submission error:', error);
-            } finally {
-                setIsSubmitting(false);
+        if (id) {
+          try {
+            // delete otp from staging data
+            const { otp, ...registrationPayload } = stagingData;
+            const response = await fetch(
+              `${API_BASE_URL}/auth/registration/staging/id/${id}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...registrationPayload,
+                  registered: true,
+                }),
+                credentials: "include",
+              }
+            );
+            const result = await response.json();
+            console.log(result);
+            if (result.status === "Ok") {
+              setIsRegistered(true);
             }
+            navigate("/login");
+          } catch (error) {
+            console.error("Error during registration:", error);
+          }
+        } else {
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/auth/registration/staging`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...stagingData,
+                  registered: true,
+                  source: "portal",
+                }),
+                credentials: "include",
+              }
+            );
+            const result = await response.json();
+            console.log(result);
+            navigate("/login");
+          } catch (error) {
+            console.error("Error during registration:", error);
+          }
         }
-    };
+      }
+    }
+    if (isSubmitting) {
+      try {
+        console.log("Form submitted:", formData);
+        // Reset form after successful submission
+        setFormData({
+          leadName: "",
+          companyEmail: "",
+          companyPhone: "",
+          companyName: "",
+          region: "",
+          password: "",
+          confirmpassword: "",
+        });
+        setErrors({});
+        setIsSubmitting(false);
+      } catch (error) {
+        console.error("Submission error:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
 
-  const handleOtp = async (type, email,otpType) => {
+  const handleOtp = async (type, email, otpType) => {
+    // Email validation regex (same as in submit validation)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Check if email is provided
+    if (!email) {
+      setErrors({ companyEmail: t("Email is required") });
+      return;
+    }
+
+    // Check email format before sending OTP (same as in submit validation)
+    if (!emailRegex.test(email)) {
+      setErrors({ companyEmail: t("Please enter a valid email address") });
+      return;
+    }
+
+    setIsOtpLoading(true); // Start loading
+
     const Reqbody = {};
     Reqbody.contact_type = type;
     Reqbody.contact_info = email;
-    try {
-        let path = "";
-        if (otpType === "sendotp") {
-            path=`${API_BASE_URL}/auth/registration/send-otp`;
-        }else if (otpType === "resendotp") {
-    path=`${API_BASE_URL}/auth/registration/resend-otp`;
-        }
-      const { data } = await axios.post(path,  Reqbody );
-      if( data?.status== "success") {
 
+    try {
+      let path = "";
+      if (otpType === "sendotp") {
+        path = `${API_BASE_URL}/auth/registration/send-otp`;
+      } else if (otpType === "resendotp") {
+        path = `${API_BASE_URL}/auth/registration/resend-otp`;
+      }
+
+      const { data } = await axios.post(path, Reqbody);
+
+      if (data?.status == "success") {
         setIsOtpSent(true);
+        setErrors({});
       }
-      if(data?.status =="verified")
-      {
+      if (data?.status == "verified") {
         setIsOtpVerify(true);
-         setIsOtpSent(true);
+        setIsOtpSent(true);
+        setErrors({});
       }
-       Swal.fire({
-          title: t(data.status),
-          text: t(data.message),
-          icon: data.status,
-          confirmButtonText: t("OK"),
-        });
+
+      Swal.fire({
+        title: t(data.status),
+        text: t(data.message),
+        icon: data.status,
+        confirmButtonText: t("OK"),
+      });
     } catch (error) {
       console.error(
         "Error sending OTP:",
@@ -523,13 +632,18 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
         icon: "error",
         confirmButtonText: t("OK"),
       });
+    } finally {
+      setIsOtpLoading(false); // Stop loading
     }
   };
   const handleVerifyOtp = async (type, email, otp) => {
+    setIsVerifyLoading(true); // Start loading
+
     const Reqbody = {};
     Reqbody.contact_type = type;
     Reqbody.contact_info = email;
     Reqbody.otp = otp;
+
     try {
       const { data } = await axios.post(
         `${API_BASE_URL}/auth/registration/verify-otp`,
@@ -537,18 +651,24 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
       );
       if (data?.status === "success") {
         setIsOtpVerify(true);
+        setErrors({});
         Swal.fire({
           title: t(data.status),
           text: t(data.message),
           icon: data.status,
           confirmButtonText: t("OK"),
         });
+      } else {
+        // Show error if status is not success
+        setErrors({ otp: t(data.message || "Invalid OTP") });
       }
     } catch (error) {
-      console.error(
-        "Error verifying OTP:",
-        error.response?.data || error?.message
-      );
+      // Show error if request fails or OTP is wrong
+      setErrors({
+        otp: t(
+          error.response?.data?.message || "Invalid OTP. Please try again."
+        ),
+      });
       Swal.fire({
         title: t(error.response?.data?.status || "Error"),
         text: t(
@@ -558,6 +678,8 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
         icon: "error",
         confirmButtonText: t("OK"),
       });
+    } finally {
+      setIsVerifyLoading(false); // Stop loading
     }
   };
   return (
@@ -588,157 +710,205 @@ const getOptionsFromBasicsMaster = async (fieldName) => {
             className="onboarding-container"
             noValidate
           >
-            {fields.map((field, index) => 
-            {    
-                if (field.name === "empty" && isOtpSent) return null;
-                 if (field.name === "otp" && !isOtpSent) return null;
-                return(
-              <div key={index} className="form-group">
-                
-              {!(field.name === "otp" && isOtpVerify) && (
-            <label htmlFor={field.name}>
-                    {field.label}
-                    {field.required && <span className="required-field">*</span>}
-                    {console.log("Field:", formData[field.name])}
-                </label>
-                )}
-
-                {field.type === "text" && (
-                  <>
-                  {field.name === "otp" && isOtpVerify ? (
-  <div style={{ display: "flex", alignItems: "center", gap: "8px", margin: "35px 0" }}>
-    <FontAwesomeIcon icon={faCheckCircle} color="green" />
-    <span style={{ color: "green", fontWeight: "bold" }}>Email Verified</span>
-  </div>
-) :
-                   (<> <input
-                      type="text"
-                      id={field.name}
-                      name={field.name}
-                      placeholder={field.placeholder}
-                      value={formData[field.name]}
-                      onChange={handleChange}
-                      className={errors[field.name] ? "error" : ""}
-                      disabled={
-                        isRegistered || (field.name === "companyEmail" && id)
-                      }
-                    />
-                    {field.name === "companyEmail"  &&
-                      formData?.companyEmail &&!isOtpVerify && (
-                        <button
-                          type="button" 
-                         style={{
-                          padding: "8px 12px",
-                          margin: "10px 0",
-                          backgroundColor: '#01594C',
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          width: "100px",
-                        }}
-                          onClick={()=>handleOtp("email", formData?.companyEmail,!isOtpSent ?"sendotp" : "resendotp")}
-                        >
-                         {!isOtpSent ? "Send Otp" :"resend Otp"}
-                        </button>
+            {fields.map((field, index) => {
+              if (field.name === "empty" && isOtpSent) return null;
+              if (field.name === "otp" && !isOtpSent) return null;
+              return (
+                <div key={index} className="form-group">
+                  {!(field.name === "otp" && isOtpVerify) && (
+                    <label htmlFor={field.name}>
+                      {field.label}
+                      {field.required && (
+                        <span className="required-field">*</span>
                       )}
-                    {field.name === "otp" && !isOtpVerify && (
-                      <button
-                        type="button" 
-                        style={{
-                          padding: "8px 12px",
-                          margin: "10px 0",
-                       backgroundColor: '#01594C',
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          whiteSpace: "nowrap",
-                          width: "100px",
-                        }}
-                        onClick={() =>handleVerifyOtp("email", formData?.companyEmail,formData?.otp)}
-                      >
-                        Verify Otp
-                      </button>
-                    )}
+                      {console.log("Field:", formData[field.name])}
+                    </label>
+                  )}
 
-                    {errors[field.name] && (
-                      <span className="error-message">
-                        {errors[field.name]}
-                      </span>
-                    )}
-                </>)}
-                  </>
-                )}
-              
-                
-               
-                {field.type === "password" && (
-                  <>
-                    <input
-                      type="password"
-                      id={field.name}
-                      name={field.name}
-                      placeholder={field.placeholder}
-                      value={formData[field.name]}
-                      onChange={handleChange}
-                      className={errors[field.name] ? "error" : ""}
-                      disabled={isRegistered}
-                    />
-                    {errors[field.name] && (
-                      <span className="error-message">
-                        {errors[field.name]}
-                      </span>
-                    )}
-                  </>
-                )}
-                {field.type === "dropdown" && (
-                  <>
-                    <select
-                      id={field.name}
-                      name={field.name}
-                      value={formData[field.name]}
-                      onChange={handleChange}
-                      className={errors[field.name] ? "error" : ""}
-                      disabled={isRegistered}
-                      required={field.required}
-                    >
-                      <option value="">{t("Select a region")}</option>
-                      {regionOptions.map((option, idx) => (
-                        <option key={idx} value={option}>
-                          {t(option)}
-                        </option>
-                      ))}
-                    </select>
-                    {errors[field.name] && (
-                      <span className="error-message">
-                        {errors[field.name]}
-                      </span>
-                    )}
-                  </>
-                )}
-                {field.type === "empty" && <></>}
-              </div>
-            )})}
+                  {field.type === "text" && (
+                    <>
+                      {field.name === "otp" && isOtpVerify ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            margin: "35px 0",
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faCheckCircle} color="green" />
+                          <span style={{ color: "green", fontWeight: "bold" }}>
+                            Email Verified
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          {" "}
+                          <input
+                            type="text"
+                            id={field.name}
+                            name={field.name}
+                            placeholder={field.placeholder}
+                            value={formData[field.name]}
+                            onChange={handleChange}
+                            className={errors[field.name] ? "error" : ""}
+                            disabled={
+                              isRegistered ||
+                              (field.name === "companyEmail" &&
+                                id &&
+                                isOtpVerify) // Only disable if verified and has ID
+                            }
+                          />
+                          {field.name === "companyEmail" &&
+                            formData?.companyEmail &&
+                            !isOtpVerify && (
+                              <button
+                                type="button"
+                                style={{
+                                  padding: "8px 12px",
+                                  margin: "10px 0",
+                                  backgroundColor: isOtpLoading
+                                    ? "#ccc"
+                                    : "#01594C",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: "4px",
+                                  cursor: isOtpLoading
+                                    ? "not-allowed"
+                                    : "pointer",
+                                  whiteSpace: "nowrap",
+                                  width: "100px",
+                                }}
+                                onClick={() =>
+                                  handleOtp(
+                                    "email",
+                                    formData?.companyEmail,
+                                    !isOtpSent ? "sendotp" : "resendotp"
+                                  )
+                                }
+                                disabled={isOtpLoading}
+                              >
+                                {isOtpLoading
+                                  ? t("Sending...")
+                                  : !isOtpSent
+                                  ? t("Send Otp")
+                                  : t("Resend Otp")}
+                              </button>
+                            )}
+                          {field.name === "otp" && !isOtpVerify && (
+                            <button
+                              type="button"
+                              style={{
+                                padding: "8px 12px",
+                                margin: "10px 0",
+                                backgroundColor:
+                                  isVerifyLoading || !formData?.otp
+                                    ? "#ccc"
+                                    : "#01594C",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor:
+                                  isVerifyLoading || !formData?.otp
+                                    ? "not-allowed"
+                                    : "pointer",
+                                whiteSpace: "nowrap",
+                                width: "100px",
+                              }}
+                              onClick={() =>
+                                handleVerifyOtp(
+                                  "email",
+                                  formData?.companyEmail,
+                                  formData?.otp
+                                )
+                              }
+                              disabled={isVerifyLoading || !formData?.otp}
+                            >
+                              {isVerifyLoading
+                                ? t("Verifying...")
+                                : t("Verify Otp")}
+                            </button>
+                          )}
+                          {errors[field.name] && (
+                            <span className="error-message">
+                              {errors[field.name]}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {field.type === "password" && (
+                    <>
+                      <input
+                        type="password"
+                        id={field.name}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        className={errors[field.name] ? "error" : ""}
+                        disabled={isRegistered}
+                      />
+                      {errors[field.name] && (
+                        <span className="error-message">
+                          {errors[field.name]}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {field.type === "dropdown" && (
+                    <>
+                      <select
+                        id={field.name}
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        className={errors[field.name] ? "error" : ""}
+                        disabled={isRegistered}
+                        required={field.required}
+                      >
+                        <option value="">{t("Select a region")}</option>
+                        {regionOptions.map((option, idx) => (
+                          <option key={idx} value={option}>
+                            {t(option)}
+                          </option>
+                        ))}
+                      </select>
+                      {errors[field.name] && (
+                        <span className="error-message">
+                          {errors[field.name]}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {field.type === "empty" && <></>}
+                </div>
+              );
+            })}
           </form>
           <div className="onboarding-footer">
-          <button
-              type="submit"
-              className="login-button"
-              disabled={isSubmitting}
-              onClick={handleSubmit}
-            >
-              {t("Submit")}
-            </button>
-            <button
-              type="submit"
-              className="login-button"
-              disabled={isSubmitting}
-              onClick={handleLogin}
-            >
-              {t("Login")}
-            </button>
+            <div className="onboarding-footer-text">
+              <span>{t("Already have an account?")}</span>
+              <a href="#" onClick={handleLogin}>
+                {`\t ${t("Login")}`}
+              </a>
+            </div>
+            <div>
+              <button
+                type="submit"
+                className="login-button"
+                disabled={isSubmitting}
+                onClick={handleSubmit}
+                style={{
+                  background: isSubmitting ? "#ccc" : "#01594C",
+                  cursor: isSubmitting ? "not-allowed" : "pointer",
+                }}
+              >
+                {isSubmitting ? t("Submitting...") : t("Submit")}
+              </button>
+            </div>
           </div>
         </div>
       </div>

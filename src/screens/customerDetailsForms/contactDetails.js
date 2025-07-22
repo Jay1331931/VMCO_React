@@ -15,7 +15,8 @@ import maplibregl from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 function ContactDetails({
   customerData = {},
   customerContactsData = {},
@@ -38,19 +39,19 @@ function ContactDetails({
   const dropdownFields = ["district", "city", "region", "zone", "branch"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-    
+
   const rbacMgr = new RbacManager(
-      user?.userType == "employee" && user?.roles[0] !== "admin"
-        ? user?.designation
-        : user?.roles[0],
-      mode === "add" || customerData?.customerStatus === "new"
-        ? "custDetailsAdd"
-        : "custDetailsEdit"
-    );
-    console.log("RBAC Manager:", rbacMgr);
-  
-    const isV = rbacMgr.isV.bind(rbacMgr);
-    const isE = rbacMgr.isE.bind(rbacMgr);
+    user?.userType == "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    mode === "add" || customerData?.customerStatus === "new"
+      ? "custDetailsAdd"
+      : "custDetailsEdit"
+  );
+  console.log("RBAC Manager:", rbacMgr);
+
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -73,7 +74,7 @@ function ContactDetails({
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
-  
+
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
     const markerRef = useRef(null); // Using ref instead of state for the marker
@@ -175,7 +176,8 @@ function ContactDetails({
         handleLocationSelect(lngLat.lat, lngLat.lng);
         setGeoLocation({
           x: lngLat.lat.toFixed(6),
-          y: lngLat.lng.toFixed(6),});
+          y: lngLat.lng.toFixed(6),
+        });
       }
     };
 
@@ -248,27 +250,25 @@ function ContactDetails({
 
   return (
     <div className="customer-onboarding-form-grid">
-       {isV("customerApprovalChecklist") && (
-                          <div className="form-main-header">
-                            <a
-      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={e => {
-        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-          e.preventDefault();
-          alert(t("No checklist URL configured."));
-        }
-      }}
-    >
-      {t("Customer Approval Checklist")}
-    </a>
-    </div>
-                        )}
+      {isV("customerApprovalChecklist") && (
+        <div className="form-main-header">
+          <a
+            href={CUSTOMER_APPROVAL_CHECKLIST_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+                e.preventDefault();
+                alert(t("No checklist URL configured."));
+              }
+            }}
+          >
+            {t("Customer Approval Checklist")}
+          </a>
+        </div>
+      )}
       {/* Primary Contact Details Header */}
-      <h3 className="form-header full-width">
-        {t("Primary Contact Details")}
-      </h3>
+      <h3 className="form-header full-width">{t("Primary Contact Details")}</h3>
       <div className="form-group">
         <label htmlFor="primaryContactName">
           {t("Primary Contact Name")}
@@ -295,7 +295,14 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.primaryContactName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactName === customerContactsData?.primaryContactName && mode === "edit" && customerData?.customerStatus !== "pending" }
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactName ===
+              customerContactsData?.primaryContactName &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -339,7 +346,14 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.primaryContactDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactDesignation === customerContactsData?.primaryContactDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactDesignation ===
+              customerContactsData?.primaryContactDesignation &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -353,9 +367,9 @@ function ContactDetails({
                 "(empty)"}
             </div>
           )}
-          {formErrors.primaryContactDesignation && (
-            <div className="error">{formErrors.primaryContactDesignation}</div>
-          )}
+        {formErrors.primaryContactDesignation && (
+          <div className="error">{formErrors.primaryContactDesignation}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -366,7 +380,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.primaryContactEmail !=
               customerContactsData?.primaryContactEmail &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -384,7 +400,15 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.primaryContactEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={(originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactEmail === customerContactsData?.primaryContactEmail && mode === "edit" && customerData?.customerStatus !== "pending") || true}
+          disabled={
+            (originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactEmail ===
+                customerContactsData?.primaryContactEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending") ||
+            true
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -397,9 +421,9 @@ function ContactDetails({
               {originalCustomerContactsData?.primaryContactEmail || "(empty)"}
             </div>
           )}
-          {formErrors.primaryContactEmail && (
-            <div className="error">{formErrors.primaryContactEmail}</div>
-          )}
+        {formErrors.primaryContactEmail && (
+          <div className="error">{formErrors.primaryContactEmail}</div>
+        )}
       </div>
 
       <div className="form-group">
@@ -428,7 +452,14 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.primaryContactMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.primaryContactMobile === customerContactsData?.primaryContactMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactMobile ===
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -454,8 +485,16 @@ function ContactDetails({
             type="checkbox"
             id="businessHeadSameAsPrimary"
             name="businessHeadSameAsPrimary"
-            checked={customerContactsData?.businessHeadName === customerContactsData?.primaryContactName &&
-              customerContactsData?.businessHeadDesignation === customerContactsData?.primaryContactDesignation && customerContactsData?.businessHeadEmail === customerContactsData?.primaryContactEmail && customerContactsData?.businessHeadMobile === customerContactsData?.primaryContactMobile}
+            checked={
+              customerContactsData?.businessHeadName ===
+                customerContactsData?.primaryContactName &&
+              customerContactsData?.businessHeadDesignation ===
+                customerContactsData?.primaryContactDesignation &&
+              customerContactsData?.businessHeadEmail ===
+                customerContactsData?.primaryContactEmail &&
+              customerContactsData?.businessHeadMobile ===
+                customerContactsData?.primaryContactMobile
+            }
             onChange={(e) => setBusinessHeadSameAsPrimary(e.target.checked)}
           />
           {`\t  ${t("Same as Primary Contact Details")}`}
@@ -470,7 +509,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.businessHeadName !=
               customerContactsData?.businessHeadName &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -488,7 +529,14 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.businessHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadName === customerContactsData?.businessHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadName ===
+              customerContactsData?.businessHeadName &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -514,7 +562,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.businessHeadDesignation !=
               customerContactsData?.businessHeadDesignation &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -532,7 +582,14 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.businessHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadDesignation === customerContactsData?.businessHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadDesignation ===
+              customerContactsData?.businessHeadDesignation &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -559,7 +616,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.businessHeadEmail !=
               customerContactsData?.businessHeadEmail &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -577,7 +636,14 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.businessHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadEmail === customerContactsData?.businessHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadEmail ===
+              customerContactsData?.businessHeadEmail &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -603,7 +669,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.businessHeadMobile !=
               customerContactsData?.businessHeadMobile &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -621,7 +689,14 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.businessHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.businessHeadMobile === customerContactsData?.businessHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadMobile ===
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -649,7 +724,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.financeHeadName !=
               customerContactsData?.financeHeadName &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -667,7 +744,14 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.financeHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadName === customerContactsData?.financeHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadName ===
+              customerContactsData?.financeHeadName &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -693,7 +777,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.financeHeadDesignation !=
               customerContactsData?.financeHeadDesignation &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -711,7 +797,14 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.financeHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadDesignation === customerContactsData?.financeHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadDesignation ===
+              customerContactsData?.financeHeadDesignation &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -738,7 +831,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.financeHeadEmail !=
               customerContactsData?.financeHeadEmail &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -756,7 +851,14 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.financeHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadEmail === customerContactsData?.financeHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadEmail ===
+              customerContactsData?.financeHeadEmail &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -782,7 +884,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.financeHeadMobile !=
               customerContactsData?.financeHeadMobile &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -800,7 +904,14 @@ function ContactDetails({
           placeholder={t("Enter Mobile number")}
           value={customerContactsData?.financeHeadMobile || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.financeHeadMobile === customerContactsData?.financeHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadMobile ===
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -828,7 +939,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadName !=
               customerContactsData?.purchasingHeadName &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -846,7 +959,14 @@ function ContactDetails({
           placeholder={t("Enter name")}
           value={customerContactsData?.purchasingHeadName || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadName === customerContactsData?.purchasingHeadName && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadName ===
+              customerContactsData?.purchasingHeadName &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -872,7 +992,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadDesignation !=
               customerContactsData?.purchasingHeadDesignation &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -890,7 +1012,14 @@ function ContactDetails({
           placeholder={t("Enter designation")}
           value={customerContactsData?.purchasingHeadDesignation || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadDesignation === customerContactsData?.purchasingHeadDesignation && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadDesignation ===
+              customerContactsData?.purchasingHeadDesignation &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -917,7 +1046,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadEmail !=
               customerContactsData?.purchasingHeadEmail &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -935,7 +1066,14 @@ function ContactDetails({
           placeholder={t("Enter email")}
           value={customerContactsData?.purchasingHeadEmail || ""}
           onChange={onChangeCustomerContactsData}
-          disabled={originalCustomerContactsData && customerContactsData && originalCustomerContactsData?.purchasingHeadEmail === customerContactsData?.purchasingHeadEmail && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadEmail ===
+              customerContactsData?.purchasingHeadEmail &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerContactsData &&
@@ -961,7 +1099,9 @@ function ContactDetails({
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadMobile !=
               customerContactsData?.purchasingHeadMobile &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -983,7 +1123,9 @@ function ContactDetails({
             originalCustomerContactsData &&
             customerContactsData &&
             originalCustomerContactsData?.purchasingHeadMobile ===
-              customerContactsData?.purchasingHeadMobile && mode === "edit" && customerData?.customerStatus !== "pending"
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
           }
           required
         />
@@ -1011,7 +1153,9 @@ function ContactDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.buildingName != customerData?.buildingName &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -1028,7 +1172,13 @@ function ContactDetails({
           placeholder={t("Enter building name")}
           value={customerData?.buildingName || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.buildingName === customerData?.buildingName && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.buildingName === customerData?.buildingName &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerData &&
@@ -1051,7 +1201,9 @@ function ContactDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.street != customerData?.street &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -1068,7 +1220,13 @@ function ContactDetails({
           placeholder={t("Enter street")}
           value={customerData?.street || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.street === customerData?.street && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.street === customerData?.street &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerData &&
@@ -1079,194 +1237,192 @@ function ContactDetails({
               Previous: {originalCustomerData?.street || "(empty)"}
             </div>
           )}
-        {formErrors.street && (
-          <div className="error">{formErrors.street}</div>
+        {formErrors.street && <div className="error">{formErrors.street}</div>}
+      </div>
+
+      {/* city dropdown */}
+      <div className="form-group">
+        <label htmlFor="city">
+          {t("City")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.city != customerData?.city &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="city"
+          options={basicMasterLists?.city || []}
+          value={customerData?.city || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.city === customerData?.city &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.city != customerData?.city &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Enter city")}
+          required
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.city != customerData?.city &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.city || "(empty)"}
+            </div>
+          )}
+        {formErrors.city && <div className="error">{formErrors.city}</div>}
+      </div>
+      {/*district dropdown*/}
+      <div className="form-group">
+        <label htmlFor="district">
+          {t("District")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.district != customerData?.district &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="district"
+          options={basicMasterLists?.district || []}
+          value={customerData?.district || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.district === customerData?.district &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.district != customerData?.district &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Enter district")}
+          required
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.district != customerData?.district &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.district || "(empty)"}
+            </div>
+          )}
+        {formErrors.district && (
+          <div className="error">{formErrors.district}</div>
         )}
       </div>
-
-{/*district dropdown*/}
-<div className="form-group">
-  <label htmlFor="district">
-    {t("District")}
-    <span className="required-field">*</span>
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.district != customerData?.district &&
-      mode === "edit" && <span className="update-badge">Updated</span>}
-  </label>
-  <SearchableDropdown
-    name="district"
-    options={basicMasterLists?.district || []}
-    value={customerData?.district || ""}
-    onChange={onChangeCustomerData}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.district === customerData?.district &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.district != customerData?.district &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Enter district")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.district != customerData?.district &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous: {originalCustomerData?.district || "(empty)"}
+      {/* region dropdown */}
+      <div className="form-group">
+        <label htmlFor="region">
+          {t("Region")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="region"
+          options={basicMasterLists?.region || []}
+          value={customerData?.region || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region === customerData?.region &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Enter region")}
+          required
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.region != customerData?.region &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.region || "(empty)"}
+            </div>
+          )}
+        {formErrors.region && <div className="error">{formErrors.region}</div>}
       </div>
-    )}
-  {formErrors.district && (
-    <div className="error">{formErrors.district}</div>
-  )}
-</div>
 
-{/* city dropdown */}
-<div className="form-group">
-  <label htmlFor="city">
-    {t("City")}
-    <span className="required-field">*</span>
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.city != customerData?.city &&
-      mode === "edit" && <span className="update-badge">Updated</span>}
-  </label>
-  <SearchableDropdown
-    name="city"
-    options={basicMasterLists?.city || []}
-    value={customerData?.city || ""}
-    onChange={onChangeCustomerData}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.city === customerData?.city &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.city != customerData?.city &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Enter city")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.city != customerData?.city &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous: {originalCustomerData?.city || "(empty)"}
+      {/* zone dropdown */}
+      <div className="form-group">
+        <label htmlFor="zone">
+          {t("Zone")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.zone != customerData?.zone &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="zone"
+          options={basicMasterLists?.zone || []}
+          value={customerData?.zone || ""}
+          onChange={onChangeCustomerData}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.zone === customerData?.zone &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.zone != customerData?.zone &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Enter zone")}
+          required
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.zone != customerData?.zone &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.zone || "(empty)"}
+            </div>
+          )}
+        {formErrors.zone && <div className="error">{formErrors.zone}</div>}
       </div>
-    )}
-  {formErrors.city && (
-    <div className="error">{formErrors.city}</div>
-  )}
-</div>
-
-{/* region dropdown */}
-<div className="form-group">
-  <label htmlFor="region">
-    {t("Region")}
-    <span className="required-field">*</span>
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.region != customerData?.region &&
-      mode === "edit" && <span className="update-badge">Updated</span>}
-  </label>
-  <SearchableDropdown
-    name="region"
-    options={basicMasterLists?.region || []}
-    value={customerData?.region || ""}
-    onChange={onChangeCustomerData}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.region === customerData?.region &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.region != customerData?.region &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Enter region")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.region != customerData?.region &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous: {originalCustomerData?.region || "(empty)"}
-      </div>
-    )}
-  {formErrors.region && (
-    <div className="error">{formErrors.region}</div>
-  )}
-</div>
-
-{/* zone dropdown */}
-<div className="form-group">
-  <label htmlFor="zone">
-    {t("Zone")}
-    <span className="required-field">*</span>
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.zone != customerData?.zone &&
-      mode === "edit" && <span className="update-badge">Updated</span>}
-  </label>
-  <SearchableDropdown
-    name="zone"
-    options={basicMasterLists?.zone || []}
-    value={customerData?.zone || ""}
-    onChange={onChangeCustomerData}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.zone === customerData?.zone &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.zone != customerData?.zone &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Enter zone")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.zone != customerData?.zone &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous: {originalCustomerData?.zone || "(empty)"}
-      </div>
-    )}
-  {formErrors.zone && (
-    <div className="error">{formErrors.zone}</div>
-  )}
-</div>
       <div className="form-group">
         <label htmlFor="pincode">
           {t("Pincode")}
@@ -1274,7 +1430,9 @@ function ContactDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.pincode != customerData?.pincode &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <input
           type="text"
@@ -1291,7 +1449,13 @@ function ContactDetails({
           placeholder={t("Enter pincode")}
           value={customerData?.pincode || ""}
           onChange={onChangeCustomerData}
-          disabled={originalCustomerData && customerData && originalCustomerData?.pincode === customerData?.pincode && mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.pincode === customerData?.pincode &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
           required
         />
         {originalCustomerData &&
@@ -1314,7 +1478,9 @@ function ContactDetails({
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.geolocation != customerData?.geolocation &&
-            mode === "edit" && <span className="update-badge">Updated</span>}
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
         </label>
         <div className="location-input-container">
           <input
@@ -1324,7 +1490,7 @@ function ContactDetails({
               //   ? `${selectedLocation.lat.toFixed(
               //       6
               //     )}, ${selectedLocation.lng.toFixed(6)}` :
-                customerData?.geolocation
+              customerData?.geolocation
                 ? getLocationDisplay(customerData.geolocation)
                 : "Select Location"
             }
@@ -1332,7 +1498,11 @@ function ContactDetails({
             placeholder={t("Select Location")}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData && customerData && originalCustomerData?.geolocation === customerData?.geolocation && mode === "edit" && customerData?.customerStatus !== "pending"
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.geolocation === customerData?.geolocation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
             }
             className={`text-field small ${
               originalCustomerData &&
@@ -1375,52 +1545,7 @@ function ContactDetails({
         )}
       </div>
 
-{/* branch dropdown */}
-{ isV("assignedToEntityWise") && (<div className="form-group">
-  <label htmlFor="branch">
-    {t("Branch")}
-    <span className="required-field">*</span>
-    {originalCustomerData &&
-      customerData &&
-      originalCustomerData?.branch != customerData?.branch &&
-      mode === "edit" && <span className="update-badge">Updated</span>}
-  </label>
-  <SearchableDropdown
-    name="branch"
-    options={basicMasterLists?.branch || []}
-    value={customerData?.branch || ""}
-    onChange={onChangeCustomerData}
-    disabled={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.branch === customerData?.branch &&
-      mode === "edit" &&
-      customerData?.customerStatus !== "pending"
-    }
-    className={
-      originalCustomerData &&
-      customerData &&
-      originalCustomerData?.branch != customerData?.branch &&
-      mode === "edit"
-        ? "update-field"
-        : ""
-    }
-    placeholder={t("Enter branch")}
-    required
-  />
-  {originalCustomerData &&
-    customerData &&
-    originalCustomerData?.branch != customerData?.branch &&
-    mode === "edit" && (
-      <div className="current-value">
-        Previous: {originalCustomerData?.branch || "(empty)"}
-      </div>
-    )}
-  {formErrors.branch && (
-    <div className="error">{formErrors.branch}</div>
-  )}
-  </div>)}
-
+     
       {showMap && (
         <div className="map-modal">
           <div className="map-modal-content">

@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import GetPaymentMethods from '../components/GetPaymentMethods';
 import Swal from 'sweetalert2';
 import Constants from '../constants';
+import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -449,8 +450,8 @@ function Cart() {
     
     const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
-        console.log('selected payment:', method)
-
+        
+        
         // Check if this is SHC entity - if so, handle fresh/non-fresh splitting
         const entity = getEntityFromCategory(pendingOrderCategory);
         if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -554,7 +555,31 @@ function Cart() {
                         return newQuantities;
                     });
                 });
+           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase()) {
+            try {
+                const { data } = await axios.post(
+                `${API_BASE_URL}/generatePayment-link`,
+                {
+                    id: orderIds?.map(String).join(','),
+                    endPoint: "payment-opations/order",
+                    IsEmail: false,
+                },
+                { withCredentials: true }
+                );
+
+                if (data?.details?.url) {
+                window.open(data.details.url, '_blank', 'width=500,height=600');
+                } else {
+                console.error("Payment URL not found in response:", data);
+                }
+            } catch (error) {
+                console.error("Error generating payment link:", error);
             }
+            }
+            }
+         
+
+
         } catch (err) {
             console.error('Error in SHC order splitting:', err);
             setError(err.message);
@@ -1650,6 +1675,10 @@ function Cart() {
                         });
                         return newQuantities;
                     });
+                    console.log("ssssss",updatedOrderResponse)
+                    
+      
+
                 });
 
                 // Delete cart items for non-VMCO and non-SHC categories
@@ -1674,6 +1703,17 @@ function Cart() {
                     }
                 }
             }
+            if (updatedOrderResponse&& updatedOrderResponse.status.toLowerCase() === 'ok' && 
+                     updatedOrderResponse?.salesOrder?.paymentMethod.toLowerCase()==="pre payment"&&
+                     (
+                     updatedOrderResponse?.salesOrder?.entity?.toLowerCase()=== Constants?.ENTITY?.DAR?.toLowerCase() 
+                     ||updatedOrderResponse?.salesOrder?.entity?.toLowerCase()=== Constants?.ENTITY?.GMTC?.toLowerCase()) )
+                      {
+                        const {data}= await axios.post(`${API_BASE_URL}/generatePayment-link`, {id: updatedOrderResponse?.salesOrder.id,endPoint:"payment-opations/order",IsEmail:false}, {withCredentials: true});
+                         
+                           window.open(data.details.url,'_blank','width=500,height=600');
+                     
+                    }
 
             // Return the order ID for use in combined success messages
             console.log(`placeOrderForCategory completed - returning order ID: ${orderId} for category: ${categoryName}`);

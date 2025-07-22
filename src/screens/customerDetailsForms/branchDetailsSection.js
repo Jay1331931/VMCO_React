@@ -36,7 +36,7 @@ const BranchDetailsForm = ({
   formErrors = {},
   handleDeliveryChargesChange,
   isFirstBranch,
-  setSameAsCustomer
+  setSameAsCustomer,
 }) => {
   const { t } = useTranslation();
   const [showMap, setShowMap] = useState(false);
@@ -95,7 +95,7 @@ const BranchDetailsForm = ({
       const options = {};
       console.log("branch", branch);
       // Find all dropdown fields and fetch their options
-      const dropdownFields = ["city", "locationType", "region", "branch"];
+      const dropdownFields = ["city", "locationType", "region", "branch", "district"];
       console.log("dropdownFields", dropdownFields);
       for (const field of dropdownFields) {
         try {
@@ -119,41 +119,46 @@ const BranchDetailsForm = ({
 
     fetchDropdownOptions();
   }, [branch]);
-const fetchWorkflowDataOfBranch = async (workflowId) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
-    const workflowDataJson = await response.json();
-    console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
-    return workflowDataJson?.data?.workflowData?.updates;
-  } catch (error) {
-    console.error("Error fetching workflow data:", error);
-    throw error;
-  }
-};
-  useEffect(() => {
-    const fetchWorkflowData = async () => {
-    if (inApproval && workflowInstanceId) {
-      const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
-      setWorkflowData(wfData?.branch);
+  const fetchWorkflowDataOfBranch = async (workflowId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      const workflowDataJson = await response.json();
+      console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+      return workflowDataJson?.data?.workflowData?.updates;
+    } catch (error) {
+      console.error("Error fetching workflow data:", error);
+      throw error;
     }
   };
-  fetchWorkflowData();
-  }, [workflowInstanceId, inApproval]);
-   useEffect(() => {
-     const getFieldValue = (fieldName) => {
-    if (fieldName === "isDeliveryChargesApplicable") {
-      if (branch?.[fieldName]) {
-        return branch?.[fieldName];
-      } else {
-        return customer?.[fieldName];
+  useEffect(() => {
+    const fetchWorkflowData = async () => {
+      if (inApproval && workflowInstanceId) {
+        const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
+        setWorkflowData(wfData?.branch);
       }
-    }
-  }
-  branch.isDeliveryChargesApplicable = getFieldValue("isDeliveryChargesApplicable");
+    };
+    fetchWorkflowData();
+  }, [workflowInstanceId, inApproval]);
+  useEffect(() => {
+    const getFieldValue = (fieldName) => {
+      if (fieldName === "isDeliveryChargesApplicable") {
+        if (branch?.[fieldName]) {
+          return branch?.[fieldName];
+        } else {
+          return customer?.[fieldName];
+        }
+      }
+    };
+    branch.isDeliveryChargesApplicable = getFieldValue(
+      "isDeliveryChargesApplicable"
+    );
   }, []);
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
@@ -256,7 +261,8 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
         handleLocationSelect(lngLat.lat, lngLat.lng);
         setGeoLocation({
           x: lngLat.lat.toFixed(6),
-          y: lngLat.lng.toFixed(6),});
+          y: lngLat.lng.toFixed(6),
+        });
       }
     };
 
@@ -320,10 +326,10 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
     (lat, lng) => {
       setSelectedLocation({ lat, lng });
       setShowMap(false);
-      
+
       // Store as object for display but convert to string for backend
       // handleBranchFieldChange(branch.id, "geolocation", { x: lat, y: lng });
-    },
+    }
     // [branch.id, handleBranchFieldChange]
   );
 
@@ -384,6 +390,14 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
         required: true,
         options: ["Jeddah", "Riyadh", "Dammam"],
       },
+{
+        type: "dropdown",
+        label: "District",
+        name: "district",
+        placeholder: "District",
+        required: true,
+        options: ["Jeddah", "Riyadh", "Dammam"],
+      },
       {
         type: "dropdown",
         label: "Location Type",
@@ -392,6 +406,14 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
         required: true,
         options: ["Office", "Warehouse", "Showroom"],
       },
+      // {
+      //   type: "text",
+      //   label: "Location Type (Other)",
+      //   name: "locationTypeOther",
+      //   placeholder: "Location Type (Other)",
+      //   required: true,
+      //   hidden: branch?.locationType !== "Others (specify)",
+      // },
       {
         type: "dropdown",
         label: "Region",
@@ -420,9 +442,7 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
   );
   console.log("customer", customer);
   const hasCheckboxUpdate =
-    inApproval &&
-    workflowData &&
-    "isDeliveryChargesApplicable" in workflowData;
+    inApproval && workflowData && "isDeliveryChargesApplicable" in workflowData;
   return (
     <div className="form-section">
       {console.log(isUnderApproval)}
@@ -439,22 +459,26 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     />
                     {'\t' + t('Same as Customer Details')}
                 </label> */}
-{isFirstBranch && mode!== "edit" && (<div className="form-group">
-        <label className="checkbox-group-label">
-          <input
-            type="checkbox"
-            id="sameAsCustomer"
-            name="sameAsCustomer"
-            checked={branch?.street === customer?.street &&
-              branch?.buildingName === customer?.buildingName &&
-              branch?.city === customer?.city &&
-              branch?.region === customer?.region &&
-              branch?.geolocation === customer?.geolocation}
-            onChange={(e) => setSameAsCustomer(e.target.checked)}
-          />
-          {t("Same as Customer Details")}
-        </label>
-      </div>)}
+        {isFirstBranch && mode !== "edit" && (
+          <div className="form-group">
+            <label className="checkbox-group-label">
+              <input
+                type="checkbox"
+                id="sameAsCustomer"
+                name="sameAsCustomer"
+                checked={
+                  branch?.street === customer?.street &&
+                  branch?.buildingName === customer?.buildingName &&
+                  branch?.city === customer?.city &&
+                  branch?.region === customer?.region &&
+                  branch?.geolocation === customer?.geolocation
+                }
+                onChange={(e) => setSameAsCustomer(e.target.checked)}
+              />
+              {t("Same as Customer Details")}
+            </label>
+          </div>
+        )}
         {isV("isDeliveryChargesApplicable") && (
           <div className="form-group">
             <label>
@@ -479,27 +503,24 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
 
       <div className="form-row">
         {fields.map((field, index) => {
-          const hasUpdate = (mode === "edit" && inApproval && workflowData ? field.name in workflowData : false) || (mode==="edit" &&inApproval && branch.branchStatus === "pending");
-            // inApproval &&
-            // customer.module === "branch" &&
-            // customer?.workflowData?.updates &&
-            // field.name in customer.workflowData.updates;
+          const hasUpdate =
+            (mode === "edit" && inApproval && workflowData
+              ? field.name in workflowData
+              : false) ||
+            (mode === "edit" &&
+              inApproval &&
+              branch.branchStatus === "pending");
           const currentValue = originalBranch?.[field.name] || "";
           const value = hasUpdate
             ? workflowData?.[field.name]
             : getFieldValue(field.name);
-          console.log(
-            "Branch field value:",
-            branch?.[field.name],
-            typeof branch?.[field.name]
-          );
 
           return (
             <div
               className={`form-group ${hasUpdate ? "pending-update" : ""}`}
               key={index}
             >
-              {isV(field.name) && (
+              {isV(field.name) && !field?.hidden && (
                 <label>
                   {t(field.label)}
                   {field.required && <span className="required-field">*</span>}
@@ -518,15 +539,16 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                     // value={getLocationDisplay(branch[field.name])}
                     placeholder={t(field.placeholder)}
                     disabled={
-                      (customerFormMode === "custDetailsEdit" && !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
+                      (customerFormMode === "custDetailsEdit" && !hasUpdate) ||
+                      (customerFormMode === "custDetailsAdd" && inApproval)
                     }
                     style={
-                              hasUpdate
-                                ? {
-                                    backgroundColor: "#fff8e1",
-                                  }
-                                : {}
-                            }
+                      hasUpdate
+                        ? {
+                            backgroundColor: "#fff8e1",
+                          }
+                        : {}
+                    }
                     onChange={handleBranchFieldChange}
                     readOnly
                   />
@@ -545,12 +567,16 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                   </button>
                 </div>
               ) : (
-                  <div className="form-row">
-                    {(() => {
-                      switch (field.type) {
-                        case "text":
-                          return (
-                            <input
+                <div className="form-row">
+                  {(() => {
+                    switch (field.type) {
+                      case "text":
+                        // Only show "Location Type (Other)" when locationType is "Others (specify)"
+                        if (field.name === "locationTypeOther" && branch?.locationType !== "Others (specify)") {
+                          return null;
+                        }
+                        return (
+                          <input
                             type="text"
                             name={field.name}
                             value={branch?.[field.name]}
@@ -565,47 +591,54 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
                             }
                             disabled={
                               (customerFormMode === "custDetailsEdit" &&
-                              !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
+                                !hasUpdate) ||
+                              (customerFormMode === "custDetailsAdd" &&
+                                inApproval)
                             }
+                            hidden={field?.hidden}
                           />
-                          
-                          
                         );
                       case "dropdown":
                         return (
-                          <select
-                            name={field.name}
-                            value={branch?.[field.name]}
-                            onChange={handleBranchFieldChange}
-                            style={
-                              hasUpdate
-                                ? {
-                                    backgroundColor: "#fff8e1",
-                                  }
-                                : {}
-                            }
-                            disabled={
-                              (customerFormMode === "custDetailsEdit" &&
-                              !hasUpdate) || (customerFormMode === "custDetailsAdd" && inApproval)
-                            }
-              hidden={!isV(field.name)}
-                          >
-                            <option value="">{t(field.placeholder)}</option>
-                            {dropdownOptions[field.name]
-                              ? dropdownOptions[field.name].map((opt, idx) => (
-                                  <option key={idx} value={opt}>
-                                    {t(opt)}
-                                  </option>
-                                ))
-                              : []}
-                          </select>
+                          <>
+                            <select
+                              name={field.name}
+                              value={branch?.[field.name]}
+                              onChange={handleBranchFieldChange}
+                              style={
+                                hasUpdate
+                                  ? {
+                                      backgroundColor: "#fff8e1",
+                                    }
+                                  : {}
+                              }
+                              disabled={
+                                (customerFormMode === "custDetailsEdit" &&
+                                  !hasUpdate) ||
+                                (customerFormMode === "custDetailsAdd" &&
+                                  inApproval)
+                              }
+                              hidden={!isV(field.name)}
+                            >
+                              <option value="">{t(field.placeholder)}</option>
+                              {dropdownOptions[field.name]
+                                ? dropdownOptions[field.name].map(
+                                    (opt, idx) => (
+                                      <option key={idx} value={opt}>
+                                        {t(opt)}
+                                      </option>
+                                    )
+                                  )
+                                : []}
+                            </select>
+                          </>
                         );
                       default:
                         return null;
                     }
                   })()}
                 </div>
-            )}
+              )}
               {hasUpdate && (
                 <div className="current-value">
                   Previous:{" "}
@@ -616,8 +649,10 @@ const fetchWorkflowDataOfBranch = async (workflowId) => {
               )}
               {formErrors[field.name] && (
                 <div className="current-value">
-                <span className="error-message" style={{ fontSize: "12px"}}>{formErrors[field.name]}</span>
-              </div>
+                  <span className="error-message" style={{ fontSize: "12px" }}>
+                    {formErrors[field.name]}
+                  </span>
+                </div>
               )}
             </div>
           );

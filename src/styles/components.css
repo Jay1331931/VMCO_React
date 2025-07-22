@@ -2166,7 +2166,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  margin-top: 10vh;
+  margin-top: 5vh;
 }
 
 .onboarding-component {
@@ -2191,7 +2191,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   background: #fff;
-  padding: 40px;
+  padding: 20px;
   padding-top: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
@@ -2221,9 +2221,9 @@
 .onboarding-footer {
   margin-top: 20px;
   display: flex;
-  flex-direction: row-reverse;
-  justify-content: space-between;
+  justify-content: end;
   width: 100%;
+  gap: 20px;
 }
 
 .onboarding-footer a {
