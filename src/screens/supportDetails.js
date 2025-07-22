@@ -396,9 +396,7 @@ function SupportDetails() {
     setLoadingBranches(true);
     try {
       // Replace with your actual API endpoint URL
-      const apiUrl = process.env.REACT_APP_API_BASE_URL
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerIdToUse}`
-        : "http://localhost:3000/api/branches";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerIdToUse}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -651,9 +649,7 @@ function SupportDetails() {
 
     setLoadingBranches(true);
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL
-        ? `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerId}`
-        : "http://localhost:3000/api/branches";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/customer-branches/cust-id/${customerId}`;
 
       const response = await fetch(apiUrl, {
         method: "GET",

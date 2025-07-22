@@ -39,9 +39,7 @@ function Support() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = API_BASE_URL
-        ? `${API_BASE_URL}/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc`
-        : "http://localhost:3000/api/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc";
+      const apiUrl = `${API_BASE_URL}/grievances/pagination?page=1&pageSize=10&sortBy=ticket_id&sortOrder=asc`;
 
       const response = await fetch(apiUrl, {
         method: "GET",

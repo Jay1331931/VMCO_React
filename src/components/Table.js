@@ -12,7 +12,14 @@ const Table = ({
     onPay,
 }) => {
     const { t } = useTranslation();
- 
+ const isDateString = (val) => {
+        if (val instanceof Date) return true;
+        if (typeof val === "string") {
+            // Matches YYYY-MM-DD or YYYY-MM-DDTHH:mm:ssZ
+            return /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(.\d+)?(Z|([+-]\d{2}:\d{2}))?)?$/.test(val);
+        }
+        return false;
+    };
     const renderCell = (item, column) => {
         // If there's a custom renderer for this column, use it
         if (customCellRenderer && customCellRenderer[column.key]) {
@@ -87,6 +94,21 @@ const Table = ({
    if (typeof value === 'object' && value !== null) {
         return JSON.stringify(value);
     }
+    // Identify whether value string is a date
+
+    if (isDateString(value)) {
+        // Format date if needed, or just return value
+        // return in dd/mm/yyyy format
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return value; // Invalid date
+        // Format date to dd/mm/yyyy
+        return new Intl.DateTimeFormat('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+        }).format(date);
+    }
+        
     // Default cell rendering
     return item[column.key];
     };

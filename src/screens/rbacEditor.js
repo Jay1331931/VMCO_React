@@ -32,7 +32,7 @@ function RbacEditor() {
   const fetchRoles = async () => {
     setRolesLoading(true);
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}/currentRoles` : "http://localhost:3000/api/currentRoles";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/currentRoles`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
@@ -65,7 +65,7 @@ function RbacEditor() {
     setError(null);
 
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}/addRole` : "http://localhost:3000/api/addRole";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/addRole`;
 
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -96,7 +96,7 @@ function RbacEditor() {
   const fetchPages = async () => {
     setPagesLoading(true);
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}/forms` : "http://localhost:3000/api/forms/";
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/forms`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
