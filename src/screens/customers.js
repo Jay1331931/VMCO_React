@@ -1178,7 +1178,7 @@ function Customers() {
           </div>
           {renderContent()}
         </div>
-        {((activeTab === "customers" && paginatedCustomers.length > 0) ||
+        {((activeTab === "customers" && paginatedCustomers.length > 0 && !isApprovalMode) ||
           (activeTab === "invites" && paginatedInvites.length > 0) ||
           (activeTab === "customers" &&
             isApprovalMode &&
