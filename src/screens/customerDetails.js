@@ -179,6 +179,7 @@ const businessDetailsFields = [
   "interCompany",
   "entity",
   "assignedTo",
+  "branch",
   // "assignedToEntityWise",
   // "pricingPolicy",
   // "zone",
@@ -216,7 +217,7 @@ const contactDetailsCustomerFields = [
   "pincode",
   "geolocation",
   "zone",
-  "branch",
+  
   // ...add more if needed
 ];
 
