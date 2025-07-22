@@ -6,13 +6,13 @@ import translationEN from './locales/en.json';
 import translationAR from './locales/ar.json';
 
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       en: { translation: translationEN },
       ar: { translation: translationAR }
     },
+    lng: 'en', // Set default language to English
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
