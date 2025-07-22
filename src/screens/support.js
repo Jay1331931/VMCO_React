@@ -10,6 +10,7 @@ import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import ActionButton from "../components/ActionButton";
+import LoadingSpinner from "../components/LoadingSpinner";
 //import { supportMenuItems } from '../utilities/supportMenuItems';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -170,7 +171,9 @@ function Support() {
               onRowClick={(ticket) => handleRowClick(ticket)} 
             />
           )}
-          {loading && isV('loadingState') && <div>{t("Loading...")}</div>}
+          {loading && isV('loadingState') &&  <div className="loading-container">
+            <LoadingSpinner size="medium" />
+          </div>}
           {error && isV('errorState') && <div className="error">{error}</div>}
         </div>
       )}

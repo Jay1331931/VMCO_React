@@ -1242,17 +1242,18 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
               ))}
             </tbody>
           </table>
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(page) => {
-              setExpandedRows([]);
-              setCurrentPage(page);
+          {branches && branches.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => {
+                setExpandedRows([]);
+                setCurrentPage(page);
             }}
             startIndex={startIndex}
             endIndex={Math.min(endIndex, branches.length)}
             totalItems={branches.length}
-          />
+          />)}
         </div>
       )}
     </div>

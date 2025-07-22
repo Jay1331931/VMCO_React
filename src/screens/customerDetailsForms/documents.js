@@ -276,7 +276,7 @@ function Documents({
             {t("Upload duly signed document")}
             <span className="required-field">*</span>
             {customerData?.acknowledgementSignature !==
-              originalCustomerData?.acknowledgementSignature && (
+              originalCustomerData?.acknowledgementSignature && mode === "edit" && (
               <span className="update-badge">Updated</span>
             )}
           </label>
@@ -409,7 +409,7 @@ function Documents({
                 {t("Copy of Commercial Registration")}
                 <span className="required-field">*</span>
                 {customerData?.crCertificate !==
-                  originalCustomerData?.crCertificate && (
+                  originalCustomerData?.crCertificate && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -543,7 +543,7 @@ function Documents({
                 {t("Copy of VAT Certificate")}
                 <span className="required-field">*</span>
                 {customerData?.vatCertificate !==
-                  originalCustomerData?.vatCertificate && (
+                  originalCustomerData?.vatCertificate && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -677,7 +677,7 @@ function Documents({
                 {t("Copy of national ID/Iqama of the auth. sign..")}
                 <span className="required-field">*</span>
                 {customerData?.nationalId !==
-                  originalCustomerData?.nationalId && (
+                  originalCustomerData?.nationalId && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -804,7 +804,7 @@ function Documents({
                 {t("Bank details on company letterhead")}
                 <span className="required-field">*</span>
                 {customerData?.bankLetter !==
-                  originalCustomerData?.bankLetter && (
+                  originalCustomerData?.bankLetter && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -931,7 +931,7 @@ function Documents({
                 {t("Copy of National Address")}
                 <span className="required-field">*</span>
                 {customerData?.nationalAddress !==
-                  originalCustomerData?.nationalAddress && (
+                  originalCustomerData?.nationalAddress && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -1064,7 +1064,7 @@ function Documents({
                 {t("Contract Agreement")}
                 <span className="required-field">*</span>
                 {customerData?.contractAgreement !==
-                  originalCustomerData?.contractAgreement && (
+                  originalCustomerData?.contractAgreement && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -1197,7 +1197,7 @@ function Documents({
                 {t("Credit Application")}
                 <span className="required-field">*</span>
                 {customerData?.creditApplication !==
-                  originalCustomerData?.creditApplication && (
+                  originalCustomerData?.creditApplication && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -1332,7 +1332,7 @@ function Documents({
                 {t("Contract Agreement")}
                 <span className="required-field">*</span>
                 {customerData?.contractAgreement !==
-                  originalCustomerData?.contractAgreement && (
+                  originalCustomerData?.contractAgreement && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -1465,7 +1465,7 @@ function Documents({
                 {t("Credit Application")}
                 <span className="required-field">*</span>
                 {customerData?.creditApplication !==
-                  originalCustomerData?.creditApplication && (
+                  originalCustomerData?.creditApplication && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
@@ -1599,7 +1599,7 @@ function Documents({
               <label htmlFor="nonTradingDocuments">
                 {t("Non-Trading Documents")}
                 {customerData?.nonTradingDocuments?.length !==
-                  originalCustomerData?.nonTradingDocuments?.length && (
+                  originalCustomerData?.nonTradingDocuments?.length && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
