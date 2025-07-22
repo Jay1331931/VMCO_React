@@ -1282,16 +1282,6 @@ function CustomersDetails() {
         });
       }
 
-      //   // 2. Create new contact details if needed
-      //   if (Object.keys(contactCreatePayload).length > 0) {
-      //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-      //       method: 'POST',
-      //       headers: { 'Content-Type': 'application/json' },
-      //       body: JSON.stringify(contactCreatePayload),
-      //       credentials: 'include',
-      //     });
-      //   }
-
       // 3. Update existing contact details if needed
       if (Object.keys(contactUpdatePayload).length > 0) {
         await fetch(`${API_BASE_URL}/customer-contacts/${customer.id}`, {
@@ -2314,16 +2304,6 @@ function CustomersDetails() {
             credentials: "include",
           });
         }
-
-        //   // 2. Create new contact details if needed
-        //   if (Object.keys(contactCreatePayload).length > 0) {
-        //     await fetch(`http://localhost:3000/api/customers/id/${customer.id}/contact-details`, {
-        //       method: 'POST',
-        //       headers: { 'Content-Type': 'application/json' },
-        //       body: JSON.stringify(contactCreatePayload),
-        //       credentials: 'include',
-        //     });
-        //   }
 
         // 3. Update existing contact details if needed
         if (Object.keys(contactUpdatePayload).length > 0) {

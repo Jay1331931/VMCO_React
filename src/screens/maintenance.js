@@ -44,14 +44,10 @@ function Maintenance() {
       // Only include access parameter if user is maintenance head
       if (user?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
         const accessParam = isMyTicketsMode ? 'region' : 'all';
-        apiUrl = API_BASE_URL
-          ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc&access=${accessParam}`
-          : `http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc&access=${accessParam}`;
+        apiUrl = `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc&access=${accessParam}`;
       } else {
         // For other designations, don't include access parameter
-        apiUrl = API_BASE_URL
-          ? `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`
-          : `http://localhost:3000/api/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`;
+        apiUrl = `${API_BASE_URL}/maintenance/pagination?page=1&pageSize=10&sortBy=request_id&sortOrder=asc`;
       }
       
       console.log("Fetching maintenance tickets from:", apiUrl);

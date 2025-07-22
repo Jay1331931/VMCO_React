@@ -341,13 +341,9 @@ function Catalog() {
       }
 
       // Choose the right product name based on language
-      let productName = product.productName || product.product_name;
-      if (
-        currentLanguage !== "en" &&
-        (product.product_name_lc || product.productNameLc)
-      ) {
-        productName =
-          product.product_name_lc || product.productNameLc || productName;
+      let productName = product.productName ;
+      if (currentLanguage !== "en" && product.productNameLc) {
+        productName = productName ||  product.productNameLc;
       }
 
       // Choose the right product description based on language
