@@ -397,6 +397,9 @@ function OrderDetails() {
           else if (isCreditAllowed === false) {
             selectedMethod = 'Pre Payment';
           }
+          else {
+            selectedMethod = 'Credit'; // Default to Credit if allowed
+          }
 
         }
       }
@@ -415,6 +418,9 @@ function OrderDetails() {
         }
         else if (!isCreditAllowed) {
           selectedMethod = 'Pre Payment';
+        }
+        else {
+          selectedMethod = 'Credit'; // Default to Credit if allowed
         }
       }
     }

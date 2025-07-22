@@ -694,14 +694,18 @@ function Cart() {
                     if (paymentMethod === 'Pre Payment') {
                         // Directly place order with Pre Payment, do not show popup
                         console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for VMCO entity`);
-                        await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', 'Pre Payment', false);
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
-                        // Optionally, collect orderId if needed
-                        // orderIds.push(orderId);
+                        const orderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', 'Pre Payment', false);
+                        if (orderId) {
+                            orderIds.push(orderId);
+                            await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
+                        }
                     } else if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
                         console.log(`Using determined payment method ${paymentMethod} for VMCO entity`);
-                        await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', paymentMethod, false);
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
+                        const orderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', paymentMethod, false);
+                        if (orderId) {
+                            orderIds.push(orderId);
+                            await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
+                        }
                     } else {
                         // For COD or when payment method needs user selection, show popup
                         console.log(`Showing payment method selection for VMCO entity`);
@@ -713,10 +717,12 @@ function Cart() {
                 }
 
                 // Show combined success message for VMCO orders
-                if (orderIds.length > 0) {
+                if (orderIds.length > 0 || (nonMachineProducts.length > 0 && !machineProducts.length)) {
                     const orderText = orderIds.length === 1
                         ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
-                        : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                        : orderIds.length > 1
+                            ? t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`)
+                            : t('Your order has been placed successfully!');
 
                     Swal.fire({
                         icon: 'success',
@@ -724,6 +730,7 @@ function Cart() {
                         text: orderText,
                         confirmButtonText: t('OK')
                     }).then(() => {
+                        // Update cart items state to remove ordered items
                         setCartItems(prevCartItems =>
                             prevCartItems.map(category => ({
                                 ...category,
@@ -731,6 +738,7 @@ function Cart() {
                                     cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
                             })));
 
+                        // Clear quantities for ordered items
                         setQuantities(prevQuantities => {
                             const newQuantities = { ...prevQuantities };
                             categoryItems.forEach(item => {
@@ -738,6 +746,9 @@ function Cart() {
                             });
                             return newQuantities;
                         });
+                        
+                        // Force a refresh of cart items
+                        fetchCartItems();
                     });
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
