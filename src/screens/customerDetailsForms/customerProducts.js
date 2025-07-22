@@ -590,14 +590,15 @@ function Products({ customerId, customer, setTabsHeight }) {
           </tbody>
         </table>
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => {
-            setCurrentPage(page);
-            fetchProducts();
+        {currentItems && currentItems.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => {
+              setCurrentPage(page);
+              fetchProducts();
           }}
-        />
+        />)}
       </div>
       <style jsx="true">{`
         .product-search-input {

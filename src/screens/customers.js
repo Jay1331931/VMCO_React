@@ -12,6 +12,7 @@ import RbacManager from "../utilities/rbac";
 import getBusinessDetailsFormData from "./customerDetailsForms/customerBusinessDetails";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const getStatusClass = (status) => {
@@ -531,7 +532,10 @@ function Customers() {
   const customerColumns = [
     { key: "id", header: "Registration ID" },
     { key: "erpCustId", header: "ERP ID" },
-    { key: i18n.language === 'ar' ? "companyNameAr" : "companyNameEn", header: "Company" },
+    {
+      key: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      header: "Company",
+    },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
     { key: "customerStatus", header: "Status" },
@@ -540,7 +544,10 @@ function Customers() {
   const approvalColumns = [
     { key: "id", header: "Registration ID" },
     { key: "erpCustId", header: "ERP ID" },
-    { key: i18n.language === 'ar' ? "companyNameAr" : "companyNameEn", header: "Company" },
+    {
+      key: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      header: "Company",
+    },
     { key: "workflowName", header: "Workflow Name" },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
@@ -1002,7 +1009,7 @@ function Customers() {
 
             {activeTab === t("invites") && isV("btnAddInvite") && (
               <>
-              <SearchInput onSearch={handleSearch} />
+                <SearchInput onSearch={handleSearch} />
                 {
                   <button className="add-button" onClick={handleInvite}>
                     {t("+ Invite")}
@@ -1171,12 +1178,22 @@ function Customers() {
           </div>
           {renderContent()}
         </div>
-        <Pagination
-          currentPage={page}
-          totalPages={Math.ceil(total / pageSize)}
-          // onPageChange={setPage}
-          onPageChange={setPage}
-        />
+        {((activeTab === "customers" && paginatedCustomers.length > 0) ||
+          (activeTab === "invites" && paginatedInvites.length > 0) ||
+          (activeTab === "customers" &&
+            isApprovalMode &&
+            paginatedApprovals.length > 0)) && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / pageSize)}
+            onPageChange={setPage}
+          />
+        )}
+        {loading && (
+          <div className="loading-container">
+            <LoadingSpinner size="medium" />
+          </div>
+        )}
       </div>
       <style>{`
       .invite-dialog {
