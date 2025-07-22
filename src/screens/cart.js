@@ -55,7 +55,7 @@ function Cart() {
     const [quantities, setQuantities] = useState({}); const [selectedUserId, setSelectedUserId] = useState('');
     const [selectedCustomerId, setSelectedCustomerId] = useState('');
     const [selectedCustomerStatus, setSelectedCustomerStatus] = useState('');
-    const [selectedErpCustId, setSelectedErpCustId] = useState('');
+    const [selectederpCustId, setSelectederpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
@@ -446,7 +446,9 @@ function Cart() {
                 selectedCustomerId
             }
         });
-    }; const handleSelectPaymentMethod = (method) => {
+    }; 
+    
+    const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
         
         
@@ -689,14 +691,7 @@ function Cart() {
                         return; // Exit the function early
                     }
 
-                    // If a specific payment method was determined, use it directly
-                    if (paymentMethod === 'SHOW_COD_POPUP') {
-                        // Only allow COD and Pre Payment in the popup
-                        setPendingOrderCategory(categoryName + ' - Consumables');
-                        setPendingOrderItems(nonMachineProducts);
-                        setShowPaymentPopup(true);
-                        return;
-                    } else if (paymentMethod === 'Pre Payment') {
+                    if (paymentMethod === 'Pre Payment') {
                         // Directly place order with Pre Payment, do not show popup
                         console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for VMCO entity`);
                         await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', 'Pre Payment', false);
@@ -799,13 +794,7 @@ function Cart() {
                 }
 
                 // If a specific payment method was determined, use it directly
-                if (paymentMethod === 'SHOW_COD_POPUP') {
-                    // Only allow COD and Pre Payment in the popup
-                    setPendingOrderCategory(categoryName);
-                    setPendingOrderItems(categoryItems);
-                    setShowPaymentPopup(true);
-                    return;
-                } else if (paymentMethod === 'Pre Payment') {
+                if (paymentMethod === 'Pre Payment') {
                     // Directly place order with Pre Payment, do not show popup
                     console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
@@ -2058,16 +2047,12 @@ function Cart() {
                         // If totalAmount is greater than or equal to COD limit, force Pre Payment
                         console.log(`Credit not allowed, COD allowed but totalAmount ${totalAmount} >= codLimit ${codLimit}, using Pre Payment`);
                         return 'Pre Payment';
-                    } else {
-                        // If totalAmount is strictly less than COD limit, show only COD/Pre Payment options in popup
-                        console.log(`Credit not allowed, COD allowed and totalAmount ${totalAmount} < codLimit ${codLimit}, show COD/Pre Payment popup`);
-                        return 'SHOW_COD_POPUP';
+                    }
+                    else {
+                        setShowPaymentPopup(true);
+                        return;
                     }
                 }
-
-                // Neither credit nor COD applicable, use Pre Payment
-                console.log('Neither credit nor Cash On Delivery applicable, using Pre Payment');
-                return 'Pre Payment';
             }
 
             return 'Pre Payment'; // Default fallback

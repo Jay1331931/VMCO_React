@@ -49,10 +49,6 @@ function GetProducts({
         customerId: parseInt(customerId),
         entity: entity
       };
-      // Only add category filter if entity is vmco and category is provided
-      if (entity && entity.toLowerCase() === "vmco" && category) {
-        filters.category = category;
-      }
 
       const params = new URLSearchParams({
         page: pagination.page,
@@ -60,7 +56,8 @@ function GetProducts({
         search: searchQuery,
         filters: JSON.stringify(filters),
         sortBy: "id",
-        sortOrder: "asc"
+        sortOrder: "asc",
+        isMachine: category.toLowerCase() === "vmco machines" ? true : false
       });
 
       const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
