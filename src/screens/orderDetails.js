@@ -2764,7 +2764,6 @@ function OrderDetails() {
                           className="entity-dropdown"
                           disabled={!isE('pricingPolicy')}
                         >
-                          <option value="">{t('Select Pricing Policy')}</option>
                           {pricingPolicyOptions.map((pricingPolicy, index) => (
                             <option key={index} value={pricingPolicy}>
                               {pricingPolicy}
