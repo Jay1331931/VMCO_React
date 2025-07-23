@@ -428,7 +428,7 @@ function OrderDetails() {
     // Check if we're editing an existing order or creating a new one
     if (formData.id && isEditMode) {
       const fieldsToUpdate = [
-        'erpCustId', 'erpBranchId', 'orderBy', 'entity',
+        'erpCustId', 'erpBranchId', 'orderBy', 'entity', 'sampleOrder',
         'paymentMethod', 'paymentPercentage', 'totalAmount', 'paidAmount', 'deliveryCharges',
         'expectedDeliveryDate', 'status', 'driver', 'vehicleNumber', 'branchRegion', 'branchCity'];
 
@@ -587,6 +587,7 @@ function OrderDetails() {
           totalProducts: formData.products.length,
           hasAnyMachine,
           hasAnyFresh,
+          sampleOrder: sampleMode ? true : false,
           productFlags: formData.products.map(p => ({ id: p.id, isMachine: p.isMachine, isFresh: p.isFresh }))
         });
 
@@ -1050,7 +1051,8 @@ function OrderDetails() {
           const orderUpdatePayload = {
             total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
             isMachine: hasAnyMachine,
-            isFresh: hasAnyFresh
+            isFresh: hasAnyFresh,
+            sampleOrder: sampleMode ? true : false,
           };
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
