@@ -938,7 +938,8 @@ function CustomerDetails() {
         if (field in dataToValidate && !dataToValidate[field]) {
           if (documentList.includes(field) || field === "declarationSignature") {
             errors[field] = t("This document is required.");
-          } else {
+          } 
+          if(!tradingDocumentList.includes(field) && !nonTradingDocumentList.includes(field)) {
             errors[field] = t("This field is required.");
           }
         }

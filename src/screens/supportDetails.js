@@ -1126,7 +1126,7 @@ function SupportDetails() {
               {isV('videos') && (
                 <div className='maintenance-details-videos'>
                   <label>{t("Videos")}</label>
-                  <div className='maintenance-videos-list'>
+                  <div className='maintenance-images-list'>
                     {/* Add Video Button */}
                     {isE('addVideo') && !isReadOnly && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
@@ -1142,7 +1142,7 @@ function SupportDetails() {
                         </div>
                       )}
                       {videoData.map((videoData, idx) => (
-                        <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
+                        <div key={idx} className='maintenance-image-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
                           <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
                           {isV("removeVideo") && isE("removeVideo") && !isReadOnly && (
                             <button
@@ -1316,6 +1316,11 @@ function SupportDetails() {
       <style>
         {
             `
+            .maintenance-details-images,
+.maintenance-details-videos {
+  flex: 1;
+  max-width: 48%;
+}
 .image-popup-overlay {
   position: fixed;
   top: 0;

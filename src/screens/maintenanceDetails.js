@@ -794,6 +794,29 @@ const serialNumberDebounceRef = useRef(null);
       setSaving(false); // End saving if validation fails
       return;
     }
+    if(!ticket.urgencyLevel) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select an urgency level"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
+      return;
+    }
+    if(!ticket.machineSerialNumber?.trim()) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter a machine serial number"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
+      return;
+    }
+
 
     try {
       // Get customer and branch regions
@@ -1047,7 +1070,7 @@ const serialNumberDebounceRef = useRef(null);
 const convertToDateInputFormat = (dateStr) => {
   if (!dateStr || !/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return "";
   const [day, month, year] = dateStr.split("-");
-  return `${year}-${month}-${day}`;
+ return `${year}-${month}-${day}`;
 };
  const handleSerialNumberChange = (e) => {
   const value = e.target.value;
@@ -1067,12 +1090,13 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
           withCredentials: true,
         }
       );
+      const rawDate = data?.details?.warrantdate || "";
+      const parsedDate = convertToDateInputFormat(rawDate);
+     
+
       setTicket((prev) => ({
         ...prev,
-        warrantyEndDate: data?.details?.warrantdate
-          ? convertToDateInputFormat(data?.details?.warrantdate)
-          : "",
-       
+        warrantyEndDate: parsedDate || "",
       }));
     } catch (error) {
       console.error("Error handling serial number change:", error);
@@ -1186,6 +1210,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                   id='warrantyEndDate'
                   name='warrantyEndDate'
                   type='date'
+                  placeholder={t("Enter Machine Serial Number")}
                   // onChange={handleInputChange}
                   value={ticket.warrantyEndDate}
                   disabled
@@ -1261,7 +1286,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
               {isV('videos') && (
                 <div className='maintenance-details-videos'>
                   <label>{t("Videos")}</label>
-                  <div className='maintenance-videos-list'>
+                  <div className='maintenance-images-list'>
                     {/* Add Video Button */}
                     {isV('addVideo') && isE('addVideo') && !isReadOnly && videos?.length <= 6 && (
                       <button type='button' className='maintenance-add-image-btn' onClick={openVideoDialog} title='Add Video'>
@@ -1276,7 +1301,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                      </div>
                     )}
                     {videoData?.map((videoData, idx) => (
-                      <div key={idx} className='maintenance-video-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
+                      <div key={idx} className='maintenance-image-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
                         <video width='100%' height='100%' style={{ objectFit: "cover" }} src={videoData.url} />
                         {isV("removeVideo") && isE("removeVideo") && !isReadOnly && (
                           <button
@@ -1425,6 +1450,11 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
       <style>
         {
           `
+           .maintenance-details-images,
+.maintenance-details-videos {
+  flex: 1;
+  max-width: 48%;
+}
 .image-popup-overlay {
   position: fixed;
   top: 0;
