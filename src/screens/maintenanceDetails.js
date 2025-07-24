@@ -743,6 +743,38 @@ const serialNumberDebounceRef = useRef(null);
 
   // Track saving state
 
+const formatDateInput = (dateStr, returnType = 'date') => {
+  if (!dateStr) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && returnType === 'date') {
+    return dateStr;
+  }
+
+  const normalized = dateStr.replace(/\//g, "-");
+
+  if (!/^\d{2}-\d{2}-\d{4}$/.test(normalized)) return "";
+
+  const [day, month, year] = normalized.split("-");
+  const isoBase = `${year}-${month}-${day}`;
+  const dateObj = new Date(isoBase);
+
+  if (isNaN(dateObj)) return "";
+
+  if (returnType === 'iso') {
+    if (
+      dateObj.toISOString().endsWith("T00:00:00.000Z") &&
+      /^\d{2}-\d{2}-\d{4}$/.test(normalized)
+    ) {
+      return isoBase;
+    }
+    return dateObj.toISOString();
+  }
+
+  return isoBase;
+};
+
+
+
 
   // Handle save
   const handleSave = async (e) => {
@@ -823,12 +855,11 @@ const serialNumberDebounceRef = useRef(null);
       const customerIdToUse = user?.userType === 'customer' ? user.customerId : ticket.customerId;
       const customerRegion = await getCustomerRegion(customerIdToUse);
       const branchRegion = getBranchRegion();
-
-      // First, create the ticket to get the ID for file uploads
+  // First, create the ticket to get the ID for file uploads
       const ticketData = {
         ...ticket,
         customerId: customerIdToUse,
-        createdAt: formMode === "add" ? new Date().toISOString() : ticket.createdAt,
+        createdAt: formMode === "add" ? new Date().toISOString() : formatDateInput(ticket?.createdAt, "iso"),
         comments: Array.isArray(ticket.comments)
           ? ticket.comments
           : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
@@ -1067,11 +1098,7 @@ const serialNumberDebounceRef = useRef(null);
   };
 
  
-const convertToDateInputFormat = (dateStr) => {
-  if (!dateStr || !/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) return "";
-  const [day, month, year] = dateStr.split("-");
- return `${year}-${month}-${day}`;
-};
+
  const handleSerialNumberChange = (e) => {
   const value = e.target.value;
 setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
@@ -1091,12 +1118,10 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
         }
       );
       const rawDate = data?.details?.warrantdate || "";
-      const parsedDate = convertToDateInputFormat(rawDate);
-     
 
       setTicket((prev) => ({
         ...prev,
-        warrantyEndDate: parsedDate || "",
+        warrantyEndDate: formatDateInput(rawDate, "date") || "",
       }));
     } catch (error) {
       console.error("Error handling serial number change:", error);
@@ -1209,10 +1234,10 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                 <input
                   id='warrantyEndDate'
                   name='warrantyEndDate'
-                  type='date'
+                  type='text'
                   placeholder={t("Enter Machine Serial Number")}
                   // onChange={handleInputChange}
-                  value={ticket.warrantyEndDate}
+                  value={formatDate(ticket?.warrantyEndDate, 'DD-MM-YYYY') || ""}
                   disabled
                 />
               </div>

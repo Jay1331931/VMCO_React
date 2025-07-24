@@ -588,6 +588,7 @@ function OrderDetails() {
           hasAnyMachine,
           hasAnyFresh,
           sampleOrder: sampleMode ? true : false,
+          status: "Approved",
           productFlags: formData.products.map(p => ({ id: p.id, isMachine: p.isMachine, isFresh: p.isFresh }))
         });
 
@@ -1053,6 +1054,7 @@ function OrderDetails() {
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh,
             sampleOrder: sampleMode ? true : false,
+            status:"Approved"
           };
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
