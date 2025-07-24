@@ -746,6 +746,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
                     </div>
                   )}
+                  {formErrors.DARCreditLimit && (
+          <div className="error">{formErrors.DARCreditLimit}</div>
+        )}
               </>
             )}
           </div>
@@ -802,6 +805,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
                     </div>
                   )}
+                  {formErrors.DARCreditPeriod && (
+          <div className="error">{formErrors.DARCreditPeriod}</div>
+        )}
               </>
             )}
           </div>
@@ -888,6 +894,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.VMCO]?.limit || "(empty)"}
                     </div>
                   )}
+                {formErrors.VMCOCreditLimit && (
+          <div className="error">{formErrors.VMCOCreditLimit}</div>
+                )}
               </>
             )}
           </div>
@@ -944,6 +953,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.VMCO]?.period || "(empty)"}
                     </div>
                   )}
+                {formErrors.VMCOCreditPeriod && (
+          <div className="error">{formErrors.VMCOCreditPeriod}</div>
+                )}
               </>
             )}
           </div>
@@ -1029,6 +1041,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.SHC]?.limit || "(empty)"}
                     </div>
                   )}
+                {formErrors.SHCCreditLimit && (
+          <div className="error">{formErrors.SHCCreditLimit}</div>
+                )}
               </>
             )}
           </div>
@@ -1085,6 +1100,10 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.SHC]?.period || "(empty)"}
                     </div>
                   )}
+                {formErrors.SHCCreditPeriod && (
+          <div className="error">{formErrors.SHCCreditPeriod}</div>
+                )}
+
               </>
             )}
           </div>
@@ -1171,6 +1190,10 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.NAQI]?.limit || "(empty)"}
                     </div>
                   )}
+                {formErrors.NAQICreditLimit && (
+                  <div className="error">{formErrors.NAQICreditLimit}</div>
+                )}
+
               </>
             )}
           </div>
@@ -1227,6 +1250,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.NAQI]?.period || "(empty)"}
                     </div>
                   )}
+                {formErrors.NAQICreditPeriod && (
+                  <div className="error">{formErrors.NAQICreditPeriod}</div>
+                )}
               </>
             )}
           </div>
@@ -1313,6 +1339,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.GMTC]?.limit || "(empty)"}
                     </div>
                   )}
+                {formErrors.GMTCCreditLimit && (
+                  <div className="error">{formErrors.GMTCCreditLimit}</div>
+                )}
               </>
             )}
           </div>
@@ -1369,6 +1398,10 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.GMTC]?.period || "(empty)"}
                     </div>
                   )}
+                {formErrors.GMTCCreditPeriod && (
+                  <div className="error">{formErrors.GMTCCreditPeriod}</div>
+                )}
+                
               </>
             )}
           </div>
