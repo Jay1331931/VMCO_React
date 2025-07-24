@@ -235,7 +235,7 @@ const rbacMgr = new RbacManager(
   const getBranchTimeSlotsInStringHours = (hoursData) => {
     console.log("#### Enter");
     try {
-      if (hoursData !== null && hoursData !== undefined) {
+      if (Object.keys(hoursData).length > 0) {
         const parsedData =
           typeof hoursData === "string" ? JSON.parse(hoursData) : hoursData;
         let convertedData = {};
@@ -638,7 +638,7 @@ const rbacMgr = new RbacManager(
               isDeliveryChargesApplicable:
                 customer?.isDeliveryChargesApplicable,
               erpCustId: customer?.erpCustId,
-              hours: hoursDetails,
+              hours: stringifyHours(hoursDetails),
             }),
             credentials: "include",
           });

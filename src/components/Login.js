@@ -3,7 +3,7 @@ import "../i18n";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
+import Constants from "../constants";
 function Login({ title, userType }) {
   const { login } = useAuth();
   const { t } = useTranslation();
@@ -58,7 +58,16 @@ function Login({ title, userType }) {
           navigate("/customerDetails", {
             state: { customerId: data?.data?.customerId, mode: "add" },
           });
-        } else {
+        } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || data?.data?.designation === Constants.DESIGNATIONS.OPS_MANAGER || data?.data?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || data?.data?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER || data?.data?.roles[0] === Constants.ROLES.SUPER_ADMIN)) {
+
+            navigate("/customers");
+          } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_HEAD || data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN || data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_MANAGER)) {
+            navigate("/maintenance");
+
+          } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT)) {
+            navigate("/bankTransactions");
+          }
+        else {
           navigate("/catalog");
         }
 

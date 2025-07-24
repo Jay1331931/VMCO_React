@@ -146,7 +146,7 @@ function Support() {
   };
 
   return (
-    <Sidebar title={t("Support - Tickets")}>
+    <Sidebar title={t("Support")}>
       {isV('supportContent') && (
         <div className='support-content'>
           <div className='support-header'>

@@ -323,13 +323,13 @@ function Sidebar({ children, title }) {
       case "Catalog":
         navigate("/catalog");
         break;
-      case "Support - Tickets":
+      case "Support":
         navigate("/support");
         break;
-      case "Maintenance - Tickets":
+      case "Maintenance":
         navigate("/maintenance");
         break;
-      case "Bank":
+      case "Bank Transfer":
         navigate("/bankTransactions");
         break;
       case "Dashboard":
@@ -380,9 +380,9 @@ function Sidebar({ children, title }) {
     { icon: faBookOpen, label: "Catalog" },
     { icon: faShoppingCart, label: "Orders" },
     { icon: faUsers, label: "Customers" },
-    { icon: faHeadset, label: "Support - Tickets" },
-    { icon: faTools, label: "Maintenance - Tickets" },
-    { icon: faBank, label: "Bank" },
+    { icon: faHeadset, label: "Support" },
+    { icon: faTools, label: "Maintenance" },
+    { icon: faBank, label: "Bank Transfer" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
   ];

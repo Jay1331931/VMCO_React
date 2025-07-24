@@ -390,7 +390,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       custDetailsAdd: {
@@ -987,7 +987,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Customers: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1436,7 +1436,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Customers: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1720,7 +1720,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: true, editable: false },
+          "Bank Transfer": { visible: true, editable: false },
         },
       },
       custDetailsAdd: {
@@ -1992,7 +1992,6 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -2742,7 +2741,8 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
+          Maintenance: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -2867,7 +2867,8 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
+          Maintenance: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -3310,7 +3311,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       catalog: {
@@ -3884,7 +3885,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -4013,6 +4014,8 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
+          Support: { visible: false, editable: false},
+          "Bank Transfer": { visible: false, editable: false },
         },
       },
       catalog: {
@@ -4419,6 +4422,9 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
+          Support: { visible: false, editable: false},
+          "Bank Transfer": { visible: false, editable: false },
+        
         },
       },
       catalog: {
@@ -4957,8 +4963,11 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
-          Bank: { visible: false, editable: false },
-
+          "Bank Transfer": { visible: false, editable: false },
+          Support: { visible: false, editable: false },
+          Customers: { visible: false, editable: false},
+          Orders: { visible: false, editable: false},
+          Catalog: { visible: false, editable: false},
         },
       },
       BankTransactions: {
@@ -5489,7 +5498,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: false },
           Company: { visible: false, editable: false },
           Settings: { visible: false, editable: false },
-          Bank: { visible: true, editable: false },
+          "Bank Transfer": { visible: true, editable: false },
           Customers: { visible: false, editable: false },
           Catalog: { visible: false, editable: false },
           Orders: { visible: false, editable: false },
