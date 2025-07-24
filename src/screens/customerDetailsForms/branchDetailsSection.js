@@ -406,14 +406,14 @@ const BranchDetailsForm = ({
         required: true,
         options: ["Office", "Warehouse", "Showroom"],
       },
-      // {
-      //   type: "text",
-      //   label: "Location Type (Other)",
-      //   name: "locationTypeOther",
-      //   placeholder: "Location Type (Other)",
-      //   required: true,
-      //   hidden: branch?.locationType !== "Others (specify)",
-      // },
+      {
+        type: "text",
+        label: "Location Type (Other)",
+        name: "locationTypeOther",
+        placeholder: "Location Type (Other)",
+        required: true,
+        // hidden: branch?.locationType !== "Others (specify)",
+      },
       {
         type: "dropdown",
         label: "Region",
@@ -503,6 +503,9 @@ const BranchDetailsForm = ({
 
       <div className="form-row">
         {fields.map((field, index) => {
+          if (field.name === "locationTypeOther" && branch?.locationType !== "Others (specify)") {
+                          return null;
+                        }
           const hasUpdate =
             (mode === "edit" && inApproval && workflowData
               ? field.name in workflowData
@@ -572,9 +575,7 @@ const BranchDetailsForm = ({
                     switch (field.type) {
                       case "text":
                         // Only show "Location Type (Other)" when locationType is "Others (specify)"
-                        if (field.name === "locationTypeOther" && branch?.locationType !== "Others (specify)") {
-                          return null;
-                        }
+                        
                         return (
                           <input
                             type="text"

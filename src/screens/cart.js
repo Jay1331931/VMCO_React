@@ -555,17 +555,17 @@ function Cart() {
                         return newQuantities;
                     });
                 });
-                if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase()) {
-                    try {
-                        const { data } = await axios.post(
-                            `${API_BASE_URL}/generatePayment-link`,
-                            {
-                                id: orderIds?.map(String).join(','),
-                                endPoint: "payment-opations/order",
-                                IsEmail: false,
-                            },
-                            { withCredentials: true }
-                        );
+           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase() && selectedPaymentMethod?.toLowerCase()==="pre payment") {
+            try {
+                const { data } = await axios.post(
+                `${API_BASE_URL}/generatePayment-link`,
+                {
+                    id: orderIds?.map(String).join(','),
+                    endPoint: "payment-opations/order",
+                    IsEmail: false,
+                },
+                { withCredentials: true }
+                );
 
                         if (data?.details?.url) {
                             window.open(data.details.url, '_blank', 'width=500,height=600');

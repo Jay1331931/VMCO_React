@@ -787,6 +787,7 @@ function CustomerDetails() {
     "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
+    "methodDetails",
     // "customerStatus",
     // "isDeliveryChargesApplicable",
     // "isBlocked",
@@ -853,6 +854,7 @@ function CustomerDetails() {
     "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
+    "methodDetails",
     // "customerStatus",
     // "isDeliveryChargesApplicable",
     // "isBlocked",
@@ -962,6 +964,32 @@ function CustomerDetails() {
             );
           }
         });
+      } 
+
+      // Special check for payment methods
+      if (
+        mandatoryFields.includes("methodDetails") &&
+        dataToValidate.methodDetails &&
+        typeof dataToValidate.methodDetails === "object"
+      ) {
+       for(const entity in dataToValidate?.methodDetails?.credit) {
+          if (
+           dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.limit <= 0
+          ) {
+            // Set error for each missing entity assignment
+            errors[`${entity}CreditLimit`] = t(
+              `Credit Limit is required.`
+            );
+          }
+           if (
+           dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.period <= 0
+          ) {
+            // Set error for each missing entity assignment
+            errors[`${entity}CreditPeriod`] = t(
+              `Credit Period is required.`
+            );
+          }
+        };
       } 
       // else if (mandatoryFields.includes("assignedToEntityWise")) {
       //   // If the whole object is missing
@@ -1536,7 +1564,7 @@ function CustomerDetails() {
         ...uploadedFiles,
       };
       const errors = await validateData(
-        { ...customerData, ...customerContactsData },
+        { ...customerData, ...customerContactsData, ...customerPaymentMethodsData },
         true,
         mandatoryFields
       );

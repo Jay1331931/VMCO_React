@@ -271,6 +271,14 @@ function Orders() {
         },
         { withCredentials: true }
       );
+       if(email){
+                Swal.fire({
+                  title: t("Payment Link Generated"),
+                  text: t("A payment link has been sent to the customer's email."),
+                  icon: "success",
+                  confirmButtonText: t("OK"),
+                });
+             }
 
       if (email) {
         Swal.fire({

@@ -210,7 +210,7 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
                   customerFormMode={customerFormMode}
                   mode={mode}
                 />
-                {inApproval && (hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending") && (
+                {inApproval && mode === "edit" && (hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending") && (
                   <div className="current-value">
                   Previous: {originalHoursData[day]?.operating?.from || "09:00"} - {originalHoursData[day]?.operating?.to || "18:00"}
                 </div>
@@ -238,7 +238,7 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
                   customerFormMode={customerFormMode}
                   mode={mode}
                 />
-                {inApproval && (hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending") && (
+                {inApproval && mode === "edit" && (hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending") && (
                   <div className="current-value">
                   Previous: {originalHoursData[day]?.delivery?.from || "09:00"} - {originalHoursData[day]?.delivery?.to || "18:00"}
                 </div>
