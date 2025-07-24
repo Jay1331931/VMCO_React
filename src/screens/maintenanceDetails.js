@@ -1237,7 +1237,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                   type='text'
                   placeholder={t("Enter Machine Serial Number")}
                   // onChange={handleInputChange}
-                  value={formatDate(ticket?.warrantyEndDate, 'DD-MM-YYYY') || ""}
+                  value={formatDate(ticket?.warrantyEndDate, 'DD/MM/YYYY') || ""}
                   disabled
                 />
               </div>

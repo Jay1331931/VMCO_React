@@ -146,13 +146,13 @@ function OrderDetails() {
     if (formMode === 'add') return;
 
     if (salesOrderLinesFromNav && Array.isArray(salesOrderLinesFromNav) && salesOrderLinesFromNav.length > 0) {
-      console.log('Using pre-fetched sales order lines:', salesOrderLinesFromNav.length, 'items');
+      console.log('Using pre-fetched sales order lines:', salesOrderLinesFromNav.length, 'formData?s');
       const processedProducts = salesOrderLinesFromNav.map(product => ({
         ...product,
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
-        isFresh: product.isFresh, // Add isFresh field if present
+        isFresh: product.isFresh, 
         quantity: product.quantity,
       }));
 
@@ -1201,9 +1201,38 @@ function OrderDetails() {
     }
   };
 
-  const handleCheckout = (order) => {
-    navigate('/checkout', { state: { order } });
-  };
+ const handleCheckout = async (orderId, email = false) => {
+     try {
+       const { data } = await axios.post(
+         `${API_BASE_URL}/generatePayment-link`,
+         {
+           id: orderId,
+           endPoint: "payment-opations/order",
+           IsEmail: email,
+         },
+         { withCredentials: true }
+       );
+       if(email){
+          Swal.fire({
+            title: t("Payment Link Generated"),
+            text: t("A payment link has been sent to the customer's email."),
+            icon: "success",
+            confirmButtonText: t("OK"),
+          });
+       }
+       if (!email && data?.details?.url) {
+         window.open(data.details.url, "_blank", "width=500,height=600");
+       }
+     } catch (error) {
+       console.error("Error generating payment link:", error);
+       Swal.fire({
+         title: t("Error"),
+         text: t("Failed to generate payment link. Please try again later."),
+         icon: "error",
+         confirmButtonText: t("OK"),
+       });
+     }
+   };
 
 
   // Images state (allow dynamic add)
@@ -2437,7 +2466,7 @@ function OrderDetails() {
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
 
-
+console.log("formData",formData)
 
   return (
     <Sidebar>
@@ -2766,7 +2795,6 @@ function OrderDetails() {
                           className="entity-dropdown"
                           disabled={!isE('pricingPolicy')}
                         >
-                          <option value="">{t('Select Pricing Policy')}</option>
                           {pricingPolicyOptions.map((pricingPolicy, index) => (
                             <option key={index} value={pricingPolicy}>
                               {pricingPolicy}
@@ -3132,11 +3160,24 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnPay') && isE('btnPay') && (
-                  <button className="order-action-btn" onClick={() => handleCheckout()} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase()!="cash on delivery"&& formData?.paymentStatus?.toLowerCase() !== 'paid'  
+        && (formData?.status?.toLowerCase() === 'approved'  || (formData?.status?.toLowerCase() === 'open' 
+        && (formData?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||formData?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| formData?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
+        (formData?.status?.toLowerCase() === 'pending' && (formData?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() ))) &&(
+                  <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                     {t('Pay')}
                   </button>
                 )}
+                {isV('btnSendLink') && isE('btnSendLink') &&  formData?.paymentMethod?.toLowerCase()!="cash on delivery"&& formData?.paymentStatus?.toLowerCase() !== 'paid'  
+        && (formData?.status?.toLowerCase() === 'approved'  || (formData?.status?.toLowerCase() === 'open' 
+        && (formData?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||formData?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| formData?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
+        (formData?.status?.toLowerCase() === 'pending' && (formData?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() ))) &&(
+
+                  <button className="order-action-btn" onClick={() => handleCheckout(orderId,true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                    {t('Send Link')}
+                  </button>
+                )}
+
                 {isV('actionButtons') && fromApproval && (
                   <div className="order-details-actions">
                     {isV('btnApprove', fromApproval, true) && (
