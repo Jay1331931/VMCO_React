@@ -264,7 +264,7 @@ function OrderDetails() {
         if (totalAmount > codLimit) {
           console.log(`Total amount exceeds COD limit.`);
           return false;
-        } else {
+        } else { 
           console.log(`Total amount is within COD limit. Showing payment popup.`);
           setShowPaymentPopup(true);
           setPendingSaveAction(true);
@@ -345,7 +345,12 @@ function OrderDetails() {
   const handleSave = async (action, selectedMethod) => {
     setPendingSaveAction(false);
     if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
-      alert(t('The payment method is Pre Payment. The order cannot be altered.'));
+      // alert(t('The payment method is Pre Payment. The order cannot be altered.'));
+      Swal.fire({
+        icon: 'warning',
+        title: t('No Updations Allowed'),
+        text: t('The payment method is Pre Payment. The order cannot be altered.'),
+      });
       setSaving(false);
       return;
     }
@@ -1142,15 +1147,15 @@ function OrderDetails() {
   };
 
   // cancel handler
-  const handleCancelOrder = async () => {
-    if (!formData.id) {
+  const handleCancelOrder = async (orderId) => {
+    console.log('Cancelling order');
+    if (!orderId) {
       Swal.fire({
         icon: 'warning',
         title: t('Validation Error'),
         text: t('Order ID is missing.'),
         confirmButtonText: t('OK')
       });
-      // alert(t('Order ID is missing.'));
       return;
     }
 
@@ -1181,10 +1186,9 @@ function OrderDetails() {
       Swal.fire({
         icon: 'success',
         title: t('Order Cancelled'),
-        text: t('Order status updated to Cancelled!'),
+        text: t('Order cancelled successfully!'),
         confirmButtonText: t('OK')
       });
-      // alert(t('Order status updated to Cancelled!'));
       navigate('/orders'); // or refresh the current view if needed
     } catch (err) {
       console.error('Error cancelling order:', err);
@@ -1195,7 +1199,6 @@ function OrderDetails() {
         text: err.message || t('Failed to cancel order: '),
         confirmButtonText: t('OK')
       });
-      // alert(t(err.message));
     } finally {
       setCancelling(false);
     }
@@ -1775,8 +1778,7 @@ function OrderDetails() {
           />
           {isV('stock') &&
             formData.entity &&
-            formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
-            row.isMachine === true && (
+            formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
               <span>
                 <button
                   type="button"
@@ -2466,8 +2468,6 @@ function OrderDetails() {
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
 
-console.log("formData",formData)
-
   return (
     <Sidebar>
       {isV('orderDetails') && (
@@ -2567,14 +2567,14 @@ console.log("formData",formData)
                       </div>
                     )}
 
-                    {isV('erpId') && (
+                    {isV('erpOrderId') && (
                       <div className="order-details-field">
                         <label>{t('ERP#')}</label>
                         <input
-                          name="erp"
-                          value={formData.erp !== undefined && formData.erp !== null ? formData.erp : ''}
+                          name="erpOrderId"
+                          value={formData.erpOrderId !== undefined && formData.erpOrderId !== null ? formData.erpOrderId : ''}
                           onChange={handleInputChange}
-                          disabled={!isE('erpId')}
+                          disabled={!isE('erpOrderId')}
                           placeholder={t('ERP ID')}
                         />
                       </div>
@@ -2742,7 +2742,8 @@ console.log("formData",formData)
                           readOnly
                         />
                       </div>
-                    )}                    {isV('expectedDeliveryDate') && (
+                    )}                    
+                    {isV('expectedDeliveryDate') && (
                       <div className="order-details-field">
                         <label>{t('Delivery Date')}</label>
                         {formMode === 'add' ? (
@@ -3138,11 +3139,11 @@ console.log("formData",formData)
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
+                {isV('btnCancel', fromApproval, false) && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
-                    disabled={loading || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                    disabled={(formData?.status?.toLowerCase() !== 'open')}
                   >
                     {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>

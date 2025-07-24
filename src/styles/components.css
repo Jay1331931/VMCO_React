@@ -3391,5 +3391,17 @@ input:focus {
   cursor: pointer;
 }
 
+.badge {
+  display: inline-block;
+  padding: 2px 6px;
+  width: 80px;
+  font-size: 8px;
+  border-radius: 10px;
+  color: #fff;
+  vertical-align: middle;
+}
 
+.badge-blue {
+  background-color: #008CDE; /* Blue */
+}
 

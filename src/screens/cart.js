@@ -446,12 +446,12 @@ function Cart() {
                 selectedCustomerId
             }
         });
-    }; 
-    
+    };
+
     const handleSelectPaymentMethod = (method) => {
         setShowPaymentPopup(false);
-        
-        
+
+
         // Check if this is SHC entity - if so, handle fresh/non-fresh splitting
         const entity = getEntityFromCategory(pendingOrderCategory);
         if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
@@ -494,7 +494,7 @@ function Cart() {
             if (freshProducts.length > 0) {
                 console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
                 // Use a specific category name for fresh products to ensure separate orders
-                const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false);
+                const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false, true);
                 console.log('Fresh order result:', freshOrderId);
                 if (freshOrderId) {
                     orderIds.push(freshOrderId);
@@ -511,7 +511,7 @@ function Cart() {
             if (nonFreshProducts.length > 0) {
                 console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
                 // Use a specific category name for non-fresh products to ensure separate orders
-                const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false);
+                const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false, false);
                 console.log('Non-fresh order result:', nonFreshOrderId);
                 if (nonFreshOrderId) {
                     orderIds.push(nonFreshOrderId);
@@ -555,29 +555,29 @@ function Cart() {
                         return newQuantities;
                     });
                 });
-           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase()) {
-            try {
-                const { data } = await axios.post(
-                `${API_BASE_URL}/generatePayment-link`,
-                {
-                    id: orderIds?.map(String).join(','),
-                    endPoint: "payment-opations/order",
-                    IsEmail: false,
-                },
-                { withCredentials: true }
-                );
+                if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase()) {
+                    try {
+                        const { data } = await axios.post(
+                            `${API_BASE_URL}/generatePayment-link`,
+                            {
+                                id: orderIds?.map(String).join(','),
+                                endPoint: "payment-opations/order",
+                                IsEmail: false,
+                            },
+                            { withCredentials: true }
+                        );
 
-                if (data?.details?.url) {
-                window.open(data.details.url, '_blank', 'width=500,height=600');
-                } else {
-                console.error("Payment URL not found in response:", data);
+                        if (data?.details?.url) {
+                            window.open(data.details.url, '_blank', 'width=500,height=600');
+                        } else {
+                            console.error("Payment URL not found in response:", data);
+                        }
+                    } catch (error) {
+                        console.error("Error generating payment link:", error);
+                    }
                 }
-            } catch (error) {
-                console.error("Error generating payment link:", error);
             }
-            }
-            }
-         
+
 
 
         } catch (err) {
@@ -746,7 +746,7 @@ function Cart() {
                             });
                             return newQuantities;
                         });
-                        
+
                         // Force a refresh of cart items
                         fetchCartItems();
                     });
@@ -839,7 +839,7 @@ function Cart() {
     };
 
     // Helper function to place order for a single category
-    const placeOrderForCategory = async (categoryItems, categoryName, selectedPaymentMethod, showSuccessMessage = true) => {
+    const placeOrderForCategory = async (categoryItems, categoryName, selectedPaymentMethod, showSuccessMessage = true, isFresh = false) => {
         // Copy the original handlePlaceOrder logic here, but add productCategory to orderPayload
         if (categoryItems.length === 0) {
             Swal.fire({
@@ -1113,7 +1113,7 @@ function Cart() {
                     productCategory: categoryName,
                     paymentPercentage: '100.00',
                     isMachine: isMachineOrder,
-                    isFresh: isFreshOrder
+                    isFresh: isFresh
                     //createdBy: userId // <-- Add createdBy field
                 };
 
@@ -1686,9 +1686,9 @@ function Cart() {
                         });
                         return newQuantities;
                     });
-                    console.log("ssssss",updatedOrderResponse)
-                    
-      
+                    console.log("ssssss", updatedOrderResponse)
+
+
 
                 });
 
@@ -1714,17 +1714,17 @@ function Cart() {
                     }
                 }
             }
-            if (updatedOrderResponse&& updatedOrderResponse.status.toLowerCase() === 'ok' && 
-                     updatedOrderResponse?.salesOrder?.paymentMethod.toLowerCase()==="pre payment"&&
-                     (
-                     updatedOrderResponse?.salesOrder?.entity?.toLowerCase()=== Constants?.ENTITY?.DAR?.toLowerCase() 
-                     ||updatedOrderResponse?.salesOrder?.entity?.toLowerCase()=== Constants?.ENTITY?.GMTC?.toLowerCase()) )
-                      {
-                        const {data}= await axios.post(`${API_BASE_URL}/generatePayment-link`, {id: updatedOrderResponse?.salesOrder.id,endPoint:"payment-opations/order",IsEmail:false}, {withCredentials: true});
-                         
-                           window.open(data.details.url,'_blank','width=500,height=600');
-                     
-                    }
+            if (updatedOrderResponse && updatedOrderResponse.status.toLowerCase() === 'ok' &&
+                updatedOrderResponse?.salesOrder?.paymentMethod.toLowerCase() === "pre payment" &&
+                (
+                    updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.DAR?.toLowerCase()
+                    || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.NAQI?.toLowerCase()
+                    || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.GMTC?.toLowerCase())) {
+                const { data } = await axios.post(`${API_BASE_URL}/generatePayment-link`, { id: updatedOrderResponse?.salesOrder.id, endPoint: "payment-opations/order", IsEmail: false }, { withCredentials: true });
+
+                window.open(data.details.url, '_blank', 'width=500,height=600');
+
+            }
 
             // Return the order ID for use in combined success messages
             console.log(`placeOrderForCategory completed - returning order ID: ${orderId} for category: ${categoryName}`);
@@ -2304,7 +2304,7 @@ function Cart() {
                                                         <h4 className="item-name">{item.name}</h4>
                                                         <p className="item-code">{item.productCode}</p>
                                                         {item.description && <p className="item-description">{item.description}</p>}
-                                                        <p className="delivery-date">{t("Delivery By")} {item.delivery}</p>                                                        <QuantityController
+                                                        <QuantityController
                                                             itemId={item.id}
                                                             quantity={Number(quantities[item.id] || item.quantity || 1)}
                                                             onQuantityChange={handleQuantityChange}

@@ -272,7 +272,15 @@ function Orders() {
         { withCredentials: true }
       );
 
-      if (!email && data?.details?.url) {
+      if (email) {
+        Swal.fire({
+          title: t("Payment Link Generated"),
+          text: t("A payment link has been sent to the customer's email."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      }
+      else if (!email && data?.details?.url) {
         window.open(data.details.url, "_blank", "width=500,height=600");
       }
     } catch (error) {
@@ -317,31 +325,37 @@ function Orders() {
   const isArabic = i18n.language === "ar"; // or use your language state
   const orderColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
+    { key: "erpOrderId", header: () => t("ERP ID"), include: isV("erpOrderId") },
+    { key: isArabic ? "companyNameAr" : "companyNameEn", header: () => t("Customer"), include: isV("companyName") },
+    { key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName") },
     {
-      key: isArabic ? "companyNameAr" : "companyNameEn",
-      header: () => t("Customer"),
-      include: isV("companyName"),
+      key: "entity",
+      header: () => t("Entity"),
+      include: isV("entity"),
+      render: (item) => {
+        let badge = null;
+
+        if (item.entity === "VMCO") {
+          badge = item.isMachine
+            ? <span className="badge badge-blue">Machines</span>
+            : <span className="badge badge-blue">Consumables</span>;
+        } else if (item.entity === "SHC") {
+          badge = item.isFresh
+            ? <span className="badge badge-blue">Fresh</span>
+            : <span className="badge badge-blue">Frozen</span>;
+        }
+
+        return (
+          <div>
+            {item.entity} {badge && <span style={{ marginLeft: "8px" }}>{badge}</span>}
+          </div>
+        );
+      },
     },
+    { key: "paymentMethod", header: () => t("Payment Method"), include: isV("paymentMethod") },
+    { key: "createdByUsername", header: () => t("Created By"), include: isV("createdBy") },
     {
-      key: isArabic ? "branchNameLc" : "branchNameEn",
-      header: () => t("Branch"),
-      include: isV("branchName"),
-    },
-    { key: "entity", header: () => t("Entity"), include: isV("entity") },
-    {
-      key: "paymentMethod",
-      header: () => t("Payment Method"),
-      include: isV("paymentMethod"),
-    },
-    {
-      key: "createdByUsername",
-      header: () => t("Created By"),
-      include: isV("createdBy"),
-    },
-    {
-      key: "deliveryDate",
-      header: () => t("Delivery Date"),
-      include: isV("expectedDeliveryDate"),
+      key: "deliveryDate", header: () => t("Delivery Date"), include: isV("expectedDeliveryDate"),
       render: (item) =>
         item.expectedDeliveryDate
           ? formatDate(item.expectedDeliveryDate, "DD/MM/YYYY")
@@ -352,7 +366,6 @@ function Orders() {
       header: () => t("Total Amount"),
       include: isV("totalAmount"),
     },
-    //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     {
       key: "paymentStatus",
       header: () => t("Payment Status"),
@@ -364,6 +377,7 @@ function Orders() {
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
+    { key: "erpOrderId", header: () => t("ERP ID"), include: isV("erpOrderId") },
     {
       key: isArabic ? "companyNameAr" : "companyNameEn",
       header: () => t("Customer"),
@@ -379,7 +393,30 @@ function Orders() {
       header: () => t("Workflow Name"),
       include: isV("workflowName"),
     },
-    { key: "entity", header: () => t("Entity"), include: isV("entity") },
+    {
+      key: "entity",
+      header: () => t("Entity"),
+      include: isV("entity"),
+      render: (item) => {
+        let badge = null;
+
+        if (item.entity === "VMCO") {
+          badge = item.isMachine
+            ? <span className="badge badge-blue">Machines</span>
+            : <span className="badge badge-blue">Consumables</span>;
+        } else if (item.entity === "SHC") {
+          badge = item.isFresh
+            ? <span className="badge badge-yellow">Fresh</span>
+            : <span className="badge badge-yellow">Frozen</span>;
+        }
+
+        return (
+          <div>
+            {item.entity} {badge && <span style={{ marginLeft: "8px" }}>{badge}</span>}
+          </div>
+        );
+      },
+    },
     {
       key: "paymentMethod",
       header: () => t("Payment Method"),
@@ -417,9 +454,9 @@ function Orders() {
   // Paginate the filtered orders
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
   // Always pass totalPages as a string to Pagination to avoid NaN warning
