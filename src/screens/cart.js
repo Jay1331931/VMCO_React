@@ -555,7 +555,7 @@ function Cart() {
                         return newQuantities;
                     });
                 });
-           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase()) {
+           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase() && selectedPaymentMethod?.toLowerCase()==="pre payment") {
             try {
                 const { data } = await axios.post(
                 `${API_BASE_URL}/generatePayment-link`,
