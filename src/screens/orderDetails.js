@@ -152,7 +152,7 @@ function OrderDetails() {
         id: product.productId || product.id,
         productName: product.productName || product.product_name || product.erp_prod_id,
         isMachine: product.isMachine,
-        isFresh: product.isFresh, // Add isFresh field if present
+        isFresh: product.isFresh, 
         quantity: product.quantity,
       }));
 
