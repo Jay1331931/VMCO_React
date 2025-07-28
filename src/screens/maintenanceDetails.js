@@ -471,7 +471,7 @@ const serialNumberDebounceRef = useRef(null);
 
   const getBranchRegion = () => {
     const branch = branches.find(b => b.id === ticket.branchId);
-    return branch ? (branch.branch ) : '';
+    return branch ? (branch.city||branch.cityName || "" ) : '';
   };
 
   // Early returns must come after all hooks
