@@ -343,7 +343,7 @@ function Catalog() {
       // Choose the right product name based on language
       let productName = product.productName ;
       if (currentLanguage !== "en" && product.productNameLc) {
-        productName = productName ||  product.productNameLc;
+        productName = product.productNameLc;
       }
 
       // Choose the right product description based on language

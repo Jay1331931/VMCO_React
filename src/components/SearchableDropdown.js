@@ -99,7 +99,7 @@ function SearchableDropdown({
           <input
             type="text"
             className="dropdown-search"
-            placeholder="Search..."
+            placeholder={t("Search...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClick={(e) => e.stopPropagation()}
