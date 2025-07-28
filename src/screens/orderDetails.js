@@ -344,6 +344,158 @@ function OrderDetails() {
 
   const handleSave = async (action, selectedMethod) => {
     setPendingSaveAction(false);
+    
+    // Basic validations first
+    if (!formData.customerId) {
+      alert(t('Please select a customer'));
+      setSaving(false);
+      return;
+    }
+
+    if (!formData.products || formData.products.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('Validation Error'),
+        text: t('Please add at least one product'),
+      });
+      setSaving(false);
+      return;
+    }
+
+    // Check if editing Pre Payment order
+    if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
+      Swal.fire({
+        icon: 'warning',
+        title: t('No Updates Allowed'),
+        text: t('The payment method is Pre Payment. The order cannot be altered.'),
+      });
+      setSaving(false);
+      return;
+    }
+
+    // Determine payment method first if not provided and not in edit mode
+    if (formMode === 'add' && !selectedMethod) {
+      const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+      if (isVmcoEntity) {
+        const machineProducts = formData.products.length > 0 && formData.products.every(product => product.isMachine === true);
+        if (machineProducts) {
+          selectedMethod = 'Pre Payment';
+        } else {
+          const totalAmount = parseFloat(formData.totalAmount);
+          const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId, formData.entity, totalAmount, action);
+          if (isCreditAllowed === "Payment popup") {
+            setSaving(false);
+            return;
+          } else if (isCreditAllowed === "Insufficient balance") {
+            setSaving(false);
+            return;
+          } else if (!isCreditAllowed) {
+            selectedMethod = 'Pre Payment';
+          } else {
+            selectedMethod = 'Credit';
+          }
+        }
+      } else {
+        const totalAmount = parseFloat(formData.totalAmount);
+        const isCreditAllowed = await isCreditPaymentAllowed(formData.customerId, formData.entity, totalAmount, action);
+        if (isCreditAllowed === "Payment popup") {
+          setSaving(false);
+          return;
+        } else if (isCreditAllowed === "Insufficient balance") {
+          setSaving(false);
+          return;
+        } else if (!isCreditAllowed) {
+          selectedMethod = 'Pre Payment';
+        } else {
+          selectedMethod = 'Credit';
+        }
+      }
+    }
+
+    // Use existing payment method in edit mode if not changing it
+    if (formMode !== 'add' && !selectedMethod) {
+      selectedMethod = formData.paymentMethod;
+    }
+
+    // Check COD limits if payment method is Cash on Delivery
+    if (selectedMethod && selectedMethod.toLowerCase() === 'cash on delivery') {
+      try {
+        // Calculate current order total amount
+        let currentOrderTotal = formData.totalAmount || 0;
+
+        // Check for existing open COD orders
+        const orderFilters = new URLSearchParams({
+          filters: JSON.stringify({
+            customerId: formData.customerId,
+            status: 'Open',
+            paymentMethod: 'Cash on Delivery'
+          })
+        });
+
+        const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+
+        if (!existingOrdersResponse.ok) {
+          throw new Error('Failed to fetch existing COD orders');
+        }
+
+        const existingOrdersResult = await existingOrdersResponse.json();
+        
+        // Calculate total amount of existing COD orders
+        let existingCODTotal = 0;
+        if (existingOrdersResult.data?.data) {
+          existingOrdersResult.data.data.forEach(order => {
+            // Skip current order if we're editing
+            if (order.id !== formData.id) {
+              existingCODTotal += Number(order.totalAmount) || 0;
+            }
+          });
+        }
+
+        // Get customer's COD limit
+        const customerResponse = await fetch(`${API_BASE_URL}/payment-method-balances/id/${formData.customerId}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+        });
+
+        if (!customerResponse.ok) {
+          throw new Error('Failed to fetch customer COD limit');
+        }
+
+        const customerData = await customerResponse.json();
+        console.log('Customer COD limit data:', customerData);
+        const codLimit = Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
+
+        // Compare total with COD limit
+        if (existingCODTotal + Number(currentOrderTotal) >= codLimit) {
+          console.log(`COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + Number(currentOrderTotal)}, current=${currentOrderTotal}, limit=${codLimit}`);
+          Swal.fire({
+            icon: 'warning',
+            title: t('COD Limit Reached'),
+            text: t('The COD Limit of the customer has been reached. Please choose a different payment method.'),
+            confirmButtonText: t('OK')
+          });
+          setSaving(false);
+          return;
+        }
+        console.log('COD limit check passed. Continuing with order placement.');
+      } catch (error) {
+        console.error('Error checking COD limits:', error);
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('Failed to verify COD limits. Please try again.'),
+          confirmButtonText: t('OK')
+        });
+        setSaving(false);
+        return;
+      }
+    }
+
     if (formMode !== 'add' && formData.paymentMethod === 'Pre Payment') {
       // alert(t('The payment method is Pre Payment. The order cannot be altered.'));
       Swal.fire({
@@ -429,7 +581,38 @@ function OrderDetails() {
         }
       }
     }
-    //setPendingSaveAction(true);
+
+    // Always check and determine payment method before proceeding
+    if (!selectedMethod) {
+      if (formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) {
+        selectedMethod = 'Pre Payment';
+      } else if (formData.paymentMethod) {
+        selectedMethod = formData.paymentMethod;
+      } else {
+        // Check entity type and product composition
+        const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+        if (isVmcoEntity) {
+          // For VMCO entity, check if all products are machines
+          const machineProducts = formData.products.length > 0 && formData.products.every(product => product.isMachine === true);
+          if (machineProducts) {
+            selectedMethod = 'Pre Payment';
+          }
+        }
+      }
+    }
+
+    // If still no payment method determined, show error
+    if (!selectedMethod) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('Payment Method Required'),
+        text: t('Please select a payment method before saving the order.'),
+        confirmButtonText: t('OK')
+      });
+      setSaving(false);
+      return;
+    }
+
     // Check if we're editing an existing order or creating a new one
     if (formData.id && isEditMode) {
       const fieldsToUpdate = [
@@ -520,8 +703,6 @@ function OrderDetails() {
           const productId = product.id || product.productId;
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
-          const isMachine = product.isMachine;
-          const isFresh = product.isFresh;
           const netAmount = parseFloat(product.netAmount);
           //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
           const vatPercentage = parseFloat(product.vatPercentage || 0);
@@ -593,7 +774,6 @@ function OrderDetails() {
           hasAnyMachine,
           hasAnyFresh,
           sampleOrder: sampleMode ? true : false,
-          status: "Approved",
           productFlags: formData.products.map(p => ({ id: p.id, isMachine: p.isMachine, isFresh: p.isFresh }))
         });
 
@@ -1041,16 +1221,16 @@ function OrderDetails() {
           console.log('Total sales tax amount:', totalSalesTaxAmount);
 
           // Check if any product is a machine (is_machine = true)
-          const hasAnyMachine = productsPayload.length > 0 && productsPayload.some(product => product.is_machine === true);
+          const hasAnyMachine = productsPayload.length > 0 && productsPayload.some(product => product.isMachine === true);
 
           // Check if any product is fresh (is_fresh = true)
-          const hasAnyFresh = productsPayload.length > 0 && productsPayload.some(product => product.is_fresh === true);
+          const hasAnyFresh = productsPayload.length > 0 && productsPayload.some(product => product.isFresh === true);
 
           console.log('Product analysis for new order:', {
             totalProducts: productsPayload.length,
             hasAnyMachine,
             hasAnyFresh,
-            productFlags: productsPayload.map(p => ({ id: p.product_id, is_machine: p.is_machine, is_fresh: p.is_fresh }))
+            productFlags: productsPayload.map(p => ({ id: p.product_id, isMachine: p.isMachine, isFresh: p.isFresh }))
           });
 
           // Update the sales order with the total sales tax amount and product flags
@@ -1058,8 +1238,7 @@ function OrderDetails() {
             total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh,
-            sampleOrder: sampleMode ? true : false,
-            status:"Approved"
+            sampleOrder: sampleMode ? true : false
           };
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
@@ -2791,7 +2970,7 @@ function OrderDetails() {
                         <label>{t('Pricing Policy')}</label>
                         <select
                           name="pricingPolicy"
-                          value={formData.pricingPolicy || ''}
+                          value={formData.customerPricingPolicy || ''}
                           onChange={handleInputChange}
                           className="entity-dropdown"
                           disabled={!isE('pricingPolicy')}

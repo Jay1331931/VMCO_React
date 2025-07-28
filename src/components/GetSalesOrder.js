@@ -76,6 +76,7 @@ const handleSelect = (customer) => {
         updated.orderId = [...(prev.orderId || []), customer.id];
       }
     }
+    updated.branchVmcoRegion=customer?.branchRegion || null
     updated.amountTransferred += parseFloat(customer.totalAmount) || 0;
     return updated;
   });
