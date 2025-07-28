@@ -1911,7 +1911,7 @@ function Cart() {
                         Swal.fire({
                             icon: 'warning',
                             title: t('Insufficient Balance'),
-                            text: t(`Insufficient Balance! Your current credit balance is: ${creditBalance.toFixed(2)}`),
+                            text: t(`Insufficient Balance! Your current credit balance is: `) + `${creditBalance.toFixed(2)}`,
                             confirmButtonText: t('OK')
                         }).then(() => {
                             //
