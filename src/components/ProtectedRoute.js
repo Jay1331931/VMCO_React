@@ -1,14 +1,52 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { isTokenValid } from '../utilities/authUtils';
+import { useNavigate } from "react-router-dom";
+// const ProtectedRoute = ({ children }) => {
+//   const { isAuthenticated, logout } = useAuth();
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, logout } = useAuth();
+//   // if (!isAuthenticated) {
+//   //   logout && logout();
+//   //   return <Navigate to="/login" replace />;
+//   // }
 
-  if (!isAuthenticated) {
-    logout && logout();
-    return <Navigate to="/login" replace />;
+//   return children;
+// };
+
+// export default ProtectedRoute;
+
+const ProtectedRoute = ({ children, allowedRoles }) => {
+  const { user, isAuthenticated, logout, token } = useAuth();
+  const [isValid, setIsValid] = useState(true);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const checkAuth = () => {
+      const tokenFromCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+      
+      if (!tokenFromCookie || !isTokenValid(tokenFromCookie)) {
+        setIsValid(false);
+        logout();
+      }
+    };
+
+    checkAuth();
+    
+    // Check every 5 seconds (adjust as needed)
+    const interval = setInterval(checkAuth, 5000);
+    return () => clearInterval(interval);
+  }, [logout]);
+
+  if (!isValid) {
+    navigate(user?.userType === "customer" ? "/login" : "/login/employee");
+    return;
   }
+  if (allowedRoles && user && !allowedRoles.includes(user?.designation)) {
+      return <Navigate to="*" replace />; // or to a "not authorized" page
+    }
 
   return children;
 };

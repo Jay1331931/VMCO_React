@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
+import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 const getStatusClass = (status) => {
   switch (status) {
@@ -53,7 +54,7 @@ function Customers() {
     source: "salesexecutive",
     comments: "",
   });
-
+  const [geoData, setGeoData] = useState(null);
   // Add validation and loading states
   const [inviteErrors, setInviteErrors] = useState({});
   const [isInviteLoading, setIsInviteLoading] = useState(false);
@@ -848,7 +849,29 @@ function Customers() {
   }, [activeTab, isApprovalMode, page, searchQuery]);
 
   useEffect(() => {
-    getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    // getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    const fetchGeoData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/geoLocation`,
+          {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setGeoData(data.data);
+          setRegionOptions(geoData ? Object.keys(geoData).map(region => ({
+          value: region,
+          name: region
+          })) : [])
+        }
+      } catch (error) {
+        console.error('Error fetching geo data:', error);
+      }
+    };
+    fetchGeoData();
   }, []);
 
   const handleRowClick = (customer) => {
@@ -1102,21 +1125,20 @@ function Customers() {
                     >
                       {t("Region")}
                     </label>
-                    <select
-                      name="region"
-                      value={inviteData.region}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">{t("Select a region")}</option>
-                      {regionOptions.map((r) => (
-                        <option key={r} value={r}>
-                          {t(r)}
-                        </option>
-                      ))}
-                    </select>
+                    <SearchableDropdown
+                            name="region"
+                            // options={basicMasterLists?.region || []}
+                            options={geoData ? Object.keys(geoData).map(region => ({
+                            value: region,
+                            name: region
+                            })) : []}
+                            value={inviteData.region}
+                            onChange={handleInputChange}
+                            placeholder="Enter Region"
+                            required
+                          />
                   </div>
-
+                  
                   <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
@@ -1202,7 +1224,7 @@ function Customers() {
         left: 50%;
         transform: translate(-50%, -45%);
         width: 95vw;                 
-        max-width: 700px;              
+        max-width: 600px;              
         border: none;
         border-radius: 8px;
         padding: 1rem;
@@ -1247,14 +1269,20 @@ function Customers() {
       .form-group-1 input,
       .form-group-1 select,
       .form-group-1 textarea {
-        width:100%;
+      display: flex;
+        width:250px;
         padding:.5rem;
         border:1px solid #ccc;
         border-radius:8px;
         font-size:1rem;
         box-sizing:border-box;
       }
-      .form-group-1 textarea { min-height:80px; resize:vertical; }
+      .form-group-1 textarea { width:100%;
+        padding:.5rem;
+        border:1px solid #ccc;
+        border-radius:8px;
+        font-size:1rem;
+        box-sizing:border-box;min-height:80px; resize:vertical; }
 
       .modal-actions {
         margin-top:1.5rem;

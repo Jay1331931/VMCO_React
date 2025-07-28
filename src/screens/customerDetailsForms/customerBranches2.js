@@ -29,7 +29,7 @@ import { debounce, set } from "lodash";
 import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
   const actionMenuRef = useRef(null);
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
@@ -1163,7 +1163,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     <td className="desktop-only">
                       {branch.erpBranchId}
                     </td>
-                    <td className="desktop-only">{branch.branchNameEn}</td>
+                    {(i18n.language === "en") ? <td className="desktop-only">{branch.branchNameEn}</td> : <td className="desktop-only">{branch.branchNameLc}</td>}
                     <td className="desktop-only">{branch.city}</td>
                     <td className="desktop-only">{branch.locationType}</td>
                     <td className="desktop-only">{branch.region}</td>

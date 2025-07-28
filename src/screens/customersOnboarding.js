@@ -14,6 +14,7 @@ import constants from "../constants";
 import Constants from "../constants";
 import axios from "axios";
 import Swal from "sweetalert2";
+import SearchableDropdown from "../components/SearchableDropdown";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
@@ -33,6 +34,7 @@ function CustomersOnboarding() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [geoData, setGeoData] = useState(null);
   const [regionOptions, setRegionOptions] = useState([]);
   const navigate = useNavigate();
 
@@ -228,7 +230,29 @@ function CustomersOnboarding() {
   };
   useEffect(() => {
     // Fetch region options on mount
-    getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    // getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    const fetchGeoData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/geoLocation`,
+          {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setGeoData(data.data);
+          setRegionOptions(geoData ? Object.keys(geoData).map(region => ({
+          value: region,
+          name: region
+          })) : [])
+        }
+      } catch (error) {
+        console.error('Error fetching geo data:', error);
+      }
+    };
+    fetchGeoData();
   }, []);
 
   const validateForm = async () => {
@@ -400,7 +424,7 @@ function CustomersOnboarding() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 companyNameEn: formData.companyName,
-                region: formData.region.toLowerCase(),
+                region: formData.region,
                 customerStatus: "new",
                 pricingPolicy: {
                   [constants.ENTITY.VMCO]: "price A",
@@ -860,7 +884,7 @@ function CustomersOnboarding() {
                   )}
                   {field.type === "dropdown" && (
                     <>
-                      <select
+                      {/* <select
                         id={field.name}
                         name={field.name}
                         value={formData[field.name]}
@@ -875,7 +899,21 @@ function CustomersOnboarding() {
                             {t(option)}
                           </option>
                         ))}
-                      </select>
+                      </select> */}
+                      
+                      <SearchableDropdown
+                            name={field.name}
+                            // options={basicMasterLists?.region || []}
+                            options={geoData ? Object.keys(geoData).map(region => ({
+                            value: region,
+                            name: region
+                            })) : []}
+                            value={formData[field.name]}
+                            onChange={handleChange}
+                            placeholder="Enter Region"
+                            required
+                          />
+                          
                       {errors[field.name] && (
                         <span className="error-message">
                           {errors[field.name]}

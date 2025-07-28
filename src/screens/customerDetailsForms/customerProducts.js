@@ -62,7 +62,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   const [error, setError] = useState(null);
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const actionMenuRef = useRef(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [entities] = useState(initialEntities);
   const [activeEntity, setActiveEntity] = useState(initialEntities[0].value);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -90,7 +90,6 @@ function Products({ customerId, customer, setTabsHeight }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -538,7 +537,7 @@ function Products({ customerId, customer, setTabsHeight }) {
                     disabled={!isV("btnSelectItems")}
                   />
                 </td>
-                <td>{product.productName}</td>
+                {(i18n.language === "en") ? <td>{product.productName}</td> : <td>{product.productNameLc}</td>}
                 {isV("btnApplyAll") && (
                   <td className="edit-cell">
                     <div className="input-with-icons">

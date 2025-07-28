@@ -17,6 +17,8 @@ import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
 function ContactDetails({
   customerData = {},
   customerContactsData = {},
@@ -36,8 +38,12 @@ function ContactDetails({
   //   useState(false);
 
   // Dropdown state
-  const dropdownFields = ["district", "city", "region", "zone", "branch"];
+  const dropdownFields = ["zone", "branch"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
+  const [selectedRegion, setSelectedRegion] = useState(customerData?.region);
+  const [selectedCity, setSelectedCity] = useState(customerData?.city);
+  const [geoData, setGeoData] = useState(null);
+
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const rbacMgr = new RbacManager(
@@ -61,6 +67,24 @@ function ContactDetails({
     };
     fetchData();
     setTabsHeight("auto");
+  }, []);
+  useEffect(() => {
+    const fetchGeoData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGeoData(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching geo data:", error);
+      }
+    };
+    fetchGeoData();
   }, []);
   const getBindingValue = (contactType, fieldname) => {
     if (Array.isArray(customerContactsData.data)) {
@@ -246,6 +270,61 @@ function ContactDetails({
     }
 
     return "Select Location";
+  };
+
+  const getCityOptions = useCallback(() => {
+    if (!selectedRegion || !geoData) return [];
+    return Object.keys(geoData?.[selectedRegion]).map((city) => ({
+      value: city,
+      name: city,
+    }));
+  }, [selectedRegion, geoData]);
+
+  // Get districts based on selected city
+  const getDistrictOptions = useCallback(() => {
+    if (!selectedRegion || !selectedCity || !geoData) return [];
+    return geoData[selectedRegion][selectedCity].map((district) => ({
+      value: district,
+      name: district,
+    }));
+  }, [selectedRegion, selectedCity, geoData]);
+
+  // Handle region selection
+  const handleRegionChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedRegion(value || null);
+    setSelectedCity(null); // Reset city when region changes
+    // Update your form data as needed
+    onChangeCustomerData({
+      target: {
+        name: "region",
+        value: value || null,
+      },
+    });
+  };
+
+  // Handle city selection
+  const handleCityChange = (e) => {
+    const { name, value } = e.target;
+    setSelectedCity(value || null);
+    // Update your form data as needed
+    onChangeCustomerData({
+      target: {
+        name: "city",
+        value: value || null,
+      },
+    });
+  };
+
+  // Handle district selection
+  const handleDistrictChange = (e) => {
+    const { name, value } = e.target;
+    onChangeCustomerData({
+      target: {
+        name: "district",
+        value: value || null,
+      },
+    });
   };
 
   return (
@@ -1239,6 +1318,59 @@ function ContactDetails({
           )}
         {formErrors.street && <div className="error">{formErrors.street}</div>}
       </div>
+      {/* region dropdown */}
+      <div className="form-group">
+        <label htmlFor="region">
+          {t("Region")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="region"
+          // options={basicMasterLists?.region || []}
+          options={
+            geoData
+              ? Object.keys(geoData).map((region) => ({
+                  value: region,
+                  name: region,
+                }))
+              : []
+          }
+          value={customerData?.region || ""}
+          onChange={handleRegionChange}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region === customerData?.region &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.region != customerData?.region &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Enter region")}
+          required
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.region != customerData?.region &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.region || "(empty)"}
+            </div>
+          )}
+        {formErrors.region && <div className="error">{formErrors.region}</div>}
+      </div>
 
       {/* city dropdown */}
       <div className="form-group">
@@ -1254,15 +1386,15 @@ function ContactDetails({
         </label>
         <SearchableDropdown
           name="city"
-          options={basicMasterLists?.city || []}
+          options={getCityOptions()}
           value={customerData?.city || ""}
-          onChange={onChangeCustomerData}
+          onChange={handleCityChange}
           disabled={
-            originalCustomerData &&
+            (originalCustomerData &&
             customerData &&
             originalCustomerData?.city === customerData?.city &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending") || !selectedRegion
           }
           className={
             originalCustomerData &&
@@ -1299,15 +1431,15 @@ function ContactDetails({
         </label>
         <SearchableDropdown
           name="district"
-          options={basicMasterLists?.district || []}
+          options={getDistrictOptions()}
           value={customerData?.district || ""}
-          onChange={onChangeCustomerData}
+          onChange={handleDistrictChange}
           disabled={
-            originalCustomerData &&
+            (originalCustomerData &&
             customerData &&
             originalCustomerData?.district === customerData?.district &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending") || !selectedCity
           }
           className={
             originalCustomerData &&
@@ -1331,51 +1463,6 @@ function ContactDetails({
         {formErrors.district && (
           <div className="error">{formErrors.district}</div>
         )}
-      </div>
-      {/* region dropdown */}
-      <div className="form-group">
-        <label htmlFor="region">
-          {t("Region")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region != customerData?.region &&
-            mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
-            )}
-        </label>
-        <SearchableDropdown
-          name="region"
-          options={basicMasterLists?.region || []}
-          value={customerData?.region || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region === customerData?.region &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region != customerData?.region &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Enter region")}
-          required
-        />
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.region != customerData?.region &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.region || "(empty)"}
-            </div>
-          )}
-        {formErrors.region && <div className="error">{formErrors.region}</div>}
       </div>
 
       {/* zone dropdown */}
@@ -1545,7 +1632,6 @@ function ContactDetails({
         )}
       </div>
 
-     
       {showMap && (
         <div className="map-modal">
           <div className="map-modal-content">

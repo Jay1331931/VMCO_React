@@ -1,4 +1,14 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+} from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
 const parseTimeRange = (timeRange) => {
   if (typeof timeRange === "object") return timeRange;
@@ -6,8 +16,29 @@ const parseTimeRange = (timeRange) => {
   return { from, to };
 };
 
-const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer, branchId, handleBranchFieldChange, inApproval, mode, handleHoursChange, applyAllHours, workflowInstanceId }) => {
-  const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const OperatingHours = ({
+  hoursData,
+  originalHoursData,
+  branchDetails,
+  customer,
+  branchId,
+  handleBranchFieldChange,
+  inApproval,
+  mode,
+  handleHoursChange,
+  applyAllHours,
+  handleCancelHours,
+  workflowInstanceId,
+}) => {
+  const weekdays = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
   const { t } = useTranslation();
   const [hours, setHours] = useState({});
 
@@ -142,39 +173,39 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
   //     handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
   //   }
   // };
-// const fetchWorkflowDataOfBranch = async (workflowId) => {
-//   try {
-//     const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
-//       method: "GET",
-//       headers: { "Content-Type": "application/json" },
-//       credentials: "include",
-//     });
-//     const workflowDataJson = await response.json();
-//     console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
-//     return workflowDataJson?.data?.workflowData?.updates;
-//   } catch (error) {
-//     console.error("Error fetching workflow data:", error);
-//     throw error;
-//   }
-// };
-//   useEffect(() => {
-//     const fetchWorkflowData = async () => {
-//     if (inApproval) {
-//       const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
-//       // setWorkflowData(wfData?.branch);
-//     }
-//   };
-//   fetchWorkflowData();
-//   }, [workflowInstanceId, inApproval]);
+  // const fetchWorkflowDataOfBranch = async (workflowId) => {
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/workflow-instance/id/${workflowId}`, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //     });
+  //     const workflowDataJson = await response.json();
+  //     console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+  //     return workflowDataJson?.data?.workflowData?.updates;
+  //   } catch (error) {
+  //     console.error("Error fetching workflow data:", error);
+  //     throw error;
+  //   }
+  // };
+  //   useEffect(() => {
+  //     const fetchWorkflowData = async () => {
+  //     if (inApproval) {
+  //       const wfData = await fetchWorkflowDataOfBranch(workflowInstanceId);
+  //       // setWorkflowData(wfData?.branch);
+  //     }
+  //   };
+  //   fetchWorkflowData();
+  //   }, [workflowInstanceId, inApproval]);
   const formatDayName = (day) => day.charAt(0).toUpperCase() + day.slice(1);
 
   return (
-    <div className='form-section'>
+    <div className="form-section">
       <h3>
         {t("Operating And Delivery Hours")}
-        <span className='required-field'>*</span>
+        <span className="required-field">*</span>
       </h3>
-      <table className='hours-table'>
+      <table className="hours-table">
         <thead>
           <tr>
             <th>{t("Day")}</th>
@@ -184,117 +215,173 @@ const OperatingHours = ({ hoursData, originalHoursData, branchDetails, customer,
         </thead>
         <tbody>
           {weekdays.map((day) => {
-            
-            return(
-            <tr key={day} className={day === "friday" ? "friday-row" : ""}>
-              <td>{t(formatDayName(day))}</td>
+            return (
+              <tr key={day} className={day === "friday" ? "friday-row" : ""}>
+                <td>{t(formatDayName(day))}</td>
 
-              {/* Operating Hours */}
-              <td>
-                <TimeInputGroup
-                  day={day}
-                  type='operating'
-                  time={hoursData[day]?.operating}
-                  isActive={activeField}
-                  inApproval={inApproval}
-                  isModified={hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending"}
-                  onChange={handleHoursChange}
-                  onFocus={(field, value) => {
-                    setActiveField(`${day}-operating-${field}`);
-                    setOriginalValues((prev) => ({
-                      ...prev,
-                      [`${day}-operating-${field}`]: value,
-                    }));
-                  }}
-                  onApplyAll={() => applyAllHours(day, "operating")}
-                  customerFormMode={customerFormMode}
-                  mode={mode}
-                />
-                {inApproval && mode === "edit" && (hoursData[day]?.operating?.from !== originalHoursData[day]?.operating?.from || hoursData[day]?.operating?.to !== originalHoursData[day]?.operating?.to || branchDetails?.branchStatus === "pending") && (
-                  <div className="current-value">
-                  Previous: {originalHoursData[day]?.operating?.from || "09:00"} - {originalHoursData[day]?.operating?.to || "18:00"}
-                </div>
-                )} 
-              </td>
+                {/* Operating Hours */}
+                <td>
+                  <TimeInputGroup
+                    day={day}
+                    type="operating"
+                    time={hoursData[day]?.operating}
+                    isActive={activeField}
+                    inApproval={inApproval}
+                    isModified={
+                      hoursData[day]?.operating?.from !==
+                        originalHoursData[day]?.operating?.from ||
+                      hoursData[day]?.operating?.to !==
+                        originalHoursData[day]?.operating?.to ||
+                      branchDetails?.branchStatus === "pending"
+                    }
+                    onChange={handleHoursChange}
+                    onCancel={() => handleCancelHours(day)}
+                    onFocus={(field, value) => {
+                      setActiveField(`${day}-operating-${field}`);
+                      setOriginalValues((prev) => ({
+                        ...prev,
+                        [`${day}-operating-${field}`]: value,
+                      }));
+                    }}
+                    onApplyAll={() => applyAllHours(day, "operating")}
+                    customerFormMode={customerFormMode}
+                    mode={mode}
+                  />
+                  {inApproval &&
+                    mode === "edit" &&
+                    (hoursData[day]?.operating?.from !==
+                      originalHoursData[day]?.operating?.from ||
+                      hoursData[day]?.operating?.to !==
+                        originalHoursData[day]?.operating?.to ||
+                      branchDetails?.branchStatus === "pending") && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalHoursData[day]?.operating?.from || "09:00"} -{" "}
+                        {originalHoursData[day]?.operating?.to || "18:00"}
+                      </div>
+                    )}
+                </td>
 
-              {/* Delivery Hours */}
-              <td>
-                <TimeInputGroup
-                  day={day}
-                  type='delivery'
-                  time={hoursData[day]?.delivery}
-                  isActive={activeField}
-                  inApproval={inApproval}
-                  isModified={hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending"}
-                  onChange={handleHoursChange}
-                  onFocus={(field, value) => {
-                    setActiveField(`${day}-delivery-${field}`);
-                    setOriginalValues((prev) => ({
-                      ...prev,
-                      [`${day}-delivery-${field}`]: value,
-                    }));
-                  }}
-                  onApplyAll={() => applyAllHours(day, "delivery")}
-                  customerFormMode={customerFormMode}
-                  mode={mode}
-                />
-                {inApproval && mode === "edit" && (hoursData[day]?.delivery?.from !== originalHoursData[day]?.delivery?.from || hoursData[day]?.delivery?.to !== originalHoursData[day]?.delivery?.to || branchDetails?.branchStatus === "pending") && (
-                  <div className="current-value">
-                  Previous: {originalHoursData[day]?.delivery?.from || "09:00"} - {originalHoursData[day]?.delivery?.to || "18:00"}
-                </div>
-                )} 
-              </td>
-            </tr>
-          )})}
+                {/* Delivery Hours */}
+                <td>
+                  <TimeInputGroup
+                    day={day}
+                    type="delivery"
+                    time={hoursData[day]?.delivery}
+                    isActive={activeField}
+                    inApproval={inApproval}
+                    isModified={
+                      hoursData[day]?.delivery?.from !==
+                        originalHoursData[day]?.delivery?.from ||
+                      hoursData[day]?.delivery?.to !==
+                        originalHoursData[day]?.delivery?.to ||
+                      branchDetails?.branchStatus === "pending"
+                    }
+                    onChange={handleHoursChange}
+                    onCancel={() => handleCancelHours(day)}
+                    onFocus={(field, value) => {
+                      setActiveField(`${day}-delivery-${field}`);
+                      setOriginalValues((prev) => ({
+                        ...prev,
+                        [`${day}-delivery-${field}`]: value,
+                      }));
+                    }}
+                    onApplyAll={() => applyAllHours(day, "delivery")}
+                    customerFormMode={customerFormMode}
+                    mode={mode}
+                  />
+                  {inApproval &&
+                    mode === "edit" &&
+                    (hoursData[day]?.delivery?.from !==
+                      originalHoursData[day]?.delivery?.from ||
+                      hoursData[day]?.delivery?.to !==
+                        originalHoursData[day]?.delivery?.to ||
+                      branchDetails?.branchStatus === "pending") && (
+                      <div className="current-value">
+                        Previous:{" "}
+                        {originalHoursData[day]?.delivery?.from || "09:00"} -{" "}
+                        {originalHoursData[day]?.delivery?.to || "18:00"}
+                      </div>
+                    )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
 };
-const TimeInputGroup = ({ day, type, time, isActive, inApproval, isModified, onChange, onFocus, onApplyAll, customerFormMode, mode }) => {
+const TimeInputGroup = ({
+  day,
+  type,
+  time,
+  isActive,
+  inApproval,
+  isModified,
+  onChange,
+  onCancel,
+  onFocus,
+  onApplyAll,
+  customerFormMode,
+  mode,
+}) => {
   return (
-    <div className={`time-input-group ${day === "friday" ? "friday-time-input-group" : ""}`}>
+    <div
+      className={`time-input-group ${
+        day === "friday" ? "friday-time-input-group" : ""
+      }`}
+    >
       <input
-        type='time'
+        type="time"
         value={time?.from}
         onChange={(e) => onChange(day, type, "from", e.target.value)}
         onFocus={() => onFocus("from", time?.from)}
         onBlur={() => {}}
         disabled={inApproval && !isModified}
         style={
-                              inApproval && isModified && mode === "edit"
-                                ? {
-                                    backgroundColor: "#fff8e1",
-                                  }
-                                : {}
-                            }
+          inApproval && isModified && mode === "edit"
+            ? {
+                backgroundColor: "#fff8e1",
+              }
+            : {}
+        }
       />
       <span>-</span>
       <input
-        type='time'
+        type="time"
         value={time?.to}
         onChange={(e) => onChange(day, type, "to", e.target.value)}
         onFocus={() => onFocus("to", time?.to)}
         onBlur={() => {}}
         disabled={inApproval && !isModified}
         style={
-                              inApproval && isModified && mode === "edit"
-                                ? {
-                                    backgroundColor: "#fff8e1",
-                                  }
-                                : {}
-                            }
+          inApproval && isModified && mode === "edit"
+            ? {
+                backgroundColor: "#fff8e1",
+              }
+            : {}
+        }
       />
 
-      {(isActive === `${day}-${type}-from` || isActive === `${day}-${type}-to`) && (
-        <div className='time-action-buttons'>
-          <button className='time-confirm-button' /*onClick={onConfirm}*/>{/* <FontAwesomeIcon icon={faCheck} /> */}</button>
-          <button className='time-cancel-button' /*onClick={onCancel}*/>{/* <FontAwesomeIcon icon={faXmark} /> */}</button>
+      {(isActive === `${day}-${type}-from` ||
+        isActive === `${day}-${type}-to`) && (
+        <div className="time-action-buttons">
+          <button className="time-confirm-button" /*onClick={onConfirm}*/>
+            {/* <FontAwesomeIcon icon={faCheck} /> */}
+          </button>
+          <button className="time-cancel-button" onClick={onCancel} >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
         </div>
       )}
 
       {isModified && (
-        <button className='apply-row-button' onClick={onApplyAll} title='Apply to all days'>
+        <button
+          className="apply-row-button"
+          onClick={onApplyAll}
+          title="Apply to all days"
+        >
           Apply All
         </button>
       )}

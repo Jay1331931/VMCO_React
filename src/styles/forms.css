@@ -1158,6 +1158,14 @@ body::-webkit-scrollbar {
   line-height: 1.2;
 }
 
+[dir="rtl"] .products-data-table th {
+  text-align: right;
+}
+
+[dir="rtl"] .products-data-table td {
+  text-align: right;
+}
+
 .products-data-table tr:nth-child(odd) {
   background-color: #fff;
 }

@@ -41,6 +41,9 @@ const BranchDetailsForm = ({
   const { t } = useTranslation();
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(branch?.geolocation);
+  const [geoData, setGeoData] = useState(null);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   // LocationPicker component
   const { token, user, isAuthenticated, logout } = useAuth();
@@ -137,6 +140,98 @@ const BranchDetailsForm = ({
       throw error;
     }
   };
+  // Fetch geo data on component mount
+  useEffect(() => {
+    const fetchGeoData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/geoLocation`,
+          {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setGeoData(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching geo data:', error);
+      }
+    };
+    fetchGeoData();
+  }, []);
+  useEffect(() => {
+    if (geoData && branch?.region) {
+      setSelectedRegion(branch.region);
+      if (branch.city) {
+        setSelectedCity(branch.city);
+      }
+    }
+  }, [geoData, branch]);
+   // Get city options based on selected region
+  const getCityOptions = useMemo(() => {
+    if (!selectedRegion || !geoData) return [];
+    return Object.keys(geoData[selectedRegion] || {}).map(city => ({
+      value: city,
+      label: city
+    }));
+  }, [selectedRegion, geoData]);
+
+  // Get district options based on selected city
+  const getDistrictOptions = useMemo(() => {
+    if (!selectedRegion || !selectedCity || !geoData) return [];
+    return (geoData[selectedRegion]?.[selectedCity] || []).map(district => ({
+      value: district,
+      label: district
+    }));
+  }, [selectedRegion, selectedCity, geoData]);
+
+  // Handle region selection
+  const handleRegionChange = (e) => {
+    const region = e.target.value;
+    setSelectedRegion(region);
+    setSelectedCity(null);
+    handleBranchFieldChange({
+      target: {
+        name: 'region',
+        value: region
+      }
+    });
+    // Clear city and district when region changes
+    handleBranchFieldChange({
+      target: {
+        name: 'city',
+        value: ''
+      }
+    });
+    handleBranchFieldChange({
+      target: {
+        name: 'district',
+        value: ''
+      }
+    });
+  };
+
+  // Handle city selection
+  const handleCityChange = (e) => {
+    const city = e.target.value;
+    setSelectedCity(city);
+    handleBranchFieldChange({
+      target: {
+        name: 'city',
+        value: city
+      }
+    });
+    // Clear district when city changes
+    handleBranchFieldChange({
+      target: {
+        name: 'district',
+        value: ''
+      }
+    });
+  };
+
   useEffect(() => {
     const fetchWorkflowData = async () => {
       if (inApproval && workflowInstanceId) {
@@ -384,19 +479,34 @@ const BranchDetailsForm = ({
       },
       {
         type: "dropdown",
+        label: "Region",
+        name: "region",
+        placeholder: "Region",
+        required: true,
+        options: geoData ? Object.keys(geoData) : [],
+      onChange: handleRegionChange,
+      value: branch?.region || ''
+      },
+      {
+        type: "dropdown",
         label: "City",
         name: "city",
         placeholder: "City",
         required: true,
-        options: ["Jeddah", "Riyadh", "Dammam"],
+        options: getCityOptions.map(opt => opt.value),
+      onChange: handleCityChange,
+      value: branch?.city || '',
+      disabled: !selectedRegion
       },
-{
+      {
         type: "dropdown",
         label: "District",
         name: "district",
         placeholder: "District",
         required: true,
-        options: ["Jeddah", "Riyadh", "Dammam"],
+        options: getDistrictOptions.map(opt => opt.value),
+        value: branch?.district || '',
+        disabled: !selectedCity
       },
       {
         type: "dropdown",
@@ -404,7 +514,7 @@ const BranchDetailsForm = ({
         name: "locationType",
         placeholder: "Location Type",
         required: true,
-        options: ["Office", "Warehouse", "Showroom"],
+        options: dropdownOptions["locationType"],
       },
       {
         type: "text",
@@ -413,14 +523,6 @@ const BranchDetailsForm = ({
         placeholder: "Location Type (Other)",
         required: true,
         // hidden: branch?.locationType !== "Others (specify)",
-      },
-      {
-        type: "dropdown",
-        label: "Region",
-        name: "region",
-        placeholder: "Region",
-        required: true,
-        options: ["Region 1", "Region 2", "Region 3"],
       },
       {
         label: "Geolocation",
@@ -435,10 +537,10 @@ const BranchDetailsForm = ({
         name: "branch",
         placeholder: "Branch",
         required: true,
-        options: ["Jeddah", "Riyadh", "Dammam"],
+        options: dropdownOptions["branch"],
       },
     ],
-    []
+    [geoData, selectedRegion, selectedCity, branch, dropdownOptions]
   );
   console.log("customer", customer);
   const hasCheckboxUpdate =
@@ -605,7 +707,7 @@ const BranchDetailsForm = ({
                             <select
                               name={field.name}
                               value={branch?.[field.name]}
-                              onChange={handleBranchFieldChange}
+                              onChange={field.onChange || handleBranchFieldChange}
                               style={
                                 hasUpdate
                                   ? {
@@ -617,13 +719,13 @@ const BranchDetailsForm = ({
                                 (customerFormMode === "custDetailsEdit" &&
                                   !hasUpdate) ||
                                 (customerFormMode === "custDetailsAdd" &&
-                                  inApproval)
+                                  inApproval) || field.disabled
                               }
                               hidden={!isV(field.name)}
                             >
                               <option value="">{t(field.placeholder)}</option>
-                              {dropdownOptions[field.name]
-                                ? dropdownOptions[field.name].map(
+                              {field?.options
+                                ? field.options.map(
                                     (opt, idx) => (
                                       <option key={idx} value={opt}>
                                         {t(opt)}
