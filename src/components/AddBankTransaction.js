@@ -210,6 +210,8 @@ const AddBankTransaction = () => {
       description: "",
       bankDocuments: [],
       orderId: [],
+      customerVmcoRegion:customer?.region || null
+      
     }));
     setShowCustomerPopup(false);
   };
@@ -300,6 +302,7 @@ const AddBankTransaction = () => {
         companyNameEn: data.data.companyNameEn,
         companyNameAr: data.data.companyNameAr,
         amountTransferred: totalamount,
+              branchVmcoRegion:data?.data?.branchRegion || null,
         erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
         orderId: [data.data.id] || [],
       }));

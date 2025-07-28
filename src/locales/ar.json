@@ -557,6 +557,13 @@
   "View PDF": "عرض PDF",
   "Open Excel File": "فتح ملف Excel",
   "Download File": "تحميل الملف",
-  "Enter Machine Serial Number": "أدخل رقم السيريال للآلة"
-
+  "Bank Transfer":"التحويل البنكي",
+  "Enter Machine Serial Number": "أدخل رقم السيريال للآلة",
+  "Enter district":"أدخل المنطقة",
+  "Enter zone":"أدخل المنطقة",
+  "Enter city":"أدخل المدينة",
+  "Enter region":"أدخل المنطقة",
+  "najran":"نجران",
+  "new":"جديد",
+  "Select Location ":"اختر الموقع"
 }

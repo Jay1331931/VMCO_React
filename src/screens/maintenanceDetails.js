@@ -462,7 +462,7 @@ const serialNumberDebounceRef = useRef(null);
       });
       if (!response.ok) throw new Error('Failed to fetch customer details');
       const customer = await response.json();
-      return customer.city || customer.cityName || '';
+      return customer.ustomerRegion  || '';
     } catch (error) {
       console.error('Error fetching customer region:', error);
       return '';
@@ -471,7 +471,7 @@ const serialNumberDebounceRef = useRef(null);
 
   const getBranchRegion = () => {
     const branch = branches.find(b => b.id === ticket.branchId);
-    return branch ? (branch.city || branch.cityName || '') : '';
+    return branch ? (branch.city||branch.cityName || "" ) : '';
   };
 
   // Early returns must come after all hooks
