@@ -891,7 +891,7 @@ function CustomersOnboarding() {
           <div className="onboarding-footer">
             <div className="onboarding-footer-text">
               <span>{t("Already have an account?")}</span>
-              <a href="#" onClick={handleLogin}>
+              <a href="/login" >
                 {`\t ${t("Login")}`}
               </a>
             </div>

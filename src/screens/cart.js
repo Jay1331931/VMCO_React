@@ -2345,7 +2345,7 @@ function Cart() {
             </div>
             <div className="cart-main-content">
                 {isLoading ? (
-                    <div className="loading-indicator">Loading your cart items...</div>
+                    <div className="loading-indicator">{t("Loading your cart items...")}</div>
                 ) : error ? (
                     <div className="error-message">{error}</div>
                 ) : (
@@ -2361,7 +2361,7 @@ function Cart() {
                                         <FontAwesomeIcon
                                             icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
                                         />
-                                        <h3>{category.category}</h3>
+                                        <h3>{t(category.category)}</h3>
                                     </div>
                                     <span className="category-count">{category.items.length} {t("Items")}</span>
                                 </div>
