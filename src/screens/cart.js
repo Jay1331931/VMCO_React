@@ -164,8 +164,8 @@ function Cart() {
             // Declare category arrays before use
             const vmco = [];
             const shc = [];
-            const greenMast = [];
-            const naqui = [];
+            const gmtc = [];
+            const naqi = [];
             const dar = [];
 
             // ...existing code...
@@ -249,9 +249,9 @@ function Cart() {
                 } else if (entity === Constants.ENTITY.SHC.toLowerCase()) {
                     shc.push(formattedItem);
                 } else if (entity === Constants.ENTITY.GMTC.toLowerCase()) {
-                    greenMast.push(formattedItem);
+                    gmtc.push(formattedItem);
                 } else if (entity === Constants.ENTITY.NAQI.toLowerCase()) {
-                    naqui.push(formattedItem);
+                    naqi.push(formattedItem);
                 } else if (entity === Constants.ENTITY.DAR.toLowerCase()) {
                     dar.push(formattedItem);
                 } else {
@@ -261,10 +261,10 @@ function Cart() {
                         shc.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.GMTC.toLowerCase())) {
-                        greenMast.push(formattedItem);
+                        gmtc.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.NAQI.toLowerCase())) {
-                        naqui.push(formattedItem);
+                        naqi.push(formattedItem);
                     }
                     else if (category.includes(Constants.ENTITY.DAR.toLowerCase())) {
                         dar.push(formattedItem);
@@ -278,8 +278,8 @@ function Cart() {
             setCartItems([
                 { category: 'Vending Machine Company', items: vmco },
                 { category: 'Saudi Hospitality Company', items: shc },
-                { category: 'Green Mast Factory Ltd', items: greenMast },
-                { category: 'Naqi Company', items: naqui },
+                { category: 'Green Mast Factory Ltd', items: gmtc },
+                { category: 'Naqi Company', items: naqi },
                 { category: 'DAR Company', items: dar }
             ]);
 
@@ -289,8 +289,8 @@ function Cart() {
             console.log('Cart items successfully loaded:', {
                 vmco: vmco.length,
                 shc: shc.length,
-                greenMast: greenMast.length,
-                naqui: naqui.length,
+                gmtc: gmtc.length,
+                naqi: naqi.length,
                 dar: dar.length
             });
 
@@ -448,11 +448,91 @@ function Cart() {
         });
     };
 
-    const handleSelectPaymentMethod = (method) => {
+    const handleSelectPaymentMethod = async (method) => {
         setShowPaymentPopup(false);
 
+        // If payment method is Cash on Delivery, check for existing COD orders and limits
+        if (method.toLowerCase() === 'cash on delivery') {
+            try {
+                // Calculate current order total amount
+                let currentOrderTotal = 0;
+                pendingOrderItems.forEach(item => {
+                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                    const vatPercentage = Number(item.vatPercentage) || 0;
+                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                    currentOrderTotal += baseAmount + vatAmount;
+                });
 
-        // Check if this is SHC entity - if so, handle fresh/non-fresh splitting
+                // Check for existing open COD orders
+                const orderFilters = new URLSearchParams({
+                    filters: JSON.stringify({
+                        customerId: selectedCustomerId,
+                        status: 'Open',
+                        paymentMethod: 'Cash on Delivery'
+                    })
+                });
+
+                const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+
+                if (!existingOrdersResponse.ok) {
+                    throw new Error('Failed to fetch existing COD orders');
+                }
+
+                const existingOrdersResult = await existingOrdersResponse.json();
+                
+                // Calculate total amount of existing COD orders
+                let existingCODTotal = 0;
+                if (existingOrdersResult.data?.data) {
+                    existingOrdersResult.data.data.forEach(order => {
+                        existingCODTotal += Number(order.totalAmount) || 0;
+                    });
+                }
+
+                // Get customer's COD limit
+                const customerResponse = await fetch(`${API_BASE_URL}/payment-method-balances/id/${selectedCustomerId}`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+
+                if (!customerResponse.ok) {
+                    throw new Error('Failed to fetch customer COD limit');
+                }
+
+                const customerData = await customerResponse.json();
+                console.log('Customer COD limit data:', customerData);
+                const codLimit = Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
+
+                // Compare total with COD limit
+                if (existingCODTotal + currentOrderTotal >= codLimit) {
+                    console.log(`COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + currentOrderTotal}, current=${currentOrderTotal}, limit=${codLimit}`);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: t('COD Limit Reached'),
+                        text: t('The COD Limit has been reached. Please choose a different payment method.'),
+                        confirmButtonText: t('OK')
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking COD limits:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: t('Error'),
+                    text: t('Failed to verify COD limits. Please try again.'),
+                    confirmButtonText: t('OK')
+                });
+    
+                return;
+            }
+            console.log('COD limit check passed. continuing with order placement.');
+        }
+
+        // Proceed with order placement if COD limit check passes or if it's not COD
         const entity = getEntityFromCategory(pendingOrderCategory);
         if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
             handleSHCOrderSplitting(pendingOrderItems, pendingOrderCategory, method);
@@ -699,7 +779,7 @@ function Cart() {
                             orderIds.push(orderId);
                             await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
                         }
-                    } else if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
+                    } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
                         console.log(`Using determined payment method ${paymentMethod} for VMCO entity`);
                         const orderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', paymentMethod, false);
                         if (orderId) {
@@ -773,7 +853,7 @@ function Cart() {
                 }
 
                 // If a specific payment method was determined, use it directly
-                if (shcPaymentMethod && shcPaymentMethod !== 'Cash On Delivery') {
+                if (shcPaymentMethod && shcPaymentMethod !== 'Cash on Delivery') {
                     console.log(`Using determined payment method ${shcPaymentMethod} for SHC entity`);
                     await handleSHCOrderSplitting(categoryItems, categoryName, shcPaymentMethod);
                 } else {
@@ -810,7 +890,7 @@ function Cart() {
                     console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
                     return;
-                } else if (paymentMethod && paymentMethod !== 'Cash On Delivery') {
+                } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
                     console.log(`Using determined payment method ${paymentMethod} for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, paymentMethod, true);
                 } else {
@@ -895,7 +975,7 @@ function Cart() {
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
-            const pricingPolicy = customerData?.data?.pricingPolicy;
+            const pricingPolicy = customerData?.data?.entity?.pricingPolicy;
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
             let assignedTo = customerData?.data?.assignedTo;
@@ -934,8 +1014,10 @@ function Cart() {
                         customerId: selectedCustomerId,
                         branchId: selectedBranchId,
                         entity,
+                        selectedPaymentMethod: selectedPaymentMethod,
                         status: 'Open',
-                        productCategory: categoryName  // This ensures we only find orders with the exact same category
+                        productCategory: categoryName,  // This ensures we only find orders with the exact same category
+                        paymentMethod: selectedPaymentMethod
                     }
                     : {
                         customerId: selectedCustomerId,
@@ -1509,7 +1591,7 @@ function Cart() {
             // Updated delivery charges logic according to requirements
             if (isDeliveryChargesApplicable) {
                 // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
-                // For VMCO Consumables, SHC, Naqui, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
+                // For VMCO Consumables, SHC, Naqi, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
                 if (!isVmcoMachine && linesTotal <= 150) {
                     deliveryCharges = 20.00;
                 }
@@ -1556,6 +1638,7 @@ function Cart() {
                     categoryName
                 }
             });
+
             // Update the order with final calculated amounts
             const updateOrderPayload = {
                 id: orderId,
@@ -2118,14 +2201,14 @@ function Cart() {
                 if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
                     const codLimit = methodDetails.COD.limit || 0;
                     if (totalAmount <= codLimit) {
-                        console.log(`Cash On Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
-                        return 'Cash On Delivery';
+                        console.log(`Cash on Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
+                        return 'Cash on Delivery';
                     } else {
-                        console.log(`Total amount ${totalAmount} exceeds Cash On Delivery limit ${codLimit}, using Pre Payment`);
+                        console.log(`Total amount ${totalAmount} exceeds Cash on Delivery limit ${codLimit}, using Pre Payment`);
                         return 'Pre Payment';
                     }
                 } else {
-                    console.log('Cash On Delivery is not allowed, using Pre Payment');
+                    console.log('Cash on Delivery is not allowed, using Pre Payment');
                     return 'Pre Payment';
                 }
             }
