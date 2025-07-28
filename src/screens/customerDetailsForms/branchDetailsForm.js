@@ -55,13 +55,13 @@ const BranchDetailsForm = ({
   const [isBlocking, setIsBlocking] = useState(false);
   const [isUnblocking, setIsUnblocking] = useState(false);
   const { token, user, isAuthenticated, logout } = useAuth();
-    let customerFormMode;
+  let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";
   }
-const rbacMgr = new RbacManager(
+  const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
@@ -273,6 +273,29 @@ const rbacMgr = new RbacManager(
     // handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
   };
 
+  const handleCancelHours = (day) => {
+    // const {day, type, field, value} = e.target;
+    const updatedHours = {
+      ...hoursDetails,
+      [day]: {
+        ["operating"]: {
+          "from": "00:00",
+          "to": "00:00"
+        },
+        ["delivery"]: {
+          "from": "00:00",
+          "to": "00:00"
+        }
+      },
+    };
+
+    setHoursDetails(updatedHours);
+    updatedBranchData.current.hours = stringifyHours(updatedHours);
+    // setModifiedDays((prev) => ({ ...prev, [day]: true }));
+    // handleBranchFieldChange(branchId, "hours", stringifyHours(updatedHours));
+  };
+
+
   const applyAllHours = (sourceDay, type) => {
     const timeToApply = hoursDetails[sourceDay][type];
     const updatedHours = {
@@ -434,6 +457,7 @@ const rbacMgr = new RbacManager(
     "buildingName",
     "street",
     "city",
+    "district",
     "locationType",
     "region",
     "geolocation",
@@ -456,6 +480,7 @@ const rbacMgr = new RbacManager(
     "buildingName",
     "street",
     "city",
+    "district",
     "locationType",
     "region",
     "geolocation",
@@ -1098,6 +1123,7 @@ const rbacMgr = new RbacManager(
         mode={mode}
         handleHoursChange={handleHoursChange}
         applyAllHours={applyAllHours}
+        handleCancelHours={handleCancelHours}
         workflowInstanceId={customer?.workflowInstanceId}
       />
 
@@ -1166,7 +1192,8 @@ const rbacMgr = new RbacManager(
                     {isSavingChanges ? t("Saving...") : t("Save Changes")}
                   </button>
 
-                  {isV("btnBranchBlock") && branch?.branchStatus !== "blocked" ? (
+                  {isV("btnBranchBlock") &&
+                  branch?.branchStatus !== "blocked" ? (
                     <button
                       className="block"
                       disabled={

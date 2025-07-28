@@ -2212,6 +2212,7 @@
   width: 250px;
   height: 40px;
   font-size: small;
+  border-radius: 8px;
 }
 .onboarding-container .form-group select {
   width: 250px;
