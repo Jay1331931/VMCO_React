@@ -746,9 +746,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.DAR]?.limit || "(empty)"}
                     </div>
                   )}
-                  {formErrors.DARCreditLimit && (
-          <div className="error">{formErrors.DARCreditLimit}</div>
-        )}
+                {formErrors.DARCreditLimit && (
+                  <div className="error">{formErrors.DARCreditLimit}</div>
+                )}
               </>
             )}
           </div>
@@ -805,9 +805,9 @@ function FinancialInformation({
                         ?.credit?.[Constants.ENTITY.DAR]?.period || "(empty)"}
                     </div>
                   )}
-                  {formErrors.DARCreditPeriod && (
-          <div className="error">{formErrors.DARCreditPeriod}</div>
-        )}
+                {formErrors.DARCreditPeriod && (
+                  <div className="error">{formErrors.DARCreditPeriod}</div>
+                )}
               </>
             )}
           </div>
@@ -895,7 +895,7 @@ function FinancialInformation({
                     </div>
                   )}
                 {formErrors.VMCOCreditLimit && (
-          <div className="error">{formErrors.VMCOCreditLimit}</div>
+                  <div className="error">{formErrors.VMCOCreditLimit}</div>
                 )}
               </>
             )}
@@ -954,7 +954,7 @@ function FinancialInformation({
                     </div>
                   )}
                 {formErrors.VMCOCreditPeriod && (
-          <div className="error">{formErrors.VMCOCreditPeriod}</div>
+                  <div className="error">{formErrors.VMCOCreditPeriod}</div>
                 )}
               </>
             )}
@@ -1042,7 +1042,7 @@ function FinancialInformation({
                     </div>
                   )}
                 {formErrors.SHCCreditLimit && (
-          <div className="error">{formErrors.SHCCreditLimit}</div>
+                  <div className="error">{formErrors.SHCCreditLimit}</div>
                 )}
               </>
             )}
@@ -1101,9 +1101,8 @@ function FinancialInformation({
                     </div>
                   )}
                 {formErrors.SHCCreditPeriod && (
-          <div className="error">{formErrors.SHCCreditPeriod}</div>
+                  <div className="error">{formErrors.SHCCreditPeriod}</div>
                 )}
-
               </>
             )}
           </div>
@@ -1193,7 +1192,6 @@ function FinancialInformation({
                 {formErrors.NAQICreditLimit && (
                   <div className="error">{formErrors.NAQICreditLimit}</div>
                 )}
-
               </>
             )}
           </div>
@@ -1401,7 +1399,6 @@ function FinancialInformation({
                 {formErrors.GMTCCreditPeriod && (
                   <div className="error">{formErrors.GMTCCreditPeriod}</div>
                 )}
-                
               </>
             )}
           </div>

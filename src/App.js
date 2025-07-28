@@ -25,14 +25,14 @@ import AddBankTransaction from "./components/AddBankTransaction";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OpationsPage from "./components/Opationspage";
-
+import Constants from "./constants";
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginScreen />} />
         <Route path="/orders" element={<Orders />} />
-        <Route path="/customers" element={<Customers />} />
+        <Route path="/customers" element={<ProtectedRoute allowedRoles={[Constants.DESIGNATIONS.OPS_COORDINATOR, Constants.DESIGNATIONS.OPS_MANAGER, Constants.DESIGNATIONS.AREA_SALES_MANAGER, Constants.DESIGNATIONS.SALES_EXECUTIVE ]} ><Customers /></ProtectedRoute>} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/support" element={<Support />} />
         <Route path="/maintenance" element={<Maintenance />} />

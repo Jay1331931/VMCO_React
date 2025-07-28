@@ -36,11 +36,14 @@ import { useNavigate } from "react-router-dom";
 import constants from "../constants";
 import LoadingSpinner from "../components/LoadingSpinner";
 import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionConfirmation";
+import ProtectedRoute from "../components/ProtectedRoute";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const fetchCurrentDataOfCustomerContacts = async (customerId) => {
   let contactsData = {};
-
+if(!customerId) {
+  // return <Navigate to="*" replace />;
+}
   const responseContacts = await fetch(
     `${API_BASE_URL}/customer-contacts/${customerId}`,
     {
@@ -56,9 +59,10 @@ const fetchCurrentDataOfCustomerContacts = async (customerId) => {
     console.log("Current customer contacts data:", contactsDataJson.data);
     return contactsData;
   } else {
-    throw new Error(
-      contactsData.data?.message || "Failed to fetch customer contacts"
-    );
+    // throw new Error(
+    //   contactsData.data?.message || "Failed to fetch customer contacts"
+    // );
+
   }
 };
 
@@ -81,10 +85,10 @@ const fetchCurrentPaymentMetods = async (customerId) => {
     );
     return paymentMethodsDataJson.data;
   } else {
-    throw new Error(
-      paymentMethodsData.data?.message ||
-        "Failed to fetch customer payment methods"
-    );
+    // throw new Error(
+    //   paymentMethodsData.data?.message ||
+    //     "Failed to fetch customer payment methods"
+    // );
   }
 };
 
@@ -482,6 +486,9 @@ function CustomerDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
   useEffect(() => {
     const fetchData = async () => {
+      if(!customerId) {
+        navigate("/*")
+      }
       const resp = await fetchCurrentDataOfCustomer(customerId);
       const customerContacts = await fetchCurrentDataOfCustomerContacts(
         customerId
@@ -1683,11 +1690,12 @@ function CustomerDetails() {
       };
       var dataToBeValidated = {};
       if (customerData?.customerStatus === "pending") {
-        dataToBeValidated = { ...customerData, ...customerContactsData };
+        dataToBeValidated = { ...customerData, ...customerContactsData,};
       } else {
         dataToBeValidated = {
           ...mergedData?.updates?.customer,
           ...mergedData?.updates?.contacts,
+          methodDetails: mergedData?.updates?.methodDetails ? mergedData?.updates?.methodDetails : {},
         };
       }
       console.log("Data to be validated:", dataToBeValidated);
@@ -2037,7 +2045,8 @@ function CustomerDetails() {
                     className={`tab ${
                       activeTab === "Financial Information" ? "active" : ""
                     }`}
-                    onClick={() => setActiveTab("Financial Information")}
+                    onClick={() =>
+                      setActiveTab("Financial Information")}
                   >
                     {t("Financial Information")}
                     {financialInformationUpdateCount > 0 && mode === "edit" && (

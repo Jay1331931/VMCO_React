@@ -595,5 +595,13 @@
   "There are items in the cart for branch": "هناك عناصر في السلة للفرع ",
   "Do you want to discard them?": "هل تريد تجاهلها؟",
   "Yes, discard": "نعم، تجاهل",
-  "No, keep": "لا، احتفظ بالعناصر"
+  "No, keep": "لا، احتفظ بالعناصر",
+  "Vending Machine Company": "شركة آلات البيع",
+  "Saudi Hospitability Company Ltd": "شركة الضيافة السعودية",
+  "Loading your cart items...": "جارٍ تحميل عناصر سلتك...",
+  "Item Removed": "تمت إزالة العنصر",
+  "The item has been successfully removed from your cart.": "تمت إزالة العنصر بنجاح من سلتك.",
+  "Insufficient Balance": "رصيد غير كافٍ",
+  "Insufficient Balance! Your current credit balance is: ": "رصيد غير كافٍ! رصيدك الحالي هو:"
+
 }
