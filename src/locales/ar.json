@@ -602,6 +602,21 @@
   "Item Removed": "تمت إزالة العنصر",
   "The item has been successfully removed from your cart.": "تمت إزالة العنصر بنجاح من سلتك.",
   "Insufficient Balance": "رصيد غير كافٍ",
-  "Insufficient Balance! Your current credit balance is: ": "رصيد غير كافٍ! رصيدك الحالي هو:"
+  "Insufficient Balance! Your current credit balance is: ": "رصيد غير كافٍ! رصيدك الحالي هو:",
+  "Machines": "الآلات",
+  "Consumables": "المستهلكات",
+  "Fresh": "طازج",
+  "Frozen": "مجمد",
+  "Click to view": "انقر لعرض",
+  "Pricing Plan": "خطة التسعير",
+  "Delivery date will be updated soon": "سيتم تحديث تاريخ التسليم قريبًا",
+  "Delivery Date will be updated later": "سيتم تحديث تاريخ التسليم لاحقًا",
+  "New Order": "طلب جديد",
+  "Select Category": "اختر الفئة",
+  "Select a Customer": "اختر عميلًا",
+  "Customer ID": "معرف العميل",
+  "Search customers...": "البحث عن عملاء...",
+  "Search branches...": "البحث عن فروع..."
+
 
 }

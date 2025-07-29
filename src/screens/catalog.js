@@ -698,19 +698,17 @@ function Catalog() {
           : otherBranchId;
         // Make sure this function is already marked `async` (it looks like it is)
 
-        const { isConfirmed } = await Swal.fire({
-          icon: "warning",
-          title: t("Discard items?"),
-          html: t(
-            "There are items in the cart for branch <strong>{{branch}}</strong>.<br>Do you want to discard them?",
-            { branch: otherBranchLabel }
-          ),
-          showCancelButton: true,
-          focusCancel: true,
-          confirmButtonText: t("Yes, discard"),
-          cancelButtonText: t("No, keep"),
-          reverseButtons: true,
-        });
+       const { isConfirmed } = await Swal.fire({
+  icon: "warning",
+  title: t("Discard items?"),
+  html: `${t("There are items in the cart for branch")} <strong>${otherBranchLabel}</strong>.<br>${t("Do you want to discard them?")}`,
+  showCancelButton: true,
+  focusCancel: true,
+  confirmButtonText: t("Yes, discard"),
+  cancelButtonText: t("No, keep"),
+  reverseButtons: true,
+});
+
 
         if (isConfirmed) {
           try {
