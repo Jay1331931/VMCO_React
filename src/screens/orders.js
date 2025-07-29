@@ -284,7 +284,7 @@ function Orders() {
         Swal.fire({
           title: t("Payment Link Generated"),
           text: t("A payment link has been sent to the customer's email."),
-          icon: "success",
+          icon: t("success"),
           confirmButtonText: t("OK"),
         });
       }
@@ -296,7 +296,7 @@ function Orders() {
       Swal.fire({
         title: t("Error"),
         text: t("Failed to generate payment link. Please try again later."),
-        icon: "error",
+        icon: t("error"),
         confirmButtonText: t("OK"),
       });
     }
@@ -323,7 +323,7 @@ function Orders() {
         Swal.fire({
           title: t("Custom Orders"),
           text: t("Custom Orders clicked"),
-          icon: "info",
+          icon: t("info"),
           confirmButtonText: "OK",
         }),
       // alert('Custom Orders clicked')
@@ -345,12 +345,12 @@ function Orders() {
 
         if (item.entity === "VMCO") {
           badge = item.isMachine
-            ? <span className="badge badge-blue">Machines</span>
-            : <span className="badge badge-blue">Consumables</span>;
+            ? <span className="badge badge-blue">{t("Machines")}</span>
+            : <span className="badge badge-blue">{t("Consumables")}</span>;
         } else if (item.entity === "SHC") {
           badge = item.isFresh
-            ? <span className="badge badge-blue">Fresh</span>
-            : <span className="badge badge-blue">Frozen</span>;
+            ? <span className="badge badge-blue">{t("Fresh")}</span>
+            : <span className="badge badge-blue">{t("Frozen")}</span>;
         }
 
         return (
@@ -410,12 +410,12 @@ function Orders() {
 
         if (item.entity === "VMCO") {
           badge = item.isMachine
-            ? <span className="badge badge-blue">Machines</span>
-            : <span className="badge badge-blue">Consumables</span>;
+             ? <span className="badge badge-blue">{t("Machines")}</span>
+            : <span className="badge badge-blue">{t("Consumables")}</span>;
         } else if (item.entity === "SHC") {
           badge = item.isFresh
-            ? <span className="badge badge-yellow">Fresh</span>
-            : <span className="badge badge-yellow">Frozen</span>;
+            ?  <span className="badge badge-blue">{t("Fresh")}</span>
+            : <span className="badge badge-blue">{t("Frozen")}</span>;
         }
 
         return (

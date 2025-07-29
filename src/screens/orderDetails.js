@@ -2838,7 +2838,7 @@ function OrderDetails() {
                         {formMode === 'add' ? (
                           <input
                             name="paymentMethod"
-                            value={formData.paymentMethod || ''}
+                            value={t(formData.paymentMethod) || ''}
                             readOnly
                             placeholder={t('Click Save to select')}
                             style={{ background: '#f9f9f9', cursor: 'not-allowed' }}
@@ -2847,7 +2847,7 @@ function OrderDetails() {
                         ) : (
                           <input
                             name="paymentMethod"
-                            value={formData.paymentMethod || ''}
+                            value={t(formData.paymentMethod) || ''}
                             disabled
                           />
                         )}
@@ -2929,7 +2929,7 @@ function OrderDetails() {
                           <input
                             type="text"
                             name="expectedDeliveryDate"
-                            value="Delivery Date will be updated later"
+                            value={t("Delivery Date will be updated later")}
                             disabled
                             readOnly
                             style={{ background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }}
@@ -2956,7 +2956,7 @@ function OrderDetails() {
                             <input
                               type="text"
                               name="expectedDeliveryDate"
-                              value="Delivery date will be updated soon"
+                              value={t("Delivery date will be updated soon")}
                               disabled
                               readOnly
                               style={{ background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }}
@@ -2977,7 +2977,7 @@ function OrderDetails() {
                         >
                           {pricingPolicyOptions.map((pricingPolicy, index) => (
                             <option key={index} value={pricingPolicy}>
-                              {pricingPolicy}
+                              {t(pricingPolicy)}
                             </option>
                           ))}
                         </select>
@@ -3061,7 +3061,7 @@ function OrderDetails() {
                             className="maintenance-image-placeholder"
                             style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
                             onClick={() => img && setPopupImage(img)}
-                            title={img ? 'Click to view' : ''}
+                            title={img ? t('Click to view') : ''}
                           />
                         ))}
                       </div>
