@@ -781,7 +781,7 @@ function OrderDetails() {
         const orderUpdatePayload = {
           total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
           isMachine: hasAnyMachine,
-          isFresh: hasAnyFresh
+          isFresh: hasAnyFresh,
         };
 
         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
@@ -1249,7 +1249,8 @@ function OrderDetails() {
             total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh,
-            sampleOrder: sampleMode ? true : false
+            sampleOrder: sampleMode ? true : false,
+            status: sampleMode ? 'Approved' : formData.status,
           };
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
@@ -2417,7 +2418,6 @@ function OrderDetails() {
   const handleDialogSubmit = async (comment) => {
     // Build workflowData payload (add updates if needed, similar to customersDetails)
     let updates = { ...((location.state?.workflowData && location.state.workflowData.updates) || {}) };
-    // If you need to add more update logic for orders, do it here
 
     try {
       // Ensure we have the latest order data
@@ -3198,9 +3198,142 @@ function OrderDetails() {
               <CommentPopup
                 isOpen={isCommentPanelOpen}
                 setIsOpen={setIsCommentPanelOpen}
-                externalComments={approvalHistory ? approvalHistory : []}
+                externalComments={(() => {
+                  const comments = [...(approvalHistory || [])];
+                  if (formData.feedback) {
+                    try {
+                      const feedbackObj = typeof formData.feedback === 'string' ? 
+                        JSON.parse(formData.feedback) : formData.feedback;
+
+                      if (Array.isArray(feedbackObj)) {
+                        // Handle array of feedback comments
+                        feedbackObj.forEach(feedback => {
+                          if (feedback.comment) {
+                            comments.unshift({
+                              action: "Feedback",
+                              date: formatDate(feedback.createdAt || new Date(), "YYYY-MM-DD HH:MM"),
+                              message: feedback.comment,
+                              userName: feedback.createdBy || t("Feedback"),
+                              userId: feedback.userId || "system"
+                            });
+                          }
+                        });
+                      } else if (feedbackObj.comment) {
+                        // Handle single feedback object for backward compatibility
+                        comments.unshift({
+                          action: "Feedback", 
+                          date: formatDate(feedbackObj.createdAt || formData.updatedAt || new Date(), "YYYY-MM-DD HH:MM"),
+                          message: feedbackObj.comment,
+                          userName: feedbackObj.createdBy || t("Feedback"),
+                          userId: feedbackObj.userId || "system"
+                        });
+                      }
+                    } catch (e) {
+                      console.error('Error parsing feedback:', e);
+                    }
+                  }
+                  return comments;
+                })()}
                 currentUser={user}
-                isVisible={fromApproval}
+                isVisible={fromApproval || formData.sampleOrder}
+                onAddComment={async (comment) => {
+                  if (!comment || !user || !(fromApproval || formData.sampleOrder)) return;
+                  
+                  // Create new feedback object
+                  const newFeedback = {
+                    comment,
+                    createdBy: user.userName,
+                    userId: user.userId,
+                    createdAt: new Date().toISOString()
+                  };
+
+                  // Update local state first
+                  const currentFeedback = formData.feedback ? 
+                    (typeof formData.feedback === 'string' ? 
+                      JSON.parse(formData.feedback) : formData.feedback) : [];
+                  
+                  const updatedFeedback = Array.isArray(currentFeedback) ?
+                    [newFeedback, ...currentFeedback] : [newFeedback];
+                  
+                  setFormData(prev => ({
+                    ...prev,
+                    feedback: updatedFeedback
+                  }));
+
+                  try {
+                    // Save to backend
+                    const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/orders/id/${formData.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        feedback: updatedFeedback
+                      })
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Failed to save feedback');
+                    }
+
+                    console.log('Feedback saved successfully');
+                  } catch (error) {
+                    console.error('Error saving feedback:', error);
+                    // Optionally show error notification
+                    Swal.fire({
+                      title: t('Error'),
+                      text: t('Failed to save feedback. Please try again.'),
+                      icon: 'warning',
+                      toast: true,
+                      position: 'bottom-end',
+                      showConfirmButton: false,
+                      timer: 3000
+                    });
+                  }
+                  if (formData.sampleOrder) {
+                    const feedbackObject = {
+                      comment: comment,
+                      createdBy: user.name,
+                    };
+                    
+                    try {
+                      const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
+                        method: 'PATCH',
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ feedback: JSON.stringify(feedbackObject) }),
+                        credentials: 'include'
+                      });
+
+                      if (!response.ok) {
+                        throw new Error('Failed to update feedback');
+                      }
+
+                      // Update local state
+                      setFormData(prev => ({
+                        ...prev,
+                        feedback: JSON.stringify(feedbackObject)
+                      }));
+
+                      // Show success message
+                      Swal.fire({
+                        icon: 'success',
+                        title: t('Comment Added'),
+                        text: t('Feedback updated successfully'),
+                        confirmButtonText: t('OK')
+                      });
+                    } catch (error) {
+                      console.error('Error updating feedback:', error);
+                      Swal.fire({
+                        icon: 'error',
+                        title: t('Error'),
+                        text: t('Failed to update feedback: ') + error.message,
+                        confirmButtonText: t('OK')
+                      });
+                    }
+                  }
+                }}
               />
             </div>
             {/* Rest of the component with modals and popups */}
