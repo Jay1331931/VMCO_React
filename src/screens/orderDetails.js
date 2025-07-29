@@ -427,11 +427,12 @@ function OrderDetails() {
         const orderFilters = new URLSearchParams({
           filters: JSON.stringify({
             customerId: formData.customerId,
+            entity: formData.entity,
             status: 'Open',
             paymentMethod: 'Cash on Delivery'
           })
         });
-
+        console.log(`Fetching existing orders with filters: ${orderFilters}`);
         const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },

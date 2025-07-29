@@ -463,14 +463,16 @@ function Cart() {
                     currentOrderTotal += baseAmount + vatAmount;
                 });
 
-                // Check for existing open COD orders
+                // Check for existing open COD orders for that entity
                 const orderFilters = new URLSearchParams({
                     filters: JSON.stringify({
                         customerId: selectedCustomerId,
                         status: 'Open',
+                        entity: getEntityFromCategory(pendingOrderCategory),
                         paymentMethod: 'Cash on Delivery'
                     })
                 });
+                console.log(`Checking existing COD orders with filters: ${orderFilters.toString()}`);
 
                 const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
@@ -1961,7 +1963,7 @@ function Cart() {
         }
 
         // If cart items are empty, clear filtered cart items
-        if (cartItems.length === 0) {
+        if (cartItems?.length === 0) {
             console.log("Cart items are empty, clearing filtered cart items");
             setFilteredCartItems([]);
             return;
@@ -2088,7 +2090,7 @@ function Cart() {
             }
         ];
 
-        setCartItems(items);
+        // setCartItems(items);
     };
 
     // Helper function to determine payment method for non-machine products
