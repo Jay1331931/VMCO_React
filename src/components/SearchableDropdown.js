@@ -130,7 +130,7 @@ function SearchableDropdown({
                     }
                     aria-disabled={isOptDisabled}
                   >
-                    {typeof opt === "object" ? t(opt.name) : t(opt)}
+                    {typeof opt === "object" ? opt.name : opt}
                   </div>
                 );
               })

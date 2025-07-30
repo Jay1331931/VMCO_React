@@ -185,7 +185,7 @@ const ContactSection = ({
                   )}
                   {formErrors[field] && (
                 <div className="current-value">
-                <span className="error-message" style={{ fontSize: "12px"}}>{formErrors[field]}</span>
+                <span className="error-message" style={{ fontSize: "12px"}}>{t(formErrors[field])}</span>
               </div>
               )}
                 </div>)

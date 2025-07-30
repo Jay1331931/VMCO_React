@@ -141,7 +141,7 @@ const FinalSubmissionConfirmation = ({
           required
           disabled={mode === "edit" || isE("declarationName")}
         />
-        {formErrors?.declarationName && <div className="error">{formErrors.declarationName}</div>}
+        {formErrors?.declarationName && <div className="error">{t(formErrors.declarationName)}</div>}
       </div>
       
       <div className="form-group">
@@ -253,7 +253,7 @@ const FinalSubmissionConfirmation = ({
                   </div>
                 )}
                 {formErrors?.declarationSignature && (
-                  <div className="error">{formErrors.declarationSignature}</div>
+                  <div className="error">{t(formErrors.declarationSignature)}</div>
                 )}
               </div>
             </div>

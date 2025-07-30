@@ -2047,8 +2047,14 @@ function Cart() {
                         }
                     });
                 }
-
-                setEntityDescriptions(descriptionMap);
+                
+               
+                setEntityDescriptions(result.data?.map(entity => 
+                    ({
+                        descriptionLc: entity.descriptionLc ,
+                        description: entity.description
+                    })
+  ));
 
                 // Initialize cart items with these descriptions
                 initializeCartItems(descriptionMap);
@@ -2332,7 +2338,11 @@ function Cart() {
             return 0;
         }
     };
-
+const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
+  const match = entityDescriptions.find(desc => desc.description.toLowerCase() === categoryName.toLowerCase());
+  if (!match) return categoryName; 
+  return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
+};
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
@@ -2363,7 +2373,8 @@ function Cart() {
                                         <FontAwesomeIcon
                                             icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
                                         />
-                                        <h3>{t(category.category)}</h3>
+                                       <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
+
                                     </div>
                                     <span className="category-count">{category.items.length} {t("Items")}</span>
                                 </div>

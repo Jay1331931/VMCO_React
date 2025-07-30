@@ -86,8 +86,9 @@ const BranchDetailsForm = ({
 
       const result = await response.json(); // Don't forget 'await' here
 
-      const options = result.data.map((item) => item.value);
-
+         const options = result.data.map((item) => {
+  return { value: item.value, valueLc: item.valueLc };
+});
       return options;
     } catch (err) {
       console.error("Error fetching options:", err);
@@ -547,7 +548,10 @@ const BranchDetailsForm = ({
         name: "locationType",
         placeholder: "Location Type",
         required: true,
-        options: dropdownOptions["locationType"],
+        options: (dropdownOptions?.locationType || []).map(item => ({
+          value: item.value,
+          name: i18n.language === "ar" ? item.valueLc : item.value
+        }))
       },
       {
         type: "text",
@@ -570,7 +574,10 @@ const BranchDetailsForm = ({
         name: "branch",
         placeholder: "Branch",
         required: true,
-        options: dropdownOptions["branch"],
+        options: (dropdownOptions?.branch || []).map(item => ({
+          value: item.value,
+          name: i18n.language === "ar" ? item.valueLc : item.value
+        }))
       },
     ],
     [geoData, selectedRegion, selectedCity, branch, dropdownOptions]
@@ -795,7 +802,7 @@ const BranchDetailsForm = ({
               {formErrors[field.name] && (
                 <div className="current-value">
                   <span className="error-message" style={{ fontSize: "12px" }}>
-                    {formErrors[field.name]}
+                    {t(formErrors[field.name])} 
                   </span>
                 </div>
               )}

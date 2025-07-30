@@ -26,7 +26,7 @@ function BusinessDetails({
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
 }) {
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const rbacMgr = new RbacManager(
@@ -53,7 +53,7 @@ function BusinessDetails({
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const [employeeListWithManagers, setEmployeeListWithManagers] = useState([]);
   const [employeeList, setEmployeeList] = useState([]);
-
+let currentLanguage=i18n.language;
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -63,13 +63,14 @@ function BusinessDetails({
         await getOptionsFromEmployeesWithManager(customerData?.branch);
 
       const listOfEmployees = await getOptionsFromEmployees();
+     
       setBasicMasterLists(listOfBasicsMaster);
       setEmployeeListWithManagers(listOfEmployeesWithManagers);
       setEmployeeList(listOfEmployees);
     };
     fetchData();
     setTabsHeight("auto");
-  }, [customerData?.branch]);
+  }, [customerData?.branch,currentLanguage]);
 
   // Example state for conditional fields
   const [typeOfBusiness, setTypeOfBusiness] = useState(
@@ -241,7 +242,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.companyNameEn && (
-          <div className="error">{formErrors.companyNameEn}</div>
+          <div className="error">{t(formErrors.companyNameEn)}</div>
         )}
       </div>
 
@@ -293,7 +294,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.companyNameAr && (
-          <div className="error">{formErrors.companyNameAr}</div>
+          <div className="error">{t(formErrors.companyNameAr)}</div>
         )}
       </div>
 
@@ -342,7 +343,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.crNumber && (
-          <div className="error">{formErrors.crNumber}</div>
+          <div className="error">{t(formErrors.crNumber)}</div>
         )}
       </div>
 
@@ -391,7 +392,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.vatNumber && (
-          <div className="error">{formErrors.vatNumber}</div>
+          <div className="error">{t(formErrors.vatNumber)}</div>
         )}
       </div>
 
@@ -445,7 +446,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.governmentRegistrationNumber && (
-          <div className="error">{formErrors.governmentRegistrationNumber}</div>
+          <div className="error">{t(formErrors.governmentRegistrationNumber)}</div>
         )}
       </div>
 
@@ -499,7 +500,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.baladeahLicenseNumber && (
-          <div className="error">{formErrors.baladeahLicenseNumber}</div>
+          <div className="error">{t(formErrors.baladeahLicenseNumber)}</div>
         )}
       </div>
 
@@ -517,9 +518,18 @@ function BusinessDetails({
         </label>
         <SearchableDropdown
           name="companyType"
-          options={basicMasterLists?.companyType || []}
+          options={
+            (basicMasterLists?.companyType || []).map(item => ({
+              value: item.value,
+              name: currentLanguage === "ar" ? item.valueLc : item.value
+            }))
+          }
           value={customerData?.companyType || ""}
-          onChange={onChangeCustomerData}
+          onChange={e => {
+            onChangeCustomerData({
+              target: { name: "companyType", value: e.target.value }
+            });
+          }}
           disabled={
             originalCustomerData &&
             customerData &&
@@ -546,7 +556,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.companyType && (
-          <div className="error">{formErrors.companyType}</div>
+          <div className="error">{t(formErrors.companyType)}</div>
         )}
       </div>
       {/* Delivery Locations Dropdown */}
@@ -564,9 +574,20 @@ function BusinessDetails({
         </label>
         <SearchableDropdown
           name="deliveryLocations"
-          options={basicMasterLists?.deliveryLocations || []}
-          value={customerData?.deliveryLocations || ""}
-          onChange={onChangeCustomerData}
+            options={
+    (basicMasterLists?.deliveryLocations || []).map(item => ({
+      value: item.value,
+      name: currentLanguage === "ar" ? item.valueLc : item.value
+    }))
+  }
+  value={customerData?.deliveryLocations || ""}
+  onChange={e => {
+    // e.target.value will be the actual value, not the localized label
+    onChangeCustomerData({
+      target: { name: "deliveryLocations", value: e.target.value }
+    });
+  }}
+      
           disabled={
             originalCustomerData &&
             customerData &&
@@ -596,7 +617,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.deliveryLocations && (
-          <div className="error">{formErrors.deliveryLocations}</div>
+          <div className="error">{t(formErrors.deliveryLocations)}</div>
         )}
       </div>
       {/* Type of Business Dropdown */}
@@ -613,9 +634,18 @@ function BusinessDetails({
         </label>
         <SearchableDropdown
           name="typeOfBusiness"
-          options={basicMasterLists?.typeOfBusiness || []}
+          options={
+            (basicMasterLists?.typeOfBusiness || []).map(item => ({
+              value: item.value,
+              name: currentLanguage === "ar" ? item.valueLc : item.value
+            }))
+          }
           value={typeOfBusiness}
-          onChange={onChangeCustomerData}
+          onChange={e => {
+            onChangeCustomerData({
+              target: { name: "typeOfBusiness", value: e.target.value }
+            });
+          }}
           disabled={
             originalCustomerData &&
             customerData &&
@@ -643,7 +673,7 @@ function BusinessDetails({
             </div>
           )}
         {formErrors.typeOfBusiness && (
-          <div className="error">{formErrors.typeOfBusiness}</div>
+          <div className="error">{t(formErrors.typeOfBusiness)}</div>
         )}
       </div>
 
@@ -697,7 +727,7 @@ function BusinessDetails({
               </div>
             )}
           {formErrors.typeOfBusinessOther && (
-            <div className="error">{formErrors.typeOfBusinessOther}</div>
+            <div className="error">{t(formErrors.typeOfBusinessOther)}</div>
           )}
         </div>
       ) : (
@@ -1129,7 +1159,7 @@ function BusinessDetails({
                   </div>
                 )}
               {formErrors.entity && (
-                <div className="error">{formErrors.entity}</div>
+                <div className="error">{t(formErrors.entity)}</div>
               )}
             </div>
           )}
@@ -1152,9 +1182,18 @@ function BusinessDetails({
           </label>
           <SearchableDropdown
             name="branch"
-            options={basicMasterLists?.branch || []}
+            options={
+              (basicMasterLists?.branch || []).map(item => ({
+                value: item.value,
+                name: currentLanguage === "ar" ? item.valueLc : item.value
+              }))
+            }
             value={customerData?.branch || ""}
-            onChange={onChangeCustomerData}
+            onChange={e => {
+              onChangeCustomerData({
+                target: { name: "branch", value: e.target.value }
+              });
+            }}
             disabled={
               originalCustomerData &&
               customerData &&
@@ -1182,7 +1221,7 @@ function BusinessDetails({
               </div>
             )}
           {formErrors.branch && (
-            <div className="error">{formErrors.branch}</div>
+            <div className="error">{t(formErrors.branch)}</div>
           )}
         </div>
       )}
@@ -1246,7 +1285,7 @@ function BusinessDetails({
                   </div>
                 )}
               {formErrors.assignedTo && (
-                <div className="error">{formErrors.assignedTo}</div>
+                <div className="error">{t(formErrors.assignedTo)}</div>
               )}
             </div>
           )}
@@ -1319,7 +1358,7 @@ function BusinessDetails({
               )}
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`] && (
               <div className="error">
-                {formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`]}
+                {t(formErrors[`assignedToEntityWise.${Constants.ENTITY.DAR}`])}
               </div>
             )}
           </div>
@@ -1391,7 +1430,7 @@ function BusinessDetails({
               )}
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`] && (
               <div className="error">
-                {formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`]}
+                {t(formErrors[`assignedToEntityWise.${Constants.ENTITY.VMCO}`])}
               </div>
             )}
           </div>
@@ -1462,7 +1501,7 @@ function BusinessDetails({
               )}
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`] && (
               <div className="error">
-                {formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`]}
+                {t(formErrors[`assignedToEntityWise.${Constants.ENTITY.SHC}`])}
               </div>
             )}
           </div>
@@ -1533,7 +1572,7 @@ function BusinessDetails({
               )}
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`] && (
               <div className="error">
-                {formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`]}
+                {t(formErrors[`assignedToEntityWise.${Constants.ENTITY.NAQI}`])}
               </div>
             )}
           </div>
@@ -1605,7 +1644,7 @@ function BusinessDetails({
               )}
             {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`] && (
               <div className="error">
-                {formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`]}
+                {t(formErrors[`assignedToEntityWise.${Constants.ENTITY.GMTC}`])}
               </div>
             )}
           </div>
