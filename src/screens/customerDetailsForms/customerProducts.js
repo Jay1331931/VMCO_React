@@ -390,7 +390,11 @@ function Products({ customerId, customer, setTabsHeight }) {
     const options = Array.from(
       new Set(
         products
-          ?.filter((p) => !categoryFilter || p.category === categoryFilter)
+          ?.filter(
+            (p) =>
+              !categoryFilter ||
+              p.category.toLowerCase() === categoryFilter.toLowerCase()
+          )
           .map((p) => p.subCategory)
           .filter(Boolean)
       )
