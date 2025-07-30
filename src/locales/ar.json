@@ -641,7 +641,7 @@
   "This field is required": "هذا الحقل مطلوب",
   "Invalid mobile number format": "تنسيق رقم الهاتف المحمول غير صالح",
   "Branch saved successfully.": "تم حفظ الفرع بنجاح.",
-  "Branch is currently under approval": "الفرع قيد الموافقة حاليًا."
-  
+  "Branch is currently under approval": "الفرع قيد الموافقة حاليًا.",
+  "Password reset successful! Redirecting...": "تم إعادة تعيين كلمة المرور بنجاح! جارٍ التوجيه..." 
 
 }
