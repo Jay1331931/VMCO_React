@@ -977,7 +977,7 @@ function Cart() {
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
-            const pricingPolicy = customerData?.data?.entity?.pricingPolicy;
+            const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
             let assignedTo = customerData?.data?.assignedTo;
