@@ -19,7 +19,6 @@
   "Invites": "دعوة",
   "Export": "تصدير",
   "Import": "استيراد",
-  "All": "الكل",
   "My Approval": "موافقتي",
   "Order #": "رقم الطلب",
   "Order Number": "رقم الطلب",
@@ -229,8 +228,6 @@
   "Detecting your location...": "يتم اكتشاف موقعك...",
   "Trading": "تجاري",
   "Non-trading": "غير تجاري",
-  "Riyadh": "الرياض",
-  "Jeddah": "جدة",
   "Maintenance Charges": "رسوم الصيانة",
   "Warranty Date": "تاريخ الضمان",
   "Machine Serial Number": "رقم السيريال للآلة",
@@ -632,6 +629,14 @@
   "Please select a customer before choosing an entity.": "يرجى اختيار عميل قبل اختيار كيان.",
   "Click Save to select": "انقر على حفظ للاختيار",
   "Driver": "السائق",
-  "Vehicle Number": "رقم المركبة"
-
+  "Vehicle Number": "رقم المركبة",
+  "Please select a branch": "يرجى اختيار فرع",
+  "Please select an issue type": "يرجى اختيار نوع المشكلة",
+  "Please enter an issue name": "يرجى إدخال اسم المشكلة",
+  "Please enter issue details": "يرجى إدخال تفاصيل المشكلة",
+  "Ticket created successfully!": "تم إنشاء التذكرة بنجاح!",
+  "Success!": "نجاح!",
+  "Please select an urgency level": "يرجى اختيار مستوى الأهمية",
+  "Order Id": "معرف الطلب",
+  "Select a Customer Order": "اختر طلب عميل"
 }
