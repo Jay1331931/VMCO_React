@@ -616,7 +616,22 @@
   "Select a Customer": "اختر عميلًا",
   "Customer ID": "معرف العميل",
   "Search customers...": "البحث عن عملاء...",
-  "Search branches...": "البحث عن فروع..."
-
+  "Search branches...": "البحث عن فروع...",
+  "New OTP generated and sent successfully": "تم إنشاء رمز تحقق جديد وإرساله بنجاح",
+  "Invalid OTP provided": "رمز التحقق المقدم غير صالح",
+  "Enter Region": "أدخل المنطقة",
+  "Please send OTP first": "يرجى إرسال رمز التحقق أولاً",
+  "OTP verified successfully": "تم التحقق من رمز التحقق بنجاح",
+  "User not found": "المستخدم غير موجود",
+  "Select a Product": "اختر منتجًا",
+  "Sample Order": "طلب عينة",
+  "Search products...": "البحث عن منتجات...",
+  "Insuffiecient Credit balance": "رصيد ائتماني غير كافٍ",
+  "Order Created Successfully!": "تم إنشاء الطلب بنجاح!",
+  "Select Customer First": "اختر عميلًا أولاً",
+  "Please select a customer before choosing an entity.": "يرجى اختيار عميل قبل اختيار كيان.",
+  "Click Save to select": "انقر على حفظ للاختيار",
+  "Driver": "السائق",
+  "Vehicle Number": "رقم المركبة"
 
 }

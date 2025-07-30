@@ -2787,7 +2787,7 @@ function OrderDetails() {
                                   disabled={!isEntityAllowed}
                                   style={!isEntityAllowed ? { color: '#aaa', backgroundColor: '#f5f5f5' } : {}}
                                 >
-                                  {t(entity)}
+                                  {entity}
                                 </option>
                               );
                             })}
@@ -2839,7 +2839,7 @@ function OrderDetails() {
                         {formMode === 'add' ? (
                           <input
                             name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
+                            value={formData.paymentMethod || ''}
                             readOnly
                             placeholder={t('Click Save to select')}
                             style={{ background: '#f9f9f9', cursor: 'not-allowed' }}
@@ -2848,7 +2848,7 @@ function OrderDetails() {
                         ) : (
                           <input
                             name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
+                            value={formData.paymentMethod || ''}
                             disabled
                           />
                         )}
