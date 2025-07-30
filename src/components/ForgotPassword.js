@@ -136,7 +136,7 @@ function ForgotPassword() {
       }, 2000);
     } catch (err) {
       console.error("Password reset error:", err);
-      setError(err.message || t("An error occurred. Please try again."));
+       setError(t(err.message) || t("An error occurred. Please try again."));
     } finally {
       setIsSubmitLoading(false); // Stop loading
     }
@@ -171,7 +171,7 @@ function ForgotPassword() {
         Swal.fire({
           icon: "error",
           title: t(data?.status || "Error"),
-          text: data.message || t("Failed to send OTP"),
+          text: t(data.message) || t("Failed to send OTP"),
           confirmButtonText: t("OK"),
         });
         return;

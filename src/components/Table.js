@@ -48,7 +48,21 @@ const Table = ({
                 </span>
             );
         }
- 
+        if(column.key.toLowerCase() ==="paymentstatus"){
+            return (
+                <span >
+                    {t(item[column.key])}
+                </span>
+            );
+        }
+        if (column.key?.toLowerCase() === 'paymentmethod') {
+            return (
+                <span >
+                    {t(item[column.key])}
+                </span>
+            );
+        }
+
         // Handle action buttons
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);

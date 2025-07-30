@@ -1134,7 +1134,7 @@ function Customers() {
                             })) : []}
                             value={inviteData.region}
                             onChange={handleInputChange}
-                            placeholder="Enter Region"
+                            placeholder={t("Enter Region")}
                             required
                           />
                   </div>

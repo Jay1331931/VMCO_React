@@ -684,7 +684,8 @@ function CustomersOnboarding() {
         });
       } else {
         // Show error if status is not success
-        setErrors({ otp: t(data.message || "Invalid OTP") });
+        console.error("OTP verification failed:", data);
+        setErrors({ otp: data.message || "Invalid OTP" });
       }
     } catch (error) {
       // Show error if request fails or OTP is wrong
@@ -762,7 +763,7 @@ function CustomersOnboarding() {
                         >
                           <FontAwesomeIcon icon={faCheckCircle} color="green" />
                           <span style={{ color: "green", fontWeight: "bold" }}>
-                            Email Verified
+                            {t("Email Verified")}
                           </span>
                         </div>
                       ) : (
@@ -855,7 +856,7 @@ function CustomersOnboarding() {
                           )}
                           {errors[field.name] && (
                             <span className="error-message">
-                              {errors[field.name]}
+                              {t(errors[field.name])}
                             </span>
                           )}
                         </>
@@ -910,7 +911,7 @@ function CustomersOnboarding() {
                             })) : []}
                             value={formData[field.name]}
                             onChange={handleChange}
-                            placeholder="Enter Region"
+                            placeholder={t("Enter Region")}
                             required
                           />
                           
@@ -929,7 +930,7 @@ function CustomersOnboarding() {
           <div className="onboarding-footer">
             <div className="onboarding-footer-text">
               <span>{t("Already have an account?")}</span>
-              <a href="#" onClick={handleLogin}>
+              <a href="/login" >
                 {`\t ${t("Login")}`}
               </a>
             </div>

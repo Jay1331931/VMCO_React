@@ -158,7 +158,7 @@ function GetProducts({
                     className="gp-product-btn"
                     onClick={() => onSelectProduct(product)}
                   >
-                    {product.id} - {product.productName}
+                    {product.id} - { i18n.language === 'ar' ? product.productNameLc : product.productName }
                   </button>
                 </li>
               ))}

@@ -463,14 +463,16 @@ function Cart() {
                     currentOrderTotal += baseAmount + vatAmount;
                 });
 
-                // Check for existing open COD orders
+                // Check for existing open COD orders for that entity
                 const orderFilters = new URLSearchParams({
                     filters: JSON.stringify({
                         customerId: selectedCustomerId,
                         status: 'Open',
+                        entity: getEntityFromCategory(pendingOrderCategory),
                         paymentMethod: 'Cash on Delivery'
                     })
                 });
+                console.log(`Checking existing COD orders with filters: ${orderFilters.toString()}`);
 
                 const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
@@ -975,7 +977,7 @@ function Cart() {
             const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
-            const pricingPolicy = customerData?.data?.entity?.pricingPolicy;
+            const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
             let assignedTo = customerData?.data?.assignedTo;
@@ -1911,7 +1913,7 @@ function Cart() {
                         Swal.fire({
                             icon: 'warning',
                             title: t('Insufficient Balance'),
-                            text: t(`Insufficient Balance! Your current credit balance is: ${creditBalance.toFixed(2)}`),
+                            text: t(`Insufficient Balance! Your current credit balance is: `) + `${creditBalance.toFixed(2)}`,
                             confirmButtonText: t('OK')
                         }).then(() => {
                             //
@@ -1961,7 +1963,7 @@ function Cart() {
         }
 
         // If cart items are empty, clear filtered cart items
-        if (cartItems.length === 0) {
+        if (cartItems?.length === 0) {
             console.log("Cart items are empty, clearing filtered cart items");
             setFilteredCartItems([]);
             return;
@@ -2088,7 +2090,7 @@ function Cart() {
             }
         ];
 
-        setCartItems(items);
+        // setCartItems(items);
     };
 
     // Helper function to determine payment method for non-machine products
@@ -2345,7 +2347,7 @@ function Cart() {
             </div>
             <div className="cart-main-content">
                 {isLoading ? (
-                    <div className="loading-indicator">Loading your cart items...</div>
+                    <div className="loading-indicator">{t("Loading your cart items...")}</div>
                 ) : error ? (
                     <div className="error-message">{error}</div>
                 ) : (
@@ -2361,7 +2363,7 @@ function Cart() {
                                         <FontAwesomeIcon
                                             icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
                                         />
-                                        <h3>{category.category}</h3>
+                                        <h3>{t(category.category)}</h3>
                                     </div>
                                     <span className="category-count">{category.items.length} {t("Items")}</span>
                                 </div>
