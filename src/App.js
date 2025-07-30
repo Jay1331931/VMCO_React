@@ -27,16 +27,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import OpationsPage from "./components/Opationspage";
 import Constants from "./constants";
 function App() {
+
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginScreen />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/customers" element={<ProtectedRoute allowedRoles={[Constants.DESIGNATIONS.OPS_COORDINATOR, Constants.DESIGNATIONS.OPS_MANAGER, Constants.DESIGNATIONS.AREA_SALES_MANAGER, Constants.DESIGNATIONS.SALES_EXECUTIVE ]} ><Customers /></ProtectedRoute>} />
+        <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} />
+        <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/>
         <Route path="/catalog" element={<Catalog />} />
-        <Route path="/support" element={<Support />} />
-        <Route path="/maintenance" element={<Maintenance />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/support" element={<ProtectedRoute page="support"><Support /></ProtectedRoute>} />
+        <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/login/employee" element={<LoginScreen />} />
@@ -48,11 +49,11 @@ function App() {
           path="/customers/registration/:id"
           element={<CustomersOnboarding />}
         />
-        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/checkout" element={<ProtectedRoute page="checkout"><Checkout /></ProtectedRoute>} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
-        <Route path="/orderDetails" element={<OrderDetails />} />
-        <Route path="/supportDetails" element={<SupportDetails />} />
-        <Route path="/maintenanceDetails" element={<MaintenanceDetails />} />
+        <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
+        <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
+        <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<RbacEditor />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/payment" element={<Payment />} />
@@ -66,7 +67,7 @@ function App() {
           path="/bankTransactions/order/:amount/:orderId"
           element={<AddBankTransaction />}
         />
-        <Route path="/customerDetails" element={<ProtectedRoute><CustomerDetails /></ProtectedRoute>} />
+        <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
         <Route path="/payment-opations/order/:orderId" element={<OpationsPage/>} />

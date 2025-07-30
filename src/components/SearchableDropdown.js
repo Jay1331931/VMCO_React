@@ -11,6 +11,7 @@ function SearchableDropdown({
   disabled,
   className,
   placeholder = "Value",
+  style = {},
 }) {
   // Add default 'All' option at the top
   const allOption = { name: "All", value: null };
@@ -84,11 +85,12 @@ function SearchableDropdown({
         className={`dropdown-header ${className || ""}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         tabIndex={disabled ? -1 : 0}
-        style={
-          disabled
+        style={{
+          ...(disabled
             ? { backgroundColor: "#e9ecef", cursor: "not-allowed" }
-            : {}
-        }
+            : {}),
+            ...style,
+        }}
       >
         <span className="selected-value">{displayText}</span>
         <span className="dropdown-arrow">▼</span>

@@ -1135,13 +1135,13 @@ function BusinessDetails({
           )}
           {/* VMCO Branch Assignment Header */}
           <h3 className="form-header full-width">
-            {t("Branch")}
+            {t("Branch Regions")}
           </h3>
  {/* branch dropdown */}
       {isV("assignedToEntityWise") && (
         <div className="form-group">
           <label htmlFor="branch">
-            {t("Branch")}
+            {t("Branch Region")}
             <span className="required-field">*</span>
             {originalCustomerData &&
               customerData &&

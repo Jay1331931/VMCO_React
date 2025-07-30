@@ -33,7 +33,7 @@ function ContactDetails({
   formErrors = {},
 }) {
   // Now you can access both objects
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
   //   useState(false);
 
@@ -272,26 +272,57 @@ function ContactDetails({
     return "Select Location";
   };
 
+  // const getCityOptions = useCallback(() => {
+  //   if (!selectedRegion || !geoData) return [];
+  //   return Object.keys(geoData?.[selectedRegion]).map((city) => ({
+  //     value: city,
+  //     name: city,
+  //   }));
+  // }, [selectedRegion, geoData]);
   const getCityOptions = useCallback(() => {
-    if (!selectedRegion || !geoData) return [];
-    return Object.keys(geoData?.[selectedRegion]).map((city) => ({
+    if (!selectedRegion || !geoData || !geoData[selectedRegion]?.cities)
+      return [];
+    return Object.keys(geoData[selectedRegion].cities).map((city) => ({
       value: city,
-      name: city,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[city].ar
+          : geoData[selectedRegion].cities[city].en,
     }));
   }, [selectedRegion, geoData]);
 
   // Get districts based on selected city
+  // const getDistrictOptions = useCallback(() => {
+  //   if (!selectedRegion || !selectedCity || !geoData) return [];
+  //   return geoData[selectedRegion][selectedCity].map((district) => ({
+  //     value: district,
+  //     name: district,
+  //   }));
+  // }, [selectedRegion, selectedCity, geoData]);
   const getDistrictOptions = useCallback(() => {
-    if (!selectedRegion || !selectedCity || !geoData) return [];
-    return geoData[selectedRegion][selectedCity].map((district) => ({
+    if (
+      !selectedRegion ||
+      !selectedCity ||
+      !geoData ||
+      !geoData[selectedRegion]?.cities?.[selectedCity]?.districts
+    ) {
+      return [];
+    }
+
+    return Object.keys(
+      geoData[selectedRegion].cities[selectedCity].districts
+    ).map((district) => ({
       value: district,
-      name: district,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
+          : geoData[selectedRegion].cities[selectedCity].districts[district].en,
     }));
   }, [selectedRegion, selectedCity, geoData]);
-
   // Handle region selection
   const handleRegionChange = (e) => {
     const { name, value } = e.target;
+    console.log("value", value);
     setSelectedRegion(value || null);
     setSelectedCity(null); // Reset city when region changes
     // Update your form data as needed
@@ -1337,7 +1368,10 @@ function ContactDetails({
             geoData
               ? Object.keys(geoData).map((region) => ({
                   value: region,
-                  name: region,
+                  name:
+                    i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
                 }))
               : []
           }
@@ -1391,10 +1425,11 @@ function ContactDetails({
           onChange={handleCityChange}
           disabled={
             (originalCustomerData &&
-            customerData &&
-            originalCustomerData?.city === customerData?.city &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending") || !selectedRegion
+              customerData &&
+              originalCustomerData?.city === customerData?.city &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending") ||
+            !selectedRegion
           }
           className={
             originalCustomerData &&
@@ -1436,10 +1471,11 @@ function ContactDetails({
           onChange={handleDistrictChange}
           disabled={
             (originalCustomerData &&
-            customerData &&
-            originalCustomerData?.district === customerData?.district &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending") || !selectedCity
+              customerData &&
+              originalCustomerData?.district === customerData?.district &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending") ||
+            !selectedCity
           }
           className={
             originalCustomerData &&

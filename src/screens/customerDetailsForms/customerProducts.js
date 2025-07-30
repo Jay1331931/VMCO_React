@@ -28,9 +28,9 @@ const initialEntities = [
     label: Constants.CATEGORY.VMCO_MACHINES,
   },
   {
-      value: Constants.CATEGORY.VMCO_CONSUMABLES,
-      entity: Constants.ENTITY.VMCO,
-      label: Constants.CATEGORY.VMCO_CONSUMABLES,
+    value: Constants.CATEGORY.VMCO_CONSUMABLES,
+    entity: Constants.ENTITY.VMCO,
+    label: Constants.CATEGORY.VMCO_CONSUMABLES,
   },
   {
     value: Constants.ENTITY.SHC,
@@ -50,8 +50,8 @@ const initialEntities = [
   },
   {
     value: "Special Products",
-    label: "Special Products"
-  }
+    label: "Special Products",
+  },
 ];
 
 function Products({ customerId, customer, setTabsHeight }) {
@@ -125,7 +125,7 @@ function Products({ customerId, customer, setTabsHeight }) {
       filters.entity = "VMCO";
       filters.is_machine = false;
     }
-    if(activeEntity?.toLowerCase() === "special products") {
+    if (activeEntity?.toLowerCase() === "special products") {
       filters.special_product = true;
       filters.erp_cust_id = customer?.erpCustId;
       // remove entity from filters
@@ -179,7 +179,15 @@ function Products({ customerId, customer, setTabsHeight }) {
       fetchData();
     }
     setTabsHeight("auto");
-  }, [customer, activeEntity, currentPage, isApprovalMode, search, categoryFilter, subCategoryFilter]);
+  }, [
+    customer,
+    activeEntity,
+    currentPage,
+    isApprovalMode,
+    search,
+    categoryFilter,
+    subCategoryFilter,
+  ]);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
@@ -368,23 +376,21 @@ function Products({ customerId, customer, setTabsHeight }) {
   // Fetch category options when products or activeEntity changes
   useEffect(() => {
     const options = Array.from(
-      new Set(products?.map((p) => p.category).filter(Boolean))
+      new Set(products?.map((p) => p.category.toLowerCase()).filter(Boolean))
     ).map((cat) => ({
       name: cat,
       value: cat,
     }));
     // Add "All Categories" option at the top
-    setCategoryOptions([
-      
-      ...options,
-    ]);
+    setCategoryOptions([...options]);
   }, [products, activeEntity, t]);
 
   // Fetch subcategory options when products, activeEntity, or categoryFilter changes
   useEffect(() => {
     const options = Array.from(
       new Set(
-        products?.filter((p) => !categoryFilter || p.category === categoryFilter)
+        products
+          ?.filter((p) => !categoryFilter || p.category === categoryFilter)
           .map((p) => p.subCategory)
           .filter(Boolean)
       )
@@ -393,10 +399,7 @@ function Products({ customerId, customer, setTabsHeight }) {
       value: sub,
     }));
     // Add "All Subcategories" option at the top
-    setSubCategoryOptions([
-      
-      ...options,
-    ]);
+    setSubCategoryOptions([...options]);
   }, [products, activeEntity, categoryFilter, t]);
 
   return (
@@ -426,7 +429,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             variant="category"
           />
         </div>
-        </div>
+      </div>
       <div className="products-header-controls">
         {/* --- Second row: Category & Subcategory dropdowns --- */}
         <div className="products-page-header">
@@ -481,19 +484,16 @@ function Products({ customerId, customer, setTabsHeight }) {
             disabled={!categoryFilter}
           />
         </div>
-
-        
       </div>
 
       {/* --- Toggle and Apply All below filters --- */}
       <div className="products-page-header">
-       
         <ToggleButton
-                            isToggled={isApprovalMode}
-                            onToggle={toggleApprovalMode}
-                            leftLabel={t("All")}
-                            rightLabel={t("Selected")}
-                          />
+          isToggled={isApprovalMode}
+          onToggle={toggleApprovalMode}
+          leftLabel={t("All")}
+          rightLabel={t("Selected")}
+        />
         <div className="toggle-container">
           {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
           {isV("btnApplyAll") && (
@@ -537,7 +537,11 @@ function Products({ customerId, customer, setTabsHeight }) {
                     disabled={!isV("btnSelectItems")}
                   />
                 </td>
-                {(i18n.language === "en") ? <td>{product.productName}</td> : <td>{product.productNameLc}</td>}
+                {i18n.language === "en" ? (
+                  <td>{product.productName}</td>
+                ) : (
+                  <td>{product.productNameLc}</td>
+                )}
                 {isV("btnApplyAll") && (
                   <td className="edit-cell">
                     <div className="input-with-icons">
@@ -596,8 +600,9 @@ function Products({ customerId, customer, setTabsHeight }) {
             onPageChange={(page) => {
               setCurrentPage(page);
               fetchProducts();
-          }}
-        />)}
+            }}
+          />
+        )}
       </div>
       <style jsx="true">{`
         .product-search-input {

@@ -1009,6 +1009,11 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: false, editable: false},
+        },
       }
     },
 

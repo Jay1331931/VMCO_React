@@ -541,6 +541,9 @@ const BranchDetailsForm = ({
         }
       }
     }
+    if( dataToValidate?.locationType?.toLowerCase() === "others (specify)" && !dataToValidate?.locationTypeOther) {
+        errors.locationTypeOther = t("This field is required.");
+      }
     return errors;
   };
 

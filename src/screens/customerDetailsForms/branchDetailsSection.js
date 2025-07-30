@@ -20,6 +20,7 @@ import "../../styles/components.css";
 import "../../styles/forms.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
+import SearchableDropdown from "../../components/SearchableDropdown";
 
 const BranchDetailsForm = ({
   branch,
@@ -38,7 +39,7 @@ const BranchDetailsForm = ({
   isFirstBranch,
   setSameAsCustomer,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(branch?.geolocation);
   const [geoData, setGeoData] = useState(null);
@@ -98,7 +99,13 @@ const BranchDetailsForm = ({
       const options = {};
       console.log("branch", branch);
       // Find all dropdown fields and fetch their options
-      const dropdownFields = ["city", "locationType", "region", "branch", "district"];
+      const dropdownFields = [
+        "city",
+        "locationType",
+        "region",
+        "branch",
+        "district",
+      ];
       console.log("dropdownFields", dropdownFields);
       for (const field of dropdownFields) {
         try {
@@ -144,19 +151,17 @@ const BranchDetailsForm = ({
   useEffect(() => {
     const fetchGeoData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/geoLocation`,
-          {
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-        }
-        );
+        });
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);
         }
       } catch (error) {
-        console.error('Error fetching geo data:', error);
+        console.error("Error fetching geo data:", error);
       }
     };
     fetchGeoData();
@@ -169,47 +174,67 @@ const BranchDetailsForm = ({
       }
     }
   }, [geoData, branch]);
-   // Get city options based on selected region
+  // Get city options based on selected region
   const getCityOptions = useMemo(() => {
-    if (!selectedRegion || !geoData) return [];
-    return Object.keys(geoData[selectedRegion] || {}).map(city => ({
+    console.log("excute123", selectedRegion, geoData);
+    if (!selectedRegion || !geoData || !geoData[selectedRegion]?.cities)
+      return [];
+    console.log("excute");
+    return Object.keys(geoData[selectedRegion].cities).map((city) => ({
       value: city,
-      label: city
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[city].ar
+          : geoData[selectedRegion].cities[city].en,
     }));
   }, [selectedRegion, geoData]);
 
   // Get district options based on selected city
   const getDistrictOptions = useMemo(() => {
-    if (!selectedRegion || !selectedCity || !geoData) return [];
-    return (geoData[selectedRegion]?.[selectedCity] || []).map(district => ({
+    if (
+      !selectedRegion ||
+      !selectedCity ||
+      !geoData ||
+      !geoData[selectedRegion]?.cities?.[selectedCity]?.districts
+    ) {
+      return [];
+    }
+
+    return Object.keys(
+      geoData[selectedRegion].cities[selectedCity].districts
+    ).map((district) => ({
       value: district,
-      label: district
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
+          : geoData[selectedRegion].cities[selectedCity].districts[district].en,
     }));
   }, [selectedRegion, selectedCity, geoData]);
 
   // Handle region selection
   const handleRegionChange = (e) => {
     const region = e.target.value;
+
     setSelectedRegion(region);
     setSelectedCity(null);
     handleBranchFieldChange({
       target: {
-        name: 'region',
-        value: region
-      }
+        name: "region",
+        value: region,
+      },
     });
     // Clear city and district when region changes
     handleBranchFieldChange({
       target: {
-        name: 'city',
-        value: ''
-      }
+        name: "city",
+        value: "",
+      },
     });
     handleBranchFieldChange({
       target: {
-        name: 'district',
-        value: ''
-      }
+        name: "district",
+        value: "",
+      },
     });
   };
 
@@ -219,16 +244,16 @@ const BranchDetailsForm = ({
     setSelectedCity(city);
     handleBranchFieldChange({
       target: {
-        name: 'city',
-        value: city
-      }
+        name: "city",
+        value: city,
+      },
     });
     // Clear district when city changes
     handleBranchFieldChange({
       target: {
-        name: 'district',
-        value: ''
-      }
+        name: "district",
+        value: "",
+      },
     });
   };
 
@@ -483,9 +508,17 @@ const BranchDetailsForm = ({
         name: "region",
         placeholder: "Region",
         required: true,
-        options: geoData ? Object.keys(geoData) : [],
-      onChange: handleRegionChange,
-      value: branch?.region || ''
+        options: geoData
+          ? Object.keys(geoData).map((region) => ({
+              value: region,
+              name:
+                i18n.language === "ar"
+                  ? geoData[region].ar
+                  : geoData[region].en,
+            }))
+          : [],
+        onChange: handleRegionChange,
+        value: branch?.region || "",
       },
       {
         type: "dropdown",
@@ -493,10 +526,10 @@ const BranchDetailsForm = ({
         name: "city",
         placeholder: "City",
         required: true,
-        options: getCityOptions.map(opt => opt.value),
-      onChange: handleCityChange,
-      value: branch?.city || '',
-      disabled: !selectedRegion
+        options: getCityOptions.map((opt) => opt.name),
+        onChange: handleCityChange,
+        value: branch?.city || "",
+        disabled: !selectedRegion,
       },
       {
         type: "dropdown",
@@ -504,9 +537,9 @@ const BranchDetailsForm = ({
         name: "district",
         placeholder: "District",
         required: true,
-        options: getDistrictOptions.map(opt => opt.value),
-        value: branch?.district || '',
-        disabled: !selectedCity
+        options: getDistrictOptions.map((opt) => opt.name),
+        value: branch?.district || "",
+        disabled: !selectedCity,
       },
       {
         type: "dropdown",
@@ -533,7 +566,7 @@ const BranchDetailsForm = ({
       },
       {
         type: "dropdown",
-        label: "Branch",
+        label: "Branch Region",
         name: "branch",
         placeholder: "Branch",
         required: true,
@@ -605,9 +638,12 @@ const BranchDetailsForm = ({
 
       <div className="form-row">
         {fields.map((field, index) => {
-          if (field.name === "locationTypeOther" && branch?.locationType !== "Others (specify)") {
-                          return null;
-                        }
+          if (
+            field.name === "locationTypeOther" &&
+            branch?.locationType !== "Others (specify)"
+          ) {
+            return null;
+          }
           const hasUpdate =
             (mode === "edit" && inApproval && workflowData
               ? field.name in workflowData
@@ -677,7 +713,7 @@ const BranchDetailsForm = ({
                     switch (field.type) {
                       case "text":
                         // Only show "Location Type (Other)" when locationType is "Others (specify)"
-                        
+
                         return (
                           <input
                             type="text"
@@ -690,7 +726,16 @@ const BranchDetailsForm = ({
                                 ? {
                                     backgroundColor: "#fff8e1",
                                   }
-                                : {}
+                                : {
+                                    fontSize: "12px",
+                                    padding: "3px 6px",
+                                    height: "30px",
+                                    border: "1px solid #D9D9D6",
+                                    borderRadius: "4px",
+                                    width: "140px",
+                                    rowGap: "10px",
+                                    columnGap: "5px",
+                                  }
                             }
                             disabled={
                               (customerFormMode === "custDetailsEdit" &&
@@ -704,36 +749,33 @@ const BranchDetailsForm = ({
                       case "dropdown":
                         return (
                           <>
-                            <select
-                              name={field.name}
-                              value={branch?.[field.name]}
-                              onChange={field.onChange || handleBranchFieldChange}
-                              style={
-                                hasUpdate
-                                  ? {
-                                      backgroundColor: "#fff8e1",
-                                    }
-                                  : {}
-                              }
-                              disabled={
-                                (customerFormMode === "custDetailsEdit" &&
-                                  !hasUpdate) ||
-                                (customerFormMode === "custDetailsAdd" &&
-                                  inApproval) || field.disabled
-                              }
-                              hidden={!isV(field.name)}
-                            >
-                              <option value="">{t(field.placeholder)}</option>
-                              {field?.options
-                                ? field.options.map(
-                                    (opt, idx) => (
-                                      <option key={idx} value={opt}>
-                                        {t(opt)}
-                                      </option>
-                                    )
-                                  )
-                                : []}
-                            </select>
+                            {isV(field.name) && (
+                              <SearchableDropdown
+                                name={field.name}
+                                value={branch?.[field.name]}
+                                onChange={
+                                  field.onChange || handleBranchFieldChange
+                                }
+                                className={"branchDropDown"}
+                                style={{
+                                  ...(hasUpdate
+                                    ? {
+                                        backgroundColor: "#fff8e1",
+                                      }
+                                    : {}),
+                                    
+                                }}
+                                disabled={
+                                  (customerFormMode === "custDetailsEdit" &&
+                                    !hasUpdate) ||
+                                  (customerFormMode === "custDetailsAdd" &&
+                                    inApproval) ||
+                                  field.disabled
+                                }
+                                hidden={!isV(field.name)}
+                                options={field.options}
+                              ></SearchableDropdown>
+                            )}
                           </>
                         );
                       default:
@@ -780,6 +822,11 @@ const BranchDetailsForm = ({
           </div>
         </div>
       )}
+      <style>
+        {`
+          .dropdown-header:{
+    width: "140px !important"}`}
+      </style>
     </div>
   );
 };
