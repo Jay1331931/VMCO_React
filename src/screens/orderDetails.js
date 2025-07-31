@@ -343,7 +343,7 @@ function OrderDetails() {
   };
 
   const handleSave = async (action, selectedMethod) => {
-    setSaving(true);  
+    setSaving(true);
     // Basic validations first
     if (!formData.customerId) {
       alert(t('Please select a customer'));
@@ -910,8 +910,8 @@ function OrderDetails() {
     });
 
     // Skip existing order check if payment method is Pre Payment
-    const isPrePayment = (selectedMethod || formData.paymentMethod) === 'Pre Payment';
-    if (isPrePayment) {
+    const isPrePayment = (selectedMethod || formData.paymentMethod).toLowerCase() === 'pre payment';
+    if (!isPrePayment) {
       console.log('Payment method is Pre Payment - skipping existing order check');
       const branchIdForFilter = formData.branchId || formData.erpBranchId;
 
@@ -919,6 +919,12 @@ function OrderDetails() {
       const statusToCheck = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
         ? 'Pending'  // VMCO orders use Pending status
         : 'Open';    // Other entities use Open status
+
+      const freshOrder =
+        Array.isArray(formData.products) &&
+        formData.products.length > 0 &&
+        formData.products.every(product => product.isFresh === true);
+
 
       const orderFiltersObj = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
         ? {
@@ -928,12 +934,21 @@ function OrderDetails() {
           status: statusToCheck,
           productCategory: formData.category
         }
-        : {
-          customerId: formData.customerId,
-          branchId: branchIdForFilter,
-          entity: formData.entity,
-          status: statusToCheck
-        };
+        : (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+          ? {
+            customerId: formData.customerId,
+            branchId: branchIdForFilter,
+            entity: formData.entity,
+            status: statusToCheck,
+            isFresh: freshOrder // or set this based on your logic if needed
+          }
+          : {
+            customerId: formData.customerId,
+            branchId: branchIdForFilter,
+            entity: formData.entity,
+            status: statusToCheck
+          }
+        );
 
       console.log('Order filter object created:', orderFiltersObj);
 
@@ -970,7 +985,7 @@ function OrderDetails() {
           Swal.fire({
             icon: 'warning',
             title: t('Order Already Exists'),
-            text: t(`An active order already exists for this ${entityName} with the same customer, branch, and entity. Please check the existing orders before creating a new one.`),
+            text: t(`An active order already exists for ${entityName} with the same customer, branch, and entity. Please check the existing orders before creating a new one.`),
             confirmButtonText: t('OK')
           });
           navigate('/orders');
@@ -1009,7 +1024,7 @@ function OrderDetails() {
     }
 
     while (attempt < maxAttempts) {
-      let orderStatus = 'Open'; // Default status
+      let orderStatus = ''; // Default status
       let paymentStatus = 'Pending'; // Default payment status
 
       const finalPaymentMethod = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
@@ -1018,16 +1033,21 @@ function OrderDetails() {
 
       // Determine status based on entity and payment method
       if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+        orderStatus = 'Pending';
         if (finalPaymentMethod.toLowerCase() === 'pre payment') {
-          // For VMCO entity with Pre Payment
-          orderStatus = 'Pending';
+          // For VMCO entity with Pre Payment    
           paymentStatus = 'Pending';
         } else if (finalPaymentMethod.toLowerCase() === 'credit') {
           orderStatus = 'Pending';
           paymentStatus = 'Paid';
         }
-      } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-        // For NAQI entity
+      } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+        // For other entities (SHC, GMTC, DAR)
+        orderStatus = 'Open';
+        paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
+      }
+      else {
+        // For NAQI, GMTC and DAR entities
         if (finalPaymentMethod.toLowerCase() === 'pre payment') {
           orderStatus = 'Pending';
           paymentStatus = 'Pending';
@@ -1038,10 +1058,6 @@ function OrderDetails() {
           orderStatus = 'Approved';
           paymentStatus = 'Pending';
         }
-      } else {
-        // For other entities (SHC, GMTC, DAR)
-        orderStatus = 'Open';
-        paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
       }
 
       // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
@@ -1060,7 +1076,7 @@ function OrderDetails() {
         isMachine: formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ? true : false,
         paymentMethod: finalPaymentMethod,
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
-        status: sampleMode ? 'Open' : orderStatus,
+        status: sampleMode ? 'Approved' : orderStatus,
         salesExecutive: user.employeeId,
         paymentStatus: paymentStatus,
         entity: formData.entity || '',
@@ -1222,7 +1238,7 @@ function OrderDetails() {
           console.log('Total sales tax amount:', totalSalesTaxAmount);
 
           // Check if any product is a machine (is_machine = true)
-          const hasAnyMachine = Array.isArray(productsPayload) 
+          const hasAnyMachine = Array.isArray(productsPayload)
             ? productsPayload.some(product => product.is_machine === true || product.isMachine === true)
             : productsPayload.is_machine === true || productsPayload.isMachine === true;
 
@@ -2616,14 +2632,25 @@ function OrderDetails() {
 
   // Add this handler inside your component, before return
   function handleSelectPaymentMethod(method) {
-    setShowPaymentPopup(false);
-    setFormData(prev => ({ ...prev, paymentMethod: method }));
-    // If a save was pending, continue with save
-    if (pendingSaveAction) {
-      handleSave(pendingSaveAction, method);
-      setPendingSaveAction(null);
+  setShowPaymentPopup(false);
+  setFormData(prev => {
+    // If Cash on Delivery is selected and entity is VMCO, set status to Pending
+    if (
+      method &&
+      method.toLowerCase() === 'cash on delivery' &&
+      prev.entity &&
+      prev.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+    ) {
+      return { ...prev, paymentMethod: method, status: 'Pending' };
     }
+    return { ...prev, paymentMethod: method };
+  });
+  // If a save was pending, continue with save
+  if (pendingSaveAction) {
+    handleSave(pendingSaveAction, method);
+    setPendingSaveAction(null);
   }
+}
 
   // Debug effect to monitor products loading
   useEffect(() => {
@@ -3200,7 +3227,7 @@ function OrderDetails() {
                   const comments = [...(approvalHistory || [])];
                   if (formData.feedback) {
                     try {
-                      const feedbackObj = typeof formData.feedback === 'string' ? 
+                      const feedbackObj = typeof formData.feedback === 'string' ?
                         JSON.parse(formData.feedback) : formData.feedback;
 
                       if (Array.isArray(feedbackObj)) {
@@ -3219,7 +3246,7 @@ function OrderDetails() {
                       } else if (feedbackObj.comment) {
                         // Handle single feedback object for backward compatibility
                         comments.unshift({
-                          action: "Feedback", 
+                          action: "Feedback",
                           date: formatDate(feedbackObj.createdAt || formData.updatedAt || new Date(), "YYYY-MM-DD HH:MM"),
                           message: feedbackObj.comment,
                           userName: feedbackObj.createdBy || t("Feedback"),
@@ -3236,7 +3263,7 @@ function OrderDetails() {
                 isVisible={fromApproval || formData.sampleOrder}
                 onAddComment={async (comment) => {
                   if (!comment || !user || !(fromApproval || formData.sampleOrder)) return;
-                  
+
                   // Create new feedback object
                   const newFeedback = {
                     comment,
@@ -3246,13 +3273,13 @@ function OrderDetails() {
                   };
 
                   // Update local state first
-                  const currentFeedback = formData.feedback ? 
-                    (typeof formData.feedback === 'string' ? 
+                  const currentFeedback = formData.feedback ?
+                    (typeof formData.feedback === 'string' ?
                       JSON.parse(formData.feedback) : formData.feedback) : [];
-                  
+
                   const updatedFeedback = Array.isArray(currentFeedback) ?
                     [newFeedback, ...currentFeedback] : [newFeedback];
-                  
+
                   setFormData(prev => ({
                     ...prev,
                     feedback: updatedFeedback
@@ -3292,11 +3319,11 @@ function OrderDetails() {
                       comment: comment,
                       createdBy: user.name,
                     };
-                    
+
                     try {
                       const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
                         method: 'PATCH',
-                        headers: { 
+                        headers: {
                           'Content-Type': 'application/json',
                           'Authorization': `Bearer ${token}`
                         },
