@@ -425,19 +425,6 @@
   "Select Entity": "اختر الكيان",
   "Upload Bank Documents *": "تحميل مستندات البنك *",
   "Select Issue Type": "اختر نوع المشكلة",
-  "Order Placement Issue": "مشكلة في تقديم الطلب",
-  "Product Quality": "مشكلة في جودة المنتج",
-  "Wrong Product Delivery": "تسليم منتج خاطئ",
-  "Damaged Product": "منتج تالف",
-  "Technical Support": "دعم فني",
-  "Delivery Issue": "مشكلة في التوصيل",
-  "Product Information": "معلومات المنتج",
-  "Order Cancellation Issue": "مشكلة في إلغاء الطلب",
-  "Payment Issue": "مشكلة في الدفع",
-  "Machine Malfunction": "خلل في الآلة",
-  "Routine Maintenance": "صيانة دورية",
-  "Installation Issue": "مشكلة في التثبيت",
-  "Spare Parts Request": "طلب قطع غيار",
   "Low": "منخفض",
   "Medium": "متوسط",
   "High": "مرتفع",
@@ -642,6 +629,7 @@
   "Invalid mobile number format": "تنسيق رقم الهاتف المحمول غير صالح",
   "Branch saved successfully.": "تم حفظ الفرع بنجاح.",
   "Branch is currently under approval": "الفرع قيد الموافقة حاليًا.",
-  "Password reset successful! Redirecting...": "تم إعادة تعيين كلمة المرور بنجاح! جارٍ التوجيه..." 
+  "Password reset successful! Redirecting...": "تم إعادة تعيين كلمة المرور بنجاح! جارٍ التوجيه..." ,
+  "Invalid or expired OTP": "رمز التحقق غير صالح أو منتهي الصلاحية"
 
 }
