@@ -539,6 +539,19 @@ class RbacManager {
           btnVerify: { visible: false, editable: false },
           btnReject: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -1009,6 +1022,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: false, editable: false},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -1457,6 +1483,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: false, editable: false},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -1884,6 +1923,19 @@ class RbacManager {
           btnSubmit: { visible: true, editable: false },
           OrderIdCol: { visible: true, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -2311,6 +2363,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -2763,6 +2828,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -3203,6 +3281,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -3640,6 +3731,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -3906,6 +4010,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -4315,6 +4432,19 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
         }
       },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
+      }
     },
 
     [constants.DESIGNATIONS.MAINTENANCE_MANAGER]: {
@@ -4723,6 +4853,19 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true }
         }
       },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
+      }
     },
 
     [constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN]: {
@@ -4989,6 +5132,19 @@ class RbacManager {
           btnSubmit: { visible: false, editable: false },
 
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -5243,6 +5399,19 @@ class RbacManager {
           btnReject: { visible: false, editable: false },
           btnSubmit: { visible: false, editable: false },
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
 
@@ -5666,6 +5835,19 @@ class RbacManager {
           OrderIdCol: { visible: true, editable: false },
 
         }
+      },
+      accessPages: {
+        fields: {
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+        },
       }
     },
   };

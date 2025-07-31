@@ -281,7 +281,7 @@ function Documents({
             )}
           </label>
           {formErrors?.acknowledgementSignature && (
-            <div className="error">{formErrors.acknowledgementSignature}</div>
+            <div className="error">{t(formErrors.acknowledgementSignature)}</div>
           )}
         </td>
         <td
@@ -414,7 +414,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.crCertificate && (
-                <div className="error">{formErrors.crCertificate}</div>
+                <div className="error">{t(formErrors.crCertificate)}</div>
               )}
             </td>
             <td
@@ -548,7 +548,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.vatCertificate && (
-                <div className="error">{formErrors.vatCertificate}</div>
+                <div className="error">{t(formErrors.vatCertificate)}</div>
               )}
             </td>
             <td
@@ -682,7 +682,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.nationalId && (
-                <div className="error">{formErrors.nationalId}</div>
+                <div className="error">{t(formErrors.nationalId)}</div>
               )}
             </td>
             <td
@@ -809,7 +809,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.bankLetter && (
-                <div className="error">{formErrors.bankLetter}</div>
+                <div className="error">{t(formErrors.bankLetter)}</div>
               )}
             </td>
             <td
@@ -936,7 +936,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.nationalAddress && (
-                <div className="error">{formErrors.nationalAddress}</div>
+                <div className="error">{t(formErrors.nationalAddress)}</div>
               )}
             </td>
             <td
@@ -1069,7 +1069,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.contractAgreement && (
-                <div className="error">{formErrors.contractAgreement}</div>
+                <div className="error">{t(formErrors.contractAgreement)}</div>
               )}
             </td>
             <td
@@ -1202,7 +1202,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.creditApplication && (
-                <div className="error">{formErrors.creditApplication}</div>
+                <div className="error">{t(formErrors.creditApplication)}</div>
               )}
             </td>
             <td
@@ -1337,7 +1337,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.contractAgreement && (
-                <div className="error">{formErrors.contractAgreement}</div>
+                <div className="error">{t(formErrors.contractAgreement)}</div>
               )}
             </td>
             <td
@@ -1470,7 +1470,7 @@ function Documents({
                 )}
               </label>
               {formErrors?.creditApplication && (
-                <div className="error">{formErrors.creditApplication}</div>
+                <div className="error">{t(formErrors.creditApplication)}</div>
               )}
             </td>
             <td

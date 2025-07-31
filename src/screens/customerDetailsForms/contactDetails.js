@@ -33,7 +33,7 @@ function ContactDetails({
   formErrors = {},
 }) {
   // Now you can access both objects
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
   //   useState(false);
 
@@ -272,26 +272,57 @@ function ContactDetails({
     return "Select Location";
   };
 
+  // const getCityOptions = useCallback(() => {
+  //   if (!selectedRegion || !geoData) return [];
+  //   return Object.keys(geoData?.[selectedRegion]).map((city) => ({
+  //     value: city,
+  //     name: city,
+  //   }));
+  // }, [selectedRegion, geoData]);
   const getCityOptions = useCallback(() => {
-    if (!selectedRegion || !geoData) return [];
-    return Object.keys(geoData?.[selectedRegion]).map((city) => ({
+    if (!selectedRegion || !geoData || !geoData[selectedRegion]?.cities)
+      return [];
+    return Object.keys(geoData[selectedRegion].cities).map((city) => ({
       value: city,
-      name: city,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[city].ar
+          : geoData[selectedRegion].cities[city].en,
     }));
   }, [selectedRegion, geoData]);
 
   // Get districts based on selected city
+  // const getDistrictOptions = useCallback(() => {
+  //   if (!selectedRegion || !selectedCity || !geoData) return [];
+  //   return geoData[selectedRegion][selectedCity].map((district) => ({
+  //     value: district,
+  //     name: district,
+  //   }));
+  // }, [selectedRegion, selectedCity, geoData]);
   const getDistrictOptions = useCallback(() => {
-    if (!selectedRegion || !selectedCity || !geoData) return [];
-    return geoData[selectedRegion][selectedCity].map((district) => ({
+    if (
+      !selectedRegion ||
+      !selectedCity ||
+      !geoData ||
+      !geoData[selectedRegion]?.cities?.[selectedCity]?.districts
+    ) {
+      return [];
+    }
+
+    return Object.keys(
+      geoData[selectedRegion].cities[selectedCity].districts
+    ).map((district) => ({
       value: district,
-      name: district,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
+          : geoData[selectedRegion].cities[selectedCity].districts[district].en,
     }));
   }, [selectedRegion, selectedCity, geoData]);
-
   // Handle region selection
   const handleRegionChange = (e) => {
     const { name, value } = e.target;
+    console.log("value", value);
     setSelectedRegion(value || null);
     setSelectedCity(null); // Reset city when region changes
     // Update your form data as needed
@@ -395,7 +426,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.primaryContactName && (
-          <div className="error">{formErrors.primaryContactName}</div>
+          <div className="error">{t(formErrors.primaryContactName)}</div>
         )}
       </div>
 
@@ -447,7 +478,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.primaryContactDesignation && (
-          <div className="error">{formErrors.primaryContactDesignation}</div>
+          <div className="error">{t(formErrors.primaryContactDesignation)}</div>
         )}
       </div>
 
@@ -501,7 +532,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.primaryContactEmail && (
-          <div className="error">{formErrors.primaryContactEmail}</div>
+          <div className="error">{t(formErrors.primaryContactEmail)}</div>
         )}
       </div>
 
@@ -552,7 +583,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.primaryContactMobile && (
-          <div className="error">{formErrors.primaryContactMobile}</div>
+          <div className="error">{t(formErrors.primaryContactMobile)}</div>
         )}
       </div>
 
@@ -629,7 +660,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.businessHeadName && (
-          <div className="error">{formErrors.businessHeadName}</div>
+          <div className="error">{t(formErrors.businessHeadName)}</div>
         )}
       </div>
 
@@ -683,7 +714,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.businessHeadDesignation && (
-          <div className="error">{formErrors.businessHeadDesignation}</div>
+          <div className="error">{t(formErrors.businessHeadDesignation)}</div>
         )}
       </div>
 
@@ -736,7 +767,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.businessHeadEmail && (
-          <div className="error">{formErrors.businessHeadEmail}</div>
+          <div className="error">{t(formErrors.businessHeadEmail)}</div>
         )}
       </div>
 
@@ -789,7 +820,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.businessHeadMobile && (
-          <div className="error">{formErrors.businessHeadMobile}</div>
+          <div className="error">{t(formErrors.businessHeadMobile)}</div>
         )}
       </div>
 
@@ -844,7 +875,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.financeHeadName && (
-          <div className="error">{formErrors.financeHeadName}</div>
+          <div className="error">{t(formErrors.financeHeadName)}</div>
         )}
       </div>
 
@@ -898,7 +929,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.financeHeadDesignation && (
-          <div className="error">{formErrors.financeHeadDesignation}</div>
+          <div className="error">{t(formErrors.financeHeadDesignation)}</div>
         )}
       </div>
 
@@ -951,7 +982,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.financeHeadEmail && (
-          <div className="error">{formErrors.financeHeadEmail}</div>
+          <div className="error">{t(formErrors.financeHeadEmail)}</div>
         )}
       </div>
 
@@ -1004,7 +1035,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.financeHeadMobile && (
-          <div className="error">{formErrors.financeHeadMobile}</div>
+          <div className="error">{t(formErrors.financeHeadMobile)}</div>
         )}
       </div>
 
@@ -1059,7 +1090,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.purchasingHeadName && (
-          <div className="error">{formErrors.purchasingHeadName}</div>
+          <div className="error">{t(formErrors.purchasingHeadName)}</div>
         )}
       </div>
 
@@ -1113,7 +1144,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.purchasingHeadDesignation && (
-          <div className="error">{formErrors.purchasingHeadDesignation}</div>
+          <div className="error">{t(formErrors.purchasingHeadDesignation)}</div>
         )}
       </div>
 
@@ -1166,7 +1197,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.purchasingHeadEmail && (
-          <div className="error">{formErrors.purchasingHeadEmail}</div>
+          <div className="error">{t(formErrors.purchasingHeadEmail)}</div>
         )}
       </div>
 
@@ -1219,7 +1250,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.purchasingHeadMobile && (
-          <div className="error">{formErrors.purchasingHeadMobile}</div>
+          <div className="error">{t(formErrors.purchasingHeadMobile)}</div>
         )}
       </div>
 
@@ -1269,7 +1300,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.buildingName && (
-          <div className="error">{formErrors.buildingName}</div>
+          <div className="error">{t(formErrors.buildingName)}</div>
         )}
       </div>
 
@@ -1316,7 +1347,7 @@ function ContactDetails({
               Previous: {originalCustomerData?.street || "(empty)"}
             </div>
           )}
-        {formErrors.street && <div className="error">{formErrors.street}</div>}
+        {formErrors.street && <div className="error">{t(formErrors.street)}</div>}
       </div>
       {/* region dropdown */}
       <div className="form-group">
@@ -1337,7 +1368,10 @@ function ContactDetails({
             geoData
               ? Object.keys(geoData).map((region) => ({
                   value: region,
-                  name: region,
+                  name:
+                    i18n.language === "ar"
+                      ? geoData[region].ar
+                      : geoData[region].en,
                 }))
               : []
           }
@@ -1369,7 +1403,7 @@ function ContactDetails({
               Previous: {originalCustomerData?.region || "(empty)"}
             </div>
           )}
-        {formErrors.region && <div className="error">{formErrors.region}</div>}
+        {formErrors.region && <div className="error">{t(formErrors.region)}</div>}
       </div>
 
       {/* city dropdown */}
@@ -1391,10 +1425,11 @@ function ContactDetails({
           onChange={handleCityChange}
           disabled={
             (originalCustomerData &&
-            customerData &&
-            originalCustomerData?.city === customerData?.city &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending") || !selectedRegion
+              customerData &&
+              originalCustomerData?.city === customerData?.city &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending") ||
+            !selectedRegion
           }
           className={
             originalCustomerData &&
@@ -1415,7 +1450,7 @@ function ContactDetails({
               Previous: {originalCustomerData?.city || "(empty)"}
             </div>
           )}
-        {formErrors.city && <div className="error">{formErrors.city}</div>}
+        {formErrors.city && <div className="error">{t(formErrors.city)}</div>}
       </div>
       {/*district dropdown*/}
       <div className="form-group">
@@ -1436,10 +1471,11 @@ function ContactDetails({
           onChange={handleDistrictChange}
           disabled={
             (originalCustomerData &&
-            customerData &&
-            originalCustomerData?.district === customerData?.district &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending") || !selectedCity
+              customerData &&
+              originalCustomerData?.district === customerData?.district &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending") ||
+            !selectedCity
           }
           className={
             originalCustomerData &&
@@ -1461,7 +1497,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.district && (
-          <div className="error">{formErrors.district}</div>
+          <div className="error">{t(formErrors.district)}</div>
         )}
       </div>
 
@@ -1479,9 +1515,18 @@ function ContactDetails({
         </label>
         <SearchableDropdown
           name="zone"
-          options={basicMasterLists?.zone || []}
+          options={
+            (basicMasterLists?.zone || []).map(item => ({
+              value: item.value,
+              name: i18n.language === "ar" ? item.valueLc : item.value
+            }))
+          }
           value={customerData?.zone || ""}
-          onChange={onChangeCustomerData}
+          onChange={e => {
+            onChangeCustomerData({
+              target: { name: "zone", value: e.target.value }
+            });
+          }}
           disabled={
             originalCustomerData &&
             customerData &&
@@ -1508,7 +1553,7 @@ function ContactDetails({
               Previous: {originalCustomerData?.zone || "(empty)"}
             </div>
           )}
-        {formErrors.zone && <div className="error">{formErrors.zone}</div>}
+        {formErrors.zone && <div className="error">{t(formErrors.zone)}</div>}
       </div>
       <div className="form-group">
         <label htmlFor="pincode">
@@ -1554,7 +1599,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.pincode && (
-          <div className="error">{formErrors.pincode}</div>
+          <div className="error">{t(formErrors.pincode)}</div>
         )}
       </div>
 
@@ -1628,7 +1673,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.geolocation && (
-          <div className="error">{formErrors.geolocation}</div>
+          <div className="error">{t(formErrors.geolocation)}</div>
         )}
       </div>
 

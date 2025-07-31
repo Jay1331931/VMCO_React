@@ -20,7 +20,12 @@ export const getOptionsFromBasicsMaster = async (fieldName) => {
 
     const result = await response.json(); // Don't forget 'await' here
 
-    const options = result.data.map((item) => item.value);
+    console.log("Response from basics-masters:", result); 
+
+    const options = result.data.map((item) => {
+  return { value: item.value, valueLc: item.valueLc };
+});
+    // const options = result.data.map((item) => item.value );
     return options;
   } catch (err) {
     console.error("Error fetching options:", err);

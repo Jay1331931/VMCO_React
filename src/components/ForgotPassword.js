@@ -63,20 +63,20 @@ function ForgotPassword() {
 
     // Validation - only show errors after submit
     if (!email) {
-      setError(t("Email is required"));
+      setError("Email is required");
       return;
     }
     if (!otp) {
-      setError(t("OTP is required"));
+      setError("OTP is required");
       return;
     }
     if (otp.length !== 6) {
-      setError(t("OTP must be 6 digits"));
+      setError("OTP must be 6 digits");
       return;
     }
 
     if (!newPassword || !confirmPassword) {
-      setError(t("Please fill in all fields"));
+      setError("Please fill in all fields");
       return;
     }
 
@@ -85,22 +85,22 @@ function ForgotPassword() {
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     if (newPassword.length < 8) {
-      setError(t("Password must be at least 8 characters"));
+      setError("Password must be at least 8 characters");
       return;
     }
 
     if (!passwordRegex.test(newPassword)) {
       setError(
-        t(
+      
           "Password must contain at least one uppercase, one lowercase, one number and one special character"
-        )
+        
       );
       return;
     }
 
     // Only check password matching after submit
     if (newPassword !== confirmPassword) {
-      setError(t("Passwords do not match"));
+      setError("Passwords do not match");
       return;
     }
 
@@ -116,7 +116,7 @@ function ForgotPassword() {
         Swal.fire({
           icon: "error",
           title: t(data?.status),
-          text: data.message || t("Password reset failed"),
+          text: t(data.message) || t("Password reset failed"),
           confirmButtonText: t("OK"),
         });
         return;
@@ -136,7 +136,7 @@ function ForgotPassword() {
       }, 2000);
     } catch (err) {
       console.error("Password reset error:", err);
-       setError(t(err.message) || t("An error occurred. Please try again."));
+       setError(err.message || "An error occurred. Please try again.");
     } finally {
       setIsSubmitLoading(false); // Stop loading
     }
@@ -149,13 +149,13 @@ function ForgotPassword() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email) {
-      setError(t("Email is required"));
+      setError("Email is required");
       return;
     }
 
     // Check email format before sending OTP
     if (!emailRegex.test(email)) {
-      setError(t("Please enter a valid email address"));
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -338,7 +338,7 @@ function ForgotPassword() {
                     onChange={(e) => setOtp(e.target.value)}
                   />
                   {/* Add Verify OTP button */}
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleVerifyOtp}
                     disabled={isVerifyLoading || !otp}
@@ -355,7 +355,7 @@ function ForgotPassword() {
                     }}
                   >
                     {isVerifyLoading ? t("Verifying...") : t("Verify OTP")}
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>
@@ -379,7 +379,7 @@ function ForgotPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-message">{t(error)}</p>}
           </form>
 
           <div className="onboarding-footer">

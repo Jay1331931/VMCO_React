@@ -946,10 +946,10 @@ function CustomerDetails() {
         }
         if (field in dataToValidate && !dataToValidate[field]) {
           if (documentList.includes(field) || field === "declarationSignature") {
-            errors[field] = t("This document is required.");
+            errors[field] = "This document is required.";
           } 
           if(!tradingDocumentList.includes(field) && !nonTradingDocumentList.includes(field)) {
-            errors[field] = t("This field is required.");
+            errors[field] = "This field is required.";
           }
         }
       });
@@ -984,17 +984,15 @@ function CustomerDetails() {
            dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.limit <= 0
           ) {
             // Set error for each missing entity assignment
-            errors[`${entity}CreditLimit`] = t(
+            errors[`${entity}CreditLimit`] = 
               `Credit Limit is required.`
-            );
           }
            if (
            dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.period <= 0
           ) {
             // Set error for each missing entity assignment
-            errors[`${entity}CreditPeriod`] = t(
+            errors[`${entity}CreditPeriod`] = 
               `Credit Period is required.`
-            );
           }
         };
       } 
@@ -1010,13 +1008,13 @@ function CustomerDetails() {
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
       if (arabicList.includes(field) && value && !isArabicText(value)) {
-        errors[field] = t("Please enter Arabic text.");
+        errors[field] = "Please enter Arabic text.";
       }
 
       if (field.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errors[field] = t("Invalid email format");
+          errors[field] = "Invalid email format";
         }
       }
 
@@ -1026,57 +1024,57 @@ function CustomerDetails() {
       ) {
         const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
         if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = t(
+          errors[field] = 
             "Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted"
-          );
+          
         }
       }
 
       if (field.toLowerCase().includes("iban")) {
         const saudiIbanRegex = /^SA\d{22}$/;
         if (value && !saudiIbanRegex.test(value)) {
-          errors[field] = t("Invalid format! SAXXXXXXXXXXXXXX accepted");
+          errors[field] = "Invalid format! SAXXXXXXXXXXXXXX accepted";
         }
       }
 
       if (field.toLowerCase().includes("bankaccountnumber")) {
         const saudiBankAccountRegex = /^\d{15,20}$/;
         if (value && !saudiBankAccountRegex.test(value)) {
-          errors[field] = t("Invalid format! 15 to 20 digits accepted");
+          errors[field] = "Invalid format! 15 to 20 digits accepted";
         }
       }
 
       if (field.toLowerCase().includes("baladeahlicensenumber")) {
         const baladeahLicenseRegex = /^\d{9,10}$/;
         if (value && !baladeahLicenseRegex.test(value)) {
-          errors[field] = t("Invalid format! 9 to 10 digits accepted");
+          errors[field] = "Invalid format! 9 to 10 digits accepted";
         }
       }
 
       if (field.toLowerCase().includes("vatnumber")) {
         const saudiVatRegex = /^\d{15}$/;
         if (value && !saudiVatRegex.test(value)) {
-          errors[field] = t("Invalid format! 15 digits required");
+          errors[field] = "Invalid format! 15 digits required";
         }
       }
 
       if (field.toLowerCase().includes("crnumber")) {
         const crNumberRegex = /^[1-9]\d{9}$/;
         if (value && !crNumberRegex.test(value)) {
-          errors[field] = t("Invalid format! 10 digits required");
+          errors[field] = "Invalid format! 10 digits required";
         }
       }
       if (field.toLowerCase().includes("governmentregistrationnumber")) {
         const govRegNumberRegex = /^[1-9]\d{8,9}$/;
         if (value && !govRegNumberRegex.test(value)) {
-          errors[field] = t("Invalid format! 8 to 9 digits accepted");
+          errors[field] = "Invalid format! 8 to 9 digits accepted";
         }
       }
 
       if (field.toLowerCase().includes("pincode")) {
         const saudiPincodeRegex = /^\d{5}$/;
         if (value && !saudiPincodeRegex.test(value)) {
-          errors[field] = t("Invalid format! 5 digits required");
+          errors[field] = "Invalid format! 5 digits required";
         }
       }
       if (
@@ -1089,7 +1087,7 @@ function CustomerDetails() {
             f !== field &&
             dataToValidate[f] === value
           ) {
-            errors[field] = t("This email is already used.");
+            errors[field] = "This email is already used.";
             break;
           }
         }
@@ -1099,7 +1097,7 @@ function CustomerDetails() {
             f !== field &&
             customerContactsData[f] === value
           ) {
-            errors[field] = t("This email is already used.");
+            errors[field] = "This email is already used.";
             break;
           }
         }
@@ -1114,7 +1112,7 @@ function CustomerDetails() {
             f !== field &&
             dataToValidate[f] === value
           ) {
-            errors[field] = t("This mobile number is already used.");
+            errors[field] = "This mobile number is already used.";
             break;
           }
         }
@@ -1124,7 +1122,7 @@ function CustomerDetails() {
             f !== field &&
             customerContactsData[f] === value
           ) {
-            errors[field] = t("This mobile number is already used.");
+            errors[field] = "This mobile number is already used.";
             break;
           }
         }

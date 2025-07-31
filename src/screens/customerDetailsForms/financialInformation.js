@@ -21,7 +21,7 @@ function FinancialInformation({
   setTabsHeight,
   formErrors = {},
 }) {
-  const { t } = useTranslation();
+  const { t,i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const rbacMgr = new RbacManager(
@@ -134,7 +134,7 @@ function FinancialInformation({
             </div>
           )}
         {formErrors.bankName && (
-          <div className="error">{formErrors.bankName}</div>
+          <div className="error">{t(formErrors.bankName)}</div>
         )}
       </div>
 
@@ -186,7 +186,7 @@ function FinancialInformation({
             </div>
           )}
         {formErrors.bankAccountNumber && (
-          <div className="error">{formErrors.bankAccountNumber}</div>
+          <div className="error">{t(formErrors.bankAccountNumber)}</div>
         )}
       </div>
 
@@ -233,7 +233,7 @@ function FinancialInformation({
               Previous: {originalCustomerData?.iban || "(empty)"}
             </div>
           )}
-        {formErrors.iban && <div className="error">{formErrors.iban}</div>}
+        {formErrors.iban && <div className="error">{t(formErrors.iban)}</div>}
       </div>
       <div className="form-group" />
 
@@ -279,8 +279,8 @@ function FinancialInformation({
                 {t("Select")}
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type} value={type}>
-                  {t(type)}
+                <option key={type.value} value={type.value}>
+                  {i18n.language === "ar" ? type.valueLc : type.value}
                 </option>
               ))}
             </select>
@@ -334,9 +334,9 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type} value={type}>
-                  {t(type)}
+               {basicMasterLists?.pricingPolicy?.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {i18n.language === "ar" ? type.valueLc : type.value}
                 </option>
               ))}
             </select>
@@ -390,9 +390,9 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type} value={type}>
-                  {t(type)}
+               {basicMasterLists?.pricingPolicy?.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {i18n.language === "ar" ? type.valueLc : type.value}
                 </option>
               ))}
             </select>
@@ -447,9 +447,9 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type} value={type}>
-                  {t(type)}
+               {basicMasterLists?.pricingPolicy?.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {i18n.language === "ar" ? type.valueLc : type.value}
                 </option>
               ))}
             </select>
@@ -504,9 +504,9 @@ function FinancialInformation({
               <option value="" disabled>
                 {t("Select")}
               </option>
-              {basicMasterLists?.pricingPolicy?.map((type) => (
-                <option key={type} value={type}>
-                  {t(type)}
+                {basicMasterLists?.pricingPolicy?.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {i18n.language === "ar" ? type.valueLc : type.value}
                 </option>
               ))}
             </select>

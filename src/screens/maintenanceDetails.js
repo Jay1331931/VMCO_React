@@ -410,7 +410,7 @@ const serialNumberDebounceRef = useRef(null);
           // Extract issue type values from the response data and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
-            displayText: t(item.value)
+            displayText: currentLanguage === "ar" ? item.valueLc : item.value
           }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
@@ -418,7 +418,7 @@ const serialNumberDebounceRef = useRef(null);
           // Handle the actual response structure and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
-            displayText: t(item.value)
+            displayText: currentLanguage === "ar" ? item.valueLc : item.value
           }));
           setIssueTypeOptions(issueTypeValues);
         } else {

@@ -514,20 +514,20 @@ const BranchDetailsForm = ({
     if (mandatoryCheckRequired) {
       mandatoryFields.forEach((field) => {
         if (field in dataToValidate && !dataToValidate[field]) {
-          errors[field] = t("This field is required");
+          errors[field] = "This field is required";
         }
       });
     }
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
       if (arabicList.includes(field) && value && !isArabicText(value)) {
-        errors[field] = t("Please enter Arabic text.");
+        errors[field] = "Please enter Arabic text.";
       }
 
       if (field.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errors[field] = t("Invalid email format");
+          errors[field] = " ";
         }
       }
 
@@ -537,10 +537,13 @@ const BranchDetailsForm = ({
       ) {
         const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
         if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = t("Invalid mobile number format");
+          errors[field] = "Invalid mobile number format";
         }
       }
     }
+    if( dataToValidate?.locationType?.toLowerCase() === "others (specify)" && !dataToValidate?.locationTypeOther) {
+        errors.locationTypeOther = "This field is required.";
+      }
     return errors;
   };
 

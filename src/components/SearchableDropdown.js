@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-
-
 function SearchableDropdown({
   name,
   options,
@@ -11,6 +9,7 @@ function SearchableDropdown({
   disabled,
   className,
   placeholder = "Value",
+  style = {},
 }) {
   // Add default 'All' option at the top
   const allOption = { name: "All", value: null };
@@ -18,26 +17,23 @@ function SearchableDropdown({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
-  const { t, i18n } = useTranslation(); 
+  const { t, i18n } = useTranslation();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Get filtered options based on search term
   const filteredOptions = mergedOptions.filter((opt) => {
-    const optionText = typeof opt === "object" ? (opt.name || opt.label || "") : (opt || "");
+    const optionText =
+      typeof opt === "object" ? opt.name || opt.label || "" : opt || "";
     return optionText.toLowerCase().includes((searchTerm || "").toLowerCase());
   });
 
@@ -69,7 +65,10 @@ function SearchableDropdown({
     selectedOption = allOption;
   } else {
     selectedOption = mergedOptions.find(
-      (opt) => (typeof opt === "object" ? opt.employeeId || opt.value || opt.name : opt) === value
+      (opt) =>
+        (typeof opt === "object"
+          ? opt.employeeId || opt.value || opt.name
+          : opt) === value
     );
   }
   const displayText = selectedOption
@@ -79,23 +78,24 @@ function SearchableDropdown({
     : placeholder;
 
   return (
-    <div className={`searchable-dropdown `} ref={dropdownRef} >
+    <div className={`searchable-dropdown `} ref={dropdownRef}>
       <div
         className={`dropdown-header ${className || ""}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         tabIndex={disabled ? -1 : 0}
-        style={
-          disabled
+        style={{
+          ...(disabled
             ? { backgroundColor: "#e9ecef", cursor: "not-allowed" }
-            : {}
-        }
+            : {}),
+          ...style,
+        }}
       >
         <span className="selected-value">{displayText}</span>
         <span className="dropdown-arrow">▼</span>
       </div>
 
       {isOpen && !disabled && (
-        <div className="dropdown-content">
+        <div className={`dropdown-content  ${className || ""}`}>
           <input
             type="text"
             className="dropdown-search"
@@ -109,18 +109,28 @@ function SearchableDropdown({
           <div className="dropdown-options">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt, idx) => {
-                const isOptDisabled = typeof opt === 'object' && opt.disabled;
+                const isOptDisabled = typeof opt === "object" && opt.disabled;
                 return (
                   <div
                     key={idx}
-                    className={`dropdown-option${isOptDisabled ? ' disabled' : ''}`}
+                    className={`dropdown-option${
+                      isOptDisabled ? " disabled" : ""
+                    }`}
                     onClick={() => {
                       if (!isOptDisabled) handleOptionSelect(opt);
                     }}
-                    style={isOptDisabled ? { color: '#aaa', cursor: 'not-allowed', background: '#eae9e9ff' } : {}}
+                    style={
+                      isOptDisabled
+                        ? {
+                            color: "#aaa",
+                            cursor: "not-allowed",
+                            background: "#eae9e9ff",
+                          }
+                        : {}
+                    }
                     aria-disabled={isOptDisabled}
                   >
-                    {typeof opt === "object" ? t(opt.name) : t(opt)}
+                    {typeof opt === "object" ? opt.name : opt}
                   </div>
                 );
               })

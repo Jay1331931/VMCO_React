@@ -18,7 +18,7 @@ const NotFound = () => {
           Sorry, the page you are looking for doesn't exist or has been moved.
         </p>
         <div className="error-actions">
-          <Link to="/" className="btn-home">
+          <Link to="/catalog" className="btn-home">
             Go to Home
           </Link>
           <button onClick={handleGoBack} className="btn-back">

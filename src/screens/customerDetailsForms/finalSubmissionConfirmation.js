@@ -15,20 +15,20 @@ const FinalSubmissionConfirmation = ({
 }) => {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-  
-    const rbacMgr = new RbacManager(
-      user?.userType == "employee" && user?.roles[0] !== "admin"
-        ? user?.designation
-        : user?.roles[0],
-      mode === "add" || customerData?.customerStatus === "new"
-        ? "custDetailsAdd"
-        : "custDetailsEdit"
-    );
-    console.log("RBAC Manager:", rbacMgr);
-  
-    const isV = rbacMgr.isV.bind(rbacMgr);
-    const isE = rbacMgr.isE.bind(rbacMgr);
-    
+
+  const rbacMgr = new RbacManager(
+    user?.userType == "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    mode === "add" || customerData?.customerStatus === "new"
+      ? "custDetailsAdd"
+      : "custDetailsEdit"
+  );
+  console.log("RBAC Manager:", rbacMgr);
+
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
   const signatureInputRef = useRef();
   const [signaturePreviews, setSignaturePreviews] = useState({
     declarationSignature: null,
@@ -70,7 +70,10 @@ const FinalSubmissionConfirmation = ({
   // Remove signature (clear from state and upload queue)
   const handleSignatureDelete = (signatureType) => {
     onChangeCustomerData({
-      target: { name: signatureType, value: originalCustomerData[signatureType] || "" },
+      target: {
+        name: signatureType,
+        value: originalCustomerData[signatureType] || "",
+      },
     });
     delete signatureToUpload[signatureType];
     // Reset the file input value so the same file can be uploaded again
@@ -110,11 +113,7 @@ const FinalSubmissionConfirmation = ({
   // Auto-capture date on mount if not set
   useEffect(() => {
     if (!customerData.declarationDate) {
-    //   setConfirmationData((prev) => ({
-    //     ...prev,
-    //     date: new Date().toISOString().slice(0, 10),
-    //   }));
-    customerData.declarationDate = new Date().toISOString();
+      customerData.declarationDate = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
     }
     // eslint-disable-next-line
   }, []);
@@ -141,16 +140,24 @@ const FinalSubmissionConfirmation = ({
           required
           disabled={mode === "edit" || isE("declarationName")}
         />
-        {formErrors?.declarationName && <div className="error">{formErrors.declarationName}</div>}
+        {formErrors?.declarationName && (
+          <div className="error">{t(formErrors.declarationName)}</div>
+        )}
       </div>
-      
+
       <div className="form-group">
         <label htmlFor="confirmationDate">{t("Date")}</label>
         <input
           type="date"
           id="confirmationDate"
           name="date"
-          value={customerData?.declarationDate?.slice(0, 10) || new Date().toISOString().slice(0, 10)}
+          value={
+            customerData?.declarationDate
+              ? new Date(customerData.declarationDate).toLocaleDateString(
+                  "en-CA"
+                )
+              : new Date().toLocaleDateString("en-CA")
+          }
           readOnly
           disabled
         />
@@ -170,79 +177,84 @@ const FinalSubmissionConfirmation = ({
           ref={signatureInputRef}
           onChange={(e) => handleSignatureChange(e, "declarationSignature")}
           required
-          disabled={mode === "edit" && customerData?.customerStatus !== "pending"}
+          disabled={
+            mode === "edit" && customerData?.customerStatus !== "pending"
+          }
         />
         <button
-                  type="button"
-                  className="custom-file-button"
-                  onClick={() => signatureInputRef.current?.click()}
-                  disabled={
-                    (mode === "edit" && customerData?.customerStatus === "pending") || isE("declarationName")
-                  }
-                  style={{ width: "100px" }}
-                >
-                  {t("Upload")}
-                </button>
-                {/* Show preview if file is selected but not saved */}
-                {signaturePreviews.declarationSignature && (
-                  <div className="logo-preview">
-                    <img
-                      src={signaturePreviews.declarationSignature}
-                      alt="Signature Preview"
-                      style={{
-                        maxWidth: 120,
-                        maxHeight: 120,
-                        marginTop: 8,
-                        border: "1px solid #ccc",
-                        borderRadius: 4,
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="delete-file-button"
-                      onClick={() => {
-                        setSignaturePreviews((prev) => {
-                          if (prev.declarationSignature) URL.revokeObjectURL(prev.declarationSignature);
-                          return { ...prev, declarationSignature: null };
-                        });
-                        handleSignatureDelete("declarationSignature");
-                      }}
-                      style={{ marginLeft: 8, fontSize: "20px" }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
-                {/* Show uploaded file name as link if present and no preview */}
-                {!signaturePreviews.declarationSignature && customerData?.declarationSignature && (
-                  <div className="logo-preview">
-                    <a
-                      href="#"
-                      className="file-link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleViewSignature(
-                          customerData.id,
-                          customerData.declarationSignature,
-                          "declarationSignature"
-                        );
-                      }}
-                      style={{ marginRight: 8 }}
-                    >
-                      {typeof customerData.declarationSignature === "string"
-                        ? (() => {
-                            const name = customerData.declarationSignature
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ");
-                            const maxLen = 20;
-                            return name.length > maxLen
-                              ? name.substring(0, maxLen) + "..."
-                              : name;
-                          })()
-                        : "View Document"}
-                    </a>
-                    {/* <button
+          type="button"
+          className="custom-file-button"
+          onClick={() => signatureInputRef.current?.click()}
+          disabled={
+            (mode === "edit" && customerData?.customerStatus === "pending") ||
+            isE("declarationName")
+          }
+          style={{ width: "100px" }}
+        >
+          {t("Upload")}
+        </button>
+        {/* Show preview if file is selected but not saved */}
+        {signaturePreviews.declarationSignature && (
+          <div className="logo-preview">
+            <img
+              src={signaturePreviews.declarationSignature}
+              alt="Signature Preview"
+              style={{
+                maxWidth: 120,
+                maxHeight: 120,
+                marginTop: 8,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            />
+            <button
+              type="button"
+              className="delete-file-button"
+              onClick={() => {
+                setSignaturePreviews((prev) => {
+                  if (prev.declarationSignature)
+                    URL.revokeObjectURL(prev.declarationSignature);
+                  return { ...prev, declarationSignature: null };
+                });
+                handleSignatureDelete("declarationSignature");
+              }}
+              style={{ marginLeft: 8, fontSize: "20px" }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {/* Show uploaded file name as link if present and no preview */}
+        {!signaturePreviews.declarationSignature &&
+          customerData?.declarationSignature && (
+            <div className="logo-preview">
+              <a
+                href="#"
+                className="file-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleViewSignature(
+                    customerData.id,
+                    customerData.declarationSignature,
+                    "declarationSignature"
+                  );
+                }}
+                style={{ marginRight: 8 }}
+              >
+                {typeof customerData.declarationSignature === "string"
+                  ? (() => {
+                      const name = customerData.declarationSignature
+                        .split("_")
+                        .slice(0, 2)
+                        .join(" ");
+                      const maxLen = 20;
+                      return name.length > maxLen
+                        ? name.substring(0, maxLen) + "..."
+                        : name;
+                    })()
+                  : "View Document"}
+              </a>
+              {/* <button
                       type="button"
                       className="delete-file-button"
                       onClick={() => handleSignatureDelete("declarationSignature")}
@@ -250,14 +262,14 @@ const FinalSubmissionConfirmation = ({
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </button> */}
-                  </div>
-                )}
-                {formErrors?.declarationSignature && (
-                  <div className="error">{formErrors.declarationSignature}</div>
-                )}
-              </div>
             </div>
-          );
-        };
+          )}
+        {formErrors?.declarationSignature && (
+          <div className="error">{t(formErrors.declarationSignature)}</div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default FinalSubmissionConfirmation;
