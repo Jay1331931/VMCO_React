@@ -524,7 +524,7 @@ function OrderDetails() {
       return;
     }
 
-    // Enhanced payment method determination logic based on cart page logic
+    // Enhanced payment method determination logic
     if (formMode === 'add' && !formData.paymentMethod && !selectedMethod) {
       // Check entity type and product composition
       const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
@@ -839,23 +839,23 @@ function OrderDetails() {
           console.log('No products were removed from the order');
         }
       }
-      // Check if this is a VMCO Machines order that needs discount workflow approval
-      if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
-        (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
-        formData.customerId) {
-        // Directly trigger the discount workflow without checking if it already exists
-        console.log(`Directly triggering discount workflow for order ${formData.id}`);
-        console.log(`- formData.entity: "${formData.entity}"`);
-        console.log(`- formData.productCategory: "${formData.productCategory}"`);
-        console.log(`- formData.customerId: ${formData.customerId}`);
+      // // Check if this is a VMCO Machines order that needs discount workflow approval
+      // if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
+      //   (formData.isMachine && formData.isMachine === true) &&
+      //   formData.customerId) {
+      //   // Directly trigger the discount workflow without checking if it already exists
+      //   console.log(`Directly triggering discount workflow for order ${formData.id}`);
+      //   console.log(`- formData.entity: "${formData.entity}"`);
+      //   console.log(`- formData.isMachine: "${formData.isMachine}"`);
+      //   console.log(`- formData.customerId: ${formData.customerId}`);
 
-        await triggerDiscountWorkflow(formData.id, formData.customerId);
-      } else {
-        console.log('Skipping discount workflow creation in order update because conditions failed:');
-        console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
-        console.log(`- productCategory is vmco machines (case insensitive): ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
-        console.log(`- has customerID: ${Boolean(formData.customerId)}`);
-      }
+      //   await triggerDiscountWorkflow(formData.id, formData.customerId);
+      // } else {
+      //   console.log('Skipping discount workflow creation in order update because conditions failed:');
+      //   console.log(`- entity is vmco (case insensitive): ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
+      //   console.log(`- isMachine is true: ${formData.isMachine && formData.isMachine === true}`);
+      //   console.log(`- has customerID: ${Boolean(formData.customerId)}`);
+      // }
 
       setIsEditMode(false);
 
@@ -1057,7 +1057,7 @@ function OrderDetails() {
         branchRegion: formData.branchRegion || '', // Include branch region
         branchCity: formData.branchCity || '', // Include branch city        
         orderBy: orderByName, // <-- Use fetched employee name here
-        isMachine: formData.isMachine, // Include isMachine flag
+        isMachine: formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ? true : false,
         paymentMethod: finalPaymentMethod,
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         status: sampleMode ? 'Open' : orderStatus,
@@ -1250,7 +1250,7 @@ function OrderDetails() {
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh,
             sampleOrder: sampleMode ? true : false,
-            status: sampleMode ? 'Approved' : formData.status,
+            status: sampleMode ? 'Approved' : orderStatus,
           };
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
@@ -1533,6 +1533,7 @@ function OrderDetails() {
           body: JSON.stringify({
             productId: product.id,
             customerId: formData.customerId,
+            entity: formData.entity,
             pricingPolicy: pricingPolicy.toLowerCase()
           })
         });
@@ -1606,7 +1607,6 @@ function OrderDetails() {
           unitPrice,
           net_amount: netAmount.toFixed(2),
           sales_tax_amount: vatAmount.toFixed(2),
-          //sugarTaxPrice: sugarTaxPrice.toFixed(2),
           vatPercentage: Number(finalVat).toFixed(2)
         })
       });
@@ -1674,7 +1674,6 @@ function OrderDetails() {
         product_name_lc: productObj?.productNameLc || productObj?.product_name_lc || '',
         unit: productObj?.unit || '',
         vat_percentage: Number(finalVat).toFixed(2),
-        //salesExecutive: salesExecutive
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: 'POST',
@@ -2544,7 +2543,7 @@ function OrderDetails() {
       console.log(`- formData.id type: ${typeof formData.id}, value: ${formData.id}`);
       console.log(`- formData.customerId type: ${typeof formData.customerId}, value: ${formData.customerId}`);      // Use case-insensitive comparison for entity
       if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
-        (formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()) &&
+        (formData.isMachine && formData.isMachine === true) &&
         formData.customerId && formData.id) {
 
         // Additional validation before calling the workflow
@@ -2564,8 +2563,7 @@ function OrderDetails() {
         console.log("Skipping discount workflow - not a VMCO Machines order or missing customer ID");
         console.log(`- entity: ${formData.entity}`);
         console.log(`- entity.toLowerCase() === 'vmco': ${formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()}`);
-        console.log(`- productCategory: ${formData.productCategory}`);
-        console.log(`- productCategory.toLowerCase() === 'vmco machines': ${formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase()}`);
+        console.log(`- isMachine is: ${formData.isMachine}`);
         console.log(`- customerId: ${Boolean(formData.customerId)}`);
       }
 
