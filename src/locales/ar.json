@@ -630,6 +630,7 @@
   "Branch saved successfully.": "تم حفظ الفرع بنجاح.",
   "Branch is currently under approval": "الفرع قيد الموافقة حاليًا.",
   "Password reset successful! Redirecting...": "تم إعادة تعيين كلمة المرور بنجاح! جارٍ التوجيه..." ,
-  "Invalid or expired OTP": "رمز التحقق غير صالح أو منتهي الصلاحية"
+  "Invalid or expired OTP": "رمز التحقق غير صالح أو منتهي الصلاحية",
+   "OTP has expired  Resend OTP to reset password": "انتهت صلاحية رمز التحقق. أعد إرسال رمز التحقق لإعادة تعيين كلمة المرور"
 
 }
