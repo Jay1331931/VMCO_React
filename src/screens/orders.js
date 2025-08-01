@@ -14,6 +14,8 @@ import Swal from "sweetalert2";
 import { formatDate } from "../utilities/dateFormatter";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { or } from "ajv/dist/compile/codegen";
+import PdfPopupViewer from "../components/PdfPopupViewer";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -41,7 +43,8 @@ function Orders() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
-
+ const [showModal, setShowModal] = useState(false);
+  const [pdfFiles, setPdfFiles] = useState([]);
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -259,47 +262,82 @@ function Orders() {
       });
     }
   };
+const handleViewSignature = async (orderId, customerId, Invoices) => {
+ 
 
-  const handlePay = async (order, email = false) => {
-    try {
+  try {
+    // Reset PDF files before loading new ones
+    setPdfFiles([]); // Optional but recommended to avoid stacking from previous view
+
+    for (let file of Invoices) {
       const { data } = await axios.post(
-        `${API_BASE_URL}/generatePayment-link`,
+        `${API_BASE_URL}/get-files`,
         {
-          id: order.id,
-          endPoint: "payment-opations/order",
-          IsEmail: email,
+          fileName: file,
+          containerType: "invoices",
+          id: customerId,    // replaced hardcoded id:64
+          orderId: orderId,  // replaced hardcoded orderId:3
         },
         { withCredentials: true }
       );
-       if(email){
-                Swal.fire({
-                  title: t("Payment Link Generated"),
-                  text: t("A payment link has been sent to the customer's email."),
-                  icon: "success",
-                  confirmButtonText: t("OK"),
-                });
-             }
 
-      if (email) {
-        Swal.fire({
-          title: t("Payment Link Generated"),
-          text: t("A payment link has been sent to the customer's email."),
-          icon: t("success"),
-          confirmButtonText: t("OK"),
-        });
-      }
-      else if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank", "width=500,height=600");
-      }
-    } catch (error) {
-      console.error("Error generating payment link:", error);
-      Swal.fire({
-        title: t("Error"),
-        text: t("Failed to generate payment link. Please try again later."),
-        icon: t("error"),
-        confirmButtonText: t("OK"),
-      });
+      if (data?.status === "Ok" && data.data) {
+        setPdfFiles((prevFiles) => [...prevFiles, data.data]);
+      } 
     }
+    if (pdfFiles?.length > 0) {
+      setShowModal(true);
+    }
+  } catch (error) {
+    console.error("Error fetching signature files:", error);
+  }
+};
+
+  const handleClose = () => {
+    setShowModal(false);
+    setPdfFiles([] );
+  };
+
+  const handlePay = async (order, email = false, invoice = null) => {
+
+    console.log("Handling payment for order:", order, "Email:", email, "Invoice:", invoice);
+      if (invoice === "ViewInvoice") {
+        await handleViewSignature(order.id, order.customerId, order.invoices);
+      }
+      else{
+          try {
+            const { data } = await axios.post(
+              `${API_BASE_URL}/generatePayment-link`,
+              {
+                id: order.id,
+                endPoint: "payment-opations/order",
+                IsEmail: email,
+              },
+              { withCredentials: true }
+            );
+            
+            if (email) {
+              Swal.fire({
+                title: t("Payment Link Generated"),
+                text: t("A payment link has been sent to the customer's email."),
+                icon: t("success"),
+                confirmButtonText: t("OK"),
+              });
+            }
+            else if (!email && data?.details?.url) {
+              window.open(data.details.url, "_blank", "width=500,height=600");
+            }
+          } catch (error) {
+            console.error("Error generating payment link:", error);
+            Swal.fire({
+              title: t("Error"),
+              text: t("Failed to generate payment link. Please try again later."),
+              icon: t("error"),
+              confirmButtonText: t("OK"),
+            });
+          }
+      }
+  
   };
 
   // Action menu for Orders page
@@ -382,6 +420,7 @@ function Orders() {
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
     { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
+    { key: "viewInvoice", header: () => t("View Invoice"), include: isV("viewInvoice") },
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -509,6 +548,12 @@ function Orders() {
               onPay={handlePay}
             />
           )}
+           <PdfPopupViewer
+        pdfFiles={pdfFiles}
+        showModal={showModal}
+        onClose={() => handleClose()}
+        t={t}
+      />
           {isV("ordersPagination") && paginatedOrders.length > 0 && (
             <Pagination
               currentPage={page}

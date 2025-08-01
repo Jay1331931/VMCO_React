@@ -104,9 +104,23 @@ const Table = ({
                 </button>
             );
         }
-
-        
-   const value = item[column.key];
+        if (column.key?.toLowerCase() === 'viewinvoice' && item?.invoices?.length > 0) {
+            return (
+                <button 
+                    className="action-button view-invoice"
+                    onClick={(e) => {
+                        
+                        e.stopPropagation();
+                        // Assuming you have a function to handle viewing the invoice
+                        onPay(item, false, "ViewInvoice"); // Pass true for view invoice
+                    }}
+                >
+                    {t('View Invoice')}
+                </button>
+            );
+            
+        }
+        const value = item[column.key];
 
     // If value is an object, stringify it
    if (typeof value === 'object' && value !== null) {

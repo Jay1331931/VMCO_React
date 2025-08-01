@@ -478,7 +478,7 @@ const AddBankTransaction = () => {
                   updateTransaction?.amountTransferred ||
                   ""
                 }
-                disabled={!!updateTransaction?.amountTransferred || orderId}
+                disabled={true}
                 onChange={handleChange}
               />
               {fieldErrors.amountTransferred && (
