@@ -1856,3 +1856,17 @@ td.file-display-cell {
     height: 60vh;
   }
 }
+
+.view-invoice{
+  background-color:  var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* .view-invoice:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+} */
