@@ -331,12 +331,17 @@ function ForgotPassword() {
                 <>
                   <label htmlFor="otp">{t("Enter OTP")}</label>
                   <input
-                    type="text"
-                    id="otp"
-                    value={otp}
-                    placeholder={t("Enter OTP")}
-                    onChange={(e) => setOtp(e.target.value)}
-                  />
+                  type="text"
+                  id="otp"
+                  inputMode="numeric" // Brings up numeric keyboard on mobile
+                  pattern="\d*"       // Only allows digits
+                  value={otp}
+                  placeholder={t("Enter OTP")}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) setOtp(val); // Only allow digits
+                  }}
+                />
                   {/* Add Verify OTP button */}
                   {/* <button
                     type="button"

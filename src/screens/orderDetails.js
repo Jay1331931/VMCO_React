@@ -22,6 +22,7 @@ import Swal from 'sweetalert2';
 import LoadingSpinner from '../components/LoadingSpinner';
 import axios from 'axios';
 import Constants from '../constants';
+import PdfPopupViewer from '../components/PdfPopupViewer';
 
 const defaultOrder = {
   id: '',
@@ -132,6 +133,8 @@ function OrderDetails() {
   const [companyType, setCompanyType] = useState('');
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null);  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
+   const [showModal, setShowModal] = useState(false);
+    const [pdfFiles, setPdfFiles] = useState([]);
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
@@ -2688,6 +2691,38 @@ function OrderDetails() {
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
 
+const handleViewSignature = async (orderId, customerId, Invoices) => {
+
+setShowModal(true);
+  try {
+    // Reset PDF files before loading new ones
+    setPdfFiles([]); // Optional but recommended to avoid stacking from previous view
+
+    for (let file of Invoices) {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/get-files`,
+        {
+          fileName: file,
+          containerType: "invoices",
+          id: customerId,    // replaced hardcoded id:64
+          orderId: orderId,  // replaced hardcoded orderId:3
+        },
+        { withCredentials: true }
+      );
+
+      if (data?.status === "Ok" && data.data) {
+        setPdfFiles((prevFiles) => [...prevFiles, data.data]);
+      } 
+    }
+  } catch (error) {
+    console.error("Error fetching signature files:", error);
+  }
+};
+  const handleClose = () => {
+    setShowModal(false);
+    setPdfFiles([] );
+  };
+
   return (
     <Sidebar>
       {isV('orderDetails') && (
@@ -3503,7 +3538,9 @@ function OrderDetails() {
                 )}
 
                 {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
-                  <button className="order-action-btn" onClick={() => handleDownloadInvoice(formData.id)}>
+                  <button className="order-action-btn" onClick={() =>
+                 handleViewSignature(formData.id, formData.customerId, formData.invoices)
+                  }>
                     {t('Download Invoice')}
                   </button>
                 )}
@@ -3559,7 +3596,14 @@ function OrderDetails() {
               </div>
             </div>
           )}
+           <PdfPopupViewer
+                pdfFiles={pdfFiles}
+               showModal={showModal}
+                onClose={() => handleClose()}
+                t={t}
+              />
         </div>
+        
       )}
     </Sidebar>
   );

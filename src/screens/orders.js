@@ -15,7 +15,6 @@ import { formatDate } from "../utilities/dateFormatter";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { or } from "ajv/dist/compile/codegen";
-import PdfPopupViewer from "../components/PdfPopupViewer";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -43,8 +42,7 @@ function Orders() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
- const [showModal, setShowModal] = useState(false);
-  const [pdfFiles, setPdfFiles] = useState([]);
+
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -262,49 +260,9 @@ function Orders() {
       });
     }
   };
-const handleViewSignature = async (orderId, customerId, Invoices) => {
- 
 
-  try {
-    // Reset PDF files before loading new ones
-    setPdfFiles([]); // Optional but recommended to avoid stacking from previous view
 
-    for (let file of Invoices) {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/get-files`,
-        {
-          fileName: file,
-          containerType: "invoices",
-          id: customerId,    // replaced hardcoded id:64
-          orderId: orderId,  // replaced hardcoded orderId:3
-        },
-        { withCredentials: true }
-      );
-
-      if (data?.status === "Ok" && data.data) {
-        setPdfFiles((prevFiles) => [...prevFiles, data.data]);
-      } 
-    }
-    if (pdfFiles?.length > 0) {
-      setShowModal(true);
-    }
-  } catch (error) {
-    console.error("Error fetching signature files:", error);
-  }
-};
-
-  const handleClose = () => {
-    setShowModal(false);
-    setPdfFiles([] );
-  };
-
-  const handlePay = async (order, email = false, invoice = null) => {
-
-    console.log("Handling payment for order:", order, "Email:", email, "Invoice:", invoice);
-      if (invoice === "ViewInvoice") {
-        await handleViewSignature(order.id, order.customerId, order.invoices);
-      }
-      else{
+  const handlePay = async (order, email = false) => {
           try {
             const { data } = await axios.post(
               `${API_BASE_URL}/generatePayment-link`,
@@ -336,7 +294,7 @@ const handleViewSignature = async (orderId, customerId, Invoices) => {
               confirmButtonText: t("OK"),
             });
           }
-      }
+      
   
   };
 
@@ -419,8 +377,7 @@ const handleViewSignature = async (orderId, customerId, Invoices) => {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
-    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
-    { key: "viewInvoice", header: () => t("View Invoice"), include: isV("viewInvoice") },
+    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") }
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -548,12 +505,7 @@ const handleViewSignature = async (orderId, customerId, Invoices) => {
               onPay={handlePay}
             />
           )}
-           <PdfPopupViewer
-        pdfFiles={pdfFiles}
-        showModal={showModal}
-        onClose={() => handleClose()}
-        t={t}
-      />
+          
           {isV("ordersPagination") && paginatedOrders.length > 0 && (
             <Pagination
               currentPage={page}
