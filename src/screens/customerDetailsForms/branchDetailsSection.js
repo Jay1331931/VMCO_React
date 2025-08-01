@@ -210,7 +210,7 @@ const BranchDetailsForm = ({
           ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
           : geoData[selectedRegion].cities[selectedCity].districts[district].en,
     }));
-  }, [selectedRegion, selectedCity, geoData]);
+  }, [selectedRegion, selectedCity, geoData,i18n.language]);
 
   // Handle region selection
   const handleRegionChange = (e) => {
@@ -527,7 +527,10 @@ const BranchDetailsForm = ({
         name: "city",
         placeholder: "City",
         required: true,
-        options: getCityOptions.map((opt) => opt.name),
+        options: getCityOptions.map((opt) => ({
+          value: opt.value,
+          name: i18n.language === "ar" ? geoData && geoData[selectedRegion]?.cities?.[opt.value]?.ar : opt.name
+        })),
         onChange: handleCityChange,
         value: branch?.city || "",
         disabled: !selectedRegion,
@@ -538,7 +541,12 @@ const BranchDetailsForm = ({
         name: "district",
         placeholder: "District",
         required: true,
-        options: getDistrictOptions.map((opt) => opt.name),
+        options: getDistrictOptions.map((opt) => ({
+          value: opt.value,
+          name: i18n.language === "ar" && geoData && selectedRegion && selectedCity && geoData[selectedRegion]?.cities?.[selectedCity]?.districts?.[opt.value]?.ar
+            ? geoData[selectedRegion].cities[selectedCity].districts[opt.value].ar
+            : opt.name
+        })),
         value: branch?.district || "",
         disabled: !selectedCity,
       },
