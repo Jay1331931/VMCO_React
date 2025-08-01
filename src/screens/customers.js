@@ -245,9 +245,9 @@ function Customers() {
       errors.email = t("Invalid email format");
     }
     // Saudi mobile validation (accepts 05XXXXXXXX or 9665XXXXXXXX)
-    const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
+    const saudiMobileRegex = /^\+?[1-9]\d{7,14}$/;
     if (!data.mobile || !saudiMobileRegex.test(data.mobile)) {
-      errors.mobile = t("Invalid format! 05XXXXXXXX or 9665XXXXXXXX");
+      errors.mobile = t("Invalid mobile number.");
     }
     // Name required
     if (!data.name) errors.name = t("This field is required.");

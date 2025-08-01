@@ -258,7 +258,7 @@ function CustomersOnboarding() {
   const validateForm = async () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(00966|966|\+966|0)?5\d{8}$/;
+    const phoneRegex = /^\+?[1-9]\d{7,14}$/;
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 

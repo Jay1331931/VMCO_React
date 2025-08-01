@@ -498,6 +498,11 @@ const BranchDetailsForm = ({
     // "supervisorContactEmail",
     // "supervisorContactMobile",
   ];
+  const uniqueContactFieldsList = [
+      {name: "primaryContactEmail", field: "email"},
+      {name: "secondaryContactEmail", field: "email"},
+      {name: "supervisorContactEmail", field: "email"},
+    ]
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
@@ -524,6 +529,24 @@ const BranchDetailsForm = ({
         errors[field] = "Please enter Arabic text.";
       }
 
+      if(uniqueContactFieldsList.some(item => item.name === field)) {
+        const { name, field: contactField } = uniqueContactFieldsList.find(item => item.name === field);
+        const res = await fetch(`${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ customerId: customer?.id, name, value }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.data.isUnique) {
+            // Field is valid
+          } else {
+            errors[name] = t(`This ${contactField} is already registered.`);
+          }
+        }
+      }
+
       if (field.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
@@ -535,10 +558,10 @@ const BranchDetailsForm = ({
         field.toLowerCase().includes("mobile") ||
         field.toLowerCase().includes("phone")
       ) {
-        const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
-        if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = "Invalid mobile number format";
-        }
+        const universalMobileRegex = /^\+?[1-9]\d{7,14}$/;
+      if (value && !universalMobileRegex.test(value)) {
+        errors[field] = "Invalid mobile number format";
+      }
       }
     }
     if( dataToValidate?.locationType?.toLowerCase() === "others (specify)" && !dataToValidate?.locationTypeOther) {
