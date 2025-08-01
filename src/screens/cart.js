@@ -1161,8 +1161,9 @@ function Cart() {
                     orderStatus = 'Pending';
                 } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                     orderStatus = 'Open';
-                } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                    // For Naqi entity, set status based on payment method
+               // } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+                } else {
+                    // For Naqi, GMTC and DAR entity, set status based on payment method
                     const pm = (selectedPaymentMethod || '').toLowerCase();
                     if (pm === 'credit' || pm === 'cash on delivery') {
                         orderStatus = 'Approved';
@@ -1620,7 +1621,7 @@ function Cart() {
                 orderStatusUpdate = 'Pending';
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 orderStatusUpdate = 'Open';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+            } else {
                 const pm = (selectedPaymentMethod || '').toLowerCase();
                 if (pm === 'credit' || pm === 'cash on delivery') {
                     orderStatusUpdate = 'Approved';
