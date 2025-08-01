@@ -1022,12 +1022,10 @@ function CustomerDetails() {
         field.toLowerCase().includes("mobile") ||
         field.toLowerCase().includes("phone")
       ) {
-        const saudiMobileRegex = /^(00966|966|\+966|0)?5\d{8}$/;
-        if (value && !saudiMobileRegex.test(value)) {
-          errors[field] = 
-            "Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted"
-          
-        }
+        const universalMobileRegex = /^\+?[1-9]\d{7,14}$/;
+      if (value && !universalMobileRegex.test(value)) {
+        errors[field] = "Invalid mobile number format";
+      }
       }
 
       if (field.toLowerCase().includes("iban")) {
@@ -1134,7 +1132,7 @@ function CustomerDetails() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ customerId, field: contactField, value }),
+          body: JSON.stringify({ customerId, name, value }),
         });
         if (res.ok) {
           const data = await res.json();
