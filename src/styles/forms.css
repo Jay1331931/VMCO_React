@@ -1754,6 +1754,67 @@ td.file-display-cell {
   gap: 10px;
 }
 
+/* Add to your CSS file */
+.location-search {
+  position: relative;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+.location-search-input {
+  width: 50%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.location-search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-loading {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #666;
+}
+
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 50%;
+}
+
+.search-result-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.search-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
 .location-picker-button {
   right: 8px;
   background: none;
@@ -1793,7 +1854,7 @@ td.file-display-cell {
   border-radius: 8px;
   width: 80%;
   max-width: 900px;
-  max-height: 80vh;
+  max-height: 100vh;
   overflow: auto;
   position: relative;
 }
