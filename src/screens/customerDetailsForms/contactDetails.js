@@ -101,58 +101,183 @@ function ContactDetails({
 
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
-    const markerRef = useRef(null); // Using ref instead of state for the marker
+    const markerRef = useRef(null);
     const [map, setMap] = useState(null);
     const { t, i18n } = useTranslation();
     const [coords, setCoords] = useState("Detecting your location...");
     const [coordsArabic, setCoordsArabic] = useState(
       t("Detecting your location...")
     );
-    const [defaultCenter] = useState([77.5946, 12.9716]);
+    const [defaultCenter] = useState([77.5946, 12.9716]); // [lng, lat]
     const [zoom] = useState(14);
     const [confirmedLocation, setConfirmedLocation] = useState(null);
-    console.log("Initial Lat:", initialLat);
-    console.log("Initial Lng:", initialLng);
+
+    // Add search states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    // Validate and sanitize coordinates
+    const isValidCoordinate = (lat, lng) => {
+      return (
+        typeof lat === "number" &&
+        typeof lng === "number" &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180 &&
+        !isNaN(lat) &&
+        !isNaN(lng)
+      );
+    };
+
+    const getInitialCenter = () => {
+      // Parse coordinates if they're strings
+      const lat =
+        typeof initialLat === "string" ? parseFloat(initialLat) : initialLat;
+      const lng =
+        typeof initialLng === "string" ? parseFloat(initialLng) : initialLng;
+
+      if (isValidCoordinate(lat, lng)) {
+        return [lng, lat]; // MapLibre expects [lng, lat]
+      }
+      return defaultCenter;
+    };
+
+    // Add search function
+    const searchLocation = async (query) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        // Using MapTiler Geocoding API
+        const response = await fetch(
+          `https://api.maptiler.com/geocoding/${encodeURIComponent(
+            query
+          )}.json?key=NxvpwMoXuYLINUijkWEc&limit=5`
+        );
+        const data = await response.json();
+
+        if (data.features) {
+          setSearchResults(
+            data.features.map((feature) => ({
+              id: feature.id,
+              name: feature.place_name,
+              coordinates: feature.center,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    // Handle search input change with debounce
+    useEffect(() => {
+      const timeoutId = setTimeout(() => {
+        searchLocation(searchQuery);
+      }, 500); // 500ms debounce
+
+      return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
+    // Handle search result selection
+    const handleSearchResultClick = (result) => {
+      const [lng, lat] = result.coordinates;
+      if (isValidCoordinate(lat, lng) && map) {
+        updateMarker(map, lng, lat);
+        setSearchQuery(result.name);
+        setSearchResults([]);
+      }
+    };
+
+    const updateMarker = (map, lng, lat) => {
+      // Validate coordinates before updating marker
+      if (!isValidCoordinate(lat, lng)) {
+        console.error("Invalid coordinates:", lat, lng);
+        return;
+      }
+
+      // Remove existing marker if it exists
+      if (markerRef.current) {
+        markerRef.current.remove();
+        markerRef.current = null;
+      }
+
+      // Create new marker
+      const newMarker = new maplibregl.Marker()
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      markerRef.current = newMarker;
+      setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+      setCoordsArabic(
+        `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
+      );
+
+      map.setCenter([lng, lat]);
+    };
+
     useEffect(() => {
       let mapInstance;
 
       const initializeMap = async () => {
-        mapInstance = new maplibregl.Map({
-          container: mapContainer.current,
-          style:
-            "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
-          center:
-            initialLat && initialLng ? [initialLat, initialLng] : defaultCenter,
-          zoom: zoom,
-        });
+        try {
+          mapInstance = new maplibregl.Map({
+            container: mapContainer.current,
+            style:
+              "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
+            center: getInitialCenter(), // Use the validated center
+            zoom: zoom,
+          });
 
-        mapInstance.on("load", async () => {
-          setMap(mapInstance);
-          try {
-            const position =
-              initialLat && initialLng
-                ? { coords: { latitude: initialLat, longitude: initialLng } }
-                : await getCurrentPosition();
-            const { latitude, longitude } = position.coords;
-            updateMarker(mapInstance, longitude, latitude);
-          } catch (error) {
-            console.log("Geolocation error:", error);
-            setCoords("Click on the map to select a location");
-            setCoordsArabic(t("Click on the map to select a location"));
-          }
-        });
+          mapInstance.on("load", async () => {
+            setMap(mapInstance);
+            try {
+              let position;
+              const lat =
+                typeof initialLat === "string"
+                  ? parseFloat(initialLat)
+                  : initialLat;
+              const lng =
+                typeof initialLng === "string"
+                  ? parseFloat(initialLng)
+                  : initialLng;
 
-        mapInstance.on("click", (e) => {
-          if (!confirmedLocation) {
-            const { lng, lat } = e.lngLat;
-            updateMarker(mapInstance, lng, lat);
-          }
-        });
+              if (isValidCoordinate(lat, lng)) {
+                position = { coords: { latitude: lat, longitude: lng } };
+              } else {
+                position = await getCurrentPosition();
+              }
 
-        return () => {
-          if (markerRef.current) markerRef.current.remove();
-          mapInstance.remove();
-        };
+              const { latitude, longitude } = position.coords;
+              if (isValidCoordinate(latitude, longitude)) {
+                updateMarker(mapInstance, longitude, latitude);
+              }
+            } catch (error) {
+              console.log("Geolocation error:", error);
+              setCoords("Click on the map to select a location");
+              setCoordsArabic(t("Click on the map to select a location"));
+            }
+          });
+
+          mapInstance.on("click", (e) => {
+            if (!confirmedLocation) {
+              const { lng, lat } = e.lngLat;
+              if (isValidCoordinate(lat, lng)) {
+                updateMarker(mapInstance, lng, lat);
+              }
+            }
+          });
+        } catch (error) {
+          console.error("Map initialization error:", error);
+        }
       };
 
       const getCurrentPosition = () => {
@@ -164,44 +289,35 @@ function ContactDetails({
         });
       };
 
-      const updateMarker = (map, lng, lat) => {
-        // Remove existing marker if it exists
-        if (markerRef.current) {
-          markerRef.current.remove();
-          markerRef.current = null;
-        }
-
-        // Create new marker
-        const newMarker = new maplibregl.Marker()
-          .setLngLat([lng, lat])
-          .addTo(map);
-
-        markerRef.current = newMarker;
-        setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-        setCoordsArabic(
-          `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
-        );
-
-        map.setCenter([lng, lat]);
-      };
-
       initializeMap();
 
       return () => {
-        if (mapInstance) mapInstance.remove();
+        if (mapInstance) {
+          try {
+            if (markerRef.current) markerRef.current.remove();
+            mapInstance.remove();
+          } catch (error) {
+            console.error("Error cleaning up map:", error);
+          }
+        }
       };
-    }, [confirmedLocation]);
+    }, [confirmedLocation, initialLat, initialLng]);
 
     const handleConfirm = () => {
       if (markerRef.current) {
         const lngLat = markerRef.current.getLngLat();
-        onLocationSelect(lngLat.lat, lngLat.lng);
-        setConfirmedLocation(lngLat);
-        handleLocationSelect(lngLat.lat, lngLat.lng);
-        setGeoLocation({
-          x: lngLat.lat.toFixed(6),
-          y: lngLat.lng.toFixed(6),
-        });
+        const lat = lngLat.lat;
+        const lng = lngLat.lng;
+
+        if (isValidCoordinate(lat, lng)) {
+          onLocationSelect(lat, lng);
+          setConfirmedLocation(lngLat);
+          handleLocationSelect(lat, lng);
+          setGeoLocation({
+            x: lat.toFixed(6),
+            y: lng.toFixed(6),
+          });
+        }
       }
     };
 
@@ -217,7 +333,40 @@ function ContactDetails({
 
     return (
       <div className="location-picker-container">
-        <div ref={mapContainer} className="map-container" />
+        {/* Add search input */}
+        <div className="location-search">
+          <input
+            type="text"
+            placeholder={t("Search for a location...")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="location-search-input"
+          />
+          {isSearching && (
+            <div className="search-loading">{t("Searching...")}</div>
+          )}
+
+          {/* Search results dropdown */}
+          {searchResults.length > 0 && (
+            <div className="search-results">
+              {searchResults.map((result) => (
+                <div
+                  key={result.id}
+                  className="search-result-item"
+                  onClick={() => handleSearchResultClick(result)}
+                >
+                  {result.name}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div
+          ref={mapContainer}
+          className="map-container"
+          style={{ width: "100%", height: "300px" }}
+        />
         <div className="location-coords">
           {i18n.language === "ar" ? coordsArabic : coords}
         </div>
@@ -228,13 +377,15 @@ function ContactDetails({
               onClick={handleConfirm}
               disabled={!markerRef.current}
             >
-              Confirm Location
+              {t("Confirm Location")}
             </button>
           ) : (
             <>
-              <div className="location-confirmed">Location confirmed!</div>
+              <div className="location-confirmed">
+                {t("Location confirmed!")}
+              </div>
               <button className="reset-location-button" onClick={handleReset}>
-                Change Location
+                {t("Change Location")}
               </button>
             </>
           )}
@@ -1347,7 +1498,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.street || "(empty)"}
             </div>
           )}
-        {formErrors.street && <div className="error">{t(formErrors.street)}</div>}
+        {formErrors.street && (
+          <div className="error">{t(formErrors.street)}</div>
+        )}
       </div>
       {/* region dropdown */}
       <div className="form-group">
@@ -1403,7 +1556,9 @@ function ContactDetails({
               Previous: {originalCustomerData?.region || "(empty)"}
             </div>
           )}
-        {formErrors.region && <div className="error">{t(formErrors.region)}</div>}
+        {formErrors.region && (
+          <div className="error">{t(formErrors.region)}</div>
+        )}
       </div>
 
       {/* city dropdown */}
@@ -1515,16 +1670,14 @@ function ContactDetails({
         </label>
         <SearchableDropdown
           name="zone"
-          options={
-            (basicMasterLists?.zone || []).map(item => ({
-              value: item.value,
-              name: i18n.language === "ar" ? item.valueLc : item.value
-            }))
-          }
+          options={(basicMasterLists?.zone || []).map((item) => ({
+            value: item.value,
+            name: i18n.language === "ar" ? item.valueLc : item.value,
+          }))}
           value={customerData?.zone || ""}
-          onChange={e => {
+          onChange={(e) => {
             onChangeCustomerData({
-              target: { name: "zone", value: e.target.value }
+              target: { name: "zone", value: e.target.value },
             });
           }}
           disabled={

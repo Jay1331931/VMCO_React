@@ -26,7 +26,7 @@ function BusinessDetails({
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
 }) {
-  const { t,i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const rbacMgr = new RbacManager(
@@ -48,12 +48,12 @@ function BusinessDetails({
     "deliveryLocations",
     "customerSource",
     "entity",
-    "branch"
+    "branch",
   ];
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const [employeeListWithManagers, setEmployeeListWithManagers] = useState([]);
   const [employeeList, setEmployeeList] = useState([]);
-let currentLanguage=i18n.language;
+  let currentLanguage = i18n.language;
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -63,14 +63,14 @@ let currentLanguage=i18n.language;
         await getOptionsFromEmployeesWithManager(customerData?.branch);
 
       const listOfEmployees = await getOptionsFromEmployees();
-     
+
       setBasicMasterLists(listOfBasicsMaster);
       setEmployeeListWithManagers(listOfEmployeesWithManagers);
       setEmployeeList(listOfEmployees);
     };
     fetchData();
     setTabsHeight("auto");
-  }, [customerData?.branch,currentLanguage]);
+  }, [customerData?.branch, currentLanguage]);
 
   // Example state for conditional fields
   const [typeOfBusiness, setTypeOfBusiness] = useState(
@@ -180,15 +180,46 @@ let currentLanguage=i18n.language;
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
-            href={CUSTOMER_APPROVAL_CHECKLIST_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => {
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
               if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-                e.preventDefault();
                 alert(t("No checklist URL configured."));
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      fileName: "Customer_data_verification_checklist",
+                      containerType: "documents",
+                    }),
+                    credentials: "include",
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  window.open(res.data.url, "_blank", "noopener,noreferrer");
+                } else {
+                  throw new Error("Failed to fetch file URL");
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+                // Fallback to direct URL if API fails
+                window.open(
+                  CUSTOMER_APPROVAL_CHECKLIST_URL,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
               }
             }}
+            style={{ cursor: "pointer" }}
           >
             {t("Customer Approval Checklist")}
           </a>
@@ -446,7 +477,9 @@ let currentLanguage=i18n.language;
             </div>
           )}
         {formErrors.governmentRegistrationNumber && (
-          <div className="error">{t(formErrors.governmentRegistrationNumber)}</div>
+          <div className="error">
+            {t(formErrors.governmentRegistrationNumber)}
+          </div>
         )}
       </div>
 
@@ -518,16 +551,14 @@ let currentLanguage=i18n.language;
         </label>
         <SearchableDropdown
           name="companyType"
-          options={
-            (basicMasterLists?.companyType || []).map(item => ({
-              value: item.value,
-              name: currentLanguage === "ar" ? item.valueLc : item.value
-            }))
-          }
+          options={(basicMasterLists?.companyType || []).map((item) => ({
+            value: item.value,
+            name: currentLanguage === "ar" ? item.valueLc : item.value,
+          }))}
           value={customerData?.companyType || ""}
-          onChange={e => {
+          onChange={(e) => {
             onChangeCustomerData({
-              target: { name: "companyType", value: e.target.value }
+              target: { name: "companyType", value: e.target.value },
             });
           }}
           disabled={
@@ -574,20 +605,17 @@ let currentLanguage=i18n.language;
         </label>
         <SearchableDropdown
           name="deliveryLocations"
-            options={
-    (basicMasterLists?.deliveryLocations || []).map(item => ({
-      value: item.value,
-      name: currentLanguage === "ar" ? item.valueLc : item.value
-    }))
-  }
-  value={customerData?.deliveryLocations || ""}
-  onChange={e => {
-    // e.target.value will be the actual value, not the localized label
-    onChangeCustomerData({
-      target: { name: "deliveryLocations", value: e.target.value }
-    });
-  }}
-      
+          options={(basicMasterLists?.deliveryLocations || []).map((item) => ({
+            value: item.value,
+            name: currentLanguage === "ar" ? item.valueLc : item.value,
+          }))}
+          value={customerData?.deliveryLocations || ""}
+          onChange={(e) => {
+            // e.target.value will be the actual value, not the localized label
+            onChangeCustomerData({
+              target: { name: "deliveryLocations", value: e.target.value },
+            });
+          }}
           disabled={
             originalCustomerData &&
             customerData &&
@@ -634,16 +662,14 @@ let currentLanguage=i18n.language;
         </label>
         <SearchableDropdown
           name="typeOfBusiness"
-          options={
-            (basicMasterLists?.typeOfBusiness || []).map(item => ({
-              value: item.value,
-              name: currentLanguage === "ar" ? item.valueLc : item.value
-            }))
-          }
+          options={(basicMasterLists?.typeOfBusiness || []).map((item) => ({
+            value: item.value,
+            name: currentLanguage === "ar" ? item.valueLc : item.value,
+          }))}
           value={typeOfBusiness}
-          onChange={e => {
+          onChange={(e) => {
             onChangeCustomerData({
-              target: { name: "typeOfBusiness", value: e.target.value }
+              target: { name: "typeOfBusiness", value: e.target.value },
             });
           }}
           disabled={
@@ -1164,72 +1190,67 @@ let currentLanguage=i18n.language;
             </div>
           )}
           {/* VMCO Branch Assignment Header */}
-          <h3 className="form-header full-width">
-            {t("Branch Regions")}
-          </h3>
- {/* branch dropdown */}
-      {isV("assignedToEntityWise") && (
-        <div className="form-group">
-          <label htmlFor="branch">
-            {t("Branch Region")}
-            <span className="required-field">*</span>
-            {originalCustomerData &&
-              customerData &&
-              originalCustomerData?.branch != customerData?.branch &&
-              mode === "edit" && (
-                <span className="update-badge">{t("Updated")}</span>
+          <h3 className="form-header full-width">{t("Branch Regions")}</h3>
+          {/* branch dropdown */}
+          {isV("assignedToEntityWise") && (
+            <div className="form-group">
+              <label htmlFor="branch">
+                {t("Branch Region")}
+                <span className="required-field">*</span>
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.branch != customerData?.branch &&
+                  mode === "edit" && (
+                    <span className="update-badge">{t("Updated")}</span>
+                  )}
+              </label>
+              <SearchableDropdown
+                name="branch"
+                options={(basicMasterLists?.branch || []).map((item) => ({
+                  value: item.value,
+                  name: currentLanguage === "ar" ? item.valueLc : item.value,
+                }))}
+                value={customerData?.branch || ""}
+                onChange={(e) => {
+                  onChangeCustomerData({
+                    target: { name: "branch", value: e.target.value },
+                  });
+                }}
+                disabled={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.branch === customerData?.branch &&
+                  mode === "edit" &&
+                  customerData?.customerStatus !== "pending"
+                }
+                className={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.branch != customerData?.branch &&
+                  mode === "edit"
+                    ? "update-field"
+                    : ""
+                }
+                placeholder={t("Enter branch")}
+                required
+              />
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.branch != customerData?.branch &&
+                mode === "edit" && (
+                  <div className="current-value">
+                    Previous: {originalCustomerData?.branch || "(empty)"}
+                  </div>
+                )}
+              {formErrors.branch && (
+                <div className="error">{t(formErrors.branch)}</div>
               )}
-          </label>
-          <SearchableDropdown
-            name="branch"
-            options={
-              (basicMasterLists?.branch || []).map(item => ({
-                value: item.value,
-                name: currentLanguage === "ar" ? item.valueLc : item.value
-              }))
-            }
-            value={customerData?.branch || ""}
-            onChange={e => {
-              onChangeCustomerData({
-                target: { name: "branch", value: e.target.value }
-              });
-            }}
-            disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.branch === customerData?.branch &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
-            className={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.branch != customerData?.branch &&
-              mode === "edit"
-                ? "update-field"
-                : ""
-            }
-            placeholder={t("Enter branch")}
-            required
-          />
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.branch != customerData?.branch &&
-            mode === "edit" && (
-              <div className="current-value">
-                Previous: {originalCustomerData?.branch || "(empty)"}
-              </div>
-            )}
-          {formErrors.branch && (
-            <div className="error">{t(formErrors.branch)}</div>
+            </div>
           )}
-        </div>
-      )}
           {/* Entity Wise Employee Assignment Header */}
           <h3 className="form-header full-width">
             {t("Sales Person Assignment")}
           </h3>
- 
 
           {/* Assigned To Dropdown */}
           {isV("assignedTo") && (

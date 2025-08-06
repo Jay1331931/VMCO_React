@@ -2276,7 +2276,7 @@ function CustomerDetails() {
                       isApproving ||
                       isRejecting ||
                       isBlocking ||
-                      isUnblocking
+                      isUnblocking || activeTab !== "Final Submission"
                     }
                   >
                     {isSubmitting ? t("Submitting...") : t("Submit")}
