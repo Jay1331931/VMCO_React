@@ -35,6 +35,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
   const [branches, setBranches] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const [transformedBranches, setTransformedBranches] = useState([]);
@@ -267,7 +269,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
     const query = new URLSearchParams({
       page: currentPage,
-      pageSize: 20,
+      pageSize: pageSize,
       sortBy: "id",
       sortOrder: "asc",
       search: search,
@@ -290,13 +292,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
       const data = await response.json();
       setBranches(data.data);
+      setTotal(data.totalRecords);
     } catch (err) {
       console.log(err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [customer]);
+  }, [customer, currentPage]);
 
   // Toggle row expansion and fetch contacts if expanding
   const toggleRow = async (branchId) => {
@@ -326,11 +329,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     if (customer?.id) {
       fetchBranches();
     }
-  }, [customer?.id, search]);
+  }, [customer?.id, search, currentPage]);
 
   // Pagination variables
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(branches.length / itemsPerPage);
+  const itemsPerPage = pageSize;
+  const totalPages = Math.ceil(total / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   // const currentItems = branches.slice(startIndex, endIndex);
@@ -1127,7 +1130,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((branch) => (
+              {branches.map((branch) => (
                 <React.Fragment key={branch.id}>
                   <tr
                     onClick={() => toggleRow(branch.id)}

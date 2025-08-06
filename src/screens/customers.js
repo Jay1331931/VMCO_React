@@ -815,14 +815,7 @@ function Customers() {
           transformedCustomer.isApprovalMode = false;
         }
         // navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
-        navigate(`/customerDetails`, {
-          state: {
-            customerId: customerId,
-            workflowId: transformedCustomer?.workflowData?.id,
-            workflowInstanceId: transformedCustomer?.workflowInstanceId,
-            mode: isApprovalMode ? "edit" : "add",
-          },
-        });
+        return transformedCustomer;
       } else {
         throw new Error(
           response.data.message || "Failed to fetch customer contacts"
@@ -852,30 +845,43 @@ function Customers() {
     // getOptionsFromBasicsMaster("region").then(setRegionOptions);
     const fetchGeoData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/geoLocation`,
-          {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    }
-        );
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);
-          setRegionOptions(geoData ? Object.keys(geoData).map(region => ({
-          value: region,
-          name: region
-          })) : [])
+          setRegionOptions(
+            geoData
+              ? Object.keys(geoData).map((region) => ({
+                  value: region,
+                  name: region,
+                }))
+              : []
+          );
         }
       } catch (error) {
-        console.error('Error fetching geo data:', error);
+        console.error("Error fetching geo data:", error);
       }
     };
     fetchGeoData();
   }, []);
 
-  const handleRowClick = (customer) => {
-    fetchCustomerContacts(customer.id, customer);
+  const handleRowClick = async (customer) => {
+    let transformedCustomer = await fetchCustomerContacts(
+      customer.id,
+      customer
+    );
+    navigate(`/customerDetails`, {
+      state: {
+        customerId: customer.id,
+        workflowId: transformedCustomer?.workflowData?.id,
+        workflowInstanceId: transformedCustomer?.workflowInstanceId,
+        mode: isApprovalMode ? "edit" : "add",
+      },
+    });
     // console.log('Customer ID:', customer.id);
     // console.log('Customer Contacts:', customerContacts);
     // const transformedCustomer = transformCustomerData(customer, customerContacts);
@@ -913,54 +919,256 @@ function Customers() {
     </div>
   );
 
+  const downloadCustomersAsExcel = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all customers for download (without pagination)
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 10000, // Large number to get all customers
+        search: searchQuery,
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: "{}",
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/customers/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.status === "Ok" && result.data.data.length > 0) {
+        // Show progress message
+        Swal.fire({
+          title: "Preparing Export",
+          text: "Fetching customer details, please wait...",
+          icon: "info",
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        try {
+          // Fetch transformed data for each customer
+          const transformedCustomers = await Promise.all(
+            result.data.data.map(async (customer) => {
+              try {
+                const transformedCustomer = await fetchCustomerContacts(
+                  customer.id,
+                  customer
+                );
+                return transformedCustomer;
+              } catch (error) {
+                console.error(
+                  `Error fetching contacts for customer ${customer.id}:`,
+                  error
+                );
+                // Return original customer data if contact fetch fails
+                return customer;
+              }
+            })
+          );
+          console.log("Transformed Customers:", transformedCustomers);
+          // Prepare data for Excel export with transformed customer data
+          const exportData = transformedCustomers.map((customer) => ({
+            "Registration ID": customer.id,
+            "ERP ID": customer.erpCustId || "",
+            "Company Name (EN)": customer.companyNameEn || "",
+            "Company Name (AR)": customer.companyNameAr || "",
+            "Company Type": customer.companyType || "",
+            "Type of Business": customer.typeOfBusiness || "",
+            "CR Number": customer.crNumber || "",
+            "VAT Number": customer.vatNumber || "",
+            "Government Registration #":
+              customer.governmentRegistrationNumber || "",
+            "Baladeah License #": customer.baladeahLicenseNumber || "",
+            "Brand Name (EN)": customer.brandNameEn || "",
+            "Brand Name (AR)": customer.brandNameAr || "",
+            "Delivery Locations": customer.deliveryLocations || "",
+            Status: customer.customerStatus || "",
+            Region: customer.region || "",
+            City: customer.city || "",
+            District: customer.district || "",
+            Street: customer.street || "",
+            "Building Name": customer.buildingName || "",
+            "Location Type": customer.locationType || "",
+
+            // Primary Contact
+            "Primary Contact Name": customer.primaryContactName || "",
+            "Primary Contact Designation":
+              customer.primaryContactDesignation || "",
+            "Primary Contact Email": customer.primaryContactEmail || "",
+            "Primary Contact Mobile": customer.primaryContactMobile || "",
+
+            // Business Head Contact
+            "Business Head Name": customer.businessHeadName || "",
+            "Business Head Designation": customer.businessHeadDesignation || "",
+            "Business Head Email": customer.businessHeadEmail || "",
+            "Business Head Mobile": customer.businessHeadMobile || "",
+
+            // Finance Head Contact
+            "Finance Head Name": customer.financeHeadName || "",
+            "Finance Head Designation": customer.financeHeadDesignation || "",
+            "Finance Head Email": customer.financeHeadEmail || "",
+            "Finance Head Mobile": customer.financeHeadMobile || "",
+
+            // Purchasing Head Contact
+            "Purchasing Head Name": customer.purchasingHeadName || "",
+            "Purchasing Head Designation":
+              customer.purchasingHeadDesignation || "",
+            "Purchasing Head Email": customer.purchasingHeadEmail || "",
+            "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
+
+            // Operations Head Contact
+            "Operations Head Name": customer.operationsHeadName || "",
+            "Operations Head Designation":
+              customer.operationsHeadDesignation || "",
+            "Operations Head Email": customer.operationsHeadEmail || "",
+            "Operations Head Mobile": customer.operationsHeadMobile || "",
+
+            // Payment Method Information
+            "Credit Limit": customer.creditLimit || "",
+            "Credit Period": customer.creditPeriod || "",
+            "Credit Balance": customer.creditBalance || "",
+
+            // Geolocation
+            Latitude: customer.geolocation?.x || "",
+            Longitude: customer.geolocation?.y || "",
+
+            // Assignment Information
+            "Assigned To": customer.assignedTo || "",
+            Branch: customer.branch || "",
+            Entity: customer.entity || "",
+            "Inter Company": customer.interCompany ? "Yes" : "No",
+
+            "Created Date": customer.createdAt
+              ? new Date(customer.createdAt).toLocaleDateString()
+              : "",
+          }));
+
+          // Close the loading dialog
+          Swal.close();
+
+          // Create Excel file
+          const XLSX = require("xlsx");
+          const ws = XLSX.utils.json_to_sheet(exportData);
+
+          // Auto-size columns
+          const colWidths = [];
+          exportData.forEach((row) => {
+            Object.keys(row).forEach((key, index) => {
+              const value = row[key] ? row[key].toString() : "";
+              const width = Math.max(key.length, value.length);
+              colWidths[index] = Math.max(
+                colWidths[index] || 0,
+                Math.min(width, 50)
+              );
+            });
+          });
+          ws["!cols"] = colWidths.map((w) => ({ width: w + 2 }));
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Customers");
+
+          // Generate filename with current date
+          const now = new Date();
+          const filename = `customers_export_${now.getFullYear()}-${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
+
+          // Download file
+          XLSX.writeFile(wb, filename);
+
+          Swal.fire({
+            title: "Export Successful",
+            text: `${result.data.data.length} customers exported successfully with complete details.`,
+            icon: "success",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (error) {
+          console.error("Error during export preparation:", error);
+          Swal.fire({
+            title: "Export Error",
+            text: "Failed to prepare customer details for export. Please try again.",
+            icon: "error",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#dc3545",
+          });
+        }
+      } else {
+        Swal.fire({
+          title: "No Data",
+          text: "No customers found to export.",
+          icon: "info",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3085d6",
+        });
+      }
+    } catch (error) {
+      console.error("Error downloading customers:", error);
+      Swal.fire({
+        title: "Export Failed",
+        text: "Failed to export customers. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const customerMenuItems = [
+    // {
+    //   key: "select customers",
+    //   label: "Select Customers",
+    //   onClick: () =>
+    //     Swal.fire({
+    //       title: "Feature Not Implemented",
+    //       text: "Select Customers functionality will be available soon.",
+    //       icon: "info",
+    //       confirmButtonText: "OK",
+    //       confirmButtonColor: "#3085d6",
+    //     }),
+    // },
+    // {
+    //   key: "add customers",
+    //   label: "Add Customers",
+    //   onClick: () =>
+    //     Swal.fire({
+    //       title: "Feature Not Implemented",
+    //       text: "Add Customers functionality will be available soon.",
+    //       icon: "info",
+    //       confirmButtonText: "OK",
+    //       confirmButtonColor: "#3085d6",
+    //     }),
+    // },
+    // {
+    //   key: "remove customers",
+    //   label: "Remove Customers",
+    //   onClick: () =>
+    //     Swal.fire({
+    //       title: "Feature Not Implemented",
+    //       text: "Remove Customers functionality will be available soon.",
+    //       icon: "info",
+    //       confirmButtonText: "OK",
+    //       confirmButtonColor: "#3085d6",
+    //     }),
+    // },
     {
-      key: "select customers",
-      label: "Select Customers",
-      onClick: () =>
-        Swal.fire({
-          title: "Feature Not Implemented",
-          text: "Select Customers functionality will be available soon.",
-          icon: "info",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#3085d6",
-        }),
-    },
-    {
-      key: "add customers",
-      label: "Add Customers",
-      onClick: () =>
-        Swal.fire({
-          title: "Feature Not Implemented",
-          text: "Add Customers functionality will be available soon.",
-          icon: "info",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#3085d6",
-        }),
-    },
-    {
-      key: "remove customers",
-      label: "Remove Customers",
-      onClick: () =>
-        Swal.fire({
-          title: "Feature Not Implemented",
-          text: "Remove Customers functionality will be available soon.",
-          icon: "info",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#3085d6",
-        }),
-    },
-    {
-      key: "export customers",
-      label: "Export Customers",
-      onClick: () =>
-        Swal.fire({
-          title: "Feature Not Implemented",
-          text: "Export Customers functionality will be available soon.",
-          icon: "info",
-          confirmButtonText: "OK",
-          confirmButtonColor: "#3085d6",
-        }),
+      key: "download customers",
+      label: "Download Customers",
+      onClick: downloadCustomersAsExcel, // Add the download functionality
     },
   ];
 
@@ -1126,19 +1334,23 @@ function Customers() {
                       {t("Region")}
                     </label>
                     <SearchableDropdown
-                            name="region"
-                            // options={basicMasterLists?.region || []}
-                            options={geoData ? Object.keys(geoData).map(region => ({
-                            value: region,
-                            name: region
-                            })) : []}
-                            value={inviteData.region}
-                            onChange={handleInputChange}
-                            placeholder={t("Enter Region")}
-                            required
-                          />
+                      name="region"
+                      // options={basicMasterLists?.region || []}
+                      options={
+                        geoData
+                          ? Object.keys(geoData).map((region) => ({
+                              value: region,
+                              name: region,
+                            }))
+                          : []
+                      }
+                      value={inviteData.region}
+                      onChange={handleInputChange}
+                      placeholder={t("Enter Region")}
+                      required
+                    />
                   </div>
-                  
+
                   <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
@@ -1200,7 +1412,9 @@ function Customers() {
           </div>
           {renderContent()}
         </div>
-        {((activeTab === "customers" && paginatedCustomers.length > 0 && !isApprovalMode) ||
+        {((activeTab === "customers" &&
+          paginatedCustomers.length > 0 &&
+          !isApprovalMode) ||
           (activeTab === "invites" && paginatedInvites.length > 0) ||
           (activeTab === "customers" &&
             isApprovalMode &&
