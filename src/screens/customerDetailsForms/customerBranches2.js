@@ -1116,18 +1116,18 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             className="branches-search-input"
           />
           <div className="branches-action-buttons">
-                <button className="branches-upload-button" onClick={handleButtonClick}>
+               {/* <button className="branches-upload-button" onClick={handleButtonClick}>
         <span>Upload Excel</span>
         <PiMicrosoftExcelLogoFill size={20} />
-      </button>
+                </button>
 
-      <input
-        type="file"
-        accept=".xlsx,.xls"
-        ref={fileExcelInputRef}
-        onChange={handleFileChange}
-        style={{ display: "none" }}
-      />
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  ref={fileExcelInputRef}
+                  onChange={handleFileChange}
+                  style={{ display: "none" }}
+                /> */}
 
 
             {isV("btnBranchAdd") && (
