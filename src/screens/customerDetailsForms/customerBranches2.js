@@ -72,6 +72,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleAddBranch = () => {
+    setActionMenuOpen(false)
     if (customer?.isBlocked) {
       Swal.fire({
         title: t("Customer is blocked"),
@@ -217,7 +218,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
   // Fetch contacts for a specific branch
   const fetchBranchContacts = async (branchId) => {
-    setLoading(true);
     setError(null);
     const customerId = customer.id;
 
@@ -253,14 +253,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     } catch (err) {
       setError(err.message);
       console.error("Error fetching contacts:", err);
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   const fetchBranches = useCallback(async () => {
     console.log("~~~~~Fetching branches for customer:", customer);
-    setLoading(true);
     setError(null);
     console.log(customer);
     const filters = {
@@ -292,13 +289,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       }
 
       const data = await response.json();
+      setCurrentPage(data.page)
       setBranches(data.data);
     } catch (err) {
       console.log(err);
       setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } 
   }, [customer]);
 
   // Toggle row expansion and fetch contacts if expanding
@@ -332,7 +328,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   }, [customer?.id, search]);
 
   // Pagination variables
-  const itemsPerPage = 5;
+  const itemsPerPage = 20;
   const totalPages = Math.ceil(branches.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -994,9 +990,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   };
 
  const handleButtonClick = () => {
+  if (loading) return;
   if (fileExcelInputRef.current) {
     fileExcelInputRef.current.value = ""; // ✅ Clear the input
     fileExcelInputRef.current.click();    // ✅ Open file picker
+    setActionMenuOpen(false)
   }
 };
   const handleFileChange = async (e) => {
@@ -1014,7 +1012,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     }
 
     try {
-      const formData = new FormData();
+       setLoading(true)
+      const formData =  new FormData();
+     
+     
       formData.append("file", file);
       formData.append("customerId", customer.id); // assumes customer object is passed as prop
       formData.append("erpCustId", customer.erpCustId);
@@ -1059,24 +1060,27 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
   return; // Make sure to return early to prevent success message
 }
+const blob = response?.data;
+const text = await blob.text(); // convert blob to text
+const data = JSON.parse(text);  // parse text to JSON
 
+if (response?.status === 200 && data?.success) {
+      setBranches((prev) => [...data?.details, ...prev]);
+  Swal.fire({
+    title: t("File Uploaded Successfully"),
+    text: t(data.message) || t("Branches have been updated from the Excel file."),
+    icon: "success",
+    confirmButtonText: t("OK"),
+  });
+} else {
+  Swal.fire({
+    title: t("File Upload Failed"),
+    text: t(data.message) || t("An error occurred while uploading the file."),
+    icon: "error",
+    confirmButtonText: t("OK"),
+  });
+}
 
-
-      if (response.data?.success) {
-        Swal.fire({
-          title: t("File Uploaded Successfully"),
-          text: t(response.data.message) || t("Branches have been updated from the Excel file."),
-          icon: "success",
-          confirmButtonText: t("OK"),
-        });
-      } else {
-        Swal.fire({
-          title: t("File Upload Failed"),
-          text: t(response.data.message) || t("An error occurred while uploading the file."),
-          icon: "error",
-          confirmButtonText: t("OK"),
-        });
-      }
     } catch (error) {
       console.error("Error uploading file:", error);
       Swal.fire({
@@ -1085,6 +1089,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         icon: "error",
         confirmButtonText: t("OK"),
       });
+    }finally{
+       setLoading(false)
     }
   };
 
@@ -1115,9 +1121,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             onChange={handleSearchChange}
             className="branches-search-input"
           />
-          <div className="branches-action-buttons">
-               {/* <button className="branches-upload-button" onClick={handleButtonClick}>
-        <span>Upload Excel</span>
+          {/* <div className="branches-action-buttons">
+               <button className="branches-upload-button" onClick={handleButtonClick}>
+        <span> {loading ? t("Uploading Excel") : t("Upload Excel")}</span>
         <PiMicrosoftExcelLogoFill size={20} />
                 </button>
 
@@ -1127,7 +1133,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   ref={fileExcelInputRef}
                   onChange={handleFileChange}
                   style={{ display: "none" }}
-                /> */}
+                />
 
 
             {isV("btnBranchAdd") && (
@@ -1155,7 +1161,56 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 </div>
               )}
             </div>
+          </div> */}
+          <div className="branches-action-buttons">
+  <div className="action-menu-container" ref={actionMenuRef}>
+    <FontAwesomeIcon
+      icon={faEllipsisV}
+      className="action-menu-icon"
+      onClick={() => setActionMenuOpen(!isActionMenuOpen)}
+    />
+    {isActionMenuOpen && (
+      <div className="action-menu">
+        {/* <div className="action-menu-item">
+          {t("Export")}
+        </div> */}
+
+       { isV("btnUploadExcel") && (<div className="action-menu-item" onClick={handleButtonClick}>
+          {loading ? t("Uploading Excel...") : t("Upload Excel")}
+        </div>)
+}
+
+        {isV("btnBranchAdd") && (
+          <div
+            className="action-menu-item"
+            onClick={handleAddBranch}
+            style={{
+              pointerEvents: branches.some((branch) => branch.id < 0)
+                ? "none"
+                : "auto",
+              opacity: branches.some((branch) => branch.id < 0) ? 0.5 : 1,
+            }}
+          >
+            {t("Add Branch")}
           </div>
+        )}
+
+        {/* <div className="action-menu-item">{t("Import")}</div>
+        <div className="action-menu-item">{t("Settings")}</div> */}
+      </div>
+    )}
+  </div>
+
+  {/* Hidden file input stays outside */}
+  <input
+    type="file"
+    accept=".xlsx,.xls"
+    ref={fileExcelInputRef}
+    onChange={handleFileChange}
+    style={{ display: "none" }}
+  />
+</div>
+
         </div>
       </div>
       {isMobile ? (
