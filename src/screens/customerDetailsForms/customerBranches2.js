@@ -27,6 +27,8 @@ import OperatingHours from "./operatingHours";
 import BranchDetailsForm from "./branchDetailsForm";
 import { debounce, set } from "lodash";
 import Swal from "sweetalert2";
+import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
+import axios from "axios";
 const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
@@ -52,6 +54,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+   const fileExcelInputRef = useRef(null);
   let customerFormMode;
   if (mode === "edit" ) {
     customerFormMode = "custDetailsEdit";
@@ -990,6 +993,101 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     }
   };
 
+ const handleButtonClick = () => {
+  if (fileExcelInputRef.current) {
+    fileExcelInputRef.current.value = ""; // ✅ Clear the input
+    fileExcelInputRef.current.click();    // ✅ Open file picker
+  }
+};
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      Swal.fire({
+        title: t("Invalid File Type"),
+        text: t("Please upload a valid Excel file (.xlsx or .xls)"),
+        icon: "error",
+        confirmButtonText: t("OK"),
+      });
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("customerId", customer.id); // assumes customer object is passed as prop
+      formData.append("erpCustId", customer.erpCustId);
+      const response = await axios.post(
+        `${API_BASE_URL}/customer-branches/upload-excel`, // updated URL
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+          withCredentials: true,
+           responseType: "blob", // <-- Important to receive Excel file
+        validateStatus: () => true
+        }
+      );
+   if (
+  response?.status === 400 &&
+  response.headers["content-type"] !== "application/json"
+) {
+  const blob = new Blob([response.data], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  Swal.fire({
+    title: t("Validation Failed"),
+    html: t(
+    "Some rows contain validation errors.<br>" +
+    "The Excel file has been updated with a new column named <b>Errors</b>.<br>" +
+    "Please open the file, review the <b>Errors</b> column, fix the issues, and re-upload the file."
+  ), icon: "warning",
+    confirmButtonText: t("Download Error File"),
+  }).then(() => {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "branch_upload_errors.xlsx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  });
+
+  return; // Make sure to return early to prevent success message
+}
+
+
+
+      if (response.data?.success) {
+        Swal.fire({
+          title: t("File Uploaded Successfully"),
+          text: t(response.data.message) || t("Branches have been updated from the Excel file."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else {
+        Swal.fire({
+          title: t("File Upload Failed"),
+          text: t(response.data.message) || t("An error occurred while uploading the file."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      Swal.fire({
+        title: t("File Upload Failed"),
+        text: t("An error occurred while uploading the file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+      });
+    }
+  };
+
   return (
     <div className="branches-content" ref={contentRef}>
       {isV("customerApprovalChecklist") && (
@@ -1018,6 +1116,20 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             className="branches-search-input"
           />
           <div className="branches-action-buttons">
+                <button className="branches-upload-button" onClick={handleButtonClick}>
+        <span>Upload Excel</span>
+        <PiMicrosoftExcelLogoFill size={20} />
+      </button>
+
+      <input
+        type="file"
+        accept=".xlsx,.xls"
+        ref={fileExcelInputRef}
+        onChange={handleFileChange}
+        style={{ display: "none" }}
+      />
+
+
             {isV("btnBranchAdd") && (
               <button
                 className="branches-add-button"
