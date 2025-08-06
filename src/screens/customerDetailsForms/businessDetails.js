@@ -1171,8 +1171,8 @@ function BusinessDetails({
                   {t("Select")}
                 </option>
                 {basicMasterLists?.entity?.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {t(loc)}
+                  <option key={loc.value} value={loc.value}>
+                    {loc.value}
                   </option>
                 ))}
               </select>
