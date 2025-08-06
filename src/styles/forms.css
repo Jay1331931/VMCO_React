@@ -1927,6 +1927,15 @@ td.file-display-cell {
   cursor: pointer;
 }
 
+.branches-upload-button{
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+
+}
 /* .view-invoice:disabled {
   background-color: #cccccc;
   cursor: not-allowed;

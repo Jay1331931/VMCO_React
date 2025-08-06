@@ -633,6 +633,14 @@
   "Invalid or expired OTP": "رمز التحقق غير صالح أو منتهي الصلاحية",
    "OTP has expired  Resend OTP to reset password": "انتهت صلاحية رمز التحقق. أعد إرسال رمز التحقق لإعادة تعيين كلمة المرور",
    "View Invoice": "عرض الفاتورة",
-   "Sale Order Invoices": "فواتير طلبات البيع"
-
+   "Sale Order Invoices": "فواتير طلبات البيع",
+   "Invalid File Type": "نوع الملف غير صالح",
+   "Please upload a valid Excel file (.xlsx or .xls)": "يرجى تحميل ملف Excel صالح (.xlsx أو .xls)",
+   "Branches have been updated from the Excel file.": "تم تحديث الفروع من ملف Excel.",
+   "Branches and contacts inserted successfully.": "تم إدخال الفروع وجهات الاتصال بنجاح.",
+   "An error occurred while uploading the file.": "حدث خطأ أثناء تحميل الملف.",
+   "Add Branch": "إضافة فرع",
+   "Upload Excel": "تحميل Excel",
+   "Uploading Excel...": "جارٍ تحميل Excel...",
+   "Please upload a file with 200 rows or fewer for branch data.": "يرجى تحميل ملف يحتوي على 200 صف أو أقل لبيانات الفرع."
 }
