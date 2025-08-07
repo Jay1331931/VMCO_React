@@ -375,36 +375,121 @@ function Products({ customerId, customer, setTabsHeight }) {
 
   // Fetch category options when products or activeEntity changes
   useEffect(() => {
-    const options = Array.from(
-      new Set(products?.map((p) => p.category.toLowerCase()).filter(Boolean))
-    ).map((cat) => ({
-      name: cat,
-      value: cat,
-    }));
-    // Add "All Categories" option at the top
-    setCategoryOptions([...options]);
-  }, [products, activeEntity, t]);
+    const fetchCategories = async () => {
+      const selectedCategory = entities.find(
+        (cat) => cat.value === activeEntity
+      );
+      const entity = selectedCategory?.entity || selectedCategory?.value; // Use entity or value
+
+      if (!entity) {
+        setCategoryOptions([]);
+        return;
+      }
+
+      try {
+        // Build query parameters
+        const params = new URLSearchParams({
+          entity: entity,
+        });
+
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if (activeEntity === Constants.CATEGORY.VMCO_MACHINES) {
+            params.append("isMachine", "true");
+          } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
+            params.append("isMachine", "false");
+          }
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/product-categories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch categories");
+
+        const result = await response.json();
+
+        // Assuming result.data is an array of category names/objects
+        const options = Array.isArray(result.data)
+          ? result.data.map((cat) => ({
+              name: cat.category || cat.name || cat, // adapt as per API response
+              value: cat.category || cat.name || cat,
+            }))
+          : [];
+
+        setCategoryOptions(options);
+      } catch (err) {
+        setCategoryOptions([]);
+        console.error("Error fetching categories:", err);
+      }
+    };
+
+    fetchCategories();
+  }, [activeEntity, API_BASE_URL]);
 
   // Fetch subcategory options when products, activeEntity, or categoryFilter changes
   useEffect(() => {
-    const options = Array.from(
-      new Set(
-        products
-          ?.filter(
-            (p) =>
-              !categoryFilter ||
-              p.category.toLowerCase() === categoryFilter.toLowerCase()
-          )
-          .map((p) => p.subCategory)
-          .filter(Boolean)
-      )
-    ).map((sub) => ({
-      name: sub,
-      value: sub,
-    }));
-    // Add "All Subcategories" option at the top
-    setSubCategoryOptions([...options]);
-  }, [products, activeEntity, categoryFilter, t]);
+    const fetchSubCategories = async () => {
+      const selectedEntityObj = entities.find(
+        (cat) => cat.value === activeEntity
+      );
+      const entity = selectedEntityObj?.entity || selectedEntityObj?.value;
+
+      if (!entity || !categoryFilter) {
+        setSubCategoryOptions([]);
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams({
+          entity: entity,
+          category: categoryFilter,
+        });
+
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if (activeEntity === Constants.CATEGORY.VMCO_MACHINES) {
+            params.append("isMachine", "true");
+          } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
+            params.append("isMachine", "false");
+          }
+        }
+
+        const response = await fetch(
+          `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) throw new Error("Failed to fetch subcategories");
+
+        const result = await response.json();
+
+        // Assuming result.data is an array of subcategory names/objects
+        const options = Array.isArray(result.data)
+          ? result.data.map((sub) => ({
+              name: sub.subCategory || sub.sub_category || sub.name || sub,
+              value: sub.subCategory || sub.sub_category || sub.name || sub,
+            }))
+          : [];
+
+        setSubCategoryOptions(options);
+      } catch (err) {
+        setSubCategoryOptions([]);
+        console.error("Error fetching subcategories:", err);
+      }
+    };
+
+    fetchSubCategories();
+  }, [activeEntity, categoryFilter, API_BASE_URL]);
 
   return (
     <div className="products-content">
@@ -469,7 +554,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             value={categoryFilter}
             onChange={(e) => {
               setCategoryFilter(e.target.value);
-              setSubCategoryFilter("");
+              setSubCategoryFilter(""); // Reset subcategory when category changes
               setCurrentPage(1);
             }}
           />
