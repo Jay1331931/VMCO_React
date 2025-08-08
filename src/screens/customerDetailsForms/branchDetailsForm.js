@@ -529,7 +529,7 @@ const BranchDetailsForm = ({
     }
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
-      if(value === undefined || value === null) {
+      if(value === undefined || value === null || value === "") {
         continue; // Skip undefined or null values
       }
       if (arabicList.includes(field) && value && !isArabicText(value)) {

@@ -435,7 +435,7 @@ function BusinessDetails({
       <div className="form-group">
         <label htmlFor="governmentRegistrationNumber">
           {t("Government Registration #")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.governmentRegistrationNumber !=
@@ -491,7 +491,7 @@ function BusinessDetails({
       <div className="form-group">
         <label htmlFor="baladeahLicenseNumber">
           {t("Baladeah License #")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.baladeahLicenseNumber !=
