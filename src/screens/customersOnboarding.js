@@ -15,12 +15,14 @@ import Constants from "../constants";
 import axios from "axios";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
+import { useAuth } from "../context/AuthContext";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
   const { id } = useParams();
   // console.log(id)
   const { t, i18n } = useTranslation();
+  const { token } = useAuth();
   const isRTL = i18n.language === "ar";
   const [formData, setFormData] = useState({
     leadName: "",
@@ -123,8 +125,11 @@ function CustomersOnboarding() {
             `${API_BASE_URL}/auth/registration/getById/${id}`,
             {
               method: "GET",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
+              headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+              },
+              
             }
           );
           // Check if response is JSON
@@ -179,14 +184,17 @@ function CustomersOnboarding() {
   }, [id]);
   const getManagerFromEmployees = async (region) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/employees/random`, {
+      const response = await fetch(`${API_BASE_URL}/auth/employees/random`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
         body: JSON.stringify({
           designation: "area sales manager",
           region: region,
         }),
-        credentials: "include",
+        
       });
       if (response.ok) {
         const result = await response.json();
@@ -207,8 +215,11 @@ function CustomersOnboarding() {
         `${API_BASE_URL}/auth/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
         }
       );
 
@@ -236,8 +247,11 @@ function CustomersOnboarding() {
         const response = await fetch(`${API_BASE_URL}/auth/geoLocation`,
           {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      
     }
         );
         if (response.ok) {
@@ -286,11 +300,14 @@ function CustomersOnboarding() {
     ) {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`,
+          `${API_BASE_URL}/auth/customer-contacts/uniqueField/checkUniqueField`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}` 
+            },
+            
             body: JSON.stringify({
               field: "email",
               value: formData.companyEmail,
@@ -384,14 +401,17 @@ function CustomersOnboarding() {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/registration/user`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
           body: JSON.stringify({
             email: formData.companyEmail,
             password: formData.password,
             userType: "customer",
             roles: ["customer_primary"],
           }),
-          credentials: "include",
+          
         });
         if (!response.ok) {
           const errorData = await response.json();
@@ -413,7 +433,7 @@ function CustomersOnboarding() {
       const areaSalesManager =
         (await getManagerFromEmployees(formData?.region)) || "";
       if (!isRegistered) {
-        const { password, confirmpassword, ...stagingData } = formData;
+        const { password, confirmpassword, otp, ...stagingData } = formData;
 
         try {
           console.log("Lead Data:", leadData);
@@ -421,7 +441,7 @@ function CustomersOnboarding() {
             `${API_BASE_URL}/auth/registration/customer`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
               body: JSON.stringify({
                 companyNameEn: formData.companyName,
                 region: formData.region,
@@ -443,7 +463,7 @@ function CustomersOnboarding() {
                   [constants.ENTITY.GMTC]: areaSalesManager,
                 },
               }),
-              credentials: "include",
+              
             }
           );
           const result = await response.json();
@@ -463,7 +483,7 @@ function CustomersOnboarding() {
                 name: formData.leadName,
                 mobile: formData.companyPhone,
               }),
-              credentials: "include",
+              
             });
           });
 
@@ -475,13 +495,13 @@ function CustomersOnboarding() {
                 customerId: result.data.id,
                 contactType: type,
               }),
-              credentials: "include",
+              
             });
           });
 
           const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({
               customerId: result.data.id,
               methodDetails: {
@@ -517,7 +537,7 @@ function CustomersOnboarding() {
                 // partialPayment: { isAllowed: true }
               },
             }),
-            credentials: "include",
+            
           });
         } catch (error) {
           console.error("Error during registration:", error);
@@ -535,7 +555,7 @@ function CustomersOnboarding() {
                   ...registrationPayload,
                   registered: true,
                 }),
-                credentials: "include",
+                
               }
             );
             const result = await response.json();
@@ -549,6 +569,7 @@ function CustomersOnboarding() {
           }
         } else {
           try {
+       
             const response = await fetch(
               `${API_BASE_URL}/auth/registration/staging`,
               {
@@ -559,7 +580,7 @@ function CustomersOnboarding() {
                   registered: true,
                   source: "portal",
                 }),
-                credentials: "include",
+                
               }
             );
             const result = await response.json();
@@ -671,7 +692,10 @@ function CustomersOnboarding() {
     try {
       const { data } = await axios.post(
         `${API_BASE_URL}/auth/registration/verify-otp`,
-        Reqbody
+        Reqbody,
+        {
+          headers: { "Authorization": `Bearer ${token}` },
+        }
       );
       if (data?.status === "success") {
         setIsOtpVerify(true);

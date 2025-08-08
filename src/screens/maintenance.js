@@ -53,8 +53,11 @@ function Maintenance() {
       console.log("Fetching maintenance tickets from:", apiUrl);
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       const contentType = response.headers.get('content-type');

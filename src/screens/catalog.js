@@ -91,7 +91,7 @@ function Catalog() {
   const [searchQuery, setSearchQuery] = useState("");
   const productsPerPage = 60;
   const { token, user, isAuthenticated, loading, logout } = useAuth();
-  console.log("User Dataaaaa:", user);
+  console.log("User Dataaaaa:", token);
 
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]); // For category dropdown options
@@ -177,8 +177,10 @@ function Catalog() {
           `${API_BASE_URL}/products?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}` 
+            }
           }
         );
 
@@ -204,7 +206,7 @@ function Catalog() {
               result.pagination.total !== undefined &&
               Number(result.pagination.total)) ||
             result.data.length;
-        } else if (result && Array.isArray(result.data.data)) {
+        } else if (result && Array.isArray(result?.data?.data)) {
           pageProducts = result.data.data;
           totalCount =
             (result.total !== undefined && Number(result.total)) ||
@@ -575,8 +577,9 @@ function Catalog() {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
+              "Authorization": `Bearer ${token}`
             },
-            credentials: "include",
+            
           }
         );
         if (!response.ok) {
@@ -656,8 +659,9 @@ function Catalog() {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            "Authorization": `Bearer ${token}`
           },
-          credentials: "include",
+          
         }
       );
       if (!response.ok) throw new Error("Failed to fetch cart items");
@@ -720,8 +724,9 @@ function Catalog() {
                 headers: {
                   "Content-Type": "application/json",
                   Accept: "application/json",
+                  "Authorization": `Bearer ${token}`
                 },
-                credentials: "include",
+                
               }
             );
 
@@ -839,8 +844,9 @@ function Catalog() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
-          credentials: "include", // Send along auth cookies/JWT
+           // Send along auth cookies/JWT
         }
       );
 
@@ -859,8 +865,9 @@ function Catalog() {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
             },
-            credentials: "include",
+            
             body: JSON.stringify({
               quantityOrdered: updatedQuantity,
               netAmount: unitPrice * updatedQuantity,
@@ -916,8 +923,9 @@ function Catalog() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
-          credentials: "include",
+          
           body: JSON.stringify(cartItem),
         });
 
@@ -972,8 +980,9 @@ function Catalog() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
-          credentials: "include",
+          
           body: JSON.stringify({
             userId: user.userId,
             customerId: selectedCustomerId || user.customerId,
@@ -991,7 +1000,10 @@ function Catalog() {
           `${API_BASE_URL}/favorites/${user.userId}/${productId}`,
           {
             method: "DELETE",
-            credentials: "include",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            },
+            
           }
         );
 
@@ -1233,8 +1245,11 @@ function Catalog() {
 
         const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          
         });
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
@@ -1272,8 +1287,11 @@ function Catalog() {
         });
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          
         });
         if (!response.ok) throw new Error("Failed to fetch subcategories");
         const result = await response.json();

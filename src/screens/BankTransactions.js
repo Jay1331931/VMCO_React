@@ -97,7 +97,7 @@ const BankTransactions = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/bank-transactions/pagination?page=${pagination.page}&pageSize=${pagination.pageSize}&search=${debouncedSearchQuery}`,
         {
-          withCredentials: true,
+          headers: { "Authorization": `Bearer ${token}` },
         }
       );
       const formattedData = data.data?.map(row => ({

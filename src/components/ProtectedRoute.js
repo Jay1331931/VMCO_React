@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { isTokenValid } from '../utilities/authUtils';
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 // const ProtectedRoute = ({ children }) => {
 //   const { isAuthenticated, logout } = useAuth();
 
@@ -33,14 +34,19 @@ const ProtectedRoute = ({ children, allowedRoles, page }) => {
   const navigate = useNavigate();
   useEffect(() => {
     const checkAuth = () => {
-      const tokenFromCookie = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-      
+      const tokenFromCookie = localStorage.getItem("token");
+
       if (!tokenFromCookie || !isTokenValid(tokenFromCookie)) {
         setIsValid(false);
-        logout();
+        Swal.fire({
+          icon: 'error',
+          title: 'Session Expired',
+          text: 'Your session has expired. Please log in again.',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          logout();
+        });
+
       }
     };
 

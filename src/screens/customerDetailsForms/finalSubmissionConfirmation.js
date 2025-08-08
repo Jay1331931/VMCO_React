@@ -94,9 +94,10 @@ const FinalSubmissionConfirmation = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
           body: JSON.stringify({ fileType, fileName }),
-          credentials: "include",
+          
         }
       );
       const res = await response.json();

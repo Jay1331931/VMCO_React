@@ -166,12 +166,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     try {
       const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({
           id: branchId,
           module: "branch",
         }),
-        credentials: "include",
+        
       });
 
       console.log("!!!!!!!", res);
@@ -228,8 +228,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
 
@@ -281,8 +281,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
 
@@ -452,9 +452,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(payload),
-          credentials: "include",
+          
         }
       );
 
@@ -497,13 +497,13 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
     const response = await fetch(`${API_BASE_URL}/customer-branches`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({
         ...branchPayload,
         customer_id: customer.id,
         isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
       }),
-      credentials: "include",
+      
     });
 
     const result = await response.json();
@@ -538,13 +538,13 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${branchId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             ...contactPayload,
             customer_id: customer.id,
             branch_id: branchId,
           }),
-          credentials: "include",
+          
         }
       );
     }
@@ -623,13 +623,13 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         });
         const response = await fetch(`${API_BASE_URL}/customer-branches`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             ...branchPayload,
             customer_id: customer.id,
             isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
           }),
-          credentials: "include",
+          
         });
 
         const result = await response.json();
@@ -656,13 +656,13 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
               `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify({
                   ...contactPayload,
                   customer_id: customer.id,
                   branch_id: result.data.id,
                 }),
-                credentials: "include",
+                
               }
             );
           }
@@ -673,9 +673,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         if (Object.keys(branchPayload).length > 0) {
           await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ ...branchPayload, customerId: customer.id }),
-            credentials: "include",
+            
           });
         }
         console.log("Contact payload:", contactPayload);
@@ -684,9 +684,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
               body: JSON.stringify(contactPayload),
-              credentials: "include",
+              
             }
           );
         }
@@ -784,7 +784,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //       customer_id: customer.id,
       //       isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
       //     }),
-      //     credentials: "include",
+      //     
       //   });
 
       //   const result = await response.json();
@@ -817,7 +817,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //             customer_id: customer.id,
       //             branch_id: result.data.id,
       //           }),
-      //           credentials: "include",
+      //           
       //         }
       //       );
       //     }
@@ -828,12 +828,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       if (Object.keys(branchPayload).length > 0) {
         await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             branch: { ...branchPayload, customerId: customer.id },
             contacts: { ...contactPayload },
           }),
-          credentials: "include",
+          
         });
       }
       // console.log("Contact payload:", contactPayload);
@@ -844,7 +844,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //       method: "POST",
       //       headers: { "Content-Type": "application/json" },
       //       body: JSON.stringify(contactPayload),
-      //       credentials: "include",
+      //       
       //     }
       //   );
       // }
@@ -913,12 +913,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             ...branchPayload,
             branchStatus: "pending",
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -978,7 +978,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userPayload),
-            credentials: "include",
+            
           }
         );
 
@@ -1030,8 +1030,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`,
           },
-          withCredentials: true,
+         
            responseType: "blob", // <-- Important to receive Excel file
         validateStatus: () => true
         }

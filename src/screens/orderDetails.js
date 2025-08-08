@@ -190,8 +190,11 @@ function OrderDetails() {
         console.log('Fetching order products from URL:', url);
         const response = await fetch(url, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+          
         });
 
         const contentType = response.headers.get('content-type');
@@ -253,8 +256,8 @@ function OrderDetails() {
       const creditUrl = `${API_BASE_URL}/payment-method-balances/id/${customerId}`;
       const creditRes = await fetch(creditUrl, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        
       });
       if (!creditRes.ok) {
         console.warn('Failed to fetch credit eligibility:', creditRes.statusText);
@@ -437,8 +440,8 @@ function OrderDetails() {
         console.log(`Fetching existing orders with filters: ${orderFilters}`);
         const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          
         });
 
         if (!existingOrdersResponse.ok) {
@@ -461,8 +464,8 @@ function OrderDetails() {
         // Get customer's COD limit
         const customerResponse = await fetch(`${API_BASE_URL}/payment-method-balances/id/${formData.customerId}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          
         });
 
         if (!customerResponse.ok) {
@@ -648,9 +651,9 @@ function OrderDetails() {
       // First update the sales order
       const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
-        credentials: 'include',
+        
       }); if (!orderResponse.ok) {
         const errorData = await orderResponse.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Server response:', errorData);
@@ -670,8 +673,8 @@ function OrderDetails() {
       try {
         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: formData.id }))}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          
         });
 
         if (!linesResponse.ok) {
@@ -789,9 +792,9 @@ function OrderDetails() {
 
         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(orderUpdatePayload),
-          credentials: 'include',
+          
         });
 
         if (!updateOrderResponse.ok) {
@@ -969,8 +972,9 @@ function OrderDetails() {
       try {
         const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
+          
         });
 
         console.log('Existing order response status:', existingOrderResponse.status);
@@ -1010,7 +1014,8 @@ function OrderDetails() {
     let usernameApiUrl = `/user/get-username-by-id/${userId}`;
     const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
       method: 'GET',
-      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${token}` },
+      
     });
     if (usernameRes.ok) {
       const contentType = usernameRes.headers.get('content-type');
@@ -1105,9 +1110,9 @@ function OrderDetails() {
         console.log('Making API call to create sales order');
         const response = await fetch(`${API_BASE_URL}/sales-order`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(payload),
-          credentials: 'include',
+          
         });
         console.log('Sales order API response status:', response.status);
         if (!response.ok) {
@@ -1125,8 +1130,8 @@ function OrderDetails() {
             });
             const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
               method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include'
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              
             });
             const idResult = await idRes.json();
             let newOrderId = 1;
@@ -1213,9 +1218,10 @@ function OrderDetails() {
           // productsPayload[0].is_machine=true
           const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
             body: JSON.stringify(productsPayload),
-            credentials: 'include',
+            
           });
           console.log('Sales order lines API response status:', linesResponse.status);
 
@@ -1274,9 +1280,10 @@ function OrderDetails() {
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
             body: JSON.stringify(orderUpdatePayload),
-            credentials: 'include',
+            
           });
 
           if (!updateOrderResponse.ok) {
@@ -1378,9 +1385,10 @@ function OrderDetails() {
 
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
         body: JSON.stringify(payload),
-        credentials: 'include',
+        
       });
 
       if (!response.ok) {
@@ -1423,7 +1431,12 @@ function OrderDetails() {
           endPoint: "payment-opations/order",
           IsEmail: email,
         },
-        { withCredentials: true }
+        { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
       if (email) {
         Swal.fire({
@@ -1547,8 +1560,9 @@ function OrderDetails() {
         // Call API to get updated price for this product with new pricing policy
         const response = await fetch(`${API_BASE_URL}/product/price`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
+          
           body: JSON.stringify({
             productId: product.id,
             customerId: formData.customerId,
@@ -1619,8 +1633,9 @@ function OrderDetails() {
 
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
+        
         body: JSON.stringify({
           quantity,
           unitPrice,
@@ -1648,8 +1663,9 @@ function OrderDetails() {
     try {
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
+        
       });
 
       if (!response.ok) {
@@ -1696,8 +1712,9 @@ function OrderDetails() {
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
+        
         body: JSON.stringify(payload)
       });
 
@@ -1923,7 +1940,12 @@ function OrderDetails() {
     try {
       setInventoryLoading(true);
       const { data } = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
-        { withCredentials: true });
+        { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
 
       setProductName(productName);
       setInventoryData(data?.details || []);
@@ -2059,8 +2081,8 @@ function OrderDetails() {
         // Updated URL to include query parameter for entity master type
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
+          
         });
 
         if (!response.ok) throw new Error('Failed to fetch entity options');
@@ -2107,8 +2129,10 @@ function OrderDetails() {
         console.log('Fetching customer options with params:', params.toString());
         const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json',
+            "Authorization": `Bearer ${token}`
+           }
+          
         });
 
         if (!response.ok) throw new Error('Failed to fetch customer options');
@@ -2139,8 +2163,8 @@ function OrderDetails() {
       try {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
+          
         });
 
         if (!response.ok) throw new Error('Failed to fetch payment method options');
@@ -2258,8 +2282,9 @@ function OrderDetails() {
         const url = `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`;
         const response = await fetch(url, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
+          
         });
 
         if (!response.ok) throw new Error('Failed to fetch order products');
@@ -2302,8 +2327,9 @@ function OrderDetails() {
     try {
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
+        
       });
 
       if (!response.ok) throw new Error('Failed to fetch order details'); const result = await response.json();
@@ -2398,7 +2424,7 @@ function OrderDetails() {
           'Authorization': `Bearer ${token}` // Adding Authorization header with token
         },
         body: JSON.stringify(payload),
-        credentials: 'include'
+        
       });
 
       console.log('Discount workflow API response status:', response.status);
@@ -2465,14 +2491,15 @@ function OrderDetails() {
               console.log(`Updating existing product line: ${productId}`);
               const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
                 body: JSON.stringify({
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
                   vatPercentage: vatPercentage.toFixed(2)
                 }),
-                credentials: 'include',
+                
               });
 
               if (!patchResponse.ok) {
@@ -2484,7 +2511,8 @@ function OrderDetails() {
               console.log(`Creating new product line: ${productId}`);
               const postResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
                 body: JSON.stringify({
                   orderId: formData.id,
                   productId: productId,
@@ -2499,7 +2527,7 @@ function OrderDetails() {
                   erpProdId: product.erpProdId || product.erp_prod_id || '',
                   unit: product.unit || ''
                 }),
-                credentials: 'include',
+                
               });
 
               if (!postResponse.ok) {
@@ -2525,9 +2553,10 @@ function OrderDetails() {
           console.log("Updating sales order with payload:", patchPayload);
           const orderUpdateResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
             body: JSON.stringify(patchPayload),
-            credentials: 'include',
+            
           });
 
           if (!orderUpdateResponse.ok) {
@@ -2601,9 +2630,10 @@ function OrderDetails() {
 
       const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
         body: JSON.stringify(payload),
-        credentials: 'include',
+        
       });
 
       if (res.ok) {
@@ -2707,7 +2737,12 @@ setShowModal(true);
           id: customerId,    // replaced hardcoded id:64
           orderId: orderId,  // replaced hardcoded orderId:3
         },
-        { withCredentials: true }
+        { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       if (data?.status === "Ok" && data.data) {
@@ -3324,8 +3359,9 @@ setShowModal(true);
                     // Save to backend
                     const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/orders/id/${formData.id}`, {
                       method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json' },
-                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}` },
+                      
                       body: JSON.stringify({
                         feedback: updatedFeedback
                       })
@@ -3363,7 +3399,7 @@ setShowModal(true);
                           'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ feedback: JSON.stringify(feedbackObject) }),
-                        credentials: 'include'
+                        
                       });
 
                       if (!response.ok) {

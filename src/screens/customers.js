@@ -87,8 +87,11 @@ function Customers() {
         `${API_BASE_URL}/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
         }
       );
 
@@ -125,8 +128,9 @@ function Customers() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
-          credentials: "include",
+          
           body: JSON.stringify({
             id: invite.id,
           }),
@@ -139,8 +143,9 @@ function Customers() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}`
             },
-            credentials: "include",
+            
             body: JSON.stringify({
               eventName: "WELCOME_EMAIL",
               emailData: {
@@ -315,7 +320,8 @@ function Customers() {
         `${API_BASE_URL}/auth/registration/staging`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             companyEmail: inviteData.email,
             leadName: inviteData.name,
@@ -328,7 +334,7 @@ function Customers() {
             comments: inviteData.comments || "",
             registered: false,
           }),
-          credentials: "include",
+          
         }
       );
       const result = await response.json();
@@ -342,8 +348,9 @@ function Customers() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}`
               },
-              credentials: "include",
+              
               body: JSON.stringify({
                 id: result.lead.id,
               }),
@@ -359,8 +366,9 @@ function Customers() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}`
               },
-              credentials: "include",
+              
               body: JSON.stringify({
                 eventName: "WELCOME_EMAIL",
                 emailData: {
@@ -586,8 +594,10 @@ function Customers() {
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+            "Authorization": `Bearer ${token}`
+          },
+          
         }
       );
       const result = await response.json();
@@ -626,8 +636,9 @@ function Customers() {
         `${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
       const result = await response.json();
@@ -668,8 +679,9 @@ function Customers() {
         `${API_BASE_URL}/customer-registration-staging/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
         }
       );
       const result = await response.json();
@@ -754,8 +766,9 @@ function Customers() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
         }
       );
       const result = await response.json();
@@ -793,8 +806,9 @@ function Customers() {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
         }
       );
       const result = await response.json();
@@ -845,11 +859,15 @@ function Customers() {
     // getOptionsFromBasicsMaster("region").then(setRegionOptions);
     const fetchGeoData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
+        const response = await fetch(`${API_BASE_URL}/geoLocation`,
+          {
+      method: "GET",
+      headers: { "Content-Type": "application/json",
+        ...(token && { "Authorization": `Bearer ${token}` })
+       },
+      
+    }
+        );
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);

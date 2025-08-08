@@ -75,8 +75,8 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" , "Authorization": `Bearer ${token}`},
+          
         }
       );
 
@@ -136,8 +136,9 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
       const workflowDataJson = await response.json();
@@ -154,8 +155,10 @@ const BranchDetailsForm = ({
       try {
         const response = await fetch(`${API_BASE_URL}/geoLocation`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+              "Authorization": `Bearer ${token}` 
+          },
+          
         });
         if (response.ok) {
           const data = await response.json();

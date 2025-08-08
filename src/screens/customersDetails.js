@@ -179,6 +179,8 @@ const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
 };
 function CustomersDetails() {
   const location = useLocation();
+   const { token, user, isAuthenticated, logout, loading } = useAuth();
+
   const transformedCustomer = location.state?.transformedCustomer;
   // const {
   //   refreshCustomerData = () =>
@@ -207,12 +209,12 @@ function CustomersDetails() {
         `${API_BASE_URL}/workflow-instance/check/id`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({
             id: customer?.id,
             module: "customer",
           }),
-          credentials: "include",
+          
         }
       );
       console.log(res);
@@ -274,8 +276,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
       const result = await response.json();
@@ -340,8 +342,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
       const result = await response.json();
@@ -358,13 +360,13 @@ function CustomersDetails() {
       const [contactsResponse, paymentMethodsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }),
         fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }),
       ]);
 
@@ -454,7 +456,7 @@ function CustomersDetails() {
   //     const response = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
   //       method: 'GET',
   //       headers: { 'Content-Type': 'application/json' },
-  //       credentials: 'include'
+  //       
   //     });
   //     const result = await response.json();
   //     return result.status === 'Ok' ? result.data : null;
@@ -485,7 +487,6 @@ function CustomersDetails() {
 
   const formMode = location.state?.mode;
 
-  const { token, user, isAuthenticated, logout, loading } = useAuth();
 
   const navigate = useNavigate();
 
@@ -879,8 +880,9 @@ function CustomersDetails() {
 
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
         body: formData,
-        credentials: "include",
+        
       });
     } catch (error) {
       console.error("Error uploading files:", error.message);
@@ -1257,9 +1259,9 @@ function CustomersDetails() {
             `${API_BASE_URL}/customers/id/${customer.id}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
               body: JSON.stringify(customerPayload),
-              credentials: "include",
+              
             }
           );
           console.log("Response", response);
@@ -1276,9 +1278,9 @@ function CustomersDetails() {
         // console.log(paymentMethodPayload)
         await fetch(`${API_BASE_URL}/payment-method/id/${customer.id}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(paymentMethodPayload),
-          credentials: "include",
+          
         });
       }
 
@@ -1286,9 +1288,9 @@ function CustomersDetails() {
       if (Object.keys(contactUpdatePayload).length > 0) {
         await fetch(`${API_BASE_URL}/customer-contacts/${customer.id}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(contactUpdatePayload),
-          credentials: "include",
+          
         });
       }
 
@@ -1299,9 +1301,9 @@ function CustomersDetails() {
               `${API_BASE_URL}/customer-branches/${branchId}`,
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify(changes),
-                credentials: "include",
+                
               }
             );
             return response.json();
@@ -1332,7 +1334,7 @@ function CustomersDetails() {
     //     {
     //       method: "GET",
     //       headers: { "Content-Type": "application/json" },
-    //       credentials: "include",
+    //       
     //     }
     //   );
     //   const result = await response.json();
@@ -1370,8 +1372,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
 
@@ -1393,12 +1395,12 @@ function CustomersDetails() {
     try {
       const response = await fetch(`${API_BASE_URL}/employees/random`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({
           designation: "area sales manager",
           region: region,
         }),
-        credentials: "include",
+        
       });
       if (response.ok) {
         const result = await response.json();
@@ -1420,8 +1422,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
       const customerDataJson = await response.json();
@@ -1434,7 +1436,7 @@ function CustomersDetails() {
       // const responseContacts = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
       //   method: 'GET',
       //   headers: { 'Content-Type': 'application/json' },
-      //   credentials: 'include'
+      //   
       // });
       // const contactsDataJson = await responseContacts.json();
       // if (contactsDataJson.status === 'Ok') {
@@ -1447,7 +1449,7 @@ function CustomersDetails() {
       // const responsePaymentMethods = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
       //   method: 'GET',
       //   headers: { 'Content-Type': 'application/json' },
-      //   credentials: 'include'
+      //   
       // });
       // const paymentMethodsDataJson = await responsePaymentMethods.json();
       // if (paymentMethodsDataJson.status === 'Ok') {
@@ -1479,8 +1481,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
       if (!response.ok) {
@@ -1507,8 +1509,8 @@ function CustomersDetails() {
         `${API_BASE_URL}/employees/manager-and-employees`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
           body: JSON.stringify({ region: customerData.region }),
         }
       );
@@ -1780,8 +1782,9 @@ function CustomersDetails() {
 
           fetch(`${API_BASE_URL}/customers/file/${customer.id}`, {
             method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
             body: formData,
-            credentials: "include",
+            
           });
         }
       });
@@ -1796,8 +1799,9 @@ function CustomersDetails() {
             uploadPromises.push(
               fetch(`${API_BASE_URL}/customers/file/${customer.id}`, {
                 method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
                 body: formData,
-                credentials: "include",
+                
               })
             );
           }
@@ -1962,7 +1966,7 @@ function CustomersDetails() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          credentials: "include",
+          
         }
       );
 
@@ -2015,7 +2019,7 @@ function CustomersDetails() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(payload),
-            credentials: "include",
+            
           }
         );
         res.then((response) => {
@@ -2053,7 +2057,7 @@ function CustomersDetails() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(payload),
-            credentials: "include",
+            
           }
         );
         res.then((response) => {
@@ -2289,7 +2293,7 @@ function CustomersDetails() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payloadToSend),
-            credentials: "include",
+            
           });
         }
 
@@ -2301,7 +2305,7 @@ function CustomersDetails() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(paymentMethodPayload),
-            credentials: "include",
+            
           });
         }
 
@@ -2311,7 +2315,7 @@ function CustomersDetails() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(contactUpdatePayload),
-            credentials: "include",
+            
           });
         }
 
@@ -2345,7 +2349,7 @@ function CustomersDetails() {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify(changes),
-                  credentials: "include",
+                  
                 }
               );
               return response.json();
@@ -2408,7 +2412,7 @@ function CustomersDetails() {
           {
             method: "GET",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            
           }
         );
         const result = await response.json();
@@ -2498,7 +2502,7 @@ function CustomersDetails() {
               fileType,
               fileName: "logo", // Can be undefined since we're using logoType
             }),
-            credentials: "include",
+            
           }
         );
 
@@ -2541,7 +2545,7 @@ function CustomersDetails() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ fileType, fileName }),
-          credentials: "include",
+          
         }
       );
 
