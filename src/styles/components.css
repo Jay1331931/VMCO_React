@@ -140,6 +140,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   color: #333;
+  width: max-content;
 }
 
 .tab-button {

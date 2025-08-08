@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Constants from '../constants';
+import { convertToTimezone, TIMEZONES } from '../utilities/convertToTimezone';
 
 const Table = ({
     columns,
@@ -119,11 +120,14 @@ const Table = ({
         const date = new Date(value);
         if (isNaN(date.getTime())) return value; // Invalid date
         // Format date to dd/mm/yyyy
-        return new Intl.DateTimeFormat('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-        }).format(date);
+        // return new Intl.DateTimeFormat('en-GB', {
+        //     day: '2-digit',
+        //     month: '2-digit',
+        //     year: 'numeric',
+        // }).format(date);
+        // Use your custom function to convert to Saudi Arabia timezone
+    return convertToTimezone(value, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY');
+
     }
         
     // Default cell rendering

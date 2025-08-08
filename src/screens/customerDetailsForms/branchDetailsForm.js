@@ -529,6 +529,9 @@ const BranchDetailsForm = ({
     }
     for (const field in dataToValidate) {
       const value = dataToValidate[field];
+      if(value === undefined || value === null) {
+        continue; // Skip undefined or null values
+      }
       if (arabicList.includes(field) && value && !isArabicText(value)) {
         errors[field] = "Please enter Arabic text.";
       }
@@ -555,7 +558,7 @@ const BranchDetailsForm = ({
       if (field.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errors[field] = " ";
+          errors[field] = "Invalid email format";
         }
       }
 
