@@ -14,6 +14,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST || "Customer_data_verification_checklist";
 
 function BusinessDetails({
   customerData = {},
@@ -199,7 +201,7 @@ function BusinessDetails({
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: "Customer_data_verification_checklist",
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
                       containerType: "documents",
                     }),
                     
