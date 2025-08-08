@@ -16,7 +16,7 @@ import EmployeeLogin from "./screens/employeeLogin";
 import OrderDetails from "./screens/orderDetails";
 import SupportDetails from "./screens/supportDetails";
 import MaintenanceDetails from "./screens/maintenanceDetails";
-import Logout from "./screens/logout";
+// import Logout from "./screens/logout";
 import RbacEditor from "./screens/rbacEditor";
 import CustomerDetails from "./screens/customerDetails";
 import Payment from "./screens/payment";
@@ -26,8 +26,12 @@ import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OpationsPage from "./components/Opationspage";
 import Constants from "./constants";
+import { useAuth } from "./context/AuthContext";
 function App() {
-
+  const { user, token, loading } = useAuth();
+  if(loading) {
+    return <div>Loading...</div>; // or a loading spinner
+  }
   return (
     <Router>
       <Routes>
@@ -55,7 +59,7 @@ function App() {
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<RbacEditor />} />
-        <Route path="/logout" element={<Logout />} />
+        {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />

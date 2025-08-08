@@ -21,7 +21,7 @@ function RbacEditor() {
   const [pages, setPages] = useState([]);
   const [error, setError] = useState(null);
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   // Fetch roles and pages from API
   useEffect(() => {
@@ -36,8 +36,11 @@ function RbacEditor() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -71,8 +74,9 @@ function RbacEditor() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
-        credentials: "include",
+        
         body: JSON.stringify({ roleName: newRoleName.trim() }),
       });
 
@@ -100,8 +104,11 @@ function RbacEditor() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {

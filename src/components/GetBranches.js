@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, t = (x) => x }) {
   const { i18n } = useTranslation();
+  const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,8 +53,8 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
       const url = `${API_BASE_URL}/customer-branches/pagination?filters=${filters}&page=${pagination.page}&pageSize=${pagination.pageSize}${searchParam}`;
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
+        
       });
       if (!response.ok) throw new Error('Failed to fetch branches');
       const result = await response.json();

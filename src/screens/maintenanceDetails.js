@@ -143,8 +143,11 @@ const serialNumberDebounceRef = useRef(null);
         `${API_BASE_URL}/upload-files`,
         formDataUpload,
         {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}` 
+          },
+         
         }
       );
 
@@ -186,7 +189,12 @@ const serialNumberDebounceRef = useRef(null);
         const { data } = await axios.post(
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "maintenance" },
-          { withCredentials: true }
+          { 
+           
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          }
         );
 
         if (data?.status === "Ok" && data.data) {
@@ -212,7 +220,12 @@ const serialNumberDebounceRef = useRef(null);
           fileName,
           containerType: "maintenance",
         },
-        { withCredentials: true }
+        { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       if (data.success) {
@@ -273,8 +286,10 @@ const serialNumberDebounceRef = useRef(null);
       const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/basics-masters?filters={"masterName": "region"}`;
       const response = await fetch(apiUrl, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json',
+           "Authorization": `Bearer ${token}`
+         },
+        
       });
       if (!response.ok) throw new Error('Failed to fetch regions');
       const result = await response.json();
@@ -400,8 +415,8 @@ const serialNumberDebounceRef = useRef(null);
       try {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "maintenanceIssueType"}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
+          
         });
         if (!response.ok) throw new Error('Failed to fetch issue type options');
         const result = await response.json();
@@ -457,8 +472,9 @@ const serialNumberDebounceRef = useRef(null);
     try {
       const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' ,
+                                'Authorization': `Bearer ${token}`},
+        
       });
       if (!response.ok) throw new Error('Failed to fetch customer details');
       const customer = await response.json();
@@ -535,8 +551,11 @@ const serialNumberDebounceRef = useRef(null);
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -564,8 +583,11 @@ const serialNumberDebounceRef = useRef(null);
       const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50000&sortOrder=asc&filters={"designation": "maintenance technician"}`;
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -622,8 +644,11 @@ const serialNumberDebounceRef = useRef(null);
 
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
           body: JSON.stringify({ 
             status: "Cancelled",
             comments: ticket.comments // Explicitly preserve comments
@@ -724,8 +749,11 @@ const serialNumberDebounceRef = useRef(null);
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -904,8 +932,11 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
       const response = await fetch(apiUrl, {
         method: method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
         body: JSON.stringify(ticketData),
       });
 
@@ -976,8 +1007,11 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
       const response = await fetch(apiUrl, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
         body: JSON.stringify({ 
           status: "Closed",
           comments: ticket.comments // Explicitly preserve comments
@@ -1055,8 +1089,11 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
           body: JSON.stringify({
             comments: updatedComments
           })
@@ -1113,8 +1150,11 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
       const { data } = await axios.get(
         `${API_BASE_URL}/warranty-end-date/C-000002/${value}`,
         {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+         
         }
       );
       const rawDate = data?.details?.warrantdate || "";

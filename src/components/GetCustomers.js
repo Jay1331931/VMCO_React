@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/components.css';
 import Pagination from './Pagination';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 
 function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoint, apiParams, t = (x) => x }) {
   const { i18n } = useTranslation();
+  const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,8 +53,8 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
       const url = `${API_BASE_URL}${apiEndpoint}?${params.toString()}`;
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        
       });
       
       if (!response.ok) throw new Error('Failed to fetch customers');

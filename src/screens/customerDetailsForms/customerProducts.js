@@ -146,8 +146,8 @@ function Products({ customerId, customer, setTabsHeight }) {
         `${API_BASE_URL}/product-customer-mappings/pagination?${query.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          
         }
       );
 
@@ -272,9 +272,9 @@ function Products({ customerId, customer, setTabsHeight }) {
         `${API_BASE_URL}/product-customer-mappings`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify(updatedItems),
-          credentials: "include",
+          
         }
       );
 
@@ -301,9 +301,9 @@ function Products({ customerId, customer, setTabsHeight }) {
         `${API_BASE_URL}/product-customer-mappings/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
           body: JSON.stringify({ moq: value }),
-          credentials: "include",
+          
         }
       );
     } catch (error) {
@@ -376,8 +376,8 @@ function Products({ customerId, customer, setTabsHeight }) {
   // Fetch category options when products or activeEntity changes
   useEffect(() => {
     const fetchCategories = async () => {
-      const selectedCategory = entities.find(
-        (cat) => cat.value === activeEntity
+      const selectedCategory = entities?.find(
+        (cat) => cat?.value === activeEntity
       );
       const entity = selectedCategory?.entity || selectedCategory?.value; // Use entity or value
 

@@ -4,10 +4,12 @@ import Pagination from './Pagination';
 import axios from 'axios';
 import { BiHandicap } from 'react-icons/bi';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 
 function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x }) {
   const { i18n } = useTranslation();
+  const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   
   const [search, setSearch] = useState('');
@@ -28,7 +30,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
       filteredData.paymentStatus="Pending";
       const filter=JSON.stringify(filteredData);
       const { data } = await axios.get(`${API_BASE_URL}/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
-        withCredentials: true,
+        headers: { "Authorization": `Bearer ${token}` },
       });
       setCustomerOrders(data.data.data || []);
       setPagination({

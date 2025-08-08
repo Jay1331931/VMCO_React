@@ -61,7 +61,7 @@ const ContactSection = ({
   const { t } = useTranslation();
   const [workflowData, setWorkflowData] = useState(null);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const token = localStorage.getItem("token");
   // Add OTP verification states
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [isOtpVerified, setIsOtpVerified] = useState(false);
@@ -267,8 +267,9 @@ const ContactSection = ({
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
       const workflowDataJson = await response.json();

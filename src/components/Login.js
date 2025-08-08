@@ -38,16 +38,16 @@ function Login({ title, userType }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
-          credentials: "include",
+          
         });
 
         const data = await res.json();
 
+        localStorage.setItem("token", data.token);
         console.log("Login response:", data);
-        const cookie = getCookie("token");
-        console.log("Cookie:", cookie);
+       
 
-        login(cookie, data.data);
+        login(data.token, data.data);
 
         if (!res.ok) {
           // setError(data.message || 'Login failed');
@@ -83,18 +83,18 @@ function Login({ title, userType }) {
     }
   };
 
-  const getCookie = (name) => {
-    const cookies = document.cookie
-      .split(";")
-      .map((cookie) => cookie.trim())
-      .reduce((acc, cookie) => {
-        const [key, value] = cookie.split("=");
-        acc[key] = decodeURIComponent(value);
-        return acc;
-      }, {});
+  // const getCookie = (name) => {
+  //   const cookies = document.cookie
+  //     .split(";")
+  //     .map((cookie) => cookie.trim())
+  //     .reduce((acc, cookie) => {
+  //       const [key, value] = cookie.split("=");
+  //       acc[key] = decodeURIComponent(value);
+  //       return acc;
+  //     }, {});
 
-    return cookies[name] || null;
-  };
+  //   return cookies[name] || null;
+  // };
 
   const handleForgotPassword = (e) => {
     e.preventDefault();

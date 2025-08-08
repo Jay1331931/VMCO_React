@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Constants from '../constants';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../context/AuthContext';
 
 function GetPaymentMethods({
   open,
@@ -12,6 +13,7 @@ function GetPaymentMethods({
   isSimpleMode = false // New prop to indicate simple mode for SHC, NAQI, GMTC, DAR
 }) {
   const { i18n } = useTranslation();
+  const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   const [methods, setMethods] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -32,8 +34,8 @@ function GetPaymentMethods({
     setError(null);
     fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include'
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      
     })
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch payment method options');

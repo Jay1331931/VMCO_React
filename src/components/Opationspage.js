@@ -10,15 +10,16 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
-  const cookies = document.cookie
-    .split(";")
-    .map(cookie => cookie.trim())
-    .reduce((acc, cookie) => {
-      const [key, ...rest] = cookie.split("=");
-      acc[key] = decodeURIComponent(rest.join("="));
-      return acc;
-    }, {});
-  return cookies[name] || null;
+  // const cookies = document.cookie
+  //   .split(";")
+  //   .map(cookie => cookie.trim())
+  //   .reduce((acc, cookie) => {
+  //     const [key, ...rest] = cookie.split("=");
+  //     acc[key] = decodeURIComponent(rest.join("="));
+  //     return acc;
+  //   }, {});
+  // return cookies[name] || null;
+  return localStorage.getItem(name);
 };
 const OpationsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
@@ -50,7 +51,9 @@ const OpationsPage = () => {
             userId: 0,
             userName: "payment",
           },
-          { withCredentials: true }
+          {
+            headers: { "Authorization": `Bearer ${token}` },
+          }
         );
         console.log("Temporary Token Response:", data.details);
       } catch (error) {
@@ -69,7 +72,7 @@ const OpationsPage = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}`,
         {
-          withCredentials: true,
+          headers: { "Authorization": `Bearer ${token}` },
         }
       );
       // setDecodedOrderID(parseInt(data?.details?.orderIds));
@@ -88,7 +91,7 @@ const OpationsPage = () => {
   //     const { data } = await axios.get(
   //       `${API_BASE_URL}/sales-order/id/${decodedOrderID}`,
   //       {
-  //         withCredentials: true,
+  //        
   //       }
   //     );
 
@@ -109,7 +112,7 @@ const OpationsPage = () => {
       const results = await Promise.all(
         ids.map((id) =>
           axios.get(`${API_BASE_URL}/sales-order/id/${parseInt(id)}`, {
-            withCredentials: true,
+            headers: { "Authorization": `Bearer ${token}` },
           })
         )
       );
@@ -213,16 +216,16 @@ const OpationsPage = () => {
     // Check if entity is VMCO and all orders are unpaid and paymentPercentage = 30
     const allUnpaidVMCO = OrderDetails.every(
       (order) =>
-        parseFloat(order.paidAmount) === 0 &&
-        parseFloat(order.paymentPercentage || 0) === 30 &&
+        (parseFloat(order.paidAmount) == 0.0 || order.paidAmount == null) &&
+        parseFloat(order.paymentPercentage || 0) == 30.0 &&
         order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
     );
-
+    console.log("Amount match:", 0 == null);
     // Mixed condition: paid partially and paymentPercentage is 30 and 70% amount is not paid
     const somePaid30 = OrderDetails.every(
       (order) =>
-        parseFloat(order.paidAmount || 0) > 0 &&
-        parseFloat(order.paymentPercentage || 0) === 30
+        (parseFloat(order.paidAmount || 0)  > 0.0 || order.paidAmount == null) &&
+        parseFloat(order.paymentPercentage || 0) === 30.0
     );
     const paidOrders = OrderDetails.filter(
       (order) =>
@@ -317,7 +320,9 @@ const OpationsPage = () => {
         endPoint: "bankTransactions/order",
         amount: amount,
       },
-      { withCredentials: true }
+      {
+        headers: { "Authorization": `Bearer ${token}` },
+      }
     );
 
     console.log("Payment link generated:", data);
@@ -395,14 +400,16 @@ const OpationsPage = () => {
     //   `${API_BASE_URL}/payment/generate-link`,
     //   payload,
     //   {
-    //     withCredentials: true,
+    //    
     //   }
     // );
      const makeRequest = async () => {
     const { data } = await axios.post(
       `${API_BASE_URL}/payment/generate-link`,
       payload,
-      { withCredentials: true }
+      {
+        headers: { "Authorization": `Bearer ${token}` },
+      }
     );
     return data;
   };

@@ -22,7 +22,8 @@ import {
   faCog,
   faUser,
   faSignOutAlt,
-  faLanguage,faBank
+  faLanguage,
+  faBank,
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 
@@ -74,9 +75,11 @@ function Sidebar({ children, title }) {
     try {
       const res = fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ id: customer?.id, module: "customer" }),
-        credentials: "include",
       });
       if (res.ok) {
         isApprovalMode = true;
@@ -123,8 +126,10 @@ function Sidebar({ children, title }) {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -149,8 +154,10 @@ function Sidebar({ children, title }) {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
         }
       );
       const result = await response.json();
@@ -167,13 +174,17 @@ function Sidebar({ children, title }) {
       const [contactsResponse, paymentMethodsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }),
         fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }),
       ]);
 
@@ -336,21 +347,25 @@ function Sidebar({ children, title }) {
         navigate("/login");
         break;
       // case 'Company Profile': navigate('/customersDetails', { state: { transformedCustomer: fetchApprovedCustomer(user)}}); break;
-      case 'Company': 
-      try {
-        const customerData = await fetchApprovedCustomer(user);
-        // navigate('/customersDetails', { 
-        //   state: { 
-        //     transformedCustomer: JSON.parse(JSON.stringify(customerData)) 
-        //   }
-        // });
-        navigate('/customerDetails', {
-          state: { customerId: customerData?.id, workflowId: customerData?.workflowInstanceId, mode: 'add' }
-        });
-      } catch (err) {
-        console.error("Failed to fetch customer:", err);
-      }
-      break;
+      case "Company":
+        try {
+          const customerData = await fetchApprovedCustomer(user);
+          // navigate('/customersDetails', {
+          //   state: {
+          //     transformedCustomer: JSON.parse(JSON.stringify(customerData))
+          //   }
+          // });
+          navigate("/customerDetails", {
+            state: {
+              customerId: customerData?.id,
+              workflowId: customerData?.workflowInstanceId,
+              mode: "add",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to fetch customer:", err);
+        }
+        break;
       default:
         // If no match is found, stay on current page
         break;
@@ -359,19 +374,14 @@ function Sidebar({ children, title }) {
 
   const handleLogout = async () => {
     const userLoggedOut = user;
-    const refreshResponse = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-    });
 
-    if (refreshResponse.ok) {
-      // Logout successful, redirect to login page
-      if (userLoggedOut?.userType === "employee") {
-        navigate("/login/employee");
-      } else {
-        navigate("/login");
-      }
+    logout();
+
+    // Logout successful, redirect to login page
+    if (userLoggedOut?.userType === "employee") {
+      navigate("/login/employee");
+    } else {
+      navigate("/login");
     }
   };
 
