@@ -299,6 +299,11 @@
   padding: 8px 12px;
   cursor: pointer;
   font-size: 12px;
+  text-align: left;
+}
+
+[dir="rtl"] .dropdown-option {
+  text-align: right;
 }
 
 .dropdown-option:hover {
@@ -1796,7 +1801,7 @@ td.file-display-cell {
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 50%;
 }
 
@@ -1918,8 +1923,8 @@ td.file-display-cell {
   }
 }
 
-.view-invoice{
-  background-color:  var(--primary-color);
+.view-invoice {
+  background-color: var(--primary-color);
   color: white;
   border: none;
   padding: 10px 15px;
@@ -1927,16 +1932,35 @@ td.file-display-cell {
   cursor: pointer;
 }
 
-.branches-upload-button{
+.branches-upload-button {
   background-color: var(--primary-color);
   color: white;
   border: none;
   padding: 10px 15px;
   border-radius: 8px;
   cursor: pointer;
-
 }
-/* .view-invoice:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-} */
+
+/* Arabic text alignment for branch fields */
+.form-row .form-group input[name="branchNameLc"] {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Alternative: You can also use a class-based approach */
+.branch-arabic-field {
+  text-align: right;
+  direction: rtl;
+}
+
+/* For the searchable dropdown if needed */
+.branchDropDown[name="branchNameLc"] .dropdown-header {
+  text-align: right;
+  direction: rtl;
+}
+
+/* For RTL support in branch forms */
+[dir="rtl"] .form-row .form-group input[name="branchNameLc"] {
+  text-align: right;
+  direction: rtl;
+}

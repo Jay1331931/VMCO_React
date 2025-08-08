@@ -893,8 +893,6 @@ const BranchDetailsForm = ({
                   {(() => {
                     switch (field.type) {
                       case "text":
-                        // Only show "Location Type (Other)" when locationType is "Others (specify)"
-
                         return (
                           <input
                             type="text"
@@ -902,10 +900,19 @@ const BranchDetailsForm = ({
                             value={branch?.[field.name]}
                             placeholder={t(field.placeholder)}
                             onChange={handleBranchFieldChange}
+                            className={
+                              field.name === "branchNameLc"
+                                ? "branch-arabic-field"
+                                : ""
+                            }
                             style={
                               hasUpdate
                                 ? {
                                     backgroundColor: "#fff8e1",
+                                    ...(field.name === "branchNameLc" && {
+                                      textAlign: "right",
+                                      direction: "rtl",
+                                    }),
                                   }
                                 : {
                                     fontSize: "12px",
@@ -916,6 +923,10 @@ const BranchDetailsForm = ({
                                     width: "140px",
                                     rowGap: "10px",
                                     columnGap: "5px",
+                                    ...(field.name === "branchNameLc" && {
+                                      textAlign: "right",
+                                      direction: "rtl",
+                                    }),
                                   }
                             }
                             disabled={

@@ -211,7 +211,7 @@ function BusinessDetails({
                 }
               } catch (error) {
                 console.error("Error viewing checklist:", error);
-                // Fallback to direct URL if API fails
+
                 window.open(
                   CUSTOMER_APPROVAL_CHECKLIST_URL,
                   "_blank",

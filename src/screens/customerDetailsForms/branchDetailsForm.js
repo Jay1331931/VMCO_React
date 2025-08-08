@@ -550,7 +550,7 @@ const BranchDetailsForm = ({
       if (field.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
-          errors[field] = " ";
+          errors[field] = "Invalid email format";
         }
       }
 
