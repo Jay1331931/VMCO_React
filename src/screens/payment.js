@@ -5,12 +5,14 @@ import axios from 'axios';
 import '../i18n';
 import { useTranslation } from 'react-i18next';
 import Swal from 'sweetalert2';
+import { useAuth } from '../context/AuthContext';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const PaymentPage = () => {
     const { i18n } = useTranslation();
     const { t } = useTranslation();
+    const { token } = useAuth();
 
     const location = useLocation();
     const query = new URLSearchParams(location.search);
@@ -40,7 +42,10 @@ const PaymentPage = () => {
                     linkExpiryDays: linkExpiryDays
                 },
                 {
-                    withCredentials: true,
+                   
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
                 }
             );
             console.log('Payment response:', data);

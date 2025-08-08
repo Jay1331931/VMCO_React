@@ -13,7 +13,7 @@ const fetchUser = async (token) => {
   const response = await fetch(`${API_SERVER_URL}/auth/me`, {
     method: "GET",
     headers: { Authorization: `Bearer ${token}` },
-    credentials: "include",
+    
   });
 
   //console.log('Response received:', response);
@@ -49,15 +49,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // Add loading state
 
   const getCookie = (name) => {
-    const cookies = document.cookie
-      .split(";")
-      .map((cookie) => cookie.trim())
-      .reduce((acc, cookie) => {
-        const [key, value] = cookie.split("=");
-        acc[key] = decodeURIComponent(value);
-        return acc;
-      }, {});
-    return cookies[name] || null;
+    // const cookies = document.cookie
+    //   .split(";")
+    //   .map((cookie) => cookie.trim())
+    //   .reduce((acc, cookie) => {
+    //     const [key, value] = cookie.split("=");
+    //     acc[key] = decodeURIComponent(value);
+    //     return acc;
+    //   }, {});
+    // return cookies[name] || null;
+    return localStorage.getItem(name);
   };
 
   useEffect(() => {
@@ -84,8 +85,9 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       setToken(null);
       setLoading(false);
-      document.cookie =
-        "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      // localStorage.removeItem("token");
+      // document.cookie =
+      //   "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
   }, []);
 
@@ -99,7 +101,8 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("token");
+    // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   return (

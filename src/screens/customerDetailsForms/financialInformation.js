@@ -61,7 +61,7 @@ function FinancialInformation({
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields
+        dropdownFields,token
       );
       setBasicMasterLists(listOfBasicsMaster);
     };

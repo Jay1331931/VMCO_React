@@ -61,7 +61,7 @@ function ContactDetails({
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields
+        dropdownFields,token
       );
       setBasicMasterLists(listOfBasicsMaster);
     };
@@ -73,8 +73,10 @@ function ContactDetails({
       try {
         const response = await fetch(`${API_BASE_URL}/geoLocation`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+              "Authorization": `Bearer ${token}` 
+          },
+          
         });
         if (response.ok) {
           const data = await response.json();

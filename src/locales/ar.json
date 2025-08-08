@@ -603,7 +603,7 @@
   "Invalid email format": "تنسيق البريد الإلكتروني غير صالح",
   "Invalid format! 05XXXXXXXX or 9665XXXXXXXX accepted": "تنسيق غير صالح! 05XXXXXXXX أو 9665XXXXXXXX مقبول",
   "Invalid format! 15 to 20 digits accepted": "تنسيق غير صالح! 15 إلى 20 رقمًا مقبولة",
-  "Invalid format! SAXXXXXXXXXXXXXX accepted": "تنسيق غير صالح! SAXXXXXXXXXXXXXX مقبول",
+  "Invalid format! SAXXXXXXXXXXXXXXXXXXXXXX accepted": "تنسيق غير صالح! SAXXXXXXXXXXXXXXXXXXXXXX مقبول",
   "This document is required.": "هذه الوثيقة مطلوبة.",
   "Enter bank name": "أدخل اسم البنك",
   "Enter account number": "أدخل رقم الحساب",

@@ -45,7 +45,7 @@ function Orders() {
 
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -78,8 +78,11 @@ function Orders() {
           `${API_BASE_URL}/sales-order/pagination?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}` 
+            },
+            
           }
         );
 
@@ -134,8 +137,11 @@ function Orders() {
         `${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
         }
       );
       const result = await response.json();
@@ -220,8 +226,11 @@ function Orders() {
         `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
         }
       );
       const result = await response.json();
@@ -271,7 +280,12 @@ function Orders() {
                 endPoint: "payment-opations/order",
                 IsEmail: email,
               },
-              { withCredentials: true }
+              { 
+               
+                headers: {
+                  "Authorization": `Bearer ${token}`
+                }
+              }
             );
             
             if (email) {

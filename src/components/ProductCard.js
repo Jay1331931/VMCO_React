@@ -91,7 +91,7 @@ const ProductCard = ({
             <div className="product-details">
                 <h3 className="product-name" title={product.name}>{product.name}</h3>
                 <p className="product-code">{product.code}</p>
-                {product.entity && <p className="product-entity">{product.entity}</p>}
+                {product.entity && <p className="product-entity">{product.entity?.toUpperCase()}</p>}
                 <h4 className="unit-price" style={{ color: "#6c7584" }}>{t('Price: ')}{(product.unitPrice).toFixed(2)}</h4>
                 <div className="buttons-container">
                     {isV('quantityController') && (

@@ -193,9 +193,10 @@ function Documents({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
           body: JSON.stringify({ fileType, fileName }),
-          credentials: "include",
+          
         }
       )
         .then((res) => res.json())

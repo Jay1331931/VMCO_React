@@ -57,12 +57,12 @@ function BusinessDetails({
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields
+        dropdownFields,token
       );
       const listOfEmployeesWithManagers =
-        await getOptionsFromEmployeesWithManager(customerData?.branch);
+        await getOptionsFromEmployeesWithManager(customerData?.branch,token);
 
-      const listOfEmployees = await getOptionsFromEmployees();
+      const listOfEmployees = await getOptionsFromEmployees(token);
 
       setBasicMasterLists(listOfBasicsMaster);
       setEmployeeListWithManagers(listOfEmployeesWithManagers);
@@ -151,9 +151,10 @@ function BusinessDetails({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({ fileType, fileName }),
-          credentials: "include",
+          
         }
       );
       const res = await response.json();
@@ -195,12 +196,13 @@ function BusinessDetails({
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
                       fileName: "Customer_data_verification_checklist",
                       containerType: "documents",
                     }),
-                    credentials: "include",
+                    
                   }
                 );
                 const res = await response.json();

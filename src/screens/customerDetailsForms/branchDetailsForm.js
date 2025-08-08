@@ -77,8 +77,9 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-branches/id/${branchId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
 
@@ -100,8 +101,9 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customer?.id}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
         }
       );
 
@@ -121,8 +123,9 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
       const workflowDataJson = await response.json();
@@ -141,12 +144,13 @@ const BranchDetailsForm = ({
     try {
       const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           id: branchId,
           module: "branch",
         }),
-        credentials: "include",
+        
       });
 
       console.log("!!!!!!!", res);
@@ -533,8 +537,9 @@ const BranchDetailsForm = ({
         const { name, field: contactField } = uniqueContactFieldsList.find(item => item.name === field);
         const res = await fetch(`${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
+          
           body: JSON.stringify({ customerId: customer?.id, name, value }),
         });
         if (res.ok) {
@@ -599,7 +604,8 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             branch: {
               branchStatus: "pending",
@@ -607,7 +613,7 @@ const BranchDetailsForm = ({
             },
             contacts: {},
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -640,7 +646,7 @@ const BranchDetailsForm = ({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userPayload),
-            credentials: "include",
+            
           }
         );
 
@@ -682,7 +688,8 @@ const BranchDetailsForm = ({
         try {
           const response = await fetch(`${API_BASE_URL}/customer-branches`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
             body: JSON.stringify({
               ...updatedBranchData.current,
               customer_id: customer?.id, // Set initial status to 'new'
@@ -691,7 +698,7 @@ const BranchDetailsForm = ({
               erpCustId: customer?.erpCustId,
               hours: stringifyHours(hoursDetails),
             }),
-            credentials: "include",
+            
           });
 
           const result = await response.json();
@@ -717,13 +724,14 @@ const BranchDetailsForm = ({
                 `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
                 {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
                   body: JSON.stringify({
                     ...updatedBranchContactsData.current,
                     customer_id: customer.id,
                     branch_id: result.data.id,
                   }),
-                  credentials: "include",
+                  
                 }
               );
               if (res.ok) {
@@ -756,7 +764,8 @@ const BranchDetailsForm = ({
             `${API_BASE_URL}/customer-branches/id/${id}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
               body: JSON.stringify({
                 branch: {
                   ...updatedBranchData.current,
@@ -765,7 +774,7 @@ const BranchDetailsForm = ({
                 },
                 contacts: {},
               }),
-              credentials: "include",
+              
             }
           );
         } catch (error) {
@@ -782,9 +791,10 @@ const BranchDetailsForm = ({
             `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
               body: JSON.stringify({ ...updatedBranchContactsData.current }),
-              credentials: "include",
+              
             }
           );
         } catch (error) {
@@ -833,7 +843,8 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             branch: {
               ...updatedBranchData.current,
@@ -844,7 +855,7 @@ const BranchDetailsForm = ({
               ...updatedBranchContactsData.current,
             },
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -873,7 +884,8 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             branch: {
               branchStatus: "blocked",
@@ -881,7 +893,7 @@ const BranchDetailsForm = ({
               isBlocked: true,
             },
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -911,7 +923,8 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             branch: {
               branchStatus: "approved",
@@ -919,7 +932,7 @@ const BranchDetailsForm = ({
               isBlocked: false,
             },
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -958,13 +971,14 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             approvedStatus: "approved",
             comment: "comment",
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -995,13 +1009,14 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             approvedStatus: "rejected",
             comment: "comment",
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
 
@@ -1083,14 +1098,15 @@ const BranchDetailsForm = ({
         `${API_BASE_URL}/workflow-instance/id/${customer?.workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             approvedStatus:
               approvalAction === "approve" ? "approved" : "rejected",
             comment,
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
 

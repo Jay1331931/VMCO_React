@@ -12,15 +12,16 @@ import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
 const getCookie = (name) => {
-  const cookies = document.cookie
-    .split(";")
-    .map((cookie) => cookie.trim())
-    .reduce((acc, cookie) => {
-      const [key, ...rest] = cookie.split("=");
-      acc[key] = decodeURIComponent(rest.join("="));
-      return acc;
-    }, {});
-  return cookies[name] || null;
+  // const cookies = document.cookie
+  //   .split(";")
+  //   .map((cookie) => cookie.trim())
+  //   .reduce((acc, cookie) => {
+  //     const [key, ...rest] = cookie.split("=");
+  //     acc[key] = decodeURIComponent(rest.join("="));
+  //     return acc;
+  //   }, {});
+  // return cookies[name] || null;
+  return localStorage.getItem(name);
 };
 const AddBankTransaction = () => {
   const { t } = useTranslation();
@@ -68,7 +69,9 @@ const AddBankTransaction = () => {
           userId: 0,
           userName: "payment",
         },
-        { withCredentials: true }
+        {
+          headers: { "Authorization": `Bearer ${token}` },
+        }
       );
       console.log("Temporary Token Response:", data.details);
     } catch (error) {
@@ -105,8 +108,8 @@ const AddBankTransaction = () => {
           `${API_BASE_URL}/upload-files`,
           formDataUpload,
           {
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true,
+            headers: { "Content-Type": "multipart/form-data", "Authorization": `Bearer ${token}` },
+           
           }
         );
 
@@ -152,7 +155,9 @@ const AddBankTransaction = () => {
       const response = await axios.post(
         `${API_BASE_URL}/bank-transactions`,
         payload,
-        { withCredentials: true }
+        {
+          headers: { "Authorization": `Bearer ${token}` },
+        }
       );
       if (orderIds && response.data.status === "success") {
         Swal.fire({
@@ -225,8 +230,9 @@ const AddBankTransaction = () => {
         {
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
-          withCredentials: true,
+         
         }
       );
       if (data.status === "success") {
@@ -255,7 +261,7 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/bank-transactions/id/${id}`,
         {
-          withCredentials: true,
+          headers: { "Authorization": `Bearer ${token}` },
         }
       );
       setImageUrls(data.data.bankDocuments ? data.data.bankDocuments : []);
@@ -272,7 +278,7 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}&amount=${amount}`,
         {
-          withCredentials: true,
+          headers: { "Authorization": `Bearer ${token}` },
         }
       );
       setOrderIds(parseInt(data?.details?.orderIds));
@@ -291,7 +297,7 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/sales-order/id/${orderIds}`,
         {
-          withCredentials: true,
+          headers: { "Authorization": `Bearer ${token}` },
         }
       );
       console.log("Sale Order Data:", amount);
@@ -331,7 +337,9 @@ const AddBankTransaction = () => {
         const { data } = await axios.post(
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "transactions" },
-          { withCredentials: true }
+          {
+            headers: { "Authorization": `Bearer ${token}` },
+          }
         );
 
         if (data?.status === "Ok" && data.data) {
@@ -356,7 +364,9 @@ const AddBankTransaction = () => {
           fileName: fileName,
           containerType: "transactions",
         },
-        { withCredentials: true }
+        {
+          headers: { "Authorization": `Bearer ${token}` },
+        }
       );
 
       if (data.success) {

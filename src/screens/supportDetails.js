@@ -148,8 +148,11 @@ function SupportDetails() {
         `${API_BASE_URL}/upload-files`,
         formDataUpload,
         {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
+          headers: { 
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}` 
+          },
+         
         }
       );
 
@@ -191,7 +194,12 @@ function SupportDetails() {
         const { data } = await axios.post(
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "support" },
-          { withCredentials: true }
+          { 
+           
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          }
         );
 
         if (data?.status === "Ok" && data.data) {
@@ -217,7 +225,12 @@ function SupportDetails() {
           fileName,
           containerType: "support",
         },
-        { withCredentials: true }
+        { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
       );
 
       if (data.success) {
@@ -316,8 +329,11 @@ function SupportDetails() {
         // Updated URL to include query parameter for supportIssueType master type
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "supportIssueType"}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          headers: { 
+            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${token}` 
+          },
+          
         });
 
         if (!response.ok) throw new Error('Failed to fetch issue type options');
@@ -400,8 +416,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -438,8 +457,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -468,8 +490,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -543,8 +568,11 @@ function SupportDetails() {
 
           const response = await fetch(apiUrl, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { 
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}` 
+            },
+            
             body: JSON.stringify(ticketData),
           });
 
@@ -653,8 +681,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
       });
 
       if (!response.ok) {
@@ -776,8 +807,11 @@ function SupportDetails() {
       const { createdAt, ...filterdata } = ticketData
       const response = await fetch(apiUrl, {
         method: method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
         body: JSON.stringify(filterdata),
       });
 
@@ -851,8 +885,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+        },
+        
         body: JSON.stringify({ 
           status: "Closed",
           comments: ticket.comments // Explicitly preserve comments
@@ -930,8 +967,11 @@ function SupportDetails() {
         
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+          
           body: JSON.stringify({ 
             comments: updatedComments 
           })

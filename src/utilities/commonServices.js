@@ -1,5 +1,5 @@
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-export const getOptionsFromBasicsMaster = async (fieldName) => {
+export const getOptionsFromBasicsMaster = async (fieldName, token) => {
   const params = new URLSearchParams({
     filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
   });
@@ -9,8 +9,11 @@ export const getOptionsFromBasicsMaster = async (fieldName) => {
       `${API_BASE_URL}/basics-masters?${params.toString()}`,
       {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` })
+        },
+        
       }
     );
 
@@ -32,7 +35,7 @@ export const getOptionsFromBasicsMaster = async (fieldName) => {
     return []; // Return empty array on error
   }
 };
-export const fetchCurrentDataOfCustomer = async (customerId) => {
+export const fetchCurrentDataOfCustomer = async (customerId, token) => {
   console.log("Fetching current data for customer ID:~~~~~~", customerId);
   let customerData = {};
   let contactsData = {};
@@ -42,8 +45,11 @@ export const fetchCurrentDataOfCustomer = async (customerId) => {
       `${API_BASE_URL}/customers/id/${customerId}`,
       {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` })
+        },
+        
       }
     );
     const customerDataJson = await response.json();
@@ -56,7 +62,7 @@ export const fetchCurrentDataOfCustomer = async (customerId) => {
     // const responseContacts = await fetch(`${API_BASE_URL}/customer-contacts/${customerId}`, {
     //   method: 'GET',
     //   headers: { 'Content-Type': 'application/json' },
-    //   credentials: 'include'
+    //   
     // });
     // const contactsDataJson = await responseContacts.json();
     // if (contactsDataJson.status === 'Ok') {
@@ -69,7 +75,7 @@ export const fetchCurrentDataOfCustomer = async (customerId) => {
     // const responsePaymentMethods = await fetch(`${API_BASE_URL}/payment-method/id/${customerId}`, {
     //   method: 'GET',
     //   headers: { 'Content-Type': 'application/json' },
-    //   credentials: 'include'
+    //   
     // });
     // const paymentMethodsDataJson = await responsePaymentMethods.json();
     // if (paymentMethodsDataJson.status === 'Ok') {
@@ -91,12 +97,12 @@ export const fetchCurrentDataOfCustomer = async (customerId) => {
     throw error;
   }
 };
-export const fetchDropdownFromBasicsMaster = async (dropdownFields) => {
+export const fetchDropdownFromBasicsMaster = async (dropdownFields,token) => {
   const options = {};
   console.log("Dropdown Fields", dropdownFields);
   for (const field of dropdownFields) {
     try {
-      let data = await getOptionsFromBasicsMaster(field);
+      let data = await getOptionsFromBasicsMaster(field,token);
       console.log("Data for field", field, data);
       options[field] = data.map((opt) =>
         typeof opt === "string" ? opt.charAt(0) + opt.slice(1) : opt
@@ -109,7 +115,7 @@ export const fetchDropdownFromBasicsMaster = async (dropdownFields) => {
   return options;
 };
 
-export const getOptionsFromEmployees = async () => {
+export const getOptionsFromEmployees = async (token) => {
   const params = new URLSearchParams({
     filters: { designation: "sales executive" }, // Properly stringify the filter
   });
@@ -119,8 +125,11 @@ export const getOptionsFromEmployees = async () => {
       `${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`,
       {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` })
+        },
+        
       }
     );
     if (!response.ok) {
@@ -137,7 +146,7 @@ export const getOptionsFromEmployees = async () => {
   }
 };
 
-export const getOptionsFromEmployeesWithManager = async (region) => {
+export const getOptionsFromEmployeesWithManager = async (region, token) => {
   try {
     console.log("getOptionsFromEmployeesWithManager #############");
 
@@ -145,8 +154,11 @@ export const getOptionsFromEmployeesWithManager = async (region) => {
       `${API_BASE_URL}/employees/manager-and-employees`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` })
+        },
+        
         body: JSON.stringify({ region: region }),
       }
     );

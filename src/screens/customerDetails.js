@@ -39,7 +39,7 @@ import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionC
 import ProtectedRoute from "../components/ProtectedRoute";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const fetchCurrentDataOfCustomerContacts = async (customerId) => {
+const fetchCurrentDataOfCustomerContacts = async (customerId,token) => {
   let contactsData = {};
 if(!customerId) {
   // return <Navigate to="*" replace />;
@@ -48,8 +48,11 @@ if(!customerId) {
     `${API_BASE_URL}/customer-contacts/${customerId}`,
     {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      
     }
   );
   const contactsDataJson = await responseContacts.json();
@@ -66,14 +69,17 @@ if(!customerId) {
   }
 };
 
-const fetchCurrentPaymentMetods = async (customerId) => {
+const fetchCurrentPaymentMetods = async (customerId,token) => {
   let paymentMethodsData = {};
   const responsePaymentMethods = await fetch(
     `${API_BASE_URL}/payment-method/id/${customerId}`,
     {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      
     }
   );
   const paymentMethodsDataJson = await responsePaymentMethods.json();
@@ -92,7 +98,7 @@ const fetchCurrentPaymentMetods = async (customerId) => {
   }
 };
 
-const fetchCurrentDataOfCustomer = async (customerId) => {
+const fetchCurrentDataOfCustomer = async (customerId,token) => {
   console.log("Fetching current data for customer ID:~~~~~~", customerId);
   let customerData = {};
   let contactsData = {};
@@ -100,8 +106,11 @@ const fetchCurrentDataOfCustomer = async (customerId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      
     });
     const customerDataJson = await response.json();
     console.log("Customer Data JSON~~~~~~~~~~~~~", customerDataJson);
@@ -114,14 +123,17 @@ const fetchCurrentDataOfCustomer = async (customerId) => {
 
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
 
-const checkInApproval = async (customerId, module) => {
+const checkInApproval = async (customerId, module,token) => {
   let isAppMode = false;
   try {
     const response = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ id: customerId, module: module }),
-      credentials: "include",
+      
     });
 
     console.log("!!!!!!!!", response);
@@ -402,6 +414,7 @@ function CustomerDetails() {
   const location = useLocation();
   const customerId = location?.state?.customerId;
   const workflowId = location?.state?.workflowId;
+  console.log("@@@@@location?.state?.workflowInstanceId:", location?.state);
   const workflowInstanceId = location?.state?.workflowInstanceId;
   const mode = location?.state?.mode;
   const [customerData, setCustomerData] = useState({});
@@ -458,8 +471,11 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          
         }
       );
       const workflowDataJson = await response.json();
@@ -489,9 +505,10 @@ function CustomerDetails() {
       if(!customerId) {
         navigate("/*")
       }
-      const resp = await fetchCurrentDataOfCustomer(customerId);
+      const resp = await fetchCurrentDataOfCustomer(customerId,token);
       const customerContacts = await fetchCurrentDataOfCustomerContacts(
-        customerId
+        customerId,
+        token
       );
       console.log("#####???????Fetched customer data:", JSON.stringify(resp));
       console.log("@@@@@@customerId:", customerId);
@@ -499,9 +516,9 @@ function CustomerDetails() {
       console.log("@@@@@mode:", mode);
       let isUnderApproval = false;
       // Check if the customer is under approval
-      isUnderApproval = await checkInApproval(customerId, "customer");
+      isUnderApproval = await checkInApproval(customerId, "customer", token);
       if(!isUnderApproval) {
-        isUnderApproval = await checkInApproval(customerId, "branch");
+        isUnderApproval = await checkInApproval(customerId, "branch", token);
       }
       // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
       setInApproval(isUnderApproval);
@@ -521,16 +538,16 @@ function CustomerDetails() {
 
         temp = wfData;
       } else if (workflowInstanceId) {
-        fetchWorkflowDataOfCustomer(workflowInstanceId);
+       await fetchWorkflowDataOfCustomer(workflowInstanceId);
       }
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
       setOriginalCustomerData(resp);
-      const conRes = await fetchCurrentDataOfCustomerContacts(customerId);
+      const conRes = await fetchCurrentDataOfCustomerContacts(customerId, token);
       setCustomerContactsData(
         isUnderApproval ? { ...conRes, ...temp?.contacts } : conRes
       );
       setOriginalCustomerContactsData(conRes);
-      const paymentMethodsRes = await fetchCurrentPaymentMetods(customerId);
+      const paymentMethodsRes = await fetchCurrentPaymentMetods(customerId,token);
       setCustomerPaymentMethodsData(
         isUnderApproval && temp?.methodDetails
           ? { methodDetails: temp?.methodDetails }
@@ -1031,7 +1048,7 @@ function CustomerDetails() {
       if (field.toLowerCase().includes("iban")) {
         const saudiIbanRegex = /^SA\d{22}$/;
         if (value && !saudiIbanRegex.test(value)) {
-          errors[field] = "Invalid format! SAXXXXXXXXXXXXXX accepted";
+          errors[field] = "Invalid format! SAXXXXXXXXXXXXXXXXXXXXXX accepted";
         }
       }
 
@@ -1063,7 +1080,7 @@ function CustomerDetails() {
         }
       }
       if (field.toLowerCase().includes("governmentregistrationnumber")) {
-        const govRegNumberRegex = /^[1-9]\d{8,9}$/;
+        const govRegNumberRegex = /^[1-9]\d{7,8}$/;
         if (value && !govRegNumberRegex.test(value)) {
           errors[field] = "Invalid format! 8 to 9 digits accepted";
         }
@@ -1130,8 +1147,11 @@ function CustomerDetails() {
         const { name, field: contactField } = uniqueContactFieldsList.find(item => item.name === field);
         const res = await fetch(`${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          
           body: JSON.stringify({ customerId, name, value }),
         });
         if (res.ok) {
@@ -1148,8 +1168,11 @@ function CustomerDetails() {
       if (uniqueFieldsList.includes(field)) {
         const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          
           body: JSON.stringify({ customerId, field, value }),
         });
         if (res.ok) {
@@ -1181,8 +1204,11 @@ function CustomerDetails() {
 
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
         body: formData,
-        credentials: "include",
+        
       });
 
       if (res.ok) {
@@ -1437,12 +1463,13 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             customer: updatedCustomerData.current,
             contacts: {},
           }),
-          credentials: "include",
+          
         }
       );
       if (response.ok) {
@@ -1472,9 +1499,10 @@ function CustomerDetails() {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify(updatedCustomerContactsData.current),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1498,9 +1526,10 @@ function CustomerDetails() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1589,12 +1618,13 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             customer: updatedCustomerData.current,
             contacts: updatedCustomerContactsData.current,
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1617,9 +1647,10 @@ function CustomerDetails() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1717,14 +1748,15 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             approvedStatus:
               approvalAction === "approve" ? "approved" : "rejected",
             comment,
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1782,13 +1814,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             approvedStatus: "approved",
             comment: "comment",
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1821,13 +1854,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             approvedStatus: "rejected",
             comment: "comment",
             workflowData: mergedData,
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1873,8 +1907,8 @@ function CustomerDetails() {
         return;
       }
 
-      const customerDataSubmit = await fetchCurrentDataOfCustomer(customerId);
-      const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(customerId);
+      const customerDataSubmit = await fetchCurrentDataOfCustomer(customerId,token);
+      const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(customerId,token);
       const errorsSubmit = await validateData({
         ...customerDataSubmit,
         ...contactsDataSubmit,
@@ -1899,12 +1933,13 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             customer: { customerStatus: customerData.customerStatus },
             contacts: {},
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1936,12 +1971,13 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
             customer: { customerStatus: "blocked", isBlocked: true },
             contacts: {},
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);
@@ -1960,7 +1996,8 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" ,
+                                'Authorization': `Bearer ${token}`},
           body: JSON.stringify({
             customer: {
               customerStatus: "approved",
@@ -1968,7 +2005,7 @@ function CustomerDetails() {
             },
             contacts: {},
           }),
-          credentials: "include",
+          
         }
       );
       console.log("Response", response);

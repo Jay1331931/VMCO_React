@@ -56,7 +56,7 @@ const ContactSection = ({
   const { t } = useTranslation();
   const [workflowData, setWorkflowData] = useState(null);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
+const token = localStorage.getItem("token");
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -120,8 +120,9 @@ const ContactSection = ({
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json",
+                                'Authorization': `Bearer ${token}` },
+          
         }
       );
       const workflowDataJson = await response.json();
