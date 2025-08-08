@@ -289,54 +289,50 @@ const ContactSection = ({
     fetchWorkflowData();
   }, [workflowInstanceId, inApproval]);
 
-  // // Add function to check email verification status
-  // const checkEmailVerificationStatus = async (email) => {
-  //   try {
-  //     const response = await fetch(
-  //       `${API_BASE_URL}/auth/registration/send-otp`,
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({
-  //           contact_type: "email",
-  //           contact_info: email,
-  //         }),
-  //         credentials: "include",
-  //       }
-  //     );
-  //     const data = await response.json();
-  //     return data?.status === "verified";
-  //   } catch (error) {
-  //     console.error("Error checking verification status:", error);
-  //     return false;
-  //   }
-  // };
+  // Add function to check email verification status
+  const checkEmailVerificationStatus = async (email) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/registration/check-email?email=${email}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
+      const data = await response.json();
+      return data?.status === "verified";
+    } catch (error) {
+      console.error("Error checking verification status:", error);
+      return false;
+    }
+  };
 
-  // // Add useEffect to check verification status when component mounts
-  // useEffect(() => {
-  //   const checkExistingVerifications = async () => {
-  //     if (branch?.primaryContactEmail) {
-  //       const isVerified = await checkEmailVerificationStatus(
-  //         branch.primaryContactEmail
-  //       );
-  //       if (isVerified) {
-  //         setVerifiedEmails((prev) =>
-  //           new Set(prev).add(branch.primaryContactEmail)
-  //         );
-  //         setIsOtpVerified(true);
-  //       }
-  //     }
-  //   };
-  //   checkExistingVerifications();
-  // }, [branch?.primaryContactEmail]);
+  // Add useEffect to check verification status when component mounts
+  useEffect(() => {
+    const checkExistingVerifications = async () => {
+      if (branch?.primaryContactEmail) {
+        const isVerified = await checkEmailVerificationStatus(
+          branch.primaryContactEmail
+        );
+        if (isVerified) {
+          setVerifiedEmails((prev) =>
+            new Set(prev).add(branch.primaryContactEmail)
+          );
+          setIsOtpVerified(true);
+        }
+      }
+    };
+    checkExistingVerifications();
+  }, [branch?.primaryContactEmail]);
 
   // Add email validation function
+
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return email && emailRegex.test(email);
   };
 
-  
   return (
     <div className="form-section">
       <h3>{t("Personal Details")}</h3>
@@ -398,7 +394,7 @@ const ContactSection = ({
                                   href="#"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    
+
                                     handleSendOtp(branch[field]);
                                   }}
                                   style={{
