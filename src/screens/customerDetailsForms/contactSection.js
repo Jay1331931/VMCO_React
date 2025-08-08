@@ -336,6 +336,7 @@ const ContactSection = ({
     return email && emailRegex.test(email);
   };
 
+  
   return (
     <div className="form-section">
       <h3>{t("Personal Details")}</h3>
