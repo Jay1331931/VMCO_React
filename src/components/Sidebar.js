@@ -375,7 +375,7 @@ function Sidebar({ children, title }) {
   const handleLogout = async () => {
     const userLoggedOut = user;
 
-    logout();
+    logout(true); // Pass true to indicate button was clicked
 
     // Logout successful, redirect to login page
     if (userLoggedOut?.userType === "employee") {
