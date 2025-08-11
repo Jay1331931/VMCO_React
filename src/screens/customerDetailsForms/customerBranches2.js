@@ -995,7 +995,17 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   };
 
  const handleButtonClick = () => {
+
   if (loading) return;
+  if(!customer?.erpCustId) {
+      Swal.fire({
+        title: t("Customer not synced with ERP"),
+        text: t("Please sync the customer with ERP before adding branches."),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+      });
+      return; // Stop adding branch if customer is not synced
+    }
   if (fileExcelInputRef.current) {
     fileExcelInputRef.current.value = ""; // ✅ Clear the input
     fileExcelInputRef.current.click();    // ✅ Open file picker
