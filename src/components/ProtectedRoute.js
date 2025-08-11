@@ -19,7 +19,7 @@ import Swal from "sweetalert2";
 // export default ProtectedRoute;
 
 const ProtectedRoute = ({ children, allowedRoles, page }) => {
-  const { user, isAuthenticated, logout, token } = useAuth();
+  const { user, isAuthenticated, logout, token , buttonClicked} = useAuth();
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -36,7 +36,7 @@ const ProtectedRoute = ({ children, allowedRoles, page }) => {
     const checkAuth = () => {
       const tokenFromCookie = localStorage.getItem("token");
 
-      if (!tokenFromCookie || !isTokenValid(tokenFromCookie)) {
+      if ((!tokenFromCookie || !isTokenValid(tokenFromCookie)) && !buttonClicked) {
         setIsValid(false);
         Swal.fire({
           icon: 'error',
