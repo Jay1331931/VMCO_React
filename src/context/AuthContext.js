@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true); // Add loading state
-
+  const [buttonClicked, setButtonClicked] = useState(false);
   const getCookie = (name) => {
     // const cookies = document.cookie
     //   .split(";")
@@ -97,17 +97,18 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
+  const logout = (buttonClickedValue = false) => {
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem("token");
+    setButtonClicked(buttonClickedValue);
     // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   return (
     <AuthContext.Provider
-      value={{ token, user, isAuthenticated, loading, login, logout }}
+      value={{ token, user, isAuthenticated, loading, login, logout ,buttonClicked}}
     >
       {children}
     </AuthContext.Provider>

@@ -145,13 +145,12 @@ function Customers() {
               "Content-Type": "application/json",
                                 'Authorization': `Bearer ${token}`
             },
-            
+          
             body: JSON.stringify({
               eventName: "WELCOME_EMAIL",
               emailData: {
                 to: invite?.companyEmail,
-                firstName: invite?.companyName,
-                lastName: "",
+                customerName: invite?.companyName,
                 activationLink: result?.data,
               },
             }),

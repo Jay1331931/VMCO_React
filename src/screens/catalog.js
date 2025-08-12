@@ -839,7 +839,7 @@ function Catalog() {
 
       // First check if this item already exists in the cart
       const checkResponse = await fetch(
-        `${API_BASE_URL}/cart/pagination?filters={"userId":${user.userId}, "customerId":3,"branchId":${selectedLocation}, "productId":${productId}}`,
+        `${API_BASE_URL}/cart/pagination?filters={"userId":${user.userId}, "customerId":${customerId},"branchId":${selectedLocation}, "productId":${productId}}`,
         {
           method: "GET",
           headers: {
@@ -860,7 +860,7 @@ function Catalog() {
           parseInt(existingItem.quantityOrdered) + parseInt(quantity);
 
         const updateResponse = await fetch(
-          `${API_BASE_URL}/cart/update?customer_id=3&branch_id=${selectedLocation}&product_id=${productId}`,
+          `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
           {
             method: "PATCH",
             headers: {
