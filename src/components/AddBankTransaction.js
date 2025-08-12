@@ -11,6 +11,8 @@ import GetSalesOrder from "./GetSalesOrder";
 import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
+import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
+
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -70,7 +72,7 @@ const AddBankTransaction = () => {
           userName: "payment",
         },
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log("Temporary Token Response:", data.details);
@@ -108,8 +110,10 @@ const AddBankTransaction = () => {
           `${API_BASE_URL}/upload-files`,
           formDataUpload,
           {
-            headers: { "Content-Type": "multipart/form-data", "Authorization": `Bearer ${token}` },
-           
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -125,8 +129,7 @@ const AddBankTransaction = () => {
   const handleSubmit = async () => {
     try {
       const errors = {};
-      if (!formData.erpCustId)
-        errors.erpCustId = "ERP Customer ID is required";
+      if (!formData.erpCustId) errors.erpCustId = "ERP Customer ID is required";
       if (!formData.entity) errors.entity = "Entity is required";
       if (!formData.transactionDate)
         errors.transactionDate = "Transaction Date is required";
@@ -140,6 +143,7 @@ const AddBankTransaction = () => {
         setError(t("Please fill all required fields"));
         return;
       }
+
       const payload = {
         ...formData,
         erpOrderId: formData.erpOrderId
@@ -147,18 +151,21 @@ const AddBankTransaction = () => {
           : [],
         orderId: formData.orderId ? JSON.stringify(formData.orderId) : [],
         bankDocuments: JSON.stringify(imageUrls),
+        // Convert the transaction date to ISO format for storage
         transactionDate: new Date(formData.transactionDate)
           .toISOString()
           .split("T")[0],
       };
       delete payload.entity;
+
       const response = await axios.post(
         `${API_BASE_URL}/bank-transactions`,
         payload,
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       if (orderIds && response.data.status === "success") {
         Swal.fire({
           title: t("Success"),
@@ -215,8 +222,7 @@ const AddBankTransaction = () => {
       description: "",
       bankDocuments: [],
       orderId: [],
-      customerVmcoRegion:customer?.region || null
-      
+      customerVmcoRegion: customer?.region || null,
     }));
     setShowCustomerPopup(false);
   };
@@ -230,9 +236,8 @@ const AddBankTransaction = () => {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
-         
         }
       );
       if (data.status === "success") {
@@ -261,13 +266,18 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/bank-transactions/id/${id}`,
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setImageUrls(data.data.bankDocuments ? data.data.bankDocuments : []);
       setUpdateTransaction({
         ...data.data,
-        transactionDate: data.data.transactionDate.split("T")[0],
+        // Convert transaction date to Saudi Arabia timezone and format for input
+        transactionDate: convertToTimezone(
+          data.data.transactionDate,
+          TIMEZONES.SAUDI_ARABIA,
+          "YYYY-MM-DD"
+        ),
       });
     } catch (error) {
       console.error("Failed to fetch transaction", error);
@@ -278,7 +288,7 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}&amount=${amount}`,
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       setOrderIds(parseInt(data?.details?.orderIds));
@@ -297,7 +307,7 @@ const AddBankTransaction = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/sales-order/id/${orderIds}`,
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       console.log("Sale Order Data:", amount);
@@ -308,7 +318,7 @@ const AddBankTransaction = () => {
         companyNameEn: data.data.companyNameEn,
         companyNameAr: data.data.companyNameAr,
         amountTransferred: totalamount,
-              branchVmcoRegion:data?.data?.branchRegion || null,
+        branchVmcoRegion: data?.data?.branchRegion || null,
         erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
         orderId: [data.data.id] || [],
       }));
@@ -338,7 +348,7 @@ const AddBankTransaction = () => {
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "transactions" },
           {
-            headers: { "Authorization": `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
@@ -365,7 +375,7 @@ const AddBankTransaction = () => {
           containerType: "transactions",
         },
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 

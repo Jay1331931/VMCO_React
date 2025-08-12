@@ -7,7 +7,9 @@ import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2"; // Add this import at the top if not already present
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST ;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
   isTrading = true,
@@ -238,22 +240,54 @@ function Documents({
 
   return (
     <div className="customer-onboarding-form-grid">
-      {isV("customerApprovalChecklist") && (
+       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
-      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={e => {
-        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-          e.preventDefault();
-          alert(t("No checklist URL configured."));
-        }
-      }}
-    >
-      {t("Customer Approval Checklist")}
-    </a>
-    </div>
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+                alert(t("No checklist URL configured."));
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      containerType: "documents",
+                    }),
+                    
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  window.open(res.data.url, "_blank", "noopener,noreferrer");
+                } else {
+                  throw new Error("Failed to fetch file URL");
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+
+                window.open(
+                  CUSTOMER_APPROVAL_CHECKLIST_URL,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {t("Customer Approval Checklist")}
+          </a>
+        </div>
       )}
       {/* Documents Header */}
       <h3 className="form-header full-width">{t("Documents")}</h3>
