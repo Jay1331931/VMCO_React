@@ -13,9 +13,9 @@ import SearchableDropdown from "../../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST;
 const CUSTOMER_APPROVAL_CHECKLIST =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST || "Customer_data_verification_checklist";
+  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST ;
 
 function BusinessDetails({
   customerData = {},
@@ -201,7 +201,7 @@ function BusinessDetails({
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
                       containerType: "documents",
                     }),
                     

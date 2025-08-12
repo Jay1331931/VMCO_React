@@ -29,7 +29,10 @@ import { debounce, set } from "lodash";
 import Swal from "sweetalert2";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import axios from "axios";
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST_URL;
+const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_BRANCH_APPROVAL_CHECKLIST;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  process.env.REACT_APP_BRANCH_APPROVAL_CHECKLIST;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
@@ -1082,6 +1085,9 @@ const data = JSON.parse(text);  // parse text to JSON
 
 if (response?.status === 200 && data?.success) {
       setBranches((prev) => [...data?.details, ...prev]);
+      setCurrentPage(1); // Reset to first page after upload
+      setTotal(data?.details.length); // Update total count based on new data
+
   Swal.fire({
     title: t("File Uploaded Successfully"),
     text: t(data.message) || t("Branches have been updated from the Excel file."),
@@ -1115,19 +1121,51 @@ if (response?.status === 200 && data?.success) {
       {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
-      href={CUSTOMER_APPROVAL_CHECKLIST_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={e => {
-        if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-          e.preventDefault();
-          alert(t("No checklist URL configured."));
-        }
-      }}
-    >
-      {t("Customer Approval Checklist")}
-    </a>
-    </div>
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
+                alert(t("No checklist URL configured."));
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      containerType: "documents",
+                    }),
+                    
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  window.open(res.data.url, "_blank", "noopener,noreferrer");
+                } else {
+                  throw new Error("Failed to fetch file URL");
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+
+                window.open(
+                  CUSTOMER_APPROVAL_CHECKLIST_URL,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {t("Customer Branch Approval Checklist")}
+          </a>
+        </div>
       )}
       <div className="branches-page-header">
         <div className="branches-header-controls">
