@@ -3094,6 +3094,32 @@ setShowModal(true);
                       </div>
                     )}
 
+                    {/* Reservation Status field - visible only in edit mode for VMCO entity with machines */}
+                    {isV('reservationStatus') && 
+                     isEditMode && 
+                     formData.entity && 
+                     formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && 
+                     (formData.isMachine === true || (formData.products && formData.products.length > 0 && formData.products.some(product => product.isMachine === true))) &&
+                     (user?.roles?.[0] === Constants.ROLES.CUSTOMER_PRIMARY || 
+                      user?.roles?.[0] === Constants.ROLES.BRANCH_PRIMARY ||
+                      (user?.userType === 'employee' && user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
+                      user?.roles?.[0] === Constants.ROLES.SUPER_ADMIN) && (
+                      <div className="order-details-field">
+                        <label>{t('Reservation Status')}</label>
+                        <input
+                          name="reservationStatus"
+                          value={formData.reserved === true ? t('Reserved') : t('Unreserved')}
+                          disabled={!isE('reservationStatus')}
+                          style={
+                            !isE('reservationStatus')
+                              ? { background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }
+                              : {}
+                          }
+                          readOnly
+                        />
+                      </div>
+                    )}
+
                     {isV('createdDate') && (
                       <div className="order-details-field">
                         <label>{t('Created Date')}</label>
