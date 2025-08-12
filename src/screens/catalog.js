@@ -24,12 +24,12 @@ const initialCategories = [
   {
     value: Constants.CATEGORY.VMCO_MACHINES,
     entity: Constants.ENTITY.VMCO,
-    label: Constants.CATEGORY.VMCO_MACHINES,
+    label: Constants.TAB_NAMES.VMCO_MACHINES,
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
-    label: Constants.CATEGORY.VMCO_CONSUMABLES,
+    label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
   },
   {
     value: Constants.ENTITY.SHC,

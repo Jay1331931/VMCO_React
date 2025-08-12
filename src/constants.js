@@ -25,6 +25,14 @@ const Constants = {
         DAR: 'DAR',
         GMTC: 'GMTC'
     },
+    TAB_NAMES: {
+        VMCO_MACHINES: 'Machines & Accessories',
+        VMCO_CONSUMABLES: 'Food Ingredients',
+        SHC: 'Sandwiches, Bakery & Pastry',
+        GMTC: 'Fresh Vegetables & Fruits',
+        NAQI: 'Hygiene Chemicals',
+        DAR: 'DAR Company'
+    },
     FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',
