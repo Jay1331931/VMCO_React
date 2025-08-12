@@ -2622,7 +2622,7 @@ function OrderDetails() {
           ...(location.state?.workflowData || {}),
           updates
         },
-        approvedStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
+        approvedStatus: approvalAction === 'approve' ? 'Approved' : 'Rejected',
         comment: comment
       };
 
@@ -2639,8 +2639,7 @@ function OrderDetails() {
       if (res.ok) {
         Swal.fire({
           icon: 'success',
-          title: t('Approved Successfully'),
-          text: t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`),
+          title: t(approvalAction === 'approve' ? 'Approved Successfully' : 'Rejected Successfully'),
           confirmButtonText: t('OK')
         });
         // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
@@ -3293,6 +3292,7 @@ setShowModal(true);
               <CommentPopup
                 isOpen={isCommentPanelOpen}
                 setIsOpen={setIsCommentPanelOpen}
+                showCommentForm={!fromApproval}
                 externalComments={(() => {
                   const comments = [...(approvalHistory || [])];
                   if (formData.feedback) {

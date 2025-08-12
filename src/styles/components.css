@@ -2490,6 +2490,7 @@
 
 .status-rejected {
   background-color: #ef7c00;
+  align-items: center;
   color: #ffffff;
 }
 
@@ -3119,8 +3120,6 @@
 .status-rejected {
   background: #ef7c00;
   color: #ffffff;
-    padding: 10px;
-    border-radius: 10px;
 }
 
 .maintenance-assign {

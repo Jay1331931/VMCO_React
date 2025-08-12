@@ -276,11 +276,11 @@ function Cart() {
                 }
             });            // Update the cart items with the categorized data
             setCartItems([
-                { category: 'Vending Machine Company', items: vmco },
-                { category: 'Saudi Hospitality Company', items: shc },
-                { category: 'Green Mast Factory Ltd', items: gmtc },
-                { category: 'Naqi Company', items: naqi },
-                { category: 'DAR Company', items: dar }
+                { category: Constants.ENTITY.VMCO, items: vmco },
+                { category: Constants.ENTITY.SHC, items: shc },
+                { category: Constants.ENTITY.GMTC, items: gmtc },
+                { category: Constants.ENTITY.NAQI, items: naqi },
+                { category: Constants.ENTITY.DAR, items: dar }
             ]);
 
             // Initialize quantities from fetched data
@@ -2108,7 +2108,9 @@ function Cart() {
                 setEntityDescriptions(result.data?.map(entity => 
                     ({
                         descriptionLc: entity.descriptionLc ,
-                        description: entity.description
+                        description: entity.description,
+                        value: entity.value 
+
                     })
   ));
 
@@ -2404,8 +2406,9 @@ function Cart() {
         }
     };
 const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
-  const match = entityDescriptions?.find(desc => desc.description.toLowerCase() === categoryName.toLowerCase());
-  if (!match) return categoryName; 
+    console.log("getLocalizedEntityName called with:", { categoryName, currentLanguage, entityDescriptions });
+  const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === categoryName.toLowerCase());
+  if (!match) return categoryName;
   return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
 };
     return (

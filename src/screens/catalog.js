@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
@@ -34,22 +34,22 @@ const initialCategories = [
   {
     value: Constants.ENTITY.SHC,
     entity: Constants.ENTITY.SHC,
-    label: "Saudi Hospitality Company",
+    label: Constants.ENTITY.SHC, 
   },
   {
     value: Constants.ENTITY.GMTC,
     entity: Constants.ENTITY.GMTC,
-    label: "Green Mast Factory Ltd",
+    label: Constants.ENTITY.GMTC,
   },
   {
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
-    label: "Naqi Company",
+    label: Constants.ENTITY.NAQI,
   },
   {
     value: Constants.ENTITY.DAR,
     entity: Constants.ENTITY.DAR,
-    label: "DAR Company",
+    label: Constants.ENTITY.DAR,
   },
   {
     value: "SPECIAL_PRODUCTS",
@@ -89,6 +89,7 @@ function Catalog() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryTabs, setCategoryTabs] = useState([]);
   const productsPerPage = 60;
   const { token, user, isAuthenticated, loading, logout } = useAuth();
   console.log("User Dataaaaa:", token);
@@ -96,6 +97,7 @@ function Catalog() {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]); // For category dropdown options
   const [subCategoryOptions, setSubCategoryOptions] = useState([]); // For subcategory dropdown options
+  const [entityDescriptions, setEntityDescriptions] = useState([]); // For entity descriptions from basics master
 
   const fetchAllPages = async () => {
     // Show loading state
@@ -263,6 +265,40 @@ function Catalog() {
     }
   };
 
+  // Add this effect to fetch entity descriptions
+  useEffect(() => {
+    const fetchEntityDescriptions = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${token}` // Include token for authentication
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch entity descriptions');
+        }
+
+        const result = await response.json();
+        
+        setEntityDescriptions(result.data?.map(entity => 
+          ({
+            descriptionLc: entity.descriptionLc,
+            description: entity.description,
+            value: entity.value 
+          })
+        ) || []);
+
+      } catch (error) {
+        console.error('Error fetching entity descriptions:', error);
+      }
+    };
+
+    fetchEntityDescriptions();
+  }, [i18n.language, API_BASE_URL, token]); // Re-fetch when language changes
+
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
     if (loading) {
@@ -305,10 +341,75 @@ function Catalog() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
 
-  const categoryTabs = categories.map((category) => ({
-    value: category.value,
-    label: category.label,
-  }));
+  // Helper function to get localized entity name
+  const getLocalizedEntityName = (initialCategories, currentLanguage, entityDescriptions) => {
+    console.log("getLocalizedEntityName called with:", { initialCategories, currentLanguage, entityDescriptions });
+    const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === initialCategories.toLowerCase());
+    if (!match) return initialCategories;
+    return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
+  };
+
+  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
+
+
+  // Create categoryTabs with localized labels and filter for interCompany customers
+  useEffect(() => {
+    if(!entityDescriptions || entityDescriptions?.length === 0) {
+      return;
+    }
+    
+    if (!user) return;
+
+    const allLocalizedTabs = initialCategories.map((category) => {
+      const response = getLocalizedEntityName(category.label, i18n.language, entityDescriptions);
+      return {
+        value: category.value,
+        label: response,
+      };
+    });
+        
+    // Now filter tabs based on interCompany status
+    let tabsToShow = allLocalizedTabs;
+
+    // If user is a customer with interCompany set to true, filter out matching entity tabs
+    if (user.userType === "customer" && user.interCompany === true && user.entity) {
+      const customerEntity = user.entity.toLowerCase();
+      console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
+
+      tabsToShow = allLocalizedTabs.filter(tab => {
+        // Find the original category to get its entity
+        const category = initialCategories.find(cat => cat.value === tab.value);
+
+        // If no matching category or no entity, include the tab (for special tabs like FAVORITES, SPECIAL_PRODUCTS)
+        if (!category || !category.entity) return true;
+
+        // Check if this tab's entity exists in entityDescriptions and matches customer's entity
+        const tabEntityExists = entityDescriptions.some(
+          desc => desc.value.toLowerCase() === category.entity.toLowerCase()
+        );
+
+        // If the tab's entity exists in basic master and matches customer's entity, exclude it
+        if (tabEntityExists && category.entity.toLowerCase() === customerEntity) {
+          console.log("Excluding tab:", tab.label, "for entity:", category.entity);
+          return false;
+        }
+
+        // Include all other tabs
+        return true;
+      });
+      
+      console.log("Filtered tabs for interCompany customer:", tabsToShow);
+    }
+
+    setCategoryTabs(tabsToShow);
+    setFilteredCategoryTabs(tabsToShow);
+
+    // If current active category is not in filtered tabs, set to first available
+    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab?.value === activeCategory)) {
+      setActiveCategory(tabsToShow[0]?.value);
+    }
+      
+  }, [entityDescriptions, i18n.language, initialCategories, user, activeCategory]);
 
   const customerId = user?.customerId;
   const userId = user?.userId;
@@ -1175,46 +1276,6 @@ function Catalog() {
   // Determine direction and alignment
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
-
-  // Filter categories based on interCompany status
-  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
-
-  // Filter out tabs based on interCompany status
-  useEffect(() => {
-    if (!user) return;
-
-    // Default to all tabs
-    let tabsToShow = categoryTabs;
-
-    // If user is a customer with interCompany set to true, filter out matching entity tabs
-    if (user.userType === "customer" && user.interCompany === true && user.entity) {
-      const customerEntity = user.entity.toLowerCase();
-
-      tabsToShow = categoryTabs.filter(tab => {
-        // Find the original category to get its entity
-        const category = categories.find(cat => cat.value === tab.value);
-
-        // If no matching category or no entity, include the tab
-        if (!category || !category.entity) return true;
-
-        // If entity matches customer's entity, exclude the tab
-        return category.entity.toLowerCase() !== customerEntity;
-      });
-
-      // If we filtered all tabs, show the original tabs as fallback
-      if (tabsToShow.length === 0) {
-        tabsToShow = categoryTabs;
-        console.warn("All tabs would be filtered out based on interCompany rules. Showing all tabs instead.");
-      }
-    }
-
-    setFilteredCategoryTabs(tabsToShow);
-
-    // If current active category is not in filtered tabs, set to first available
-    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab.value === activeCategory)) {
-      setActiveCategory(tabsToShow[0].value);
-    }
-  }, [user, categories.entity, categoryTabs.values, activeCategory]);
 
   // Fetch categories from API when active tab/entity changes
   useEffect(() => {
