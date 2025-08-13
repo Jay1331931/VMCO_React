@@ -1051,12 +1051,17 @@ function OrderDetails() {
           paymentStatus = 'Paid';
         }
       } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-        // For other entities (SHC, GMTC, DAR)
+        // For other entities (SHC)
+        orderStatus = 'Open';
+        paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
+      }
+      else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+        // For other entities (GMTC)
         orderStatus = 'Open';
         paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
       }
       else {
-        // For NAQI, GMTC and DAR entities
+        // For NAQI and DAR entities
         if (finalPaymentMethod.toLowerCase() === 'pre payment') {
           orderStatus = 'Pending';
           paymentStatus = 'Pending';

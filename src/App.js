@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "../src/components/Sidebar";
 import Orders from "./screens/orders";
 import Customers from "./screens/customers";
@@ -24,18 +24,47 @@ import BankTransactions from "./screens/BankTransactions";
 import AddBankTransaction from "./components/AddBankTransaction";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
-import OpationsPage from "./components/Opationspage";
+import OptionsPage from "./components/OptionsPage";
 import Constants from "./constants";
 import { useAuth } from "./context/AuthContext";
+import { isTokenValid } from './utilities/authUtils';
+import RbacManager from "./utilities/rbac";
 function App() {
   const { user, token, loading } = useAuth();
+  const [pageName,setPageName]=useState("")
+  
+  useEffect(() => {
+    if (user) {
+      const rbacMgr = new RbacManager(
+        user?.userType === "employee" && user?.roles[0] !== "admin"
+          ? user?.designation
+          : user?.roles[0],
+        "SidebarList"
+      );
+
+      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company"];
+      const isV = rbacMgr.isV.bind(rbacMgr);
+
+      for (const page of pages) {
+        if (isV(page)) {
+          setPageName(page);
+          break; // important: stop the loop once found
+        }
+      }
+    }
+  }, [user]); 
+
   if(loading) {
     return <div>Loading...</div>; // or a loading spinner
   }
+
+  const tokenIsValid = token && isTokenValid(token);
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<LoginScreen />} />
+        {/* <Route path="/" element={<LoginScreen />} /> */}
+         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+
         <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} />
         <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/>
         <Route path="/catalog" element={<Catalog />} />
@@ -43,8 +72,8 @@ function App() {
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="/login/employee" element={<LoginScreen />} />
+        <Route path="/login" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path="/login/employee" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
         <Route
           path="/customers/registration"
           element={<CustomersOnboarding />}
@@ -74,7 +103,7 @@ function App() {
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
-        <Route path="/payment-opations/order/:orderId" element={<OpationsPage/>} />
+        <Route path="/payment-opations/order/:orderId" element={<OptionsPage/>} />
       </Routes>
     </Router>
   );

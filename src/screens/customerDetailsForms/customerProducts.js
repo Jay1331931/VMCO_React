@@ -405,8 +405,10 @@ function Products({ customerId, customer, setTabsHeight }) {
           `${API_BASE_URL}/product-categories?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { "Content-Type": "application/json" ,
+              "Authorization": `Bearer ${token}`  
+            },
+            
           }
         );
 
@@ -464,8 +466,8 @@ function Products({ customerId, customer, setTabsHeight }) {
           `${API_BASE_URL}/product-subcategories?${params.toString()}`,
           {
             method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
+            headers: { "Content-Type": "application/json",  "Authorization": `Bearer ${token}` },
+        
           }
         );
 

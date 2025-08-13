@@ -77,7 +77,7 @@ const Pagination = ({
         </button>
       </div>
       <div className="pagination-jump">
-        <label htmlFor="page-jump">Page:</label>
+        <label htmlFor="page-jump">{t("Page:")}</label>
         <input
           id="page-jump"
           type="number"
@@ -87,7 +87,7 @@ const Pagination = ({
           onChange={handlePageJump}
           className="page-jump-input"
         />
-        <span className="page-info">of {totalPages} pages</span>
+        <span className="page-info">{t("of")} {totalPages} {t("pages")}</span>
       </div>
       <style>{`
                 .pagination-wrapper {

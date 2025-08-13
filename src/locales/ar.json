@@ -1,5 +1,5 @@
 {   
-  "Dashboard": "لوحة القيادة",
+    "Dashboard": "لوحة القيادة",
     "Catalog": "الكتالوج",
     "Orders": "الطلبات",
     "Customers": "العملاء",
@@ -643,6 +643,26 @@
    "Uploading Excel...": "جارٍ تحميل Excel...",
    "Please upload a file with 200 rows or fewer for branch data.": "يرجى تحميل ملف يحتوي على 200 صف أو أقل لبيانات الفرع.",
    "No checklist URL configured.": "لا يوجد عنوان URL لقائمة التحقق مُكون.",
-   "Customer Branch Approval Checklist": "قائمة التحقق لموافقة فرع العميل"
+   "Customer Branch Approval Checklist": "قائمة التحقق لموافقة فرع العميل",
+    "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل فروع متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل.",
+    "* All branch fields are mandatory": "* جميع حقول الفرع إلزامية",
+    "Upload Branch Data": "تحميل بيانات الفرع",
+    "Upload Completed Excel File": "تحميل ملف Excel المكتمل",
+    "Download Excel Template": "تنزيل قالب Excel",
+    "File Uploaded Successfully": "تم تحميل الملف بنجاح",
+    "Validation Failed": "فشل التحقق",
+    "Download Error file": "تنزيل ملف الأخطاء",
+    "Download Error File": "تنزيل ملف الأخطاء",
+    "Some rows contain validation errors.": "بعض الصفوف تحتوي على أخطاء في التحقق.",
+    "The Excel file has been updated with a new column named": "تم تحديث ملف Excel بعمود جديد باسم",
+    "Please open the file, review the": "يرجى فتح الملف، ومراجعة الأخطاء، وإجراء التعديلات اللازمة، ثم إعادة تحميل الملف.",
+    "column, fix the issues, and re-upload the file.": "العمود، وإصلاح المشكلات، وإعادة تحميل الملف.",
+    "Errors": "أخطاء",
+    "No customers found to export.": "لا توجد عملاء للتصدير.",
+    "Download Customers": "تنزيل العملاء",
+    "No Data": "لا توجد بيانات"
+
+
+
    
 }

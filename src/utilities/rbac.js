@@ -137,7 +137,7 @@ class RbacManager {
           contact: { visible: true, editable: true },
           email: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          location: { visible: true, editable: true },
+          location: { visible: true, editable: true }
         },
       },
       invitesList: {
@@ -1851,6 +1851,7 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
           btnAddInvite: { visible: true, editable: true },
             btnUploadExcel:{visible: true, editable: true},
+             FandOSync: { visible: false, editable: false },  
         },
       },
       custDetailsEdit: {

@@ -12,10 +12,10 @@ import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST;
-const CUSTOMER_APPROVAL_CHECKLIST =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST ;
+import Swal from "sweetalert2";
+const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST
+ ;
+const CUSTOMER_APPROVAL_CHECKLIST =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
 
 function BusinessDetails({
   customerData = {},
@@ -187,7 +187,13 @@ function BusinessDetails({
             onClick={async (e) => {
               e.preventDefault();
               if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
-                alert(t("No checklist URL configured."));
+                Swal.fire({
+                  icon: 'error',
+                  title: t('Error'),
+                  text: t('No checklist URL configured.'),
+                  confirmButtonText: t('OK')
+                });
+
                 return;
               }
 
@@ -201,7 +207,7 @@ function BusinessDetails({
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
                       containerType: "documents",
                     }),
                     
