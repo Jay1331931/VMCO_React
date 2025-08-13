@@ -9,7 +9,6 @@ const Tabs = ({
     variant = 'default' // 'default' or 'category'
 }) => {
     const { t } = useTranslation();
-
     return (
         <div className={`tab-container ${className}`}>
             <div className={`tabs ${variant === 'category' ? 'category-tabs' : ''}`}>

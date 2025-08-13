@@ -230,7 +230,7 @@ const Table = ({
                     height: 30px;
                     line-height: 30px;
                     font-size: 0.85rem;
-                    border-radius: 4px;
+                    border-radius: 40px;
                     display: inline-block;
                     text-align: center;
                     font-weight: 600;

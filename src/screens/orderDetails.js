@@ -23,6 +23,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import axios from 'axios';
 import Constants from '../constants';
 import PdfPopupViewer from '../components/PdfPopupViewer';
+import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 
 const defaultOrder = {
   id: '',
@@ -2622,7 +2623,7 @@ function OrderDetails() {
           ...(location.state?.workflowData || {}),
           updates
         },
-        approvedStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
+        approvedStatus: approvalAction === 'approve' ? 'Approved' : 'Rejected',
         comment: comment
       };
 
@@ -2639,8 +2640,7 @@ function OrderDetails() {
       if (res.ok) {
         Swal.fire({
           icon: 'success',
-          title: t('Approved Successfully'),
-          text: t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`),
+          title: t(approvalAction === 'approve' ? 'Approved Successfully' : 'Rejected Successfully'),
           confirmButtonText: t('OK')
         });
         // alert(t(`${approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)} successful!`));
@@ -3049,8 +3049,12 @@ setShowModal(true);
                           <input
                             type="text"
                             name="expectedDeliveryDate"
-                            value={formData.expectedDeliveryDate ? formatDate(formData.expectedDeliveryDate, 'DD/MM/YYYY') : 'Delivery date will be updated soon'}
-                            disabled
+                            value={formData.expectedDeliveryDate ? convertToTimezone(
+          formData.expectedDeliveryDate, 
+          TIMEZONES.SAUDI_ARABIA, 
+          'DD/MM/YYYY'
+        ) : 'Delivery date will be updated soon'}
+        disabled
                             readOnly
                             style={{ background: '#f9f9f9', color: formData.expectedDeliveryDate ? '#000' : '#999' }}
                           />
@@ -3059,8 +3063,12 @@ setShowModal(true);
                             <input
                               type="date"
                               name="expectedDeliveryDate"
-                              value={formatDate(formData.expectedDeliveryDate, 'YYYY-MM-DD')}
-                              onChange={handleInputChange}
+                              value={convertToTimezone(
+            formData.expectedDeliveryDate, 
+            TIMEZONES.SAUDI_ARABIA, 
+            'YYYY-MM-DD'
+          )}
+          onChange={handleInputChange}
                               disabled={!isE('expectedDeliveryDate')}
                             />
                           ) : (
@@ -3095,12 +3103,42 @@ setShowModal(true);
                       </div>
                     )}
 
+                    {/* Reservation Status field - visible only in edit mode for VMCO entity with machines */}
+                    {isV('reservationStatus') && 
+                     isEditMode && 
+                     formData.entity && 
+                     formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && 
+                     (formData.isMachine === true || (formData.products && formData.products.length > 0 && formData.products.some(product => product.isMachine === true))) &&
+                     (user?.roles?.[0] === Constants.ROLES.CUSTOMER_PRIMARY || 
+                      user?.roles?.[0] === Constants.ROLES.BRANCH_PRIMARY ||
+                      (user?.userType === 'employee' && user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
+                      user?.roles?.[0] === Constants.ROLES.SUPER_ADMIN) && (
+                      <div className="order-details-field">
+                        <label>{t('Reservation Status')}</label>
+                        <input
+                          name="reservationStatus"
+                          value={formData.reserved === true ? t('Reserved') : t('Unreserved')}
+                          disabled={!isE('reservationStatus')}
+                          style={
+                            !isE('reservationStatus')
+                              ? { background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }
+                              : {}
+                          }
+                          readOnly
+                        />
+                      </div>
+                    )}
+
                     {isV('createdDate') && (
                       <div className="order-details-field">
                         <label>{t('Created Date')}</label>
                         <input
                           name="createdDate"
-                          value={formData.createdAt ?? ''}
+                          value={formData.createdAt ?convertToTimezone(
+        formData.createdAt, 
+        TIMEZONES.SAUDI_ARABIA, 
+        'DD/MM/YYYY HH:MM'
+      ) : ''}
                           disabled
                         />
                       </div>
@@ -3111,7 +3149,11 @@ setShowModal(true);
                         <label>{t('Updated Date')}</label>
                         <input
                           name="updatedDate"
-                          value={formData.updatedAt ?? ''}
+                          value={formData.updatedAt ? convertToTimezone(
+        formData.updatedAt, 
+        TIMEZONES.SAUDI_ARABIA, 
+        'DD/MM/YYYY HH:MM'
+      ) : ''}
                           disabled
                         />
                       </div>
@@ -3293,6 +3335,7 @@ setShowModal(true);
               <CommentPopup
                 isOpen={isCommentPanelOpen}
                 setIsOpen={setIsCommentPanelOpen}
+                showCommentForm={!fromApproval}
                 externalComments={(() => {
                   const comments = [...(approvalHistory || [])];
                   if (formData.feedback) {

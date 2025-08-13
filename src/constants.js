@@ -25,12 +25,20 @@ const Constants = {
         DAR: 'DAR',
         GMTC: 'GMTC'
     },
+    TAB_NAMES: {
+        VMCO_MACHINES: 'Machines & Accessories',
+        VMCO_CONSUMABLES: 'Food Ingredients',
+        SHC: 'Sandwiches, Bakery & Pastry',
+        GMTC: 'Fresh Vegetables & Fruits',
+        NAQI: 'Hygiene Chemicals',
+        DAR: 'DAR Company'
+    },
     FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',
         VMCO_CONSUMABLES: 'VMCO Consumables'
     },
-    MAINTENANCE_REGION:{
+    MAINTENANCE_REGIONAL_CITY:{
         RIYADH: 'Riyadh',
         JEDDAH: 'Jeddah',
         DAMMAM: 'Dammam',
@@ -39,11 +47,11 @@ const Constants = {
         AL_JUBAIL: 'Al Jubail',
         AL_QASSIM: 'Al Qassim',
         AL_JOUF: 'Al Jouf',
-        TABUK: 'Tabuk',
+        TABUK: 'Tabuk', 
         HAIL: 'Hail',
         ASIR: 'Asir'
     },
-    EXCLUDED_REGIONS: {
+    EXCLUDED_REGIONAL_CITY: {
         RIYADH: 'Riyadh',
         JEDDAH: 'Jeddah'
     },

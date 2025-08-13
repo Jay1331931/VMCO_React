@@ -1126,10 +1126,10 @@ function Customers() {
         }
       } else {
         Swal.fire({
-          title: "No Data",
-          text: "No customers found to export.",
+          title: t("No Data"),
+          text: t("No customers found to export."),
           icon: "info",
-          confirmButtonText: "OK",
+          confirmButtonText: t("OK"),
           confirmButtonColor: "#3085d6",
         });
       }
@@ -1186,7 +1186,7 @@ function Customers() {
     // },
     {
       key: "download customers",
-      label: "Download Customers",
+      label: t("Download Customers"),
       onClick: downloadCustomersAsExcel, // Add the download functionality
     },
   ];

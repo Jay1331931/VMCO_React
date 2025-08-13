@@ -6,7 +6,7 @@ import ToggleButton from "../components/ToggleButton";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import formatDate from "../utilities/dateFormatter";
+import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
@@ -199,7 +199,11 @@ function Maintenance() {
               columns={columns.filter(col => col.include !== false)} 
               data={filteredTickets.map(ticket => ({
                 ...ticket,
-                createdAt: formatDate(ticket.createdAt, 'DD/MM/YYYY')
+                createdAt: convertToTimezone(
+                  ticket.createdAt, 
+                  TIMEZONES.SAUDI_ARABIA, 
+                  'DD/MM/YYYY'
+                )
               }))}
               getStatusClass={getStatusClass} 
               onRowClick={(ticket) => handleRowClick(ticket)} 
