@@ -21,7 +21,7 @@ const getCookie = (name) => {
   // return cookies[name] || null;
   return localStorage.getItem(name);
 };
-const OpationsPage = () => {
+const OptionsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
   const { orderId } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
@@ -559,4 +559,4 @@ try {
   );
 };
 
-export default OpationsPage;
+export default OptionsPage;

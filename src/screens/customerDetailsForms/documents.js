@@ -6,10 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2"; // Add this import at the top if not already present
+import Constants from "../../constants";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST;
-const CUSTOMER_APPROVAL_CHECKLIST =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST ;
+const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
   isTrading = true,
@@ -261,7 +261,7 @@ function Documents({
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
                       containerType: "documents",
                     }),
                     

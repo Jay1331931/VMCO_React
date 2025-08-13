@@ -16,6 +16,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -546,7 +547,8 @@ function Customers() {
     },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
-    { key: "customerStatus", header: "Status" },
+    { key: "customerStatus", header: "Status", },
+    { key: "FandOSync", header: "Action" }
   ];
 
   const approvalColumns = [
@@ -1203,6 +1205,7 @@ function Customers() {
             getStatusClass={getStatusClass}
             customCellRenderer={customCellRenderer}
             onRowClick={handleRowClick}
+            onPay={HandleFandOFailCustomer}
           />
         );
       case t("invites"):
@@ -1224,6 +1227,44 @@ function Customers() {
   const paginatedCustomers = filteredCustomers;
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
+const HandleFandOFailCustomer = async (customerId) => {
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
+      {}, 
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (data?.success) {
+      Swal.fire({
+        title: "Success",
+        text: data.message,
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#3085d6",
+      });
+    } else {
+      Swal.fire({
+        title: "Error",
+        text: data.message || "Failed to Sync with FandO.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    }
+  } catch (error) {
+    console.error("Error handling FandO fail customer:", error);
+    Swal.fire({
+      title: "Error",
+      text: error.message || "Failed to Sync with FandO.",
+      icon: "error",
+      confirmButtonText: "OK",
+      confirmButtonColor: "#dc3545",
+    });
+  }
+};
 
   return (
     <Sidebar title={t("Customers")}>

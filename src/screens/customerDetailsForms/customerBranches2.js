@@ -29,10 +29,13 @@ import { debounce, set } from "lodash";
 import Swal from "sweetalert2";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import axios from "axios";
-const CUSTOMER_APPROVAL_CHECKLIST_URL = process.env.REACT_APP_BRANCH_APPROVAL_CHECKLIST;
+import Constants from "../../constants";
+import  LoadingSpinner from "../../components/LoadingSpinner";
+
+const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =
-  process.env.REACT_APP_BRANCH_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
+const  BRANCH_UPLOAD_FORMAT=Constants?.DEPARTMENTS_NAMES?.BRANCH_UPLOAD_FORMAT;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
@@ -60,6 +63,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
    const fileExcelInputRef = useRef(null);
+   const [popup,setPopup] = useState(false);
   let customerFormMode;
   if (mode === "edit" ) {
     customerFormMode = "custDetailsEdit";
@@ -1009,13 +1013,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       });
       return; // Stop adding branch if customer is not synced
     }
-  if (fileExcelInputRef.current) {
-    fileExcelInputRef.current.value = ""; // ✅ Clear the input
-    fileExcelInputRef.current.click();    // ✅ Open file picker
-    setActionMenuOpen(false)
-  }
+    setPopup(true);
+ 
 };
   const handleFileChange = async (e) => {
+    console.log("File input changed:", e);
     const file = e.target.files[0];
     if (!file) return;
 
@@ -1037,6 +1039,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       formData.append("file", file);
       formData.append("customerId", customer.id); // assumes customer object is passed as prop
       formData.append("erpCustId", customer.erpCustId);
+      formData.append("isDeliveryChargesApplicable", customer.isDeliveryChargesApplicable);
       const response = await axios.post(
         `${API_BASE_URL}/customer-branches/upload-excel`, // updated URL
         formData,
@@ -1058,15 +1061,16 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 
-  Swal.fire({
-    title: t("Validation Failed"),
-    html: t(
-    "Some rows contain validation errors.<br>" +
-    "The Excel file has been updated with a new column named <b>Errors</b>.<br>" +
-    "Please open the file, review the <b>Errors</b> column, fix the issues, and re-upload the file."
-  ), icon: "warning",
-    confirmButtonText: t("Download Error File"),
-  }).then(() => {
+ Swal.fire({
+  title: t('Validation Failed'),
+  html: `
+    ${t("Some rows contain validation errors.")}<br>
+    ${t("The Excel file has been updated with a new column named")} <b>${t("Errors")}</b>.<br>
+    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t("column, fix the issues, and re-upload the file.")}.
+  `,
+  icon: "warning",
+  confirmButtonText: t('Download Error File'),
+}).then(() => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -1112,9 +1116,99 @@ if (response?.status === 200 && data?.success) {
         confirmButtonText: t("OK"),
       });
     }finally{
+      setPopup(false);
        setLoading(false)
     }
   };
+const HandleFandOFailBranch = async (branchId) => {
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/customer-branches/fando_sync_branch?branchId=${branchId}`,
+      {}, 
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (data?.success) {
+      Swal.fire({
+        title: "Success",
+        text: data.message,
+        icon: "success",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#3085d6",
+      });
+    } else {
+      Swal.fire({
+        title: "Error",
+        text: data.message || "Failed to Sync with FandO.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    }
+  } catch (error) {
+    console.error("Error handling FandO fail branch:", error);
+    Swal.fire({
+      title: "Error",
+      text: error.message || "Failed to Sync with FandO.",
+      icon: "error",
+      confirmButtonText: "OK",
+      confirmButtonColor: "#dc3545",
+    });
+  }
+};
+const HandleBranchDocument = async () => {
+    try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      fileName: BRANCH_UPLOAD_FORMAT,
+                      containerType: "documents",
+                    }),
+                    
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  window.open(res.data.url, "_blank", "noopener,noreferrer");
+                } else {
+                 Swal.fire({
+                    title: "Error",
+                    text: res.message || "Failed to view checklist.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                    confirmButtonColor: "#dc3545",
+                  });
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+
+              }
+};
+const btnUploadExcel = () => {
+  setActionMenuOpen(false);
+  if (loading) return;
+   if (fileExcelInputRef.current) {
+    fileExcelInputRef.current.value = ""; 
+    fileExcelInputRef.current.click();
+  
+  }
+
+}
+const onClose = () => {
+  setPopup(false);
+ setActionMenuOpen(false)
+  if (fileExcelInputRef.current) {
+    fileExcelInputRef.current.value = "";
+  }
+};
 
   return (
     <div className="branches-content" ref={contentRef}>
@@ -1139,7 +1233,7 @@ if (response?.status === 200 && data?.success) {
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
                       containerType: "documents",
                     }),
                     
@@ -1256,13 +1350,13 @@ if (response?.status === 200 && data?.success) {
   </div>
 
   {/* Hidden file input stays outside */}
-  <input
+  {/* <input
     type="file"
     accept=".xlsx,.xls"
     ref={fileExcelInputRef}
     onChange={handleFileChange}
     style={{ display: "none" }}
-  />
+  /> */}
 </div>
 
         </div>
@@ -1344,6 +1438,7 @@ if (response?.status === 200 && data?.success) {
                 <th className="desktop-only">{t("Location Type")}</th>
                 <th className="desktop-only">{t("Region")}</th>
                 <th>{t("Status")}</th>
+                <th>{t("Actions")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -1397,6 +1492,19 @@ if (response?.status === 200 && data?.success) {
                         {t(branch.branchStatus)}
                       </span>
                     </td>
+                    <td>
+                    
+                       {!branch.erp_branch_id && branch.branchStatus.toLowerCase()==="approved"  && user.designation.toLowerCase()==="sales executive"&& (
+                          <button
+                            className="action-button pay"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              HandleFandOFailBranch(branch.id);
+                            }}
+                          >
+                            {t('F&O Sync')} 
+                            </button>)}
+                            </td>
                     <td>
                       <button className="branches-toggle-row-btn">
                         {isExpanded(branch.id) ? (
@@ -1477,6 +1585,141 @@ if (response?.status === 200 && data?.success) {
           />)}
         </div>
       )}
+    {popup && (
+  <div>
+    <div className="gp-backdrop" onClick={onClose} />
+    <div className="gp-modal">
+      <div className="gp-header">
+        <span className="gp-title">{t("Upload Branch Data")}</span>
+        <button className="gp-close-btn" onClick={onClose}>
+          {t("Close")}
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: 24 }}><LoadingSpinner /></div>
+      ) : (
+        <div style={{ padding: "0 28px 20px 28px" }}>
+          <p style={{ color: "#dc3545", fontWeight: "500", marginBottom: 12 }}>
+            {t("* All branch fields are mandatory")}
+          </p>
+          <p style={{ marginBottom: 20 }}>
+            {t("To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.")}
+          </p>
+
+          <div className="popup-buttons-row">
+            <button className="download-btn" onClick={HandleBranchDocument}>
+              📥 {t("Download Excel Template")}
+            </button>
+            <button className="upload-btn" onClick={btnUploadExcel}>
+              📤 {t("Upload Completed Excel File")}
+            </button>
+            <input
+              type="file"
+              ref={fileExcelInputRef}
+              accept=".xlsx, .xls"
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        .popup-buttons-row {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+        }
+        .download-btn,
+        .upload-btn {
+          flex: 1;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 6px;
+          color: white;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.15s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+        .download-btn {
+          background:  #00594C;
+        }
+        .upload-btn {
+          background: #00205b;
+        }
+        .download-btn:hover {
+          background:  #044b3fff;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+        }
+        .upload-btn:hover {
+          background: #0b285fff;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25);
+        }
+          .gp-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+
+.gp-modal {
+  position: fixed;
+  top: 50%; 
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 700px;
+  max-width: 95vw;
+  z-index: 1001;
+  animation: gp-fadein 0.2s;
+}
+
+@keyframes gp-fadein {
+  from { opacity: 0; transform: translate(-50%, -60%);}
+  to { opacity: 1; transform: translate(-50%, -50%);}
+}
+
+.gp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px 10px 28px;
+}
+
+.gp-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.gp-close-btn {
+  padding: 7px 18px;
+  border-radius: 6px;
+  border: 1px solid #bbb;
+  background: #fff;
+  color: #222;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.gp-close-btn:hover {
+  background: #f2f2f2;
+}
+
+      `}</style>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
