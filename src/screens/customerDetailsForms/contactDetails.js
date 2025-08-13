@@ -15,11 +15,10 @@ import maplibregl from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST;
+import Constants from "../../constants";
+const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =
-  process.env.REACT_APP_CUSTOMER_APPROVAL_CHECKLIST ;
+const CUSTOMER_APPROVAL_CHECKLIST =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST ;
 
 function ContactDetails({
   customerData = {},
@@ -536,7 +535,7 @@ function ContactDetails({
                       "Authorization": `Bearer ${token}`
                     },
                     body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST+".pdf",
+                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
                       containerType: "documents",
                     }),
                     
