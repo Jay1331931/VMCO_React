@@ -54,7 +54,7 @@ const Tabs = ({
                     border-bottom: 1px solid #D9D9D6;
                     height: 32px;
                     display: flex;
-                    gap: 2px;
+                    gap: 16px;
                     white-space: nowrap;
                 }
                 .category-tab {
