@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import axios from "axios";
+import Constants from "../constants";
 function MaintenanceDetails() {
   const defaultTicket = {
     id: null,
@@ -67,7 +68,7 @@ function MaintenanceDetails() {
     // Set maintenance charges from backend charges field in edit mode
     maintenanceCharges: ticketRcvd.charges || ticketRcvd.maintenanceCharges || null,
   });
-const serialNumberDebounceRef = useRef(null);
+  const serialNumberDebounceRef = useRef(null);
   // State for branches dropdown
   const [branches, setBranches] = useState([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
@@ -143,11 +144,11 @@ const serialNumberDebounceRef = useRef(null);
         `${API_BASE_URL}/upload-files`,
         formDataUpload,
         {
-          headers: { 
+          headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-         
+
         }
       );
 
@@ -189,8 +190,8 @@ const serialNumberDebounceRef = useRef(null);
         const { data } = await axios.post(
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "maintenance" },
-          { 
-           
+          {
+
             headers: {
               "Authorization": `Bearer ${token}`
             }
@@ -220,8 +221,8 @@ const serialNumberDebounceRef = useRef(null);
           fileName,
           containerType: "maintenance",
         },
-        { 
-         
+        {
+
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -280,25 +281,11 @@ const serialNumberDebounceRef = useRef(null);
     }
   };
 
-  // Utility: fetch regions from basics master
-  const fetchRegions = async () => {
-    try {
-      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/basics-masters?filters={"masterName": "region"}`;
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json',
-           "Authorization": `Bearer ${token}`
-         },
-        
-      });
-      if (!response.ok) throw new Error('Failed to fetch regions');
-      const result = await response.json();
-      // Assume result.data is an array of region objects with a 'value' property
-      return Array.isArray(result.data) ? result.data.map(r => r.value.toLowerCase()) : [];
-    } catch (err) {
-      console.error('Error fetching regions:', err);
-      return [];
-    }
+  // Utility: fetch regions from Constants.MAINTENANCE_REGIONAL_CITY
+  const fetchRegionalCities = async () => {
+    // Get MAINTENANCE_REGIONAL_CITY from Constants.js and map as array of objects { c: cityName }
+    const cities = Object.values(Constants.MAINTENANCE_REGIONAL_CITY);
+    return cities.map(city => ({ c: city.toLowerCase() }));
   };
 
   // Utility: get city of selected branch (from branches array)
@@ -340,40 +327,28 @@ const serialNumberDebounceRef = useRef(null);
     console.log('[Charges] warrantyEndDate (DD/MM/YYYY):', warrantyDateFormatted, 'currentDate (DD/MM/YYYY):', currentDateFormatted);
     console.log('[Charges] warrantyDate >= currentDate?', warrantyDate >= todayDate);
 
-    const regions = await fetchRegions();
-    console.log('[Charges] Regions from basics master:', regions);
+    const cities = await fetchRegionalCities();
+    console.log('[Charges] Cities from constants:', cities);
 
     const branchCity = getSelectedBranchCity();
     console.log('[Charges] Branch city:', branchCity);
 
-    const cityMatchesRegion = regions.includes(branchCity);
-    console.log('[Charges] City matches region?', cityMatchesRegion);
+    const cityMatchesRegionalCity = cities.map(obj => obj.c).includes(branchCity);
+    console.log('[Charges] City matches regional city?', cityMatchesRegionalCity);
 
     let charges = 0;
     if (warrantyDate >= todayDate) {
       // Warranty is still valid (not expired)
-      charges = cityMatchesRegion ? 0.00 : 200.00;
+      charges = cityMatchesRegionalCity ? 0.00 : 200.00;
       console.log('[Charges] Warranty valid, charges:', charges);
     } else {
       // Warranty has expired
-      charges = cityMatchesRegion ? 200.00 : 300.00;
+      charges = cityMatchesRegionalCity ? 200.00 : 300.00;
       console.log('[Charges] Warranty expired, charges:', charges);
     }
 
     setTicket(prev => ({ ...prev, maintenanceCharges: charges.toFixed(2) }));
     console.log('[Charges] Final maintenanceCharges set:', charges.toFixed(2));
-  };
-
-  // Single function to check and calculate maintenance charges
-  const handleMaintenanceChargesCalculation = async () => {
-    if (
-      formMode === 'add' &&
-      ticket.warrantyEndDate &&
-      ticket.branchId &&
-      branches.length > 0
-    ) {
-      await calculateMaintenanceCharges();
-    }
   };
 
   // All hooks must be before any early return!
@@ -416,7 +391,7 @@ const serialNumberDebounceRef = useRef(null);
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "maintenanceIssueType"}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
-          
+
         });
         if (!response.ok) throw new Error('Failed to fetch issue type options');
         const result = await response.json();
@@ -472,13 +447,15 @@ const serialNumberDebounceRef = useRef(null);
     try {
       const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
       });
       if (!response.ok) throw new Error('Failed to fetch customer details');
       const customer = await response.json();
-      return customer.ustomerRegion  || '';
+      return customer.ustomerRegion || '';
     } catch (error) {
       console.error('Error fetching customer region:', error);
       return '';
@@ -487,7 +464,7 @@ const serialNumberDebounceRef = useRef(null);
 
   const getBranchRegion = () => {
     const branch = branches.find(b => b.id === ticket.branchId);
-    return branch ? (branch.city||branch.cityName || "" ) : '';
+    return branch ? (branch.city || branch.cityName || "") : '';
   };
 
   // Early returns must come after all hooks
@@ -551,11 +528,11 @@ const serialNumberDebounceRef = useRef(null);
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -583,11 +560,11 @@ const serialNumberDebounceRef = useRef(null);
       const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50000&sortOrder=asc&filters={"designation": "maintenance technician"}`;
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -644,12 +621,12 @@ const serialNumberDebounceRef = useRef(null);
 
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
-          body: JSON.stringify({ 
+
+          body: JSON.stringify({
             status: "Cancelled",
             comments: ticket.comments // Explicitly preserve comments
           }),
@@ -749,11 +726,11 @@ const serialNumberDebounceRef = useRef(null);
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -771,35 +748,35 @@ const serialNumberDebounceRef = useRef(null);
 
   // Track saving state
 
-const formatDateInput = (dateStr, returnType = 'date') => {
-  if (!dateStr) return "";
+  const formatDateInput = (dateStr, returnType = 'date') => {
+    if (!dateStr) return "";
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && returnType === 'date') {
-    return dateStr;
-  }
-
-  const normalized = dateStr.replace(/\//g, "-");
-
-  if (!/^\d{2}-\d{2}-\d{4}$/.test(normalized)) return "";
-
-  const [day, month, year] = normalized.split("-");
-  const isoBase = `${year}-${month}-${day}`;
-  const dateObj = new Date(isoBase);
-
-  if (isNaN(dateObj)) return "";
-
-  if (returnType === 'iso') {
-    if (
-      dateObj.toISOString().endsWith("T00:00:00.000Z") &&
-      /^\d{2}-\d{2}-\d{4}$/.test(normalized)
-    ) {
-      return isoBase;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr) && returnType === 'date') {
+      return dateStr;
     }
-    return dateObj.toISOString();
-  }
 
-  return isoBase;
-};
+    const normalized = dateStr.replace(/\//g, "-");
+
+    if (!/^\d{2}-\d{2}-\d{4}$/.test(normalized)) return "";
+
+    const [day, month, year] = normalized.split("-");
+    const isoBase = `${year}-${month}-${day}`;
+    const dateObj = new Date(isoBase);
+
+    if (isNaN(dateObj)) return "";
+
+    if (returnType === 'iso') {
+      if (
+        dateObj.toISOString().endsWith("T00:00:00.000Z") &&
+        /^\d{2}-\d{2}-\d{4}$/.test(normalized)
+      ) {
+        return isoBase;
+      }
+      return dateObj.toISOString();
+    }
+
+    return isoBase;
+  };
 
 
 
@@ -854,7 +831,7 @@ const formatDateInput = (dateStr, returnType = 'date') => {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if(!ticket.urgencyLevel) {
+    if (!ticket.urgencyLevel) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please select an urgency level"),
@@ -865,7 +842,7 @@ const formatDateInput = (dateStr, returnType = 'date') => {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if(!ticket.machineSerialNumber?.trim()) {
+    if (!ticket.machineSerialNumber?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please enter a machine serial number"),
@@ -883,7 +860,7 @@ const formatDateInput = (dateStr, returnType = 'date') => {
       const customerIdToUse = user?.userType === 'customer' ? user.customerId : ticket.customerId;
       const customerRegion = await getCustomerRegion(customerIdToUse);
       const branchRegion = getBranchRegion();
-  // First, create the ticket to get the ID for file uploads
+      // First, create the ticket to get the ID for file uploads
       const ticketData = {
         ...ticket,
         customerId: customerIdToUse,
@@ -932,11 +909,11 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
       const response = await fetch(apiUrl, {
         method: method,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
         body: JSON.stringify(ticketData),
       });
 
@@ -1007,12 +984,12 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
       const response = await fetch(apiUrl, {
         method: "PATCH",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
-        body: JSON.stringify({ 
+
+        body: JSON.stringify({
           status: "Closed",
           comments: ticket.comments // Explicitly preserve comments
         }),
@@ -1089,11 +1066,11 @@ const formatDateInput = (dateStr, returnType = 'date') => {
 
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
+
           body: JSON.stringify({
             comments: updatedComments
           })
@@ -1134,41 +1111,41 @@ const formatDateInput = (dateStr, returnType = 'date') => {
     }
   };
 
- 
 
- const handleSerialNumberChange = (e) => {
-  const value = e.target.value;
-setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
-  // Clear any existing timeout
-  if (serialNumberDebounceRef.current) {
-    clearTimeout(serialNumberDebounceRef.current);
-  }
 
-  // Set new timeout
-  serialNumberDebounceRef.current = setTimeout(async () => {
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/warranty-end-date/C-000002/${value}`,
-        {
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
-          },
-         
-        }
-      );
-      const rawDate = data?.details?.warrantdate || "";
-
-      setTicket((prev) => ({
-        ...prev,
-        warrantyEndDate: formatDateInput(rawDate, "date") || "",
-      }));
-    } catch (error) {
-      console.error("Error handling serial number change:", error);
+  const handleSerialNumberChange = (e) => {
+    const value = e.target.value;
+    setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
+    // Clear any existing timeout
+    if (serialNumberDebounceRef.current) {
+      clearTimeout(serialNumberDebounceRef.current);
     }
-  }, 500); 
-};
- 
+
+    // Set new timeout
+    serialNumberDebounceRef.current = setTimeout(async () => {
+      try {
+        const { data } = await axios.get(
+          `${API_BASE_URL}/warranty-end-date/C-000002/${value}`,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+
+          }
+        );
+        const rawDate = data?.details?.warrantdate || "";
+
+        setTicket((prev) => ({
+          ...prev,
+          warrantyEndDate: formatDateInput(rawDate, "date") || "",
+        }));
+      } catch (error) {
+        console.error("Error handling serial number change:", error);
+      }
+    }, 500);
+  };
+
 
   return (
     <Sidebar title={`${formMode === "add" ? t("New Request") : `${t("Request# ")}${ticket.requestId}`}`}>
@@ -1327,7 +1304,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                     {uploadingImage && (
                       <div className='maintenance-image-placeholder upload-loading'>
                         <LoadingSpinner size="small" />
-                        </div>
+                      </div>
                     )}
                     {fileData?.map((imageData, idx) => (
                       <div key={idx} className='maintenance-image-placeholder' onClick={() => imageData.url && setPopupImage(imageData.url)} title={imageData.url ? "Click to view" : ""}>
@@ -1363,7 +1340,7 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
                     {uploadingVideo && (
                       <div className='maintenance-video-placeholder upload-loading'>
                         <LoadingSpinner size="small" />
-                     </div>
+                      </div>
                     )}
                     {videoData?.map((videoData, idx) => (
                       <div key={idx} className='maintenance-image-placeholder' onClick={() => videoData.url && setPopupVideo(videoData.url)} title={videoData.url ? "Click to view" : ""}>
@@ -1390,12 +1367,12 @@ setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
       </div>
       <div className='support-details-footer'>
         <div className='support-status '>
-        {isV('ticketStatus') && (
-          <div className='support-status'>
-            <span>{t("Ticket Status:")}</span>
-            <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
-          </div>
-        )}
+          {isV('ticketStatus') && (
+            <div className='support-status'>
+              <span>{t("Ticket Status:")}</span>
+              <span className={`order-status-badge status-${ticket.status?.replace(/\s/g, "").toLowerCase()}`}>{t(ticket.status)}</span>
+            </div>
+          )}
         </div>
         <div className='support-details-container-right'>
           {isV('assignedTo') && (
