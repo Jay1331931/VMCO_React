@@ -64,6 +64,19 @@ const Table = ({
             );
         }
 
+        if(column.key?.toLowerCase()=="fandosync" && item.customerStatus?.toLowerCase() === "approved" && !item.erpCustId ){
+            return (
+                <button 
+                    className="action-button pay"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onPay(item.id);
+                    }}
+                >
+                    {t('F&O Sync')} 
+                </button>
+            );
+        }
         // Handle action buttons
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);
@@ -217,7 +230,7 @@ const Table = ({
                     height: 30px;
                     line-height: 30px;
                     font-size: 0.85rem;
-                    border-radius: 4px;
+                    border-radius: 40px;
                     display: inline-block;
                     text-align: center;
                     font-weight: 600;

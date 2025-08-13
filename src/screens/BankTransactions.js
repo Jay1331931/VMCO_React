@@ -9,7 +9,7 @@ import i18n from "../i18n";
 import Table from "../components/Table";
 import SearchInput from "../components/SearchInput";
 import axios from "axios";
-import formatDate from "../utilities/dateFormatter";
+import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import Pagination from "../components/Pagination";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -49,7 +49,7 @@ const BankTransactions = () => {
       header: "ERP Order Id",
       include: isV("erpOrderIdCol"),
     },
-     {
+    {
       key: "orderId",
       header: "Order Id",
       include: isV("OrderIdCol"),
@@ -97,14 +97,14 @@ const BankTransactions = () => {
       const { data } = await axios.get(
         `${API_BASE_URL}/bank-transactions/pagination?page=${pagination.page}&pageSize=${pagination.pageSize}&search=${debouncedSearchQuery}`,
         {
-          headers: { "Authorization": `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const formattedData = data.data?.map(row => ({
-  ...row,
-  orderId:  row.orderId?.join(", "),
-  erpOrderId: row.erpOrderId?.join(", ") ,
-}));
+      const formattedData = data.data?.map((row) => ({
+        ...row,
+        orderId: row.orderId?.join(", "),
+        erpOrderId: row.erpOrderId?.join(", "),
+      }));
       setTransactions(formattedData || []);
       setPagination({
         page: data.pagination.currentPage,
@@ -148,10 +148,17 @@ const BankTransactions = () => {
               columns={columns.filter((col) => col.include !== false)}
               data={transactions?.map((transaction) => ({
                 ...transaction,
-                createdAt: formatDate(transaction.createdAt, "DD/MM/YYYY"),
+                createdAt: convertToTimezone(
+                  transaction.createdAt,
+                  TIMEZONES.SAUDI_ARABIA,
+                  "DD/MM/YYYY"
+                ),
                 transactionDate:
-                  formatDate(transaction.transactionDate, "DD/MM/YYYY") ||
-                  "N/A",
+                  convertToTimezone(
+                    transaction.transactionDate,
+                    TIMEZONES.SAUDI_ARABIA,
+                    "DD/MM/YYYY"
+                  ) || "N/A",
               }))}
               onRowClick={(bank) => handleRowClick(bank.id)}
             />

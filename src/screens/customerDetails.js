@@ -39,20 +39,19 @@ import FinalSubmissionConfirmation from "./customerDetailsForms/finalSubmissionC
 import ProtectedRoute from "../components/ProtectedRoute";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-const fetchCurrentDataOfCustomerContacts = async (customerId,token) => {
+const fetchCurrentDataOfCustomerContacts = async (customerId, token) => {
   let contactsData = {};
-if(!customerId) {
-  // return <Navigate to="*" replace />;
-}
+  if (!customerId) {
+    // return <Navigate to="*" replace />;
+  }
   const responseContacts = await fetch(
     `${API_BASE_URL}/customer-contacts/${customerId}`,
     {
       method: "GET",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      
     }
   );
   const contactsDataJson = await responseContacts.json();
@@ -65,21 +64,19 @@ if(!customerId) {
     // throw new Error(
     //   contactsData.data?.message || "Failed to fetch customer contacts"
     // );
-
   }
 };
 
-const fetchCurrentPaymentMetods = async (customerId,token) => {
+const fetchCurrentPaymentMetods = async (customerId, token) => {
   let paymentMethodsData = {};
   const responsePaymentMethods = await fetch(
     `${API_BASE_URL}/payment-method/id/${customerId}`,
     {
       method: "GET",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      
     }
   );
   const paymentMethodsDataJson = await responsePaymentMethods.json();
@@ -98,7 +95,7 @@ const fetchCurrentPaymentMetods = async (customerId,token) => {
   }
 };
 
-const fetchCurrentDataOfCustomer = async (customerId,token) => {
+const fetchCurrentDataOfCustomer = async (customerId, token) => {
   console.log("Fetching current data for customer ID:~~~~~~", customerId);
   let customerData = {};
   let contactsData = {};
@@ -106,11 +103,10 @@ const fetchCurrentDataOfCustomer = async (customerId,token) => {
   try {
     const response = await fetch(`${API_BASE_URL}/customers/id/${customerId}`, {
       method: "GET",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      
     });
     const customerDataJson = await response.json();
     console.log("Customer Data JSON~~~~~~~~~~~~~", customerDataJson);
@@ -123,17 +119,16 @@ const fetchCurrentDataOfCustomer = async (customerId,token) => {
 
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
 
-const checkInApproval = async (customerId, module,token) => {
+const checkInApproval = async (customerId, module, token) => {
   let isAppMode = false;
   try {
     const response = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
       method: "POST",
-      headers: { 
+      headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ id: customerId, module: module }),
-      
     });
 
     console.log("!!!!!!!!", response);
@@ -233,7 +228,7 @@ const contactDetailsCustomerFields = [
   "pincode",
   "geolocation",
   "zone",
-  
+
   // ...add more if needed
 ];
 
@@ -471,11 +466,10 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowId}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
       const workflowDataJson = await response.json();
@@ -502,10 +496,10 @@ function CustomerDetails() {
   const isE = rbacMgr.isE.bind(rbacMgr);
   useEffect(() => {
     const fetchData = async () => {
-      if(!customerId) {
-        navigate("/*")
+      if (!customerId) {
+        navigate("/*");
       }
-      const resp = await fetchCurrentDataOfCustomer(customerId,token);
+      const resp = await fetchCurrentDataOfCustomer(customerId, token);
       const customerContacts = await fetchCurrentDataOfCustomerContacts(
         customerId,
         token
@@ -517,7 +511,7 @@ function CustomerDetails() {
       let isUnderApproval = false;
       // Check if the customer is under approval
       isUnderApproval = await checkInApproval(customerId, "customer", token);
-      if(!isUnderApproval) {
+      if (!isUnderApproval) {
         isUnderApproval = await checkInApproval(customerId, "branch", token);
       }
       // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
@@ -538,16 +532,22 @@ function CustomerDetails() {
 
         temp = wfData;
       } else if (workflowInstanceId) {
-       await fetchWorkflowDataOfCustomer(workflowInstanceId);
+        await fetchWorkflowDataOfCustomer(workflowInstanceId);
       }
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
       setOriginalCustomerData(resp);
-      const conRes = await fetchCurrentDataOfCustomerContacts(customerId, token);
+      const conRes = await fetchCurrentDataOfCustomerContacts(
+        customerId,
+        token
+      );
       setCustomerContactsData(
         isUnderApproval ? { ...conRes, ...temp?.contacts } : conRes
       );
       setOriginalCustomerContactsData(conRes);
-      const paymentMethodsRes = await fetchCurrentPaymentMetods(customerId,token);
+      const paymentMethodsRes = await fetchCurrentPaymentMetods(
+        customerId,
+        token
+      );
       setCustomerPaymentMethodsData(
         isUnderApproval && temp?.methodDetails
           ? { methodDetails: temp?.methodDetails }
@@ -945,11 +945,11 @@ function CustomerDetails() {
     ];
 
     const uniqueContactFieldsList = [
-      {name: "primaryContactEmail", field: "email"},
-      {name: "businessHeadEmail", field: "email"},
-      {name: "financeHeadEmail", field: "email"},
-      {name: "purchasingHeadEmail", field: "email"},
-    ]
+      { name: "primaryContactEmail", field: "email" },
+      { name: "businessHeadEmail", field: "email" },
+      { name: "financeHeadEmail", field: "email" },
+      { name: "purchasingHeadEmail", field: "email" },
+    ];
     // If mandatoryCheckReguired is true, check all mandatory fields
     console.log(
       "check mandtaory fields has assigned to entity wise",
@@ -962,10 +962,16 @@ function CustomerDetails() {
           return;
         }
         if (field in dataToValidate && !dataToValidate[field]) {
-          if (documentList.includes(field) || field === "declarationSignature") {
+          if (
+            documentList.includes(field) ||
+            field === "declarationSignature"
+          ) {
             errors[field] = "This document is required.";
-          } 
-          if(!tradingDocumentList.includes(field) && !nonTradingDocumentList.includes(field)) {
+          }
+          if (
+            !tradingDocumentList.includes(field) &&
+            !nonTradingDocumentList.includes(field)
+          ) {
             errors[field] = "This field is required.";
           }
         }
@@ -988,7 +994,7 @@ function CustomerDetails() {
             );
           }
         });
-      } 
+      }
 
       // Special check for payment methods
       if (
@@ -996,23 +1002,23 @@ function CustomerDetails() {
         dataToValidate.methodDetails &&
         typeof dataToValidate.methodDetails === "object"
       ) {
-       for(const entity in dataToValidate?.methodDetails?.credit) {
+        for (const entity in dataToValidate?.methodDetails?.credit) {
           if (
-           dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.limit <= 0
+            dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed &&
+            dataToValidate?.methodDetails?.credit?.[entity]?.limit <= 0
           ) {
             // Set error for each missing entity assignment
-            errors[`${entity}CreditLimit`] = 
-              `Credit Limit is required.`
+            errors[`${entity}CreditLimit`] = `Credit Limit is required.`;
           }
-           if (
-           dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed && dataToValidate?.methodDetails?.credit?.[entity]?.period <= 0
+          if (
+            dataToValidate?.methodDetails?.credit?.[entity]?.isAllowed &&
+            dataToValidate?.methodDetails?.credit?.[entity]?.period <= 0
           ) {
             // Set error for each missing entity assignment
-            errors[`${entity}CreditPeriod`] = 
-              `Credit Period is required.`
+            errors[`${entity}CreditPeriod`] = `Credit Period is required.`;
           }
-        };
-      } 
+        }
+      }
       // else if (mandatoryFields.includes("assignedToEntityWise")) {
       //   // If the whole object is missing
       //   assignedToEntityWiseEntities.forEach((entity) => {
@@ -1040,9 +1046,9 @@ function CustomerDetails() {
         field.toLowerCase().includes("phone")
       ) {
         const universalMobileRegex = /^\+?[1-9]\d{7,14}$/;
-      if (value && !universalMobileRegex.test(value)) {
-        errors[field] = "Invalid mobile number format";
-      }
+        if (value && !universalMobileRegex.test(value)) {
+          errors[field] = "Invalid mobile number format";
+        }
       }
 
       if (field.toLowerCase().includes("iban")) {
@@ -1142,18 +1148,23 @@ function CustomerDetails() {
           }
         }
       }
-      
-      if(uniqueContactFieldsList.some(item => item.name === field)) {
-        const { name, field: contactField } = uniqueContactFieldsList.find(item => item.name === field);
-        const res = await fetch(`${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`, {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          
-          body: JSON.stringify({ customerId, name, value }),
-        });
+
+      if (uniqueContactFieldsList.some((item) => item.name === field)) {
+        const { name, field: contactField } = uniqueContactFieldsList.find(
+          (item) => item.name === field
+        );
+        const res = await fetch(
+          `${API_BASE_URL}/customer-contacts/uniqueField/checkUniqueField`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({ customerId, name, value }),
+          }
+        );
         if (res.ok) {
           const data = await res.json();
           if (data.data.isUnique) {
@@ -1163,16 +1174,15 @@ function CustomerDetails() {
           }
         }
       }
-       
 
       if (uniqueFieldsList.includes(field)) {
         const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          
+
           body: JSON.stringify({ customerId, field, value }),
         });
         if (res.ok) {
@@ -1185,7 +1195,10 @@ function CustomerDetails() {
         }
       }
 
-      if( dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" && !dataToValidate?.typeOfBusinessOther) {
+      if (
+        dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" &&
+        !dataToValidate?.typeOfBusinessOther
+      ) {
         errors.typeOfBusinessOther = t("This field is required.");
       }
     }
@@ -1205,10 +1218,9 @@ function CustomerDetails() {
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: formData,
-        
       });
 
       if (res.ok) {
@@ -1463,13 +1475,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customer: updatedCustomerData.current,
             contacts: {},
           }),
-          
         }
       );
       if (response.ok) {
@@ -1499,10 +1512,11 @@ function CustomerDetails() {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(updatedCustomerContactsData.current),
-          
         }
       );
       console.log("Response", response);
@@ -1526,10 +1540,11 @@ function CustomerDetails() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
-          
         }
       );
       console.log("Response", response);
@@ -1596,7 +1611,11 @@ function CustomerDetails() {
         ...uploadedFiles,
       };
       const errors = await validateData(
-        { ...customerData, ...customerContactsData, ...customerPaymentMethodsData },
+        {
+          ...customerData,
+          ...customerContactsData,
+          ...customerPaymentMethodsData,
+        },
         true,
         mandatoryFields
       );
@@ -1618,13 +1637,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customer: updatedCustomerData.current,
             contacts: updatedCustomerContactsData.current,
           }),
-          
         }
       );
       console.log("Response", response);
@@ -1647,10 +1667,11 @@ function CustomerDetails() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(updatedCustomerPaymentMethodsData.current),
-          
         }
       );
       console.log("Response", response);
@@ -1695,11 +1716,6 @@ function CustomerDetails() {
           wfCustomerData.customer.nonTradingDocuments
         );
       }
-      // if (customerData?.nonTradingDocuments) {
-      //   wfCustomerData.customer.nonTradingDocuments = JSON.stringify(
-      //     customerData.nonTradingDocuments
-      //   );
-      // }
       const mergedData = {
         updates: {
           ...wfCustomerData,
@@ -1717,12 +1733,14 @@ function CustomerDetails() {
       };
       var dataToBeValidated = {};
       if (customerData?.customerStatus === "pending") {
-        dataToBeValidated = { ...customerData, ...customerContactsData,};
+        dataToBeValidated = { ...customerData, ...customerContactsData };
       } else {
         dataToBeValidated = {
           ...mergedData?.updates?.customer,
           ...mergedData?.updates?.contacts,
-          methodDetails: mergedData?.updates?.methodDetails ? mergedData?.updates?.methodDetails : {},
+          methodDetails: mergedData?.updates?.methodDetails
+            ? mergedData?.updates?.methodDetails
+            : {},
         };
       }
       console.log("Data to be validated:", dataToBeValidated);
@@ -1741,34 +1759,65 @@ function CustomerDetails() {
           text: t("Please fix the errors before saving."),
           confirmButtonText: t("OK"),
         });
-        // alert("Please fix the errors before saving.");
         return;
       }
+
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             approvedStatus:
               approvalAction === "approve" ? "approved" : "rejected",
             comment,
             workflowData: mergedData,
           }),
-          
         }
       );
-      console.log("Response", response);
-      setIsApprovalDialogOpen(false);
-      setIsApproving(false);
-      setIsRejecting(false);
-      navigate("/customers");
+
+      if (response.ok) {
+        // Show success message based on action
+        Swal.fire({
+          icon: "success",
+          title: t("Success"),
+          text:
+            approvalAction === "approve"
+              ? t("Customer has been approved successfully")
+              : t("Customer has been rejected successfully"),
+          confirmButtonText: t("OK"),
+        }).then(() => {
+          setIsApprovalDialogOpen(false);
+          setIsApproving(false);
+          setIsRejecting(false);
+          navigate("/customers");
+        });
+      } else {
+        // Handle error response
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `HTTP ${response.status}: ${response.statusText}`
+        );
+      }
     } catch (error) {
       console.error("Error approving/rejecting customer:", error.message);
       setIsApprovalDialogOpen(false);
       setIsApproving(false);
       setIsRejecting(false);
+
+      // Show error message
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text:
+          approvalAction === "approve"
+            ? t("Failed to approve customer. Please try again.")
+            : t("Failed to reject customer. Please try again."),
+        confirmButtonText: t("OK"),
+      });
     }
   };
 
@@ -1814,14 +1863,15 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             approvedStatus: "approved",
             comment: "comment",
             workflowData: mergedData,
           }),
-          
         }
       );
       console.log("Response", response);
@@ -1854,14 +1904,15 @@ function CustomerDetails() {
         `${API_BASE_URL}/workflow-instance/id/${workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             approvedStatus: "rejected",
             comment: "comment",
             workflowData: mergedData,
           }),
-          
         }
       );
       console.log("Response", response);
@@ -1907,12 +1958,22 @@ function CustomerDetails() {
         return;
       }
 
-      const customerDataSubmit = await fetchCurrentDataOfCustomer(customerId,token);
-      const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(customerId,token);
-      const errorsSubmit = await validateData({
-        ...customerDataSubmit,
-        ...contactsDataSubmit,
-      }, true, mandatoryFields);
+      const customerDataSubmit = await fetchCurrentDataOfCustomer(
+        customerId,
+        token
+      );
+      const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(
+        customerId,
+        token
+      );
+      const errorsSubmit = await validateData(
+        {
+          ...customerDataSubmit,
+          ...contactsDataSubmit,
+        },
+        true,
+        mandatoryFields
+      );
       setFormErrors(errorsSubmit);
       if (Object.keys(errorsSubmit).length > 0) {
         // Handle errors (e.g., show error messages)
@@ -1933,13 +1994,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customer: { customerStatus: customerData.customerStatus },
             contacts: {},
           }),
-          
         }
       );
       console.log("Response", response);
@@ -1971,13 +2033,14 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customer: { customerStatus: "blocked", isBlocked: true },
             contacts: {},
           }),
-          
         }
       );
       console.log("Response", response);
@@ -1996,8 +2059,10 @@ function CustomerDetails() {
         `${API_BASE_URL}/customers/id/${customerId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             customer: {
               customerStatus: "approved",
@@ -2005,7 +2070,6 @@ function CustomerDetails() {
             },
             contacts: {},
           }),
-          
         }
       );
       console.log("Response", response);
@@ -2078,8 +2142,7 @@ function CustomerDetails() {
                     className={`tab ${
                       activeTab === "Financial Information" ? "active" : ""
                     }`}
-                    onClick={() =>
-                      setActiveTab("Financial Information")}
+                    onClick={() => setActiveTab("Financial Information")}
                   >
                     {t("Financial Information")}
                     {financialInformationUpdateCount > 0 && mode === "edit" && (
@@ -2269,14 +2332,15 @@ function CustomerDetails() {
               </span>
             </div>
             {mode === "add" && inApproval && (
-                  
-                  <div
-              className="action-buttons"
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            >
-              <span className="status-label">{t("This customer is in approval process.")}</span>
-            </div>
-                )}
+              <div
+                className="action-buttons"
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span className="status-label">
+                  {t("This customer is in approval process.")}
+                </span>
+              </div>
+            )}
             {[
               "Business Details",
               "Contact Details",
@@ -2313,13 +2377,14 @@ function CustomerDetails() {
                       isApproving ||
                       isRejecting ||
                       isBlocking ||
-                      isUnblocking || activeTab !== "Final Submission"
+                      isUnblocking ||
+                      activeTab !== "Final Submission"
                     }
                   >
                     {isSubmitting ? t("Submitting...") : t("Submit")}
                   </button>
                 )}
-                
+
                 {isV("btnSaveChanges") &&
                   customerData?.customerStatus !== "new" && (
                     <button
@@ -2340,42 +2405,46 @@ function CustomerDetails() {
                       {isSavingChanges ? t("Saving...") : t("Save Changes")}
                     </button>
                   )}
-                {isV("btnApprove") && inApproval && wfCustomerData?.branch?.customerId !==
-                        originalCustomerData?.id && (
-                  <button
-                    className="approve"
-                    onClick={() => handleApprovalClick("approve")}
-                    disabled={
-                      isSaving ||
-                      isSubmitting ||
-                      isSavingChanges ||
-                      isApproving ||
-                      isRejecting ||
-                      isBlocking ||
-                      isUnblocking 
-                    }
-                  >
-                    {isApproving ? t("Approving...") : t("Approve")}
-                  </button>
-                )}
-                {isV("btnReject") && inApproval &&  wfCustomerData?.branch?.customerId !==
-                        originalCustomerData?.id &&  (
-                  <button
-                    className="reject"
-                    onClick={() => handleApprovalClick("reject")}
-                    disabled={
-                      isSaving ||
-                      isSubmitting ||
-                      isSavingChanges ||
-                      isApproving ||
-                      isRejecting ||
-                      isBlocking ||
-                      isUnblocking
-                    }
-                  >
-                    {isRejecting ? t("Rejecting...") : t("Reject")}
-                  </button>
-                )}
+                {isV("btnApprove") &&
+                  inApproval &&
+                  wfCustomerData?.branch?.customerId !==
+                    originalCustomerData?.id && (
+                    <button
+                      className="approve"
+                      onClick={() => handleApprovalClick("approve")}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking
+                      }
+                    >
+                      {isApproving ? t("Approving...") : t("Approve")}
+                    </button>
+                  )}
+                {isV("btnReject") &&
+                  inApproval &&
+                  wfCustomerData?.branch?.customerId !==
+                    originalCustomerData?.id && (
+                    <button
+                      className="reject"
+                      onClick={() => handleApprovalClick("reject")}
+                      disabled={
+                        isSaving ||
+                        isSubmitting ||
+                        isSavingChanges ||
+                        isApproving ||
+                        isRejecting ||
+                        isBlocking ||
+                        isUnblocking
+                      }
+                    >
+                      {isRejecting ? t("Rejecting...") : t("Reject")}
+                    </button>
+                  )}
                 {isV("btnBlock") && !customerData?.isBlocked && (
                   <button
                     className="block"

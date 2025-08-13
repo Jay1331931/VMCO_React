@@ -21,10 +21,10 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getStatusClass = (status) => {
   //get the status from the order
 
-  switch (status) {
-    case "Approved":
+  switch (status.toLowerCase()) {
+    case "approved":
       return "status-approved";
-    case "Rejected":
+    case "rejected":
       return "status-rejected";
     default:
       return "status-pending";
@@ -372,13 +372,13 @@ function Orders() {
     },
     { key: "paymentMethod", header: () => t("Payment Method"), include: isV("paymentMethod") },
     { key: "createdByUsername", header: () => t("Created By"), include: isV("createdBy") },
-    {
-      key: "deliveryDate", header: () => t("Delivery Date"), include: isV("expectedDeliveryDate"),
-      render: (item) =>
-        item.expectedDeliveryDate
-          ? formatDate(item.expectedDeliveryDate, "DD/MM/YYYY")
-          : " ",
-    },
+    // {
+    //   key: "deliveryDate", header: () => t("Delivery Date"), include: isV("expectedDeliveryDate"),
+    //   render: (item) =>
+    //     item.expectedDeliveryDate
+    //       ? formatDate(item.expectedDeliveryDate, "DD/MM/YYYY")
+    //       : " ",
+    // },
     {
       key: "totalAmount",
       header: () => t("Total Amount"),

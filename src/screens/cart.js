@@ -276,11 +276,11 @@ function Cart() {
                 }
             });            // Update the cart items with the categorized data
             setCartItems([
-                { category: 'Vending Machine Company', items: vmco },
-                { category: 'Saudi Hospitality Company', items: shc },
-                { category: 'Green Mast Factory Ltd', items: gmtc },
-                { category: 'Naqi Company', items: naqi },
-                { category: 'DAR Company', items: dar }
+                { category: Constants.ENTITY.VMCO, items: vmco },
+                { category: Constants.ENTITY.SHC, items: shc },
+                { category: Constants.ENTITY.GMTC, items: gmtc },
+                { category: Constants.ENTITY.NAQI, items: naqi },
+                { category: Constants.ENTITY.DAR, items: dar }
             ]);
 
             // Initialize quantities from fetched data
@@ -547,6 +547,9 @@ function Cart() {
         const entity = getEntityFromCategory(pendingOrderCategory);
         if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
             handleSHCOrderSplitting(pendingOrderItems, pendingOrderCategory, method);
+        } else if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+            // Handle VMCO order processing with selected payment method
+            handleVMCOOrderProcessing(pendingOrderItems, pendingOrderCategory, method);
         } else {
             // For NAQI, GMTC, DAR - directly place order with selected payment method
             placeOrderForCategory(pendingOrderItems, pendingOrderCategory, method, true);
@@ -688,6 +691,112 @@ function Cart() {
         }
     };
 
+    // Handle VMCO order processing with machines and consumables
+    const handleVMCOOrderProcessing = async (categoryItems, categoryName, selectedPaymentMethod) => {
+        try {
+            setIsPlacingOrder(true);
+            const entity = getEntityFromCategory(categoryName);
+
+            // Separate VMCO products into machines and consumables
+            const machineProducts = categoryItems.filter(item => item.isMachine === true);
+            const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
+
+            console.log('VMCO order processing separated:', {
+                total: categoryItems.length,
+                machines: machineProducts.length,
+                consumables: nonMachineProducts.length,
+                machineProductIds: machineProducts.map(p => p.product_id),
+                nonMachineProductIds: nonMachineProducts.map(p => p.product_id),
+                selectedPaymentMethod
+            });
+
+            const orderIds = [];
+
+            // First, place order for machines with Pre Payment
+            if (machineProducts.length > 0) {
+                console.log('Placing order for VMCO machines with Pre Payment');
+                const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
+                console.log('Machine order result:', machineOrderId);
+                if (machineOrderId) {
+                    orderIds.push(machineOrderId);
+                    console.log('Added machine order ID to array:', machineOrderId);
+                }
+            }
+
+            // Then, place order for non-machine products with selected payment method
+            if (nonMachineProducts.length > 0) {
+                console.log('Placing order for VMCO consumables with selected payment method:', selectedPaymentMethod);
+                const consumableOrderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', selectedPaymentMethod, false);
+                console.log('Consumable order result:', consumableOrderId);
+                if (consumableOrderId) {
+                    orderIds.push(consumableOrderId);
+                    console.log('Added consumable order ID to array:', consumableOrderId);
+                }
+            }
+
+            // Show combined success message for VMCO orders
+            if (orderIds.length > 0) {
+                console.log('Order IDs collected:', orderIds);
+                const orderText = orderIds.length === 1
+                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
+                    : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+
+                console.log('Order success message:', orderText);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Order Placed'),
+                    text: orderText,
+                    confirmButtonText: t('OK')
+                }).then(async () => {
+                    // Delete machine products from cart after successful order
+                    if (machineProducts.length > 0) {
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
+                        console.log('Deleted machine products from cart after order:', machineProducts);
+                    }
+
+                    // Delete non-machine products from cart after successful order
+                    if (nonMachineProducts.length > 0) {
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
+                        console.log('Deleted non-machine products from cart after order:', nonMachineProducts);
+                    }
+
+                    // Update cart items state to remove ordered items
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(
+                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                        })));
+
+                    // Clean up quantities state for removed items
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        categoryItems.forEach(item => {
+                            delete newQuantities[item.id];
+                        });
+                        return newQuantities;
+                    });
+
+                    // Force a refresh of cart items
+                    fetchCartItems();
+                });
+            }
+
+        } catch (err) {
+            console.error('Error in VMCO order processing:', err);
+            setError(err.message);
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Failed'),
+                text: t(`Failed to place order: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
+        } finally {
+            setIsPlacingOrder(false);
+        }
+    };
+
     // Handle place order button click
     const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
 
@@ -751,99 +860,47 @@ function Cart() {
                     nonMachineProductIds: nonMachineProducts.map(p => p.product_id)
                 });
 
-                const orderIds = [];
-
-                // First, place order for machines with Pre Payment
-                if (machineProducts.length > 0) {
-                    console.log('Placing order for VMCO machines with Pre Payment');
-                    const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
-                    console.log('Machine order result:', machineOrderId);
-                    if (machineOrderId) {
-                        orderIds.push(machineOrderId);
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
-                    }
-                }
-
-                // Then, place order for non-machine products with payment method logic like GMTC, SHC, DAR
+                // For VMCO, first show payment method popup for consumables, then process both machines and consumables
                 if (nonMachineProducts.length > 0) {
-                    // Calculate total amount for non-machine products
-                    let nonMachineTotal = 0;
-                    nonMachineProducts.forEach(item => {
-                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                        const vatPercentage = Number(item.vatPercentage) || 0;
-                        const vatAmount = (baseAmount * vatPercentage) / 100;
-                        const totalAmount = baseAmount + vatAmount;
-                        nonMachineTotal += totalAmount;
-                    });
+                    console.log('Showing payment method selection for VMCO consumables first');
+                    setPendingOrderCategory(categoryName);
+                    setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+                    setShowPaymentPopup(true);
+                    return; // Exit function to wait for user payment method selection
+                } else if (machineProducts.length > 0) {
+                    // If only machines, proceed directly
+                    console.log('Only VMCO machines found, placing order directly with Pre Payment');
+                    const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
+                    if (machineOrderId) {
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: t('Order Placed'),
+                            text: t(`Your order has been placed successfully! Order #${machineOrderId}`),
+                            confirmButtonText: t('OK')
+                        }).then(() => {
+                            // Update cart items state to remove ordered items
+                            setCartItems(prevCartItems =>
+                                prevCartItems.map(category => ({
+                                    ...category,
+                                    items: category.items.filter(
+                                        cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                                })));
 
-                    // Use the same payment method determination as GMTC, SHC, DAR
-                    const paymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, nonMachineTotal, entity);
-
-                    // If payment method determination returned null (insufficient balance), cancel the order
-                    if (paymentMethod === null) {
-                        console.log('Payment method determination cancelled due to insufficient balance');
-                        return; // Exit the function early
-                    }
-
-                    if (paymentMethod === 'Pre Payment') {
-                        // Directly place order with Pre Payment, do not show popup
-                        console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for VMCO entity`);
-                        const orderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', 'Pre Payment', false);
-                        if (orderId) {
-                            orderIds.push(orderId);
-                            await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
-                        }
-                    } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
-                        console.log(`Using determined payment method ${paymentMethod} for VMCO entity`);
-                        const orderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', paymentMethod, false);
-                        if (orderId) {
-                            orderIds.push(orderId);
-                            await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
-                        }
-                    } else {
-                        // For COD or when payment method needs user selection, show popup
-                        console.log(`Showing payment method selection for VMCO entity`);
-                        setPendingOrderCategory(categoryName + ' - Consumables');
-                        setPendingOrderItems(nonMachineProducts);
-                        setShowPaymentPopup(true);
-                        return;
-                    }
-                }
-
-                // Show combined success message for VMCO orders
-                if (orderIds.length > 0 || (nonMachineProducts.length > 0 && !machineProducts.length)) {
-                    const orderText = orderIds.length === 1
-                        ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
-                        : orderIds.length > 1
-                            ? t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`)
-                            : t('Your order has been placed successfully!');
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: t('Order Placed'),
-                        text: orderText,
-                        confirmButtonText: t('OK')
-                    }).then(() => {
-                        // Update cart items state to remove ordered items
-                        setCartItems(prevCartItems =>
-                            prevCartItems.map(category => ({
-                                ...category,
-                                items: category.items.filter(
-                                    cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                            })));
-
-                        // Clear quantities for ordered items
-                        setQuantities(prevQuantities => {
-                            const newQuantities = { ...prevQuantities };
-                            categoryItems.forEach(item => {
-                                delete newQuantities[item.id];
+                            // Clear quantities for ordered items
+                            setQuantities(prevQuantities => {
+                                const newQuantities = { ...prevQuantities };
+                                categoryItems.forEach(item => {
+                                    delete newQuantities[item.id];
+                                });
+                                return newQuantities;
                             });
-                            return newQuantities;
-                        });
 
-                        // Force a refresh of cart items
-                        fetchCartItems();
-                    });
+                            // Force a refresh of cart items
+                            fetchCartItems();
+                        });
+                    }
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 // For SHC entity, handle fresh/non-fresh splitting with payment method determination
@@ -2108,7 +2165,9 @@ function Cart() {
                 setEntityDescriptions(result.data?.map(entity => 
                     ({
                         descriptionLc: entity.descriptionLc ,
-                        description: entity.description
+                        description: entity.description,
+                        value: entity.value 
+
                     })
   ));
 
@@ -2404,8 +2463,9 @@ function Cart() {
         }
     };
 const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
-  const match = entityDescriptions?.find(desc => desc.description.toLowerCase() === categoryName.toLowerCase());
-  if (!match) return categoryName; 
+    console.log("getLocalizedEntityName called with:", { categoryName, currentLanguage, entityDescriptions });
+  const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === categoryName.toLowerCase());
+  if (!match) return categoryName;
   return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
 };
     return (
