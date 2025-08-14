@@ -25,12 +25,12 @@ import SearchableDropdown from "../../components/SearchableDropdown"; // Add thi
 const initialEntities = [
   {
     value: Constants.ENTITY.VMCO,
-    label: Constants.CATEGORY.VMCO_MACHINES,
+    label:  Constants.TAB_NAMES.VMCO_MACHINES,
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
-    label: Constants.CATEGORY.VMCO_CONSUMABLES,
+    label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
   },
   {
     value: Constants.ENTITY.SHC,
@@ -394,7 +394,7 @@ function Products({ customerId, customer, setTabsHeight }) {
 
         // Add isMachine parameter for VMCO entity tabs
         if (entity === Constants.ENTITY.VMCO) {
-          if (activeEntity === Constants.CATEGORY.VMCO_MACHINES) {
+          if (activeEntity.toLowerCase() === "vmco") {
             params.append("isMachine", "true");
           } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
             params.append("isMachine", "false");
