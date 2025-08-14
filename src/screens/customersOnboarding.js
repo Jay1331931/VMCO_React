@@ -16,6 +16,8 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { useAuth } from "../context/AuthContext";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 function CustomersOnboarding() {
@@ -79,7 +81,7 @@ function CustomersOnboarding() {
       required: true,
     },
     {
-      type: "text",
+      type: "phone",
       name: "companyPhone",
       label: t("Phone Number"),
       placeholder: t("Phone Number"),
@@ -946,6 +948,34 @@ function CustomersOnboarding() {
                       )}
                     </>
                   )}
+                  {field.type === "phone" && (
+  <div style={{ width: "100%" }}>
+    <PhoneInput
+      international
+      defaultCountry="SA" // Set default country (e.g., SA for Saudi Arabia)
+      id={field.name}
+      name={field.name}
+      placeholder={field.placeholder}
+      value={formData[field.name]}
+      onChange={(value) => {
+        handleChange({
+          target: {
+            name: field.name,
+            value: value
+          }
+        });
+      }}
+      className={`phone-input ${errors[field.name] ? "error" : ""}`}
+      disabled={isRegistered}
+      required={field.required}
+    />
+    {errors[field.name] && (
+      <span className="error-message">
+        {t(errors[field.name])}
+      </span>
+    )}
+  </div>
+)}
                   {field.type === "empty" && <></>}
                 </div>
               );

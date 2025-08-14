@@ -17,6 +17,9 @@ import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -1364,7 +1367,7 @@ const HandleFandOFailCustomer = async (customerId) => {
                     />
                   </div>
 
-                  <div className="form-group-1">
+                  {/* <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
                     >
@@ -1383,6 +1386,37 @@ const HandleFandOFailCustomer = async (customerId) => {
                         {inviteErrors.mobile}
                       </div>
                     )}
+                  </div> */}
+
+                  <div className="form-group-1">
+  <label style={{ marginBottom: "6px", display: "inline-block" }}>
+    {t("Phone Number")}
+  </label>
+  <PhoneInput
+    international
+    defaultCountry="SA" // Set your preferred default country
+    name="mobile"
+    value={inviteData.mobile}
+    onChange={(value) => {
+      handleInputChange({
+        target: {
+          name: "mobile",
+          value: value
+        }
+      });
+    }}
+    required
+    style={inviteErrors.mobile ? { 
+      borderColor: "red",
+      '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
+    } : {}}
+    className={inviteErrors.mobile ? "phone-input-error" : ""}
+  />
+  {inviteErrors.mobile && (
+    <div style={{ color: "red", fontSize: "0.8em" }}>
+      {inviteErrors.mobile}
+    </div>
+  )}
                   </div>
 
                   <div className="form-group-1">

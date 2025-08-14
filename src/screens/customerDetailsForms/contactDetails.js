@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
 import "../../styles/forms.css";
+import "react-phone-number-input/style.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsisV,
@@ -16,9 +17,12 @@ import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Constants from "../../constants";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST
+import PhoneInput from "react-phone-number-input";
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST ;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
 
 function ContactDetails({
   customerData = {},
@@ -62,7 +66,8 @@ function ContactDetails({
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields,token
+        dropdownFields,
+        token
       );
       setBasicMasterLists(listOfBasicsMaster);
     };
@@ -74,10 +79,10 @@ function ContactDetails({
       try {
         const response = await fetch(`${API_BASE_URL}/geoLocation`, {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-              "Authorization": `Bearer ${token}` 
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          
         });
         if (response.ok) {
           const data = await response.json();
@@ -526,21 +531,17 @@ function ContactDetails({
               }
 
               try {
-                const response = await fetch(
-                  `${API_BASE_URL}/get-files`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
-                      containerType: "documents",
-                    }),
-                    
-                  }
-                );
+                const response = await fetch(`${API_BASE_URL}/get-files`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    fileName: CUSTOMER_APPROVAL_CHECKLIST,
+                    containerType: "documents",
+                  }),
+                });
                 const res = await response.json();
                 if (res.status === "Ok") {
                   window.open(res.data.url, "_blank", "noopener,noreferrer");
@@ -722,7 +723,7 @@ function ContactDetails({
         )}
       </div>
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="primaryContactMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
@@ -758,6 +759,69 @@ function ContactDetails({
           }
           required
         />
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.primaryContactMobile !=
+            customerContactsData?.primaryContactMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.primaryContactMobile || "(empty)"}
+            </div>
+          )}
+        {formErrors.primaryContactMobile && (
+          <div className="error">{t(formErrors.primaryContactMobile)}</div>
+        )}
+      </div> */}
+
+      <div className="form-group">
+        <label htmlFor="primaryContactMobile">
+          {t("Mobile")}
+          <span className="required-field">*</span>
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactMobile !=
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
+        </label>
+
+        <PhoneInput
+          international
+          defaultCountry="SA" // Set your default country code
+          id="primaryContactMobile"
+          name="primaryContactMobile"
+          className={`phone-input ${
+            // Use a specific class for phone input
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactMobile !=
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }`}
+          placeholder={t("Enter Mobile number")}
+          value={customerContactsData?.primaryContactMobile || ""}
+          onChange={(value) => {
+            // Handle the phone number change
+            onChangeCustomerContactsData({
+              target: {
+                name: "primaryContactMobile",
+                value: value,
+              },
+            });
+          }}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.primaryContactMobile ===
+              customerContactsData?.primaryContactMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          required
+        />
+
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactMobile !=
@@ -957,7 +1021,7 @@ function ContactDetails({
         )}
       </div>
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="businessHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
@@ -1008,7 +1072,71 @@ function ContactDetails({
         {formErrors.businessHeadMobile && (
           <div className="error">{t(formErrors.businessHeadMobile)}</div>
         )}
+      </div> */}
+
+      <div className="form-group">
+        <label htmlFor="businessHeadMobile">
+          {t("Mobile")}
+          <span className="required-field">*</span>
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadMobile !=
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
+        </label>
+
+        <PhoneInput
+          international
+          defaultCountry="SA" // Set your default country code
+          id="businessHeadMobile"
+          name="businessHeadMobile"
+          className={`phone-input ${
+            // Use a specific class for phone input
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadMobile !=
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }`}
+          placeholder={t("Enter Mobile number")}
+          value={customerContactsData?.businessHeadMobile || ""}
+          onChange={(value) => {
+            // Handle the phone number change
+            onChangeCustomerContactsData({
+              target: {
+                name: "businessHeadMobile",
+                value: value,
+              },
+            });
+          }}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.businessHeadMobile ===
+              customerContactsData?.businessHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          required
+        />
+
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.businessHeadMobile !=
+            customerContactsData?.businessHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.businessHeadMobile || "(empty)"}
+            </div>
+          )}
+        {formErrors.businessHeadMobile && (
+          <div className="error">{t(formErrors.businessHeadMobile)}</div>
+        )}
       </div>
+
 
       {/* Finance Head Header */}
       <h3 className="form-header full-width">{t("Finance Head")}</h3>
@@ -1172,7 +1300,7 @@ function ContactDetails({
         )}
       </div>
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="financeHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
@@ -1210,6 +1338,69 @@ function ContactDetails({
           }
           required
         />
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.financeHeadMobile !=
+            customerContactsData?.financeHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.financeHeadMobile || "(empty)"}
+            </div>
+          )}
+        {formErrors.financeHeadMobile && (
+          <div className="error">{t(formErrors.financeHeadMobile)}</div>
+        )}
+      </div> */}
+
+      <div className="form-group">
+        <label htmlFor="financeHeadMobile">
+          {t("Mobile")}
+          <span className="required-field">*</span>
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadMobile !=
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
+        </label>
+
+        <PhoneInput
+          international
+          defaultCountry="SA" // Set your default country code
+          id="financeHeadMobile"
+          name="financeHeadMobile"
+          className={`phone-input ${
+            // Use a specific class for phone input
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadMobile !=
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }`}
+          placeholder={t("Enter Mobile number")}
+          value={customerContactsData?.financeHeadMobile || ""}
+          onChange={(value) => {
+            // Handle the phone number change
+            onChangeCustomerContactsData({
+              target: {
+                name: "financeHeadMobile",
+                value: value,
+              },
+            });
+          }}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.financeHeadMobile ===
+              customerContactsData?.financeHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          required
+        />
+
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadMobile !=
@@ -1387,7 +1578,7 @@ function ContactDetails({
         )}
       </div>
 
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="purchasingHeadMobile">
           {t("Mobile")}
           <span className="required-field">*</span>
@@ -1425,6 +1616,69 @@ function ContactDetails({
           }
           required
         />
+        {originalCustomerContactsData &&
+          customerContactsData &&
+          originalCustomerContactsData?.purchasingHeadMobile !=
+            customerContactsData?.purchasingHeadMobile &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous:{" "}
+              {originalCustomerContactsData?.purchasingHeadMobile || "(empty)"}
+            </div>
+          )}
+        {formErrors.purchasingHeadMobile && (
+          <div className="error">{t(formErrors.purchasingHeadMobile)}</div>
+        )}
+      </div> */}
+
+      <div className="form-group">
+        <label htmlFor="purchasingHeadMobile">
+          {t("Mobile")}
+          <span className="required-field">*</span>
+          {originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadMobile !=
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit" && <span className="update-badge">Updated</span>}
+        </label>
+
+        <PhoneInput
+          international
+          defaultCountry="SA" // Set your default country code
+          id="purchasingHeadMobile"
+          name="purchasingHeadMobile"
+          className={`phone-input ${
+            // Use a specific class for phone input
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadMobile !=
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }`}
+          placeholder={t("Enter Mobile number")}
+          value={customerContactsData?.purchasingHeadMobile || ""}
+          onChange={(value) => {
+            // Handle the phone number change
+            onChangeCustomerContactsData({
+              target: {
+                name: "purchasingHeadMobile",
+                value: value,
+              },
+            });
+          }}
+          disabled={
+            originalCustomerContactsData &&
+            customerContactsData &&
+            originalCustomerContactsData?.purchasingHeadMobile ===
+              customerContactsData?.purchasingHeadMobile &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          required
+        />
+
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadMobile !=

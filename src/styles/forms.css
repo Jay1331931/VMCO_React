@@ -198,7 +198,10 @@
 .form-group input {
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 5px; 
+}
+.PhoneInputInput {
+  max-width: 210px
 }
 
 .customers .dropdown {
