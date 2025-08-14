@@ -19,14 +19,6 @@ import BusinessDetails from "./customerDetailsForms/businessDetails";
 import ContactDetails from "./customerDetailsForms/contactDetails";
 import FinancialInformation from "./customerDetailsForms/financialInformation";
 import Documents from "./customerDetailsForms/documents";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faXmark,
-  faLocationDot,
-  faDownload,
-  faEye,
-} from "@fortawesome/free-solid-svg-icons";
-import maplibregl, { setWorkerCount, validate } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import Pagination from "../components/Pagination";
 import ApprovalDialog from "../components/ApprovalDialog";

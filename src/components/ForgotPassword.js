@@ -4,7 +4,7 @@ import "../i18n";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate, useLocation } from "react-router-dom";
-import { faLanguage, faLocationDot } from "@fortawesome/free-solid-svg-icons";
+import { faLanguage } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import axios from "axios";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -91,9 +91,9 @@ function ForgotPassword() {
 
     if (!passwordRegex.test(newPassword)) {
       setError(
-      
-          "Password must contain at least one uppercase, one lowercase, one number and one special character"
-        
+
+        "Password must contain at least one uppercase, one lowercase, one number and one special character"
+
       );
       return;
     }
@@ -136,7 +136,7 @@ function ForgotPassword() {
       }, 2000);
     } catch (err) {
       console.error("Password reset error:", err);
-       setError(err.message || "An error occurred. Please try again.");
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setIsSubmitLoading(false); // Stop loading
     }
@@ -240,11 +240,15 @@ function ForgotPassword() {
 
   return (
     <div>
-      <div className={`app ${isRTL ? "rtl" : ""}`}>
+      <div className={`app ${isRTL ? 'rtl' : ''}`}>
         <header className="header">
           <div className="sidebar-header">
-            <FontAwesomeIcon icon={faLocationDot} size="xl" />
-            <h1>{t("Talab Point")}</h1>
+            <img
+              src={isRTL ? '/logos/talab_point_lc.png' : '/logos/talab_point_en.png'}
+              alt="Talab Point Logo"
+              className="header-logo"
+              style={{ maxHeight: '80%' }} // Adjust height as needed
+            />
           </div>
           <button className="lang-switch-btn" onClick={toggleLanguage}>
             <FontAwesomeIcon icon={faLanguage} />
@@ -331,17 +335,17 @@ function ForgotPassword() {
                 <>
                   <label htmlFor="otp">{t("Enter OTP")}</label>
                   <input
-                  type="text"
-                  id="otp"
-                  inputMode="numeric" // Brings up numeric keyboard on mobile
-                  pattern="\d*"       // Only allows digits
-                  value={otp}
-                  placeholder={t("Enter OTP")}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d*$/.test(val)) setOtp(val); // Only allow digits
-                  }}
-                />
+                    type="text"
+                    id="otp"
+                    inputMode="numeric" // Brings up numeric keyboard on mobile
+                    pattern="\d*"       // Only allows digits
+                    value={otp}
+                    placeholder={t("Enter OTP")}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d*$/.test(val)) setOtp(val); // Only allow digits
+                    }}
+                  />
                   {/* Add Verify OTP button */}
                   {/* <button
                     type="button"
