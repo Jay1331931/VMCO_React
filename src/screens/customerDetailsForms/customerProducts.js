@@ -394,7 +394,7 @@ function Products({ customerId, customer, setTabsHeight }) {
 
         // Add isMachine parameter for VMCO entity tabs
         if (entity === Constants.ENTITY.VMCO) {
-          if (activeEntity === Constants.CATEGORY.VMCO_MACHINES) {
+          if (activeEntity.toLowerCase() === "vmco") {
             params.append("isMachine", "true");
           } else if (activeEntity === Constants.CATEGORY.VMCO_CONSUMABLES) {
             params.append("isMachine", "false");
