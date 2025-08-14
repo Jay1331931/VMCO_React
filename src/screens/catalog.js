@@ -1407,6 +1407,20 @@ function Catalog() {
                 </div>
               )}
             </div>
+            {isV("goToCart") && (
+            <button
+              className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+              style={{
+                opacity: !selectedLocation ? 0.6 : 1,
+                cursor: !selectedLocation ? "not-allowed" : "pointer",
+              }}
+              onClick={handleGoToCart}
+              disabled={!selectedLocation}
+            >
+              <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+              <span>{t("Go to Cart")}</span>
+            </button>
+          )}
           </div>
         )}
         <div className="filter-section">
@@ -1424,20 +1438,7 @@ function Catalog() {
             }}
             variant="category"
           />
-          {isV("goToCart") && (
-            <button
-              className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-              style={{
-                opacity: !selectedLocation ? 0.6 : 1,
-                cursor: !selectedLocation ? "not-allowed" : "pointer",
-              }}
-              onClick={handleGoToCart}
-              disabled={!selectedLocation}
-            >
-              <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-              <span>{t("Go to Cart")}</span>
-            </button>
-          )}
+          
         </div>{" "}
         <div className="search-section">
           <div className="search-container">

@@ -186,7 +186,7 @@
   border-bottom: 1px solid #d9d9d6;
   height: 32px;
   display: flex;
-  gap: 2px;
+  gap: 16px;
   white-space: nowrap;
 }
 
