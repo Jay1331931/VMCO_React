@@ -11,7 +11,6 @@ import {
   faChevronLeft,
   faChevronRight,
   faBars,
-  faLocationDot,
   faHouse,
   faBookOpen,
   faShoppingCart,
@@ -63,8 +62,8 @@ function Sidebar({ children, title }) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-      ? [customerContacts]
-      : [];
+        ? [customerContacts]
+        : [];
 
     // Create a map of contactType to contact data (note: using contactType instead of contact_type)
     const contactsMap = contacts.reduce((acc, contact) => {
@@ -412,19 +411,31 @@ function Sidebar({ children, title }) {
       console.error("Failed to refresh customer:", err);
     }
   };
-
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
-        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${
-          isSidebarExpanded ? "expanded" : ""
-        }`}
+        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${isSidebarExpanded ? "expanded" : ""
+          }`}
       >
         <div className="sidebar-header">
-          <FontAwesomeIcon icon={faLocationDot} size="xl" />
-          <h1>{t("Talab Point")}</h1>
+          {isSidebarCollapsed ? (
+            // Collapsed logo
+            <img
+              src="/logos/talab_point_logo.png"
+              alt="Talab Point Logo"
+              className="logo-collapsed"
+              style={{ maxWidth: "100%", maxHeight: "100%" }}
+            />
+          ) : (
+            // Expanded logo: show different image based on RTL
+            <img
+              src={isRTL ? "/logos/talab_point_lc.png" : "/logos/talab_point_en.png"}
+              alt="Talab Point Logo Expanded"
+              className="logo-expanded"
+              style={{ maxWidth: "100%", maxHeight: "100%", padding: "10px" }}
+            />
+          )}
         </div>
-
         <div className="sidebar-menu">
           <div className="main-menu-items">
             {menuItems.slice(0, 7).map(({ icon, label }) => (
@@ -490,8 +501,8 @@ function Sidebar({ children, title }) {
                   ? faChevronLeft
                   : faChevronRight
                 : isRTL
-                ? faChevronRight
-                : faChevronLeft
+                  ? faChevronRight
+                  : faChevronLeft
             }
           />
         </div>
@@ -504,8 +515,8 @@ function Sidebar({ children, title }) {
             window.innerWidth <= 768
               ? {}
               : isRTL
-              ? { marginRight: sidebarOffset, marginLeft: 0 }
-              : { marginLeft: sidebarOffset, marginRight: 0 }
+                ? { marginRight: sidebarOffset, marginLeft: 0 }
+                : { marginLeft: sidebarOffset, marginRight: 0 }
           }
         >
           <header className="header">

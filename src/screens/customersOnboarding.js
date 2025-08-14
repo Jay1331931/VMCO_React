@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLanguage,
-  faLocationDot,
   faCheckCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from "react-router-dom";
@@ -127,11 +126,11 @@ function CustomersOnboarding() {
             `${API_BASE_URL}/auth/registration/getById/${id}`,
             {
               method: "GET",
-              headers: { 
+              headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}` 
+                "Authorization": `Bearer ${token}`
               },
-              
+
             }
           );
           // Check if response is JSON
@@ -188,15 +187,15 @@ function CustomersOnboarding() {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/employees/random`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           designation: "area sales manager",
           region: region,
         }),
-        
+
       });
       if (response.ok) {
         const result = await response.json();
@@ -217,11 +216,11 @@ function CustomersOnboarding() {
         `${API_BASE_URL}/auth/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
+
         }
       );
 
@@ -248,20 +247,20 @@ function CustomersOnboarding() {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/geoLocation`,
           {
-      method: "GET",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` 
-      },
-      
-    }
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+
+          }
         );
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);
           setRegionOptions(geoData ? Object.keys(geoData).map(region => ({
-          value: region,
-          name: region
+            value: region,
+            name: region
           })) : [])
         }
       } catch (error) {
@@ -305,11 +304,11 @@ function CustomersOnboarding() {
           `${API_BASE_URL}/auth/customer-contacts/uniqueField/checkUniqueField`,
           {
             method: "POST",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}` 
+              "Authorization": `Bearer ${token}`
             },
-            
+
             body: JSON.stringify({
               field: "email",
               value: formData.companyEmail,
@@ -403,9 +402,9 @@ function CustomersOnboarding() {
       try {
         const response = await fetch(`${API_BASE_URL}/auth/registration/user`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
             email: formData.companyEmail,
@@ -413,7 +412,7 @@ function CustomersOnboarding() {
             userType: "customer",
             roles: ["customer_primary"],
           }),
-          
+
         });
         if (!response.ok) {
           const errorData = await response.json();
@@ -465,7 +464,7 @@ function CustomersOnboarding() {
                   [constants.ENTITY.GMTC]: areaSalesManager,
                 },
               }),
-              
+
             }
           );
           const result = await response.json();
@@ -485,7 +484,7 @@ function CustomersOnboarding() {
                 name: formData.leadName,
                 mobile: formData.companyPhone,
               }),
-              
+
             });
           });
 
@@ -497,7 +496,7 @@ function CustomersOnboarding() {
                 customerId: result.data.id,
                 contactType: type,
               }),
-              
+
             });
           });
 
@@ -539,7 +538,7 @@ function CustomersOnboarding() {
                 // partialPayment: { isAllowed: true }
               },
             }),
-            
+
           });
         } catch (error) {
           console.error("Error during registration:", error);
@@ -557,7 +556,7 @@ function CustomersOnboarding() {
                   ...registrationPayload,
                   registered: true,
                 }),
-                
+
               }
             );
             const result = await response.json();
@@ -571,7 +570,7 @@ function CustomersOnboarding() {
           }
         } else {
           try {
-       
+
             const response = await fetch(
               `${API_BASE_URL}/auth/registration/staging`,
               {
@@ -582,7 +581,7 @@ function CustomersOnboarding() {
                   registered: true,
                   source: "portal",
                 }),
-                
+
               }
             );
             const result = await response.json();
@@ -674,7 +673,7 @@ function CustomersOnboarding() {
         title: t(error.response?.data?.status || "Error"),
         text: t(
           error.response?.data?.message ||
-            "An error occurred while sending OTP."
+          "An error occurred while sending OTP."
         ),
         icon: "error",
         confirmButtonText: t("OK"),
@@ -724,7 +723,7 @@ function CustomersOnboarding() {
         title: t(error.response?.data?.status || "Error"),
         text: t(
           error.response?.data?.message ||
-            "An error occurred while verifying OTP."
+          "An error occurred while verifying OTP."
         ),
         icon: "error",
         confirmButtonText: t("OK"),
@@ -735,11 +734,15 @@ function CustomersOnboarding() {
   };
   return (
     <div>
-      <div className={`app ${isRTL ? "rtl" : ""}`}>
+      <div className={`app ${isRTL ? 'rtl' : ''}`}>
         <header className="header">
           <div className="sidebar-header">
-            <FontAwesomeIcon icon={faLocationDot} size="xl" />
-            <h1>{t("Talab Point")}</h1>
+            <img
+              src={isRTL ? '/logos/talab_point_lc.png' : '/logos/talab_point_en.png'}
+              alt="Talab Point Logo"
+              className="header-logo"
+              style={{ maxHeight: '80%' }} // Adjust height as needed
+            />
           </div>
           <button className="lang-switch-btn" onClick={toggleLanguage}>
             <FontAwesomeIcon icon={faLanguage} />
@@ -842,8 +845,8 @@ function CustomersOnboarding() {
                                 {isOtpLoading
                                   ? t("Sending...")
                                   : !isOtpSent
-                                  ? t("Send Otp")
-                                  : t("Resend Otp")}
+                                    ? t("Send Otp")
+                                    : t("Resend Otp")}
                               </button>
                             )}
                           {field.name === "otp" && !isOtpVerify && (
@@ -927,20 +930,20 @@ function CustomersOnboarding() {
                           </option>
                         ))}
                       </select> */}
-                      
+
                       <SearchableDropdown
-                            name={field.name}
-                            // options={basicMasterLists?.region || []}
-                            options={geoData ? Object.keys(geoData).map(region => ({
-                            value: region,
-                            name: region
-                            })) : []}
-                            value={formData[field.name]}
-                            onChange={handleChange}
-                            placeholder={t("Enter Region")}
-                            required
-                          />
-                          
+                        name={field.name}
+                        // options={basicMasterLists?.region || []}
+                        options={geoData ? Object.keys(geoData).map(region => ({
+                          value: region,
+                          name: region
+                        })) : []}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        placeholder={t("Enter Region")}
+                        required
+                      />
+
                       {errors[field.name] && (
                         <span className="error-message">
                           {errors[field.name]}
