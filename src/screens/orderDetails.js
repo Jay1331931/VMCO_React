@@ -2621,7 +2621,7 @@ function OrderDetails() {
         console.log(`- isMachine is: ${formData.isMachine}`);
         console.log(`- customerId: ${Boolean(formData.customerId)}`);
       }
-      
+
       // STEP 3: Submit the approval for the sales order
       const payload = {
         workflowData: {
@@ -3020,7 +3020,7 @@ setShowModal(true);
                         <label>{t('Amount Paid')}</label>
                         <input
                           name="paidAmount"
-                          value={formData.paidAmount ?? ''}
+                          value={parseFloat(formData.paidAmount).toFixed(2) ?? ''}
                           onChange={handleInputChange}
                           disabled={!isE('paidAmount')}
                         />
