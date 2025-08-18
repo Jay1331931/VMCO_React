@@ -1699,7 +1699,7 @@ function ContactDetails({
       <div className="form-group">
         <label htmlFor="buildingName">
           {t("Building Name")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.buildingName != customerData?.buildingName &&
@@ -1946,7 +1946,7 @@ function ContactDetails({
       </div>
 
       {/* zone dropdown */}
-      <div className="form-group">
+      {isV("assignedToEntityWise") && (<div className="form-group">
         <label htmlFor="zone">
           {t("Zone")}
           <span className="required-field">*</span>
@@ -1996,7 +1996,7 @@ function ContactDetails({
             </div>
           )}
         {formErrors.zone && <div className="error">{t(formErrors.zone)}</div>}
-      </div>
+      </div>)}
       <div className="form-group">
         <label htmlFor="pincode">
           {t("Pincode")}
