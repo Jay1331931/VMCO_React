@@ -1,9 +1,11 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faPen } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext";
 import RbacManager from "../../utilities/rbac";
+import SignatureCanvas from "react-signature-canvas";
+import Swal from "sweetalert2";
 
 const FinalSubmissionConfirmation = ({
   customerData = {},
@@ -24,38 +26,137 @@ const FinalSubmissionConfirmation = ({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
-  console.log("RBAC Manager:", rbacMgr);
 
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
 
-  const signatureInputRef = useRef();
+  const sigCanvasRef = useRef();
   const [signaturePreviews, setSignaturePreviews] = useState({
     declarationSignature: null,
   });
 
-  // Handle signature file selection
-  const handleSignatureChange = (e, signatureType) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    // Optional: file size check (e.g., 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert(t("File size exceeds 2MB."));
+  // Add this useEffect to track mouse movement
+  useEffect(() => {
+    const canvas = sigCanvasRef.current.getCanvas();
+    const cursor = document.querySelector(".fa-cursor");
+
+    const handleMouseMove = (e) => {
+      if (!cursor) return;
+      const offsetX = 10;
+      const offsetY = 18;
+
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left + offsetX;
+      const y = e.clientY - rect.top + offsetY;
+
+      cursor.style.left = `${x}px`;
+      cursor.style.top = `${y}px`;
+    };
+
+    const handleMouseEnter = () => {
+      cursor.style.display = "block";
+    };
+
+    const handleMouseLeave = () => {
+      cursor.style.display = "none";
+    };
+
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseenter", handleMouseEnter);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseenter", handleMouseEnter);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  // Handle signature save
+  // const handleSaveSignature = () => {
+  //   if (sigCanvasRef.current.isEmpty()) {
+  //     alert(t("Please provide a signature first"));
+  //     return;
+  //   }
+
+  //   // Convert canvas to blob
+  //   sigCanvasRef.current.getTrimmedCanvas().toBlob((blob) => {
+  //     // Generate a filename
+  //     const fileName = `signature_${Date.now()}.png`;
+
+  //     // Add to signatureToUpload
+  //     signatureToUpload.declarationSignature = new File([blob], fileName, { type: "image/png" });
+
+  //     // Save file name in customerData for display
+  //     onChangeCustomerData({
+  //       target: { name: "declarationSignature", value: fileName },
+  //     });
+
+  //     // Generate preview URL
+  //     const previewUrl = URL.createObjectURL(blob);
+  //     setSignaturePreviews((prev) => {
+  //       // Clean up previous URL if exists
+  //       if (prev.declarationSignature) URL.revokeObjectURL(prev.declarationSignature);
+  //       return { ...prev, declarationSignature: previewUrl };
+  //     });
+  //   }, "image/png");
+  // };
+  const handleSaveSignature = () => {
+    if (sigCanvasRef.current.isEmpty()) {
+      // alert(t("Please provide a signature first"));
+      Swal.fire({
+        // title: "Error",
+        text: "Please provide a signature first",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#3085d6",
+      });
       return;
     }
-    signatureToUpload[signatureType] = file;
-    // Save file name in customerData for display
-    onChangeCustomerData({
-      target: { name: signatureType, value: file.name },
-    });
 
-    // Generate preview URL
-    const previewUrl = URL.createObjectURL(file);
+    // Get the canvas element directly
+    const canvas = sigCanvasRef.current.getCanvas();
+
+    // Convert canvas to data URL
+    const dataUrl = canvas.toDataURL("image/png");
+
+    // Convert data URL to blob
+    fetch(dataUrl)
+      .then((res) => res.blob())
+      .then((blob) => {
+        // Generate a filename
+        const fileName = `signature_${Date.now()}.png`;
+
+        // Add to signatureToUpload
+        signatureToUpload.declarationSignature = new File([blob], fileName, {
+          type: "image/png",
+        });
+
+        // Save file name in customerData for display
+        onChangeCustomerData({
+          target: { name: "declarationSignature", value: fileName },
+        });
+
+        // Use data URL directly for preview (no need to revoke as it's not an object URL)
+        setSignaturePreviews((prev) => ({
+          ...prev,
+          declarationSignature: dataUrl,
+        }));
+      })
+      .catch((error) => {
+        console.error("Error saving signature:", error);
+        alert(t("Failed to save signature. Please try again."));
+      });
+  };
+  // Clear signature
+  const handleClearSignature = () => {
+    sigCanvasRef.current.clear();
     setSignaturePreviews((prev) => {
-      // Clean up previous URL if exists
-      if (prev[signatureType]) URL.revokeObjectURL(prev[signatureType]);
-      return { ...prev, [signatureType]: previewUrl };
+      if (prev.declarationSignature)
+        URL.revokeObjectURL(prev.declarationSignature);
+      return { ...prev, declarationSignature: null };
     });
+    handleSignatureDelete("declarationSignature");
   };
 
   // Clean up preview URLs on unmount
@@ -76,15 +177,11 @@ const FinalSubmissionConfirmation = ({
       },
     });
     delete signatureToUpload[signatureType];
-    // Reset the file input value so the same file can be uploaded again
-    if (signatureInputRef.current) {
-      signatureInputRef.current.value = "";
-    }
   };
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  // View signature (same as handleViewFile in documents.js)
+  // View signature
   const handleViewSignature = async (customerId, fileName, fileType) => {
     let fileURL = "";
     try {
@@ -94,10 +191,9 @@ const FinalSubmissionConfirmation = ({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ fileType, fileName }),
-          
         }
       );
       const res = await response.json();
@@ -111,6 +207,7 @@ const FinalSubmissionConfirmation = ({
       console.error("Error viewing file:", error);
     }
   };
+
   // Auto-capture date on mount if not set
   useEffect(() => {
     if (!customerData.declarationDate) {
@@ -169,40 +266,113 @@ const FinalSubmissionConfirmation = ({
           {t("Signature")}
           <span className="required-field">*</span>
         </label>
-        <input
-          type="file"
-          id="declarationSignature"
-          name="declarationSignature"
-          accept="image/*"
-          style={{ display: "none" }}
-          ref={signatureInputRef}
-          onChange={(e) => handleSignatureChange(e, "declarationSignature")}
-          required
-          disabled={
-            mode === "edit" && customerData?.customerStatus !== "pending"
-          }
-        />
-        <button
-          type="button"
-          className="custom-file-button"
-          onClick={() => signatureInputRef.current?.click()}
-          disabled={
-            (mode === "edit" && customerData?.customerStatus === "pending") ||
-            isE("declarationName")
-          }
-          style={{ width: "100px" }}
-        >
-          {t("Upload")}
-        </button>
-        {/* Show preview if file is selected but not saved */}
+
+        {/* Signature Canvas */}
+        {/* <div className="signature-container">
+          <div
+            style={{
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              backgroundColor: "#f8f8f8",
+              marginBottom: "10px",
+            }}
+          >
+            <SignatureCanvas
+              ref={sigCanvasRef}
+              penColor="blue"
+              canvasProps={{
+                width: 400,
+                height: 150,
+                className: "signature-canvas",
+              }}
+            />
+          </div>
+
+          <div className="signature-buttons">
+            <button
+              type="button"
+              onClick={handleSaveSignature}
+              disabled={
+                (mode === "edit" &&
+                  customerData?.customerStatus === "pending") ||
+                isE("declarationName")
+              }
+              className="custom-file-button"
+            >
+              {t("Save Signature")}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearSignature}
+              disabled={
+                (mode === "edit" &&
+                  customerData?.customerStatus === "pending") ||
+                isE("declarationName")
+              }
+              style={{ marginLeft: "10px" }}
+              className="custom-file-button"
+            >
+              {t("Clear")}
+            </button>
+          </div>
+        </div> */}
+
+        <div className="signature-container">
+          <div className="signature-wrapper">
+            <p className="signature-hint">{t('Click and drag to sign')}</p>
+            <SignatureCanvas
+              ref={sigCanvasRef}
+              penColor="black"
+              minWidth={0.5}
+              maxWidth={1.5}
+              dotSize={0.2}
+              canvasProps={{
+                width: 400,
+                height: 150,
+                className: "signature-canvas-fa",
+              }}
+            />
+            <div className="fa-cursor">
+              <FontAwesomeIcon icon={faPen} />
+            </div>
+          </div>
+          
+          <div className="signature-buttons">
+            <button
+              type="button"
+              onClick={handleSaveSignature}
+              disabled={
+                (mode === "edit" && customerData?.customerStatus === "pending") ||
+                isE("declarationName")
+              }
+              className="custom-file-button"
+            >
+              {t("Save Signature")}
+            </button>
+            <button
+              type="button"
+              onClick={handleClearSignature}
+              disabled={
+                (mode === "edit" && customerData?.customerStatus === "pending") ||
+                isE("declarationName")
+              }
+              style={{ marginLeft: "10px" }}
+              className="custom-file-button"
+            >
+              {t("Clear")}
+            </button>
+          </div>
+        </div>
+
+        {/* Show preview if signature is saved but not yet submitted */}
         {signaturePreviews.declarationSignature && (
-          <div className="logo-preview">
+          <div className="signature-preview">
             <img
               src={signaturePreviews.declarationSignature}
               alt="Signature Preview"
               style={{
-                maxWidth: 120,
-                maxHeight: 120,
+                maxWidth: 200,
+                maxHeight: 80,
                 marginTop: 8,
                 border: "1px solid #ccc",
                 borderRadius: 4,
@@ -225,10 +395,11 @@ const FinalSubmissionConfirmation = ({
             </button>
           </div>
         )}
-        {/* Show uploaded file name as link if present and no preview */}
+
+        {/* Show uploaded signature as link if present and no preview */}
         {!signaturePreviews.declarationSignature &&
           customerData?.declarationSignature && (
-            <div className="logo-preview">
+            <div className="signature-preview">
               <a
                 href="#"
                 className="file-link"
@@ -253,16 +424,16 @@ const FinalSubmissionConfirmation = ({
                         ? name.substring(0, maxLen) + "..."
                         : name;
                     })()
-                  : "View Document"}
+                  : "View Signature"}
               </a>
-              {/* <button
-                      type="button"
-                      className="delete-file-button"
-                      onClick={() => handleSignatureDelete("declarationSignature")}
-                      style={{ marginLeft: 8, fontSize: "15px" }}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button> */}
+              <button
+                type="button"
+                className="delete-file-button"
+                onClick={() => handleSignatureDelete("declarationSignature")}
+                style={{ marginLeft: 8, fontSize: "15px" }}
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
             </div>
           )}
         {formErrors?.declarationSignature && (

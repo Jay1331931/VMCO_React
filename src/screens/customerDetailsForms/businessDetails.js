@@ -235,6 +235,61 @@ function BusinessDetails({
           </a>
         </div>
       )}
+
+      {/* Company Type Dropdown */}
+      <div className="form-group">
+        <label htmlFor="companyType">
+          {t("Company Type")}
+          <span className="required-field">*</span>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.companyType != customerData?.companyType &&
+            mode === "edit" && (
+              <span className="update-badge">{t("Updated")}</span>
+            )}
+        </label>
+        <SearchableDropdown
+          name="companyType"
+          options={(basicMasterLists?.companyType || []).map((item) => ({
+            value: item.value,
+            name: currentLanguage === "ar" ? item.valueLc : item.value,
+          }))}
+          value={customerData?.companyType || ""}
+          onChange={(e) => {
+            onChangeCustomerData({
+              target: { name: "companyType", value: e.target.value },
+            });
+          }}
+          disabled={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.companyType === customerData?.companyType &&
+            mode === "edit" &&
+            customerData?.customerStatus !== "pending"
+          }
+          className={
+            originalCustomerData &&
+            customerData &&
+            originalCustomerData?.companyType != customerData?.companyType &&
+            mode === "edit"
+              ? "update-field"
+              : ""
+          }
+          placeholder={t("Select")}
+        />
+        {originalCustomerData &&
+          customerData &&
+          originalCustomerData?.companyType != customerData?.companyType &&
+          mode === "edit" && (
+            <div className="current-value">
+              Previous: {originalCustomerData?.companyType || "(empty)"}
+            </div>
+          )}
+        {formErrors.companyType && (
+          <div className="error">{t(formErrors.companyType)}</div>
+        )}
+      </div>
+      
       {/* Company Name (English) */}
       <div className="form-group">
         <label htmlFor="companyNameEn">
@@ -547,59 +602,7 @@ function BusinessDetails({
         )}
       </div>
 
-      {/* Company Type Dropdown */}
-      <div className="form-group">
-        <label htmlFor="companyType">
-          {t("Company Type")}
-          <span className="required-field">*</span>
-          {originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyType != customerData?.companyType &&
-            mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
-            )}
-        </label>
-        <SearchableDropdown
-          name="companyType"
-          options={(basicMasterLists?.companyType || []).map((item) => ({
-            value: item.value,
-            name: currentLanguage === "ar" ? item.valueLc : item.value,
-          }))}
-          value={customerData?.companyType || ""}
-          onChange={(e) => {
-            onChangeCustomerData({
-              target: { name: "companyType", value: e.target.value },
-            });
-          }}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyType === customerData?.companyType &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyType != customerData?.companyType &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Select")}
-        />
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.companyType != customerData?.companyType &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.companyType || "(empty)"}
-            </div>
-          )}
-        {formErrors.companyType && (
-          <div className="error">{t(formErrors.companyType)}</div>
-        )}
-      </div>
+      
       {/* Delivery Locations Dropdown */}
       <div className="form-group">
         <label htmlFor="deliveryLocations">

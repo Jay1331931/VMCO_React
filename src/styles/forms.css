@@ -669,6 +669,11 @@
   margin-top: 5px;
 }
 
+.phone-number-placeholder {
+  color: #999;
+  font-size: 12px;
+  margin-top: 5px;
+}
 /* .product-search-input {
     padding: 8px 12px;
     width: 200px;
@@ -1724,6 +1729,78 @@ td.file-display-cell {
   .products-data-table input[type="text"] {
     width: 100px;
   }
+}
+
+.signature-container {
+  margin-bottom: 15px;
+}
+
+.signature-buttons {
+  margin-bottom: 10px;
+  display: flex;
+  background-color: white;
+  margin-top: 10px;
+}
+
+[dir="rtl"] .signature-buttons {
+  display: flex;
+  gap: 10px
+}
+
+.signature-canvas {
+  background-color: white;
+}
+
+.signature-container {
+  position: relative;
+  margin: 20px 0;
+}
+
+.signature-wrapper {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f8f8;
+  width: fit-content;
+}
+
+.signature-canvas-fa {
+  cursor: none; /* Hide default cursor */
+  display: block;
+  background-color: white;
+}
+
+.fa-cursor {
+  position: absolute;
+  pointer-events: none;
+  color: #333;
+  font-size: 24px;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: none;
+}
+
+.signature-wrapper:hover .fa-cursor {
+  display: block;
+}
+
+.signature-hint {
+  text-align: center;
+  color: #666;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  font-size: 0.8em;
+}
+
+.signature-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.signature-preview img {
+  border: 1px solid #ddd;
+  background: white;
 }
 
 @media (max-width: 768px) {
