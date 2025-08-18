@@ -2352,21 +2352,23 @@ function Cart() {
     };
 
     // Helper function to delete cart items with specific parameters
-    const deleteCartItems = async (customerId, branchId, entity, isFresh, isMachine, products) => {
+   const deleteCartItems = async (customerId, branchId, entity, isFresh, isMachine, products) => {
         try {
             const deletePromises = products.map(async (product) => {
-                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', customerId);
-                deleteUrl.searchParams.append('branch_id', branchId);
-                deleteUrl.searchParams.append('entity', entity);
+                let deleteUrl = new URL(`${API_BASE_URL}/cart/delete?customer_id=${customerId}&branch_id=${branchId}&entity=${entity}`);
+                // deleteUrl.searchParams.append('customer_id', customerId);
+                // deleteUrl.searchParams.append('branch_id', branchId);
+                // deleteUrl.searchParams.append('entity', entity);
                 if (isFresh !== null && isFresh !== undefined) {
-                    deleteUrl.searchParams.append('isFresh', isFresh);
+                    // deleteUrl.searchParams.append('isFresh', isFresh);
+                    deleteUrl+=`&isFresh=${isFresh}`
                 }
                 if (isMachine !== null && isMachine !== undefined) {
-                    deleteUrl.searchParams.append('isMachine', isMachine);
+                        deleteUrl+=`&isMachine=${isMachine}`
+                    // deleteUrl.searchParams.append('isMachine', isMachine);
                 }
-                deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
-
+                // deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
+                deleteUrl+=`&product_id=${product.product_id || product.productId}`
                 console.log(`Deleting cart item with params: ${deleteUrl}`);
 
                 const deleteResponse = await fetch(deleteUrl, {
