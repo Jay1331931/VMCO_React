@@ -176,9 +176,12 @@ function Orders() {
 
     console.log("$$$$$$$$$$$ user in orders page", user);
     if (user) {
-      fetchOrders(page, searchQuery);
-      // eslint-disable-next-line
-    } // Check loading state first
+    if (isApprovalMode) {
+      fetchApprovals(page, searchQuery); // <-- Call approval API
+    } else {
+      fetchOrders(page, searchQuery);    // <-- Call sales orders API
+    }
+  }
 
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
