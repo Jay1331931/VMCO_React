@@ -1494,7 +1494,7 @@ const onClose = () => {
                     </td>
                     <td>
                     
-                       {!branch.erp_branch_id && branch.branchStatus.toLowerCase()==="approved"  && user.designation.toLowerCase()==="sales executive"&& (
+                       {!branch?.erpBranchId && branch.branchStatus.toLowerCase()==="approved"  && user.designation.toLowerCase()==="sales executive"&& (
                           <button
                             className="action-button pay"
                             onClick={(e) => {

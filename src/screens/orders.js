@@ -78,11 +78,11 @@ function Orders() {
           `${API_BASE_URL}/sales-order/pagination?${params.toString()}`,
           {
             method: "GET",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}` 
+              "Authorization": `Bearer ${token}`
             },
-            
+
           }
         );
 
@@ -137,11 +137,11 @@ function Orders() {
         `${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
+
         }
       );
       const result = await response.json();
@@ -176,9 +176,12 @@ function Orders() {
 
     console.log("$$$$$$$$$$$ user in orders page", user);
     if (user) {
-      fetchOrders(page, searchQuery);
-      // eslint-disable-next-line
-    } // Check loading state first
+      if (isApprovalMode) {
+        fetchApprovals(page, searchQuery); // <-- Call approval API
+      } else {
+        fetchOrders(page, searchQuery);    // <-- Call sales orders API
+      }
+    }
 
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
@@ -226,11 +229,11 @@ function Orders() {
         `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
+
         }
       );
       const result = await response.json();
@@ -272,44 +275,44 @@ function Orders() {
 
 
   const handlePay = async (order, email = false) => {
-          try {
-            const { data } = await axios.post(
-              `${API_BASE_URL}/generatePayment-link`,
-              {
-                id: order.id,
-                endPoint: "payment-opations/order",
-                IsEmail: email,
-              },
-              { 
-               
-                headers: {
-                  "Authorization": `Bearer ${token}`
-                }
-              }
-            );
-            
-            if (email) {
-              Swal.fire({
-                title: t("Payment Link Generated"),
-                text: t("A payment link has been sent to the customer's email."),
-                icon: t("success"),
-                confirmButtonText: t("OK"),
-              });
-            }
-            else if (!email && data?.details?.url) {
-              window.open(data.details.url, "_blank", "width=500,height=600");
-            }
-          } catch (error) {
-            console.error("Error generating payment link:", error);
-            Swal.fire({
-              title: t("Error"),
-              text: t("Failed to generate payment link. Please try again later."),
-              icon: t("error"),
-              confirmButtonText: t("OK"),
-            });
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/generatePayment-link`,
+        {
+          id: order.id,
+          endPoint: "payment-opations/order",
+          IsEmail: email,
+        },
+        {
+
+          headers: {
+            "Authorization": `Bearer ${token}`
           }
-      
-  
+        }
+      );
+
+      if (email) {
+        Swal.fire({
+          title: t("Payment Link Generated"),
+          text: t("A payment link has been sent to the customer's email."),
+          icon: t("success"),
+          confirmButtonText: t("OK"),
+        });
+      }
+      else if (!email && data?.details?.url) {
+        window.open(data.details.url, "_blank", "width=500,height=600");
+      }
+    } catch (error) {
+      console.error("Error generating payment link:", error);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Failed to generate payment link. Please try again later."),
+        icon: t("error"),
+        confirmButtonText: t("OK"),
+      });
+    }
+
+
   };
 
   // Action menu for Orders page
@@ -420,11 +423,11 @@ function Orders() {
 
         if (item.entity === "VMCO") {
           badge = item.isMachine
-             ? <span className="badge badge-blue">{t("Machines")}</span>
+            ? <span className="badge badge-blue">{t("Machines")}</span>
             : <span className="badge badge-blue">{t("Consumables")}</span>;
         } else if (item.entity === "SHC") {
           badge = item.isFresh
-            ?  <span className="badge badge-blue">{t("Fresh")}</span>
+            ? <span className="badge badge-blue">{t("Fresh")}</span>
             : <span className="badge badge-blue">{t("Frozen")}</span>;
         }
 
@@ -519,7 +522,7 @@ function Orders() {
               onPay={handlePay}
             />
           )}
-          
+
           {isV("ordersPagination") && paginatedOrders.length > 0 && (
             <Pagination
               currentPage={page}
