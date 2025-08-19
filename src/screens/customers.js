@@ -1205,6 +1205,7 @@ const HandleFandOFailCustomer = async (customerId) => {
     );
 
     if (data?.success) {
+    fetchCustomers();
       Swal.fire({
         title: "Success",
         text: data.message,
