@@ -1131,6 +1131,7 @@ const HandleFandOFailBranch = async (branchId) => {
     );
 
     if (data?.success) {
+      fetchBranches()
       Swal.fire({
         title: "Success",
         text: data.message,
