@@ -318,28 +318,15 @@ function Orders() {
   // Action menu for Orders page
   const orderMenuItems = [
     {
-      key: "favorites",
-      label: "Favorites",
+      key: "upload orders",
+      label: "Upload orders",
       onClick: () =>
         Swal.fire({
-          title: t("Favorites"),
-          text: t("Favorites clicked"),
+          title: t("Upload orders"),
+          text: t("Upload orders clicked"),
           icon: "info",
           confirmButtonText: "OK",
-        }),
-      // alert('Favorites clicked')
-    },
-    {
-      key: "customOrders",
-      label: "Custom Orders",
-      onClick: () =>
-        Swal.fire({
-          title: t("Custom Orders"),
-          text: t("Custom Orders clicked"),
-          icon: t("info"),
-          confirmButtonText: "OK",
-        }),
-      // alert('Custom Orders clicked')
+        })
     },
   ];
 
