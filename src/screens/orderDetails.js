@@ -2583,7 +2583,8 @@ function OrderDetails() {
         }
       }
 
-      // --- END: PATCH order lines and order if approving in approval mode and status is pending ---      // STEP 2: Directly create discount workflow without checking if it exists
+      // --- END: PATCH order lines and order if approving in approval mode and status is pending ---      
+      // STEP 2: Directly create discount workflow without checking if it exists
       console.log("Creating discount workflow instance...");
       console.log("formData:", {
         id: formData.id,
@@ -2620,7 +2621,6 @@ function OrderDetails() {
         console.log(`- isMachine is: ${formData.isMachine}`);
         console.log(`- customerId: ${Boolean(formData.customerId)}`);
       }
-
 
       // STEP 3: Submit the approval for the sales order
       const payload = {
@@ -3020,7 +3020,7 @@ setShowModal(true);
                         <label>{t('Amount Paid')}</label>
                         <input
                           name="paidAmount"
-                          value={formData.paidAmount ?? ''}
+                          value={parseFloat(formData.paidAmount).toFixed(2) ?? ''}
                           onChange={handleInputChange}
                           disabled={!isE('paidAmount')}
                         />

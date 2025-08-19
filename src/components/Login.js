@@ -4,11 +4,20 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Constants from "../constants";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+
 function Login({ title, userType }) {
   const { login } = useAuth();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Add loading state
@@ -129,13 +138,24 @@ function Login({ title, userType }) {
             </div>
             <div className="form-group">
               <label htmlFor="password">{t("Password")}</label>
+              <div className="password-input-wrapper">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 value={password}
                 placeholder={t("Password")}
                 onChange={(e) => setPassword(e.target.value)}
+                className="password-input"
               />
+              {password && (<button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="password-toggle-btn"
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
+        </button>)}
+        </div>
             </div>
             {error && <p className="error-message">{t(error)}</p>}
           </form>
@@ -205,6 +225,27 @@ function Login({ title, userType }) {
       </div>
       <style>
         {`
+        .password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  width: 100%;
+  padding-right: 40px; /* Space for the eye icon */
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+}
                 input:focus {
                     outline: none;
                 }

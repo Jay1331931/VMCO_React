@@ -5,6 +5,7 @@ import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
+import SearchableDropdown from "../../components/SearchableDropdown";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST ;
@@ -24,7 +25,7 @@ function FinancialInformation({
 }) {
   const { t,i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-
+  let currentLanguage = i18n.language;
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -55,8 +56,18 @@ function FinancialInformation({
   const [paymentMethods, setPaymentMethods] = useState(
     customerPaymentMethodsData?.methodDetails || {}
   );
+
+  // Example state for conditional fields
+    const [bankName, setBankName] = useState(
+      customerData?.bankName || ""
+    );
+  
+    useEffect(() => {
+      setBankName(customerData?.bankName || "");
+    }, [customerData?.bankName]);
+  
   // Dropdown state for pricingPolicy
-  const dropdownFields = ["pricingPolicy"];
+  const dropdownFields = ["pricingPolicy", "bankName"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
 
   useEffect(() => {
@@ -123,7 +134,7 @@ function FinancialInformation({
       )}
       {/* Bank Details Header */}
       <h3 className="form-header full-width">{t("Bank Details")}</h3>
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="bankName">
           {t("Bank Name")}
           <span className="required-field">*</span>
@@ -169,12 +180,124 @@ function FinancialInformation({
         {formErrors.bankName && (
           <div className="error">{t(formErrors.bankName)}</div>
         )}
-      </div>
+      </div> */}
+
+      {/* Type of Business Dropdown */}
+            <div className="form-group">
+              <label htmlFor="bankName">
+                {t("Bank Name")}
+                <span className="required-field">*</span>
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.bankName != bankName &&
+                  mode === "edit" && (
+                    <span className="update-badge">{t("Updated")}</span>
+                  )}
+              </label>
+              <SearchableDropdown
+                name="bankName"
+                options={(basicMasterLists?.bankName || []).map((item) => ({
+                  value: item.value,
+                  name: currentLanguage === "ar" ? item.valueLc : item.value,
+                }))}
+                value={bankName}
+                onChange={(e) => {
+                  onChangeCustomerData({
+                    target: { name: "bankName", value: e.target.value },
+                  });
+                }}
+                disabled={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.bankName ===
+                    customerData?.bankName &&
+                  mode === "edit" &&
+                  customerData?.customerStatus !== "pending"
+                }
+                className={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.bankName != bankName &&
+                  mode === "edit"
+                    ? "update-field"
+                    : ""
+                }
+                placeholder={t("Select")}
+              />
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.bankName != bankName &&
+                mode === "edit" && (
+                  <div className="current-value">
+                    Previous: {originalCustomerData?.bankName || "(empty)"}
+                  </div>
+                )}
+              {formErrors.bankName && (
+                <div className="error">{t(formErrors.bankName)}</div>
+              )}
+            </div>
+      
+            {/* Type of Business (Other) - Conditional */}
+            {bankName === "Others (Specify)" ? (
+              <div className="form-group">
+                <label htmlFor="bankNameOther">
+                  {t("Bank Name (Other)")}
+                  <span className="required-field">*</span>
+                  {originalCustomerData &&
+                    customerData &&
+                    originalCustomerData?.bankNameOther !=
+                      customerData?.bankNameOther &&
+                    mode === "edit" && (
+                      <span className="update-badge">{t("Updated")}</span>
+                    )}
+                </label>
+                <input
+                  type="text"
+                  id="bankNameOther"
+                  name="bankNameOther"
+                  className={`text-field small ${
+                    originalCustomerData &&
+                    customerData &&
+                    originalCustomerData?.bankNameOther !=
+                      customerData?.bankNameOther &&
+                    mode === "edit"
+                      ? "update-field"
+                      : ""
+                  }`}
+                  placeholder={t("Enter other bank name")}
+                  value={customerData?.bankNameOther || ""}
+                  onChange={onChangeCustomerData}
+                  disabled={
+                    originalCustomerData &&
+                    customerData &&
+                    originalCustomerData?.bankNameOther ===
+                      customerData?.bankNameOther &&
+                    mode === "edit" &&
+                    customerData?.customerStatus !== "pending"
+                  }
+                />
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.bankNameOther !=
+                    customerData?.bankNameOther &&
+                  mode === "edit" && (
+                    <div className="current-value">
+                      Previous:{" "}
+                      {originalCustomerData?.bankNameOther || "(empty)"}
+                    </div>
+                  )}
+                {formErrors.bankNameOther && (
+                  <div className="error">{t(formErrors.bankNameOther)}</div>
+                )}
+              </div>
+            ) : (
+              <div className="form-group"></div>
+            )}
 
       <div className="form-group">
         <label htmlFor="bankAccountNumber">
           {t("Account Number")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.bankAccountNumber !=

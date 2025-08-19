@@ -4,7 +4,7 @@ import "../i18n";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useNavigate, useLocation } from "react-router-dom";
-import { faLanguage } from "@fortawesome/free-solid-svg-icons";
+import { faLanguage, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import axios from "axios";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -28,6 +28,12 @@ function ForgotPassword() {
 
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const [showPassword, setShowPassword] = useState(false);
+  
+    const togglePasswordVisibility = () => {
+      setShowPassword(!showPassword);
+    };
+  
 
   // Get email from navigation state
   useEffect(() => {
@@ -370,23 +376,45 @@ function ForgotPassword() {
             </div>
             <div className="form-group">
               <label htmlFor="password">{t("New Password")}</label>
+              <div className="password-input-wrapper">
               <input
-                type="password"
+               type={showPassword ? "text" : "password"}
                 id="password"
                 value={newPassword}
                 placeholder={t("New Password")}
                 onChange={(e) => setNewPassword(e.target.value)}
+                className="password-input"
               />
+              {newPassword && (<button
+                        type="button"
+                        onClick={togglePasswordVisibility}
+                        className="password-toggle-btn"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
+                      </button>)}
+              </div>
             </div>
             <div className="form-group">
               <label htmlFor="confirmpassword">{t("Confirm Password")}</label>
+              <div className="password-input-wrapper">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="confirmpassword"
                 value={confirmPassword}
                 placeholder={t("Confirm Password")}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                className="password-input"
               />
+              {confirmPassword && (<button
+                        type="button"
+                        onClick={togglePasswordVisibility}
+                        className="password-toggle-btn"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
+                      </button>)}
+              </div>
             </div>
             {error && <p className="error-message">{t(error)}</p>}
           </form>
