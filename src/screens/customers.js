@@ -376,7 +376,7 @@ function Customers() {
                 eventName: "WELCOME_EMAIL",
                 emailData: {
                   to: inviteData.email,
-                  firstName: inviteData.name,
+                  customerName: inviteData.name,
                   lastName: "",
                   activationLink: res.data,
                 },
