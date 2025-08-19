@@ -66,13 +66,12 @@ const ActionButton = ({ menuItems = [] }) => {
         .action-menu {
           top: 100%;
           right: 0;
-          width: 160px;
-          min-width: 160px;
+          min-width: 200px;
           position: absolute;
           background-color: white;
           border: 1px solid #ccc;
           border-radius: 4px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
           z-index: 100;
         }
         [dir="rtl"] .action-menu {
@@ -81,6 +80,7 @@ const ActionButton = ({ menuItems = [] }) => {
         }
         .action-menu-item {
           padding: 12px 16px;
+          min-width: 100%;
           font-size: 1rem;
           cursor: pointer;
           font-size: 0.9rem;

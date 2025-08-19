@@ -6,6 +6,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLanguage,
   faCheckCircle,
+  faEye,
+  faEyeSlash
 } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -48,6 +50,12 @@ function CustomersOnboarding() {
   // Add loading states
   const [isOtpLoading, setIsOtpLoading] = useState(false);
   const [isVerifyLoading, setIsVerifyLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+    const togglePasswordVisibility = () => {
+      setShowPassword(!showPassword);
+    };
+  
 
   const toggleLanguage = () => {
     const newLang = isRTL ? "en" : "ar";
@@ -895,16 +903,27 @@ function CustomersOnboarding() {
 
                   {field.type === "password" && (
                     <>
+                    <div className="password-input-wrapper">
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         id={field.name}
                         name={field.name}
                         placeholder={field.placeholder}
                         value={formData[field.name]}
                         onChange={handleChange}
-                        className={errors[field.name] ? "error" : ""}
+                        // className={errors[field.name] ? "error" : ""}
+                        className="password-input"
                         disabled={isRegistered}
                       />
+                      {formData[field.name] && (<button
+                                type="button"
+                                onClick={togglePasswordVisibility}
+                                className="password-toggle-btn"
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                              >
+                                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
+                              </button>)}
+                      </div>
                       {errors[field.name] && (
                         <span className="error-message">
                           {errors[field.name]}

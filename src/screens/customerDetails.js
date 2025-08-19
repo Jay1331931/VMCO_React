@@ -779,7 +779,7 @@ function CustomerDetails() {
     // "brandLogo",
     // "brandNameEn",
     // "brandNameAr",
-    "buildingName",
+    // "buildingName",
     "street",
     "city",
     "district",
@@ -787,7 +787,7 @@ function CustomerDetails() {
     "pincode",
     "geolocation",
     "bankName",
-    "bankAccountNumber",
+    // "bankAccountNumber",
     "iban",
     "crCertificate",
     "vatCertificate",
@@ -812,7 +812,7 @@ function CustomerDetails() {
     // "nonTradingDocuments",
     // "interCompany",
     // "entity",
-    "zone",
+    // "zone",
     "primaryContactName",
     "primaryContactEmail",
     "primaryContactMobile",
@@ -846,7 +846,7 @@ function CustomerDetails() {
     // "brandLogo",
     // "brandNameEn",
     // "brandNameAr",
-    "buildingName",
+    // "buildingName",
     "street",
     "city",
     "district",
@@ -854,7 +854,7 @@ function CustomerDetails() {
     "pincode",
     "geolocation",
     "bankName",
-    "bankAccountNumber",
+    // "bankAccountNumber",
     "iban",
     "crCertificate",
     "vatCertificate",
@@ -902,6 +902,11 @@ function CustomerDetails() {
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
   };
+
+  const isEnglishText = (text) => {
+  return /^[\u0000-\u007F\u0080-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]+$/.test(text);
+};
+
   const validateData = async (
     dataToValidate,
     mandatoryCheckRequired = false,
@@ -909,6 +914,7 @@ function CustomerDetails() {
   ) => {
     const errors = {};
     const arabicList = ["companyNameAr", "brandNameAr"];
+    const englishList = ["companyNameEn", "brandNameEn"];
     const tradingDocumentList = [
       "acknowledgementSignature",
       "crCertificate",
@@ -1024,6 +1030,10 @@ function CustomerDetails() {
       const value = dataToValidate[field];
       if (arabicList.includes(field) && value && !isArabicText(value)) {
         errors[field] = "Please enter Arabic text.";
+      }
+
+      if(englishList.includes(field) && value && !isEnglishText(value)) {
+        errors[field] = "Please enter English text.";
       }
 
       if (field.toLowerCase().includes("email")) {
@@ -1192,6 +1202,13 @@ function CustomerDetails() {
         !dataToValidate?.typeOfBusinessOther
       ) {
         errors.typeOfBusinessOther = t("This field is required.");
+      }
+
+      if (
+        dataToValidate?.bankName?.toLowerCase() === "others (specify)" &&
+        !dataToValidate?.bankNameOther
+      ) {
+        errors.bankNameOther = t("This field is required.");
       }
     }
     return errors;
@@ -1556,7 +1573,7 @@ function CustomerDetails() {
     Swal.fire({
       icon: "success",
       title: t("Success"),
-      text: t("Customer data saved successfully."),
+      text: t("Your account is under review"),
       confirmButtonText: t("OK"),
     });
     // alert("Customer data saved successfully.");
@@ -1682,7 +1699,7 @@ function CustomerDetails() {
     Swal.fire({
       icon: "success",
       title: t("Success"),
-      text: t("Customer data saved successfully."),
+      text: t("Your account is under review"),
       confirmButtonText: t("OK"),
     }).then(() => {
       window.location.reload();
