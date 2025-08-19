@@ -2001,7 +2001,7 @@ class RbacManager {
           addImages: { visible: false, editable: false },
           products: { visible: true, editable: true },
           addProducts: { visible: true, editable: true },
-          sampleOrder: { visible: false, editable: false },
+          sampleOrder: { visible: true, editable: true },
           productIdCol: { visible: true, editable: false },
           quantityCol: { visible: true, editable: true },
           unitCol: { visible: true, editable: false },
