@@ -328,12 +328,12 @@ function Orders() {
   const orderMenuItems = [
     {
       key: "upload orders",
-      label: "Upload orders",
+      label: t("Upload orders"),
       onClick: () => HandleBulkOrderUpload(),
     },
     {
       key: "download orders",
-      label: "Download orders",
+      label: t("Download orders"),
       onClick: () => Swal.fire({
         title: t("Download Orders clicked"),
         text: t("Button clicked"),
@@ -634,10 +634,16 @@ function Orders() {
                     </p>
 
                     <div className="popup-buttons-row">
-                      <button className="download-btn" onClick={() => alert("Download the Excel")}>
+                      <button className="download-btn"
+                        onClick={() => alert("Download the Excel")}
+                        disabled={!selectedCustomer || !selectedBranch}
+                      >
                         📥 {t("Download Excel Template")}
                       </button>
-                      <button className="upload-btn" onClick={() => alert("Upload the Excel")}>
+                      <button className="upload-btn"
+                        onClick={() => alert("Upload the Excel")}
+                        disabled={!selectedCustomer || !selectedBranch}
+                        >
                         📤 {t("Upload Completed Excel File")}
                       </button>
                       {/* <input
