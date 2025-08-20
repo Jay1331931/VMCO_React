@@ -666,9 +666,12 @@
     "Errors": "أخطاء",
     "No customers found to export.": "لا توجد عملاء للتصدير.",
     "Download Customers": "تنزيل العملاء",
-    "No Data": "لا توجد بيانات"
-
-
-
-   
+    "No Data": "لا توجد بيانات",
+    "Machines & Accessories": "الآلات والإكسسوارات",
+    "Food Ingredients": "مكونات الطعام",
+    "Upload orders": "تحميل الطلبات",
+    "Download orders": "تنزيل الطلبات",
+    "Upload Orders Data": "تحميل بيانات الطلبات",
+    "Click to select company": "انقر لتحديد الشركة",
+    "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل طلبات متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل."
 }

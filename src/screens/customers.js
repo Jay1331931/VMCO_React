@@ -379,7 +379,7 @@ function Customers() {
                 eventName: "WELCOME_EMAIL",
                 emailData: {
                   to: inviteData.email,
-                  firstName: inviteData.name,
+                  customerName: inviteData.name,
                   lastName: "",
                   activationLink: res.data,
                 },
@@ -1154,42 +1154,6 @@ function Customers() {
   };
 
   const customerMenuItems = [
-    // {
-    //   key: "select customers",
-    //   label: "Select Customers",
-    //   onClick: () =>
-    //     Swal.fire({
-    //       title: "Feature Not Implemented",
-    //       text: "Select Customers functionality will be available soon.",
-    //       icon: "info",
-    //       confirmButtonText: "OK",
-    //       confirmButtonColor: "#3085d6",
-    //     }),
-    // },
-    // {
-    //   key: "add customers",
-    //   label: "Add Customers",
-    //   onClick: () =>
-    //     Swal.fire({
-    //       title: "Feature Not Implemented",
-    //       text: "Add Customers functionality will be available soon.",
-    //       icon: "info",
-    //       confirmButtonText: "OK",
-    //       confirmButtonColor: "#3085d6",
-    //     }),
-    // },
-    // {
-    //   key: "remove customers",
-    //   label: "Remove Customers",
-    //   onClick: () =>
-    //     Swal.fire({
-    //       title: "Feature Not Implemented",
-    //       text: "Remove Customers functionality will be available soon.",
-    //       icon: "info",
-    //       confirmButtonText: "OK",
-    //       confirmButtonColor: "#3085d6",
-    //     }),
-    // },
     {
       key: "download customers",
       label: t("Download Customers"),
@@ -1244,6 +1208,7 @@ const HandleFandOFailCustomer = async (customerId) => {
     );
 
     if (data?.success) {
+    fetchCustomers();
       Swal.fire({
         title: "Success",
         text: data.message,
