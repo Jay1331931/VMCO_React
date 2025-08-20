@@ -71,6 +71,7 @@ function Customers() {
   // const { token, user, isAuthenticated, logout } = useAuth();
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [regionOptions, setRegionOptions] = useState([]);
+  const [entityOptions, setEntityOptions] = useState([]);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -306,7 +307,8 @@ function Customers() {
       !inviteData.company ||
       !inviteData.mobile ||
       !inviteData.source ||
-      !inviteData.region
+      !inviteData.region ||
+      !inviteData.primaryBusinessUnit
     ) {
       Swal.fire({
         title: "Error",
@@ -333,6 +335,7 @@ function Customers() {
             region: inviteData.region,
             source: inviteData.source,
             employeeId: user?.employeeId,
+            primaryBusinessUnit: inviteData?.primaryBusinessUnit,
             // submissionDate: new Date(),
             comments: inviteData.comments || "",
             registered: false,
@@ -860,7 +863,7 @@ function Customers() {
   }, [activeTab, isApprovalMode, page, searchQuery]);
 
   useEffect(() => {
-    // getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    getOptionsFromBasicsMaster("entity").then(setEntityOptions);
     const fetchGeoData = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/geoLocation`,
@@ -1439,6 +1442,25 @@ const HandleFandOFailCustomer = async (customerId) => {
                       value={inviteData.region}
                       onChange={handleInputChange}
                       placeholder={t("Enter Region")}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group-1">
+                    <label
+                      style={{ marginBottom: "6px", display: "inline-block" }}
+                    >
+                      {t("Primary Business Unit")}
+                    </label>
+                    <SearchableDropdown
+                      name="primaryBusinessUnit"
+                      // options={basicMasterLists?.region || []}
+                      options={
+                        entityOptions
+                      }
+                      value={inviteData.primaryBusinessUnit}
+                      onChange={handleInputChange}
+                      placeholder={t("Enter Primary Business Unit")}
                       required
                     />
                   </div>

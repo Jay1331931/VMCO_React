@@ -1330,7 +1330,7 @@ table {
 
 /* First column will expand to fit the widest label */
 td.label-cell {
-  width: 50%;
+  width: 40%;
   white-space: nowrap;
   padding-right: 20px; /* Add some spacing between columns */
   vertical-align: top;
@@ -1802,6 +1802,55 @@ td.file-display-cell {
   border: 1px solid #ddd;
   background: white;
 }
+
+.input-with-verification {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.verification-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.verified-checkbox:checked {
+  accent-color: #4CAF50; /* Green color */
+  
+}
+/* OR for more customization: */
+/* .verified-checkbox {
+  width: 2px;
+  height: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.verified-checkbox:checked {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.verified-checkbox:checked::after {
+  content: "✓";
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+.verified-label {
+  cursor: pointer;
+} */
 
 @media (max-width: 768px) {
   .form-section h3 {
