@@ -17,6 +17,8 @@ function Documents({
   nonTradingFilesToUpload = {},
   customerData = {},
   originalCustomerData = {},
+  verifiedData = {},
+  onChangeVerifiedData,
   setTabsHeight,
   mode,
   formErrors = {},
@@ -308,7 +310,7 @@ function Documents({
           }}
         >
           <label htmlFor="acknowledgementSignature">
-            {t("Upload duly signed document")}
+            {t("Terms and Conditions")}
             <span className="required-field">*</span>
             {customerData?.acknowledgementSignature !==
               originalCustomerData?.acknowledgementSignature && mode === "edit" && (
@@ -319,6 +321,34 @@ function Documents({
             <div className="error">{t(formErrors.acknowledgementSignature)}</div>
           )}
         </td>
+        <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          { isV("acknowledgementSignatureVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="acknowledgementSignatureVerified"
+        name="acknowledgementSignatureVerified"
+        checked={verifiedData?.acknowledgementSignatureVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="acknowledgementSignatureVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
         <td
           className="upload-cell"
           style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }}
@@ -452,6 +482,34 @@ function Documents({
                 <div className="error">{t(formErrors.crCertificate)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("crCertificateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="crCertificateVerified"
+        name="crCertificateVerified"
+        checked={verifiedData?.crCertificateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="crCertificateVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -586,6 +644,34 @@ function Documents({
                 <div className="error">{t(formErrors.vatCertificate)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("vatCertificateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="vatCertificateVerified"
+        name="vatCertificateVerified"
+        checked={verifiedData?.vatCertificateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="vatCertificateVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -720,6 +806,34 @@ function Documents({
                 <div className="error">{t(formErrors.nationalId)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          { isV("nationalIdVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalIdVerified"
+        name="nationalIdVerified"
+        checked={verifiedData?.nationalIdVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalIdVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -847,6 +961,34 @@ function Documents({
                 <div className="error">{t(formErrors.bankLetter)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("bankLetterVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankLetterVerified"
+        name="bankLetterVerified"
+        checked={verifiedData?.bankLetterVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankLetterVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -974,6 +1116,34 @@ function Documents({
                 <div className="error">{t(formErrors.nationalAddress)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nationalAddressVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalAddressVerified"
+        name="nationalAddressVerified"
+        checked={verifiedData?.nationalAddressVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalAddressVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1107,6 +1277,34 @@ function Documents({
                 <div className="error">{t(formErrors.contractAgreement)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementVerified"
+        name="contractAgreementVerified"
+        checked={verifiedData?.contractAgreementVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1240,6 +1438,34 @@ function Documents({
                 <div className="error">{t(formErrors.creditApplication)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationVerified"
+        name="creditApplicationVerified"
+        checked={verifiedData?.creditApplicationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1375,6 +1601,34 @@ function Documents({
                 <div className="error">{t(formErrors.contractAgreement)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementVerified"
+        name="contractAgreementVerified"
+        checked={verifiedData?.contractAgreementVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1508,6 +1762,34 @@ function Documents({
                 <div className="error">{t(formErrors.creditApplication)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationVerified"
+        name="creditApplicationVerified"
+        checked={verifiedData?.creditApplicationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1639,6 +1921,34 @@ function Documents({
                 )}
               </label>
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nonTradingDocumentsVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nonTradingDocumentsVerified"
+        name="nonTradingDocumentsVerified"
+        checked={verifiedData?.nonTradingDocumentsVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nonTradingDocumentsVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{

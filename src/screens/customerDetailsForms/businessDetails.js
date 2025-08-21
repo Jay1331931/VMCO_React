@@ -13,14 +13,17 @@ import SearchableDropdown from "../../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST
- ;
-const CUSTOMER_APPROVAL_CHECKLIST =Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
 
 function BusinessDetails({
   customerData = {},
   originalCustomerData = {},
   onChangeCustomerData,
+  verifiedData = {},
+  onChangeVerifiedData,
   setEntityWiseAssignment,
   mode,
   setTabsHeight,
@@ -59,10 +62,11 @@ function BusinessDetails({
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
-        dropdownFields,token
+        dropdownFields,
+        token
       );
       const listOfEmployeesWithManagers =
-        await getOptionsFromEmployeesWithManager(customerData?.branch,token);
+        await getOptionsFromEmployeesWithManager(customerData?.branch, token);
 
       const listOfEmployees = await getOptionsFromEmployees(token);
 
@@ -153,10 +157,9 @@ function BusinessDetails({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ fileType, fileName }),
-          
         }
       );
       const res = await response.json();
@@ -188,31 +191,27 @@ function BusinessDetails({
               e.preventDefault();
               if (!CUSTOMER_APPROVAL_CHECKLIST_URL) {
                 Swal.fire({
-                  icon: 'error',
-                  title: t('Error'),
-                  text: t('No checklist URL configured.'),
-                  confirmButtonText: t('OK')
+                  icon: "error",
+                  title: t("Error"),
+                  text: t("No checklist URL configured."),
+                  confirmButtonText: t("OK"),
                 });
 
                 return;
               }
 
               try {
-                const response = await fetch(
-                  `${API_BASE_URL}/get-files`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
-                      containerType: "documents",
-                    }),
-                    
-                  }
-                );
+                const response = await fetch(`${API_BASE_URL}/get-files`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    fileName: CUSTOMER_APPROVAL_CHECKLIST,
+                    containerType: "documents",
+                  }),
+                });
                 const res = await response.json();
                 if (res.status === "Ok") {
                   window.open(res.data.url, "_blank", "noopener,noreferrer");
@@ -248,6 +247,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="companyType"
           options={(basicMasterLists?.companyType || []).map((item) => ({
@@ -277,6 +277,23 @@ function BusinessDetails({
           }
           placeholder={t("Select")}
         />
+        { isV("companyTypeVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="companyTypeVerified"
+        name="companyTypeVerified"
+        checked={verifiedData?.companyTypeVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="companyTypeVerified">Verified</label>
+    </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.companyType != customerData?.companyType &&
@@ -289,9 +306,9 @@ function BusinessDetails({
           <div className="error">{t(formErrors.companyType)}</div>
         )}
       </div>
-      
+
       {/* Company Name (English) */}
-      <div className="form-group">
+      {/* <div className="form-group">
         <label htmlFor="companyNameEn">
           {t("Company Name")}
           <span className="required-field">*</span>
@@ -340,6 +357,76 @@ function BusinessDetails({
         {formErrors.companyNameEn && (
           <div className="error">{t(formErrors.companyNameEn)}</div>
         )}
+      </div> */}
+
+      {/* Company Name (English) */}
+      <div className="form-group">
+  <label htmlFor="companyNameEn">
+    {t("Company Name")}
+    <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.companyNameEn !=
+        customerData?.companyNameEn &&
+      mode === "edit" && (
+        <span className="update-badge">{t("Updated")}</span>
+      )}
+  </label>
+  <div className="input-with-verification">
+    <input
+      type="text"
+      id="companyNameEn"
+      name="companyNameEn"
+      className={`text-field small ${
+        originalCustomerData &&
+        customerData &&
+        originalCustomerData?.companyNameEn !=
+          customerData?.companyNameEn &&
+        mode === "edit"
+          ? "update-field"
+          : ""
+      }`}
+      placeholder={t("Enter company name")}
+      value={customerData?.companyNameEn || ""}
+      onChange={onChangeCustomerData}
+      disabled={
+        originalCustomerData &&
+        customerData &&
+        originalCustomerData?.companyNameEn ===
+          customerData?.companyNameEn &&
+        mode === "edit" &&
+        customerData?.customerStatus !== "pending"
+      }
+      required
+    />
+    {isV("companyNameEnVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="companyNameEnVerified"
+        name="companyNameEnVerified"
+        checked={verifiedData?.companyNameEnVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="companyNameEnVerified">Verified</label>
+    </div>)}
+  </div>
+  {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.companyNameEn != customerData?.companyNameEn &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.companyNameEn || "(empty)"}
+      </div>
+    )}
+  {formErrors.companyNameEn && (
+    <div className="error">{t(formErrors.companyNameEn)}</div>
+  )}
       </div>
 
       {/* Company Name (Arabic) */}
@@ -355,6 +442,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="companyNameAr"
@@ -381,6 +469,23 @@ function BusinessDetails({
           }
           required
         />
+        { isV("companyNameArVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="companyNameArVerified"
+        name="companyNameArVerified"
+        checked={verifiedData?.companyNameArVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="companyNameArVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.companyNameAr != customerData?.companyNameAr &&
@@ -398,7 +503,10 @@ function BusinessDetails({
       <div className="form-group">
         <label htmlFor="crNumber">
           {t("Commercial Registration #")}
-          <span className="required-field">*</span>
+          {customerData?.companyType &&
+            customerData?.companyType.toLowerCase() === "trading" && (
+              <span className="required-field">*</span>
+            )}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.crNumber != customerData?.crNumber &&
@@ -406,6 +514,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="crNumber"
@@ -430,6 +539,23 @@ function BusinessDetails({
           }
           required
         />
+        {isV("crNumberVerified") &&   (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="crNumberVerified"
+        name="crNumberVerified"
+        checked={verifiedData?.crNumberVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="crNumberVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.crNumber != customerData?.crNumber &&
@@ -447,7 +573,10 @@ function BusinessDetails({
       <div className="form-group">
         <label htmlFor="vatNumber">
           {t("VAT Registration #")}
-          <span className="required-field">*</span>
+          {customerData?.companyType &&
+            customerData?.companyType.toLowerCase() === "trading" && (
+              <span className="required-field">*</span>
+            )}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.vatNumber != customerData?.vatNumber &&
@@ -455,6 +584,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="vatNumber"
@@ -479,6 +609,23 @@ function BusinessDetails({
           }
           required
         />
+        {isV("vatNumberVerified") &&   (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="vatNumberVerified"
+        name="vatNumberVerified"
+        checked={verifiedData?.vatNumberVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="vatNumberVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.vatNumber != customerData?.vatNumber &&
@@ -505,6 +652,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+         <div className="input-with-verification">
         <input
           type="text"
           id="governmentRegistrationNumber"
@@ -531,6 +679,24 @@ function BusinessDetails({
           }
           required
         />
+        {isV("governmentRegistrationNumberVerified") &&   (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="governmentRegistrationNumberVerified"
+        name="governmentRegistrationNumberVerified"
+        checked={verifiedData?.governmentRegistrationNumberVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="governmentRegistrationNumberVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.governmentRegistrationNumber !=
@@ -561,6 +727,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+         <div className="input-with-verification">
         <input
           type="text"
           id="baladeahLicenseNumber"
@@ -587,6 +754,24 @@ function BusinessDetails({
           }
           required
         />
+        { isV("baladeahLicenseNumberVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="baladeahLicenseNumberVerified"
+        name="baladeahLicenseNumberVerified"
+        checked={verifiedData?.baladeahLicenseNumberVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="baladeahLicenseNumberVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.baladeahLicenseNumber !=
@@ -602,7 +787,6 @@ function BusinessDetails({
         )}
       </div>
 
-      
       {/* Delivery Locations Dropdown */}
       <div className="form-group">
         <label htmlFor="deliveryLocations">
@@ -616,6 +800,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="deliveryLocations"
           options={(basicMasterLists?.deliveryLocations || []).map((item) => ({
@@ -648,6 +833,24 @@ function BusinessDetails({
           }
           placeholder={t("Select")}
         />
+        { isV("deliveryLocationsVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="deliveryLocationsVerified"
+        name="deliveryLocationsVerified"
+        checked={verifiedData?.deliveryLocationsVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="deliveryLocationsVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.deliveryLocations !=
@@ -673,6 +876,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="typeOfBusiness"
           options={(basicMasterLists?.typeOfBusiness || []).map((item) => ({
@@ -703,6 +907,24 @@ function BusinessDetails({
           }
           placeholder={t("Select")}
         />
+        { isV("typeOfBusinessVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="typeOfBusinessVerified"
+        name="typeOfBusinessVerified"
+        checked={verifiedData?.typeOfBusinessVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="typeOfBusinessVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.typeOfBusiness != typeOfBusiness &&
@@ -730,6 +952,7 @@ function BusinessDetails({
                 <span className="update-badge">{t("Updated")}</span>
               )}
           </label>
+          <div className="input-with-verification">
           <input
             type="text"
             id="typeOfBusinessOther"
@@ -755,6 +978,24 @@ function BusinessDetails({
               customerData?.customerStatus !== "pending"
             }
           />
+          {isV("typeOfBusinessOtherVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="typeOfBusinessOtherVerified"
+        name="typeOfBusinessOtherVerified"
+        checked={verifiedData?.typeOfBusinessOtherVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="typeOfBusinessOtherVerified">Verified</label>
+      </div>)}
+          </div>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.typeOfBusinessOther !=
@@ -784,6 +1025,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="brandNameEn"
@@ -807,6 +1049,24 @@ function BusinessDetails({
             customerData?.customerStatus !== "pending"
           }
         />
+        { isV("brandNameEnVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="brandNameEnVerified"
+        name="brandNameEnVerified"
+        checked={verifiedData?.brandNameEnVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="brandNameEnVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.brandNameEn != customerData?.brandNameEn &&
@@ -828,6 +1088,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="brandNameAr"
@@ -851,6 +1112,24 @@ function BusinessDetails({
             customerData?.customerStatus !== "pending"
           }
         />
+        {isV("brandNameArVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="brandNameArVerified"
+        name="brandNameArVerified"
+        checked={verifiedData?.brandNameArVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="brandNameArVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.brandNameAr != customerData?.brandNameAr &&
@@ -870,6 +1149,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="file"
           id="companyLogo"
@@ -893,6 +1173,24 @@ function BusinessDetails({
         >
           {t("Upload")}
         </button>
+        { isV("companyLogoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="companyLogoVerified"
+        name="companyLogoVerified"
+        checked={verifiedData?.companyLogoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="companyLogoVerified">Verified</label>
+      </div>)}
+        </div>
         {/* Show preview if file is selected but not saved */}
         {logoPreviews.companyLogo && (
           <div className="logo-preview">
@@ -973,6 +1271,7 @@ function BusinessDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="file"
           id="brandLogo"
@@ -996,6 +1295,24 @@ function BusinessDetails({
         >
           {t("Upload")}
         </button>
+        {isV("brandLogoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="brandLogoVerified"
+        name="brandLogoVerified"
+        checked={verifiedData?.brandLogoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="brandLogoVerified">Verified</label>
+      </div>)}
+        </div>
         {/* Show preview if file is selected but not saved */}
         {logoPreviews.brandLogo && (
           <div className="logo-preview">
@@ -1080,6 +1397,7 @@ function BusinessDetails({
                 <span className="update-badge">{t("Updated")}</span>
               )}
           </label>
+          <div className="input-with-verification">
           <input
             type="text"
             id="customerSource"
@@ -1106,6 +1424,24 @@ function BusinessDetails({
               true
             }
           />
+          {isV("customerSourceVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="customerSourceVerified"
+        name="customerSourceVerified"
+        checked={verifiedData?.customerSourceVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="customerSourceVerified">Verified</label>
+      </div>)}
+          </div>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.customerSource !=
@@ -1125,6 +1461,7 @@ function BusinessDetails({
           </h3>
           {isV("assignedToEntityWise") && (
             <div className="form-group">
+              <div className="input-with-verification">
               <label className="checkbox-group-label">
                 <input
                   type="checkbox"
@@ -1143,6 +1480,24 @@ function BusinessDetails({
                 />
                 {`\t ${t("Inter Company")}`}
               </label>
+              {isV("interCompanyVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="interCompanyVerified"
+        name="interCompanyVerified"
+        checked={verifiedData?.interCompanyVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="interCompanyVerified">Verified</label>
+      </div>)}
+              </div>
             </div>
           )}
 
@@ -1158,6 +1513,7 @@ function BusinessDetails({
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
+              <div className="input-with-verification">
               <select
                 id="entity"
                 name="entity"
@@ -1189,6 +1545,24 @@ function BusinessDetails({
                   </option>
                 ))}
               </select>
+              {isV("entityVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="entityVerified"
+        name="entityVerified"
+        checked={verifiedData?.entityVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="entityVerified">Verified</label>
+      </div>)}
+              </div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.entity != customerData?.entity &&
@@ -1202,6 +1576,88 @@ function BusinessDetails({
               )}
             </div>
           )}
+
+          {isV("assignedToEntityWise") && (
+            <div className="form-group">
+              <label htmlFor="primaryBusinessUnit">
+                {t("Primary Business Unit")}
+                <span className="required-field">*</span>
+                {originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.primaryBusinessUnit !=
+                    customerData?.primaryBusinessUnit &&
+                  mode === "edit" && (
+                    <span className="update-badge">{t("Updated")}</span>
+                  )}
+              </label>
+              <div className="input-with-verification">
+              <select
+                id="primaryBusinessUnit"
+                name="primaryBusinessUnit"
+                className={`dropdown ${
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.primaryBusinessUnit !=
+                    customerData?.primaryBusinessUnit &&
+                  mode === "edit"
+                    ? "update-field"
+                    : ""
+                }`}
+                value={customerData?.primaryBusinessUnit || ""}
+                onChange={onChangeCustomerData}
+                disabled={
+                  originalCustomerData &&
+                  customerData &&
+                  originalCustomerData?.primaryBusinessUnit ===
+                    customerData?.primaryBusinessUnit &&
+                  mode === "edit" &&
+                  customerData?.customerStatus !== "pending"
+                }
+                required
+              >
+                <option value="" disabled>
+                  {t("Select")}
+                </option>
+                {basicMasterLists?.entity?.map((loc) => (
+                  <option key={loc.value} value={loc.value}>
+                    {loc.value}
+                  </option>
+                ))}
+              </select>
+              {isV("primaryBusinessUnitVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="primaryBusinessUnitVerified"
+        name="primaryBusinessUnitVerified"
+        checked={verifiedData?.primaryBusinessUnitVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="primaryBusinessUnitVerified">Verified</label>
+      </div>)}
+              </div>
+              {originalCustomerData &&
+                customerData &&
+                originalCustomerData?.primaryBusinessUnit !=
+                  customerData?.primaryBusinessUnit &&
+                mode === "edit" && (
+                  <div className="current-value">
+                    Previous:{" "}
+                    {originalCustomerData?.primaryBusinessUnit || "(empty)"}
+                  </div>
+                )}
+              {formErrors.primaryBusinessUnit && (
+                <div className="error">{t(formErrors.primaryBusinessUnit)}</div>
+              )}
+            </div>
+          )}
+
           {/* VMCO Branch Assignment Header */}
           <h3 className="form-header full-width">{t("Branch Regions")}</h3>
           {/* branch dropdown */}
@@ -1217,6 +1673,7 @@ function BusinessDetails({
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
+              <div className="input-with-verification">
               <SearchableDropdown
                 name="branch"
                 options={(basicMasterLists?.branch || []).map((item) => ({
@@ -1247,6 +1704,24 @@ function BusinessDetails({
                 placeholder={t("Enter branch")}
                 required
               />
+              {isV("branchVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="branchVerified"
+        name="branchVerified"
+        checked={verifiedData?.branchVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="branchVerified">Verified</label>
+      </div>)}
+              </div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.branch != customerData?.branch &&
@@ -1278,6 +1753,7 @@ function BusinessDetails({
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
+              <div className="input-with-verification">
               <SearchableDropdown
                 name="assignedTo"
                 options={
@@ -1310,6 +1786,24 @@ function BusinessDetails({
                 placeholder={t("Select")}
                 required
               />
+              {isV("assignedToVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="assignedToVerified"
+        name="assignedToVerified"
+        checked={verifiedData?.assignedToVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="assignedToVerified">Verified</label>
+      </div>)}
+              </div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.assignedTo != customerData?.assignedTo &&

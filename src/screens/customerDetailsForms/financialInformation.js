@@ -16,6 +16,8 @@ function FinancialInformation({
   originalCustomerPaymentMethodsData = {},
   onChangeCustomerPaymentMethodsData,
   onChangeCustomerData,
+  verifiedData = {},
+  onChangeVerifiedData,
   setEntityWisePricePlan,
   setCustomerCreditChange,
   setIsDeliveryChargesApplicable,
@@ -194,6 +196,7 @@ function FinancialInformation({
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
+              <div className="input-with-verification">
               <SearchableDropdown
                 name="bankName"
                 options={(basicMasterLists?.bankName || []).map((item) => ({
@@ -224,6 +227,24 @@ function FinancialInformation({
                 }
                 placeholder={t("Select")}
               />
+              { isV("bankNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankNameVerified"
+        name="bankNameVerified"
+        checked={verifiedData?.bankNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankNameVerified">Verified</label>
+      </div>)}
+        </div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.bankName != bankName &&
@@ -251,6 +272,7 @@ function FinancialInformation({
                       <span className="update-badge">{t("Updated")}</span>
                     )}
                 </label>
+                <div className="input-with-verification">
                 <input
                   type="text"
                   id="bankNameOther"
@@ -276,6 +298,24 @@ function FinancialInformation({
                     customerData?.customerStatus !== "pending"
                   }
                 />
+                { isV("bankNameOtherVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankNameOtherVerified"
+        name="bankNameOtherVerified"
+        checked={verifiedData?.bankNameOtherVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankNameOtherVerified">Verified</label>
+      </div>)}
+      </div>
                 {originalCustomerData &&
                   customerData &&
                   originalCustomerData?.bankNameOther !=
@@ -306,6 +346,7 @@ function FinancialInformation({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="bankAccountNumber"
@@ -332,6 +373,24 @@ function FinancialInformation({
           }
           required
         />
+        { isV("bankAccountNumberVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankAccountNumberVerified"
+        name="bankAccountNumberVerified"
+        checked={verifiedData?.bankAccountNumberVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankAccountNumberVerified">Verified</label>
+      </div>)}
+      </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.bankAccountNumber !=
@@ -357,6 +416,7 @@ function FinancialInformation({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="iban"
@@ -381,6 +441,24 @@ function FinancialInformation({
           }
           required
         />
+        {isV("ibanVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="ibanVerified"
+        name="ibanVerified"
+        checked={verifiedData?.ibanVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="ibanVerified">Verified</label>
+      </div>)}
+      </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.iban != customerData?.iban &&
@@ -775,7 +853,7 @@ function FinancialInformation({
                   mode === "edit"
                 }
               />
-              {`\t ${t("Cash on Delivery (COD)")}`}
+              {`\t ${t("Cash on Delivery (COD) per Branch")}`}
               {paymentMethods?.COD?.isAllowed !==
                 originalCustomerPaymentMethodsData?.methodDetails?.COD
                   ?.isAllowed &&

@@ -31,6 +31,8 @@ function ContactDetails({
   originalCustomerContactsData = {},
   onChangeCustomerContactsData,
   onChangeCustomerData,
+  verifiedData = {},
+  onChangeVerifiedData,
   setGeoLocation,
   setBusinessHeadSameAsPrimary,
   mode,
@@ -576,6 +578,7 @@ function ContactDetails({
               customerContactsData?.primaryContactName &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="primaryContactName"
@@ -602,6 +605,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("primaryContactNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="primaryContactNameVerified"
+        name="primaryContactNameVerified"
+        checked={verifiedData?.primaryContactNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="primaryContactNameVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactName !=
@@ -627,6 +648,7 @@ function ContactDetails({
               customerContactsData?.primaryContactDesignation &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="primaryContactDesignation"
@@ -653,6 +675,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("primaryContactDesignationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="primaryContactDesignationVerified"
+        name="primaryContactDesignationVerified"
+        checked={verifiedData?.primaryContactDesignationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="primaryContactDesignationVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactDesignation !=
@@ -681,6 +721,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="primaryContactEmail"
@@ -708,6 +749,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("primaryContactEmailVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="primaryContactEmailVerified"
+        name="primaryContactEmailVerified"
+        checked={verifiedData?.primaryContactEmailVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="primaryContactEmailVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactEmail !=
@@ -784,7 +843,7 @@ function ContactDetails({
               customerContactsData?.primaryContactMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-
+<div className="input-with-verification">
         <PhoneInput
           international
           defaultCountry="SA" // Set your default country code
@@ -821,7 +880,24 @@ function ContactDetails({
           }
           required
         />
-
+        {isV("primaryContactMobileVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="primaryContactMobileVerified"
+        name="primaryContactMobileVerified"
+        checked={verifiedData?.primaryContactMobileVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="primaryContactMobileVerified">Verified</label>
+      </div>)}
+</div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactMobile !=
@@ -873,6 +949,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="businessHeadName"
@@ -899,6 +976,24 @@ function ContactDetails({
           }
           required
         />
+         {isV("businessHeadNameVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="businessHeadNameVerified"
+        name="businessHeadNameVerified"
+        checked={verifiedData?.businessHeadNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="businessHeadNameVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadName !=
@@ -926,6 +1021,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="businessHeadDesignation"
@@ -952,6 +1048,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("businessHeadDesignationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="businessHeadDesignationVerified"
+        name="businessHeadDesignationVerified"
+        checked={verifiedData?.businessHeadDesignationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="businessHeadDesignationVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadDesignation !=
@@ -980,6 +1094,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="businessHeadEmail"
@@ -1006,6 +1121,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("businessHeadEmailVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="businessHeadEmailVerified"
+        name="businessHeadEmailVerified"
+        checked={verifiedData?.businessHeadEmailVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="businessHeadEmailVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.businessHeadEmail !=
@@ -1084,7 +1217,7 @@ function ContactDetails({
               customerContactsData?.businessHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-
+<div className="input-with-verification">
         <PhoneInput
           international
           defaultCountry="SA" // Set your default country code
@@ -1121,6 +1254,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("businessHeadMobileVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="businessHeadMobileVerified"
+        name="businessHeadMobileVerified"
+        checked={verifiedData?.businessHeadMobileVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="businessHeadMobileVerified">Verified</label>
+      </div>)}
+        </div>
 
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1152,6 +1303,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="financeHeadName"
@@ -1178,6 +1330,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("financeHeadNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="financeHeadNameVerified"
+        name="financeHeadNameVerified"
+        checked={verifiedData?.financeHeadNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="financeHeadNameVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadName !=
@@ -1205,6 +1375,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="financeHeadDesignation"
@@ -1231,6 +1402,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("financeHeadDesignationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="financeHeadDesignationVerified"
+        name="financeHeadDesignationVerified"
+        checked={verifiedData?.financeHeadDesignationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="financeHeadDesignationVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadDesignation !=
@@ -1259,6 +1448,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="financeHeadEmail"
@@ -1285,6 +1475,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("financeHeadEmailVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="financeHeadEmailVerified"
+        name="financeHeadEmailVerified"
+        checked={verifiedData?.financeHeadEmailVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="financeHeadEmailVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadEmail !=
@@ -1363,7 +1571,7 @@ function ContactDetails({
               customerContactsData?.financeHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-
+<div className="input-with-verification">
         <PhoneInput
           international
           defaultCountry="SA" // Set your default country code
@@ -1400,7 +1608,24 @@ function ContactDetails({
           }
           required
         />
-
+{ isV("financeHeadMobileVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id=""
+        name="financeHeadMobileVerified"
+        checked={verifiedData?.financeHeadMobileVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="financeHeadMobileVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.financeHeadMobile !=
@@ -1430,6 +1655,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="purchasingHeadName"
@@ -1456,6 +1682,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("purchasingHeadNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="purchasingHeadNameVerified"
+        name="purchasingHeadNameVerified"
+        checked={verifiedData?.purchasingHeadNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="purchasingHeadNameVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadName !=
@@ -1483,6 +1727,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="purchasingHeadDesignation"
@@ -1509,6 +1754,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("purchasingHeadDesignationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="purchasingHeadDesignationVerified"
+        name="purchasingHeadDesignationVerified"
+        checked={verifiedData?.purchasingHeadDesignationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="purchasingHeadDesignationVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadDesignation !=
@@ -1537,6 +1800,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="purchasingHeadEmail"
@@ -1563,6 +1827,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("purchasingHeadEmailVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="purchasingHeadEmailVerified"
+        name="purchasingHeadEmailVerified"
+        checked={verifiedData?.purchasingHeadEmailVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="purchasingHeadEmailVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadEmail !=
@@ -1641,7 +1923,7 @@ function ContactDetails({
               customerContactsData?.purchasingHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-
+<div className="input-with-verification">
         <PhoneInput
           international
           defaultCountry="SA" // Set your default country code
@@ -1678,7 +1960,24 @@ function ContactDetails({
           }
           required
         />
-
+{ isV("purchasingHeadMobileVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="purchasingHeadMobileVerified"
+        name="purchasingHeadMobileVerified"
+        checked={verifiedData?.purchasingHeadMobileVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="purchasingHeadMobileVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.purchasingHeadMobile !=
@@ -1707,6 +2006,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="buildingName"
@@ -1731,6 +2031,24 @@ function ContactDetails({
           }
           required
         />
+        { isV("buildingNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="buildingNameVerified"
+        name="buildingNameVerified"
+        checked={verifiedData?.buildingNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="buildingNameVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.buildingName != customerData?.buildingName &&
@@ -1755,6 +2073,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="street"
@@ -1779,6 +2098,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("streetVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="streetVerified"
+        name="streetVerified"
+        checked={verifiedData?.streetVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="streetVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.street != customerData?.street &&
@@ -1803,6 +2140,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="region"
           // options={basicMasterLists?.region || []}
@@ -1837,6 +2175,24 @@ function ContactDetails({
           placeholder={t("Enter region")}
           required
         />
+        { isV("regionVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="regionVerified"
+        name="regionVerified"
+        checked={verifiedData?.regionVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="regionVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.region != customerData?.region &&
@@ -1862,6 +2218,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="city"
           options={getCityOptions()}
@@ -1886,6 +2243,24 @@ function ContactDetails({
           placeholder={t("Enter city")}
           required
         />
+        {isV("cityVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="cityVerified"
+        name="cityVerified"
+        checked={verifiedData?.cityVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="cityVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.city != customerData?.city &&
@@ -1908,6 +2283,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="district"
           options={getDistrictOptions()}
@@ -1932,6 +2308,24 @@ function ContactDetails({
           placeholder={t("Enter district")}
           required
         />
+        { isV("districtVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="districtVerified"
+        name="districtVerified"
+        checked={verifiedData?.districtVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="districtVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.district != customerData?.district &&
@@ -1957,6 +2351,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <SearchableDropdown
           name="zone"
           options={(basicMasterLists?.zone || []).map((item) => ({
@@ -1987,6 +2382,24 @@ function ContactDetails({
           placeholder={t("Enter zone")}
           required
         />
+        { isV("zoneVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="zoneVerified"
+        name="zoneVerified"
+        checked={verifiedData?.zoneVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="zoneVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.zone != customerData?.zone &&
@@ -2008,6 +2421,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="pincode"
@@ -2032,6 +2446,24 @@ function ContactDetails({
           }
           required
         />
+        {isV("pincodeVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="pincodeVerified"
+        name="pincodeVerified"
+        checked={verifiedData?.pincodeVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="pincodeVerified">Verified</label>
+      </div>)}
+        </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.pincode != customerData?.pincode &&
@@ -2056,6 +2488,7 @@ function ContactDetails({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <div className="location-input-container">
           <input
             name="geolocation"
@@ -2102,6 +2535,24 @@ function ContactDetails({
           >
             <FontAwesomeIcon icon={faLocationDot} />
           </button>
+        </div>
+        {isV("geolocationVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="geolocationVerified"
+        name="geolocationVerified"
+        checked={verifiedData?.geolocationVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="geolocationVerified">Verified</label>
+      </div>)}
         </div>
         {originalCustomerData &&
           customerData &&
