@@ -34,6 +34,7 @@ class RbacManager {
           action: { visible: true, editable: true },
           sendLink: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
+          FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -576,6 +577,7 @@ class RbacManager {
           actionMenu: { visible: true, editable: true },
           approvalButton: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -1064,6 +1066,7 @@ class RbacManager {
           addButton: { visible: false, editable: false },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -1530,6 +1533,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -1975,6 +1979,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -2419,6 +2424,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -2685,7 +2691,7 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
           finalSubmissionTab: { visible: true, editable: true },
               btnUploadExcel:{visible: false, editable: false},
-        },
+       },
       },
       supList: {
         fields: {
@@ -2886,6 +2892,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -3287,7 +3294,66 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
           finalSubmissionTab: { visible: true, editable: true },
            btnUploadExcel:{visible: false, editable: false},
-
+ companyNameArVerified: {visible: false, editable: false},
+              companyTypeVerified: {visible: false, editable: false},
+              companyNameEnVerified: {visible: false, editable: false},
+              crNumberVerified: {visible: false, editable: false},
+              vatNumberVerified: {visible: false, editable: false},
+              governmentRegistrationNumberVerified: {visible: false, editable: false},
+              baladeahLicenseNumberVerified: {visible: false, editable: false},
+              deliveryLocationsVerified: {visible: false, editable: false},
+              typeOfBusinessVerified: {visible: false, editable: false},
+              typeOfBusinessOtherVerified: {visible: false, editable: false},
+brandNameEnVerified: {visible: false, editable: false},
+brandNameArVerified: {visible: false, editable: false},
+companyLogoVerified: {visible: false, editable: false},
+brandLogoVerified: {visible: false, editable: false},
+customerSourceVerified: {visible: false, editable: false},
+interCompanyVerified: {visible: false, editable: false},
+entityVerified: {visible: false, editable: false},
+primaryBusinessUnitVerified: {visible: false, editable: false},
+branchVerified: {visible: false, editable: false},
+assignedToVerified: {visible: false, editable: false},
+primaryContactNameVerified: {visible: false, editable: false},
+primaryContactDesignationVerified: {visible: false, editable: false},
+primaryContactEmailVerified: {visible: false, editable: false},
+primaryContactMobileVerified: {visible: false, editable: false},
+businessHeadNameVerified: {visible: false, editable: false},
+businessHeadDesignationVerified: {visible: false, editable: false},
+businessHeadEmailVerified: {visible: false, editable: false},
+businessHeadMobileVerified: {visible: false, editable: false},
+financeHeadNameVerified: {visible: false, editable: false},
+financeHeadDesignationVerified: {visible: false, editable: false},
+financeHeadEmailVerified: {visible: false, editable: false},
+financeHeadMobileVerified: {visible: false, editable: false},
+purchasingHeadNameVerified: {visible: false, editable: false},
+purchasingHeadDesignationVerified: {visible: false, editable: false},
+purchasingHeadEmailVerified: {visible: false, editable: false},
+purchasingHeadMobileVerified: {visible: false, editable: false},
+buildingNameVerified: {visible: false, editable: false},
+streetVerified: {visible: false, editable: false},
+regionVerified: {visible: false, editable: false},
+cityVerified: {visible: false, editable: false},
+districtVerified: {visible: false, editable: false},
+zoneVerified: {visible: false, editable: false},
+pincodeVerified: {visible: false, editable: false},
+geolocationVerified: {visible: false, editable: false},
+bankNameVerified: {visible: false, editable: false},
+bankNameOtherVerified: {visible: false, editable: false},
+bankAccountNumberVerified: {visible: false, editable: false},
+ibanVerified: {visible: false, editable: false},
+acknowledgementSignatureVerified: {visible: false, editable: false},
+crCertificateVerified: {visible: false, editable: false},
+vatCertificateVerified: {visible: false, editable: false},
+nationalIdVerified: {visible: false, editable: false},
+bankLetterVerified: {visible: false, editable: false},
+nationalAddressVerified: {visible: false, editable: false},
+contractAgreementVerified: {visible: false, editable: false},
+creditApplicationVerified: {visible: false, editable: false},
+nonTradingDocumentsVerified: {visible: false, editable: false},
+declarationNameVerified: {visible: false, editable: false},
+confirmationDateVerified: {visible: false, editable: false},
+declarationSignatureVerified: {visible: false, editable: false},
         }
       },
       BankTransactions: {
@@ -3342,6 +3408,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -3795,6 +3862,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4075,6 +4143,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4499,6 +4568,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4923,6 +4993,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -5204,6 +5275,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -5473,6 +5545,7 @@ class RbacManager {
           addButton: { visible: false, editable: false },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: false },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {

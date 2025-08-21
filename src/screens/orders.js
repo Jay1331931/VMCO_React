@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import ActionButton from "../components/ActionButton";
 import ToggleButton from "../components/ToggleButton";
@@ -14,6 +14,8 @@ import Swal from "sweetalert2";
 import { formatDate } from "../utilities/dateFormatter";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
+import GetCustomers from "../components/GetCustomers";
+import GetBranches from "../components/GetBranches";
 import { or } from "ajv/dist/compile/codegen";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -46,6 +48,12 @@ function Orders() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, token } = useAuth();
+  const [bulkUploadPopUp, setBulkUploadPopUp] = useState(false);
+  const [showCustomerPopup, setShowCustomerPopup] = useState(false);
+  const [showBranchPopup, setShowBranchPopup] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const fileInputRef = useRef(null);
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -202,6 +210,7 @@ function Orders() {
     "orderList"
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleSearch = (searchTerm) => {
     setSearchQuery(searchTerm);
@@ -319,14 +328,18 @@ function Orders() {
   const orderMenuItems = [
     {
       key: "upload orders",
-      label: "Upload orders",
-      onClick: () =>
-        Swal.fire({
-          title: t("Upload orders"),
-          text: t("Upload orders clicked"),
-          icon: "info",
-          confirmButtonText: "OK",
-        })
+      label: t("Upload orders"),
+      onClick: () => HandleBulkOrderUpload(),
+    },
+    {
+      key: "download orders",
+      label: t("Download orders"),
+      onClick: () => Swal.fire({
+        title: t("Download Orders clicked"),
+        text: t("Button clicked"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+      })
     },
   ];
 
@@ -381,7 +394,8 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
-    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") }
+    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
+    { key: "orderSync",header: () => t("Sync"),include: isV("FandOSyncSO") }
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -457,6 +471,7 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Pay"), include: isV("action") },
+
   ];
 
   // Paginate the filtered orders
@@ -471,6 +486,76 @@ function Orders() {
   const paginatedOrders = Array.isArray(filteredOrders)
     ? filteredOrders.slice(0, pageSize)
     : [];
+
+  const HandleBulkOrderUpload = async () => {
+    setBulkUploadPopUp(true);
+
+  }
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Handle file upload
+      console.log("Selected file:", file);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setShowCustomerPopup(false);
+  };
+
+  const handleSelectBranch = (branch) => {
+    setSelectedBranch(branch);
+    setShowBranchPopup(false);
+  };
+
+  const onClose = () => {
+    setBulkUploadPopUp(false);
+    setSelectedCustomer(null);
+    setSelectedBranch(null);
+  };
+
+
+   const handleFandOFailSO = async (orderId) => {
+     try {
+       const { data } = await axios.get(
+         `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
+      
+         {
+           headers: { Authorization: `Bearer ${token}` },
+         }
+       );
+   
+       if (data?.success) {
+       fetchOrders();
+         Swal.fire({
+           title: "Success",
+           text: data.message,
+           icon: "success",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#3085d6",
+         });
+       } else {
+         Swal.fire({
+           title: "Error",
+           text: data.message || "Failed to Sync with FandO.",
+           icon: "error",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#dc3545",
+         });
+       }
+     } catch (error) {
+       console.error("Error handling FandO fail Sales Order:", error);
+       Swal.fire({
+         title: "Error",
+         text: error.message || "Failed to Sync with FandO.",
+         icon: "error",
+         confirmButtonText: "OK",
+         confirmButtonColor: "#dc3545",
+       });
+     }
+   };
 
   return (
     <Sidebar title={t("Orders")}>
@@ -507,6 +592,7 @@ function Orders() {
               getStatusClass={getStatusClass}
               onRowClick={handleRowClick}
               onPay={handlePay}
+              onsync={handleFandOFailSO}
             />
           )}
 
@@ -523,7 +609,130 @@ function Orders() {
             </div>
           )}
           {error && <div className="error">{error}</div>}
+          {bulkUploadPopUp && (
+            <div>
+              <div className="gp-backdrop" onClick={onClose} />
+              <div className="gp-modal">
+                <div className="gp-header">
+                  <span className="gp-title">{t("Upload Orders Data")}</span>
+                  <button className="gp-close-btn" onClick={onClose}>
+                    {t("Close")}
+                  </button>
+                </div>
+
+                {loading ? (
+                  <div style={{ padding: 24 }}><LoadingSpinner /></div>
+                ) : (
+                  <div style={{ padding: "0 28px 20px 28px" }}>
+                    <div className="customer-branch-names" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {isV('customerName') && (
+                        <div className="order-details-field">
+                          <label htmlFor="customerField">{t('Company Name')}</label>
+                          <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input style={{ width: '310px' }}
+                              id="customerField"
+                              name="selectedCustomer"
+                              onClick={() => setShowCustomerPopup(true)}
+                              className="customer-input"
+                              placeholder={t('Click to select company')}
+                              value={selectedCustomer ? selectedCustomer.companyNameEn : ''}
+                              disabled={!isE('customerName')}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {isV('branchName') && (
+                        <div className="order-details-field">
+                          <label>{t('Branch')}</label>
+                          <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <input style={{ width: '310px' }}
+                              id="branchField"
+                              name="selectedBranchName"
+                              onClick={() => {
+                                if (!selectedCustomer) {
+                                  Swal.fire({
+                                    icon: 'warning',
+                                    title: t('No Customer Selected'),
+                                    text: t('Please select a customer first'),
+                                    confirmButtonText: t('OK')
+                                  });
+                                  return;
+                                }
+                                if (isE('branchName')) setShowBranchPopup(true);
+                              }}
+                              className="customer-input"
+                              placeholder={t('Click to select branch')}
+                              value={selectedBranch ? selectedBranch.branchNameEn : ''}
+                              readOnly
+                              disabled={!isE('branchName')}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p style={{ marginTop: 20, marginBottom: 20 }}>
+                      {t("To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.")}
+                    </p>
+
+                    <div className="popup-buttons-row">
+                      <button className="download-btn"
+                        onClick={() => alert("Download the Excel")}
+                        disabled={!selectedCustomer || !selectedBranch}
+                      >
+                        📥 {t("Download Excel Template")}
+                      </button>
+                      <button className="upload-btn"
+                        onClick={() => alert("Upload the Excel")}
+                        disabled={!selectedCustomer || !selectedBranch}
+                        >
+                        📤 {t("Upload Completed Excel File")}
+                      </button>
+                      {/* <input
+                        type="file"
+                        ref={fileExcelInputRef}
+                        accept=".xlsx, .xls"
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                      /> */}
+                    </div>
+                  </div>
+                )}
+                {showCustomerPopup && (
+                  <GetCustomers
+                    open={showCustomerPopup}
+                    onClose={() => setShowCustomerPopup(false)}
+                    onSelectCustomer={handleSelectCustomer}
+                    API_BASE_URL={API_BASE_URL}
+                    t={t}
+                    apiEndpoint="/customers/pagination"
+                    apiParams={{
+                      page: 1,
+                      pageSize: 10,
+                      sortBy: 'id',
+                      sortOrder: 'asc',
+                      purpose: 'order creation'
+                    }}
+                  />
+                )}
+
+                {/* Branch Popup */}
+                {showBranchPopup && (
+                  <GetBranches
+                    open={showBranchPopup}
+                    onClose={() => setShowBranchPopup(false)}
+                    onSelectBranch={handleSelectBranch}
+                    customerId={selectedCustomer?.id}
+                    API_BASE_URL={API_BASE_URL}
+                    t={t}
+                  />
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
       )}
     </Sidebar>
   );

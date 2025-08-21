@@ -270,7 +270,8 @@
     "Price Plan": "خطة السعر",
     "Is delivery charges applicable": "هل تنطبق رسوم التوصيل",
     "Payment Methods": "طرق الدفع",
-    "Cash on Delivery (COD)": "الدفع عند التسليم (COD)",
+    "Cash on Delivery (COD) per Branch": "الدفع عند الاستلام (COD) لكل فرع",
+    "I hereby verify all customer information and declare that the details provided by the customer have been verified.": "أقوم بموجب هذا بالتحقق من جميع معلومات العميل وأعلن أن التفاصيل التي قدمها العميل قد تم التحقق منها.",
     "Credit Limit": "حد الائتمان",
     "Credit Period": "فترة الائتمان",
     "Zone": "المنطقة",
@@ -501,6 +502,7 @@
     "Click and drag to sign": "انقر واسحب للتوقيع",
     "Save Signature": "حفظ التوقيع",
     "Clear": "واضح",
+    "Terms and Conditions": "الشروط والأحكام",
     "Please fix the errors before saving.": "يرجى تصحيح الأخطاء قبل الحفظ.",
     "Error updating customer data.": "حدث خطأ أثناء تحديث بيانات العميل.",
     "This customer has already been registered.": "تم تسجيل هذا العميل بالفعل.",
@@ -664,9 +666,12 @@
     "Errors": "أخطاء",
     "No customers found to export.": "لا توجد عملاء للتصدير.",
     "Download Customers": "تنزيل العملاء",
-    "No Data": "لا توجد بيانات"
-
-
-
-   
+    "No Data": "لا توجد بيانات",
+    "Machines & Accessories": "الآلات والإكسسوارات",
+    "Food Ingredients": "مكونات الطعام",
+    "Upload orders": "تحميل الطلبات",
+    "Download orders": "تنزيل الطلبات",
+    "Upload Orders Data": "تحميل بيانات الطلبات",
+    "Click to select company": "انقر لتحديد الشركة",
+    "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل طلبات متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل."
 }

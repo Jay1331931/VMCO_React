@@ -11,6 +11,8 @@ const FinalSubmissionConfirmation = ({
   customerData = {},
   originalCustomerData = {},
   onChangeCustomerData,
+  verifiedData = {},
+  onChangeVerifiedData,
   formErrors = {},
   mode,
   signatureToUpload = {},
@@ -217,6 +219,7 @@ const FinalSubmissionConfirmation = ({
   }, []);
 
   return (
+    <>
     <div className="customer-onboarding-form-grid">
       <h3>{t("Final Submission")}</h3>
       <div className="form-header full-width">
@@ -229,6 +232,7 @@ const FinalSubmissionConfirmation = ({
           {t("Name")}
           <span className="required-field">*</span>
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="declarationName"
@@ -238,6 +242,24 @@ const FinalSubmissionConfirmation = ({
           required
           disabled={mode === "edit" || isE("declarationName")}
         />
+        {isV("declarationNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="declarationNameVerified"
+        name="declarationNameVerified"
+        checked={verifiedData?.declarationNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="declarationNameVerified">Verified</label>
+      </div>)}
+      </div>
         {formErrors?.declarationName && (
           <div className="error">{t(formErrors.declarationName)}</div>
         )}
@@ -245,6 +267,7 @@ const FinalSubmissionConfirmation = ({
 
       <div className="form-group">
         <label htmlFor="confirmationDate">{t("Date")}</label>
+        <div className="input-with-verification">
         <input
           type="date"
           id="confirmationDate"
@@ -259,6 +282,24 @@ const FinalSubmissionConfirmation = ({
           readOnly
           disabled
         />
+        {isV("confirmationDateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="confirmationDateVerified"
+        name="confirmationDateVerified"
+        checked={verifiedData?.confirmationDateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="confirmationDateVerified">Verified</label>
+      </div>)}
+      </div>
       </div>
 
       <div className="form-group">
@@ -434,13 +475,119 @@ const FinalSubmissionConfirmation = ({
               >
                 <FontAwesomeIcon icon={faTrash} />
               </button>
+              <div className="input-with-verification">
+              {isV("declarationSignatureVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="declarationSignatureVerified"
+        name="declarationSignatureVerified"
+        checked={verifiedData?.declarationSignatureVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="declarationSignatureVerified">Verified</label>
+      </div>)}
+            </div>
             </div>
           )}
         {formErrors?.declarationSignature && (
           <div className="error">{t(formErrors.declarationSignature)}</div>
         )}
       </div>
+
+      {isV("assignedToEntityWise") && (
+      <>
+      <div className="form-header full-width">
+        {t(
+          "I hereby verify all customer information and declare that the details provided by the customer have been verified."
+        )}
+      </div>
+      <div className="form-group">
+        <label htmlFor="confirmationName">
+          {t("Name")}
+          <span className="required-field">*</span>
+        </label>
+        <div className="input-with-verification">
+        <input
+          type="text"
+          id="verifiedBy"
+          name="verifiedBy"
+          value={customerData.verifiedBy || user?.userName}
+          onChange={onChangeCustomerData}
+          required
+          disabled={isE("declarationName")}
+        />
+        {/* {isV("declarationNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="declarationNameVerified"
+        name="declarationNameVerified"
+        checked={verifiedData?.declarationNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="declarationNameVerified">Verified</label>
+      </div>)} */}
+      </div>
+        {formErrors?.verifiedBy && (
+          <div className="error">{t(formErrors.verifiedBy)}</div>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirmationDate">{t("Date")}</label>
+        <div className="input-with-verification">
+        <input
+          type="date"
+          id="confirmationDate"
+          name="date"
+          value={
+            customerData?.verified
+              ? new Date(customerData.verified).toLocaleDateString(
+                  "en-CA"
+                )
+              : new Date().toLocaleDateString("en-CA")
+          }
+          readOnly
+          disabled
+        />
+        {/* {isV("confirmationDateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="confirmationDateVerified"
+        name="confirmationDateVerified"
+        checked={verifiedData?.confirmationDateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="confirmationDateVerified">Verified</label>
+      </div>)} */}
+      </div>
+      </div>
+
+      </>
+      )}
     </div>
+    
+    </>
   );
 };
 

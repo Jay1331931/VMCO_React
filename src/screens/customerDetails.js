@@ -412,6 +412,7 @@ function CustomerDetails() {
   const [customerPaymentMethodsData, setCustomerPaymentMethodsData] = useState(
     {}
   );
+  const [verifiedData, setVerifiedData] = useState({});
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
@@ -438,6 +439,7 @@ function CustomerDetails() {
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
   var updatedCustomerPaymentMethodsData = useRef({});
+  var updatedVerifiedData = useRef({});
   //TODO - set it appropriately based  workflow thingy - WF
   const [inApproval, setInApproval] = useState(true);
   const [originalCustomerData, setOriginalCustomerData] = useState(null); //WF
@@ -697,7 +699,11 @@ function CustomerDetails() {
       },
     };
   };
-
+const handleVerifiedDataChange = (e) => {
+    const { name } = e.target;
+    updatedVerifiedData.current[name] = e.target.checked;
+    setVerifiedData((prev) => ({ ...prev, [name]: e.target.checked }));
+  };
   const setGeoLocation = (location) => {
     updatedCustomerData.current.geolocation = location;
     setCustomerData((prev) => ({ ...prev, geolocation: location }));
@@ -879,6 +885,7 @@ function CustomerDetails() {
     // "nonTradingDocuments",
     // "interCompany",
     // "entity",
+    "primaryBusinessUnit",
     "zone",
     "primaryContactName",
     "primaryContactEmail",
@@ -955,7 +962,7 @@ function CustomerDetails() {
     );
     if (mandatoryCheckRequired) {
       mandatoryFields?.forEach((field) => {
-        if (field === "assignedToEntityWise") {
+        if (field === "assignedToEntityWise" || (field === "crNumber" && customerData?.companyType.toLowerCase() !== "trading") || (field === "vatNumber" && customerData?.companyType.toLowerCase() !== "trading")) {
           // Skip here, handle below
           return;
         }
@@ -1725,6 +1732,13 @@ function CustomerDetails() {
           wfCustomerData.customer.nonTradingDocuments
         );
       }
+      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
+        updatedCustomerData.current.verified = new Date().toLocaleDateString("en-CA");
+        updatedCustomerData.current.verifiedBy = user.userName;
+      }
+      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
+        updatedCustomerData.current.approved = new Date().toLocaleDateString("en-CA");
+      }
       const mergedData = {
         updates: {
           ...wfCustomerData,
@@ -2238,6 +2252,8 @@ function CustomerDetails() {
                     customerData={customerData}
                     originalCustomerData={originalCustomerData}
                     onChangeCustomerData={handleCustomerDataChange}
+                    verifiedData={verifiedData}
+                    onChangeVerifiedData={handleVerifiedDataChange}
                     setEntityWiseAssignment={setEntityWiseAssignment}
                     mode={mode}
                     setTabsHeight={setTabsHeight}
@@ -2256,6 +2272,8 @@ function CustomerDetails() {
                   onChangeCustomerContactsData={
                     handleCustomerContactsDataChange
                   }
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   setGeoLocation={setGeoLocation}
                   setBusinessHeadSameAsPrimary={setBusinessHeadSameAsPrimary}
                   mode={mode}
@@ -2276,6 +2294,8 @@ function CustomerDetails() {
                     onChangeCustomerPaymentMethodsData={
                       handleCustomerPaymentMethodsDataChange
                     }
+                    verifiedData={verifiedData}
+                    onChangeVerifiedData={handleVerifiedDataChange}
                     setEntityWisePricePlan={setEntityWisePricePlan}
                     setCustomerCreditChange={handleCustomerCreditChange}
                     setIsDeliveryChargesApplicable={
@@ -2293,6 +2313,8 @@ function CustomerDetails() {
                   nonTradingFilesToUpload={nonTradingFilesToUpload}
                   customerData={customerData}
                   originalCustomerData={originalCustomerData}
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
                   formErrors={formErrors}
@@ -2322,6 +2344,8 @@ function CustomerDetails() {
                 <FinalSubmissionConfirmation
                   customerData={customerData}
                   originalCustomerData={originalCustomerData}
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   onChangeCustomerData={handleCustomerDataChange}
                   formErrors={formErrors}
                   mode={mode}
@@ -2337,7 +2361,7 @@ function CustomerDetails() {
             >
               <span className="status-label">{t("Status")}:</span>
               <span className="status-badge">
-                {t(customerData.customerStatus) || t("Pending")}
+                {t(customerData?.customerStatus) || t("Pending")}
               </span>
             </div>
             {mode === "add" && inApproval && (
@@ -2428,8 +2452,9 @@ function CustomerDetails() {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking
+                        isUnblocking  || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
                       }
+                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
                     >
                       {isApproving ? t("Approving...") : t("Approve")}
                     </button>
@@ -2448,8 +2473,9 @@ function CustomerDetails() {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking
+                        isUnblocking || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
                       }
+                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
                     >
                       {isRejecting ? t("Rejecting...") : t("Reject")}
                     </button>
