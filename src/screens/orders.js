@@ -381,7 +381,8 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
-    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") }
+    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
+    { key: "orderSync",header: () => t("Sync"),include: isV("FandOSyncSO") }
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -457,6 +458,7 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Pay"), include: isV("action") },
+
   ];
 
   // Paginate the filtered orders
@@ -471,6 +473,46 @@ function Orders() {
   const paginatedOrders = Array.isArray(filteredOrders)
     ? filteredOrders.slice(0, pageSize)
     : [];
+
+   const handleFandOFailSO = async (orderId) => {
+     try {
+       const { data } = await axios.get(
+         `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
+      
+         {
+           headers: { Authorization: `Bearer ${token}` },
+         }
+       );
+   
+       if (data?.success) {
+       fetchOrders();
+         Swal.fire({
+           title: "Success",
+           text: data.message,
+           icon: "success",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#3085d6",
+         });
+       } else {
+         Swal.fire({
+           title: "Error",
+           text: data.message || "Failed to Sync with FandO.",
+           icon: "error",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#dc3545",
+         });
+       }
+     } catch (error) {
+       console.error("Error handling FandO fail Sales Order:", error);
+       Swal.fire({
+         title: "Error",
+         text: error.message || "Failed to Sync with FandO.",
+         icon: "error",
+         confirmButtonText: "OK",
+         confirmButtonColor: "#dc3545",
+       });
+     }
+   };
 
   return (
     <Sidebar title={t("Orders")}>
@@ -507,6 +549,7 @@ function Orders() {
               getStatusClass={getStatusClass}
               onRowClick={handleRowClick}
               onPay={handlePay}
+              onsync={handleFandOFailSO}
             />
           )}
 

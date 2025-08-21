@@ -34,6 +34,7 @@ class RbacManager {
           action: { visible: true, editable: true },
           sendLink: { visible: true, editable: true },
           orderBy: { visible: true, editable: true },
+          FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -576,6 +577,7 @@ class RbacManager {
           actionMenu: { visible: true, editable: true },
           approvalButton: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -1064,6 +1066,7 @@ class RbacManager {
           addButton: { visible: false, editable: false },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -1530,6 +1533,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -1975,6 +1979,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: true, editable: true}
         },
       },
       orderDetailAdd: {
@@ -2419,6 +2424,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+           FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -2886,6 +2892,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -3342,6 +3349,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -3795,6 +3803,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4075,6 +4084,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4499,6 +4509,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -4923,6 +4934,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -5204,6 +5216,7 @@ class RbacManager {
           addButton: { visible: true, editable: true },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
@@ -5473,6 +5486,7 @@ class RbacManager {
           addButton: { visible: false, editable: false },
           actionMenu: { visible: false, editable: false },
           orderBy: { visible: true, editable: false },
+            FandOSyncSO:{visible: false, editable: false}
         },
       },
       orderDetailAdd: {
