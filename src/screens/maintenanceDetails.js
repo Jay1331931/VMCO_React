@@ -1113,19 +1113,17 @@ function MaintenanceDetails() {
 
 
 
-  const handleSerialNumberChange = (e) => {
-    const value = e.target.value;
-    setTicket((prev) => ({ ...prev, machineSerialNumber: value }));
+  const handleSerialNumberChange =async (SNo) => {
+  
+    // setTicket((prev) => ({ ...prev, machineSerialNumber: SNo }));
     // Clear any existing timeout
-    if (serialNumberDebounceRef.current) {
-      clearTimeout(serialNumberDebounceRef.current);
-    }
+   
 
     // Set new timeout
-    serialNumberDebounceRef.current = setTimeout(async () => {
+   
       try {
         const { data } = await axios.get(
-          `${API_BASE_URL}/warranty-end-date/C-000002/${value}`,
+          `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -1143,7 +1141,7 @@ function MaintenanceDetails() {
       } catch (error) {
         console.error("Error handling serial number change:", error);
       }
-    }, 500);
+   
   };
 
 
@@ -1239,11 +1237,22 @@ function MaintenanceDetails() {
                 <input
                   id='machineSerialNumber'
                   name='machineSerialNumber'
-                  onChange={handleSerialNumberChange}
+                  // onChange={handleSerialNumberChange}
+                  onChange={(e) => setTicket((prev) => ({ ...prev, machineSerialNumber: e.target.value }))}
                   value={ticket.machineSerialNumber || ""}
                   disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
-              </div>
+        {!ticket?.warrantyEndDate && (
+      <button
+        type="button"
+        className="machine-button"
+        disabled={!ticket.machineSerialNumber}
+        onClick={()=>handleSerialNumberChange(ticket.machineSerialNumber)}
+      >
+        {t("Get Warranty End Date")}
+      </button>
+    )}
+               </div>
             )}
             {isV('warrantyEndDate') && (
               <div className='maintenance-details-field'>
@@ -1568,6 +1577,21 @@ function MaintenanceDetails() {
 .upload-loading .loading-spinner-outer {
   background: transparent;
   margin-bottom: 0;
+  
+}
+.machine-button {
+  padding: 8px 14px;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #2563eb; /* blue */
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
 }`
         }
       </style>
