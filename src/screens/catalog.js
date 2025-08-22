@@ -719,7 +719,7 @@ function Catalog() {
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
             raw: branch,
-            disabled: !isApproved,
+            disabled: !isApproved || !branch.erpBranchId,
           };
         });
         setBranches(branchOptions);

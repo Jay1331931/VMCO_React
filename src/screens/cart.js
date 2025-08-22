@@ -820,7 +820,7 @@ function Cart() {
             });
             return;
         }
-        if ((selectedBranchStatus || '').toLowerCase() !== 'approved') {
+        if ((selectedBranchStatus || '').toLowerCase() !== 'approved' || !selectedBranchErpId) {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
