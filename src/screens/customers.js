@@ -72,6 +72,7 @@ function Customers() {
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [regionOptions, setRegionOptions] = useState([]);
   const [entityOptions, setEntityOptions] = useState([]);
+    const [syncLoading, setSyncLoading] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -1176,6 +1177,7 @@ function Customers() {
             customCellRenderer={customCellRenderer}
             onRowClick={handleRowClick}
             onPay={HandleFandOFailCustomer}
+            syncLoading={syncLoading}
           />
         );
       case t("invites"):
@@ -1198,6 +1200,7 @@ function Customers() {
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
 const HandleFandOFailCustomer = async (customerId) => {
+  setSyncLoading(true);
   try {
     const { data } = await axios.post(
       `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
@@ -1234,6 +1237,8 @@ const HandleFandOFailCustomer = async (customerId) => {
       confirmButtonText: "OK",
       confirmButtonColor: "#dc3545",
     });
+  } finally {
+    setSyncLoading(false);
   }
 };
 

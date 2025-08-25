@@ -11,7 +11,8 @@ const Table = ({
     customCellRenderer,
     onRowClick,
     onPay,
-    onsync
+    onsync,
+    syncLoading
 }) => {
     const { t } = useTranslation();
  const isDateString = (val) => {
@@ -73,8 +74,9 @@ const Table = ({
                         e.stopPropagation();
                         onPay(item.id);
                     }}
+                    disabled={syncLoading}
                 >
-                    {t('F&O Sync')} 
+                {syncLoading ? t('Syncing...') :t("F&O Sync")}
                 </button>
             );
         }
@@ -138,13 +140,14 @@ if (
     return (
       <button
         className="action-button pay"
+         disabled={syncLoading}
         onClick={(e) => {
           e.stopPropagation();
           console.log("item", item);
           onsync(item.id);
         }}
       >
-        {t("F&O Sync")}
+         {syncLoading ? t('Syncing...') :t("F&O Sync")}
       </button>
     );
   }

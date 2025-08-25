@@ -54,6 +54,7 @@ function Orders() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const fileInputRef = useRef(null);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -518,6 +519,7 @@ function Orders() {
 
 
    const handleFandOFailSO = async (orderId) => {
+    setSyncLoading(true);
      try {
        const { data } = await axios.get(
          `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
@@ -528,6 +530,7 @@ function Orders() {
        );
    
        if (data?.success) {
+        setSyncLoading(false);
        fetchOrders();
          Swal.fire({
            title: "Success",
@@ -537,6 +540,7 @@ function Orders() {
            confirmButtonColor: "#3085d6",
          });
        } else {
+              setSyncLoading(false);
          Swal.fire({
            title: "Error",
            text: data.message || "Failed to Sync with FandO.",
@@ -546,6 +550,7 @@ function Orders() {
          });
        }
      } catch (error) {
+        setSyncLoading(false);
        console.error("Error handling FandO fail Sales Order:", error);
        Swal.fire({
          title: "Error",
@@ -593,6 +598,7 @@ function Orders() {
               onRowClick={handleRowClick}
               onPay={handlePay}
               onsync={handleFandOFailSO}
+              syncLoading={syncLoading}
             />
           )}
 
