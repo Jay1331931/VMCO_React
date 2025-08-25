@@ -359,6 +359,16 @@ const documentFields = [
   "nationalAddress",
   "contractAgreement",
   "creditApplication",
+  "contractAgreementShc",
+  "contractAgreementVmco",
+  "contractAgreementDar",
+  "contractAgreementGmtc",
+  "contractAgreementNaqi",
+  "creditApplicationShc",
+  "creditApplicationNaqi",
+  "creditApplicationVmco",
+  "creditApplicationDar",
+  "creditApplicationGmtc"
 ];
 
 // Helper to count updated document fields (excluding nonTradingDocuments)
@@ -505,11 +515,10 @@ function CustomerDetails() {
       let isUnderApproval = false;
       // Check if the customer is under approval
       isUnderApproval = await checkInApproval(customerId, "customer", token);
-      if (!isUnderApproval) {
-        isUnderApproval = await checkInApproval(customerId, "branch", token);
-      }
+      // if (!isUnderApproval) {
+      //   isUnderApproval = await checkInApproval(customerId, "branch", token);
+      // }
       // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
-      setInApproval(isUnderApproval);
       var temp;
       if (isUnderApproval) {
         //WF
@@ -528,6 +537,7 @@ function CustomerDetails() {
       } else if (workflowInstanceId) {
         await fetchWorkflowDataOfCustomer(workflowInstanceId);
       }
+      setInApproval(isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false));
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
       setOriginalCustomerData(resp);
       const conRes = await fetchCurrentDataOfCustomerContacts(
@@ -535,7 +545,7 @@ function CustomerDetails() {
         token
       );
       setCustomerContactsData(
-        isUnderApproval ? { ...conRes, ...temp?.contacts } : conRes
+        isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false) ? { ...conRes, ...temp?.contacts } : conRes
       );
       setOriginalCustomerContactsData(conRes);
       const paymentMethodsRes = await fetchCurrentPaymentMetods(
@@ -802,9 +812,9 @@ const handleVerifiedDataChange = (e) => {
     "nationalAddress",
     "customerSource",
     "acknowledgementSignature",
-    "contractAgreement",
+    // "contractAgreement",
     // "customerContract",
-    "creditApplication",
+    // "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -869,9 +879,9 @@ const handleVerifiedDataChange = (e) => {
     "nationalAddress",
     "customerSource",
     "acknowledgementSignature",
-    "contractAgreement",
+    // "contractAgreement",
     // "customerContract",
-    "creditApplication",
+    // "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -951,9 +961,9 @@ const handleVerifiedDataChange = (e) => {
 
     const uniqueContactFieldsList = [
       { name: "primaryContactEmail", field: "email" },
-      { name: "businessHeadEmail", field: "email" },
-      { name: "financeHeadEmail", field: "email" },
-      { name: "purchasingHeadEmail", field: "email" },
+      // { name: "businessHeadEmail", field: "email" },
+      // { name: "financeHeadEmail", field: "email" },
+      // { name: "purchasingHeadEmail", field: "email" },
     ];
     // If mandatoryCheckReguired is true, check all mandatory fields
     console.log(
@@ -1184,26 +1194,78 @@ const handleVerifiedDataChange = (e) => {
         }
       }
 
-      if (uniqueFieldsList.includes(field)) {
+      // if (uniqueFieldsList.includes(field)) {
+      //   const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+
+      //     body: JSON.stringify({ customerId, field, value }),
+      //   });
+      //   if (res.ok) {
+      //     const data = await res.json();
+      //     if (data.data.isUnique) {
+      //       // Field is valid
+      //     } else {
+      //       errors[field] = t("This number is registered.");
+      //     }
+      //   }
+      // }
+// In your frontend validation function, modify the uniqueFieldsList check:
+
+if (uniqueFieldsList.includes(field)) {
+    // Special handling for VAT and CR numbers
+    if (field === 'vatNumber' || field === 'crNumber') {
+        const additionalData = {
+            vatNumber: field === 'crNumber' ? dataToValidate.vatNumber : value,
+            crNumber: field === 'vatNumber' ? dataToValidate.crNumber : value
+        };
+
         const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({ customerId, field, value }),
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ 
+                customerId, 
+                field, 
+                value,
+                additionalData 
+            }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.data.isUnique) {
-            // Field is valid
-          } else {
-            errors[field] = t("This number is registered.");
-          }
-        }
-      }
 
+        if (res.ok) {
+            const data = await res.json();
+            if (data.data.isUnique) {
+                // Field combination is valid
+            } else {
+                errors[field] = t("Combination of VAT & CR no is already registered.");
+            }
+        }
+    } else {
+        // Original logic for other unique fields
+        const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ customerId, field, value }),
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.data.isUnique) {
+                // Field is valid
+            } else {
+                errors[field] = t("This number is registered.");
+            }
+        }
+    }
+}
       if (
         dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" &&
         !dataToValidate?.typeOfBusinessOther
@@ -1226,11 +1288,18 @@ const handleVerifiedDataChange = (e) => {
       if (!fileData) {
         throw new Error("No file data provided");
       }
+    const fileToUpload = fieldName === "nonTradingDocuments" 
+      ? new File([fileData], fileData.originalname, {
+          type: fileData.type,
+          lastModified: fileData.lastModified
+        })
+      : fileData;
 
-      const formData = new FormData();
-      formData.append("file", fileData);
-      formData.append("fileType", fieldName);
-
+    const formData = new FormData();
+    formData.append("file", fileToUpload);
+    formData.append("fileType", fieldName);
+    
+      
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
         headers: {

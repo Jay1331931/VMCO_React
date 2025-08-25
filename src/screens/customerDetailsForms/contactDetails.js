@@ -443,13 +443,15 @@ function ContactDetails({
   const getCityOptions = useCallback(() => {
     if (!selectedRegion || !geoData || !geoData[selectedRegion]?.cities)
       return [];
-    return Object.keys(geoData[selectedRegion].cities).map((city) => ({
-      value: city,
-      name:
-        i18n.language === "ar"
-          ? geoData[selectedRegion].cities[city].ar
-          : geoData[selectedRegion].cities[city].en,
-    }));
+    return Object.keys(geoData[selectedRegion].cities)
+      .map((city) => ({
+        value: city,
+        name:
+          i18n.language === "ar"
+            ? geoData[selectedRegion].cities[city].ar
+            : geoData[selectedRegion].cities[city].en,
+      }))
+      .reverse();
   }, [selectedRegion, geoData]);
 
   // Get districts based on selected city
@@ -470,15 +472,17 @@ function ContactDetails({
       return [];
     }
 
-    return Object.keys(
-      geoData[selectedRegion].cities[selectedCity].districts
-    ).map((district) => ({
-      value: district,
-      name:
-        i18n.language === "ar"
-          ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
-          : geoData[selectedRegion].cities[selectedCity].districts[district].en,
-    }));
+    return Object.keys(geoData[selectedRegion].cities[selectedCity].districts)
+      .map((district) => ({
+        value: district,
+        name:
+          i18n.language === "ar"
+            ? geoData[selectedRegion].cities[selectedCity].districts[district]
+                .ar
+            : geoData[selectedRegion].cities[selectedCity].districts[district]
+                .en,
+      }))
+      .reverse();
   }, [selectedRegion, selectedCity, geoData]);
   // Handle region selection
   const handleRegionChange = (e) => {
@@ -579,49 +583,52 @@ function ContactDetails({
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="primaryContactName"
-          name="primaryContactName"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactName !=
-              customerContactsData?.primaryContactName &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter name")}
-          value={customerContactsData?.primaryContactName || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactName ===
-              customerContactsData?.primaryContactName &&
+          <input
+            type="text"
+            id="primaryContactName"
+            name="primaryContactName"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactName !=
+                customerContactsData?.primaryContactName &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter name")}
+            value={customerContactsData?.primaryContactName || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactName ===
+                customerContactsData?.primaryContactName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("primaryContactNameVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("primaryContactNameVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="primaryContactNameVerified"
-        name="primaryContactNameVerified"
-        checked={verifiedData?.primaryContactNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="primaryContactNameVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="primaryContactNameVerified"
+                  name="primaryContactNameVerified"
+                  checked={verifiedData?.primaryContactNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="primaryContactNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -649,49 +656,56 @@ function ContactDetails({
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="primaryContactDesignation"
-          name="primaryContactDesignation"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactDesignation !=
-              customerContactsData?.primaryContactDesignation &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter designation")}
-          value={customerContactsData?.primaryContactDesignation || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactDesignation ===
-              customerContactsData?.primaryContactDesignation &&
+          <input
+            type="text"
+            id="primaryContactDesignation"
+            name="primaryContactDesignation"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactDesignation !=
+                customerContactsData?.primaryContactDesignation &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter designation")}
+            value={customerContactsData?.primaryContactDesignation || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactDesignation ===
+                customerContactsData?.primaryContactDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("primaryContactDesignationVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("primaryContactDesignationVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="primaryContactDesignationVerified"
-        name="primaryContactDesignationVerified"
-        checked={verifiedData?.primaryContactDesignationVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="primaryContactDesignationVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="primaryContactDesignationVerified"
+                  name="primaryContactDesignationVerified"
+                  checked={
+                    verifiedData?.primaryContactDesignationVerified || false
+                  }
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="primaryContactDesignationVerified">
+                  Verified
+                </label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -722,50 +736,53 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="primaryContactEmail"
-          name="primaryContactEmail"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactEmail !=
-              customerContactsData?.primaryContactEmail &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter email")}
-          value={customerContactsData?.primaryContactEmail || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            (originalCustomerContactsData &&
+          <input
+            type="text"
+            id="primaryContactEmail"
+            name="primaryContactEmail"
+            className={`text-field small ${
+              originalCustomerContactsData &&
               customerContactsData &&
-              originalCustomerContactsData?.primaryContactEmail ===
+              originalCustomerContactsData?.primaryContactEmail !=
                 customerContactsData?.primaryContactEmail &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending") ||
-            true
-          }
-          required
-        />
-        {isV("primaryContactEmailVerified") &&  (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="primaryContactEmailVerified"
-        name="primaryContactEmailVerified"
-        checked={verifiedData?.primaryContactEmailVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="primaryContactEmailVerified">Verified</label>
-      </div>)}
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter email")}
+            value={customerContactsData?.primaryContactEmail || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              (originalCustomerContactsData &&
+                customerContactsData &&
+                originalCustomerContactsData?.primaryContactEmail ===
+                  customerContactsData?.primaryContactEmail &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              true
+            }
+            required
+          />
+          {isV("primaryContactEmailVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="primaryContactEmailVerified"
+                  name="primaryContactEmailVerified"
+                  checked={verifiedData?.primaryContactEmailVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="primaryContactEmailVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -843,61 +860,65 @@ function ContactDetails({
               customerContactsData?.primaryContactMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-<div className="input-with-verification">
-        <PhoneInput
-          international
-          defaultCountry="SA" // Set your default country code
-          id="primaryContactMobile"
-          name="primaryContactMobile"
-          className={`phone-input ${
-            // Use a specific class for phone input
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactMobile !=
-              customerContactsData?.primaryContactMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.primaryContactMobile || ""}
-          onChange={(value) => {
-            // Handle the phone number change
-            onChangeCustomerContactsData({
-              target: {
-                name: "primaryContactMobile",
-                value: value,
-              },
-            });
-          }}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.primaryContactMobile ===
-              customerContactsData?.primaryContactMobile &&
+        <div className="input-with-verification">
+          <PhoneInput
+            international
+            defaultCountry="SA" // Set your default country code
+            countryCallingCodeEditable={false}
+            id="primaryContactMobile"
+            name="primaryContactMobile"
+            className={`phone-input ${
+              // Use a specific class for phone input
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactMobile !=
+                customerContactsData?.primaryContactMobile &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter Mobile number")}
+            value={customerContactsData?.primaryContactMobile || ""}
+            onChange={(value) => {
+              // Handle the phone number change
+              onChangeCustomerContactsData({
+                target: {
+                  name: "primaryContactMobile",
+                  value: value,
+                },
+              });
+            }}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactMobile ===
+                customerContactsData?.primaryContactMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("primaryContactMobileVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("primaryContactMobileVerified") &&  (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="primaryContactMobileVerified"
-        name="primaryContactMobileVerified"
-        checked={verifiedData?.primaryContactMobileVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="primaryContactMobileVerified">Verified</label>
-      </div>)}
-</div>
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="primaryContactMobileVerified"
+                  name="primaryContactMobileVerified"
+                  checked={verifiedData?.primaryContactMobileVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="primaryContactMobileVerified">Verified</label>
+              </div>
+            )}
+        </div>
         {originalCustomerContactsData &&
           customerContactsData &&
           originalCustomerContactsData?.primaryContactMobile !=
@@ -950,49 +971,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="businessHeadName"
-          name="businessHeadName"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadName !=
-              customerContactsData?.businessHeadName &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter name")}
-          value={customerContactsData?.businessHeadName || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadName ===
-              customerContactsData?.businessHeadName &&
+          <input
+            type="text"
+            id="businessHeadName"
+            name="businessHeadName"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadName !=
+                customerContactsData?.businessHeadName &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter name")}
+            value={customerContactsData?.businessHeadName || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadName ===
+                customerContactsData?.businessHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("businessHeadNameVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-         {isV("businessHeadNameVerified") &&  (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="businessHeadNameVerified"
-        name="businessHeadNameVerified"
-        checked={verifiedData?.businessHeadNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="businessHeadNameVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="businessHeadNameVerified"
+                  name="businessHeadNameVerified"
+                  checked={verifiedData?.businessHeadNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="businessHeadNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1022,49 +1046,56 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="businessHeadDesignation"
-          name="businessHeadDesignation"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadDesignation !=
-              customerContactsData?.businessHeadDesignation &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter designation")}
-          value={customerContactsData?.businessHeadDesignation || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadDesignation ===
-              customerContactsData?.businessHeadDesignation &&
+          <input
+            type="text"
+            id="businessHeadDesignation"
+            name="businessHeadDesignation"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadDesignation !=
+                customerContactsData?.businessHeadDesignation &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter designation")}
+            value={customerContactsData?.businessHeadDesignation || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadDesignation ===
+                customerContactsData?.businessHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("businessHeadDesignationVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("businessHeadDesignationVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="businessHeadDesignationVerified"
-        name="businessHeadDesignationVerified"
-        checked={verifiedData?.businessHeadDesignationVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="businessHeadDesignationVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="businessHeadDesignationVerified"
+                  name="businessHeadDesignationVerified"
+                  checked={
+                    verifiedData?.businessHeadDesignationVerified || false
+                  }
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="businessHeadDesignationVerified">
+                  Verified
+                </label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1095,49 +1126,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="businessHeadEmail"
-          name="businessHeadEmail"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadEmail !=
-              customerContactsData?.businessHeadEmail &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter email")}
-          value={customerContactsData?.businessHeadEmail || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadEmail ===
-              customerContactsData?.businessHeadEmail &&
+          <input
+            type="text"
+            id="businessHeadEmail"
+            name="businessHeadEmail"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadEmail !=
+                customerContactsData?.businessHeadEmail &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter email")}
+            value={customerContactsData?.businessHeadEmail || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadEmail ===
+                customerContactsData?.businessHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("businessHeadEmailVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("businessHeadEmailVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="businessHeadEmailVerified"
-        name="businessHeadEmailVerified"
-        checked={verifiedData?.businessHeadEmailVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="businessHeadEmailVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="businessHeadEmailVerified"
+                  name="businessHeadEmailVerified"
+                  checked={verifiedData?.businessHeadEmailVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="businessHeadEmailVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1217,60 +1251,64 @@ function ContactDetails({
               customerContactsData?.businessHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-<div className="input-with-verification">
-        <PhoneInput
-          international
-          defaultCountry="SA" // Set your default country code
-          id="businessHeadMobile"
-          name="businessHeadMobile"
-          className={`phone-input ${
-            // Use a specific class for phone input
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadMobile !=
-              customerContactsData?.businessHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.businessHeadMobile || ""}
-          onChange={(value) => {
-            // Handle the phone number change
-            onChangeCustomerContactsData({
-              target: {
-                name: "businessHeadMobile",
-                value: value,
-              },
-            });
-          }}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.businessHeadMobile ===
-              customerContactsData?.businessHeadMobile &&
+        <div className="input-with-verification">
+          <PhoneInput
+            international
+            defaultCountry="SA" // Set your default country code
+            countryCallingCodeEditable={false}
+            id="businessHeadMobile"
+            name="businessHeadMobile"
+            className={`phone-input ${
+              // Use a specific class for phone input
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadMobile !=
+                customerContactsData?.businessHeadMobile &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter Mobile number")}
+            value={customerContactsData?.businessHeadMobile || ""}
+            onChange={(value) => {
+              // Handle the phone number change
+              onChangeCustomerContactsData({
+                target: {
+                  name: "businessHeadMobile",
+                  value: value,
+                },
+              });
+            }}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadMobile ===
+                customerContactsData?.businessHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("businessHeadMobileVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("businessHeadMobileVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="businessHeadMobileVerified"
-        name="businessHeadMobileVerified"
-        checked={verifiedData?.businessHeadMobileVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="businessHeadMobileVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="businessHeadMobileVerified"
+                  name="businessHeadMobileVerified"
+                  checked={verifiedData?.businessHeadMobileVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="businessHeadMobileVerified">Verified</label>
+              </div>
+            )}
         </div>
 
         {originalCustomerContactsData &&
@@ -1288,7 +1326,6 @@ function ContactDetails({
         )}
       </div>
 
-
       {/* Finance Head Header */}
       <h3 className="form-header full-width">{t("Finance Head")}</h3>
       <div className="form-group">
@@ -1304,49 +1341,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="financeHeadName"
-          name="financeHeadName"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadName !=
-              customerContactsData?.financeHeadName &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter name")}
-          value={customerContactsData?.financeHeadName || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadName ===
-              customerContactsData?.financeHeadName &&
+          <input
+            type="text"
+            id="financeHeadName"
+            name="financeHeadName"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadName !=
+                customerContactsData?.financeHeadName &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter name")}
+            value={customerContactsData?.financeHeadName || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadName ===
+                customerContactsData?.financeHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("financeHeadNameVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("financeHeadNameVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="financeHeadNameVerified"
-        name="financeHeadNameVerified"
-        checked={verifiedData?.financeHeadNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="financeHeadNameVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="financeHeadNameVerified"
+                  name="financeHeadNameVerified"
+                  checked={verifiedData?.financeHeadNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="financeHeadNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1376,49 +1416,54 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="financeHeadDesignation"
-          name="financeHeadDesignation"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadDesignation !=
-              customerContactsData?.financeHeadDesignation &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter designation")}
-          value={customerContactsData?.financeHeadDesignation || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadDesignation ===
-              customerContactsData?.financeHeadDesignation &&
+          <input
+            type="text"
+            id="financeHeadDesignation"
+            name="financeHeadDesignation"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadDesignation !=
+                customerContactsData?.financeHeadDesignation &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter designation")}
+            value={customerContactsData?.financeHeadDesignation || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadDesignation ===
+                customerContactsData?.financeHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("financeHeadDesignationVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("financeHeadDesignationVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="financeHeadDesignationVerified"
-        name="financeHeadDesignationVerified"
-        checked={verifiedData?.financeHeadDesignationVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="financeHeadDesignationVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="financeHeadDesignationVerified"
+                  name="financeHeadDesignationVerified"
+                  checked={
+                    verifiedData?.financeHeadDesignationVerified || false
+                  }
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="financeHeadDesignationVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1449,49 +1494,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="financeHeadEmail"
-          name="financeHeadEmail"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadEmail !=
-              customerContactsData?.financeHeadEmail &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter email")}
-          value={customerContactsData?.financeHeadEmail || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadEmail ===
-              customerContactsData?.financeHeadEmail &&
+          <input
+            type="text"
+            id="financeHeadEmail"
+            name="financeHeadEmail"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadEmail !=
+                customerContactsData?.financeHeadEmail &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter email")}
+            value={customerContactsData?.financeHeadEmail || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadEmail ===
+                customerContactsData?.financeHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("financeHeadEmailVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("financeHeadEmailVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="financeHeadEmailVerified"
-        name="financeHeadEmailVerified"
-        checked={verifiedData?.financeHeadEmailVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="financeHeadEmailVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="financeHeadEmailVerified"
+                  name="financeHeadEmailVerified"
+                  checked={verifiedData?.financeHeadEmailVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="financeHeadEmailVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1571,60 +1619,64 @@ function ContactDetails({
               customerContactsData?.financeHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-<div className="input-with-verification">
-        <PhoneInput
-          international
-          defaultCountry="SA" // Set your default country code
-          id="financeHeadMobile"
-          name="financeHeadMobile"
-          className={`phone-input ${
-            // Use a specific class for phone input
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadMobile !=
-              customerContactsData?.financeHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.financeHeadMobile || ""}
-          onChange={(value) => {
-            // Handle the phone number change
-            onChangeCustomerContactsData({
-              target: {
-                name: "financeHeadMobile",
-                value: value,
-              },
-            });
-          }}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.financeHeadMobile ===
-              customerContactsData?.financeHeadMobile &&
+        <div className="input-with-verification">
+          <PhoneInput
+            international
+            defaultCountry="SA" // Set your default country code
+            countryCallingCodeEditable={false}
+            id="financeHeadMobile"
+            name="financeHeadMobile"
+            className={`phone-input ${
+              // Use a specific class for phone input
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadMobile !=
+                customerContactsData?.financeHeadMobile &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter Mobile number")}
+            value={customerContactsData?.financeHeadMobile || ""}
+            onChange={(value) => {
+              // Handle the phone number change
+              onChangeCustomerContactsData({
+                target: {
+                  name: "financeHeadMobile",
+                  value: value,
+                },
+              });
+            }}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadMobile ===
+                customerContactsData?.financeHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("financeHeadMobileVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-{ isV("financeHeadMobileVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id=""
-        name="financeHeadMobileVerified"
-        checked={verifiedData?.financeHeadMobileVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="financeHeadMobileVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id=""
+                  name="financeHeadMobileVerified"
+                  checked={verifiedData?.financeHeadMobileVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="financeHeadMobileVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1656,49 +1708,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="purchasingHeadName"
-          name="purchasingHeadName"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadName !=
-              customerContactsData?.purchasingHeadName &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter name")}
-          value={customerContactsData?.purchasingHeadName || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadName ===
-              customerContactsData?.purchasingHeadName &&
+          <input
+            type="text"
+            id="purchasingHeadName"
+            name="purchasingHeadName"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadName !=
+                customerContactsData?.purchasingHeadName &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter name")}
+            value={customerContactsData?.purchasingHeadName || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadName ===
+                customerContactsData?.purchasingHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("purchasingHeadNameVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("purchasingHeadNameVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="purchasingHeadNameVerified"
-        name="purchasingHeadNameVerified"
-        checked={verifiedData?.purchasingHeadNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="purchasingHeadNameVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="purchasingHeadNameVerified"
+                  name="purchasingHeadNameVerified"
+                  checked={verifiedData?.purchasingHeadNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="purchasingHeadNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1728,49 +1783,56 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="purchasingHeadDesignation"
-          name="purchasingHeadDesignation"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadDesignation !=
-              customerContactsData?.purchasingHeadDesignation &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter designation")}
-          value={customerContactsData?.purchasingHeadDesignation || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadDesignation ===
-              customerContactsData?.purchasingHeadDesignation &&
+          <input
+            type="text"
+            id="purchasingHeadDesignation"
+            name="purchasingHeadDesignation"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadDesignation !=
+                customerContactsData?.purchasingHeadDesignation &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter designation")}
+            value={customerContactsData?.purchasingHeadDesignation || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadDesignation ===
+                customerContactsData?.purchasingHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("purchasingHeadDesignationVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("purchasingHeadDesignationVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="purchasingHeadDesignationVerified"
-        name="purchasingHeadDesignationVerified"
-        checked={verifiedData?.purchasingHeadDesignationVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="purchasingHeadDesignationVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="purchasingHeadDesignationVerified"
+                  name="purchasingHeadDesignationVerified"
+                  checked={
+                    verifiedData?.purchasingHeadDesignationVerified || false
+                  }
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="purchasingHeadDesignationVerified">
+                  Verified
+                </label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1801,49 +1863,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="purchasingHeadEmail"
-          name="purchasingHeadEmail"
-          className={`text-field small ${
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadEmail !=
-              customerContactsData?.purchasingHeadEmail &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter email")}
-          value={customerContactsData?.purchasingHeadEmail || ""}
-          onChange={onChangeCustomerContactsData}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadEmail ===
-              customerContactsData?.purchasingHeadEmail &&
+          <input
+            type="text"
+            id="purchasingHeadEmail"
+            name="purchasingHeadEmail"
+            className={`text-field small ${
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadEmail !=
+                customerContactsData?.purchasingHeadEmail &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter email")}
+            value={customerContactsData?.purchasingHeadEmail || ""}
+            onChange={onChangeCustomerContactsData}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadEmail ===
+                customerContactsData?.purchasingHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("purchasingHeadEmailVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("purchasingHeadEmailVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="purchasingHeadEmailVerified"
-        name="purchasingHeadEmailVerified"
-        checked={verifiedData?.purchasingHeadEmailVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="purchasingHeadEmailVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="purchasingHeadEmailVerified"
+                  name="purchasingHeadEmailVerified"
+                  checked={verifiedData?.purchasingHeadEmailVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="purchasingHeadEmailVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -1923,60 +1988,64 @@ function ContactDetails({
               customerContactsData?.purchasingHeadMobile &&
             mode === "edit" && <span className="update-badge">Updated</span>}
         </label>
-<div className="input-with-verification">
-        <PhoneInput
-          international
-          defaultCountry="SA" // Set your default country code
-          id="purchasingHeadMobile"
-          name="purchasingHeadMobile"
-          className={`phone-input ${
-            // Use a specific class for phone input
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadMobile !=
-              customerContactsData?.purchasingHeadMobile &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter Mobile number")}
-          value={customerContactsData?.purchasingHeadMobile || ""}
-          onChange={(value) => {
-            // Handle the phone number change
-            onChangeCustomerContactsData({
-              target: {
-                name: "purchasingHeadMobile",
-                value: value,
-              },
-            });
-          }}
-          disabled={
-            originalCustomerContactsData &&
-            customerContactsData &&
-            originalCustomerContactsData?.purchasingHeadMobile ===
-              customerContactsData?.purchasingHeadMobile &&
+        <div className="input-with-verification">
+          <PhoneInput
+            international
+            defaultCountry="SA" // Set your default country code
+            countryCallingCodeEditable={false}
+            id="purchasingHeadMobile"
+            name="purchasingHeadMobile"
+            className={`phone-input ${
+              // Use a specific class for phone input
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadMobile !=
+                customerContactsData?.purchasingHeadMobile &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter Mobile number")}
+            value={customerContactsData?.purchasingHeadMobile || ""}
+            onChange={(value) => {
+              // Handle the phone number change
+              onChangeCustomerContactsData({
+                target: {
+                  name: "purchasingHeadMobile",
+                  value: value,
+                },
+              });
+            }}
+            disabled={
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadMobile ===
+                customerContactsData?.purchasingHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("purchasingHeadMobileVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-{ isV("purchasingHeadMobileVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="purchasingHeadMobileVerified"
-        name="purchasingHeadMobileVerified"
-        checked={verifiedData?.purchasingHeadMobileVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="purchasingHeadMobileVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="purchasingHeadMobileVerified"
+                  name="purchasingHeadMobileVerified"
+                  checked={verifiedData?.purchasingHeadMobileVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="purchasingHeadMobileVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerContactsData &&
           customerContactsData &&
@@ -2007,47 +2076,52 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="buildingName"
-          name="buildingName"
-          className={`text-field small ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.buildingName != customerData?.buildingName &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter building name")}
-          value={customerData?.buildingName || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.buildingName === customerData?.buildingName &&
+          <input
+            type="text"
+            id="buildingName"
+            name="buildingName"
+            className={`text-field small ${
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.buildingName !=
+                customerData?.buildingName &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter building name")}
+            value={customerData?.buildingName || ""}
+            onChange={onChangeCustomerData}
+            disabled={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.buildingName ===
+                customerData?.buildingName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("buildingNameVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        { isV("buildingNameVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="buildingNameVerified"
-        name="buildingNameVerified"
-        checked={verifiedData?.buildingNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="buildingNameVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="buildingNameVerified"
+                  name="buildingNameVerified"
+                  checked={verifiedData?.buildingNameVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="buildingNameVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2074,47 +2148,50 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="street"
-          name="street"
-          className={`text-field small ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.street != customerData?.street &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter street")}
-          value={customerData?.street || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.street === customerData?.street &&
+          <input
+            type="text"
+            id="street"
+            name="street"
+            className={`text-field small ${
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.street != customerData?.street &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter street")}
+            value={customerData?.street || ""}
+            onChange={onChangeCustomerData}
+            disabled={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.street === customerData?.street &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("streetVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("streetVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="streetVerified"
-        name="streetVerified"
-        checked={verifiedData?.streetVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="streetVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="streetVerified"
+                  name="streetVerified"
+                  checked={verifiedData?.streetVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="streetVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2141,57 +2218,60 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <SearchableDropdown
-          name="region"
-          // options={basicMasterLists?.region || []}
-          options={
-            geoData
-              ? Object.keys(geoData).map((region) => ({
-                  value: region,
-                  name:
-                    i18n.language === "ar"
-                      ? geoData[region].ar
-                      : geoData[region].en,
-                }))
-              : []
-          }
-          value={customerData?.region || ""}
-          onChange={handleRegionChange}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region === customerData?.region &&
+          <SearchableDropdown
+            name="region"
+            // options={basicMasterLists?.region || []}
+            options={
+              geoData
+                ? Object.keys(geoData).map((region) => ({
+                    value: region,
+                    name:
+                      i18n.language === "ar"
+                        ? geoData[region].ar
+                        : geoData[region].en,
+                  }))
+                : []
+            }
+            value={customerData?.region || ""}
+            onChange={handleRegionChange}
+            disabled={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.region === customerData?.region &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            className={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.region != customerData?.region &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }
+            placeholder={t("Enter region")}
+            required
+          />
+          {isV("regionVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.region != customerData?.region &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Enter region")}
-          required
-        />
-        { isV("regionVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="regionVerified"
-        name="regionVerified"
-        checked={verifiedData?.regionVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="regionVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="regionVerified"
+                  name="regionVerified"
+                  checked={verifiedData?.regionVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="regionVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2219,47 +2299,50 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <SearchableDropdown
-          name="city"
-          options={getCityOptions()}
-          value={customerData?.city || ""}
-          onChange={handleCityChange}
-          disabled={
-            (originalCustomerData &&
+          <SearchableDropdown
+            name="city"
+            options={getCityOptions()}
+            value={customerData?.city || ""}
+            onChange={handleCityChange}
+            disabled={
+              (originalCustomerData &&
+                customerData &&
+                originalCustomerData?.city === customerData?.city &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              !selectedRegion
+            }
+            className={
+              originalCustomerData &&
               customerData &&
-              originalCustomerData?.city === customerData?.city &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending") ||
-            !selectedRegion
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.city != customerData?.city &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Enter city")}
-          required
-        />
-        {isV("cityVerified") &&  (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="cityVerified"
-        name="cityVerified"
-        checked={verifiedData?.cityVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="cityVerified">Verified</label>
-      </div>)}
+              originalCustomerData?.city != customerData?.city &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }
+            placeholder={t("Enter city")}
+            required
+          />
+          {isV("cityVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="cityVerified"
+                  name="cityVerified"
+                  checked={verifiedData?.cityVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="cityVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2271,6 +2354,79 @@ function ContactDetails({
           )}
         {formErrors.city && <div className="error">{t(formErrors.city)}</div>}
       </div>
+
+      {/* City (Other) - Conditional */}
+      {customerData?.city?.toLowerCase() === "others (specify)" && (
+        <div className="form-group">
+          <label htmlFor="cityOther">
+            {t("City (Other)")}
+            <span className="required-field">*</span>
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.cityOther != customerData?.cityOther &&
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
+          </label>
+          <div className="input-with-verification">
+            <input
+              type="text"
+              id="cityOther"
+              name="cityOther"
+              className={`text-field small ${
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.cityOther != customerData?.cityOther &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }`}
+              placeholder={t("Enter City")}
+              value={customerData?.cityOther || ""}
+              onChange={onChangeCustomerData}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.cityOther === customerData?.cityOther &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+            />
+            {isV("cityOtherVerified") &&
+              // (originalCustomerData &&
+              //     customerData &&
+              //     originalCustomerData?.companyNameEn !==
+              //       customerData?.companyNameEn &&
+              //     mode === "edit") ||
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="cityOtherVerified"
+                    name="cityOtherVerified"
+                    checked={verifiedData?.cityOtherVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="cityOtherVerified">Verified</label>
+                </div>
+              )}
+          </div>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.cityOther != customerData?.cityOther &&
+            mode === "edit" && (
+              <div className="current-value">
+                Previous: {originalCustomerData?.cityOther || "(empty)"}
+              </div>
+            )}
+          {formErrors.cityOther && (
+            <div className="error">{t(formErrors.cityOther)}</div>
+          )}
+        </div>
+      )}
+
       {/*district dropdown*/}
       <div className="form-group">
         <label htmlFor="district">
@@ -2284,47 +2440,50 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <SearchableDropdown
-          name="district"
-          options={getDistrictOptions()}
-          value={customerData?.district || ""}
-          onChange={handleDistrictChange}
-          disabled={
-            (originalCustomerData &&
+          <SearchableDropdown
+            name="district"
+            options={getDistrictOptions()}
+            value={customerData?.district || ""}
+            onChange={handleDistrictChange}
+            disabled={
+              (originalCustomerData &&
+                customerData &&
+                originalCustomerData?.district === customerData?.district &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              !selectedCity
+            }
+            className={
+              originalCustomerData &&
               customerData &&
-              originalCustomerData?.district === customerData?.district &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending") ||
-            !selectedCity
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.district != customerData?.district &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Enter district")}
-          required
-        />
-        { isV("districtVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="districtVerified"
-        name="districtVerified"
-        checked={verifiedData?.districtVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="districtVerified">Verified</label>
-      </div>)}
+              originalCustomerData?.district != customerData?.district &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }
+            placeholder={t("Enter district")}
+            required
+          />
+          {isV("districtVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="districtVerified"
+                  name="districtVerified"
+                  checked={verifiedData?.districtVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="districtVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2338,78 +2497,158 @@ function ContactDetails({
           <div className="error">{t(formErrors.district)}</div>
         )}
       </div>
+      {/* District (Other) - Conditional */}
+      {customerData?.district?.toLowerCase() === "others (specify)" && (
+        <div className="form-group">
+          <label htmlFor="districtOther">
+            {t("District (Other)")}
+            <span className="required-field">*</span>
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.districtOther !=
+                customerData?.districtOther &&
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
+          </label>
+          <div className="input-with-verification">
+            <input
+              type="text"
+              id="districtOther"
+              name="districtOther"
+              className={`text-field small ${
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.districtOther !=
+                  customerData?.districtOther &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }`}
+              placeholder={t("Enter District")}
+              value={customerData?.districtOther || ""}
+              onChange={onChangeCustomerData}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.districtOther ===
+                  customerData?.districtOther &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+            />
+            {isV("districtOtherVerified") &&
+              // (originalCustomerData &&
+              //     customerData &&
+              //     originalCustomerData?.companyNameEn !==
+              //       customerData?.companyNameEn &&
+              //     mode === "edit") ||
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="districtOtherVerified"
+                    name="districtOtherVerified"
+                    checked={verifiedData?.districtOtherVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="districtOtherVerified">Verified</label>
+                </div>
+              )}
+          </div>
+          {originalCustomerData &&
+            customerData &&
+            originalCustomerData?.districtOther !=
+              customerData?.districtOther &&
+            mode === "edit" && (
+              <div className="current-value">
+                Previous: {originalCustomerData?.districtOther || "(empty)"}
+              </div>
+            )}
+          {formErrors.districtOther && (
+            <div className="error">{t(formErrors.districtOther)}</div>
+          )}
+        </div>
+      )}
 
       {/* zone dropdown */}
-      {isV("assignedToEntityWise") && (<div className="form-group">
-        <label htmlFor="zone">
-          {t("Zone")}
-          <span className="required-field">*</span>
+      {isV("assignedToEntityWise") && (
+        <div className="form-group">
+          <label htmlFor="zone">
+            {t("Zone")}
+            <span className="required-field">*</span>
+            {originalCustomerData &&
+              customerData &&
+              originalCustomerData?.zone != customerData?.zone &&
+              mode === "edit" && (
+                <span className="update-badge">{t("Updated")}</span>
+              )}
+          </label>
+          <div className="input-with-verification">
+            <SearchableDropdown
+              name="zone"
+              options={(basicMasterLists?.zone || []).map((item) => ({
+                value: item.value,
+                name: i18n.language === "ar" ? item.valueLc : item.value,
+              }))}
+              value={customerData?.zone || ""}
+              onChange={(e) => {
+                onChangeCustomerData({
+                  target: { name: "zone", value: e.target.value },
+                });
+              }}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.zone === customerData?.zone &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.zone != customerData?.zone &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }
+              placeholder={t("Enter zone")}
+              required
+            />
+            {isV("zoneVerified") &&
+              // (originalCustomerData &&
+              //     customerData &&
+              //     originalCustomerData?.companyNameEn !==
+              //       customerData?.companyNameEn &&
+              //     mode === "edit") ||
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="zoneVerified"
+                    name="zoneVerified"
+                    checked={verifiedData?.zoneVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="zoneVerified">Verified</label>
+                </div>
+              )}
+          </div>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.zone != customerData?.zone &&
             mode === "edit" && (
-              <span className="update-badge">{t("Updated")}</span>
+              <div className="current-value">
+                Previous: {originalCustomerData?.zone || "(empty)"}
+              </div>
             )}
-        </label>
-        <div className="input-with-verification">
-        <SearchableDropdown
-          name="zone"
-          options={(basicMasterLists?.zone || []).map((item) => ({
-            value: item.value,
-            name: i18n.language === "ar" ? item.valueLc : item.value,
-          }))}
-          value={customerData?.zone || ""}
-          onChange={(e) => {
-            onChangeCustomerData({
-              target: { name: "zone", value: e.target.value },
-            });
-          }}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.zone === customerData?.zone &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          className={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.zone != customerData?.zone &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }
-          placeholder={t("Enter zone")}
-          required
-        />
-        { isV("zoneVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="zoneVerified"
-        name="zoneVerified"
-        checked={verifiedData?.zoneVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="zoneVerified">Verified</label>
-      </div>)}
+          {formErrors.zone && <div className="error">{t(formErrors.zone)}</div>}
         </div>
-        {originalCustomerData &&
-          customerData &&
-          originalCustomerData?.zone != customerData?.zone &&
-          mode === "edit" && (
-            <div className="current-value">
-              Previous: {originalCustomerData?.zone || "(empty)"}
-            </div>
-          )}
-        {formErrors.zone && <div className="error">{t(formErrors.zone)}</div>}
-      </div>)}
+      )}
       <div className="form-group">
         <label htmlFor="pincode">
           {t("Pincode")}
@@ -2422,47 +2661,50 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <input
-          type="text"
-          id="pincode"
-          name="pincode"
-          className={`text-field small ${
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.pincode != customerData?.pincode &&
-            mode === "edit"
-              ? "update-field"
-              : ""
-          }`}
-          placeholder={t("Enter pincode")}
-          value={customerData?.pincode || ""}
-          onChange={onChangeCustomerData}
-          disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.pincode === customerData?.pincode &&
+          <input
+            type="text"
+            id="pincode"
+            name="pincode"
+            className={`text-field small ${
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.pincode != customerData?.pincode &&
+              mode === "edit"
+                ? "update-field"
+                : ""
+            }`}
+            placeholder={t("Enter pincode")}
+            value={customerData?.pincode || ""}
+            onChange={onChangeCustomerData}
+            disabled={
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.pincode === customerData?.pincode &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
+            required
+          />
+          {isV("pincodeVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
-          }
-          required
-        />
-        {isV("pincodeVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="pincodeVerified"
-        name="pincodeVerified"
-        checked={verifiedData?.pincodeVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="pincodeVerified">Verified</label>
-      </div>)}
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="pincodeVerified"
+                  name="pincodeVerified"
+                  checked={verifiedData?.pincodeVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="pincodeVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&
@@ -2489,70 +2731,75 @@ function ContactDetails({
             )}
         </label>
         <div className="input-with-verification">
-        <div className="location-input-container">
-          <input
-            name="geolocation"
-            value={
-              // selectedLocation
-              //   ? `${selectedLocation.lat.toFixed(
-              //       6
-              //     )}, ${selectedLocation.lng.toFixed(6)}` :
-              customerData?.geolocation
-                ? getLocationDisplay(customerData.geolocation)
-                : "Select Location"
-            }
-            // value={getLocationDisplay(branch[field.name])}
-            placeholder={t("Select Location")}
-            onChange={onChangeCustomerData}
-            disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.geolocation === customerData?.geolocation &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
-            className={`text-field small ${
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.geolocation != customerData?.geolocation &&
-              mode === "edit"
-                ? "update-field"
-                : ""
-            }`}
-            readOnly
-            required
-          />
+          <div className="location-input-container">
+            <input
+              name="geolocation"
+              value={
+                // selectedLocation
+                //   ? `${selectedLocation.lat.toFixed(
+                //       6
+                //     )}, ${selectedLocation.lng.toFixed(6)}` :
+                customerData?.geolocation
+                  ? getLocationDisplay(customerData.geolocation)
+                  : "Select Location"
+              }
+              // value={getLocationDisplay(branch[field.name])}
+              placeholder={t("Select Location")}
+              onChange={onChangeCustomerData}
+              disabled={
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.geolocation ===
+                  customerData?.geolocation &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
+              className={`text-field small ${
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.geolocation !=
+                  customerData?.geolocation &&
+                mode === "edit"
+                  ? "update-field"
+                  : ""
+              }`}
+              readOnly
+              required
+            />
 
-          <button
-            className="location-picker-button"
-            //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
-            //     ? field.name in customer.workflowData.updates
-            //     : false)}
-            // disabled={
-            //   customerFormMode === "custDetailsEdit" && !hasUpdate
-            // }
-            onClick={() => setShowMap(true)}
-          >
-            <FontAwesomeIcon icon={faLocationDot} />
-          </button>
-        </div>
-        {isV("geolocationVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="geolocationVerified"
-        name="geolocationVerified"
-        checked={verifiedData?.geolocationVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="geolocationVerified">Verified</label>
-      </div>)}
+            <button
+              className="location-picker-button"
+              //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
+              //     ? field.name in customer.workflowData.updates
+              //     : false)}
+              // disabled={
+              //   customerFormMode === "custDetailsEdit" && !hasUpdate
+              // }
+              onClick={() => setShowMap(true)}
+            >
+              <FontAwesomeIcon icon={faLocationDot} />
+            </button>
+          </div>
+          {isV("geolocationVerified") &&
+            // (originalCustomerData &&
+            //     customerData &&
+            //     originalCustomerData?.companyNameEn !==
+            //       customerData?.companyNameEn &&
+            //     mode === "edit") ||
+            mode === "edit" &&
+            customerData?.customerStatus === "pending" && (
+              <div className="verification-checkbox">
+                <input
+                  type="checkbox"
+                  id="geolocationVerified"
+                  name="geolocationVerified"
+                  checked={verifiedData?.geolocationVerified || false}
+                  onChange={onChangeVerifiedData}
+                  // className="verified-checkbox"
+                />
+                <label htmlFor="geolocationVerified">Verified</label>
+              </div>
+            )}
         </div>
         {originalCustomerData &&
           customerData &&

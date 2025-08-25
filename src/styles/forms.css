@@ -87,6 +87,10 @@
   margin-bottom: 10px;
 }
 
+[dir="rtl"] .form-main-header {
+  text-align: left;
+}
+
 .form-main-header a {
   color: blue;
   text-decoration: none;
@@ -201,7 +205,16 @@
   border-radius: 5px; 
 }
 .PhoneInputInput {
-  max-width: 210px
+  width: 210px;
+  font-size: 12px;
+   padding: 4px 8px;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.PhoneInputInput:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .customers .dropdown {
@@ -658,7 +671,7 @@
 
 .uploaded-files-container {
   width: max-content;
-
+  min-width: 200px;
   border-radius: 4px;
   padding: 10px;
 }
@@ -920,6 +933,10 @@ body::-webkit-scrollbar {
   width: 140px;
   row-gap: 10px;
   column-gap: 5px;
+}
+
+.branch-phone-input select {
+  width: 30px !important;
 }
 .branchDropDown {
   width: 140px !important;
@@ -1333,7 +1350,7 @@ td.label-cell {
   width: 40%;
   white-space: nowrap;
   padding-right: 20px; /* Add some spacing between columns */
-  vertical-align: top;
+  vertical-align: top;;
 }
 
 /* Upload button column */
