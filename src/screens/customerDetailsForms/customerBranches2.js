@@ -30,12 +30,14 @@ import Swal from "sweetalert2";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import axios from "axios";
 import Constants from "../../constants";
-import  LoadingSpinner from "../../components/LoadingSpinner";
+import LoadingSpinner from "../../components/LoadingSpinner";
 
-const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =
+  Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
-const  BRANCH_UPLOAD_FORMAT=Constants?.DEPARTMENTS_NAMES?.BRANCH_UPLOAD_FORMAT;
+const CUSTOMER_APPROVAL_CHECKLIST =
+  Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
+const BRANCH_UPLOAD_FORMAT = Constants?.DEPARTMENTS_NAMES?.BRANCH_UPLOAD_FORMAT;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);
@@ -62,10 +64,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-   const fileExcelInputRef = useRef(null);
-   const [popup,setPopup] = useState(false);
+  const fileExcelInputRef = useRef(null);
+  const [popup, setPopup] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   let customerFormMode;
-  if (mode === "edit" ) {
+  if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
   } else {
     customerFormMode = "custDetailsAdd";
@@ -81,7 +85,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const isE = rbacMgr.isE.bind(rbacMgr);
 
   const handleAddBranch = () => {
-    setActionMenuOpen(false)
+    setActionMenuOpen(false);
     if (customer?.isBlocked) {
       Swal.fire({
         title: t("Customer is blocked"),
@@ -95,7 +99,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     if (branches.length === 0) {
       setIsFirstBranch(true); // Set flag for first branch
     }
-    if(!customer?.erpCustId) {
+    if (!customer?.erpCustId) {
       Swal.fire({
         title: t("Customer not synced with ERP"),
         text: t("Please sync the customer with ERP before adding branches."),
@@ -173,12 +177,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     try {
       const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           id: branchId,
           module: "branch",
         }),
-        
       });
 
       console.log("!!!!!!!", res);
@@ -235,8 +241,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -262,7 +270,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     } catch (err) {
       setError(err.message);
       console.error("Error fetching contacts:", err);
-    } 
+    }
   };
 
   const fetchBranches = useCallback(async () => {
@@ -288,8 +296,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -298,7 +308,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       }
 
       const data = await response.json();
-      setCurrentPage(data.page)
+      setCurrentPage(data.page);
       setBranches(data.data);
       setTotal(data.totalRecords);
     } catch (err) {
@@ -459,9 +469,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/workflow-instance/id/${customer.workflowInstanceId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify(payload),
-          
         }
       );
 
@@ -504,13 +516,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 
     const response = await fetch(`${API_BASE_URL}/customer-branches`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({
         ...branchPayload,
         customer_id: customer.id,
         isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
       }),
-      
     });
 
     const result = await response.json();
@@ -545,13 +559,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${branchId}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             ...contactPayload,
             customer_id: customer.id,
             branch_id: branchId,
           }),
-          
         }
       );
     }
@@ -630,13 +646,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         });
         const response = await fetch(`${API_BASE_URL}/customer-branches`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             ...branchPayload,
             customer_id: customer.id,
             isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
           }),
-          
         });
 
         const result = await response.json();
@@ -663,13 +681,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
               `${API_BASE_URL}/customer-contacts/create/customer/${customer.id}/branch/${result.data.id}`,
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                   ...contactPayload,
                   customer_id: customer.id,
                   branch_id: result.data.id,
                 }),
-                
               }
             );
           }
@@ -680,9 +700,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         if (Object.keys(branchPayload).length > 0) {
           await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ ...branchPayload, customerId: customer.id }),
-            
           });
         }
         console.log("Contact payload:", contactPayload);
@@ -691,9 +713,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             `${API_BASE_URL}/customer-contacts/customer/${customer.id}/branch/${id}`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
               body: JSON.stringify(contactPayload),
-              
             }
           );
         }
@@ -791,7 +815,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //       customer_id: customer.id,
       //       isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
       //     }),
-      //     
+      //
       //   });
 
       //   const result = await response.json();
@@ -824,7 +848,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //             customer_id: customer.id,
       //             branch_id: result.data.id,
       //           }),
-      //           
+      //
       //         }
       //       );
       //     }
@@ -835,12 +859,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       if (Object.keys(branchPayload).length > 0) {
         await fetch(`${API_BASE_URL}/customer-branches/id/${id}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             branch: { ...branchPayload, customerId: customer.id },
             contacts: { ...contactPayload },
           }),
-          
         });
       }
       // console.log("Contact payload:", contactPayload);
@@ -851,7 +877,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //       method: "POST",
       //       headers: { "Content-Type": "application/json" },
       //       body: JSON.stringify(contactPayload),
-      //       
+      //
       //     }
       //   );
       // }
@@ -920,12 +946,14 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         `${API_BASE_URL}/customer-branches/id/${id}`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             ...branchPayload,
             branchStatus: "pending",
           }),
-          
         }
       );
 
@@ -985,7 +1013,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userPayload),
-            
           }
         );
 
@@ -1001,10 +1028,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     }
   };
 
- const handleButtonClick = () => {
-
-  if (loading) return;
-  if(!customer?.erpCustId) {
+  const handleButtonClick = () => {
+    if (loading) return;
+    if (!customer?.erpCustId) {
       Swal.fire({
         title: t("Customer not synced with ERP"),
         text: t("Please sync the customer with ERP before adding branches."),
@@ -1014,99 +1040,94 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       return; // Stop adding branch if customer is not synced
     }
     setPopup(true);
- 
-};
-  const handleFileChange = async (e) => {
-    console.log("File input changed:", e);
-    const file = e.target.files[0];
+  };
+  const handleSubmitFile = async (file) => {
     if (!file) return;
-
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
-      Swal.fire({
-        title: t("Invalid File Type"),
-        text: t("Please upload a valid Excel file (.xlsx or .xls)"),
-        icon: "error",
-        confirmButtonText: t("OK"),
-      });
-      return;
-    }
-
     try {
-       setLoading(true)
-      const formData =  new FormData();
-     
-     
+      setLoading(true);
+
+      const formData = new FormData();
       formData.append("file", file);
-      formData.append("customerId", customer.id); // assumes customer object is passed as prop
+      formData.append("customerId", customer.id);
       formData.append("erpCustId", customer.erpCustId);
-      formData.append("isDeliveryChargesApplicable", customer.isDeliveryChargesApplicable);
+      formData.append(
+        "isDeliveryChargesApplicable",
+        customer.isDeliveryChargesApplicable
+      );
+
       const response = await axios.post(
-        `${API_BASE_URL}/customer-branches/upload-excel`, // updated URL
+        `${API_BASE_URL}/customer-branches/upload-excel`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
-         
-           responseType: "blob", // <-- Important to receive Excel file
-        validateStatus: () => true
+          responseType: "blob",
+          validateStatus: () => true,
         }
       );
-   if (
-  response?.status === 400 &&
-  response.headers["content-type"] !== "application/json"
-) {
-  const blob = new Blob([response.data], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
 
- Swal.fire({
-  title: t('Validation Failed'),
-  html: `
+      if (
+        response?.status === 400 &&
+        response.headers["content-type"] !== "application/json"
+      ) {
+        const blob = new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        Swal.fire({
+          title: t("Validation Failed"),
+          html: `
     ${t("Some rows contain validation errors.")}<br>
-    ${t("The Excel file has been updated with a new column named")} <b>${t("Errors")}</b>.<br>
-    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t("column, fix the issues, and re-upload the file.")}.
+    ${t("The Excel file has been updated with a new column named")} <b>${t(
+            "Errors"
+          )}</b>.<br>
+    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
+            "column, fix the issues, and re-upload the file."
+          )}.
   `,
-  icon: "warning",
-  confirmButtonText: t('Download Error File'),
-}).then(() => {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "branch_upload_errors.xlsx";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  });
+          icon: "warning",
+          confirmButtonText: t("Download Error File"),
+        }).then(() => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "branch_upload_errors.xlsx";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        });
 
-  return; // Make sure to return early to prevent success message
-}
-const blob = response?.data;
-const text = await blob.text(); // convert blob to text
-const data = JSON.parse(text);  // parse text to JSON
+        return; // Make sure to return early to prevent success message
+      }
+      const blob = response?.data;
+      const text = await blob.text(); // convert blob to text
+      const data = JSON.parse(text); // parse text to JSON
 
-if (response?.status === 200 && data?.success) {
-      setBranches((prev) => [...data?.details, ...prev]);
-      setCurrentPage(1); // Reset to first page after upload
-      setTotal(data?.details.length); // Update total count based on new data
+      if (response?.status === 200 && data?.success) {
+        setBranches((prev) => [...data?.details, ...prev]);
+        setCurrentPage(1); // Reset to first page after upload
+        setTotal(data?.details.length); // Update total count based on new data
 
-  Swal.fire({
-    title: t("File Uploaded Successfully"),
-    text: t(data.message) || t("Branches have been updated from the Excel file."),
-    icon: "success",
-    confirmButtonText: t("OK"),
-  });
-} else {
-  Swal.fire({
-    title: t("File Upload Failed"),
-    text: t(data.message) || t("An error occurred while uploading the file."),
-    icon: "error",
-    confirmButtonText: t("OK"),
-  });
-}
-
+        Swal.fire({
+          title: t("File Uploaded Successfully"),
+          text:
+            t(data.message) ||
+            t("Branches have been updated from the Excel file."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else {
+        Swal.fire({
+          title: t("File Upload Failed"),
+          text:
+            t(data.message) || t("An error occurred while uploading the file."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+      }
     } catch (error) {
       console.error("Error uploading file:", error);
       Swal.fire({
@@ -1115,101 +1136,202 @@ if (response?.status === 200 && data?.success) {
         icon: "error",
         confirmButtonText: t("OK"),
       });
-    }finally{
+    } finally {
       setPopup(false);
-       setLoading(false)
+      setLoading(false);
+      setSelectedFile(null); // reset file after submit
     }
   };
-const HandleFandOFailBranch = async (branchId) => {
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/customer-branches/fando_sync_branch?branchId=${branchId}`,
-      {}, 
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  //   const handleFileChange = async (e) => {
+  //     console.log("File input changed:", e);
+  //     const file = e.target.files[0];
+  //     if (!file) return;
 
-    if (data?.success) {
-      fetchBranches()
-      Swal.fire({
-        title: "Success",
-        text: data.message,
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3085d6",
-      });
-    } else {
+  //     if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+  //       Swal.fire({
+  //         title: t("Invalid File Type"),
+  //         text: t("Please upload a valid Excel file (.xlsx or .xls)"),
+  //         icon: "error",
+  //         confirmButtonText: t("OK"),
+  //       });
+  //       return;
+  //     }
+
+  //     try {
+  //        setLoading(true)
+  //       const formData =  new FormData();
+
+  //       formData.append("file", file);
+  //       formData.append("customerId", customer.id); // assumes customer object is passed as prop
+  //       formData.append("erpCustId", customer.erpCustId);
+  //       formData.append("isDeliveryChargesApplicable", customer.isDeliveryChargesApplicable);
+  //       const response = await axios.post(
+  //         `${API_BASE_URL}/customer-branches/upload-excel`, // updated URL
+  //         formData,
+  //         {
+  //           headers: {
+  //             "Content-Type": "multipart/form-data",
+  //             "Authorization": `Bearer ${token}`,
+  //           },
+
+  //            responseType: "blob", // <-- Important to receive Excel file
+  //         validateStatus: () => true
+  //         }
+  //       );
+  //    if (
+  //   response?.status === 400 &&
+  //   response.headers["content-type"] !== "application/json"
+  // ) {
+  //   const blob = new Blob([response.data], {
+  //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //   });
+
+  //  Swal.fire({
+  //   title: t('Validation Failed'),
+  //   html: `
+  //     ${t("Some rows contain validation errors.")}<br>
+  //     ${t("The Excel file has been updated with a new column named")} <b>${t("Errors")}</b>.<br>
+  //     ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t("column, fix the issues, and re-upload the file.")}.
+  //   `,
+  //   icon: "warning",
+  //   confirmButtonText: t('Download Error File'),
+  // }).then(() => {
+  //     const url = window.URL.createObjectURL(blob);
+  //     const a = document.createElement("a");
+  //     a.href = url;
+  //     a.download = "branch_upload_errors.xlsx";
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     a.remove();
+  //     window.URL.revokeObjectURL(url);
+  //   });
+
+  //   return; // Make sure to return early to prevent success message
+  // }
+  // const blob = response?.data;
+  // const text = await blob.text(); // convert blob to text
+  // const data = JSON.parse(text);  // parse text to JSON
+
+  // if (response?.status === 200 && data?.success) {
+  //       setBranches((prev) => [...data?.details, ...prev]);
+  //       setCurrentPage(1); // Reset to first page after upload
+  //       setTotal(data?.details.length); // Update total count based on new data
+
+  //   Swal.fire({
+  //     title: t("File Uploaded Successfully"),
+  //     text: t(data.message) || t("Branches have been updated from the Excel file."),
+  //     icon: "success",
+  //     confirmButtonText: t("OK"),
+  //   });
+  // } else {
+  //   Swal.fire({
+  //     title: t("File Upload Failed"),
+  //     text: t(data.message) || t("An error occurred while uploading the file."),
+  //     icon: "error",
+  //     confirmButtonText: t("OK"),
+  //   });
+  // }
+
+  //     } catch (error) {
+  //       console.error("Error uploading file:", error);
+  //       Swal.fire({
+  //         title: t("File Upload Failed"),
+  //         text: t("An error occurred while uploading the file."),
+  //         icon: "error",
+  //         confirmButtonText: t("OK"),
+  //       });
+  //     }finally{
+  //       setPopup(false);
+  //        setLoading(false)
+  //     }
+  //   };
+  const HandleFandOFailBranch = async (branchId) => {
+    setSyncLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/customer-branches/fando_sync_branch?branchId=${branchId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (data?.success) {
+        fetchBranches();
+        Swal.fire({
+          title: "Success",
+          text: data.message,
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3085d6",
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: data.message || "Failed to Sync with FandO.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    } catch (error) {
+      console.error("Error handling FandO fail branch:", error);
       Swal.fire({
         title: "Error",
-        text: data.message || "Failed to Sync with FandO.",
+        text: error.message || "Failed to Sync with FandO.",
         icon: "error",
         confirmButtonText: "OK",
         confirmButtonColor: "#dc3545",
       });
+    } finally {
+      setSyncLoading(false);
     }
-  } catch (error) {
-    console.error("Error handling FandO fail branch:", error);
-    Swal.fire({
-      title: "Error",
-      text: error.message || "Failed to Sync with FandO.",
-      icon: "error",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#dc3545",
-    });
-  }
-};
-const HandleBranchDocument = async () => {
+  };
+  const HandleBranchDocument = async () => {
     try {
-                const response = await fetch(
-                  `${API_BASE_URL}/get-files`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                      fileName: BRANCH_UPLOAD_FORMAT,
-                      containerType: "documents",
-                    }),
-                    
-                  }
-                );
-                const res = await response.json();
-                if (res.status === "Ok") {
-                  window.open(res.data.url, "_blank", "noopener,noreferrer");
-                } else {
-                 Swal.fire({
-                    title: "Error",
-                    text: res.message || "Failed to view checklist.",
-                    icon: "error",
-                    confirmButtonText: "OK",
-                    confirmButtonColor: "#dc3545",
-                  });
-                }
-              } catch (error) {
-                console.error("Error viewing checklist:", error);
-
-              }
-};
-const btnUploadExcel = () => {
-  setActionMenuOpen(false);
-  if (loading) return;
-   if (fileExcelInputRef.current) {
-    fileExcelInputRef.current.value = ""; 
-    fileExcelInputRef.current.click();
-  
-  }
-
-}
-const onClose = () => {
-  setPopup(false);
- setActionMenuOpen(false)
-  if (fileExcelInputRef.current) {
-    fileExcelInputRef.current.value = "";
-  }
-};
+      const response = await fetch(`${API_BASE_URL}/get-files`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fileName: BRANCH_UPLOAD_FORMAT,
+          containerType: "documents",
+        }),
+      });
+      const res = await response.json();
+      if (res.status === "Ok") {
+        window.open(res.data.url, "_blank", "noopener,noreferrer");
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: res.message || "Failed to view checklist.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    } catch (error) {
+      console.error("Error viewing checklist:", error);
+    }
+  };
+  const btnUploadExcel = () => {
+    setActionMenuOpen(false);
+    if (loading) return;
+    if (fileExcelInputRef.current) {
+      fileExcelInputRef.current.value = "";
+      fileExcelInputRef.current.click();
+    }
+  };
+  const onClose = () => {
+    setPopup(false);
+    setSelectedFile(null); // reset file after close
+    setActionMenuOpen(false);
+    if (fileExcelInputRef.current) {
+      fileExcelInputRef.current.value = "";
+    }
+  };
 
   return (
     <div className="branches-content" ref={contentRef}>
@@ -1225,21 +1347,17 @@ const onClose = () => {
               }
 
               try {
-                const response = await fetch(
-                  `${API_BASE_URL}/get-files`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                      fileName: CUSTOMER_APPROVAL_CHECKLIST,
-                      containerType: "documents",
-                    }),
-                    
-                  }
-                );
+                const response = await fetch(`${API_BASE_URL}/get-files`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    fileName: CUSTOMER_APPROVAL_CHECKLIST,
+                    containerType: "documents",
+                  }),
+                });
                 const res = await response.json();
                 if (res.status === "Ok") {
                   window.open(res.data.url, "_blank", "noopener,noreferrer");
@@ -1312,54 +1430,59 @@ const onClose = () => {
             </div>
           </div> */}
           <div className="branches-action-buttons">
-  <div className="action-menu-container" ref={actionMenuRef}>
-    <FontAwesomeIcon
-      icon={faEllipsisV}
-      className="action-menu-icon"
-      onClick={() => setActionMenuOpen(!isActionMenuOpen)}
-    />
-    {isActionMenuOpen && (
-      <div className="action-menu">
-        {/* <div className="action-menu-item">
+            <div className="action-menu-container" ref={actionMenuRef}>
+              <FontAwesomeIcon
+                icon={faEllipsisV}
+                className="action-menu-icon"
+                onClick={() => setActionMenuOpen(!isActionMenuOpen)}
+              />
+              {isActionMenuOpen && (
+                <div className="action-menu">
+                  {/* <div className="action-menu-item">
           {t("Export")}
         </div> */}
 
-       { isV("btnUploadExcel") && (<div className="action-menu-item" onClick={handleButtonClick}>
-          {loading ? t("Uploading Excel...") : t("Upload Excel")}
-        </div>)
-}
+                  {isV("btnUploadExcel") && (
+                    <div
+                      className="action-menu-item"
+                      onClick={handleButtonClick}
+                    >
+                      {loading ? t("Uploading Excel...") : t("Upload Excel")}
+                    </div>
+                  )}
 
-        {isV("btnBranchAdd") && (
-          <div
-            className="action-menu-item"
-            onClick={handleAddBranch}
-            style={{
-              pointerEvents: branches.some((branch) => branch.id < 0)
-                ? "none"
-                : "auto",
-              opacity: branches.some((branch) => branch.id < 0) ? 0.5 : 1,
-            }}
-          >
-            {t("Add Branch")}
-          </div>
-        )}
+                  {isV("btnBranchAdd") && (
+                    <div
+                      className="action-menu-item"
+                      onClick={handleAddBranch}
+                      style={{
+                        pointerEvents: branches.some((branch) => branch.id < 0)
+                          ? "none"
+                          : "auto",
+                        opacity: branches.some((branch) => branch.id < 0)
+                          ? 0.5
+                          : 1,
+                      }}
+                    >
+                      {t("Add Branch")}
+                    </div>
+                  )}
 
-        {/* <div className="action-menu-item">{t("Import")}</div>
+                  {/* <div className="action-menu-item">{t("Import")}</div>
         <div className="action-menu-item">{t("Settings")}</div> */}
-      </div>
-    )}
-  </div>
+                </div>
+              )}
+            </div>
 
-  {/* Hidden file input stays outside */}
-  {/* <input
+            {/* Hidden file input stays outside */}
+            {/* <input
     type="file"
     accept=".xlsx,.xls"
     ref={fileExcelInputRef}
     onChange={handleFileChange}
     style={{ display: "none" }}
   /> */}
-</div>
-
+          </div>
         </div>
       </div>
       {isMobile ? (
@@ -1419,7 +1542,7 @@ const onClose = () => {
                           {t("Save")}
                         </button>
                       )}
-                      {(<button className="block">{t("Block")}</button>)}
+                      {<button className="block">{t("Block")}</button>}
                     </div>
                   </div>
                 </div>
@@ -1477,10 +1600,12 @@ const onClose = () => {
                     <td className="desktop-only">
                       {branch.erp_branch_id || branch.id}
                     </td>
-                    <td className="desktop-only">
-                      {branch.erpBranchId}
-                    </td>
-                    {(i18n.language === "en") ? <td className="desktop-only">{branch.branchNameEn}</td> : <td className="desktop-only">{branch.branchNameLc}</td>}
+                    <td className="desktop-only">{branch.erpBranchId}</td>
+                    {i18n.language === "en" ? (
+                      <td className="desktop-only">{branch.branchNameEn}</td>
+                    ) : (
+                      <td className="desktop-only">{branch.branchNameLc}</td>
+                    )}
                     <td className="desktop-only">{branch.city}</td>
                     <td className="desktop-only">{branch.locationType}</td>
                     <td className="desktop-only">{branch.region}</td>
@@ -1494,18 +1619,22 @@ const onClose = () => {
                       </span>
                     </td>
                     <td>
-                    
-                       {!branch?.erpBranchId && branch.branchStatus.toLowerCase()==="approved"  && user.designation.toLowerCase()==="sales executive"&& (
+                      {!branch?.erpBranchId &&
+                        branch.branchStatus.toLowerCase() === "approved" &&
+                        user.designation.toLowerCase() ===
+                          "sales executive" && (
                           <button
                             className="action-button pay"
+                            disabled={syncLoading}
                             onClick={(e) => {
                               e.stopPropagation();
                               HandleFandOFailBranch(branch.id);
                             }}
                           >
-                            {t('F&O Sync')} 
-                            </button>)}
-                            </td>
+                            {syncLoading ? t("Syncing...") : t("F&O Sync")}
+                          </button>
+                        )}
+                    </td>
                     <td>
                       <button className="branches-toggle-row-btn">
                         {isExpanded(branch.id) ? (
@@ -1579,54 +1708,91 @@ const onClose = () => {
               onPageChange={(page) => {
                 setExpandedRows([]);
                 setCurrentPage(page);
-            }}
-            startIndex={startIndex}
-            endIndex={Math.min(endIndex, branches.length)}
-            totalItems={branches.length}
-          />)}
-        </div>
-      )}
-    {popup && (
-  <div>
-    <div className="gp-backdrop" onClick={onClose} />
-    <div className="gp-modal">
-      <div className="gp-header">
-        <span className="gp-title">{t("Upload Branch Data")}</span>
-        <button className="gp-close-btn" onClick={onClose}>
-          {t("Close")}
-        </button>
-      </div>
-
-      {loading ? (
-        <div style={{ padding: 24 }}><LoadingSpinner /></div>
-      ) : (
-        <div style={{ padding: "0 28px 20px 28px" }}>
-          <p style={{ color: "#dc3545", fontWeight: "500", marginBottom: 12 }}>
-            {t("* All branch fields are mandatory")}
-          </p>
-          <p style={{ marginBottom: 20 }}>
-            {t("To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.")}
-          </p>
-
-          <div className="popup-buttons-row">
-            <button className="download-btn" onClick={HandleBranchDocument}>
-              📥 {t("Download Excel Template")}
-            </button>
-            <button className="upload-btn" onClick={btnUploadExcel}>
-              📤 {t("Upload Completed Excel File")}
-            </button>
-            <input
-              type="file"
-              ref={fileExcelInputRef}
-              accept=".xlsx, .xls"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
+              }}
+              startIndex={startIndex}
+              endIndex={Math.min(endIndex, branches.length)}
+              totalItems={branches.length}
             />
-          </div>
+          )}
         </div>
       )}
+      {popup && (
+        <div>
+          <div className="gp-backdrop" onClick={onClose} />
+          <div className="gp-modal">
+            <div className="gp-header">
+              <span className="gp-title">{t("Upload Branch Data")}</span>
+              <button className="gp-close-btn" onClick={onClose}>
+                {t("Close")}
+              </button>
+            </div>
+            {loading ? (
+              <div style={{ padding: 24 }}>
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <div style={{ padding: "0 28px 20px 28px" }}>
+                <p
+                  style={{
+                    color: "#dc3545",
+                    fontWeight: "500",
+                    marginBottom: 12,
+                  }}
+                >
+                  {t("* All branch fields are mandatory")}
+                </p>
+                <p style={{ marginBottom: 20 }}>
+                  {t(
+                    "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
+                  )}
+                </p>
 
-      <style>{`
+                <div className="popup-buttons-row">
+                  <button
+                    className="download-btn"
+                    onClick={HandleBranchDocument}
+                  >
+                    📥 {t("Download Excel Template")}
+                  </button>
+                  <button
+                    className="upload-btn"
+                    onClick={() => fileExcelInputRef.current.click()}
+                  >
+                    📤 {t("Choose Excel File")}
+                  </button>
+
+                  <input
+                    type="file"
+                    ref={fileExcelInputRef}
+                    accept=".xlsx, .xls"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) setSelectedFile(file); // just store file in state
+                    }}
+                  />
+                </div>
+
+                {/* Show selected file and submit button */}
+                {selectedFile && (
+                  <div style={{ marginTop: 16 , display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between", }}>
+                    <p style={{ margin: 0 }}>
+                      {t("Selected File")}: <b>{selectedFile.name}</b>
+                    </p>
+                    <button
+                      className="submit-btn"
+                      onClick={() => handleSubmitFile(selectedFile)}
+                    >
+                      ✅ {t("Submit File")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <style>{`
         .popup-buttons-row {
           display: flex;
           gap: 12px;
@@ -1717,10 +1883,9 @@ const onClose = () => {
 }
 
       `}</style>
-    </div>
-  </div>
-)}
-
+          </div>
+        </div>
+      )}
     </div>
   );
 };

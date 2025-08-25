@@ -700,5 +700,8 @@
     "Download orders": "تنزيل الطلبات",
     "Upload Orders Data": "تحميل بيانات الطلبات",
     "Click to select company": "انقر لتحديد الشركة",
-    "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل طلبات متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل."
+    "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل طلبات متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل.",
+    "Syncing...": "جارٍ المزامنة...",
+    "F&O Sync": "مزامنة F&O",
+    "Selected File": "الملف المحدد"
 }
