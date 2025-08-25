@@ -962,8 +962,10 @@ function Customers() {
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+            "Authorization": `Bearer ${token}`
+          },
+          
         }
       );
 
@@ -1158,6 +1160,7 @@ function Customers() {
       key: "download customers",
       label: t("Download Customers"),
       onClick: downloadCustomersAsExcel, // Add the download functionality
+      visible: isV("btnDownloadCustomers"),
     },
   ];
 
@@ -1356,13 +1359,15 @@ const HandleFandOFailCustomer = async (customerId) => {
                     )}
                   </div> */}
 
-                  <div className="form-group-1">
-  <label style={{ marginBottom: "6px", display: "inline-block" }}>
+                  <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                     <label style={{ marginBottom: "6px", display: "inline-block" }}>
     {t("Phone Number")}
   </label>
   <PhoneInput
     international
     defaultCountry="SA" // Set your preferred default country
+    withCountryCallingCode={true}
+    countryCallingCodeEditable={false}
     name="mobile"
     value={inviteData.mobile}
     onChange={(value) => {
@@ -1378,7 +1383,7 @@ const HandleFandOFailCustomer = async (customerId) => {
       borderColor: "red",
       '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
     } : {}}
-    className={inviteErrors.mobile ? "phone-input-error" : ""}
+    className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
   />
   {inviteErrors.mobile && (
     <div style={{ color: "red", fontSize: "0.8em" }}>

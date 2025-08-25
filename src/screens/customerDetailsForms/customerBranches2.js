@@ -1439,7 +1439,7 @@ const onClose = () => {
                 <th className="desktop-only">{t("Location Type")}</th>
                 <th className="desktop-only">{t("Region")}</th>
                 <th>{t("Status")}</th>
-                <th>{t("Actions")}</th>
+                {/* <th>{t("Actions")}</th> */}
                 <th></th>
               </tr>
             </thead>
@@ -1518,7 +1518,7 @@ const onClose = () => {
                   </tr>
                   {!isMobile && isExpanded(branch.id) && (
                     <tr className="expanded-row">
-                      <td colSpan="6">
+                      <td colSpan="7">
                         <div className="expanded-form-container">
                           {isApprovalMode &&
                             customerFormMode === "custDetailsAdd" && (

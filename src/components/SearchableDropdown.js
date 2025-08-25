@@ -12,7 +12,7 @@ function SearchableDropdown({
   style = {},
 }) {
   // Add default 'All' option at the top
-  const allOption = { name: "All", value: null };
+  const allOption = { name: "Select", value: null };
   const mergedOptions = options ? [allOption, ...options] : [allOption];
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,7 +90,7 @@ function SearchableDropdown({
           ...style,
         }}
       >
-        <span className="selected-value">{displayText}</span>
+        <span className="selected-value">{displayText.charAt(0).toUpperCase() + displayText.slice(1)}</span>
         <span className="dropdown-arrow">▼</span>
       </div>
 
@@ -130,8 +130,8 @@ function SearchableDropdown({
                     }
                     aria-disabled={isOptDisabled}
                   >
-                    {typeof opt === "object" ? opt.name : opt}
-                  </div>
+                    {i18n.language === "en" ? (typeof opt === "object" ? opt?.name.charAt(0).toUpperCase() + opt?.name.slice(1) : opt?.charAt(0).toUpperCase() + opt?.slice(1)) : (typeof opt === "object" ? opt?.name : opt)}
+                    </div>
                 );
               })
             ) : (

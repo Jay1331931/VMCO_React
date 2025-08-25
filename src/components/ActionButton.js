@@ -42,6 +42,7 @@ const ActionButton = ({ menuItems = [] }) => {
                 setActionMenuOpen(false);
                 item.onClick && item.onClick();
               }}
+              hidden={!item?.visible}
             >
               {t(item.label)}
             </div>

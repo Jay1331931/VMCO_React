@@ -5,6 +5,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import axios from "axios";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const ContactRow = ({ label, isRequired, onChange }) => {
   const { t } = useTranslation();
@@ -356,7 +358,7 @@ const token = localStorage.getItem("token");
                     branchDetails?.branchStatus === "pending");
                 return (
                   <div className="form-group" key={field}>
-                    <input
+                    {!field.toLowerCase().includes("mobile") ? (<input
                       type={field === "primaryContactEmail" ? "email" : "text"}
                       placeholder={t(name)}
                       name={field}
@@ -381,6 +383,37 @@ const token = localStorage.getItem("token");
                           field === "primaryContactEmail")
                       }
                     />
+                  ) : (
+                      <PhoneInput
+          international
+          defaultCountry="SA"
+          countryCallingCodeEditable={false}
+          placeholder={t("Phone")}
+          name={field}
+          value={branch?.[field]}
+          onChange={(value) => handleBranchFieldChange({
+            target: {
+              name: field,
+              value: value
+            }
+          })}
+          style={
+                        hasUpdate
+                          ? {
+                              backgroundColor: "#fff8e1",
+                            }
+                          : {}
+                      }
+          required={isRequired}
+          disabled={
+                        (customerFormMode === "custDetailsEdit" &&
+                          !hasUpdate) ||
+                        (branchDetails?.branchStatus !== "new" &&
+                          field === "primaryContactEmail")
+                      }
+          className="branch-phone-input"
+        />
+                    ) }
 
                     {/* Email verification section for primary contact email */}
                     {field === "primaryContactEmail" &&

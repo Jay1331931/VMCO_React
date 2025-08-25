@@ -26,7 +26,7 @@ export const getOptionsFromBasicsMaster = async (fieldName, token) => {
     console.log("Response from basics-masters:", result); 
 
     const options = result.data.map((item) => {
-  return { value: item.value, valueLc: item.valueLc };
+  return { value: item.value, valueLc: item.valueLc, description: item.description, descriptionLc: item.descriptionLc };
 });
     // const options = result.data.map((item) => item.value );
     return options;

@@ -456,6 +456,7 @@ class RbacManager {
           btnSave: { visible: false, editable: true },
           btnSubmit: { visible: false, editable: true },
           btnAddInvite: { visible: false, editable: true },
+          btnDownloadCustomers: { visible: true, editable: false },
         },
       },
       custDetailsEdit: {
@@ -520,6 +521,7 @@ class RbacManager {
           btnUnblock: { visible: false, editable: true },
           assignedTo: { visible: true, editable: true },
           btnSaveChanges: { visible: false, editable: true },
+          btnDownloadCustomers: { visible: true, editable: false },
         },
       },
       BankTransactions: {
@@ -1851,7 +1853,8 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
           btnAddInvite: { visible: true, editable: true },
             btnUploadExcel:{visible: true, editable: true},
-             FandOSync: { visible: false, editable: false },  
+             FandOSync: { visible: false, editable: false },
+             btnDownloadCustomers: { visible: false, editable: false },
         },
       },
       custDetailsEdit: {
@@ -1919,7 +1922,7 @@ class RbacManager {
           customerApprovalChecklist: { visible: true, editable: true },
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
             btnUploadExcel:{visible: true, editable: true},
-
+            btnDownloadCustomers: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -2288,7 +2291,8 @@ class RbacManager {
           btnReject: { visible: false, editable: true },
           btnAddInvite: { visible: true, editable: true},
               btnUploadExcel:{visible: false, editable: false},
-        }
+              btnDownloadCustomers: { visible: false, editable: false },
+            }
       },
       custDetailsEdit: {
         fields: {
@@ -2364,7 +2368,8 @@ class RbacManager {
           customerApprovalChecklist: { visible: true, editable: true },
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
               btnUploadExcel:{visible: false, editable: false},
-        }
+              btnDownloadCustomers: { visible: false, editable: false },
+            }
       },
       BankTransactions: {
         fields: {
@@ -2602,6 +2607,7 @@ class RbacManager {
           finalSubmissionTab: { visible: true, editable: true },
           btnAddInvite: { visible: false, editable: true },
               btnUploadExcel:{visible: false, editable: false},
+              btnDownloadCustomers: { visible: false, editable: false },
         }
       },
       custDetailsEdit: {
@@ -2685,6 +2691,7 @@ class RbacManager {
           'Download terms & conditions and upload duly signed document': { visible: false, editable: true },
           finalSubmissionTab: { visible: true, editable: true },
               btnUploadExcel:{visible: false, editable: false},
+              btnDownloadCustomers: { visible: false, editable: false },
        },
       },
       supList: {
@@ -3208,6 +3215,7 @@ class RbacManager {
           finalSubmissionTab: { visible: true, editable: true },
           btnAddInvite: { visible: false, editable: true },
            btnUploadExcel:{visible: false, editable: false},
+           btnDownloadCustomers: { visible: false, editable: false },
         }
       },
       custDetailsEdit: {
@@ -3347,6 +3355,7 @@ nonTradingDocumentsVerified: {visible: false, editable: false},
 declarationNameVerified: {visible: false, editable: false},
 confirmationDateVerified: {visible: false, editable: false},
 declarationSignatureVerified: {visible: false, editable: false},
+btnDownloadCustomers: { visible: false, editable: false },
         }
       },
       BankTransactions: {
