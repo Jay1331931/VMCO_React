@@ -394,6 +394,7 @@ class RbacManager {
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
+          General: { visible: true, editable: true },
         },
       },
       custDetailsAdd: {
@@ -1012,6 +1013,7 @@ class RbacManager {
           Customers: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
+          General: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1480,6 +1482,7 @@ class RbacManager {
           Customers: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1781,6 +1784,7 @@ class RbacManager {
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: true, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       custDetailsAdd: {
@@ -2071,6 +2075,7 @@ class RbacManager {
           Dashboard: { visible: false, editable: true },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
+            General: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -2845,6 +2850,7 @@ class RbacManager {
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -2986,6 +2992,7 @@ class RbacManager {
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -3507,6 +3514,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -4098,6 +4106,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Company: { visible: false, editable: true },
           Settings: { visible: false, editable: true },
           "Bank Transfer": { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -4243,6 +4252,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Settings: { visible: false, editable: true },
           Support: { visible: false, editable: false},
           "Bank Transfer": { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -4668,6 +4678,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Settings: { visible: false, editable: true },
           Support: { visible: false, editable: false},
           "Bank Transfer": { visible: false, editable: false },
+            General: { visible: false, editable: false },
         
         },
       },
@@ -5229,6 +5240,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Customers: { visible: false, editable: false},
           Orders: { visible: false, editable: false},
           Catalog: { visible: false, editable: false},
+            General: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -5796,6 +5808,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           Orders: { visible: true, editable: false },
           Support: { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
+            General: { visible: false, editable: false },
         },
       },
       custDetailsAdd: {
