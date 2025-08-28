@@ -51,15 +51,15 @@ const initialCategories = [
     entity: Constants.ENTITY.DAR,
     label: Constants.ENTITY.DAR,
   },
-  {
+  { 
     value: "SPECIAL_PRODUCTS",
     entity: "",
-    label: "Special Products",
+    label: "Special Products"
   },
   {
     value: "FAVORITES",
-    entity: "", // No specific entity restriction 
-    label: "Favorites",
+    entity: "", 
+    label: "Favorites"
   },
 ];
 
@@ -340,6 +340,7 @@ function Catalog() {
     "catalog"
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
 
   // Helper function to get localized entity name
   const getLocalizedEntityName = (initialCategories, currentLanguage, entityDescriptions) => {
@@ -368,19 +369,29 @@ function Catalog() {
       };
     });
         
-    // Now filter tabs based on interCompany status
-    let tabsToShow = allLocalizedTabs;
+    // Filter tabs based on user type and interCompany status
+    let tabsToShow = allLocalizedTabs.filter(tab => {
+      // First find the original category to get its entity
+      const category = initialCategories.find(cat => cat.value === tab.value);
+      
+      // For special tabs (FAVORITES and SPECIAL_PRODUCTS), only show them for customers
+      if (category && (category.value === "FAVORITES" || category.value === "SPECIAL_PRODUCTS")) {
+        return user.userType.toLowerCase() === "customer";
+      }
+      
+      return true;
+    });
 
     // If user is a customer with interCompany set to true, filter out matching entity tabs
     if (user.userType === "customer" && user.interCompany === true && user.entity) {
       const customerEntity = user.entity.toLowerCase();
       console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
 
-      tabsToShow = allLocalizedTabs.filter(tab => {
+      tabsToShow = tabsToShow.filter(tab => {
         // Find the original category to get its entity
         const category = initialCategories.find(cat => cat.value === tab.value);
 
-        // If no matching category or no entity, include the tab (for special tabs like FAVORITES, SPECIAL_PRODUCTS)
+        // If no matching category or no entity, include the tab
         if (!category || !category.entity) return true;
 
         // Check if this tab's entity exists in entityDescriptions and matches customer's entity
