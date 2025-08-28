@@ -2768,7 +2768,7 @@ setShowModal(true);
   try {
     const {data} = await axios.post(`${API_BASE_URL}/get-delivery-files`, {
       containerType:"delivery",
-      erpOrderId:"SH-SO-000128",
+      erpOrderId:erpOrderId,
     },
     { 
          
