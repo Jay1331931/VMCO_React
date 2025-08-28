@@ -10,6 +10,7 @@ class RbacManager {
     this.isUserOwner = isOwner;
   }
   //
+    static roleformfieldmap = {};
 
   // static roleformfieldmap = {
   //   [constants.ROLES.SUPER_ADMIN]: {
