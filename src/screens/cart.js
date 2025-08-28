@@ -179,7 +179,7 @@ function Cart() {
 
             // Helper function to determine if a product is a machine
             const isProductMachine = (product) => {
-                const productType = (product.productType || product.product_type || '').toLowerCase();
+                const productType = (product.productType).toLowerCase();
                 const category = (product.category || '').toLowerCase();
 
                 // Check explicit productType field first
@@ -811,7 +811,7 @@ function Cart() {
         }
 
         // Check customer and branch status before placing order
-        if ((selectedCustomerStatus || '').toLowerCase() !== 'approved') {
+        if ((selectedCustomerStatus).toLowerCase() !== 'approved') {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
@@ -820,7 +820,7 @@ function Cart() {
             });
             return;
         }
-        if ((selectedBranchStatus || '').toLowerCase() !== 'approved') {
+        if ((selectedBranchStatus).toLowerCase() !== 'approved' || !selectedBranchErpId) {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),

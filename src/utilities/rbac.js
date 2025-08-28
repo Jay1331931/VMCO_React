@@ -578,7 +578,7 @@ class RbacManager {
 //           status: { visible: true, editable: true },
 //           action: { visible: true, editable: true },
 //           sendLink: { visible: false, editable: false },
-//           addButton: { visible: true, editable: true },
+//           addButton: { visible: false, editable: false },
 //           actionMenu: { visible: true, editable: true },
 //           approvalButton: { visible: false, editable: false },
 //           orderBy: { visible: true, editable: true },
