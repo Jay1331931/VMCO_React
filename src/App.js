@@ -21,6 +21,8 @@ import RbacEditor from "./screens/rbacEditor";
 import CustomerDetails from "./screens/customerDetails";
 import Payment from "./screens/payment";
 import BankTransactions from "./screens/BankTransactions";
+import Reports from "./screens/reports";
+import ApiLogsReport from "./screens/apiLogsReport";
 import AddBankTransaction from "./components/AddBankTransaction";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -60,6 +62,11 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
+  //       const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
+  // if(tokenIsValid){
+  // RbacManager.loadRbacConfig(role,token);
+  // }
+         
   return (
     <Router>
       <Routes>
@@ -109,6 +116,8 @@ function App() {
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
         <Route path="/payment-opations/order/:orderId" element={<OptionsPage/>} />
+        <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
+        <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

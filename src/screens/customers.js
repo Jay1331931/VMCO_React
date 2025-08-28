@@ -733,32 +733,33 @@ function Customers() {
 
     return {
       ...customer,
+      ...customerContacts,
       // Contact details - each contact type is a separate row in DB
-      primaryContactName: contactsMap.primary?.name || "",
-      primaryContactDesignation: contactsMap.primary?.designation || "",
-      primaryContactEmail: contactsMap.primary?.email || "",
-      primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
+      // primaryContactName: contactsMap.primary?.name || "",
+      // primaryContactDesignation: contactsMap.primary?.designation || "",
+      // primaryContactEmail: contactsMap.primary?.email || "",
+      // primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
 
-      businessHeadName: contactsMap.business?.name || "",
-      businessHeadDesignation: contactsMap.business?.designation || "",
-      businessHeadEmail: contactsMap.business?.email || "",
-      businessHeadMobile: contactsMap.business?.mobile || "",
+      // businessHeadName: contactsMap.business?.name || "",
+      // businessHeadDesignation: contactsMap.business?.designation || "",
+      // businessHeadEmail: contactsMap.business?.email || "",
+      // businessHeadMobile: contactsMap.business?.mobile || "",
 
-      financeHeadName: contactsMap.finance?.name || "",
-      financeHeadDesignation: contactsMap.finance?.designation || "",
-      financeHeadEmail: contactsMap.finance?.email || "",
-      financeHeadMobile: contactsMap.finance?.mobile || "",
+      // financeHeadName: contactsMap.finance?.name || "",
+      // financeHeadDesignation: contactsMap.finance?.designation || "",
+      // financeHeadEmail: contactsMap.finance?.email || "",
+      // financeHeadMobile: contactsMap.finance?.mobile || "",
 
-      purchasingHeadName: contactsMap.purchasing?.name || "",
-      purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
-      purchasingHeadEmail: contactsMap.purchasing?.email || "",
-      purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
+      // purchasingHeadName: contactsMap.purchasing?.name || "",
+      // purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
+      // purchasingHeadEmail: contactsMap.purchasing?.email || "",
+      // purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
 
-      // Adding operations contact if needed
-      operationsHeadName: contactsMap.operations?.name || "",
-      operationsHeadDesignation: contactsMap.operations?.designation || "",
-      operationsHeadEmail: contactsMap.operations?.email || "",
-      operationsHeadMobile: contactsMap.operations?.mobile || "",
+      // // Adding operations contact if needed
+      // operationsHeadName: contactsMap.operations?.name || "",
+      // operationsHeadDesignation: contactsMap.operations?.designation || "",
+      // operationsHeadEmail: contactsMap.operations?.email || "",
+      // operationsHeadMobile: contactsMap.operations?.mobile || "",
       // Adding isApprovalMode to indicate if the customer is in approval mode
       isApprovalMode: false,
       workflowData: [],
@@ -994,6 +995,7 @@ function Customers() {
                   customer.id,
                   customer
                 );
+                console.log("Transformed Customer:", transformedCustomer);
                 return transformedCustomer;
               } catch (error) {
                 console.error(
@@ -1022,11 +1024,11 @@ function Customers() {
             "Brand Name (EN)": customer.brandNameEn || "",
             "Brand Name (AR)": customer.brandNameAr || "",
             "Delivery Locations": customer.deliveryLocations || "",
-            Status: customer.customerStatus || "",
-            Region: customer.region || "",
-            City: customer.city || "",
-            District: customer.district || "",
-            Street: customer.street || "",
+            "Status": customer.customerStatus || "",
+            "Region": customer.region || "",
+            "City": customer.city || "",
+            "District": customer.district || "",
+            "Street": customer.street || "",
             "Building Name": customer.buildingName || "",
             "Location Type": customer.locationType || "",
 
@@ -1057,25 +1059,25 @@ function Customers() {
             "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
 
             // Operations Head Contact
-            "Operations Head Name": customer.operationsHeadName || "",
-            "Operations Head Designation":
-              customer.operationsHeadDesignation || "",
-            "Operations Head Email": customer.operationsHeadEmail || "",
-            "Operations Head Mobile": customer.operationsHeadMobile || "",
+            // "Operations Head Name": customer.operationsHeadName || "",
+            // "Operations Head Designation":
+            //   customer.operationsHeadDesignation || "",
+            // "Operations Head Email": customer.operationsHeadEmail || "",
+            // "Operations Head Mobile": customer.operationsHeadMobile || "",
 
             // Payment Method Information
-            "Credit Limit": customer.creditLimit || "",
-            "Credit Period": customer.creditPeriod || "",
-            "Credit Balance": customer.creditBalance || "",
+            // "Credit Limit": customer.creditLimit || "",
+            // "Credit Period": customer.creditPeriod || "",
+            // "Credit Balance": customer.creditBalance || "",
 
             // Geolocation
-            Latitude: customer.geolocation?.x || "",
-            Longitude: customer.geolocation?.y || "",
+            "Latitude": customer.geolocation?.x || "",
+            "Longitude": customer.geolocation?.y || "",
 
             // Assignment Information
             "Assigned To": customer.assignedTo || "",
-            Branch: customer.branch || "",
-            Entity: customer.entity || "",
+            "Branch": customer.branch || "",
+            "Entity": customer.entity || "",
             "Inter Company": customer.interCompany ? "Yes" : "No",
 
             "Created Date": customer.createdAt

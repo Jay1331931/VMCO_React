@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode"; // <-- Correct import
+import RbacManager from "../utilities/rbac";
 
 const AuthContext = createContext();
 
@@ -71,6 +72,10 @@ export const AuthProvider = ({ children }) => {
       fetchUser(tokenFromCookie)
         .then((userData) => {
           setUser(userData);
+              const role= userData?.roles[0] && userData?.roles[0]?.toLowerCase() ==="employee" ?  userData?.designation : userData?.roles[0];
+          
+            RbacManager.loadRbacConfig(role,tokenFromCookie);
+            
           setLoading(false); // Done loading
         })
         .catch(() => {
