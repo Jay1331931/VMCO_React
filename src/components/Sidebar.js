@@ -452,32 +452,40 @@ function Sidebar({ children, title }) {
           )}
         </div>
         <div className="sidebar-menu">
-          <div className="main-menu-items">
-            {menuItems.slice(0, 7).map(({ icon, label }) => (
-              <div
-                key={label}
-                className={`menu-item ${activeMenu === label ? "active" : ""}`}
-                onClick={() => handleMenuClick(label)}
-                style={{ display: isV(label) ? "flex" : "none" }}
-              >
-                <FontAwesomeIcon icon={icon} />
-                <span>{t(label)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="bottom-menu-section">
-            {menuItems.slice(7).map(({ icon, label }) => (
-              <div
-                key={label}
-                className={`menu-item ${activeMenu === label ? "active" : ""}`}
-                onClick={() => handleMenuClick(label)}
-                style={{ display: isV(label) ? "flex" : "none" }}
-              >
-                <FontAwesomeIcon icon={icon} />
-                <span>{t(label)}</span>
-              </div>
-            ))}
-          </div>
+       
+  <div className="main-menu-items">
+    {menuItems
+      .filter(({ label }) => label.toLowerCase() !== "company")
+      .map(({ icon, label }) => (
+        <div
+          key={label}
+          className={`menu-item ${activeMenu === label ? "active" : ""}`}
+          onClick={() => handleMenuClick(label)}
+          style={{ display: isV(label) ? "flex" : "none" }}
+        >
+          <FontAwesomeIcon icon={icon} />
+          <span>{t(label)}</span>
+        </div>
+      ))}
+  </div>
+
+  <div className="bottom-menu-section">
+    {menuItems
+      .filter(({ label }) => label.toLowerCase() === "company")
+      .map(({ icon, label }) => (
+        <div
+          key={label}
+          className={`menu-item ${activeMenu === label ? "active" : ""}`}
+          onClick={() => handleMenuClick(label)}
+          style={{ display: isV(label) ? "flex" : "none" }}
+        >
+          <FontAwesomeIcon icon={icon} />
+          <span>{t(label)}</span>
+        </div>
+      ))}
+  
+</div>
+
         </div>
 
         <div className="sidebar-footer">
