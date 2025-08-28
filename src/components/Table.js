@@ -12,7 +12,8 @@ const Table = ({
     onRowClick,
     onPay,
     onsync,
-    syncLoading
+    syncLoading,
+    syncLoadingId
 }) => {
     const { t } = useTranslation();
  const isDateString = (val) => {
@@ -147,7 +148,7 @@ if (
           onsync(item.id);
         }}
       >
-         {syncLoading ? t('Syncing...') :t("F&O Sync")}
+         {syncLoadingId === item.id && syncLoading  ? t('Syncing...') :t("F&O Sync")}
       </button>
     );
   }

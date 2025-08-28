@@ -55,7 +55,9 @@ function Orders() {
   const [selectedBranch, setSelectedBranch] = useState(null);
   const fileInputRef = useRef(null);
   const [syncLoading, setSyncLoading] = useState(false);
-
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [excelLoading, setExcelLoading] = useState(false);
+  const [syncLoadingId, setSyncLoadingId] = useState(null);
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
       const newMode = !prev;
@@ -331,6 +333,7 @@ function Orders() {
       key: "upload orders",
       label: t("Upload orders"),
       onClick: () => HandleBulkOrderUpload(),
+      visible: true
     },
     {
       key: "download orders",
@@ -340,7 +343,8 @@ function Orders() {
         text: t("Button clicked"),
         icon: "success",
         confirmButtonText: t("OK"),
-      })
+      }),
+      visible: false
     },
   ];
 
@@ -514,12 +518,17 @@ function Orders() {
   const onClose = () => {
     setBulkUploadPopUp(false);
     setSelectedCustomer(null);
+    setSelectedFile(null);
     setSelectedBranch(null);
+      if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
-
+// bulk-order/upload-excel
    const handleFandOFailSO = async (orderId) => {
     setSyncLoading(true);
+    setSyncLoadingId(orderId );
      try {
        const { data } = await axios.get(
          `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
@@ -561,7 +570,107 @@ function Orders() {
        });
      }
    };
+  const handleSubmitFile = async (file) => {
 
+    if (!file) return;
+    setExcelLoading(true)
+    try {
+
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("customerId", selectedCustomer.id);
+      formData.append("branchId", selectedBranch.id);
+    
+
+      const response = await axios.post(
+        `${API_BASE_URL}/bulk-order/upload-excel`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+          validateStatus: () => true,
+        }
+      );
+
+      if (
+        response?.status === 400 &&
+        response.headers["content-type"] !== "application/json"
+      ) {
+        const blob = new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        Swal.fire({
+          title: t("Validation Failed"),
+          html: `
+    ${t("Some rows contain validation errors.")}<br>
+    ${t("The Excel file has been updated with a new column named")} <b>${t(
+            "Errors"
+          )}</b>.<br>
+    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
+            "column, fix the issues, and re-upload the file."
+          )}.
+  `,
+          icon: "warning",
+          confirmButtonText: t("Download Error File"),
+        }).then(() => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "sales_order_upload_errors.xlsx";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        });
+
+        return; // Make sure to return early to prevent success message
+      }
+      const blob = response?.data;
+      const text = await blob.text(); // convert blob to text
+      const data = JSON.parse(text); // parse text to JSON
+      console.log(response?.status ,data?.response?.success);
+      if (response?.status === 200 && data?.response?.success) {
+       fetchOrders()
+       
+
+        Swal.fire({
+          title: t("File Uploaded Successfully"),
+          text:
+            t(data.message) ||
+            t("Sales have been updated from the Excel file."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else {
+        Swal.fire({
+          title: t("File Upload Failed"),
+          text:
+            t(data.message) || t("An error occurred while uploading the file."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      Swal.fire({
+        title: t("File Upload Failed"),
+        text: t("An error occurred while uploading the file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+      });
+    } finally {
+      setBulkUploadPopUp(false);
+      setSelectedCustomer(null);
+    setSelectedBranch(null);
+      setSelectedFile(null); // reset file after submit
+      setExcelLoading(false);
+    }
+  };
   return (
     <Sidebar title={t("Orders")}>
       {isV("ordersContent") && (
@@ -599,6 +708,7 @@ function Orders() {
               onPay={handlePay}
               onsync={handleFandOFailSO}
               syncLoading={syncLoading}
+              syncLoadingId={syncLoadingId}
             />
           )}
 
@@ -618,7 +728,8 @@ function Orders() {
           {bulkUploadPopUp && (
             <div>
               <div className="gp-backdrop" onClick={onClose} />
-              <div className="gp-modal">
+              {
+                excelLoading ? <div><LoadingSpinner/></div> :    <div className="gp-modal">
                 <div className="gp-header">
                   <span className="gp-title">{t("Upload Orders Data")}</span>
                   <button className="gp-close-btn" onClick={onClose}>
@@ -690,19 +801,39 @@ function Orders() {
                         📥 {t("Download Excel Template")}
                       </button>
                       <button className="upload-btn"
-                        onClick={() => alert("Upload the Excel")}
+                           onClick={() => fileInputRef.current.click()}
                         disabled={!selectedCustomer || !selectedBranch}
                         >
                         📤 {t("Upload Completed Excel File")}
                       </button>
-                      {/* <input
+                      <input
                         type="file"
-                        ref={fileExcelInputRef}
+                        ref={fileInputRef}
                         accept=".xlsx, .xls"
                         style={{ display: "none" }}
-                        onChange={handleFileChange}
-                      /> */}
+                        // onChange={handleFileChange}
+                        onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) setSelectedFile(file); // just store file in state
+                    }}
+                      />
+                     
                     </div>
+                     {selectedFile && (
+                  <div style={{ marginTop: 16 , display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between", }}>
+                    <p style={{ margin: 0 }}>
+                      {t("Selected File")}: <b>{selectedFile.name}</b>
+                    </p>
+                    <button
+                      className="submit-btn"
+                      onClick={() => handleSubmitFile(selectedFile)}
+                    >
+                      ✅ {t("Submit File")}
+                    </button>
+                  </div>
+                )}
                   </div>
                 )}
                 {showCustomerPopup && (
@@ -735,6 +866,8 @@ function Orders() {
                   />
                 )}
               </div>
+              }
+            
             </div>
           )}
         </div>
