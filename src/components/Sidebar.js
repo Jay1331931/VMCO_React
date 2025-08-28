@@ -23,6 +23,7 @@ import {
   faSignOutAlt,
   faLanguage,
   faBank,
+  faFile,
   faUpload
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
@@ -372,6 +373,11 @@ function Sidebar({ children, title }) {
           console.error("Failed to fetch customer:", err);
         }
         break;
+
+        case "Reports":
+          navigate("/reports");
+          break;
+
       default:
         // If no match is found, stay on current page
         break;
@@ -398,6 +404,7 @@ function Sidebar({ children, title }) {
     { icon: faUsers, label: "Customers" },
     { icon: faHeadset, label: "Support" },
     { icon: faTools, label: "Maintenance" },
+    { icon: faFile, label: "Reports" },
     { icon: faBank, label: "Bank Transfer" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },

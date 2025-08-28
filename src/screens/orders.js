@@ -332,12 +332,14 @@ function Orders() {
     {
       key: "upload orders",
       label: t("Upload orders"),
+      visible: true,
       onClick: () => HandleBulkOrderUpload(),
       visible: true
     },
     {
       key: "download orders",
       label: t("Download orders"),
+      visible: true,
       onClick: () => Swal.fire({
         title: t("Download Orders clicked"),
         text: t("Button clicked"),

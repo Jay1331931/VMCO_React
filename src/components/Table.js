@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Constants from '../constants';
 import { convertToTimezone, TIMEZONES } from '../utilities/convertToTimezone';
-
+import "../styles/components.css";
 const Table = ({
     columns,
     data,
@@ -16,6 +16,70 @@ const Table = ({
     syncLoadingId
 }) => {
     const { t } = useTranslation();
+    // Add copy to clipboard function
+    const copyToClipboard = async (text) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            // You can add a toast notification here if needed
+            console.log('Copied to clipboard');
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+        }
+    };
+
+    // Add this function to render request/response body with copy option
+    const renderBodyCell = (content, title) => {
+        if (!content) return '-';
+        
+        // Convert objects to JSON strings
+        let contentString;
+        if (typeof content === 'object' && content !== null) {
+            contentString = JSON.stringify(content, null, 2);
+        } else {
+            contentString = String(content);
+        }
+        
+        const truncatedContent = contentString.length > 30 
+            ? `${contentString.substring(0, 30)}...` 
+            : contentString;
+        
+        return (
+            <div style={{ position: 'relative', paddingRight: '40px' }}>
+                <div style={{ 
+                    maxHeight: '60px', 
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    fontSize: '12px'
+                }} title={contentString}>
+                    {truncatedContent}
+                </div>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(contentString);
+                    }}
+                    // style={{
+                    //     position: 'absolute',
+                    //     top: '0',
+                    //     right: '0',
+                    //     background: '#007bff',
+                    //     color: 'white',
+                    //     border: 'none',
+                    //     borderRadius: '3px',
+                    //     padding: '2px 8px',
+                    //     fontSize: '10px',
+                    //     cursor: 'pointer'
+                    // }}
+                    className='copy-btn'
+                    title={`Copy full ${title}`}
+                >
+                    {t("Copy")}
+                </button>
+            </div>
+        );
+    };
  const isDateString = (val) => {
         if (val instanceof Date) return true;
         if (typeof val === "string") {
@@ -43,7 +107,14 @@ const Table = ({
             }
             return value;
         }
- 
+  // Handle requestBody and responseBody specially
+        if (column.key === 'requestBody') {
+            return renderBodyCell(item.requestBody, 'Request Body');
+        }
+        
+        if (column.key === 'responseBody') {
+            return renderBodyCell(item.responseBody, 'Response Body');
+        }
         // Handle status badges
         if (column.key === 'status' && getStatusClass) {
             return (
