@@ -4803,7 +4803,7 @@ class RbacManager {
           Catalog: { visible: false, editable: false },
           Orders: { visible: false, editable: false },
           General: { visible: false, editable: false },
-  Reports: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -5990,6 +5990,7 @@ class RbacManager {
           Orders: { visible: false, editable: false },
           Catalog: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false }
         },
       },
       BankTransactions: {
