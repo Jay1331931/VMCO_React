@@ -136,6 +136,7 @@ function OrderDetails() {
   const [pendingSaveAction, setPendingSaveAction] = useState(null);  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
    const [showModal, setShowModal] = useState(false);
     const [pdfFiles, setPdfFiles] = useState([]);
+    const [deliveryImages,setDeliveryImages]=useState([])
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
@@ -2762,6 +2763,49 @@ setShowModal(true);
     setShowModal(false);
     setPdfFiles([] );
   };
+  console.log("formMode111111111",formMode,orderFromNav)
+  const getDeliveryFiles = async ( erpOrderId) => {
+  try {
+    const {data} = await axios.post(`${API_BASE_URL}/get-delivery-files`, {
+      containerType:"delivery",
+      erpOrderId:"SH-SO-000128",
+    },
+    { 
+         
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        }
+  );
+    return data?.data;
+  } catch (error) {
+    console.error("Error fetching delivery files:", error);
+    throw error;
+  }
+};
+useEffect(() => {
+  if (formMode === "add") return;
+
+  const fetchImages = async () => {
+    if (
+      orderFromNav &&
+      orderFromNav?.erpOrderId &&
+      orderFromNav?.status?.toLowerCase() === "delivered"
+    ) {
+      try {
+        const result = await getDeliveryFiles(orderFromNav?.erpOrderId);
+        setDeliveryImages(result || []);
+        console.log("Fetched delivery images:", result.data || []);
+      } catch (error) {
+        console.error("Failed to fetch delivery images:", error);
+      }
+    }
+  };
+
+  fetchImages();
+}, [formMode, orderFromNav]);
+
+
 
   return (
     <Sidebar>
@@ -3193,7 +3237,7 @@ setShowModal(true);
                     <>
                       <label>{t('Delivery images')}</label>
                       <div className="maintenance-images-list">
-                        {isV('addImages') && (
+                        {/* {isV('addImages') && (
                           <>
                             <button
                               type="button"
@@ -3212,16 +3256,45 @@ setShowModal(true);
                               onChange={handleAddImage}
                             />
                           </>
-                        )}
-                        {images.map((img, idx) => (
-                          <div
-                            key={idx}
-                            className="maintenance-image-placeholder"
-                            style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-                            onClick={() => img && setPopupImage(img)}
-                            title={img ? 'Click to view' : ''}
-                          />
-                        ))}
+                        )} */}
+ {deliveryImages?.map((img, idx) => {
+  const fileUrl = img.url;
+  const fileName = img.filename || img.fileName || `file-${idx}`;
+  const extension = fileName.split(".").pop().toLowerCase();
+
+  const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(extension);
+  const isPdf = extension === "pdf";
+  const isExcel = ["xls", "xlsx", "csv"].includes(extension);
+
+  return (
+    <div
+      key={idx}
+      className="maintenance-image-placeholder"
+      style={
+        isImage && fileUrl
+          ? {
+              backgroundImage: `url(${fileUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : {}
+      }
+      onClick={() => isImage && fileUrl && setPopupImage(fileUrl)}
+      title={isImage && fileUrl ? "Click to view" : ""}
+    >
+      {!isImage && fileUrl && (
+        <a
+          href={fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="file-link-button"
+        >
+          {isPdf ? "📄 View PDF" : isExcel ? "📊 Open Excel" : "📁 Download File"}
+        </a>
+      )}
+    </div>
+  );
+})}
                       </div>
                     </>
                   )}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 import ActionButton from "../components/ActionButton";
-import Table from "../components/Table";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import RbacManager from "../utilities/rbac";
@@ -19,28 +18,26 @@ function RbacEditor() {
   const [pagesLoading, setPagesLoading] = useState(false);
   const [roles, setRoles] = useState([]);
   const [pages, setPages] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const [error, setError] = useState(null);
   const { t } = useTranslation();
-  const { user, token } = useAuth();
+  const { user,token } = useAuth();
 
   // Fetch roles and pages from API
   useEffect(() => {
-    fetchRoles();
-    fetchPages();
+    fetchRolesAndPages();
   }, []);
+  
 
-  const fetchRoles = async () => {
+  const fetchRolesAndPages = async () => {
     setRolesLoading(true);
+    setPagesLoading(true);
     try {
-      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/currentRoles`;
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/rbac/rolesandforms`;
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
-        
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -48,13 +45,13 @@ function RbacEditor() {
       }
 
       const data = await response.json();
-      setRoles(data.data);
+      setRoles(data.data.roles);
+      setPages(data.data.forms);
     } catch (err) {
       setError(`Error loading roles: ${err.message}`);
-      // Fallback to RbacManager if API fails
-      setRoles(RbacManager.getRoles());
     } finally {
       setRolesLoading(false);
+      setPagesLoading(false);
     }
   };
 
@@ -76,7 +73,6 @@ function RbacEditor() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        
         body: JSON.stringify({ roleName: newRoleName.trim() }),
       });
 
@@ -85,11 +81,7 @@ function RbacEditor() {
         throw new Error(errorData.message || `Failed to add role: ${response.statusText}`);
       }
 
-      // Clear the input field
       setNewRoleName("");
-
-      // Refetch roles to update the dropdown
-      fetchRoles();
     } catch (err) {
       setError(`Error adding role: ${err.message}`);
     } finally {
@@ -97,73 +89,39 @@ function RbacEditor() {
     }
   };
 
-  const fetchPages = async () => {
-    setPagesLoading(true);
-    try {
-      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/forms`;
-
-      const response = await fetch(apiUrl, {
-        method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
-        },
-        
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch pages: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      console.log("Fetched pages:", result.data);
-      if (result.success && Array.isArray(result.data)) {
-        setPages(result.data);
-      } else {
-        throw new Error("Invalid response format from API");
-      }
-    } catch (err) {
-      setError(`Error loading pages: ${err.message}`);
-      // Fallback to RbacManager if API fails
-      setPages(RbacManager.getForms());
-    } finally {
-      setPagesLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (selectedRole && selectedPage) {
+    if (selectedRole) {
       fetchFieldPermissions();
     } else {
       setFieldsData([]);
     }
-  }, [selectedRole, selectedPage]);
+  }, [selectedRole]);
 
-  const fetchFieldPermissions = () => {
+  const fetchFieldPermissions = async() => {
     setLoading(true);
     try {
-      // In a real implementation, you would fetch this from your backend or from RbacManager
-      // For now, we'll create some example permissions
       const rbacMgr = new RbacManager();
-      const fieldPermissions = rbacMgr.getFieldPermissions(selectedRole, selectedPage) || {};
 
-      // Transform permissions object to array format for the table
-      const permissionsArray = Object.keys(fieldPermissions || {}).map((fieldName) => ({
-        field: fieldName,
-        isVisible: fieldPermissions[fieldName]?.visible || false,
-        isEditable: fieldPermissions[fieldName]?.editable || false,
-      }));
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/rbac/getrbacbyroles`;
 
-      setFieldsData(
-        permissionsArray.length
-          ? permissionsArray
-          : [
-              { field: "id", isVisible: true, isEditable: false },
-              { field: "name", isVisible: true, isEditable: true },
-              { field: "status", isVisible: true, editable: true },
-              { field: "createDate", isVisible: true, editable: false },
-            ]
-      );
+      const payload = {
+        "roles": [selectedRole],
+      };
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch roles: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setPermissions({[data.data[0].role]: data.data[0].rbac} || {});
+      console.log(JSON.stringify(permissions));
+      
     } catch (err) {
       setError(err.message || "Failed to fetch field permissions");
       setFieldsData([]);
@@ -174,14 +132,29 @@ function RbacEditor() {
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
-    setSelectedPage(""); // Reset page selection when role changes
+    setSelectedPage("");
   };
 
   const handlePageChange = (e) => {
     setSelectedPage(e.target.value);
+    const fieldPermissions = permissions[selectedRole]?.[e.target.value]?.fields || {};
+
+    const permissionsArray = Object.keys(fieldPermissions || {}).map((fieldName) => ({
+      field: fieldName,
+      isVisible: fieldPermissions[fieldName]?.visible || false,
+      isEditable: fieldPermissions[fieldName]?.editable || false,
+    }));
+
+    setFieldsData(
+      permissionsArray.length
+        ? permissionsArray
+        : []
+    );    
   };
 
   const handleTogglePermission = (index, permissionType) => {
+    console.log('Index received:', index, 'Permission type:', permissionType); // Debug log
+    
     const updatedFields = [...fieldsData];
     updatedFields[index][permissionType] = !updatedFields[index][permissionType];
 
@@ -192,66 +165,96 @@ function RbacEditor() {
 
     setFieldsData(updatedFields);
 
-    // In a real implementation, you would save these changes to your backend
-    // savePermissions(selectedRole, selectedPage, updatedFields);
+    // Update the permissions state to persist changes
+    const updatedPermissions = { ...permissions };
+    const fieldName = updatedFields[index].field;
+    
+    // Ensure the nested structure exists
+    if (!updatedPermissions[selectedRole]) {
+      updatedPermissions[selectedRole] = {};
+    }
+    if (!updatedPermissions[selectedRole][selectedPage]) {
+      updatedPermissions[selectedRole][selectedPage] = { fields: {} };
+    }
+    if (!updatedPermissions[selectedRole][selectedPage].fields[fieldName]) {
+      updatedPermissions[selectedRole][selectedPage].fields[fieldName] = {};
+    }
+
+    // Update the specific permission
+    if (permissionType === "isVisible") {
+      updatedPermissions[selectedRole][selectedPage].fields[fieldName].visible = updatedFields[index]["isVisible"];
+      // If visibility is turned off, also turn off editability in permissions
+      if (!updatedFields[index]["isVisible"]) {
+        updatedPermissions[selectedRole][selectedPage].fields[fieldName].editable = false;
+      }
+    } else if (permissionType === "isEditable") {
+      updatedPermissions[selectedRole][selectedPage].fields[fieldName].editable = updatedFields[index]["isEditable"];
+    }
+
+    setPermissions(updatedPermissions);
+    
+    console.log('Updated permissions:', updatedPermissions); // Debug log to see the updated permissions
   };
 
-  const handleSavePermissions = () => {
-    // Implement saving permissions to your backend or RbacManager
-    Swal.fire({
-      title: "Save Permissions",
-      text: t("Permissions saved successfully"),
-      icon: "warning",
-      confirmButtonText:t("Ok")
-    })  
-    // alert("Permissions saved successfully");
-  };
+  const handleSavePermissions = async () => {
+    try {
+      setLoading(true);
+      
+      const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/rbac/updaterbac`;
+      
+      const payload = {
+        role: selectedRole,
+        rbacConfig: permissions[selectedRole]
+      };
 
-  const columns = [
-    {
-      key: "field",
-      header: "Field",
-    },
-    {
-      key: "isVisible",
-      header: "Is Visible",
-      render: (row, index) => (
-        <div className='toggle-switch'>
-          <input type='checkbox' id={`visibility-${index}`} checked={row.isVisible} onChange={() => handleTogglePermission(index, "isVisible")} />
-          <label htmlFor={`visibility-${index}`}></label>
-        </div>
-      ),
-    },
-    {
-      key: "isEditable",
-      header: "Is Editable",
-      render: (row, index) => (
-        <div className='toggle-switch'>
-          <input
-            type='checkbox'
-            id={`editable-${index}`}
-            checked={row.isEditable}
-            disabled={!row.isVisible}
-            onChange={() => handleTogglePermission(index, "isEditable")}
-          />
-          <label htmlFor={`editable-${index}`}></label>
-        </div>
-      ),
-    },
-  ];
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" ,
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to save permissions: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      Swal.fire({
+        title: "Success",
+        text: t("Permissions saved successfully"),
+        icon: "success",
+        confirmButtonText: t("Ok")
+      });
+
+    } catch (err) {
+      console.error("Error saving permissions:", err);
+      
+      Swal.fire({
+        title: "Error",
+        text: t(`Error saving permissions: ${err.message}`),
+        icon: "error",
+        confirmButtonText: t("Ok")
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Action menu items
   const rbacMenuItems = [
     {
       key: "exportConfig",
       label: "Export Configuration",
-      onClick: () =>Swal.fire({
+      onClick: () => Swal.fire({
         title: t("Export RBAC Configuration"),
         text: t("Export RBAC Configuration clicked"),
         icon: "info",
         confirmButtonText: "OK",
-      }), // Replace with actual export logic
-        //  alert("Export RBAC Configuration clicked"),
+      }),
     },
     {
       key: "importConfig",
@@ -262,8 +265,7 @@ function RbacEditor() {
           text: t("Import RBAC Configuration clicked"),
           icon: "info",
           confirmButtonText: "OK",
-        }), // Replace with actual import logic
-        // alert("Import RBAC Configuration clicked"),
+        }),
     },
   ];
 
@@ -334,7 +336,48 @@ function RbacEditor() {
 
         {selectedRole && selectedPage ? (
           <>
-            <Table columns={columns} data={fieldsData} />
+            {/* Inline Table */}
+            <div className="table-container">
+              <table className="permissions-table">
+                <thead>
+                  <tr>
+                    <th>Field</th>
+                    <th>Is Visible</th>
+                    <th>Is Editable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {fieldsData.map((row, index) => (
+                    <tr key={index}>
+                      <td>{row.field}</td>
+                      <td>
+                        <div className='toggle-switch'>
+                          <input 
+                            type='checkbox' 
+                            id={`visibility-${index}`} 
+                            checked={row.isVisible} 
+                            onChange={() => handleTogglePermission(index, "isVisible")} 
+                          />
+                          <label htmlFor={`visibility-${index}`}></label>
+                        </div>
+                      </td>
+                      <td>
+                        <div className='toggle-switch'>
+                          <input
+                            type='checkbox'
+                            id={`editable-${index}`}
+                            checked={row.isEditable}
+                            disabled={!row.isVisible}
+                            onChange={() => handleTogglePermission(index, "isEditable")}
+                          />
+                          <label htmlFor={`editable-${index}`}></label>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {loading && <div className='loading-indicator'>Loading...</div>}
             {error && <div className='error-message'>{error}</div>}

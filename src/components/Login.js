@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import Constants from "../constants";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import RbacManager from "../utilities/rbac";
 
 function Login({ title, userType }) {
   const { login } = useAuth();
@@ -63,22 +64,26 @@ function Login({ title, userType }) {
           setError("Email or password is invalid");
           return;
         }
+          console.log("data",data)
+        const role= data?.data?.roles[0] && data.data.roles[0]?.toLowerCase() ==="employee" ?  data?.data?.designation : data.data.roles[0];
+    
+         RbacManager.loadRbacConfig(role,data.token);
         if (data?.data?.customerStatus === "new") {
           navigate("/customerDetails", {
             state: { customerId: data?.data?.customerId, mode: "add" },
           });
-        } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || data?.data?.designation === Constants.DESIGNATIONS.OPS_MANAGER || data?.data?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || data?.data?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER || data?.data?.roles[0] === Constants.ROLES.SUPER_ADMIN)) {
+        } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() || data?.data?.roles[0].toLowerCase() === Constants.ROLES.SUPER_ADMIN.toLowerCase())) {
 
             navigate("/customers");
-          } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_HEAD || data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN || data?.data?.designation === Constants.DESIGNATIONS.MAINTENANCE_MANAGER)) {
+          } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())) {
             navigate("/maintenance");
 
-          } else if (data?.data?.userType === "employee" && (data?.data?.designation === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT)) {
+          } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase())) {
             navigate("/bankTransactions");
           }
-        else {
-          navigate("/catalog");
-        }
+        // else {
+        //   navigate("/catalog");
+        // }
 
         setMessage(data.message);
         setError("");

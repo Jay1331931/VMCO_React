@@ -60,9 +60,9 @@ function Orders() {
     setApprovalMode((prev) => {
       const newMode = !prev;
       if (newMode) {
-        fetchApprovals(page, searchQuery);
+        fetchApprovals(1, searchQuery);
       } else {
-        fetchOrders(page, searchQuery);
+        fetchOrders(1, searchQuery);
       }
       return newMode;
     });
