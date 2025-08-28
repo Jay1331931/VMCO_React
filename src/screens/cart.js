@@ -237,10 +237,10 @@ function Cart() {
 
                 // Categorize based on entity and product type
                 const entity = (product.entity || '').toLowerCase();
-                const isMachine = isProductMachine(product);
+                // const isMachine = isProductMachine(product);
 
-                // Add isMachine flag to formattedItem
-                formattedItem.isMachine = isMachine;
+                // // Add isMachine flag to formattedItem
+                // formattedItem.isMachine = isMachine;
 
                 // Add isFresh flag to formattedItem (preserve from original product data)
                 formattedItem.isFresh = product.isFresh === true;                // Categorize based on entity and product type

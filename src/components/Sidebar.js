@@ -23,6 +23,7 @@ import {
   faSignOutAlt,
   faLanguage,
   faBank,
+  faUpload
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 
@@ -302,6 +303,9 @@ function Sidebar({ children, title }) {
       case "/catalog":
         setActiveMenu("Catalog");
         break;
+      case "/admin/upload":
+        setActiveMenu("General");
+        break;
       default:
         setActiveMenu("Dashboard");
     }
@@ -341,6 +345,9 @@ function Sidebar({ children, title }) {
         break;
       case "Bank Transfer":
         navigate("/bankTransactions");
+        break;
+      case "General":
+        navigate("/admin/upload");
         break;
       case "Dashboard":
         navigate("/login");
@@ -394,6 +401,7 @@ function Sidebar({ children, title }) {
     { icon: faBank, label: "Bank Transfer" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
+    { icon: faUpload, label: "General" },
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";

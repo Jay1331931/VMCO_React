@@ -7,6 +7,8 @@ import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2"; // Add this import at the top if not already present
 import Constants from "../../constants";
+import SearchableDropdown from "../../components/SearchableDropdown";
+import i18n from "../../i18n";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
 const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
@@ -17,13 +19,15 @@ function Documents({
   nonTradingFilesToUpload = {},
   customerData = {},
   originalCustomerData = {},
+  verifiedData = {},
+  onChangeVerifiedData,
   setTabsHeight,
   mode,
   formErrors = {},
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-
+  const TERMS_AND_CONDITIONS = i18n.language === "en" ? Constants.DEPARTMENTS_NAMES.TERMS_AND_CONDITIONS_EN : Constants.DEPARTMENTS_NAMES.TERMS_AND_CONDITIONS_AR;
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -45,6 +49,11 @@ function Documents({
     bankLetter: null,
     nationalAddress: null,
     contractAgreement: null,
+    contractAgreementShc: null,
+    contractAgreementVmco: null,
+    contractAgreementDar: null,
+    contractAgreementGmtc: null,
+    contractAgreementNaqi: null,
     creditApplication: null,
   });
   const [tradingFilePreviews, setTradingFilePreviews] = useState({});
@@ -57,9 +66,22 @@ function Documents({
     bankLetter: useRef(),
     nationalAddress: useRef(),
     contractAgreement: useRef(),
+    contractAgreementShc: useRef(),
+    contractAgreementVmco: useRef(),
+    contractAgreementDar: useRef(),
+    contractAgreementGmtc: useRef(),
+    contractAgreementNaqi: useRef(),
     creditApplication: useRef(),
     nonTradingDocuments: useRef(),
   };
+  const nonTradingDocumentTypes = [
+  "National ID / Iqama",
+  "Freelance Work Certificate",
+  "Passport",
+  "Others (Specify)"
+];
+const [selectedDocType, setSelectedDocType] = useState("");
+const [customDocName, setCustomDocName] = useState("");
   useEffect(() => {
     setTabsHeight("auto");
   }, []);
@@ -102,6 +124,13 @@ function Documents({
       }));
     }
   };
+
+  const handleNonTradingDropdownChange = (e) => {
+    setSelectedDocType(e.target.value);
+    if (e.target.value !== "Others (Specify)") {
+      setCustomDocName("");
+    }
+  };
   // Handle multiple file uploads
   const handleNonTradingDocumentsChange = (e) => {
     const fileList = e.target.files;
@@ -125,6 +154,11 @@ function Documents({
         });
         return;
       }
+
+      // Add a fileName property in files which holds custDocType
+      files.forEach((file) => {
+        file.originalname = customDocName || selectedDocType;
+      });
 
       // Convert FileList to array and append to existing files
       const newFiles = files;
@@ -166,11 +200,11 @@ function Documents({
   // Remove a specific file
   const removeFile = (index) => {
     setNonTradingFiles((prevFiles) =>
-      prevFiles.filter((_, fileIndex) => fileIndex !== index)
+      prevFiles.filter((_, fileIndex) => fileIndex !== nonTradingFiles.length - 1 - index)
     );
     // Remove the file from nonTradingFilesToUpload["others"] as well
     const updatedFiles = nonTradingFiles.filter(
-      (_, fileIndex) => fileIndex !== index
+      (_, fileIndex) => fileIndex !== nonTradingFiles.length - 1 - index
     );
     // If file exits in customerData, remove it from there as well
     if (Array.isArray(customerData?.nonTradingDocuments) && mode === "edit") {
@@ -293,7 +327,56 @@ function Documents({
       <h3 className="form-header full-width">{t("Documents")}</h3>
       <div className="form-group" />
       <div className="form-header full-width">
-        {t("Download terms & conditions and upload duly signed document")}
+        {t("Download ")}
+        {(
+          <a
+            href="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (!TERMS_AND_CONDITIONS) {
+                alert(t("No checklist URL configured."));
+                return;
+              }
+
+              try {
+                const response = await fetch(
+                  `${API_BASE_URL}/get-files`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                      fileName: TERMS_AND_CONDITIONS,
+                      containerType: "documents",
+                    }),
+                    
+                  }
+                );
+                const res = await response.json();
+                if (res.status === "Ok") {
+                  window.open(res.data.url, "_blank", "noopener,noreferrer");
+                } else {
+                  throw new Error("Failed to fetch file URL");
+                }
+              } catch (error) {
+                console.error("Error viewing checklist:", error);
+
+                window.open(
+                  TERMS_AND_CONDITIONS,
+                  "_blank",
+                  "noopener,noreferrer"
+                );
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {t("Terms & Conditions")}
+          </a>
+        
+      )}
+      {t(" and upload duly signed document.")}
       </div>
 
       {/* Common Fields */}
@@ -308,7 +391,7 @@ function Documents({
           }}
         >
           <label htmlFor="acknowledgementSignature">
-            {t("Upload duly signed document")}
+            {t("Terms and Conditions")}
             <span className="required-field">*</span>
             {customerData?.acknowledgementSignature !==
               originalCustomerData?.acknowledgementSignature && mode === "edit" && (
@@ -319,6 +402,34 @@ function Documents({
             <div className="error">{t(formErrors.acknowledgementSignature)}</div>
           )}
         </td>
+        <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          { isV("acknowledgementSignatureVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="acknowledgementSignatureVerified"
+        name="acknowledgementSignatureVerified"
+        checked={verifiedData?.acknowledgementSignatureVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="acknowledgementSignatureVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
         <td
           className="upload-cell"
           style={{ width: "100px", paddingRight: "16px", verticalAlign: "top" }}
@@ -452,6 +563,34 @@ function Documents({
                 <div className="error">{t(formErrors.crCertificate)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("crCertificateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="crCertificateVerified"
+        name="crCertificateVerified"
+        checked={verifiedData?.crCertificateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="crCertificateVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -586,6 +725,34 @@ function Documents({
                 <div className="error">{t(formErrors.vatCertificate)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("vatCertificateVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="vatCertificateVerified"
+        name="vatCertificateVerified"
+        checked={verifiedData?.vatCertificateVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="vatCertificateVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -720,6 +887,34 @@ function Documents({
                 <div className="error">{t(formErrors.nationalId)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          { isV("nationalIdVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalIdVerified"
+        name="nationalIdVerified"
+        checked={verifiedData?.nationalIdVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalIdVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -847,6 +1042,34 @@ function Documents({
                 <div className="error">{t(formErrors.bankLetter)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("bankLetterVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankLetterVerified"
+        name="bankLetterVerified"
+        checked={verifiedData?.bankLetterVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankLetterVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -974,6 +1197,34 @@ function Documents({
                 <div className="error">{t(formErrors.nationalAddress)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nationalAddressVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalAddressVerified"
+        name="nationalAddressVerified"
+        checked={verifiedData?.nationalAddressVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalAddressVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1084,9 +1335,12 @@ function Documents({
               )}
             </td>
           </tr>
+          {isV("assignedToEntityWise") && (
+            <>
+            
 
-          {/* Contract Agreement */}
-          <tr className="document-upload full-width" key="contractAgreement">
+          {/* Contract Agreement SHC */}
+          <tr className="document-upload full-width" key="contractAgreementShc">
             <td
               className="label-cell"
               style={{
@@ -1095,18 +1349,46 @@ function Documents({
                 verticalAlign: "top",
               }}
             >
-              <label htmlFor="contractAgreement">
-                {t("Contract Agreement")}
-                <span className="required-field">*</span>
-                {customerData?.contractAgreement !==
-                  originalCustomerData?.contractAgreement && mode === "edit" && (
+              <label htmlFor="contractAgreementShc">
+                {t("Contract Agreement SHC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementShc !==
+                  originalCustomerData?.contractAgreementShc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
-              {formErrors?.contractAgreement && (
-                <div className="error">{t(formErrors.contractAgreement)}</div>
+              {formErrors?.contractAgreementShc && (
+                <div className="error">{t(formErrors.contractAgreementShc)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementShcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementShcVerified"
+        name="contractAgreementShcVerified"
+        checked={verifiedData?.contractAgreementShcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementShcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1119,18 +1401,18 @@ function Documents({
               <input
                 type="file"
                 accept=".pdf"
-                id="contractAgreement"
-                name="contractAgreement"
+                id="contractAgreementShc"
+                name="contractAgreementShc"
                 className="hidden-file-input"
-                ref={fileInputRefs.contractAgreement}
+                ref={fileInputRefs.contractAgreementShc}
                 onChange={(e) =>
-                  handleTradingDocumentChange(e, "contractAgreement")
+                  handleTradingDocumentChange(e, "contractAgreementShc")
                 }
                 required
                 disabled={mode === "edit"}
               />
               <label
-                htmlFor="contractAgreement"
+                htmlFor="contractAgreementShc"
                 className="custom-file-button"
                 style={{
                   display: "inline-block",
@@ -1142,33 +1424,33 @@ function Documents({
               </label>
             </td>
             <td className="file-display-cell">
-              {tradingFilesToUpload?.contractAgreement && (
+              {tradingFilesToUpload?.contractAgreementShc && (
                 <li
-                  key={tradingFilesToUpload.contractAgreement.name}
+                  key={tradingFilesToUpload.contractAgreementShc.name}
                   className="uploaded-file-item"
                 >
-                  {tradingFilePreviews?.contractAgreement && (
+                  {tradingFilePreviews?.contractAgreementShc && (
                     <a
-                      href={tradingFilePreviews.contractAgreement}
+                      href={tradingFilePreviews.contractAgreementShc}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="file-link"
                       style={{ marginLeft: 8 }}
                     >
-                      {tradingFilesToUpload.contractAgreement.name}
+                      {tradingFilesToUpload.contractAgreementShc.name}
                     </a>
                   )}
                   <button
                     type="button"
                     className="delete-file-button"
-                    onClick={() => removeTradingFile("contractAgreement")}
+                    onClick={() => removeTradingFile("contractAgreementShc")}
                   >
                     ×
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.contractAgreement &&
-                !tradingFilesToUpload?.contractAgreement && (
+              {tradingFilePreviews?.contractAgreementShc &&
+                !tradingFilesToUpload?.contractAgreementShc && (
                   <a
                     href="#"
                     className="file-link"
@@ -1176,23 +1458,23 @@ function Documents({
                       e.preventDefault();
                       handleViewFile(
                         customerData.id,
-                        customerData.contractAgreement,
-                        "contractAgreement"
+                        customerData.contractAgreementShc,
+                        "contractAgreementShc"
                       );
                     }}
                   >
-                    {typeof customerData.contractAgreement === "string"
-                      ? customerData.contractAgreement
+                    {typeof customerData.contractAgreementShc === "string"
+                      ? customerData.contractAgreementShc
                           .split("_")
                           .slice(0, 2)
                           .join(" ")
                       : "View Document"}
                   </a>
                 )}
-              {customerData?.contractAgreement && (
+              {customerData?.contractAgreementShc && (
                 <div className="file-actions">
-                  {!tradingDocuments.contractAgreement &&
-                    customerData?.contractAgreement && (
+                  {!tradingDocuments.contractAgreementShc &&
+                    customerData?.contractAgreementShc && (
                       <a
                         href="#"
                         className="file-link"
@@ -1200,13 +1482,13 @@ function Documents({
                           e.preventDefault();
                           handleViewFile(
                             customerData.id,
-                            customerData.contractAgreement,
-                            "contractAgreement"
+                            customerData.contractAgreementShc,
+                            "contractAgreementShc"
                           );
                         }}
                       >
-                        {typeof customerData.contractAgreement === "string"
-                          ? customerData.contractAgreement
+                        {typeof customerData.contractAgreementShc === "string"
+                          ? customerData.contractAgreementShc
                               .split("_")
                               .slice(0, 2)
                               .join(" ")
@@ -1218,8 +1500,8 @@ function Documents({
             </td>
           </tr>
 
-          {/* Credit Application */}
-          <tr className="document-upload full-width" key="creditApplication">
+          {/* Contract Agreement NAQI */}
+          <tr className="document-upload full-width" key="contractAgreementNaqi">
             <td
               className="label-cell"
               style={{
@@ -1228,18 +1510,46 @@ function Documents({
                 verticalAlign: "top",
               }}
             >
-              <label htmlFor="creditApplication">
-                {t("Credit Application")}
-                <span className="required-field">*</span>
-                {customerData?.creditApplication !==
-                  originalCustomerData?.creditApplication && mode === "edit" && (
+              <label htmlFor="contractAgreementNaqi">
+                {t("Contract Agreement NAQI")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementNaqi !==
+                  originalCustomerData?.contractAgreementNaqi && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
-              {formErrors?.creditApplication && (
-                <div className="error">{t(formErrors.creditApplication)}</div>
+              {formErrors?.contractAgreementNaqi && (
+                <div className="error">{t(formErrors.contractAgreementNaqi)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementNaqiVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementNaqiVerified"
+        name="contractAgreementNaqiVerified"
+        checked={verifiedData?.contractAgreementNaqiVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementNaqiVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1252,18 +1562,18 @@ function Documents({
               <input
                 type="file"
                 accept=".pdf"
-                id="creditApplication"
-                name="creditApplication"
+                id="contractAgreementNaqi"
+                name="contractAgreementNaqi"
                 className="hidden-file-input"
-                ref={fileInputRefs.creditApplication}
+                ref={fileInputRefs.contractAgreementNaqi}
                 onChange={(e) =>
-                  handleTradingDocumentChange(e, "creditApplication")
+                  handleTradingDocumentChange(e, "contractAgreementNaqi")
                 }
                 required
                 disabled={mode === "edit"}
               />
               <label
-                htmlFor="creditApplication"
+                htmlFor="contractAgreementNaqi"
                 className="custom-file-button"
                 style={{
                   display: "inline-block",
@@ -1275,33 +1585,33 @@ function Documents({
               </label>
             </td>
             <td className="file-display-cell">
-              {tradingFilesToUpload?.creditApplication && (
+              {tradingFilesToUpload?.contractAgreementNaqi && (
                 <li
-                  key={tradingFilesToUpload.creditApplication.name}
+                  key={tradingFilesToUpload.contractAgreementNaqi.name}
                   className="uploaded-file-item"
                 >
-                  {tradingFilePreviews?.creditApplication && (
+                  {tradingFilePreviews?.contractAgreementNaqi && (
                     <a
-                      href={tradingFilePreviews.creditApplication}
+                      href={tradingFilePreviews.contractAgreementNaqi}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="file-link"
                       style={{ marginLeft: 8 }}
                     >
-                      {tradingFilesToUpload.creditApplication.name}
+                      {tradingFilesToUpload.contractAgreementNaqi.name}
                     </a>
                   )}
                   <button
                     type="button"
                     className="delete-file-button"
-                    onClick={() => removeTradingFile("creditApplication")}
+                    onClick={() => removeTradingFile("contractAgreementNaqi")}
                   >
                     ×
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.creditApplication &&
-                !tradingFilesToUpload?.creditApplication && (
+              {tradingFilePreviews?.contractAgreementNaqi &&
+                !tradingFilesToUpload?.contractAgreementNaqi && (
                   <a
                     href="#"
                     className="file-link"
@@ -1309,23 +1619,23 @@ function Documents({
                       e.preventDefault();
                       handleViewFile(
                         customerData.id,
-                        customerData.creditApplication,
-                        "creditApplication"
+                        customerData.contractAgreementNaqi,
+                        "contractAgreementNaqi"
                       );
                     }}
                   >
-                    {typeof customerData.creditApplication === "string"
-                      ? customerData.creditApplication
+                    {typeof customerData.contractAgreementNaqi === "string"
+                      ? customerData.contractAgreementNaqi
                           .split("_")
                           .slice(0, 2)
                           .join(" ")
                       : "View Document"}
                   </a>
                 )}
-              {customerData?.creditApplication && (
+              {customerData?.contractAgreementNaqi && (
                 <div className="file-actions">
-                  {!tradingDocuments.creditApplication &&
-                    customerData?.creditApplication && (
+                  {!tradingDocuments.contractAgreementNaqi &&
+                    customerData?.contractAgreementNaqi && (
                       <a
                         href="#"
                         className="file-link"
@@ -1333,13 +1643,13 @@ function Documents({
                           e.preventDefault();
                           handleViewFile(
                             customerData.id,
-                            customerData.creditApplication,
-                            "creditApplication"
+                            customerData.contractAgreementNaqi,
+                            "contractAgreementNaqi"
                           );
                         }}
                       >
-                        {typeof customerData.creditApplication === "string"
-                          ? customerData.creditApplication
+                        {typeof customerData.contractAgreementNaqi === "string"
+                          ? customerData.contractAgreementNaqi
                               .split("_")
                               .slice(0, 2)
                               .join(" ")
@@ -1350,11 +1660,1306 @@ function Documents({
               )}
             </td>
           </tr>
+
+          {/* Contract Agreement GMTC */}
+          <tr className="document-upload full-width" key="contractAgreementGmtc">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="contractAgreementGmtc">
+                {t("Contract Agreement GMTC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementGmtc !==
+                  originalCustomerData?.contractAgreementGmtc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementGmtc && (
+                <div className="error">{t(formErrors.contractAgreementGmtc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementGmtcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementGmtcVerified"
+        name="contractAgreementGmtcVerified"
+        checked={verifiedData?.contractAgreementGmtcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementGmtcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementGmtc"
+                name="contractAgreementGmtc"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementGmtc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementGmtc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementGmtc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementGmtc && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementGmtc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementGmtc && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementGmtc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementGmtc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementGmtc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementGmtc &&
+                !tradingFilesToUpload?.contractAgreementGmtc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementGmtc,
+                        "contractAgreementGmtc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementGmtc === "string"
+                      ? customerData.contractAgreementGmtc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementGmtc && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementGmtc &&
+                    customerData?.contractAgreementGmtc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementGmtc,
+                            "contractAgreementGmtc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementGmtc === "string"
+                          ? customerData.contractAgreementGmtc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Contract Agreement DAR */}
+          <tr className="document-upload full-width" key="contractAgreementDar">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="contractAgreementDar">
+                {t("Contract Agreement DAR")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementDar !==
+                  originalCustomerData?.contractAgreementDar && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementDar && (
+                <div className="error">{t(formErrors.contractAgreementDar)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementDarVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementDarVerified"
+        name="contractAgreementDarVerified"
+        checked={verifiedData?.contractAgreementDarVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementDarVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementDar"
+                name="contractAgreementDar"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementDar}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementDar")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementDar"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementDar && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementDar.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementDar && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementDar}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementDar.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementDar")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementDar &&
+                !tradingFilesToUpload?.contractAgreementDar && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementDar,
+                        "contractAgreementDar"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementDar === "string"
+                      ? customerData.contractAgreementDar
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementDar && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementDar &&
+                    customerData?.contractAgreementDar && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementDar,
+                            "contractAgreementDar"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementDar === "string"
+                          ? customerData.contractAgreementDar
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Contract Agreement VMCO */}
+          <tr className="document-upload full-width" key="contractAgreementVmco">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="contractAgreementVmco">
+                {t("Contract Agreement VMCO")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementVmco !==
+                  originalCustomerData?.contractAgreementVmco && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementVmco && (
+                <div className="error">{t(formErrors.contractAgreementVmco)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementVmcoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementVmcoVerified"
+        name="contractAgreementVmcoVerified"
+        checked={verifiedData?.contractAgreementVmcoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementVmcoVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementVmco"
+                name="contractAgreementVmco"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementVmco}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementVmco")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementVmco"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementVmco && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementVmco.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementVmco && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementVmco}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementVmco.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementVmco")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementVmco &&
+                !tradingFilesToUpload?.contractAgreementVmco && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementVmco,
+                        "contractAgreementVmco"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementVmco === "string"
+                      ? customerData.contractAgreementVmco
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementVmco && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementVmco &&
+                    customerData?.contractAgreementVmco && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementVmco,
+                            "contractAgreementVmco"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementVmco === "string"
+                          ? customerData.contractAgreementVmco
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application SHC */}
+          <tr className="document-upload full-width" key="creditApplicationShc">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationShc">
+                {t("Credit Application SHC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationShc !==
+                  originalCustomerData?.creditApplicationShc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationShc && (
+                <div className="error">{t(formErrors.creditApplicationShc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationShcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationShcVerified"
+        name="creditApplicationShcVerified"
+        checked={verifiedData?.creditApplicationShcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationShcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationShc"
+                name="creditApplicationShc"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationShc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationShc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationShc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationShc && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationShc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationShc && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationShc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationShc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationShc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationShc &&
+                !tradingFilesToUpload?.creditApplicationShc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationShc,
+                        "creditApplicationShc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationShc === "string"
+                      ? customerData.creditApplicationShc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationShc && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationShc &&
+                    customerData?.creditApplicationShc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationShc,
+                            "creditApplicationShc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationShc === "string"
+                          ? customerData.creditApplicationShc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application NAQI */}
+          <tr className="document-upload full-width" key="creditApplicationNaqi">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationNaqi">
+                {t("Credit Application NAQI")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationNaqi !==
+                  originalCustomerData?.creditApplicationNaqi && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationNaqi && (
+                <div className="error">{t(formErrors.creditApplicationNaqi)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationNaqiVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationNaqiVerified"
+        name="creditApplicationNaqiVerified"
+        checked={verifiedData?.creditApplicationNaqiVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationNaqiVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationNaqi"
+                name="creditApplicationNaqi"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationNaqi}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationNaqi")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationNaqi"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationNaqi && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationNaqi.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationNaqi && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationNaqi}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationNaqi.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationNaqi")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationNaqi &&
+                !tradingFilesToUpload?.creditApplicationNaqi && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationNaqi,
+                        "creditApplicationNaqi"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationNaqi === "string"
+                      ? customerData.creditApplicationNaqi
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationNaqi && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationNaqi &&
+                    customerData?.creditApplicationNaqi && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationNaqi,
+                            "creditApplicationNaqi"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationNaqi === "string"
+                          ? customerData.creditApplicationNaqi
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application GMTC */}
+          <tr className="document-upload full-width" key="creditApplicationGmtc">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationGmtc">
+                {t("Credit Application GMTC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationGmtc !==
+                  originalCustomerData?.creditApplicationGmtc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationGmtc && (
+                <div className="error">{t(formErrors.creditApplicationGmtc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationGmtcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationGmtcVerified"
+        name="creditApplicationGmtcVerified"
+        checked={verifiedData?.creditApplicationGmtcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationGmtcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationGmtc"
+                name="creditApplicationGmtc"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationGmtc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationGmtc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationGmtc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationGmtc && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationGmtc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationGmtc && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationGmtc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationGmtc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationGmtc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationGmtc &&
+                !tradingFilesToUpload?.creditApplicationGmtc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationGmtc,
+                        "creditApplicationGmtc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationGmtc === "string"
+                      ? customerData.creditApplicationGmtc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationGmtc && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationGmtc &&
+                    customerData?.creditApplicationGmtc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationGmtc,
+                            "creditApplicationGmtc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationGmtc === "string"
+                          ? customerData.creditApplicationGmtc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application DAR */}
+          <tr className="document-upload full-width" key="creditApplicationDar">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationDar">
+                {t("Credit Application DAR")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationDar !==
+                  originalCustomerData?.creditApplicationDar && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationDar && (
+                <div className="error">{t(formErrors.creditApplicationDar)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationDarVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationDarVerified"
+        name="creditApplicationDarVerified"
+        checked={verifiedData?.creditApplicationDarVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationDarVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationDar"
+                name="creditApplicationDar"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationDar}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationDar")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationDar"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationDar && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationDar.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationDar && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationDar}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationDar.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationDar")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationDar &&
+                !tradingFilesToUpload?.creditApplicationDar && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationDar,
+                        "creditApplicationDar"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationDar === "string"
+                      ? customerData.creditApplicationDar
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationDar && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationDar &&
+                    customerData?.creditApplicationDar && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationDar,
+                            "creditApplicationDar"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationDar === "string"
+                          ? customerData.creditApplicationDar
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application VMCO */}
+          <tr className="document-upload full-width" key="creditApplicationVmco">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationVmco">
+                {t("Credit Application VMCO")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationVmco !==
+                  originalCustomerData?.creditApplicationVmco && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationVmco && (
+                <div className="error">{t(formErrors.creditApplicationVmco)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationVmcoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationVmcoVerified"
+        name="creditApplicationVmcoVerified"
+        checked={verifiedData?.creditApplicationVmcoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationVmcoVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationVmco"
+                name="creditApplicationVmco"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationVmco}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationVmco")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationVmco"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationVmco && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationVmco.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationVmco && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationVmco}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationVmco.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationVmco")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationVmco &&
+                !tradingFilesToUpload?.creditApplicationVmco && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationVmco,
+                        "creditApplicationVmco"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationVmco === "string"
+                      ? customerData.creditApplicationVmco
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationVmco && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationVmco &&
+                    customerData?.creditApplicationVmco && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationVmco,
+                            "creditApplicationVmco"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationVmco === "string"
+                          ? customerData.creditApplicationVmco
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+          </>
+        
+)}
         </>
       ) : (
         <>
-          {/* Contract Agreement */}
-          <tr className="document-upload full-width" key="contractAgreement">
+          {isV("assignedToEntityWise") && (
+            <>
+            
+
+          {/* Contract Agreement SHC */}
+          <tr className="document-upload full-width" key="contractAgreementShc">
             <td
               className="label-cell"
               style={{
@@ -1363,18 +2968,46 @@ function Documents({
                 verticalAlign: "top",
               }}
             >
-              <label htmlFor="contractAgreement">
-                {t("Contract Agreement")}
-                <span className="required-field">*</span>
-                {customerData?.contractAgreement !==
-                  originalCustomerData?.contractAgreement && mode === "edit" && (
+              <label htmlFor="contractAgreementShc">
+                {t("Contract Agreement SHC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementShc !==
+                  originalCustomerData?.contractAgreementShc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
-              {formErrors?.contractAgreement && (
-                <div className="error">{t(formErrors.contractAgreement)}</div>
+              {formErrors?.contractAgreementShc && (
+                <div className="error">{t(formErrors.contractAgreementShc)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementShcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementShcVerified"
+        name="contractAgreementShcVerified"
+        checked={verifiedData?.contractAgreementShcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementShcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1387,18 +3020,18 @@ function Documents({
               <input
                 type="file"
                 accept=".pdf"
-                id="contractAgreement"
-                name="contractAgreement"
+                id="contractAgreementShc"
+                name="contractAgreementShc"
                 className="hidden-file-input"
-                ref={fileInputRefs.contractAgreement}
+                ref={fileInputRefs.contractAgreementShc}
                 onChange={(e) =>
-                  handleTradingDocumentChange(e, "contractAgreement")
+                  handleTradingDocumentChange(e, "contractAgreementShc")
                 }
                 required
                 disabled={mode === "edit"}
               />
               <label
-                htmlFor="contractAgreement"
+                htmlFor="contractAgreementShc"
                 className="custom-file-button"
                 style={{
                   display: "inline-block",
@@ -1410,33 +3043,33 @@ function Documents({
               </label>
             </td>
             <td className="file-display-cell">
-              {tradingFilesToUpload?.contractAgreement && (
+              {tradingFilesToUpload?.contractAgreementShc && (
                 <li
-                  key={tradingFilesToUpload.contractAgreement.name}
+                  key={tradingFilesToUpload.contractAgreementShc.name}
                   className="uploaded-file-item"
                 >
-                  {tradingFilePreviews?.contractAgreement && (
+                  {tradingFilePreviews?.contractAgreementShc && (
                     <a
-                      href={tradingFilePreviews.contractAgreement}
+                      href={tradingFilePreviews.contractAgreementShc}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="file-link"
                       style={{ marginLeft: 8 }}
                     >
-                      {tradingFilesToUpload.contractAgreement.name}
+                      {tradingFilesToUpload.contractAgreementShc.name}
                     </a>
                   )}
                   <button
                     type="button"
                     className="delete-file-button"
-                    onClick={() => removeTradingFile("contractAgreement")}
+                    onClick={() => removeTradingFile("contractAgreementShc")}
                   >
                     ×
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.contractAgreement &&
-                !tradingFilesToUpload?.contractAgreement && (
+              {tradingFilePreviews?.contractAgreementShc &&
+                !tradingFilesToUpload?.contractAgreementShc && (
                   <a
                     href="#"
                     className="file-link"
@@ -1444,23 +3077,23 @@ function Documents({
                       e.preventDefault();
                       handleViewFile(
                         customerData.id,
-                        customerData.contractAgreement,
-                        "contractAgreement"
+                        customerData.contractAgreementShc,
+                        "contractAgreementShc"
                       );
                     }}
                   >
-                    {typeof customerData.contractAgreement === "string"
-                      ? customerData.contractAgreement
+                    {typeof customerData.contractAgreementShc === "string"
+                      ? customerData.contractAgreementShc
                           .split("_")
                           .slice(0, 2)
                           .join(" ")
                       : "View Document"}
                   </a>
                 )}
-              {customerData?.contractAgreement && (
+              {customerData?.contractAgreementShc && (
                 <div className="file-actions">
-                  {!tradingDocuments.contractAgreement &&
-                    customerData?.contractAgreement && (
+                  {!tradingDocuments.contractAgreementShc &&
+                    customerData?.contractAgreementShc && (
                       <a
                         href="#"
                         className="file-link"
@@ -1468,13 +3101,13 @@ function Documents({
                           e.preventDefault();
                           handleViewFile(
                             customerData.id,
-                            customerData.contractAgreement,
-                            "contractAgreement"
+                            customerData.contractAgreementShc,
+                            "contractAgreementShc"
                           );
                         }}
                       >
-                        {typeof customerData.contractAgreement === "string"
-                          ? customerData.contractAgreement
+                        {typeof customerData.contractAgreementShc === "string"
+                          ? customerData.contractAgreementShc
                               .split("_")
                               .slice(0, 2)
                               .join(" ")
@@ -1486,8 +3119,8 @@ function Documents({
             </td>
           </tr>
 
-          {/* Credit Application */}
-          <tr className="document-upload full-width" key="creditApplication">
+          {/* Contract Agreement NAQI */}
+          <tr className="document-upload full-width" key="contractAgreementNaqi">
             <td
               className="label-cell"
               style={{
@@ -1496,18 +3129,46 @@ function Documents({
                 verticalAlign: "top",
               }}
             >
-              <label htmlFor="creditApplication">
-                {t("Credit Application")}
-                <span className="required-field">*</span>
-                {customerData?.creditApplication !==
-                  originalCustomerData?.creditApplication && mode === "edit" && (
+              <label htmlFor="contractAgreementNaqi">
+                {t("Contract Agreement NAQI")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementNaqi !==
+                  originalCustomerData?.contractAgreementNaqi && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
               </label>
-              {formErrors?.creditApplication && (
-                <div className="error">{t(formErrors.creditApplication)}</div>
+              {formErrors?.contractAgreementNaqi && (
+                <div className="error">{t(formErrors.contractAgreementNaqi)}</div>
               )}
             </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementNaqiVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementNaqiVerified"
+        name="contractAgreementNaqiVerified"
+        checked={verifiedData?.contractAgreementNaqiVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementNaqiVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
             <td
               className="upload-cell"
               style={{
@@ -1520,18 +3181,18 @@ function Documents({
               <input
                 type="file"
                 accept=".pdf"
-                id="creditApplication"
-                name="creditApplication"
+                id="contractAgreementNaqi"
+                name="contractAgreementNaqi"
                 className="hidden-file-input"
-                ref={fileInputRefs.creditApplication}
+                ref={fileInputRefs.contractAgreementNaqi}
                 onChange={(e) =>
-                  handleTradingDocumentChange(e, "creditApplication")
+                  handleTradingDocumentChange(e, "contractAgreementNaqi")
                 }
                 required
                 disabled={mode === "edit"}
               />
               <label
-                htmlFor="creditApplication"
+                htmlFor="contractAgreementNaqi"
                 className="custom-file-button"
                 style={{
                   display: "inline-block",
@@ -1543,33 +3204,33 @@ function Documents({
               </label>
             </td>
             <td className="file-display-cell">
-              {tradingFilesToUpload?.creditApplication && (
+              {tradingFilesToUpload?.contractAgreementNaqi && (
                 <li
-                  key={tradingFilesToUpload.creditApplication.name}
+                  key={tradingFilesToUpload.contractAgreementNaqi.name}
                   className="uploaded-file-item"
                 >
-                  {tradingFilePreviews?.creditApplication && (
+                  {tradingFilePreviews?.contractAgreementNaqi && (
                     <a
-                      href={tradingFilePreviews.creditApplication}
+                      href={tradingFilePreviews.contractAgreementNaqi}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="file-link"
                       style={{ marginLeft: 8 }}
                     >
-                      {tradingFilesToUpload.creditApplication.name}
+                      {tradingFilesToUpload.contractAgreementNaqi.name}
                     </a>
                   )}
                   <button
                     type="button"
                     className="delete-file-button"
-                    onClick={() => removeTradingFile("creditApplication")}
+                    onClick={() => removeTradingFile("contractAgreementNaqi")}
                   >
                     ×
                   </button>
                 </li>
               )}
-              {tradingFilePreviews?.creditApplication &&
-                !tradingFilesToUpload?.creditApplication && (
+              {tradingFilePreviews?.contractAgreementNaqi &&
+                !tradingFilesToUpload?.contractAgreementNaqi && (
                   <a
                     href="#"
                     className="file-link"
@@ -1577,23 +3238,23 @@ function Documents({
                       e.preventDefault();
                       handleViewFile(
                         customerData.id,
-                        customerData.creditApplication,
-                        "creditApplication"
+                        customerData.contractAgreementNaqi,
+                        "contractAgreementNaqi"
                       );
                     }}
                   >
-                    {typeof customerData.creditApplication === "string"
-                      ? customerData.creditApplication
+                    {typeof customerData.contractAgreementNaqi === "string"
+                      ? customerData.contractAgreementNaqi
                           .split("_")
                           .slice(0, 2)
                           .join(" ")
                       : "View Document"}
                   </a>
                 )}
-              {customerData?.creditApplication && (
+              {customerData?.contractAgreementNaqi && (
                 <div className="file-actions">
-                  {!tradingDocuments.creditApplication &&
-                    customerData?.creditApplication && (
+                  {!tradingDocuments.contractAgreementNaqi &&
+                    customerData?.contractAgreementNaqi && (
                       <a
                         href="#"
                         className="file-link"
@@ -1601,13 +3262,13 @@ function Documents({
                           e.preventDefault();
                           handleViewFile(
                             customerData.id,
-                            customerData.creditApplication,
-                            "creditApplication"
+                            customerData.contractAgreementNaqi,
+                            "contractAgreementNaqi"
                           );
                         }}
                       >
-                        {typeof customerData.creditApplication === "string"
-                          ? customerData.creditApplication
+                        {typeof customerData.contractAgreementNaqi === "string"
+                          ? customerData.contractAgreementNaqi
                               .split("_")
                               .slice(0, 2)
                               .join(" ")
@@ -1618,11 +3279,9 @@ function Documents({
               )}
             </td>
           </tr>
-          <tr
-            className="document-upload full-width"
-            key={"nonTradingDocuments"}
-          >
-            {/* Label */}
+
+          {/* Contract Agreement GMTC */}
+          <tr className="document-upload full-width" key="contractAgreementGmtc">
             <td
               className="label-cell"
               style={{
@@ -1631,15 +3290,1356 @@ function Documents({
                 verticalAlign: "top",
               }}
             >
-              <label htmlFor="nonTradingDocuments">
+              <label htmlFor="contractAgreementGmtc">
+                {t("Contract Agreement GMTC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementGmtc !==
+                  originalCustomerData?.contractAgreementGmtc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementGmtc && (
+                <div className="error">{t(formErrors.contractAgreementGmtc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementGmtcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementGmtcVerified"
+        name="contractAgreementGmtcVerified"
+        checked={verifiedData?.contractAgreementGmtcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementGmtcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementGmtc"
+                name="contractAgreementGmtc"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementGmtc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementGmtc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementGmtc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementGmtc && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementGmtc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementGmtc && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementGmtc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementGmtc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementGmtc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementGmtc &&
+                !tradingFilesToUpload?.contractAgreementGmtc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementGmtc,
+                        "contractAgreementGmtc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementGmtc === "string"
+                      ? customerData.contractAgreementGmtc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementGmtc && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementGmtc &&
+                    customerData?.contractAgreementGmtc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementGmtc,
+                            "contractAgreementGmtc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementGmtc === "string"
+                          ? customerData.contractAgreementGmtc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Contract Agreement DAR */}
+          <tr className="document-upload full-width" key="contractAgreementDar">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="contractAgreementDar">
+                {t("Contract Agreement DAR")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementDar !==
+                  originalCustomerData?.contractAgreementDar && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementDar && (
+                <div className="error">{t(formErrors.contractAgreementDar)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementDarVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementDarVerified"
+        name="contractAgreementDarVerified"
+        checked={verifiedData?.contractAgreementDarVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementDarVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementDar"
+                name="contractAgreementDar"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementDar}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementDar")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementDar"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementDar && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementDar.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementDar && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementDar}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementDar.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementDar")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementDar &&
+                !tradingFilesToUpload?.contractAgreementDar && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementDar,
+                        "contractAgreementDar"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementDar === "string"
+                      ? customerData.contractAgreementDar
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementDar && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementDar &&
+                    customerData?.contractAgreementDar && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementDar,
+                            "contractAgreementDar"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementDar === "string"
+                          ? customerData.contractAgreementDar
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Contract Agreement VMCO */}
+          <tr className="document-upload full-width" key="contractAgreementVmco">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="contractAgreementVmco">
+                {t("Contract Agreement VMCO")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.contractAgreementVmco !==
+                  originalCustomerData?.contractAgreementVmco && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.contractAgreementVmco && (
+                <div className="error">{t(formErrors.contractAgreementVmco)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("contractAgreementVmcoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="contractAgreementVmcoVerified"
+        name="contractAgreementVmcoVerified"
+        checked={verifiedData?.contractAgreementVmcoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="contractAgreementVmcoVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="contractAgreementVmco"
+                name="contractAgreementVmco"
+                className="hidden-file-input"
+                ref={fileInputRefs.contractAgreementVmco}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "contractAgreementVmco")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="contractAgreementVmco"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.contractAgreementVmco && (
+                <li
+                  key={tradingFilesToUpload.contractAgreementVmco.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.contractAgreementVmco && (
+                    <a
+                      href={tradingFilePreviews.contractAgreementVmco}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.contractAgreementVmco.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("contractAgreementVmco")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.contractAgreementVmco &&
+                !tradingFilesToUpload?.contractAgreementVmco && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.contractAgreementVmco,
+                        "contractAgreementVmco"
+                      );
+                    }}
+                  >
+                    {typeof customerData.contractAgreementVmco === "string"
+                      ? customerData.contractAgreementVmco
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.contractAgreementVmco && (
+                <div className="file-actions">
+                  {!tradingDocuments.contractAgreementVmco &&
+                    customerData?.contractAgreementVmco && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.contractAgreementVmco,
+                            "contractAgreementVmco"
+                          );
+                        }}
+                      >
+                        {typeof customerData.contractAgreementVmco === "string"
+                          ? customerData.contractAgreementVmco
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application SHC */}
+          <tr className="document-upload full-width" key="creditApplicationShc">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationShc">
+                {t("Credit Application SHC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationShc !==
+                  originalCustomerData?.creditApplicationShc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationShc && (
+                <div className="error">{t(formErrors.creditApplicationShc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationShcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationShcVerified"
+        name="creditApplicationShcVerified"
+        checked={verifiedData?.creditApplicationShcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationShcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationShc"
+                name="creditApplicationShc"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationShc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationShc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationShc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationShc && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationShc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationShc && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationShc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationShc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationShc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationShc &&
+                !tradingFilesToUpload?.creditApplicationShc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationShc,
+                        "creditApplicationShc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationShc === "string"
+                      ? customerData.creditApplicationShc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationShc && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationShc &&
+                    customerData?.creditApplicationShc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationShc,
+                            "creditApplicationShc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationShc === "string"
+                          ? customerData.creditApplicationShc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application NAQI */}
+          <tr className="document-upload full-width" key="creditApplicationNaqi">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationNaqi">
+                {t("Credit Application NAQI")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationNaqi !==
+                  originalCustomerData?.creditApplicationNaqi && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationNaqi && (
+                <div className="error">{t(formErrors.creditApplicationNaqi)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationNaqiVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationNaqiVerified"
+        name="creditApplicationNaqiVerified"
+        checked={verifiedData?.creditApplicationNaqiVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationNaqiVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationNaqi"
+                name="creditApplicationNaqi"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationNaqi}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationNaqi")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationNaqi"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationNaqi && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationNaqi.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationNaqi && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationNaqi}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationNaqi.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationNaqi")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationNaqi &&
+                !tradingFilesToUpload?.creditApplicationNaqi && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationNaqi,
+                        "creditApplicationNaqi"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationNaqi === "string"
+                      ? customerData.creditApplicationNaqi
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationNaqi && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationNaqi &&
+                    customerData?.creditApplicationNaqi && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationNaqi,
+                            "creditApplicationNaqi"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationNaqi === "string"
+                          ? customerData.creditApplicationNaqi
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application GMTC */}
+          <tr className="document-upload full-width" key="creditApplicationGmtc">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationGmtc">
+                {t("Credit Application GMTC")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationGmtc !==
+                  originalCustomerData?.creditApplicationGmtc && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationGmtc && (
+                <div className="error">{t(formErrors.creditApplicationGmtc)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationGmtcVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationGmtcVerified"
+        name="creditApplicationGmtcVerified"
+        checked={verifiedData?.creditApplicationGmtcVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationGmtcVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationGmtc"
+                name="creditApplicationGmtc"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationGmtc}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationGmtc")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationGmtc"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationGmtc && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationGmtc.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationGmtc && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationGmtc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationGmtc.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationGmtc")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationGmtc &&
+                !tradingFilesToUpload?.creditApplicationGmtc && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationGmtc,
+                        "creditApplicationGmtc"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationGmtc === "string"
+                      ? customerData.creditApplicationGmtc
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationGmtc && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationGmtc &&
+                    customerData?.creditApplicationGmtc && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationGmtc,
+                            "creditApplicationGmtc"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationGmtc === "string"
+                          ? customerData.creditApplicationGmtc
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application DAR */}
+          <tr className="document-upload full-width" key="creditApplicationDar">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationDar">
+                {t("Credit Application DAR")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationDar !==
+                  originalCustomerData?.creditApplicationDar && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationDar && (
+                <div className="error">{t(formErrors.creditApplicationDar)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationDarVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationDarVerified"
+        name="creditApplicationDarVerified"
+        checked={verifiedData?.creditApplicationDarVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationDarVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationDar"
+                name="creditApplicationDar"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationDar}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationDar")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationDar"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationDar && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationDar.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationDar && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationDar}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationDar.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationDar")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationDar &&
+                !tradingFilesToUpload?.creditApplicationDar && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationDar,
+                        "creditApplicationDar"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationDar === "string"
+                      ? customerData.creditApplicationDar
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationDar && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationDar &&
+                    customerData?.creditApplicationDar && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationDar,
+                            "creditApplicationDar"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationDar === "string"
+                          ? customerData.creditApplicationDar
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Credit Application VMCO */}
+          <tr className="document-upload full-width" key="creditApplicationVmco">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="creditApplicationVmco">
+                {t("Credit Application VMCO")}
+                {/* <span className="required-field">*</span> */}
+                {customerData?.creditApplicationVmco !==
+                  originalCustomerData?.creditApplicationVmco && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.creditApplicationVmco && (
+                <div className="error">{t(formErrors.creditApplicationVmco)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("creditApplicationVmcoVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="creditApplicationVmcoVerified"
+        name="creditApplicationVmcoVerified"
+        checked={verifiedData?.creditApplicationVmcoVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="creditApplicationVmcoVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="creditApplicationVmco"
+                name="creditApplicationVmco"
+                className="hidden-file-input"
+                ref={fileInputRefs.creditApplicationVmco}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "creditApplicationVmco")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="creditApplicationVmco"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.creditApplicationVmco && (
+                <li
+                  key={tradingFilesToUpload.creditApplicationVmco.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.creditApplicationVmco && (
+                    <a
+                      href={tradingFilePreviews.creditApplicationVmco}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.creditApplicationVmco.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("creditApplicationVmco")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.creditApplicationVmco &&
+                !tradingFilesToUpload?.creditApplicationVmco && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.creditApplicationVmco,
+                        "creditApplicationVmco"
+                      );
+                    }}
+                  >
+                    {typeof customerData.creditApplicationVmco === "string"
+                      ? customerData.creditApplicationVmco
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.creditApplicationVmco && (
+                <div className="file-actions">
+                  {!tradingDocuments.creditApplicationVmco &&
+                    customerData?.creditApplicationVmco && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.creditApplicationVmco,
+                            "creditApplicationVmco"
+                          );
+                        }}
+                      >
+                        {typeof customerData.creditApplicationVmco === "string"
+                          ? customerData.creditApplicationVmco
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+          </>
+        
+)}
+          {/* Non-Trading Documents */}
+          <div className="form-header full-width">
                 {t("Non-Trading Documents")}
                 {customerData?.nonTradingDocuments?.length !==
                   originalCustomerData?.nonTradingDocuments?.length && mode === "edit" && (
                   <span className="update-badge">Updated</span>
                 )}
-              </label>
-            </td>
-            <td
+                </div>
+<tr className="document-upload full-width"
+            key={"nonTradingDocuments"}>
+  <td className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}>
+                
+    <SearchableDropdown
+      options={nonTradingDocumentTypes}
+      value={selectedDocType}
+      onChange={handleNonTradingDropdownChange}
+      placeholder={t("Select document type")}
+    />
+    
+    {selectedDocType === "Others (Specify)" && (
+      <input
+        type="text"
+        value={customDocName}
+        onChange={(e) => setCustomDocName(e.target.value)}
+        placeholder="Enter document name"
+        style={{
+          padding: "8px",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          width: "250px",
+          marginTop: "2px",
+        }}
+      />
+    )}
+  </td>
+              <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nonTradingDocumentsVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nonTradingDocumentsVerified"
+        name="nonTradingDocumentsVerified"
+        checked={verifiedData?.nonTradingDocumentsVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nonTradingDocumentsVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            {mode !== "edit" && (<td
               className="upload-cell"
               style={{
                 width: "100px",
@@ -1648,6 +4648,7 @@ function Documents({
               }}
               hidden={mode === "edit"}
             >
+              
               <input
                 type="file"
                 id="nonTradingDocuments"
@@ -1657,7 +4658,7 @@ function Documents({
                 accept=".pdf,.doc,.docx,.jpg,.png"
                 ref={fileInputRefs.nonTradingDocuments}
                 onChange={handleNonTradingDocumentsChange}
-                disabled={mode === "edit"}
+                disabled={mode === "edit" || !selectedDocType || (selectedDocType === "Others (Specify)" && !customDocName)}
               />
               <label
                 htmlFor={"nonTradingDocuments"}
@@ -1670,7 +4671,7 @@ function Documents({
               >
                 {t("Upload")}
               </label>
-            </td>
+            </td>)}
             <td className="file-display-cell">
               {/* Display uploaded files with delete option */}
               {nonTradingFilesToUpload?.["others"]?.length > 0 && (
@@ -1714,7 +4715,7 @@ function Documents({
             >
               {" "}
             </td>
-            <td
+            {mode !== "edit" && (<td
               className="label-cell"
               style={{
                 width: "500px",
@@ -1723,7 +4724,7 @@ function Documents({
               }}
             >
               {" "}
-            </td>
+            </td>)}
             <td className="file-display-cell">
               {/* Display already uploaded files from customerData */}
               {Array.isArray(customerData?.nonTradingDocuments) &&
@@ -1754,7 +4755,7 @@ function Documents({
                               }}
                             >
                               {typeof fileName === "string"
-                                ? fileName.split("_").slice(0, 2).join(" ")
+                                ? fileName.split("_").slice(0, fileName.split("_").length - 1).join(" ")
                                 : "View Document"}
                             </a>
                           </li>
@@ -1783,7 +4784,7 @@ function Documents({
                               }}
                             >
                               {typeof fileName === "string"
-                                ? fileName.split("_").slice(0, 2).join(" ")
+                                ? fileName.split("_").slice(0, fileName.split("_").length - 1).join(" ")
                                 : "View Document"}
                             </a>
                             {mode === "edit" && (

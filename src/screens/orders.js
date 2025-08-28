@@ -54,6 +54,7 @@ function Orders() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const fileInputRef = useRef(null);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -394,7 +395,8 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
-    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") }
+    { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
+    { key: "orderSync",header: () => t("Sync"),include: isV("FandOSyncSO") }
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -470,6 +472,7 @@ function Orders() {
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Pay"), include: isV("action") },
+
   ];
 
   // Paginate the filtered orders
@@ -515,6 +518,50 @@ function Orders() {
   };
 
 
+   const handleFandOFailSO = async (orderId) => {
+    setSyncLoading(true);
+     try {
+       const { data } = await axios.get(
+         `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
+      
+         {
+           headers: { Authorization: `Bearer ${token}` },
+         }
+       );
+   
+       if (data?.success) {
+        setSyncLoading(false);
+       fetchOrders();
+         Swal.fire({
+           title: "Success",
+           text: data.message,
+           icon: "success",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#3085d6",
+         });
+       } else {
+              setSyncLoading(false);
+         Swal.fire({
+           title: "Error",
+           text: data.message || "Failed to Sync with FandO.",
+           icon: "error",
+           confirmButtonText: "OK",
+           confirmButtonColor: "#dc3545",
+         });
+       }
+     } catch (error) {
+        setSyncLoading(false);
+       console.error("Error handling FandO fail Sales Order:", error);
+       Swal.fire({
+         title: "Error",
+         text: error.message || "Failed to Sync with FandO.",
+         icon: "error",
+         confirmButtonText: "OK",
+         confirmButtonColor: "#dc3545",
+       });
+     }
+   };
+
   return (
     <Sidebar title={t("Orders")}>
       {isV("ordersContent") && (
@@ -550,6 +597,8 @@ function Orders() {
               getStatusClass={getStatusClass}
               onRowClick={handleRowClick}
               onPay={handlePay}
+              onsync={handleFandOFailSO}
+              syncLoading={syncLoading}
             />
           )}
 

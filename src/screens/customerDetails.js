@@ -359,6 +359,16 @@ const documentFields = [
   "nationalAddress",
   "contractAgreement",
   "creditApplication",
+  "contractAgreementShc",
+  "contractAgreementVmco",
+  "contractAgreementDar",
+  "contractAgreementGmtc",
+  "contractAgreementNaqi",
+  "creditApplicationShc",
+  "creditApplicationNaqi",
+  "creditApplicationVmco",
+  "creditApplicationDar",
+  "creditApplicationGmtc"
 ];
 
 // Helper to count updated document fields (excluding nonTradingDocuments)
@@ -412,6 +422,7 @@ function CustomerDetails() {
   const [customerPaymentMethodsData, setCustomerPaymentMethodsData] = useState(
     {}
   );
+  const [verifiedData, setVerifiedData] = useState({});
   const [tradingFilesToUpload, setTradingFilesToUpload] = useState([]);
   const [nonTradingFilesToUpload, setNonTradingFilesToUpload] = useState([]);
   // Add this state for logo uploads (similar to tradingFilesToUpload)
@@ -438,6 +449,7 @@ function CustomerDetails() {
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
   var updatedCustomerPaymentMethodsData = useRef({});
+  var updatedVerifiedData = useRef({});
   //TODO - set it appropriately based  workflow thingy - WF
   const [inApproval, setInApproval] = useState(true);
   const [originalCustomerData, setOriginalCustomerData] = useState(null); //WF
@@ -503,11 +515,10 @@ function CustomerDetails() {
       let isUnderApproval = false;
       // Check if the customer is under approval
       isUnderApproval = await checkInApproval(customerId, "customer", token);
-      if (!isUnderApproval) {
-        isUnderApproval = await checkInApproval(customerId, "branch", token);
-      }
+      // if (!isUnderApproval) {
+      //   isUnderApproval = await checkInApproval(customerId, "branch", token);
+      // }
       // const isUnderApproval = await checkInApproval(customerId, "customer") || checkInApproval(customerId, "branch");
-      setInApproval(isUnderApproval);
       var temp;
       if (isUnderApproval) {
         //WF
@@ -526,6 +537,7 @@ function CustomerDetails() {
       } else if (workflowInstanceId) {
         await fetchWorkflowDataOfCustomer(workflowInstanceId);
       }
+      setInApproval(isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false));
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
       setOriginalCustomerData(resp);
       const conRes = await fetchCurrentDataOfCustomerContacts(
@@ -533,7 +545,7 @@ function CustomerDetails() {
         token
       );
       setCustomerContactsData(
-        isUnderApproval ? { ...conRes, ...temp?.contacts } : conRes
+        isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false) ? { ...conRes, ...temp?.contacts } : conRes
       );
       setOriginalCustomerContactsData(conRes);
       const paymentMethodsRes = await fetchCurrentPaymentMetods(
@@ -697,7 +709,11 @@ function CustomerDetails() {
       },
     };
   };
-
+const handleVerifiedDataChange = (e) => {
+    const { name } = e.target;
+    updatedVerifiedData.current[name] = e.target.checked;
+    setVerifiedData((prev) => ({ ...prev, [name]: e.target.checked }));
+  };
   const setGeoLocation = (location) => {
     updatedCustomerData.current.geolocation = location;
     setCustomerData((prev) => ({ ...prev, geolocation: location }));
@@ -796,9 +812,9 @@ function CustomerDetails() {
     "nationalAddress",
     "customerSource",
     "acknowledgementSignature",
-    "contractAgreement",
+    // "contractAgreement",
     // "customerContract",
-    "creditApplication",
+    // "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -863,9 +879,9 @@ function CustomerDetails() {
     "nationalAddress",
     "customerSource",
     "acknowledgementSignature",
-    "contractAgreement",
+    // "contractAgreement",
     // "customerContract",
-    "creditApplication",
+    // "creditApplication",
     "declarationName",
     "declarationSignature",
     // "declarationDate",
@@ -879,6 +895,7 @@ function CustomerDetails() {
     // "nonTradingDocuments",
     // "interCompany",
     // "entity",
+    "primaryBusinessUnit",
     "zone",
     "primaryContactName",
     "primaryContactEmail",
@@ -944,9 +961,9 @@ function CustomerDetails() {
 
     const uniqueContactFieldsList = [
       { name: "primaryContactEmail", field: "email" },
-      { name: "businessHeadEmail", field: "email" },
-      { name: "financeHeadEmail", field: "email" },
-      { name: "purchasingHeadEmail", field: "email" },
+      // { name: "businessHeadEmail", field: "email" },
+      // { name: "financeHeadEmail", field: "email" },
+      // { name: "purchasingHeadEmail", field: "email" },
     ];
     // If mandatoryCheckReguired is true, check all mandatory fields
     console.log(
@@ -955,7 +972,7 @@ function CustomerDetails() {
     );
     if (mandatoryCheckRequired) {
       mandatoryFields?.forEach((field) => {
-        if (field === "assignedToEntityWise") {
+        if (field === "assignedToEntityWise" || (field === "crNumber" && customerData?.companyType.toLowerCase() !== "trading") || (field === "vatNumber" && customerData?.companyType.toLowerCase() !== "trading")) {
           // Skip here, handle below
           return;
         }
@@ -1177,26 +1194,78 @@ function CustomerDetails() {
         }
       }
 
-      if (uniqueFieldsList.includes(field)) {
+      // if (uniqueFieldsList.includes(field)) {
+      //   const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+
+      //     body: JSON.stringify({ customerId, field, value }),
+      //   });
+      //   if (res.ok) {
+      //     const data = await res.json();
+      //     if (data.data.isUnique) {
+      //       // Field is valid
+      //     } else {
+      //       errors[field] = t("This number is registered.");
+      //     }
+      //   }
+      // }
+// In your frontend validation function, modify the uniqueFieldsList check:
+
+if (uniqueFieldsList.includes(field)) {
+    // Special handling for VAT and CR numbers
+    if (field === 'vatNumber' || field === 'crNumber') {
+        const additionalData = {
+            vatNumber: field === 'crNumber' ? dataToValidate.vatNumber : value,
+            crNumber: field === 'vatNumber' ? dataToValidate.crNumber : value
+        };
+
         const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({ customerId, field, value }),
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ 
+                customerId, 
+                field, 
+                value,
+                additionalData 
+            }),
         });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.data.isUnique) {
-            // Field is valid
-          } else {
-            errors[field] = t("This number is registered.");
-          }
-        }
-      }
 
+        if (res.ok) {
+            const data = await res.json();
+            if (data.data.isUnique) {
+                // Field combination is valid
+            } else {
+                errors[field] = t("Combination of VAT & CR no is already registered.");
+            }
+        }
+    } else {
+        // Original logic for other unique fields
+        const res = await fetch(`${API_BASE_URL}/customers/checkUniqueField`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ customerId, field, value }),
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.data.isUnique) {
+                // Field is valid
+            } else {
+                errors[field] = t("This number is registered.");
+            }
+        }
+    }
+}
       if (
         dataToValidate?.typeOfBusiness?.toLowerCase() === "others (specify)" &&
         !dataToValidate?.typeOfBusinessOther
@@ -1219,11 +1288,18 @@ function CustomerDetails() {
       if (!fileData) {
         throw new Error("No file data provided");
       }
+    const fileToUpload = fieldName === "nonTradingDocuments" 
+      ? new File([fileData], fileData.originalname, {
+          type: fileData.type,
+          lastModified: fileData.lastModified
+        })
+      : fileData;
 
-      const formData = new FormData();
-      formData.append("file", fileData);
-      formData.append("fileType", fieldName);
-
+    const formData = new FormData();
+    formData.append("file", fileToUpload);
+    formData.append("fileType", fieldName);
+    
+      
       const res = await fetch(`${API_BASE_URL}/customers/file/${customerId}`, {
         method: "POST",
         headers: {
@@ -1724,6 +1800,13 @@ function CustomerDetails() {
         wfCustomerData.customer.nonTradingDocuments = JSON.stringify(
           wfCustomerData.customer.nonTradingDocuments
         );
+      }
+      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
+        updatedCustomerData.current.verified = new Date().toLocaleDateString("en-CA");
+        updatedCustomerData.current.verifiedBy = user.userName;
+      }
+      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
+        updatedCustomerData.current.approved = new Date().toLocaleDateString("en-CA");
       }
       const mergedData = {
         updates: {
@@ -2238,6 +2321,8 @@ function CustomerDetails() {
                     customerData={customerData}
                     originalCustomerData={originalCustomerData}
                     onChangeCustomerData={handleCustomerDataChange}
+                    verifiedData={verifiedData}
+                    onChangeVerifiedData={handleVerifiedDataChange}
                     setEntityWiseAssignment={setEntityWiseAssignment}
                     mode={mode}
                     setTabsHeight={setTabsHeight}
@@ -2256,6 +2341,8 @@ function CustomerDetails() {
                   onChangeCustomerContactsData={
                     handleCustomerContactsDataChange
                   }
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   setGeoLocation={setGeoLocation}
                   setBusinessHeadSameAsPrimary={setBusinessHeadSameAsPrimary}
                   mode={mode}
@@ -2276,6 +2363,8 @@ function CustomerDetails() {
                     onChangeCustomerPaymentMethodsData={
                       handleCustomerPaymentMethodsDataChange
                     }
+                    verifiedData={verifiedData}
+                    onChangeVerifiedData={handleVerifiedDataChange}
                     setEntityWisePricePlan={setEntityWisePricePlan}
                     setCustomerCreditChange={handleCustomerCreditChange}
                     setIsDeliveryChargesApplicable={
@@ -2293,6 +2382,8 @@ function CustomerDetails() {
                   nonTradingFilesToUpload={nonTradingFilesToUpload}
                   customerData={customerData}
                   originalCustomerData={originalCustomerData}
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
                   formErrors={formErrors}
@@ -2322,6 +2413,8 @@ function CustomerDetails() {
                 <FinalSubmissionConfirmation
                   customerData={customerData}
                   originalCustomerData={originalCustomerData}
+                  verifiedData={verifiedData}
+                  onChangeVerifiedData={handleVerifiedDataChange}
                   onChangeCustomerData={handleCustomerDataChange}
                   formErrors={formErrors}
                   mode={mode}
@@ -2337,7 +2430,7 @@ function CustomerDetails() {
             >
               <span className="status-label">{t("Status")}:</span>
               <span className="status-badge">
-                {t(customerData.customerStatus) || t("Pending")}
+                {t(customerData?.customerStatus) || t("Pending")}
               </span>
             </div>
             {mode === "add" && inApproval && (
@@ -2428,8 +2521,9 @@ function CustomerDetails() {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking
+                        isUnblocking  || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
                       }
+                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
                     >
                       {isApproving ? t("Approving...") : t("Approve")}
                     </button>
@@ -2448,8 +2542,9 @@ function CustomerDetails() {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking
+                        isUnblocking || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
                       }
+                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
                     >
                       {isRejecting ? t("Rejecting...") : t("Reject")}
                     </button>

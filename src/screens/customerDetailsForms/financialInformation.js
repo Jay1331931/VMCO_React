@@ -6,6 +6,7 @@ import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
+import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST ;
@@ -16,6 +17,8 @@ function FinancialInformation({
   originalCustomerPaymentMethodsData = {},
   onChangeCustomerPaymentMethodsData,
   onChangeCustomerData,
+  verifiedData = {},
+  onChangeVerifiedData,
   setEntityWisePricePlan,
   setCustomerCreditChange,
   setIsDeliveryChargesApplicable,
@@ -56,7 +59,8 @@ function FinancialInformation({
   const [paymentMethods, setPaymentMethods] = useState(
     customerPaymentMethodsData?.methodDetails || {}
   );
-
+  const [creditBalanceData, setCreditBalanceData] = useState(null);
+  const [isCreditBalanceData, setIsCreditBalanceData] = useState(false);
   // Example state for conditional fields
     const [bankName, setBankName] = useState(
       customerData?.bankName || ""
@@ -67,7 +71,7 @@ function FinancialInformation({
     }, [customerData?.bankName]);
   
   // Dropdown state for pricingPolicy
-  const dropdownFields = ["pricingPolicy", "bankName"];
+  const dropdownFields = ["pricingPolicy", "bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
 
   useEffect(() => {
@@ -80,6 +84,34 @@ function FinancialInformation({
     fetchData();
     setTabsHeight("auto");
   }, []);
+
+  const handleGetCreditBalance = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerData?.id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+    const data = await response.json();
+    if (response.ok) {
+      console.log("Credit Balance Data:", data);
+      console.log("Credit Balance:", data?.data?.currentBalance);
+      setCreditBalanceData(data?.data?.currentBalance || {});
+      setIsCreditBalanceData(true);
+    } else {
+      throw new Error(data.message || "Failed to fetch credit balance");
+    }
+  } catch (error) {
+    console.error("Error fetching credit balance:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: error.message || "Failed to fetch credit balance",
+    });
+  }
+};
 
   return (
     <div className="customer-onboarding-form-grid">
@@ -194,6 +226,7 @@ function FinancialInformation({
                     <span className="update-badge">{t("Updated")}</span>
                   )}
               </label>
+              <div className="input-with-verification">
               <SearchableDropdown
                 name="bankName"
                 options={(basicMasterLists?.bankName || []).map((item) => ({
@@ -224,6 +257,24 @@ function FinancialInformation({
                 }
                 placeholder={t("Select")}
               />
+              { isV("bankNameVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankNameVerified"
+        name="bankNameVerified"
+        checked={verifiedData?.bankNameVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankNameVerified">Verified</label>
+      </div>)}
+        </div>
               {originalCustomerData &&
                 customerData &&
                 originalCustomerData?.bankName != bankName &&
@@ -251,6 +302,7 @@ function FinancialInformation({
                       <span className="update-badge">{t("Updated")}</span>
                     )}
                 </label>
+                <div className="input-with-verification">
                 <input
                   type="text"
                   id="bankNameOther"
@@ -276,6 +328,24 @@ function FinancialInformation({
                     customerData?.customerStatus !== "pending"
                   }
                 />
+                { isV("bankNameOtherVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankNameOtherVerified"
+        name="bankNameOtherVerified"
+        checked={verifiedData?.bankNameOtherVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankNameOtherVerified">Verified</label>
+      </div>)}
+      </div>
                 {originalCustomerData &&
                   customerData &&
                   originalCustomerData?.bankNameOther !=
@@ -306,6 +376,7 @@ function FinancialInformation({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="bankAccountNumber"
@@ -332,6 +403,24 @@ function FinancialInformation({
           }
           required
         />
+        { isV("bankAccountNumberVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankAccountNumberVerified"
+        name="bankAccountNumberVerified"
+        checked={verifiedData?.bankAccountNumberVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankAccountNumberVerified">Verified</label>
+      </div>)}
+      </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.bankAccountNumber !=
@@ -357,6 +446,7 @@ function FinancialInformation({
               <span className="update-badge">{t("Updated")}</span>
             )}
         </label>
+        <div className="input-with-verification">
         <input
           type="text"
           id="iban"
@@ -381,6 +471,24 @@ function FinancialInformation({
           }
           required
         />
+        {isV("ibanVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="ibanVerified"
+        name="ibanVerified"
+        checked={verifiedData?.ibanVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="ibanVerified">Verified</label>
+      </div>)}
+      </div>
         {originalCustomerData &&
           customerData &&
           originalCustomerData?.iban != customerData?.iban &&
@@ -436,7 +544,7 @@ function FinancialInformation({
               </option>
               {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value}
+                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
@@ -492,7 +600,7 @@ function FinancialInformation({
               </option>
                {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value}
+                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
@@ -548,7 +656,7 @@ function FinancialInformation({
               </option>
                {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value}
+                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
@@ -605,7 +713,7 @@ function FinancialInformation({
               </option>
                {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value}
+                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
@@ -662,7 +770,7 @@ function FinancialInformation({
               </option>
                 {basicMasterLists?.pricingPolicy?.map((type) => (
                 <option key={type.value} value={type.value}>
-                  {i18n.language === "ar" ? type.valueLc : type.value}
+                  {i18n.language === "ar" ? type.valueLc : type.value.charAt(0).toUpperCase() + type.value.slice(1)}
                 </option>
               ))}
             </select>
@@ -775,7 +883,7 @@ function FinancialInformation({
                   mode === "edit"
                 }
               />
-              {`\t ${t("Cash on Delivery (COD)")}`}
+              {`\t ${t("Cash on Delivery (COD) per Branch")}`}
               {paymentMethods?.COD?.isAllowed !==
                 originalCustomerPaymentMethodsData?.methodDetails?.COD
                   ?.isAllowed &&
@@ -1558,9 +1666,194 @@ function FinancialInformation({
               </>
             )}
           </div>
+          
         </>
       )}
+     
+         {/* Credit Balance Header */}
+          <h3 className="form-header full-width">{t("Credit Balance")}</h3>
+          <div>
+            <button
+              onClick={handleGetCreditBalance}
+              className="action-button save"
+            >{t("Get Credit Balance")}</button>
+          </div>
+          {isCreditBalanceData && (
+  <dialog className="credit-balance-dialog" open>
+    <div className="dialog-header">
+      <h2>{t("Credit Balance")}</h2>
+      <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
+        &times;
+      </button>
     </div>
+    <div className="dialog-content">
+     
+      <table className="balance-table">
+        <thead>
+          <tr>
+            <th>{t("Entity")}</th>
+            <th className="balance-amount">{t("Balance")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {creditBalanceData && Object.entries(creditBalanceData).map(([entity, balance]) => (
+            <tr key={entity}>
+              <td>{basicMasterLists?.entity?.filter((item) => item.value === entity).map((item) => i18n.language === "en" ? item?.description : item?.descriptionLc)}</td>
+              <td className={`balance-amount ${balance === 0 ? 'zero' : balance > 0 ? 'positive' : 'negative'}`}>
+                {balance.toLocaleString('en-US', {
+                  style: 'currency',
+                  currency: 'SAR',
+                  minimumFractionDigits: 2
+                })}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+     
+      {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
+        <p className="no-data">{t("No credit balance data available")}</p>
+      )}
+    </div>
+  </dialog>
+)}
+ 
+<style>{`
+  .credit-balance-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95vw;
+    max-width: 500px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    padding: 0;
+    background: #fff;
+    z-index: 1000;
+    overflow: hidden;
+  }
+ 
+  .dialog-header {
+    background: #ccc;
+    color: black;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+ 
+  .dialog-header h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+  }
+ 
+  .close-dialog {
+    background: none;
+    border: none;
+    color: black;
+    font-size: 1.5rem;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+  }
+ 
+  .close-dialog:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+ 
+  .dialog-content {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+ 
+  .customer-info {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+  }
+ 
+  .customer-info p {
+    margin: 5px 0;
+    color: #6c757d;
+  }
+ 
+  .balance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+  }
+ 
+  .balance-table th {
+    background-color: #f8f9fa;
+    text-align: left;
+    padding: 12px 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+  }
+ 
+  .balance-table td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #e9ecef;
+  }
+ 
+  .balance-table tr:last-child td {
+    border-bottom: none;
+  }
+ 
+  .balance-table tr:hover {
+    background-color: #f8f9fa;
+  }
+ 
+  .balance-amount {
+    text-align: right;
+    font-weight: 500;
+  }
+ 
+  .balance-amount.zero {
+    color: #6c757d;
+  }
+ 
+  .balance-amount.positive {
+    color: #6c757d;
+  }
+ 
+  .balance-amount.negative {
+    color: #dc3545;
+  }
+ 
+  .no-data {
+    text-align: center;
+    padding: 20px;
+    color: #6c757d;
+    font-style: italic;
+  }
+ 
+  @media (max-width: 600px) {
+    .credit-balance-dialog {
+      width: 95vw;
+      max-width: none;
+    }
+   
+    .dialog-content {
+      padding: 15px;
+    }
+   
+    .balance-table th,
+    .balance-table td {
+      padding: 8px 10px;
+    }
+  }
+`}</style>        
+    </div>
+    
   );
 }
 

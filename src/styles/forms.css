@@ -87,6 +87,10 @@
   margin-bottom: 10px;
 }
 
+[dir="rtl"] .form-main-header {
+  text-align: left;
+}
+
 .form-main-header a {
   color: blue;
   text-decoration: none;
@@ -201,7 +205,16 @@
   border-radius: 5px; 
 }
 .PhoneInputInput {
-  max-width: 210px
+  width: 210px;
+  font-size: 12px;
+   padding: 4px 8px;
+  height: 40px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.PhoneInputInput:hover {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .customers .dropdown {
@@ -658,7 +671,7 @@
 
 .uploaded-files-container {
   width: max-content;
-
+  min-width: 200px;
   border-radius: 4px;
   padding: 10px;
 }
@@ -920,6 +933,10 @@ body::-webkit-scrollbar {
   width: 140px;
   row-gap: 10px;
   column-gap: 5px;
+}
+
+.branch-phone-input select {
+  width: 30px !important;
 }
 .branchDropDown {
   width: 140px !important;
@@ -1330,10 +1347,10 @@ table {
 
 /* First column will expand to fit the widest label */
 td.label-cell {
-  width: 50%;
+  width: 40%;
   white-space: nowrap;
   padding-right: 20px; /* Add some spacing between columns */
-  vertical-align: top;
+  vertical-align: top;;
 }
 
 /* Upload button column */
@@ -1802,6 +1819,55 @@ td.file-display-cell {
   border: 1px solid #ddd;
   background: white;
 }
+
+.input-with-verification {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.verification-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.verified-checkbox:checked {
+  accent-color: #4CAF50; /* Green color */
+  
+}
+/* OR for more customization: */
+/* .verified-checkbox {
+  width: 2px;
+  height: 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.verified-checkbox:checked {
+  background-color: #4CAF50;
+  border-color: #4CAF50;
+}
+
+.verified-checkbox:checked::after {
+  content: "✓";
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+}
+
+.verified-label {
+  cursor: pointer;
+} */
 
 @media (max-width: 768px) {
   .form-section h3 {

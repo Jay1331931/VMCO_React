@@ -71,6 +71,8 @@ function Customers() {
   // const { token, user, isAuthenticated, logout } = useAuth();
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [regionOptions, setRegionOptions] = useState([]);
+  const [entityOptions, setEntityOptions] = useState([]);
+    const [syncLoading, setSyncLoading] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -306,7 +308,8 @@ function Customers() {
       !inviteData.company ||
       !inviteData.mobile ||
       !inviteData.source ||
-      !inviteData.region
+      !inviteData.region ||
+      !inviteData.primaryBusinessUnit
     ) {
       Swal.fire({
         title: "Error",
@@ -333,6 +336,7 @@ function Customers() {
             region: inviteData.region,
             source: inviteData.source,
             employeeId: user?.employeeId,
+            primaryBusinessUnit: inviteData?.primaryBusinessUnit,
             // submissionDate: new Date(),
             comments: inviteData.comments || "",
             registered: false,
@@ -860,7 +864,7 @@ function Customers() {
   }, [activeTab, isApprovalMode, page, searchQuery]);
 
   useEffect(() => {
-    // getOptionsFromBasicsMaster("region").then(setRegionOptions);
+    getOptionsFromBasicsMaster("entity").then(setEntityOptions);
     const fetchGeoData = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/geoLocation`,
@@ -959,8 +963,10 @@ function Customers() {
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+          headers: { "Content-Type": "application/json" ,
+            "Authorization": `Bearer ${token}`
+          },
+          
         }
       );
 
@@ -1155,6 +1161,7 @@ function Customers() {
       key: "download customers",
       label: t("Download Customers"),
       onClick: downloadCustomersAsExcel, // Add the download functionality
+      visible: isV("btnDownloadCustomers"),
     },
   ];
 
@@ -1173,6 +1180,7 @@ function Customers() {
             customCellRenderer={customCellRenderer}
             onRowClick={handleRowClick}
             onPay={HandleFandOFailCustomer}
+            syncLoading={syncLoading}
           />
         );
       case t("invites"):
@@ -1195,6 +1203,7 @@ function Customers() {
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
 const HandleFandOFailCustomer = async (customerId) => {
+  setSyncLoading(true);
   try {
     const { data } = await axios.post(
       `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
@@ -1231,6 +1240,8 @@ const HandleFandOFailCustomer = async (customerId) => {
       confirmButtonText: "OK",
       confirmButtonColor: "#dc3545",
     });
+  } finally {
+    setSyncLoading(false);
   }
 };
 
@@ -1353,13 +1364,15 @@ const HandleFandOFailCustomer = async (customerId) => {
                     )}
                   </div> */}
 
-                  <div className="form-group-1">
-  <label style={{ marginBottom: "6px", display: "inline-block" }}>
+                  <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                     <label style={{ marginBottom: "6px", display: "inline-block" }}>
     {t("Phone Number")}
   </label>
   <PhoneInput
     international
     defaultCountry="SA" // Set your preferred default country
+    withCountryCallingCode={true}
+    countryCallingCodeEditable={false}
     name="mobile"
     value={inviteData.mobile}
     onChange={(value) => {
@@ -1375,7 +1388,7 @@ const HandleFandOFailCustomer = async (customerId) => {
       borderColor: "red",
       '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
     } : {}}
-    className={inviteErrors.mobile ? "phone-input-error" : ""}
+    className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
   />
   {inviteErrors.mobile && (
     <div style={{ color: "red", fontSize: "0.8em" }}>
@@ -1404,6 +1417,25 @@ const HandleFandOFailCustomer = async (customerId) => {
                       value={inviteData.region}
                       onChange={handleInputChange}
                       placeholder={t("Enter Region")}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group-1">
+                    <label
+                      style={{ marginBottom: "6px", display: "inline-block" }}
+                    >
+                      {t("Primary Business Unit")}
+                    </label>
+                    <SearchableDropdown
+                      name="primaryBusinessUnit"
+                      // options={basicMasterLists?.region || []}
+                      options={
+                        entityOptions
+                      }
+                      value={inviteData.primaryBusinessUnit}
+                      onChange={handleInputChange}
+                      placeholder={t("Enter Primary Business Unit")}
                       required
                     />
                   </div>

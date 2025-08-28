@@ -11,6 +11,8 @@ const Table = ({
     customCellRenderer,
     onRowClick,
     onPay,
+    onsync,
+    syncLoading
 }) => {
     const { t } = useTranslation();
  const isDateString = (val) => {
@@ -72,11 +74,99 @@ const Table = ({
                         e.stopPropagation();
                         onPay(item.id);
                     }}
+                    disabled={syncLoading}
                 >
-                    {t('F&O Sync')} 
+                {syncLoading ? t('Syncing...') :t("F&O Sync")}
                 </button>
             );
         }
+    const COMMON_RULES = {
+  SHC_GMTC: [
+    // Approved cases
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+
+    // Open cases
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
+    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "open" }, // FIX
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "open" },
+  ],
+
+  NAQI_DAR: [
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+  ],
+};
+
+
+const SYNC_RULES = {
+  [Constants.ENTITY.VMCO]: (item) =>
+    item.isMachine
+      ? [
+          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
+        ]
+      : [
+          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
+          { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+          { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+        ],
+
+  [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+  [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+  [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+  [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+};
+
+if (
+  column.key?.toLowerCase() === "ordersync" &&
+  !item.erpOrderId
+) {
+  const entity = item.entity?.toLowerCase();
+  const rules = SYNC_RULES[item.entity]?.(item) || [];
+
+  const isValidForSync = rules.some(
+    (rule) =>
+      rule.paymentMethod.toLowerCase() === item.paymentMethod?.toLowerCase() &&
+      rule.paymentStatus.toLowerCase() === item.paymentStatus?.toLowerCase() &&
+      rule.status.toLowerCase() === item.status?.toLowerCase()
+  );
+
+  if (isValidForSync) {
+    return (
+      <button
+        className="action-button pay"
+         disabled={syncLoading}
+        onClick={(e) => {
+          e.stopPropagation();
+          console.log("item", item);
+          onsync(item.id);
+        }}
+      >
+         {syncLoading ? t('Syncing...') :t("F&O Sync")}
+      </button>
+    );
+  }
+}
+
+        // if(column.key?.toLowerCase()=="ordersync" && item.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && item.status.toLowerCase()=="approved" &&!item.erpOrderId  ){
+        //     return (
+        //         <button 
+        //             className="action-button pay"
+        //             onClick={(e) => {
+        //                 e.stopPropagation();
+        //                 console.log("item",item)
+        //                 onsync(item.id);
+        //             }}
+        //         >
+        //             {t('F&O Sync')} 
+        //         </button>
+        //     );
+        // }
         // Handle action buttons
         if (column.key === 'actions' && actionButtons) {
             return actionButtons(item);

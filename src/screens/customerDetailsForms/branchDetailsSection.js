@@ -690,10 +690,18 @@ const BranchDetailsForm = ({
             i18n.language === "ar"
               ? geoData && geoData[selectedRegion]?.cities?.[opt.value]?.ar
               : opt.name,
-        })),
+        })).reverse(),
         onChange: handleCityChange,
         value: branch?.city || "",
         disabled: !selectedRegion,
+      },
+      {
+        type: "text",
+        label: "City (Other)",
+        name: "cityOther",
+        placeholder: "City (Other)",
+        required: true,
+        // hidden: branch?.locationType !== "Others (specify)",
       },
       {
         type: "dropdown",
@@ -715,9 +723,17 @@ const BranchDetailsForm = ({
                   opt.value
                 ].ar
               : opt.name,
-        })),
+        })).reverse(),
         value: branch?.district || "",
         disabled: !selectedCity,
+      },
+      {
+        type: "text",
+        label: "District (Other)",
+        name: "districtOther",
+        placeholder: "District (Other)",
+        required: true,
+        // hidden: branch?.locationType !== "Others (specify)",
       },
       {
         type: "dropdown",
@@ -823,8 +839,16 @@ const BranchDetailsForm = ({
       <div className="form-row">
         {fields.map((field, index) => {
           if (
-            field.name === "locationTypeOther" &&
-            branch?.locationType !== "Others (specify)"
+            (field.name === "locationTypeOther" &&
+            branch?.locationType !== "Others (specify)")||
+            (
+              field.name === "cityOther" &&
+              branch?.city !== "Others (Specify)"
+            ) || 
+            (
+              field.name === "districtOther" &&
+              branch?.district !== "Others (Specify)"
+            )
           ) {
             return null;
           }
