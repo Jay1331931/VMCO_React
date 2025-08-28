@@ -412,6 +412,7 @@ class RbacManager {
           Support: { visible: true, editable: true },
           Maintenance: { visible: true, editable: true },
           General: { visible: true, editable: true },
+          Reports: { visible: true, editable: true },
         },
       },
       BankTransactions: {
@@ -907,6 +908,7 @@ class RbacManager {
           Support: { visible: true, editable: true },
           Maintenance: { visible: true, editable: true },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1381,6 +1383,7 @@ class RbacManager {
           Support: { visible: true, editable: true },
           Maintenance: { visible: true, editable: true },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -1688,6 +1691,7 @@ class RbacManager {
           Support: { visible: true, editable: true },
           Maintenance: { visible: true, editable: true },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       custDetailsAdd: {
@@ -1985,6 +1989,7 @@ class RbacManager {
           Support: { visible: true, editable: true },
           Maintenance: { visible: true, editable: true },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -2764,6 +2769,7 @@ class RbacManager {
           Support: { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -2910,6 +2916,7 @@ class RbacManager {
           Orders: { visible: false, editable: false },
           Catalog: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -3597,6 +3604,7 @@ class RbacManager {
           Support: { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -4194,6 +4202,7 @@ class RbacManager {
           Support: { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -4344,6 +4353,7 @@ class RbacManager {
           Catalog: { visible: false, editable: false },
           Orders: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -4793,7 +4803,7 @@ class RbacManager {
           Catalog: { visible: false, editable: false },
           Orders: { visible: false, editable: false },
           General: { visible: false, editable: false },
-
+  Reports: { visible: false, editable: false },
         },
       },
       catalog: {
@@ -5535,6 +5545,7 @@ class RbacManager {
           Orders: { visible: false, editable: false },
           Catalog: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       BankTransactions: {
@@ -6277,6 +6288,7 @@ class RbacManager {
           Support: { visible: false, editable: false },
           Maintenance: { visible: false, editable: false },
           General: { visible: false, editable: false },
+          Reports: { visible: false, editable: false },
         },
       },
       custDetailsAdd: {
