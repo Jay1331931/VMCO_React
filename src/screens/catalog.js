@@ -53,7 +53,7 @@ const initialCategories = [
   },
   {
     value: "SPECIAL_PRODUCTS",
-    entity: "", // No specific entity restriction
+    entity: "",
     label: "Special Products",
   },
   {
