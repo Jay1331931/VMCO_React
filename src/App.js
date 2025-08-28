@@ -31,6 +31,7 @@ import Constants from "./constants";
 import { useAuth } from "./context/AuthContext";
 import { isTokenValid } from './utilities/authUtils';
 import RbacManager from "./utilities/rbac";
+import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -44,7 +45,7 @@ function App() {
         "SidebarList"
       );
 
-      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company"];
+      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company","Gen"];
       const isV = rbacMgr.isV.bind(rbacMgr);
 
       for (const page of pages) {
@@ -101,6 +102,10 @@ function App() {
         <Route
           path="/bankTransactions/order/:amount/:orderId"
           element={<AddBankTransaction />}
+        />
+         <Route
+          path="/admin/upload"
+          element={<BulkUploadBranchAndCustomer />}
         />
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}

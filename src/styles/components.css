@@ -3591,12 +3591,12 @@ input:focus {
   background: var(--navy-blue);
 }
 .download-btn:hover {
-  background:  #044b3fff;
+  background:  var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
 }
 .upload-btn:hover {
-  background: var(--navy-blue);
+  background: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25);
 }

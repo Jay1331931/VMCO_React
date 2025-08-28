@@ -159,7 +159,7 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                           <button
                             className="gb-branch-btn"
                             onClick={() => onSelectBranch(branch)}
-                            disabled={!isApproved}
+                            disabled={!isApproved || !branch.erpBranchId}
                             title={isApproved ? '' : t('Branch is either inactive or not approved')}
                           >
                             {t('Select')}

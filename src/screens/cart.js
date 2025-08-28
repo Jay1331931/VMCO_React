@@ -179,7 +179,7 @@ function Cart() {
 
             // Helper function to determine if a product is a machine
             const isProductMachine = (product) => {
-                const productType = (product.productType || product.product_type || '').toLowerCase();
+                const productType = (product.productType).toLowerCase();
                 const category = (product.category || '').toLowerCase();
 
                 // Check explicit productType field first
@@ -237,10 +237,10 @@ function Cart() {
 
                 // Categorize based on entity and product type
                 const entity = (product.entity || '').toLowerCase();
-                const isMachine = isProductMachine(product);
+                // const isMachine = isProductMachine(product);
 
-                // Add isMachine flag to formattedItem
-                formattedItem.isMachine = isMachine;
+                // // Add isMachine flag to formattedItem
+                // formattedItem.isMachine = isMachine;
 
                 // Add isFresh flag to formattedItem (preserve from original product data)
                 formattedItem.isFresh = product.isFresh === true;                // Categorize based on entity and product type
@@ -811,7 +811,7 @@ function Cart() {
         }
 
         // Check customer and branch status before placing order
-        if ((selectedCustomerStatus || '').toLowerCase() !== 'approved') {
+        if ((selectedCustomerStatus).toLowerCase() !== 'approved') {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
@@ -820,7 +820,7 @@ function Cart() {
             });
             return;
         }
-        if ((selectedBranchStatus || '').toLowerCase() !== 'approved') {
+        if ((selectedBranchStatus).toLowerCase() !== 'approved' || !selectedBranchErpId) {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
