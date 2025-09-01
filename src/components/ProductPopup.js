@@ -50,10 +50,10 @@ function ProductPopup({
                 <div className="popup-content">
                     <div className="popup-image-section">
                         <div className="popup-image-container">
-                            <FavButton 
+                           {isV('favoriteButton') && <FavButton 
                                 initialState={product.favorite || false}
                                 onToggle={handleFavoriteToggle}
-                            />
+                            />}
                             {selectedImage ? (
                                 <img
                                     src={selectedImage}
