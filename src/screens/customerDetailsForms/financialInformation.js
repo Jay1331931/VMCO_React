@@ -8,9 +8,9 @@ import { useAuth } from "../../context/AuthContext";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Swal from "sweetalert2";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST ;
+const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST ;
 function FinancialInformation({
   customerData = {},
   originalCustomerData = {},

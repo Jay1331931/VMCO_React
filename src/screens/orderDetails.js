@@ -134,8 +134,10 @@ function OrderDetails() {
   const [companyType, setCompanyType] = useState('');
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [pendingSaveAction, setPendingSaveAction] = useState(null);  // Remove categoryOptions/products fetching and getFilteredVmcoCategories
-   const [showModal, setShowModal] = useState(false);
-    const [pdfFiles, setPdfFiles] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [pdfFiles, setPdfFiles] = useState([]);
+  const [deliveryImages, setDeliveryImages] = useState([]);
+  const [loadingProductId, setLoadingProductId] = useState(null);
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
@@ -191,11 +193,11 @@ function OrderDetails() {
         console.log('Fetching order products from URL:', url);
         const response = await fetch(url, {
           method: 'GET',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
+            'Authorization': `Bearer ${token}`
           },
-          
+
         });
 
         const contentType = response.headers.get('content-type');
@@ -258,7 +260,7 @@ function OrderDetails() {
       const creditRes = await fetch(creditUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        
+
       });
       if (!creditRes.ok) {
         console.warn('Failed to fetch credit eligibility:', creditRes.statusText);
@@ -442,7 +444,7 @@ function OrderDetails() {
         const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          
+
         });
 
         if (!existingOrdersResponse.ok) {
@@ -466,7 +468,7 @@ function OrderDetails() {
         const customerResponse = await fetch(`${API_BASE_URL}/payment-method-balances/id/${formData.customerId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          
+
         });
 
         if (!customerResponse.ok) {
@@ -654,7 +656,7 @@ function OrderDetails() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
-        
+
       }); if (!orderResponse.ok) {
         const errorData = await orderResponse.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Server response:', errorData);
@@ -675,7 +677,7 @@ function OrderDetails() {
         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: formData.id }))}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          
+
         });
 
         if (!linesResponse.ok) {
@@ -795,7 +797,7 @@ function OrderDetails() {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(orderUpdatePayload),
-          
+
         });
 
         if (!updateOrderResponse.ok) {
@@ -973,9 +975,11 @@ function OrderDetails() {
       try {
         const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-          
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+
         });
 
         console.log('Existing order response status:', existingOrderResponse.status);
@@ -1016,7 +1020,7 @@ function OrderDetails() {
     const usernameRes = await fetch(`${API_BASE_URL}${usernameApiUrl}`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${token}` },
-      
+
     });
     if (usernameRes.ok) {
       const contentType = usernameRes.headers.get('content-type');
@@ -1118,7 +1122,7 @@ function OrderDetails() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify(payload),
-          
+
         });
         console.log('Sales order API response status:', response.status);
         if (!response.ok) {
@@ -1137,7 +1141,7 @@ function OrderDetails() {
             const idRes = await fetch(`${API_BASE_URL}/sales-order/pagination?${params.toString()}`, {
               method: 'GET',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-              
+
             });
             const idResult = await idRes.json();
             let newOrderId = 1;
@@ -1224,10 +1228,12 @@ function OrderDetails() {
           // productsPayload[0].is_machine=true
           const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(productsPayload),
-            
+
           });
           console.log('Sales order lines API response status:', linesResponse.status);
 
@@ -1286,10 +1292,12 @@ function OrderDetails() {
 
           const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${result.data.id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(orderUpdatePayload),
-            
+
           });
 
           if (!updateOrderResponse.ok) {
@@ -1391,10 +1399,12 @@ function OrderDetails() {
 
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
-        
+
       });
 
       if (!response.ok) {
@@ -1437,8 +1447,8 @@ function OrderDetails() {
           endPoint: "payment-opations/order",
           IsEmail: email,
         },
-        { 
-         
+        {
+
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -1566,9 +1576,11 @@ function OrderDetails() {
         // Call API to get updated price for this product with new pricing policy
         const response = await fetch(`${API_BASE_URL}/product/price`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+
           body: JSON.stringify({
             productId: product.id,
             customerId: formData.customerId,
@@ -1639,9 +1651,11 @@ function OrderDetails() {
 
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
         body: JSON.stringify({
           quantity,
           unitPrice,
@@ -1669,9 +1683,11 @@ function OrderDetails() {
     try {
       const response = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
       });
 
       if (!response.ok) {
@@ -1718,9 +1734,11 @@ function OrderDetails() {
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
         body: JSON.stringify(payload)
       });
 
@@ -1943,11 +1961,12 @@ function OrderDetails() {
 
   // Function to handle Product Stock Availability
   const handleStock = async (productId, productName) => {
+    setLoadingProductId(productId);
     try {
       setInventoryLoading(true);
       const { data } = await axios.get(`${API_BASE_URL}/product-inventory-avalability/${productId}`,
-        { 
-         
+        {
+
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -2043,7 +2062,7 @@ function OrderDetails() {
                 </button>
               </span>
             )}
-          {InventoryLoading && <LoadingSpinner />}
+          {InventoryLoading && loadingProductId === row.id && <LoadingSpinner />}
         </div>
       ),
       include: isV('quantityCol'),
@@ -2088,7 +2107,7 @@ function OrderDetails() {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
-          
+
         });
 
         if (!response.ok) throw new Error('Failed to fetch entity options');
@@ -2135,10 +2154,11 @@ function OrderDetails() {
         console.log('Fetching customer options with params:', params.toString());
         const response = await fetch(`${API_BASE_URL}/customers/pagination?${params.toString()}`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json',
+          headers: {
+            'Content-Type': 'application/json',
             "Authorization": `Bearer ${token}`
-           }
-          
+          }
+
         });
 
         if (!response.ok) throw new Error('Failed to fetch customer options');
@@ -2170,7 +2190,7 @@ function OrderDetails() {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "paymentMethod"}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json', "Authorization": `Bearer ${token}` },
-          
+
         });
 
         if (!response.ok) throw new Error('Failed to fetch payment method options');
@@ -2288,9 +2308,11 @@ function OrderDetails() {
         const url = `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`;
         const response = await fetch(url, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-          
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+
         });
 
         if (!response.ok) throw new Error('Failed to fetch order products');
@@ -2333,9 +2355,11 @@ function OrderDetails() {
     try {
       const response = await fetch(`${API_BASE_URL}/sales-order/id/${id}`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+
       });
 
       if (!response.ok) throw new Error('Failed to fetch order details'); const result = await response.json();
@@ -2430,7 +2454,7 @@ function OrderDetails() {
           'Authorization': `Bearer ${token}` // Adding Authorization header with token
         },
         body: JSON.stringify(payload),
-        
+
       });
 
       console.log('Discount workflow API response status:', response.status);
@@ -2497,15 +2521,17 @@ function OrderDetails() {
               console.log(`Updating existing product line: ${productId}`);
               const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${formData.id}/${productId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                   quantity,
                   unitPrice,
                   net_amount: netAmount.toFixed(2),
                   vatPercentage: vatPercentage.toFixed(2)
                 }),
-                
+
               });
 
               if (!patchResponse.ok) {
@@ -2517,8 +2543,10 @@ function OrderDetails() {
               console.log(`Creating new product line: ${productId}`);
               const postResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                   orderId: formData.id,
                   productId: productId,
@@ -2533,7 +2561,7 @@ function OrderDetails() {
                   erpProdId: product.erpProdId || product.erp_prod_id || '',
                   unit: product.unit || ''
                 }),
-                
+
               });
 
               if (!postResponse.ok) {
@@ -2559,10 +2587,12 @@ function OrderDetails() {
           console.log("Updating sales order with payload:", patchPayload);
           const orderUpdateResponse = await fetch(`${API_BASE_URL}/sales-order/id/${formData.id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(patchPayload),
-            
+
           });
 
           if (!orderUpdateResponse.ok) {
@@ -2636,10 +2666,12 @@ function OrderDetails() {
 
       const res = await fetch(`${API_BASE_URL}/workflow-instance/id/${wfid}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
-        
+
       });
 
       if (res.ok) {
@@ -2670,25 +2702,25 @@ function OrderDetails() {
 
   // Add this handler inside your component, before return
   function handleSelectPaymentMethod(method) {
-  setShowPaymentPopup(false);
-  setFormData(prev => {
-    // If Cash on Delivery is selected and entity is VMCO, set status to Pending
-    if (
-      method &&
-      method.toLowerCase() === 'cash on delivery' &&
-      prev.entity &&
-      prev.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
-    ) {
-      return { ...prev, paymentMethod: method, status: 'Pending' };
+    setShowPaymentPopup(false);
+    setFormData(prev => {
+      // If Cash on Delivery is selected and entity is VMCO, set status to Pending
+      if (
+        method &&
+        method.toLowerCase() === 'cash on delivery' &&
+        prev.entity &&
+        prev.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+      ) {
+        return { ...prev, paymentMethod: method, status: 'Pending' };
+      }
+      return { ...prev, paymentMethod: method };
+    });
+    // If a save was pending, continue with save
+    if (pendingSaveAction) {
+      handleSave(pendingSaveAction, method);
+      setPendingSaveAction(null);
     }
-    return { ...prev, paymentMethod: method };
-  });
-  // If a save was pending, continue with save
-  if (pendingSaveAction) {
-    handleSave(pendingSaveAction, method);
-    setPendingSaveAction(null);
   }
-}
 
   // Debug effect to monitor products loading
   useEffect(() => {
@@ -2726,42 +2758,85 @@ function OrderDetails() {
     }
   }, [salesOrderLinesFromNav, (formData.products ? formData.products.length : 0), formMode]);
 
-const handleViewSignature = async (orderId, customerId, Invoices) => {
+  const handleViewSignature = async (orderId, customerId, Invoices) => {
 
-setShowModal(true);
-  try {
-    // Reset PDF files before loading new ones
-    setPdfFiles([]); // Optional but recommended to avoid stacking from previous view
+    setShowModal(true);
+    try {
+      // Reset PDF files before loading new ones
+      setPdfFiles([]); // Optional but recommended to avoid stacking from previous view
 
-    for (let file of Invoices) {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/get-files`,
+      for (let file of Invoices) {
+        const { data } = await axios.post(
+          `${API_BASE_URL}/get-files`,
+          {
+            fileName: file,
+            containerType: "invoices",
+            id: customerId,    // replaced hardcoded id:64
+            orderId: orderId,  // replaced hardcoded orderId:3
+          },
+          {
+
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          }
+        );
+
+        if (data?.status === "Ok" && data.data) {
+          setPdfFiles((prevFiles) => [...prevFiles, data.data]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching signature files:", error);
+    }
+  };
+  const handleClose = () => {
+    setShowModal(false);
+    setPdfFiles([]);
+  };
+  console.log("formMode111111111", formMode, orderFromNav)
+  const getDeliveryFiles = async (erpOrderId) => {
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/get-delivery-files`, {
+        containerType: "delivery",
+        erpOrderId: erpOrderId,
+      },
         {
-          fileName: file,
-          containerType: "invoices",
-          id: customerId,    // replaced hardcoded id:64
-          orderId: orderId,  // replaced hardcoded orderId:3
-        },
-        { 
-         
+
           headers: {
             "Authorization": `Bearer ${token}`
           }
         }
       );
-
-      if (data?.status === "Ok" && data.data) {
-        setPdfFiles((prevFiles) => [...prevFiles, data.data]);
-      } 
+      return data?.data;
+    } catch (error) {
+      console.error("Error fetching delivery files:", error);
+      throw error;
     }
-  } catch (error) {
-    console.error("Error fetching signature files:", error);
-  }
-};
-  const handleClose = () => {
-    setShowModal(false);
-    setPdfFiles([] );
   };
+  useEffect(() => {
+    if (formMode === "add") return;
+
+    const fetchImages = async () => {
+      if (
+        orderFromNav &&
+        orderFromNav?.erpOrderId &&
+        orderFromNav?.status?.toLowerCase() === "delivered"
+      ) {
+        try {
+          const result = await getDeliveryFiles(orderFromNav?.erpOrderId);
+          setDeliveryImages(result || []);
+          console.log("Fetched delivery images:", result.data || []);
+        } catch (error) {
+          console.error("Failed to fetch delivery images:", error);
+        }
+      }
+    };
+
+    fetchImages();
+  }, [formMode, orderFromNav]);
+
+
 
   return (
     <Sidebar>
@@ -3055,11 +3130,11 @@ setShowModal(true);
                             type="text"
                             name="expectedDeliveryDate"
                             value={formData.expectedDeliveryDate ? convertToTimezone(
-          formData.expectedDeliveryDate, 
-          TIMEZONES.SAUDI_ARABIA, 
-          'DD/MM/YYYY'
-        ) : 'Delivery date will be updated soon'}
-        disabled
+                              formData.expectedDeliveryDate,
+                              TIMEZONES.SAUDI_ARABIA,
+                              'DD/MM/YYYY'
+                            ) : 'Delivery date will be updated soon'}
+                            disabled
                             readOnly
                             style={{ background: '#f9f9f9', color: formData.expectedDeliveryDate ? '#000' : '#999' }}
                           />
@@ -3069,11 +3144,11 @@ setShowModal(true);
                               type="date"
                               name="expectedDeliveryDate"
                               value={convertToTimezone(
-            formData.expectedDeliveryDate, 
-            TIMEZONES.SAUDI_ARABIA, 
-            'YYYY-MM-DD'
-          )}
-          onChange={handleInputChange}
+                                formData.expectedDeliveryDate,
+                                TIMEZONES.SAUDI_ARABIA,
+                                'YYYY-MM-DD'
+                              )}
+                              onChange={handleInputChange}
                               disabled={!isE('expectedDeliveryDate')}
                             />
                           ) : (
@@ -3109,41 +3184,41 @@ setShowModal(true);
                     )}
 
                     {/* Reservation Status field - visible only in edit mode for VMCO entity with machines */}
-                    {isV('reservationStatus') && 
-                     isEditMode && 
-                     formData.entity && 
-                     formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && 
-                     (formData.isMachine === true || (formData.products && formData.products.length > 0 && formData.products.some(product => product.isMachine === true))) &&
-                     (user?.roles?.[0] === Constants.ROLES.CUSTOMER_PRIMARY || 
-                      user?.roles?.[0] === Constants.ROLES.BRANCH_PRIMARY ||
-                      (user?.userType === 'employee' && user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
-                      user?.roles?.[0] === Constants.ROLES.SUPER_ADMIN) && (
-                      <div className="order-details-field">
-                        <label>{t('Reservation Status')}</label>
-                        <input
-                          name="reservationStatus"
-                          value={formData.reserved === true ? t('Reserved') : t('Unreserved')}
-                          disabled={!isE('reservationStatus')}
-                          style={
-                            !isE('reservationStatus')
-                              ? { background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }
-                              : {}
-                          }
-                          readOnly
-                        />
-                      </div>
-                    )}
+                    {isV('reservationStatus') &&
+                      isEditMode &&
+                      formData.entity &&
+                      formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+                      (formData.isMachine === true || (formData.products && formData.products.length > 0 && formData.products.some(product => product.isMachine === true))) &&
+                      (user?.roles?.[0] === Constants.ROLES.CUSTOMER_PRIMARY ||
+                        user?.roles?.[0] === Constants.ROLES.BRANCH_PRIMARY ||
+                        (user?.userType === 'employee' && user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
+                        user?.roles?.[0] === Constants.ROLES.SUPER_ADMIN) && (
+                        <div className="order-details-field">
+                          <label>{t('Reservation Status')}</label>
+                          <input
+                            name="reservationStatus"
+                            value={formData.reserved === true ? t('Reserved') : t('Unreserved')}
+                            disabled={!isE('reservationStatus')}
+                            style={
+                              !isE('reservationStatus')
+                                ? { background: '#f9f9f9', color: '#999', cursor: 'not-allowed' }
+                                : {}
+                            }
+                            readOnly
+                          />
+                        </div>
+                      )}
 
                     {isV('createdDate') && (
                       <div className="order-details-field">
                         <label>{t('Created Date')}</label>
                         <input
                           name="createdDate"
-                          value={formData.createdAt ?convertToTimezone(
-        formData.createdAt, 
-        TIMEZONES.SAUDI_ARABIA, 
-        'DD/MM/YYYY HH:MM'
-      ) : ''}
+                          value={formData.createdAt ? convertToTimezone(
+                            formData.createdAt,
+                            TIMEZONES.SAUDI_ARABIA,
+                            'DD/MM/YYYY HH:MM'
+                          ) : ''}
                           disabled
                         />
                       </div>
@@ -3155,10 +3230,10 @@ setShowModal(true);
                         <input
                           name="updatedDate"
                           value={formData.updatedAt ? convertToTimezone(
-        formData.updatedAt, 
-        TIMEZONES.SAUDI_ARABIA, 
-        'DD/MM/YYYY HH:MM'
-      ) : ''}
+                            formData.updatedAt,
+                            TIMEZONES.SAUDI_ARABIA,
+                            'DD/MM/YYYY HH:MM'
+                          ) : ''}
                           disabled
                         />
                       </div>
@@ -3193,7 +3268,7 @@ setShowModal(true);
                     <>
                       <label>{t('Delivery images')}</label>
                       <div className="maintenance-images-list">
-                        {isV('addImages') && (
+                        {/* {isV('addImages') && (
                           <>
                             <button
                               type="button"
@@ -3212,16 +3287,45 @@ setShowModal(true);
                               onChange={handleAddImage}
                             />
                           </>
-                        )}
-                        {images.map((img, idx) => (
-                          <div
-                            key={idx}
-                            className="maintenance-image-placeholder"
-                            style={img ? { backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-                            onClick={() => img && setPopupImage(img)}
-                            title={img ? 'Click to view' : ''}
-                          />
-                        ))}
+                        )} */}
+                        {deliveryImages?.map((img, idx) => {
+                          const fileUrl = img.url;
+                          const fileName = img.filename || img.fileName || `file-${idx}`;
+                          const extension = fileName.split(".").pop().toLowerCase();
+
+                          const isImage = ["png", "jpg", "jpeg", "gif", "webp"].includes(extension);
+                          const isPdf = extension === "pdf";
+                          const isExcel = ["xls", "xlsx", "csv"].includes(extension);
+
+                          return (
+                            <div
+                              key={idx}
+                              className="maintenance-image-placeholder"
+                              style={
+                                isImage && fileUrl
+                                  ? {
+                                    backgroundImage: `url(${fileUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                  }
+                                  : {}
+                              }
+                              onClick={() => isImage && fileUrl && setPopupImage(fileUrl)}
+                              title={isImage && fileUrl ? "Click to view" : ""}
+                            >
+                              {!isImage && fileUrl && (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="file-link-button"
+                                >
+                                  {isPdf ? "📄 View PDF" : isExcel ? "📊 Open Excel" : "📁 Download File"}
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </>
                   )}
@@ -3407,9 +3511,11 @@ setShowModal(true);
                     // Save to backend
                     const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/orders/id/${formData.id}`, {
                       method: 'PATCH',
-                      headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-                      
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+
                       body: JSON.stringify({
                         feedback: updatedFeedback
                       })
@@ -3447,7 +3553,7 @@ setShowModal(true);
                           'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ feedback: JSON.stringify(feedbackObject) }),
-                        
+
                       });
 
                       if (!response.ok) {
@@ -3623,7 +3729,7 @@ setShowModal(true);
 
                 {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
                   <button className="order-action-btn" onClick={() =>
-                 handleViewSignature(formData.id, formData.customerId, formData.invoices)
+                    handleViewSignature(formData.id, formData.customerId, formData.invoices)
                   }>
                     {t('Download Invoice')}
                   </button>
@@ -3680,14 +3786,14 @@ setShowModal(true);
               </div>
             </div>
           )}
-           <PdfPopupViewer
-                pdfFiles={pdfFiles}
-               showModal={showModal}
-                onClose={() => handleClose()}
-                t={t}
-              />
+          <PdfPopupViewer
+            pdfFiles={pdfFiles}
+            showModal={showModal}
+            onClose={() => handleClose()}
+            t={t}
+          />
         </div>
-        
+
       )}
     </Sidebar>
   );
