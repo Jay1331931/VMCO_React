@@ -754,7 +754,10 @@ function Orders() {
                               onClick={() => setShowCustomerPopup(true)}
                               className="customer-input"
                               placeholder={t('Click to select company')}
-                              value={selectedCustomer ? selectedCustomer.companyNameEn : ''}
+                              value={selectedCustomer 
+                                ? (isArabic ? selectedCustomer.companyNameAr : selectedCustomer.companyNameEn)
+                                : ''
+                              }
                               disabled={!isE('customerName')}
                               autoComplete="off"
                             />
@@ -782,7 +785,10 @@ function Orders() {
                               }}
                               className="customer-input"
                               placeholder={t('Click to select branch')}
-                              value={selectedBranch ? selectedBranch.branchNameEn : ''}
+                              value={selectedBranch 
+                                ? (isArabic ? selectedBranch.branchNameAr : selectedBranch.branchNameEn)
+                                : ''
+                              }
                               readOnly
                               disabled={!isE('branchName')}
                               autoComplete="off"
