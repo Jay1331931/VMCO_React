@@ -15,7 +15,7 @@ function Reports() {
     <div>
       <Sidebar title={t("Reports")}>
         <h3>{t("API logs link")}</h3>
-        <a onClick={handleApiLogReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{t("API log report")}</a>
+        <a onClick={handleApiLogReportClick} style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}>{t("API Logs Report")}</a>
       </Sidebar>
     </div>
   );

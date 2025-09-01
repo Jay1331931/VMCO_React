@@ -5,6 +5,7 @@ import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
@@ -37,8 +38,6 @@ function FinancialInformation({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
-  console.log("RBAC Manager:", rbacMgr);
-
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   // const [isDeliveryChargesApplicable, setIsDeliveryChargesApplicable] =
@@ -65,6 +64,7 @@ function FinancialInformation({
     const [bankName, setBankName] = useState(
       customerData?.bankName || ""
     );
+    const [isLoading, setIsLoading] = useState(false);
   
     useEffect(() => {
       setBankName(customerData?.bankName || "");
@@ -86,6 +86,7 @@ function FinancialInformation({
   }, []);
 
   const handleGetCreditBalance = async () => {
+    setIsLoading(true);
   try {
     const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerData?.id}`, {
       method: "GET",
@@ -96,10 +97,9 @@ function FinancialInformation({
     });
     const data = await response.json();
     if (response.ok) {
-      console.log("Credit Balance Data:", data);
-      console.log("Credit Balance:", data?.data?.currentBalance);
       setCreditBalanceData(data?.data?.currentBalance || {});
       setIsCreditBalanceData(true);
+      setIsLoading(false);
     } else {
       throw new Error(data.message || "Failed to fetch credit balance");
     }
@@ -1676,19 +1676,22 @@ function FinancialInformation({
             <button
               onClick={handleGetCreditBalance}
               className="action-button save"
-            >{t("Get Credit Balance")}</button>
-          </div>
+              disabled={isLoading}
+            >
+              {isLoading ? t("Loading...") : t("Get Credit Balance")}
+            </button>
+          </div>          
           {isCreditBalanceData && (
-  <dialog className="credit-balance-dialog" open>
-    <div className="dialog-header">
-      <h2>{t("Credit Balance")}</h2>
-      <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
-        &times;
-      </button>
-    </div>
-    <div className="dialog-content">
+            <dialog className="credit-balance-dialog" open>
+              <div className="dialog-header">
+                <h2>{t("Credit Balance")}</h2>
+                <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
+                  &times;
+                </button>
+              </div>
+              <div className="dialog-content">
      
-      <table className="balance-table">
+                <table className="balance-table">
         <thead>
           <tr>
             <th>{t("Entity")}</th>
@@ -1709,16 +1712,16 @@ function FinancialInformation({
             </tr>
           ))}
         </tbody>
-      </table>
+                </table>
      
-      {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
+                {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
         <p className="no-data">{t("No credit balance data available")}</p>
-      )}
-    </div>
-  </dialog>
-)}
+                )}
+              </div>
+            </dialog>
+          )}
  
-<style>{`
+          <style>{`
   .credit-balance-dialog {
     position: fixed;
     top: 50%;
@@ -1735,8 +1738,7 @@ function FinancialInformation({
   }
  
   .dialog-header {
-    background: #ccc;
-    color: black;
+    color: #666;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
@@ -1752,7 +1754,7 @@ function FinancialInformation({
   .close-dialog {
     background: none;
     border: none;
-    color: black;
+    color: #666;
     font-size: 1.5rem;
     cursor: pointer;
     width: 30px;
@@ -1851,7 +1853,7 @@ function FinancialInformation({
       padding: 8px 10px;
     }
   }
-`}</style>        
+          `}</style>        
     </div>
     
   );
