@@ -55,12 +55,13 @@ const Constants = {
         RIYADH: 'Riyadh',
         JEDDAH: 'Jeddah'
     },
-    DEPARTMENTS_NAMES: {
+    DOCUMENTS_NAME: {
         BRANCH_APPROVAL_CHECKLIST: 'Branch_data_verification_checklist.pdf',
         BRANCH_UPLOAD_FORMAT: 'branches_upload_format.xlsx',
         CUSTOMER_APPROVAL_CHECKLIST:"Customer_data_verification_checklist.pdf",
         TERMS_AND_CONDITIONS_AR: "Terms_and_condition_ar.pdf",
-        TERMS_AND_CONDITIONS_EN: "Terms_and_condition_en.pdf"
+        TERMS_AND_CONDITIONS_EN: "Terms_and_condition_en.pdf",
+        ORDERS_UPLOAD_FORMAT: "orders_upload_format.xlsx"
     }
 
 };
