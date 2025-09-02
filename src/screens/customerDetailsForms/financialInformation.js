@@ -5,11 +5,12 @@ import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
+import LoadingSpinner from "../../components/LoadingSpinner";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Swal from "sweetalert2";
-const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST_URL =Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST ;
+const CUSTOMER_APPROVAL_CHECKLIST =Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST ;
 function FinancialInformation({
   customerData = {},
   originalCustomerData = {},
@@ -37,8 +38,6 @@ function FinancialInformation({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
-  console.log("RBAC Manager:", rbacMgr);
-
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   // const [isDeliveryChargesApplicable, setIsDeliveryChargesApplicable] =
@@ -65,6 +64,7 @@ function FinancialInformation({
     const [bankName, setBankName] = useState(
       customerData?.bankName || ""
     );
+    const [isLoading, setIsLoading] = useState(false);
   
     useEffect(() => {
       setBankName(customerData?.bankName || "");
@@ -86,6 +86,7 @@ function FinancialInformation({
   }, []);
 
   const handleGetCreditBalance = async () => {
+    setIsLoading(true);
   try {
     const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerData?.id}`, {
       method: "GET",
@@ -96,10 +97,9 @@ function FinancialInformation({
     });
     const data = await response.json();
     if (response.ok) {
-      console.log("Credit Balance Data:", data);
-      console.log("Credit Balance:", data?.data?.currentBalance);
       setCreditBalanceData(data?.data?.currentBalance || {});
       setIsCreditBalanceData(true);
+      setIsLoading(false);
     } else {
       throw new Error(data.message || "Failed to fetch credit balance");
     }
@@ -1676,19 +1676,24 @@ function FinancialInformation({
             <button
               onClick={handleGetCreditBalance}
               className="action-button save"
-            >{t("Get Credit Balance")}</button>
-          </div>
+              disabled={isLoading}
+            >
+              {isLoading ? t("Loading...") : t("Get Credit Balance")}
+            </button>
+          </div>          
           {isCreditBalanceData && (
-  <dialog className="credit-balance-dialog" open>
-    <div className="dialog-header">
-      <h2>{t("Credit Balance")}</h2>
-      <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
-        &times;
-      </button>
-    </div>
-    <div className="dialog-content">
-     
-      <table className="balance-table">
+            <>
+            <div className="gi-backdrop" />
+            <dialog className="credit-balance-dialog" open>
+              <div className="dialog-header">
+                <h2>{t("Credit Balance")}</h2>
+                {/* <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
+                  &times;
+                </button> */}
+              </div>
+              <div className="dialog-content">
+     <div className="balance-table-container">
+                <table className="balance-table">
         <thead>
           <tr>
             <th>{t("Entity")}</th>
@@ -1709,16 +1714,29 @@ function FinancialInformation({
             </tr>
           ))}
         </tbody>
-      </table>
-     
-      {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
+                </table>
+     </div>
+                {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
         <p className="no-data">{t("No credit balance data available")}</p>
-      )}
-    </div>
-  </dialog>
-)}
+                )}
+              </div>
+              <div className="gi-footer">
+          <button className="gi-close-btn" onClick={() => setIsCreditBalanceData(false)}>
+            {t("Close")}
+          </button>
+        </div>
+            </dialog>
+            
+            </>
+          )}
  
-<style>{`
+          <style>{`
+          .gi-backdrop {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.15);
+          z-index: 1000;
+        }
   .credit-balance-dialog {
     position: fixed;
     top: 50%;
@@ -1727,16 +1745,22 @@ function FinancialInformation({
     width: 95vw;
     max-width: 500px;
     border: 1px solid #ccc;
+    background: #fff;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
     border-radius: 12px;
     padding: 0;
     background: #fff;
-    z-index: 1000;
+    z-index: 1001;
     overflow: hidden;
+    animation: gi-fadein 0.2s;
   }
+    @keyframes gi-fadein {
+          from { opacity: 0; transform: translate(-50%, -60%);}
+          to { opacity: 1; transform: translate(-50%, -50%);}
+        }
  
   .dialog-header {
-    background: #ccc;
-    color: black;
+    color: #666;
     padding: 15px 20px;
     display: flex;
     justify-content: space-between;
@@ -1752,7 +1776,7 @@ function FinancialInformation({
   .close-dialog {
     background: none;
     border: none;
-    color: black;
+    color: #666;
     font-size: 1.5rem;
     cursor: pointer;
     width: 30px;
@@ -1784,34 +1808,34 @@ function FinancialInformation({
     margin: 5px 0;
     color: #6c757d;
   }
- 
+    .balance-table-container {
+          margin: 10px 28px;
+          padding: 6px;
+          border: 1.9px solid #eee;
+            border-radius: 10px;
+        }
+
   .balance-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-  }
+          width: 100%;
+          border-collapse: collapse;
+        }
+        .balance-table th, .balance-table td {
+          padding: 15px 8px;
+          text-align: left;
+        }
+        [dir="rtl"] .balance-table th, [dir="rtl"] .balance-table td {
+          text-align: right;
+        }
+        .balance-table th {
+          background: #fff;
+          font-weight: 500;
+          border-bottom: 1px solid #eee;
+        }
+        .balance-table tr:not(:last-child) {
+          border-bottom: 1px solid #eee;
+        }
  
-  .balance-table th {
-    background-color: #f8f9fa;
-    text-align: left;
-    padding: 12px 15px;
-    font-weight: 600;
-    border-bottom: 2px solid #e9ecef;
-  }
- 
-  .balance-table td {
-    padding: 10px 15px;
-    border-bottom: 1px solid #e9ecef;
-  }
- 
-  .balance-table tr:last-child td {
-    border-bottom: none;
-  }
- 
-  .balance-table tr:hover {
-    background-color: #f8f9fa;
-  }
- 
+  
   .balance-amount {
     text-align: right;
     font-weight: 500;
@@ -1835,7 +1859,24 @@ function FinancialInformation({
     color: #6c757d;
     font-style: italic;
   }
- 
+    .gi-footer {
+          display: flex;
+          justify-content: flex-end;
+          padding: 16px 28px 22px 28px;
+        }
+ .gi-close-btn {
+          padding: 7px 28px;
+          border-radius: 6px;
+          border: 1px solid #bbb;
+          background: #fff;
+          color: #222;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .gi-close-btn:hover {
+          background: #f2f2f2;
+        }
   @media (max-width: 600px) {
     .credit-balance-dialog {
       width: 95vw;
@@ -1851,7 +1892,7 @@ function FinancialInformation({
       padding: 8px 10px;
     }
   }
-`}</style>        
+          `}</style>        
     </div>
     
   );

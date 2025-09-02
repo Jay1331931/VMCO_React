@@ -1107,7 +1107,7 @@ body::-webkit-scrollbar {
   gap: 10px;
   flex: 1;
   padding: 20px;
-  overflow-x: scroll;
+  /* overflow-x: scroll; */
   scrollbar-width: none;
   border-left: 1px solid #ccc;
 }
@@ -1151,7 +1151,7 @@ body::-webkit-scrollbar {
   align-items: center;
   gap: 15px;
   flex: 1;
-  width: 80%;
+  width: 100%;
 }
 
 .products-table-container {

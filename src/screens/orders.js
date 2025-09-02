@@ -16,6 +16,7 @@ import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
+import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -402,7 +403,7 @@ function Orders() {
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
     { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
-    { key: "orderSync",header: () => t("Sync"),include: isV("FandOSyncSO") }
+    { key: "orderSync", header: () => t("Sync"), include: isV("FandOSyncSO") }
   ];
   const approvalColumns = [
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
@@ -517,366 +518,423 @@ function Orders() {
     setShowBranchPopup(false);
   };
 
-  const onClose = () => {
-    setBulkUploadPopUp(false);
-    setSelectedCustomer(null);
-    setSelectedFile(null);
-    setSelectedBranch(null);
-      if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
+  const handleTemplateDownload = async () => {
+    const result = await Swal.fire({
+      title: t("Confirm Download?"),
+      text: t("Are you sure you want to download the template?"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("Yes, download"),
+      cancelButtonText: t("No, cancel"),
+    });
 
-// bulk-order/upload-excel
-   const handleFandOFailSO = async (orderId) => {
-    setSyncLoading(true);
-    setSyncLoadingId(orderId );
-     try {
-       const { data } = await axios.get(
-         `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
-      
-         {
-           headers: { Authorization: `Bearer ${token}` },
-         }
-       );
-   
-       if (data?.success) {
-        setSyncLoading(false);
-       fetchOrders();
-         Swal.fire({
-           title: "Success",
-           text: data.message,
-           icon: "success",
-           confirmButtonText: "OK",
-           confirmButtonColor: "#3085d6",
-         });
-       } else {
-              setSyncLoading(false);
-         Swal.fire({
-           title: "Error",
-           text: data.message || "Failed to Sync with FandO.",
-           icon: "error",
-           confirmButtonText: "OK",
-           confirmButtonColor: "#dc3545",
-         });
-       }
-     } catch (error) {
-        setSyncLoading(false);
-       console.error("Error handling FandO fail Sales Order:", error);
-       Swal.fire({
-         title: "Error",
-         text: error.message || "Failed to Sync with FandO.",
-         icon: "error",
-         confirmButtonText: "OK",
-         confirmButtonColor: "#dc3545",
-       });
-     }
-   };
-  const handleSubmitFile = async (file) => {
-
-    if (!file) return;
-    setExcelLoading(true)
-    try {
-
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("customerId", selectedCustomer.id);
-      formData.append("branchId", selectedBranch.id);
-    
-
-      const response = await axios.post(
-        `${API_BASE_URL}/bulk-order/upload-excel`,
-        formData,
-        {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/get-files`, {
+          method: "POST",
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          responseType: "blob",
-          validateStatus: () => true,
+          body: JSON.stringify({
+            fileName: Constants.DOCUMENTS_NAME.ORDERS_UPLOAD_FORMAT,
+            containerType: "documents",
+          }),
+        });
+
+        const res = await response.json();
+        if (res.status === "Ok") {
+          window.open(res.data.url, "_blank", "noopener,noreferrer");
+        } else {
+          await Swal.fire({
+            title: t("Error"),
+            text: res.message || t("Failed to download template."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#dc3545",
+          });
         }
-      );
-
-      if (
-        response?.status === 400 &&
-        response.headers["content-type"] !== "application/json"
-      ) {
-        const blob = new Blob([response.data], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-
-        Swal.fire({
-          title: t("Validation Failed"),
-          html: `
-    ${t("Some rows contain validation errors.")}<br>
-    ${t("The Excel file has been updated with a new column named")} <b>${t(
-            "Errors"
-          )}</b>.<br>
-    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
-            "column, fix the issues, and re-upload the file."
-          )}.
-  `,
-          icon: "warning",
-          confirmButtonText: t("Download Error File"),
-        }).then(() => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "sales_order_upload_errors.xlsx";
-          document.body.appendChild(a);
-          a.click();
-          a.remove();
-          window.URL.revokeObjectURL(url);
-        });
-
-        return; // Make sure to return early to prevent success message
-      }
-      const blob = response?.data;
-      const text = await blob.text(); // convert blob to text
-      const data = JSON.parse(text); // parse text to JSON
-      console.log(response?.status ,data?.response?.success);
-      if (response?.status === 200 && data?.response?.success) {
-       fetchOrders()
-       
-
-        Swal.fire({
-          title: t("File Uploaded Successfully"),
-          text:
-            t(data.message) ||
-            t("Sales have been updated from the Excel file."),
-          icon: "success",
-          confirmButtonText: t("OK"),
-        });
-      } else {
-        Swal.fire({
-          title: t("File Upload Failed"),
-          text:
-            t(data.message) || t("An error occurred while uploading the file."),
+      } catch (error) {
+        console.error("Error downloading template:", error);
+        await Swal.fire({
+          title: t("Error"),
+          text: t("Failed to download template."),
           icon: "error",
           confirmButtonText: t("OK"),
+          confirmButtonColor: "#dc3545",
         });
       }
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      Swal.fire({
-        title: t("File Upload Failed"),
-        text: t("An error occurred while uploading the file."),
-        icon: "error",
-        confirmButtonText: t("OK"),
-      });
-    } finally {
-      setBulkUploadPopUp(false);
-      setSelectedCustomer(null);
-    setSelectedBranch(null);
-      setSelectedFile(null); // reset file after submit
-      setExcelLoading(false);
     }
   };
-  return (
-    <Sidebar title={t("Orders")}>
-      {isV("ordersContent") && (
-        <div className="orders-content">
-          <div className="page-header">
-            <div className="header-controls">
-              <SearchInput onSearch={handleSearch} />
-            </div>
-            <div className="header-actions">
-              {isV("approvalButton") && (
-                <ToggleButton
-                  className="toggle-button"
-                  isToggled={isApprovalMode}
-                  onToggle={toggleApprovalMode}
-                  leftLabel={t("All")}
-                  rightLabel={t("My Approval")}
+
+      const onClose = () => {
+        setBulkUploadPopUp(false);
+        setSelectedCustomer(null);
+        setSelectedFile(null);
+        setSelectedBranch(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      };
+
+      // bulk-order/upload-excel
+      const handleFandOFailSO = async (orderId) => {
+        setSyncLoading(true);
+        setSyncLoadingId(orderId);
+        try {
+          const { data } = await axios.get(
+            `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${orderId}`,
+
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+
+          if (data?.success) {
+            setSyncLoading(false);
+            fetchOrders();
+            Swal.fire({
+              title: "Success",
+              text: data.message,
+              icon: "success",
+              confirmButtonText: "OK",
+              confirmButtonColor: "#3085d6",
+            });
+          } else {
+            setSyncLoading(false);
+            Swal.fire({
+              title: "Error",
+              text: data.message || "Failed to Sync with FandO.",
+              icon: "error",
+              confirmButtonText: "OK",
+              confirmButtonColor: "#dc3545",
+            });
+          }
+        } catch (error) {
+          setSyncLoading(false);
+          console.error("Error handling FandO fail Sales Order:", error);
+          Swal.fire({
+            title: "Error",
+            text: error.message || "Failed to Sync with FandO.",
+            icon: "error",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#dc3545",
+          });
+        }
+      };
+      const handleSubmitFile = async (file) => {
+
+        if (!file) return;
+        setExcelLoading(true)
+        try {
+
+
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("customerId", selectedCustomer.id);
+          formData.append("branchId", selectedBranch.id);
+
+
+          const response = await axios.post(
+            `${API_BASE_URL}/bulk-order/upload-excel`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${token}`,
+              },
+              responseType: "blob",
+              validateStatus: () => true,
+            }
+          );
+
+          if (
+            response?.status === 400 &&
+            response.headers["content-type"] !== "application/json"
+          ) {
+            const blob = new Blob([response.data], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            });
+
+            Swal.fire({
+              title: t("Validation Failed"),
+              html: `
+    ${t("Some rows contain validation errors.")}<br>
+    ${t("The Excel file has been updated with a new column named")} <b>${t(
+                "Errors"
+              )}</b>.<br>
+    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
+                "column, fix the issues, and re-upload the file."
+              )}.
+  `,
+              icon: "warning",
+              confirmButtonText: t("Download Error File"),
+            }).then(() => {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "sales_order_upload_errors.xlsx";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+            });
+
+            return; // Make sure to return early to prevent success message
+          }
+          const blob = response?.data;
+          const text = await blob.text(); // convert blob to text
+          const data = JSON.parse(text); // parse text to JSON
+          console.log(response?.status, data?.response?.success);
+          if (response?.status === 200 && data?.response?.success) {
+            fetchOrders()
+
+
+            Swal.fire({
+              title: t("File Uploaded Successfully"),
+              text:
+                t(data.message) ||
+                t("Sales have been updated from the Excel file."),
+              icon: "success",
+              confirmButtonText: t("OK"),
+            });
+          } else {
+            Swal.fire({
+              title: t("File Upload Failed"),
+              text:
+                t(data.message) || t("An error occurred while uploading the file."),
+              icon: "error",
+              confirmButtonText: t("OK"),
+            });
+          }
+        } catch (error) {
+          console.error("Error uploading file:", error);
+          Swal.fire({
+            title: t("File Upload Failed"),
+            text: t("An error occurred while uploading the file."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+          });
+        } finally {
+          setBulkUploadPopUp(false);
+          setSelectedCustomer(null);
+          setSelectedBranch(null);
+          setSelectedFile(null); // reset file after submit
+          setExcelLoading(false);
+        }
+      };
+      return (
+        <Sidebar title={t("Orders")}>
+          {isV("ordersContent") && (
+            <div className="orders-content">
+              <div className="page-header">
+                <div className="header-controls">
+                  <SearchInput onSearch={handleSearch} />
+                </div>
+                <div className="header-actions">
+                  {isV("approvalButton") && (
+                    <ToggleButton
+                      className="toggle-button"
+                      isToggled={isApprovalMode}
+                      onToggle={toggleApprovalMode}
+                      leftLabel={t("All")}
+                      rightLabel={t("My Approval")}
+                    />
+                  )}
+                  {isV("addButton") && (
+                    <button className="add-button" onClick={handleAddOrder}>
+                      {t("+ Add")}
+                    </button>
+                  )}
+                  {isV("actionMenu") && <ActionButton menuItems={orderMenuItems} />}
+                </div>
+              </div>{" "}
+              {isV("ordersTable") && (
+                <Table
+                  columns={(isApprovalMode ? approvalColumns : orderColumns).filter(
+                    (col) => col.include !== false
+                  )}
+                  data={paginatedOrders}
+                  getStatusClass={getStatusClass}
+                  onRowClick={handleRowClick}
+                  onPay={handlePay}
+                  onsync={handleFandOFailSO}
+                  syncLoading={syncLoading}
+                  syncLoadingId={syncLoadingId}
                 />
               )}
-              {isV("addButton") && (
-                <button className="add-button" onClick={handleAddOrder}>
-                  {t("+ Add")}
-                </button>
-              )}
-              {isV("actionMenu") && <ActionButton menuItems={orderMenuItems} />}
-            </div>
-          </div>{" "}
-          {isV("ordersTable") && (
-            <Table
-              columns={(isApprovalMode ? approvalColumns : orderColumns).filter(
-                (col) => col.include !== false
-              )}
-              data={paginatedOrders}
-              getStatusClass={getStatusClass}
-              onRowClick={handleRowClick}
-              onPay={handlePay}
-              onsync={handleFandOFailSO}
-              syncLoading={syncLoading}
-              syncLoadingId={syncLoadingId}
-            />
-          )}
 
-          {isV("ordersPagination") && paginatedOrders.length > 0 && (
-            <Pagination
-              currentPage={page}
-              totalPages={String(totalPages)}
-              onPageChange={setPage}
-            />
-          )}
-          {loading && (
-            <div className="loading-container">
-              <LoadingSpinner size="medium" />
-            </div>
-          )}
-          {error && <div className="error">{error}</div>}
-          {bulkUploadPopUp && (
-            <div>
-              <div className="gp-backdrop" onClick={onClose} />
-              {
-                excelLoading ? <div><LoadingSpinner/></div> :    <div className="gp-modal">
-                <div className="gp-header">
-                  <span className="gp-title">{t("Upload Orders Data")}</span>
-                  <button className="gp-close-btn" onClick={onClose}>
-                    {t("Close")}
-                  </button>
+              {isV("ordersPagination") && paginatedOrders.length > 0 && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={String(totalPages)}
+                  onPageChange={setPage}
+                />
+              )}
+              {loading && (
+                <div className="loading-container">
+                  <LoadingSpinner size="medium" />
                 </div>
+              )}
+              {error && <div className="error">{error}</div>}
+              {bulkUploadPopUp && (
+                <div>
+                  <div className="gp-backdrop" onClick={onClose} />
+                  {
+                    excelLoading ? <div><LoadingSpinner /></div> : <div className="gp-modal">
+                      <div className="gp-header">
+                        <span className="gp-title">{t("Upload Orders Data")}</span>
+                        <button className="gp-close-btn" onClick={onClose}>
+                          {t("Close")}
+                        </button>
+                      </div>
 
-                {loading ? (
-                  <div style={{ padding: 24 }}><LoadingSpinner /></div>
-                ) : (
-                  <div style={{ padding: "0 28px 20px 28px" }}>
-                    <div className="customer-branch-names" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
-                      {isV('customerName') && (
-                        <div className="order-details-field">
-                          <label htmlFor="customerField">{t('Company Name')}</label>
-                          <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <input style={{ width: '310px' }}
-                              id="customerField"
-                              name="selectedCustomer"
-                              onClick={() => setShowCustomerPopup(true)}
-                              className="customer-input"
-                              placeholder={t('Click to select company')}
-                              value={selectedCustomer ? selectedCustomer.companyNameEn : ''}
-                              disabled={!isE('customerName')}
-                              autoComplete="off"
-                            />
+                      {loading ? (
+                        <div style={{ padding: 24 }}><LoadingSpinner /></div>
+                      ) : (
+                        <div style={{ padding: "0 28px 20px 28px" }}>
+                          <div className="customer-branch-names" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+                            {isV('customerName') && (
+                              <div className="order-details-field">
+                                <label htmlFor="customerField">{t('Company Name')}</label>
+                                <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <input style={{ width: '310px' }}
+                                    id="customerField"
+                                    name="selectedCustomer"
+                                    onClick={() => setShowCustomerPopup(true)}
+                                    className="customer-input"
+                                    placeholder={t('Click to select company')}
+                                    value={selectedCustomer
+                                      ? (isArabic ? selectedCustomer.companyNameAr : selectedCustomer.companyNameEn)
+                                      : ''
+                                    }
+                                    disabled={!isE('customerName')}
+                                    autoComplete="off"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {isV('branchName') && (
+                              <div className="order-details-field">
+                                <label>{t('Branch')}</label>
+                                <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <input style={{ width: '310px' }}
+                                    id="branchField"
+                                    name="selectedBranchName"
+                                    onClick={() => {
+                                      if (!selectedCustomer) {
+                                        Swal.fire({
+                                          icon: 'warning',
+                                          title: t('No Customer Selected'),
+                                          text: t('Please select a customer first'),
+                                          confirmButtonText: t('OK')
+                                        });
+                                        return;
+                                      }
+                                      if (isE('branchName')) setShowBranchPopup(true);
+                                    }}
+                                    className="customer-input"
+                                    placeholder={t('Click to select branch')}
+                                    value={selectedBranch
+                                      ? (isArabic ? selectedBranch.branchNameAr : selectedBranch.branchNameEn)
+                                      : ''
+                                    }
+                                    readOnly
+                                    disabled={!isE('branchName')}
+                                    autoComplete="off"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )}
-                      {isV('branchName') && (
-                        <div className="order-details-field">
-                          <label>{t('Branch')}</label>
-                          <div className="customer-input-container" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <input style={{ width: '310px' }}
-                              id="branchField"
-                              name="selectedBranchName"
-                              onClick={() => {
-                                if (!selectedCustomer) {
-                                  Swal.fire({
-                                    icon: 'warning',
-                                    title: t('No Customer Selected'),
-                                    text: t('Please select a customer first'),
-                                    confirmButtonText: t('OK')
-                                  });
-                                  return;
-                                }
-                                if (isE('branchName')) setShowBranchPopup(true);
+                          <p style={{ marginTop: 20, marginBottom: 20 }}>
+                            {t("To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.")}
+                          </p>
+
+                          <div className="popup-buttons-row">
+                            <button className="download-btn"
+                              onClick={() => handleTemplateDownload()}
+                              disabled={!selectedCustomer || !selectedBranch}
+                            >
+                              📥 {t("Download Excel Template")}
+                            </button>
+                            <button className="upload-btn"
+                              onClick={() => fileInputRef.current.click()}
+                              disabled={!selectedCustomer || !selectedBranch}
+                            >
+                              📤 {t("Upload Completed Excel File")}
+                            </button>
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              accept=".xlsx, .xls"
+                              style={{ display: "none" }}
+                              // onChange={handleFileChange}
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) setSelectedFile(file); // just store file in state
                               }}
-                              className="customer-input"
-                              placeholder={t('Click to select branch')}
-                              value={selectedBranch ? selectedBranch.branchNameEn : ''}
-                              readOnly
-                              disabled={!isE('branchName')}
-                              autoComplete="off"
                             />
+
                           </div>
+                          {selectedFile && (
+                            <div style={{
+                              marginTop: 16, display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                            }}>
+                              <p style={{ margin: 0 }}>
+                                {t("Selected File")}: <b>{selectedFile.name}</b>
+                              </p>
+                              <button
+                                className="submit-btn"
+                                onClick={() => handleSubmitFile(selectedFile)}
+                              >
+                                ✅ {t("Submit File")}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                    <p style={{ marginTop: 20, marginBottom: 20 }}>
-                      {t("To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.")}
-                    </p>
+                      {showCustomerPopup && (
+                        <GetCustomers
+                          open={showCustomerPopup}
+                          onClose={() => setShowCustomerPopup(false)}
+                          onSelectCustomer={handleSelectCustomer}
+                          API_BASE_URL={API_BASE_URL}
+                          t={t}
+                          apiEndpoint="/customers/pagination"
+                          apiParams={{
+                            page: 1,
+                            pageSize: 10,
+                            sortBy: 'id',
+                            sortOrder: 'asc',
+                            purpose: 'order creation'
+                          }}
+                        />
+                      )}
 
-                    <div className="popup-buttons-row">
-                      <button className="download-btn"
-                        onClick={() => alert("Download the Excel")}
-                        disabled={!selectedCustomer || !selectedBranch}
-                      >
-                        📥 {t("Download Excel Template")}
-                      </button>
-                      <button className="upload-btn"
-                           onClick={() => fileInputRef.current.click()}
-                        disabled={!selectedCustomer || !selectedBranch}
-                        >
-                        📤 {t("Upload Completed Excel File")}
-                      </button>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx, .xls"
-                        style={{ display: "none" }}
-                        // onChange={handleFileChange}
-                        onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) setSelectedFile(file); // just store file in state
-                    }}
-                      />
-                     
+                      {/* Branch Popup */}
+                      {showBranchPopup && (
+                        <GetBranches
+                          open={showBranchPopup}
+                          onClose={() => setShowBranchPopup(false)}
+                          onSelectBranch={handleSelectBranch}
+                          customerId={selectedCustomer?.id}
+                          API_BASE_URL={API_BASE_URL}
+                          t={t}
+                        />
+                      )}
                     </div>
-                     {selectedFile && (
-                  <div style={{ marginTop: 16 , display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between", }}>
-                    <p style={{ margin: 0 }}>
-                      {t("Selected File")}: <b>{selectedFile.name}</b>
-                    </p>
-                    <button
-                      className="submit-btn"
-                      onClick={() => handleSubmitFile(selectedFile)}
-                    >
-                      ✅ {t("Submit File")}
-                    </button>
-                  </div>
-                )}
-                  </div>
-                )}
-                {showCustomerPopup && (
-                  <GetCustomers
-                    open={showCustomerPopup}
-                    onClose={() => setShowCustomerPopup(false)}
-                    onSelectCustomer={handleSelectCustomer}
-                    API_BASE_URL={API_BASE_URL}
-                    t={t}
-                    apiEndpoint="/customers/pagination"
-                    apiParams={{
-                      page: 1,
-                      pageSize: 10,
-                      sortBy: 'id',
-                      sortOrder: 'asc',
-                      purpose: 'order creation'
-                    }}
-                  />
-                )}
+                  }
 
-                {/* Branch Popup */}
-                {showBranchPopup && (
-                  <GetBranches
-                    open={showBranchPopup}
-                    onClose={() => setShowBranchPopup(false)}
-                    onSelectBranch={handleSelectBranch}
-                    customerId={selectedCustomer?.id}
-                    API_BASE_URL={API_BASE_URL}
-                    t={t}
-                  />
-                )}
-              </div>
-              }
-            
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-      )}
-    </Sidebar>
-  );
-}
+          )}
+        </Sidebar>
+      );
+    }
 
 export default Orders;

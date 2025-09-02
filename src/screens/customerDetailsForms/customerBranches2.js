@@ -33,11 +33,11 @@ import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
-  Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
+  Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const CUSTOMER_APPROVAL_CHECKLIST =
-  Constants?.DEPARTMENTS_NAMES?.BRANCH_APPROVAL_CHECKLIST;
-const BRANCH_UPLOAD_FORMAT = Constants?.DEPARTMENTS_NAMES?.BRANCH_UPLOAD_FORMAT;
+  Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
+const BRANCH_UPLOAD_FORMAT = Constants?.DOCUMENTS_NAME?.BRANCH_UPLOAD_FORMAT;
 const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const { t, i18n } = useTranslation();
   const contentRef = useRef(null);

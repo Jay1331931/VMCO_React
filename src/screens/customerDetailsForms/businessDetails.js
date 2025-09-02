@@ -14,9 +14,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
-  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
+  Constants.DOCUMENTS_NAME.CUSTOMER_APPROVAL_CHECKLIST;
 const CUSTOMER_APPROVAL_CHECKLIST =
-  Constants.DEPARTMENTS_NAMES.CUSTOMER_APPROVAL_CHECKLIST;
+  Constants.DOCUMENTS_NAME.CUSTOMER_APPROVAL_CHECKLIST;
 
 function BusinessDetails({
   customerData = {},

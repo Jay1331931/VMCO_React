@@ -154,7 +154,12 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                       <tr key={branch.id}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.id}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.erp_branch_id || branch.erpBranchId || '-'}</td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.branch_name_en || branch.branchNameEn}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          {isRTL 
+                            ? (branch.branch_name_lc || branch.branchNameLc)
+                            : (branch.branch_name_en || branch.branchNameEn)
+                          }
+                        </td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
                             className="gb-branch-btn"

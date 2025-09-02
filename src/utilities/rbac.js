@@ -19,7 +19,7 @@ static roleformfieldmap = {
           ordersContent: { visible: true, editable: true },
           approvalButton: { visible: true, editable: true },
           addButton: { visible: true, editable: true },
-          actionMenu: { visible: false, editable: false },
+          actionMenu: { visible: true, editable: true },
           ordersTable: { visible: true, editable: true },
           ordersPagination: { visible: true, editable: true },
           orderNumber: { visible: true, editable: true },
@@ -32,8 +32,8 @@ static roleformfieldmap = {
           totalAmount: { visible: true, editable: true },
           paidAmount: { visible: true, editable: true },
           status: { visible: true, editable: true },
-          action: { visible: true, editable: true },
-          sendLink: { visible: true, editable: true },
+          action: { visible: false, editable: false },
+          sendLink: { visible: false, editable: false },
           orderBy: { visible: true, editable: true },
           FandOSyncSO:{visible: true, editable: true}
         },
@@ -50,10 +50,10 @@ static roleformfieldmap = {
           paymentMethod: { visible: false, editable: false },
           totalAmount: { visible: true, editable: false },
           paymentPercentage: { visible: true, editable: false },
-          paidAmount: { visible: true, editable: false },
+          paidAmount: { visible: false, editable: false },
           deliveryCharges: { visible: true, editable: false },
           expectedDeliveryDate: { visible: true, editable: false },
-          pricingPolicy: { visible: true, editable: false },
+          pricingPolicy: { visible: false, editable: false },
           reservationStatus: { visible: true, editable: false },
           createdDate: { visible: false, editable: false },
           updatedDate: { visible: false, editable: false },
@@ -75,7 +75,7 @@ static roleformfieldmap = {
           stock: { visible: true, editable: false },
           btnSave: { visible: true, editable: false },
           btnCancel: { visible: true, editable: false },
-          btnInvoice: { visible: true, editable: false },
+          btnInvoice: { visible: false, editable: false },
           btnPay: { visible: false, editable: false },
           btnInventory: { visible: false, editable: false },
           actionButtons: { visible: true, editable: false },
@@ -126,7 +126,7 @@ static roleformfieldmap = {
           selectBranch: { visible: false, editable: false },
           search: { visible: true, editable: true },
           products: { visible: true, editable: true },
-          favoriteButton: { visible: true, editable: false },
+          favoriteButton: { visible: false, editable: false },
           quantityController: { visible: false, editable: false },
           addToCart: { visible: false, editable: false },
           goToCart: { visible: false, editable: false },
@@ -559,6 +559,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: true, editable: true},
         },
       }
     },
@@ -1050,6 +1051,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -1519,6 +1521,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -1969,6 +1972,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -2417,6 +2421,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -2890,6 +2895,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -3410,6 +3416,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -3866,6 +3873,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -4149,6 +4157,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -4576,6 +4585,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5003,6 +5013,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5287,6 +5298,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5556,6 +5568,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5998,12 +6011,48 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
   };
   
-//   static async loadRbacConfig(userRole = null,token) {
+  static async loadRbacConfig(userRole = null,token) {
+  try {
+    // Prepare the payload with roles array
+    const payload = {
+      roles: userRole ? [userRole] : [] // Send array of roles, empty array if no role specified
+    };
+    const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/rbac/getrbacbyroles`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+         "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(payload),
+     
+    });
+   
+    if (!response.ok) {
+      throw new Error(`Failed to load RBAC configuration: ${response.status} ${response.statusText}`);
+    }
+   
+    const data = await response.json();
+   
+    // Assuming the API returns data in format: { roleformfieldmap: {...} }
+    if (data.data) {
+      RbacManager.roleformfieldmap[data.data[0].role] = data.data[0].rbac;
+      //return data.roleformfieldmap;
+    } else {
+      throw new Error('Invalid RBAC configuration format received from server');
+    }
+  } catch (error) {
+    console.error('Error loading RBAC config:', error);
+    throw error;
+  }
+}
+// static async loadRbacConfig(userRole = null,token) {
 //   try {
 //     // Prepare the payload with roles array
 //     const payload = {
@@ -6038,7 +6087,6 @@ btnDownloadCustomers: { visible: false, editable: false },
 //     throw error;
 //   }
 // }
-
   static getRoles() {
     return Object.keys(RbacManager.roleformfieldmap);
   }

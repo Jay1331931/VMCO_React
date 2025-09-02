@@ -23,7 +23,7 @@ function ApiLogsReport() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedApiType, setSelectedApiType] = useState("external_api_logs");
+  const [selectedApiType, setSelectedApiType] = useState("");
   const [selectedApiName, setSelectedApiName] = useState("");
   const [selectedCallName, setSelectedCallName] = useState("");
   const [selectedStatusCode, setSelectedStatusCode] = useState("");
@@ -262,11 +262,13 @@ function ApiLogsReport() {
  
   const clearFilters = () => {
     setSearchQuery("");
+    setSelectedApiType("");
     setSelectedApiName("");
     setSelectedCallName("");
     setSelectedStatusCode("");
     setFromDate("");
     setToDate("");
+    setExternalApiLogs([]);
     setPage(1);
   };
  
@@ -305,6 +307,9 @@ function ApiLogsReport() {
                 value={selectedApiType}
                  onChange={(e) => {
                   setSelectedApiType(e.target.value);
+                  fetchApiNameOptions(e.target.value);
+                  fetchCallNameOptions(e.target.value);
+                  fetchStatusCodeOptions(e.target.value);
                   setPage(1);
                 }}
                 placeholder={t("Select API Type")}
@@ -312,7 +317,7 @@ function ApiLogsReport() {
                 className="api-name-dropdown"
               />
             </div>
-            <div className="form-group">
+            {/* <div className="form-group">
               <label>{t("API Name")}</label>
               <SearchableDropdown
                 options={apiNameOptions}
@@ -325,7 +330,7 @@ function ApiLogsReport() {
                 isClearable={true}
                 className="api-name-dropdown"
               />
-              </div>
+              </div> */}
               <div className="form-group">
                 <label>{t("Call Name")}</label>
                 <SearchableDropdown
@@ -340,7 +345,7 @@ function ApiLogsReport() {
                 className="call-name-dropdown"
               />
               </div>
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label>{t("Status Code")}</label>
               <SearchableDropdown
                 options={statusCodeOptions}
@@ -353,7 +358,7 @@ function ApiLogsReport() {
                 isClearable={true}
                 className="status-code-dropdown"
               />
-             </div>
+             </div> */}
              <div className="form-group">
               <label>{t("From Date")}</label>
 <div className="date-filter" style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
@@ -378,15 +383,19 @@ function ApiLogsReport() {
             </div>
            </div>
           </div>
+          <div style={{ display: 'flex', marginTop: '10px' }}>
           <div className="clear-filters-btn">
-            {(searchQuery || selectedApiName || selectedCallName || selectedStatusCode || fromDate || toDate) && (
+            {
+            // (searchQuery || selectedApiName || selectedCallName || selectedStatusCode || fromDate || toDate || selectedApiType) && 
+            (
               <button
                 onClick={() => fetchExternalApiLogs(page, searchQuery, selectedApiName, selectedCallName, selectedStatusCode, fromDate, toDate, selectedApiType)}
                 className="clear-filters-btn"
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   cursor: 'pointer',
@@ -399,7 +408,9 @@ function ApiLogsReport() {
             )}
             </div>
            <div className="clear-filters-btn">
-            {(searchQuery || selectedApiName || selectedCallName || selectedStatusCode || fromDate || toDate) && (
+            {
+            // (searchQuery || selectedApiName || selectedCallName || selectedStatusCode || fromDate || toDate || selectedApiType) && 
+            (
               <button
                 onClick={clearFilters}
                 className="clear-filters-btn"
@@ -409,12 +420,14 @@ function ApiLogsReport() {
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  width: 'max-content'
+                  width: 'max-content',
+                  marginRight: '10px'
                 }}
               >
                 {t("Clear Filters")}
               </button>
             )}
+            </div>
             </div>
         </div>
  

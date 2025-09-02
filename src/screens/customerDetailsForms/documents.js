@@ -10,8 +10,8 @@ import Constants from "../../constants";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import i18n from "../../i18n";
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
-const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DEPARTMENTS_NAMES?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST_URL = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
+const CUSTOMER_APPROVAL_CHECKLIST = Constants?.DOCUMENTS_NAME?.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 function Documents({
   isTrading = true,
@@ -27,7 +27,7 @@ function Documents({
 }) {
   const { t } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-  const TERMS_AND_CONDITIONS = i18n.language === "en" ? Constants.DEPARTMENTS_NAMES.TERMS_AND_CONDITIONS_EN : Constants.DEPARTMENTS_NAMES.TERMS_AND_CONDITIONS_AR;
+  const TERMS_AND_CONDITIONS = i18n.language === "en" ? Constants.DOCUMENTS_NAME.TERMS_AND_CONDITIONS_EN : Constants.DOCUMENTS_NAME.TERMS_AND_CONDITIONS_AR;
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation

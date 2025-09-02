@@ -145,7 +145,12 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
                       <tr key={customer.id}>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.id}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.erp_cust_id || customer.erpCustId || '-'}</td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{customer.company_name_en || customer.companyNameEn}</td>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                          {isRTL 
+                            ? (customer.company_name_ar || customer.companyNameAr)
+                            : (customer.company_name_en || customer.companyNameEn)
+                          }
+                        </td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
                             className="gp-product-btn"
