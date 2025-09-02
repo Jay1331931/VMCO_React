@@ -393,8 +393,9 @@ function ApiLogsReport() {
                 className="clear-filters-btn"
                 style={{
                   padding: '8px 12px',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
                   border: '1px solid #ccc',
                   borderRadius: '4px',
                   cursor: 'pointer',
