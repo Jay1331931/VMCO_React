@@ -7,6 +7,7 @@ import RbacManager from "../utilities/rbac";
 import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import axios from "axios";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 function RbacEditor() {
   const [newRoleName, setNewRoleName] = useState("");
@@ -460,13 +461,24 @@ function RbacEditor() {
           </div>
         </div> */}
 
-        <div className="page-header">
-          <div className="header-controls">
+        <div className="logs-header">
+          <div className="logs-header-controls">
             <div
               className="dropdown-container"
               style={{ display: "flex", gap: "20px" }}
             >
-              <div className="dropdown-group">
+              <div className="form-group">
+                <label htmlFor="roleSelect">Role</label>
+                <SearchableDropdown
+                  options={roles}
+                  value={selectedRole}
+                  onChange={handleRoleChange}
+                placeholder="Select Role"
+                isLoading={rolesLoading}
+              />
+              </div>
+              
+              {/* <div className="dropdown-group">
                 <label htmlFor="roleSelect">Role</label>
                 <select
                   id="roleSelect"
@@ -484,8 +496,19 @@ function RbacEditor() {
                     </option>
                   ))}
                 </select>
+              </div> */}
+              <div className="form-group">
+                <label htmlFor="pageSelect">Page</label>
+                <SearchableDropdown
+                options={pages}
+                value={selectedPage}
+                onChange={handlePageChange}
+                placeholder="Select Page"
+                isLoading={pagesLoading}
+              />
               </div>
-              <div className="dropdown-group">
+              
+              {/* <div className="dropdown-group">
                 <label htmlFor="pageSelect">Page</label>
                 <select
                   id="pageSelect"
@@ -503,17 +526,28 @@ function RbacEditor() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </div> */}
             </div>
           </div>
-          <div className="header-actions">
             {selectedRole && selectedPage && (
-              <button className="save-button" onClick={handleSavePermissions}>
+              <button className="clear-filters-btn" 
+              style={{
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
+              onClick={handleSavePermissions}>
                 {t("Save Permissions")}
               </button>
             )}
-            <ActionButton menuItems={rbacMenuItems} />
-          </div>
+            {/* <ActionButton menuItems={rbacMenuItems} /> */}
+          
         </div>
 
         {(rolesLoading || pagesLoading) && (
@@ -530,7 +564,7 @@ function RbacEditor() {
           <>
             {/* Inline Table */}
             <div className="table-container">
-              <table className="permissions-table">
+              <table className="data-table">
                 <thead>
                   <tr>
                     <th>Field</th>
@@ -595,7 +629,7 @@ function RbacEditor() {
           style={{ display: "flex", gap: "12px", marginTop: "15px" }}
         >
           <button
-            className="btn btn-outline-primary"
+            className="clear-filters-btn"
             onClick={() => {
               setShowPageInput(true);
               setShowFieldInput(false);
@@ -603,16 +637,21 @@ function RbacEditor() {
               setShowDeleteFieldInput(false);
             }}
             style={{
-              flex: 1,
-              maxWidth: "120px",
-              borderRadius: "20px",
-              padding: "10px",
-            }}
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
           >
             Add Page
           </button>
           <button
-            className="btn btn-outline-success"
+            className="clear-filters-btn"
             onClick={() => {
               setShowFieldInput(true);
               setShowPageInput(false);
@@ -620,16 +659,21 @@ function RbacEditor() {
               setShowDeleteFieldInput(false);
             }}
             style={{
-              flex: 1,
-              maxWidth: "120px",
-              borderRadius: "20px",
-              padding: "10px",
-            }}
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
           >
             Add Fields
           </button>
           <button
-            className="btn btn-outline-success"
+            className="clear-filters-btn"
             onClick={() => {
               setShowDeletePageInput(true);
               setShowDeleteFieldInput(false);
@@ -637,16 +681,21 @@ function RbacEditor() {
               setShowFieldInput(false);
             }}
             style={{
-              flex: 1,
-              maxWidth: "120px",
-              borderRadius: "20px",
-              padding: "10px",
-            }}
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
           >
             Delete Page
           </button>
           <button
-            className="btn btn-outline-success"
+            className="clear-filters-btn"
             onClick={() => {
               setShowDeleteFieldInput(true);
               setShowDeletePageInput(false);
@@ -655,11 +704,16 @@ function RbacEditor() {
               setShowFieldInput(false);
             }}
             style={{
-              flex: 1,
-              maxWidth: "120px",
-              borderRadius: "20px",
-              padding: "10px",
-            }}
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
           >
             Delete Fields
           </button>
@@ -672,7 +726,14 @@ function RbacEditor() {
               value={pageName}
               onChange={(e) => setPageName(e.target.value.replace(/\s+/g, ""))}
               className="form-control"
-              style={{ marginBottom: "10px" }}
+              style={{ marginBottom: "10px",
+                fontSize: "12px",
+                padding: "4px 8px",
+                height: "40px",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                width: "250px",
+              }}
             />
           </div>
         )}
@@ -686,7 +747,15 @@ function RbacEditor() {
             {(showFieldInput ||
               showDeletePageInput ||
               showDeleteFieldInput) && (
-              <select
+                <>
+                <SearchableDropdown
+                  options={pageNames}
+                  onChange={(e) => setPageName(e.target.value)}
+                  value={pageName}
+                  placeholder="Select Page"
+                  isLoading={pageNameLoading}
+                />
+              {/* <select
                 className="form-select"
                 onChange={(e) => setPageName(e.target.value)}
                 value={pageName}
@@ -700,16 +769,35 @@ function RbacEditor() {
                     {page}
                   </option>
                 ))}
-              </select>
+              </select> */}
+              </>
+                
             )}
             {pageName && showDeleteFieldInput && (
-              <>
-                <select
-                  className="form-select"
-                  onChange={(e) => setDeleteFieldName(e.target.value)}
-                  value={deleteFieldName}
-                  disabled={fieldNameLoading}
-                >
+              <div style={{ display: "flex", flexDirection: "row"}}>
+                  <SearchableDropdown
+                   options={fieldNames}
+                onChange={(e) => setDeleteFieldName(e.target.value)}
+                value={deleteFieldName}
+                placeholder="Select Field"
+                isLoading={fieldNameLoading}
+                style={{ marginBottom: "10px",
+                fontSize: "12px",
+                padding: "4px 8px",
+                height: "40px",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                width: "250px",
+                marginTop: "10px"
+                  }}
+                  />
+                  {/* <select
+                className="form-select"
+                onChange={(e) => setDeleteFieldName(e.target.value)}
+                value={deleteFieldName}
+                disabled={fieldNameLoading}
+              > 
+                
                   <option value="">
                     {fieldNameLoading ? "Loading..." : "Select Field"}
                   </option>
@@ -718,16 +806,30 @@ function RbacEditor() {
                       {field}
                     </option>
                   ))}
-                </select>
+                    </select> */}
 
-                <button
-                  className="btn btn-danger"
+                    <button
+                  className="clear-filters-btn"
                   onClick={handleDeleteField}
                   disabled={!deleteFieldName}
+                   style={{
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  height: 'max-content',
+                  marginRight: '10px',
+                  marginLeft: '10px',
+                  marginTop: '10px'
+                }}
                 >
                   Delete Field
-                </button>
-              </>
+                    </button>
+              </div>
             )}
 
             {(showFieldInput || showPageInput) && (
@@ -740,9 +842,30 @@ function RbacEditor() {
                     setFieldName(e.target.value.replace(/\s+/g, ""))
                   }
                   className="form-control"
-                  style={{ marginBottom: "10px" }}
+                  style={{ marginBottom: "10px",
+                fontSize: "12px",
+                padding: "4px 8px",
+                height: "40px",
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                width: "250px",
+                marginTop: "10px"
+              }}
                 />
-                <button className="btn btn-success" onClick={handleAddField}>
+                <button className="clear-filters-btn" onClick={handleAddField}
+                style={{
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px',
+                  marginLeft: '10px'
+                }}
+                >
                   Add Field
                 </button>
               </>
@@ -764,9 +887,20 @@ function RbacEditor() {
             </div>
 
             <button
-              className="btn btn-primary"
-              style={{ marginTop: "15px" }}
+              className="clear-filters-btn"
               onClick={handleSubmit}
+              style={{
+                  marginTop: '15px',
+                  padding: '8px 12px',
+                  // backgroundColor: '#007bff',
+                  // color: '#fff',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  width: 'max-content',
+                  marginRight: '10px'
+                }}
             >
               Save RBAC
             </button>
