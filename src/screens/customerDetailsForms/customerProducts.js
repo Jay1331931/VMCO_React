@@ -191,6 +191,7 @@ function Products({ customerId, customer, setTabsHeight }) {
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);
+    setCurrentPage(1);
     // fetchProducts();
   };
 
@@ -231,7 +232,6 @@ function Products({ customerId, customer, setTabsHeight }) {
       const newSelected = prevSelected.includes(id)
         ? [...prevSelected.filter((itemId) => itemId !== id)]
         : [...prevSelected, id];
-      console.log("Selected items:", newSelected);
       // Call API with the new selection
       callUpdateSelectedItemsAPI([id]);
       return newSelected;
@@ -239,8 +239,6 @@ function Products({ customerId, customer, setTabsHeight }) {
   };
 
   const callUpdateSelectedItemsAPI = async (selectedItems, state = false) => {
-    console.log("current items:", currentItems);
-    console.log("selected items:", selectedItems);
     try {
       let updatedItems;
 
@@ -266,8 +264,6 @@ function Products({ customerId, customer, setTabsHeight }) {
         }));
       }
 
-      console.log("Updating items with visibility:", updatedItems);
-
       const response = await fetch(
         `${API_BASE_URL}/product-customer-mappings`,
         {
@@ -279,7 +275,6 @@ function Products({ customerId, customer, setTabsHeight }) {
       );
 
       const data = await response.json();
-      console.log("API response:", data);
     } catch (error) {
       console.error("Failed to update selected items:", error);
     }
@@ -293,9 +288,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   };
 
   const handleSaveMoq = (id, value) => {
-    console.log("save called");
     const product = currentItems.find((item) => item.id === id);
-    console.log("Saving MoQ:", value);
     try {
       const response = fetch(
         `${API_BASE_URL}/product-customer-mappings/${id}`,
@@ -315,9 +308,8 @@ function Products({ customerId, customer, setTabsHeight }) {
   };
 
   const handleCancelMoq = (id) => {
-    console.log("cancel called");
-    const product = currentItems.find((item) => item.id === id);
-    const originalMoq = product?.originalMoq;
+    const product = products.find((item) => item.id === id);
+    const originalMoq = product?.moq;
     handleMoqChange(id, originalMoq);
     handleSaveMoq(id, originalMoq);
     setIsInputFocused(false);
@@ -505,6 +497,8 @@ function Products({ customerId, customer, setTabsHeight }) {
             flexWrap: "wrap",
             alignItems: "center",
             gap: 12,
+            overflowX: "auto",
+            scrollbarWidth: "none"
           }}
         >
           <Tabs

@@ -45,6 +45,7 @@
   display: flex;
   align-items: center;
   margin: 20px 0 20px 0;
+  justify-content: space-between;
 }
 
 .header-controls {

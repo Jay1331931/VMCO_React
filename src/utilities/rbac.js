@@ -559,6 +559,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: true, editable: true},
         },
       }
     },
@@ -1050,6 +1051,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -1519,6 +1521,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -1969,6 +1972,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -2417,6 +2421,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -2890,6 +2895,7 @@ static roleformfieldmap = {
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -3410,6 +3416,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -3866,6 +3873,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -4149,6 +4157,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
@@ -4576,6 +4585,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5003,6 +5013,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5287,6 +5298,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5556,6 +5568,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
         },
       }
     },
@@ -5998,6 +6011,7 @@ btnDownloadCustomers: { visible: false, editable: false },
           orderDetails: {visible: true, editable: true},
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
         },
       }
     },
