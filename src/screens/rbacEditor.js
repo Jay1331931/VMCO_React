@@ -306,7 +306,6 @@ function RbacEditor() {
       setFieldName("");
     }
   };
- 
 
   const fetchPages = async () => {
     try {
@@ -352,14 +351,17 @@ function RbacEditor() {
     if (!showDeleteFieldInput && !pageName) return;
     fetchFields(pageName);
   }, [pageName, showDeleteFieldInput]);
-const handleDeleteField = () => {
-  if (deleteFieldName) {
-    setFields([...fields, deleteFieldName]);
-    setDeleteFieldName("");
-  }
-};
- const handleSubmit = async () => {
-    if ((!pageName || fields.length === 0) && (showFieldInput || showPageInput)) {
+  const handleDeleteField = () => {
+    if (deleteFieldName) {
+      setFields([...fields, deleteFieldName]);
+      setDeleteFieldName("");
+    }
+  };
+  const handleSubmit = async () => {
+    if (
+      (!pageName || fields.length === 0) &&
+      (showFieldInput || showPageInput)
+    ) {
       Swal.fire({
         title: "Validation Error",
         text: "Please enter a page name and at least one field",
@@ -374,32 +376,31 @@ const handleDeleteField = () => {
       pageName,
       fields,
     };
-    let url = (showFieldInput || showPageInput) ? `${process.env.REACT_APP_API_BASE_URL}/rbac/adding_rbacpageAndfield` : `${process.env.REACT_APP_API_BASE_URL}/rbac/delete_rbacpageAndfield`;
+    let url =
+      showFieldInput || showPageInput
+        ? `${process.env.REACT_APP_API_BASE_URL}/rbac/adding_rbacpageAndfield`
+        : `${process.env.REACT_APP_API_BASE_URL}/rbac/delete_rbacpageAndfield`;
 
     try {
-      const res = await axios.post(
-        url,
-        body,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.post(url, body, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (res.data?.status?.toLowerCase() === "ok") {
         fetchFields(pageName);
         fetchPages();
         setFields([]);
-        setPageName("")
-        setShowPageInput(false)
-        setShowFieldInput(false)
-        setShowDeletePageInput(false)
-        setShowDeleteFieldInput(false)
+        setPageName("");
+        setShowPageInput(false);
+        setShowFieldInput(false);
+        setShowDeletePageInput(false);
+        setShowDeleteFieldInput(false);
         Swal.fire({
           title: "Success",
-          text: res.data?.message ,
+          text: res.data?.message,
           icon: "success",
           confirmButtonText: "OK",
           confirmButtonColor: "#28a745", // Bootstrap success green
@@ -407,7 +408,7 @@ const handleDeleteField = () => {
       } else {
         Swal.fire({
           title: "Error",
-          text: res.data?.message ,
+          text: res.data?.message,
           icon: "error",
           confirmButtonText: "OK",
           confirmButtonColor: "#dc3545", // Bootstrap danger red
@@ -701,33 +702,33 @@ const handleDeleteField = () => {
                 ))}
               </select>
             )}
-             {pageName && showDeleteFieldInput && (
-  <>
-    <select
-      className="form-select"
-      onChange={(e) => setDeleteFieldName(e.target.value)}
-      value={deleteFieldName}
-      disabled={fieldNameLoading}
-    >
-      <option value="">
-        {fieldNameLoading ? "Loading..." : "Select Field"}
-      </option>
-      {fieldNames?.map((field, idx) => (
-        <option key={idx} value={field}>
-          {field}
-        </option>
-      ))}
-    </select>
+            {pageName && showDeleteFieldInput && (
+              <>
+                <select
+                  className="form-select"
+                  onChange={(e) => setDeleteFieldName(e.target.value)}
+                  value={deleteFieldName}
+                  disabled={fieldNameLoading}
+                >
+                  <option value="">
+                    {fieldNameLoading ? "Loading..." : "Select Field"}
+                  </option>
+                  {fieldNames?.map((field, idx) => (
+                    <option key={idx} value={field}>
+                      {field}
+                    </option>
+                  ))}
+                </select>
 
-    <button
-      className="btn btn-danger"
-      onClick={handleDeleteField}
-      disabled={!deleteFieldName}
-    >
-      Delete Field
-    </button>
-  </>
-)}
+                <button
+                  className="btn btn-danger"
+                  onClick={handleDeleteField}
+                  disabled={!deleteFieldName}
+                >
+                  Delete Field
+                </button>
+              </>
+            )}
 
             {(showFieldInput || showPageInput) && (
               <>
@@ -735,7 +736,9 @@ const handleDeleteField = () => {
                   type="text"
                   placeholder="Enter field name"
                   value={fieldName}
-                  onChange={(e) => setFieldName(e.target.value.replace(/\s+/g, ""))}
+                  onChange={(e) =>
+                    setFieldName(e.target.value.replace(/\s+/g, ""))
+                  }
                   className="form-control"
                   style={{ marginBottom: "10px" }}
                 />
