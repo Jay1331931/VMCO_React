@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Constants from '../constants';
 import { convertToTimezone, TIMEZONES } from '../utilities/convertToTimezone';
 import "../styles/components.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
 const Table = ({
     columns,
     data,
@@ -75,7 +77,7 @@ const Table = ({
                     className='copy-btn'
                     title={`Copy full ${title}`}
                 >
-                    {t("Copy")}
+                    <FontAwesomeIcon icon={faCopy} />
                 </button>
             </div>
         );

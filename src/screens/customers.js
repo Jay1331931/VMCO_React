@@ -1076,7 +1076,7 @@ function Customers() {
 
             // Assignment Information
             "Assigned To": customer.assignedTo || "",
-            "Branch": customer.branch || "",
+            "Branch Region": customer.branch || "",
             "Entity": customer.entity || "",
             "Inter Company": customer.interCompany ? "Yes" : "No",
 
@@ -1368,35 +1368,35 @@ const HandleFandOFailCustomer = async (customerId) => {
 
                   <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
                      <label style={{ marginBottom: "6px", display: "inline-block" }}>
-    {t("Phone Number")}
-  </label>
-  <PhoneInput
-    international
-    defaultCountry="SA" // Set your preferred default country
-    withCountryCallingCode={true}
-    countryCallingCodeEditable={false}
-    name="mobile"
-    value={inviteData.mobile}
-    onChange={(value) => {
-      handleInputChange({
-        target: {
-          name: "mobile",
-          value: value
-        }
-      });
-    }}
-    required
-    style={inviteErrors.mobile ? { 
-      borderColor: "red",
-      '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
-    } : {}}
-    className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
-  />
-  {inviteErrors.mobile && (
-    <div style={{ color: "red", fontSize: "0.8em" }}>
-      {inviteErrors.mobile}
-    </div>
-  )}
+                      {t("Phone Number")}
+                    </label>
+                    <PhoneInput
+                      international
+                      defaultCountry="SA" // Set your preferred default country
+                      withCountryCallingCode={true}
+                      countryCallingCodeEditable={false}
+                      name="mobile"
+                      value={inviteData.mobile}
+                      onChange={(value) => {
+                        handleInputChange({
+                          target: {
+                            name: "mobile",
+                            value: value
+                          }
+                        });
+                      }}
+                      required
+                      style={inviteErrors.mobile ? { 
+                        borderColor: "red",
+                        '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
+                      } : {}}
+                      className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
+                    />
+                    {inviteErrors.mobile && (
+                      <div style={{ color: "red", fontSize: "0.8em" }}>
+                        {inviteErrors.mobile}
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group-1">

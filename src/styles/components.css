@@ -45,6 +45,7 @@
   display: flex;
   align-items: center;
   margin: 20px 0 20px 0;
+  justify-content: space-between;
 }
 
 .header-controls {
@@ -101,20 +102,21 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: #007bff;
-  color: white;
-  border: 1px solid #007bff;
-  border-radius: 3px;
-  padding: 2px 8px;
-  font-size: 10px;
+  /* background: #007bff; */
+  /* color: white; */
+  /* border: 1px solid #007bff; */
+  /* border-radius: 3px; */
+  /* padding: 2px 8px; */
+  border: none;
+  font-size: 20px;
   cursor: pointer;
 }
 
 .copy-btn:hover {
-  background-color: white;
-  color: #007bff;
-
-  border-color: #007bff;
+  /* background-color: white; */
+  /* color: #007bff; */
+  color: #ccc;
+  /* border-color: #007bff; */
 }
 
 .search-input {

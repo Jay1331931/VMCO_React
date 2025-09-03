@@ -690,7 +690,8 @@ const BranchDetailsForm = ({
             i18n.language === "ar"
               ? geoData && geoData[selectedRegion]?.cities?.[opt.value]?.ar
               : opt.name,
-        })).reverse(),
+        })),
+        // .reverse(),
         onChange: handleCityChange,
         value: branch?.city || "",
         disabled: !selectedRegion,
@@ -723,7 +724,8 @@ const BranchDetailsForm = ({
                   opt.value
                 ].ar
               : opt.name,
-        })).reverse(),
+        })),
+        // .reverse(),
         value: branch?.district || "",
         disabled: !selectedCity,
       },

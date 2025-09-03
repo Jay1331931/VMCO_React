@@ -451,7 +451,7 @@ function ContactDetails({
             ? geoData[selectedRegion].cities[city].ar
             : geoData[selectedRegion].cities[city].en,
       }))
-      .reverse();
+      // .reverse();
   }, [selectedRegion, geoData]);
 
   // Get districts based on selected city
@@ -482,7 +482,7 @@ function ContactDetails({
             : geoData[selectedRegion].cities[selectedCity].districts[district]
                 .en,
       }))
-      .reverse();
+      // .reverse();
   }, [selectedRegion, selectedCity, geoData]);
   // Handle region selection
   const handleRegionChange = (e) => {

@@ -448,6 +448,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -457,6 +458,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: true, editable: true},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -947,6 +960,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: false, editable: false },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -956,6 +970,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: false, editable: false},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -1434,6 +1460,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: false, editable: false },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -1443,6 +1470,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: false, editable: false},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -1900,6 +1939,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -1909,6 +1949,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -2370,6 +2422,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -2379,6 +2432,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -2862,6 +2927,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -2871,6 +2937,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -3406,6 +3484,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -3415,6 +3494,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -3871,6 +3962,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -3880,6 +3972,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -4345,6 +4449,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -4354,6 +4459,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -4808,6 +4925,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: false, editable: false },
           orders: { visible: false, editable: false },
           support: { visible: false, editable: false },
@@ -4817,6 +4935,18 @@ class RbacManager {
           orderDetails: { visible: false, editable: false },
           supportDetails: { visible: false, editable: false },
           maintenanceDetails: { visible: false, editable: false },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -5271,6 +5401,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -5280,6 +5411,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -5746,6 +5889,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -5755,6 +5899,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -6220,6 +6376,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -6229,6 +6386,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false}
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
@@ -6680,6 +6849,7 @@ class RbacManager {
       },
       accessPages: {
         fields: {
+<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -6689,6 +6859,18 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
+=======
+          customers: { visible: true, editable: true},
+          orders: {visible: true, editable: true},
+          support: {visible: true, editable: true},
+          maintenance: {visible: true, editable: true},
+          cart: {visible: true, editable: true},
+          checkout: {visible: true, editable: true},
+          orderDetails: {visible: true, editable: true},
+          supportDetails: {visible: true, editable: true},
+          maintenanceDetails: {visible: true, editable: true},
+          reports: {visible: false, editable: false},
+>>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
