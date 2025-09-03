@@ -2218,7 +2218,7 @@ function OrderDetails() {
     fetchPaymentMethodOptions();
   }, []);
 
-  // Calculate totalAmount as the sum of netAmount of all products
+  // Calculate totalAmount as the sum of netAmount plus VAT for all products
   useEffect(() => {
     // If it's a sample order, always set totalAmount to 0.00
     if (sampleMode || formData.sample_order) {
@@ -2228,11 +2228,13 @@ function OrderDetails() {
       return;
     }
 
-    // For non-sample orders, calculate the total as before
+    // For non-sample orders, calculate the total including VAT
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       const total = formData.products.reduce((sum, p) => {
         const net = parseFloat(p.netAmount) || 0;
-        return sum + net;
+        const vatPercentage = parseFloat(p.vatPercentage) || 0;
+        const vatAmount = net * (vatPercentage / 100);
+        return sum + net + vatAmount;
       }, 0);
       if (formData.totalAmount !== total.toFixed(2)) {
         setFormData(prev => ({ ...prev, totalAmount: total.toFixed(2) }));

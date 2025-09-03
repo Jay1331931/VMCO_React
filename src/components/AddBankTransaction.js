@@ -61,7 +61,6 @@ const AddBankTransaction = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-  console.log("isV:", isV("BankContent"));
   const generateToken = async () => {
     try {
       const { data } = await axios.post(
