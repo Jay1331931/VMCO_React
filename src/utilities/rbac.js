@@ -448,7 +448,6 @@ class RbacManager {
       },
       accessPages: {
         fields: {
-<<<<<<< HEAD
           customers: { visible: true, editable: true },
           orders: { visible: true, editable: true },
           support: { visible: true, editable: true },
@@ -458,7 +457,6 @@ class RbacManager {
           orderDetails: { visible: true, editable: true },
           supportDetails: { visible: true, editable: true },
           maintenanceDetails: { visible: true, editable: true },
-=======
           customers: { visible: true, editable: true},
           orders: {visible: true, editable: true},
           support: {visible: true, editable: true},
@@ -469,7 +467,6 @@ class RbacManager {
           supportDetails: {visible: true, editable: true},
           maintenanceDetails: {visible: true, editable: true},
           reports: {visible: true, editable: true},
->>>>>>> 33310771ca41c4062974757a8187fa0b5c590797
         },
       }
     },
