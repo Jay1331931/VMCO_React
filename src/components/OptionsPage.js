@@ -378,6 +378,7 @@ const OptionsPage = () => {
 };
 
   const handlePayment = async (paymentType) => {
+    console.log("paymentType",amount)
     if (amount <= 0) {
       Swal.fire({
         title: "Invalid Amount",
@@ -415,7 +416,7 @@ const OptionsPage = () => {
   };
 try {
     const response = await makeRequest();
-    window.open(response.data.InvoiceURL, "_blank", "width=500,height=600");
+    window.open(response.data.url, "_blank", "width=500,height=600");
     window.close();
   } catch (error) {
     console.error("Error generating payment link:", error);

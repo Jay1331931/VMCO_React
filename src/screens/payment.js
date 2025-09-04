@@ -58,8 +58,8 @@ const PaymentPage = () => {
                 });
                 setIsLoading(false);
                 return;
-            } else if (data?.data?.InvoiceURL) {
-                window.location.href = data.data.InvoiceURL;
+            } else if (data?.data?.url) {
+                window.location.href = data.data.url;
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -83,7 +83,7 @@ const PaymentPage = () => {
 
     return (
         <div className="payment-container">
-            <h2>Payment Details</h2>
+            <h2>Payment Status</h2>
 
             {!status && (
                 <div className="payment-details">
