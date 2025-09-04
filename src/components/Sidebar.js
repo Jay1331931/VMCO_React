@@ -405,7 +405,7 @@ function Sidebar({ children, title }) {
     { icon: faHeadset, label: "Support" },
     { icon: faTools, label: "Maintenance" },
     { icon: faFile, label: "Reports" },
-    { icon: faBank, label: "Bank Transfer" },
+    { icon: faBank, label: "Bank Transfer", permission: "BankTransfer" },
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
     { icon: faUpload, label: "General" },
@@ -456,12 +456,12 @@ function Sidebar({ children, title }) {
   <div className="main-menu-items">
     {menuItems
       .filter(({ label }) => label.toLowerCase() !== "company")
-      .map(({ icon, label }) => (
+      .map(({ icon, label, permission }) => (
         <div
           key={label}
           className={`menu-item ${activeMenu === label ? "active" : ""}`}
           onClick={() => handleMenuClick(label)}
-          style={{ display: isV(label) ? "flex" : "none" }}
+          style={{ display: isV(permission || label) ? "flex" : "none" }}
         >
           <FontAwesomeIcon icon={icon} />
           <span>{t(label)}</span>
@@ -472,12 +472,12 @@ function Sidebar({ children, title }) {
   <div className="bottom-menu-section">
     {menuItems
       .filter(({ label }) => label.toLowerCase() === "company")
-      .map(({ icon, label }) => (
+      .map(({ icon, label, permission }) => (
         <div
           key={label}
           className={`menu-item ${activeMenu === label ? "active" : ""}`}
           onClick={() => handleMenuClick(label)}
-          style={{ display: isV(label) ? "flex" : "none" }}
+          style={{ display: isV(permission || label) ? "flex" : "none" }}
         >
           <FontAwesomeIcon icon={icon} />
           <span>{t(label)}</span>

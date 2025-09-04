@@ -22,7 +22,7 @@ const ProductCard = ({
         user?.userType === 'employee' && user?.roles[0] !== 'admin'
             ? user?.designation
             : user?.roles?.[0],
-        'catalog'
+        "catalog"
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr); // <-- Add this line
@@ -69,7 +69,7 @@ const ProductCard = ({
             style={{ cursor: 'pointer', direction: dir, textAlign: isRTL ? 'right' : 'left' }}
             dir={dir}
         >
-            {isV('favoriteButton') && isE('favoriteButton') && (
+            {isV('favoriteButton') && (
                 <FavButton
                     initialState={product.favorite || false}
                     onToggle={handleFavoriteToggle}
