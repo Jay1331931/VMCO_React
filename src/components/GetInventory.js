@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../i18n";
 
 // const inventoryData = [
 //   { name: "Product Name 01", orderQty: 20, availableQty: 10 },
@@ -26,7 +27,7 @@ function GetInventory({ open, onClose, InventoryData, productName }) {
               <tr>
                
                 <th>{t("ERP Site ID")}</th>
-                <th>{t("Site Name")}</th>
+                <th>{t("Warehouse Name")}</th>
                  <th>{t("Available Quantity")}</th>
               </tr>
             </thead>
@@ -35,7 +36,7 @@ function GetInventory({ open, onClose, InventoryData, productName }) {
                 <tr key={idx}>
                   
                   <td>{row.erpSiteId || ""}</td>
-                  <td></td>
+                  <td>{i18n.language==="en" ? row.erpWarehouseName : row.erpWarehouseNameAr}</td>
                   <td>{row.availableQty || 0}</td> 
                 </tr>
               ))}

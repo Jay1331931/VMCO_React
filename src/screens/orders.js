@@ -394,6 +394,7 @@ function Orders() {
       key: "totalAmount",
       header: () => t("Total Amount"),
       include: isV("totalAmount"),
+      render: (item) => parseFloat(item.totalAmount).toFixed(2),
     },
     {
       key: "paymentStatus",
@@ -470,6 +471,7 @@ function Orders() {
       key: "totalAmount",
       header: () => t("Total Amount"),
       include: isV("totalAmount"),
+      render: (item) => parseFloat(item.totalAmount).toFixed(2),
     },
     //{ key: 'paidAmount', header: () => t('Paid Amount'), include: isV('paidAmount') },
     {
