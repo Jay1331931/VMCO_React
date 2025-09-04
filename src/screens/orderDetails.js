@@ -3746,7 +3746,7 @@ function OrderDetails() {
                 {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === 'pending' && (formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
                     <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                       {t('Pay')}
                     </button>
@@ -3754,7 +3754,7 @@ function OrderDetails() {
                 {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === 'pending' && (formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase()|| formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
 
                     <button className="order-action-btn" onClick={() => handleCheckout(orderId, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                       {t('Send Link')}

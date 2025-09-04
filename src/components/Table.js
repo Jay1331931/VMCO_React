@@ -250,7 +250,7 @@ if (
             item?.paymentMethod?.toLowerCase()!="cash on delivery"&& item.paymentStatus?.toLowerCase() !== 'paid'  
         && (item.status?.toLowerCase() === 'approved' || (item.status?.toLowerCase() === 'open' 
         && (item.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||item.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| item.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
-        (item.status?.toLowerCase() === 'pending' && item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() ))) {
+        (item.status?.toLowerCase() === 'pending' && (item.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) {
             return (
                 <button 
                     className="action-button pay"
@@ -268,7 +268,7 @@ if (
             item?.paymentMethod?.toLowerCase()!="cash on delivery"&& item.paymentStatus?.toLowerCase() !== 'paid'  
         && (item.status?.toLowerCase() === 'approved'  || (item.status?.toLowerCase() === 'open' 
         && (item.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||item.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| item.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
-        (item.status?.toLowerCase() === 'pending' && (item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) {
+        (item.status?.toLowerCase() === 'pending' && (item.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase()||item.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) {
             return (
                 <button 
                     className="action-button pay"
