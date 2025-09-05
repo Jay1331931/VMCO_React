@@ -2941,13 +2941,13 @@ function OrderDetails() {
 
                     {isV('erpOrderId') && (
                       <div className="order-details-field">
-                        <label>{t('ERP#')}</label>
+                        <label>{t('Sales Order ID')}</label>
                         <input
                           name="erpOrderId"
                           value={formData.erpOrderId !== undefined && formData.erpOrderId !== null ? formData.erpOrderId : ''}
                           onChange={handleInputChange}
                           disabled={!isE('erpOrderId')}
-                          placeholder={t('ERP ID')}
+                          placeholder={t('ERP#')}
                         />
                       </div>
                     )}

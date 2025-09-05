@@ -21,20 +21,15 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Initial categories with their corresponding entity values
 const initialCategories = [
-  {
-    value: Constants.CATEGORY.VMCO_MACHINES,
-    entity: Constants.ENTITY.VMCO,
-    label: Constants.TAB_NAMES.VMCO_MACHINES,
+   {
+    value: Constants.ENTITY.SHC,
+    entity: Constants.ENTITY.SHC,
+    label: Constants.ENTITY.SHC, 
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-  },
-  {
-    value: Constants.ENTITY.SHC,
-    entity: Constants.ENTITY.SHC,
-    label: Constants.ENTITY.SHC, 
   },
   {
     value: Constants.ENTITY.GMTC,
@@ -45,6 +40,11 @@ const initialCategories = [
     value: Constants.ENTITY.NAQI,
     entity: Constants.ENTITY.NAQI,
     label: Constants.ENTITY.NAQI,
+  },
+  {
+    value: Constants.CATEGORY.VMCO_MACHINES,
+    entity: Constants.ENTITY.VMCO,
+    label: Constants.TAB_NAMES.VMCO_MACHINES,
   },
   {
     value: Constants.ENTITY.DAR,
