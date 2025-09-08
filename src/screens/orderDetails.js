@@ -3052,7 +3052,7 @@ function OrderDetails() {
                         <label>{t('Total Amount')}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount ?? ''}
+                          value={orderFromNav.totalAmount === formData.totalProducts ? orderFromNav.totalAmount : formData.totalAmount}
                           disabled
                           readOnly
                         />
@@ -3097,7 +3097,7 @@ function OrderDetails() {
                         <label>{t('Amount Paid')}</label>
                         <input
                           name="paidAmount"
-                          value={parseFloat(formData.paidAmount).toFixed(2) ?? ''}
+                          value={parseFloat(formData.paidAmount).toFixed(2) ? parseFloat(formData.paidAmount).toFixed(2) : 0.00}
                           onChange={handleInputChange}
                           disabled={!isE('paidAmount')}
                         />

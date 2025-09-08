@@ -32,6 +32,7 @@ import { useAuth } from "./context/AuthContext";
 import { isTokenValid } from './utilities/authUtils';
 import RbacManager from "./utilities/rbac";
 import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
+import TapCardComponent from "./screens/TapCardComponent";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -62,10 +63,7 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
-  //       const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
-  // if(tokenIsValid){
-  // RbacManager.loadRbacConfig(role,token);
-  // }
+
          
   return (
     <Router>
@@ -118,6 +116,7 @@ function App() {
         <Route path="/payment-opations/order/:orderId" element={<OptionsPage/>} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
+        <Route path="/tapcard" element={<TapCardComponent/>} />
       </Routes>
     </Router>
   );
