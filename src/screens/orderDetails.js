@@ -3703,7 +3703,7 @@ function OrderDetails() {
               {isV('orderStatus') && (
                 <div className="order-status">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
                     {t(formData.status) || t('Open')}
                   </span>
                 </div>
