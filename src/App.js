@@ -93,7 +93,7 @@ function App() {
         <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
-        <Route path="/rbacEditor" element={<RbacEditor />} />
+        <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
