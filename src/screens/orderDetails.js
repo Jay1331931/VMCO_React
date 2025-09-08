@@ -3052,7 +3052,7 @@ function OrderDetails() {
                         <label>{t('Total Amount')}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount ?? ''}
+                          value={orderFromNav.totalAmount === formData.totalProducts ? orderFromNav.totalAmount : formData.totalAmount}
                           disabled
                           readOnly
                         />
