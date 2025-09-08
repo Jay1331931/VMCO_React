@@ -944,6 +944,9 @@ const handleVerifiedDataChange = (e) => {
     ];
     const nonTradingDocumentList = [
       "acknowledgementSignature",
+      "nationalId",
+      "bankLetter",
+      "nationalAddress",
       "contractAgreement",
       "creditApplication",
     ];
