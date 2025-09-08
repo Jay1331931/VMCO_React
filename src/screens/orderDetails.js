@@ -3729,7 +3729,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && ["invoiced","delivered"].includes(formData?.status?.toLowerCase()) && (
                   <button className="order-action-btn" onClick={() =>
                     handleViewSignature(formData.id, formData.customerId, formData.invoices)
                   }>
