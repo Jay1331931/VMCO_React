@@ -467,11 +467,7 @@ function Orders() {
     {
       key: "paymentStatus",
       header: () => t("Payment Status"),
-      include: isV("paymentStatus"),
-      render: (item) => (<span className={getPaymentStatusClass(item.paymentStatus)}>
-        {item.paymentStatus}
-      </span>
-      ),
+      include: isV("paymentStatus")
     },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Pay"), include: isV("action") },
