@@ -63,10 +63,7 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
-  //       const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
-  // if(tokenIsValid){
-  // RbacManager.loadRbacConfig(role,token);
-  // }
+
          
   return (
     <Router>
