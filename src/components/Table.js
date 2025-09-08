@@ -9,6 +9,7 @@ const Table = ({
     columns,
     data,
     getStatusClass,
+    getPaymentStatusClass,
     actionButtons,
     customCellRenderer,
     onRowClick,
@@ -127,7 +128,7 @@ const Table = ({
         }
         if(column.key.toLowerCase() ==="paymentstatus"){
             return (
-                <span >
+                <span className={`status-badge ${getPaymentStatusClass(item[column.key])}`}>
                     {t(item[column.key])}
                 </span>
             );
