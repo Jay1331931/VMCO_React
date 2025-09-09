@@ -1671,7 +1671,9 @@ function FinancialInformation({
       )}
      
          {/* Credit Balance Header */}
-          <h3 className="form-header full-width">{t("Credit Balance")}</h3>
+          {customerData?.customerStatus.toLowerCase() === "approved" &&
+          (<>
+            <h3 className="form-header full-width">{t("Credit Balance")}</h3>
           <div>
             <button
               onClick={handleGetCreditBalance}
@@ -1680,7 +1682,10 @@ function FinancialInformation({
             >
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
             </button>
-          </div>          
+          </div>
+          </>
+          )
+           }         
           {isCreditBalanceData && (
             <>
             <div className="gi-backdrop" />

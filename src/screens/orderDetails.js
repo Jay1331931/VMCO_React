@@ -3703,7 +3703,7 @@ function OrderDetails() {
               {isV('orderStatus') && (
                 <div className="order-status">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
                     {t(formData.status) || t('Open')}
                   </span>
                 </div>
@@ -3729,7 +3729,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && ["invoiced","delivered"].includes(formData?.status?.toLowerCase()) && (
                   <button className="order-action-btn" onClick={() =>
                     handleViewSignature(formData.id, formData.customerId, formData.invoices)
                   }>
