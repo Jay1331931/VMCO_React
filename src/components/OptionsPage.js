@@ -378,6 +378,8 @@ const OptionsPage = () => {
 };
 console.log("wi",window.location.host)
   const handlePayment = async (paymentType) => {
+ 
+
     console.log("paymentType",amount)
     if (amount <= 0) {
       Swal.fire({
@@ -422,8 +424,8 @@ const emailEncoded = encodeURIComponent(btoa(user.email));
 const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
 
     // const response = await makeRequest();
-    console.log("user",user)
-    const URL=`${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${emailEncoded}/${companyEncoded}`
+
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${emailEncoded}/${companyEncoded}`;
     window.open(URL, "_blank", "width=500,height=600");
     window.close();
     // navigate(URL)
@@ -488,7 +490,7 @@ const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
@@ -501,7 +503,7 @@ const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )}
+        )} */}
       </div>
       <style>
         {`.options-container {
