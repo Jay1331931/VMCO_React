@@ -3213,7 +3213,7 @@ function OrderDetails() {
 
                     {isV('createdDate') && (
                       <div className="order-details-field">
-                        <label>{t('Created Date')}</label>
+                        <label>{t('Order Placement Date')}</label>
                         <input
                           name="createdDate"
                           value={formData.createdAt ? convertToTimezone(
