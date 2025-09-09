@@ -26,7 +26,7 @@ const OptionsPage = () => {
   const { orderId } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [amount, setAmount] = useState(0);
-  const { token } = useAuth();
+  const { token ,user} = useAuth();
   const navigate = useNavigate();
 
   // if (orderId &&!token ){
@@ -376,8 +376,10 @@ const OptionsPage = () => {
     }
   }
 };
-
+console.log("wi",window.location.host)
   const handlePayment = async (paymentType) => {
+ 
+
     console.log("paymentType",amount)
     if (amount <= 0) {
       Swal.fire({
@@ -396,7 +398,7 @@ const OptionsPage = () => {
       customerName: OrderDetails[0].companyNameEn,
       paymentType,
     };
-    console.log("OrderDetails", OrderDetails[0].companyNameEn);
+    console.log("OrderDetails", OrderDetails,user);
     // const { data } = await axios.post(
     //   `${API_BASE_URL}/payment/generate-link`,
     //   payload,
@@ -414,10 +416,19 @@ const OptionsPage = () => {
     );
     return data;
   };
+
 try {
-    const response = await makeRequest();
-    window.open(response.data.url, "_blank", "width=500,height=600");
+  const orderIdEncoded = encodeURIComponent(btoa(decodedOrderID));
+const amountEncoded = encodeURIComponent(btoa(amount.toString()));
+const emailEncoded = encodeURIComponent(btoa(user.email));
+const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
+
+    // const response = await makeRequest();
+
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${emailEncoded}/${companyEncoded}`;
+    window.open(URL, "_blank", "width=500,height=600");
     window.close();
+    // navigate(URL)
   } catch (error) {
     console.error("Error generating payment link:", error);
      if (error.response && error.response.status === 401) {
@@ -479,7 +490,7 @@ try {
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
@@ -492,7 +503,7 @@ try {
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )}
+        )} */}
       </div>
       <style>
         {`.options-container {

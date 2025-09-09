@@ -1,10 +1,20 @@
+import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-
+import { useParams } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
-
+  const { orderId ,useremail,amount,companyNameEn} = useParams();
+    const { token ,user} = useAuth();
+  console.log("user",useremail,orderId,amount,companyNameEn)
+  const orderIdDecoded = atob(decodeURIComponent(orderId));
+const amountDecoded = atob(decodeURIComponent(amount));
+const emailDecoded = atob(decodeURIComponent(useremail));
+const companyDecoded = atob(decodeURIComponent(companyNameEn));
+const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   useEffect(() => {
     // Check if script is already loaded
     if (window.CardSDK) {
@@ -36,7 +46,7 @@ const TapCardPayment = () => {
       setTimeout(initializeTapCard, 100);
     }
   }, [sdkLoaded, initialized]);
-
+console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
   const initializeTapCard = () => {
     if (window.CardSDK && !initialized) {
     //   const { renderTapCard, Theme, Currencies, Direction, Edges, Locale } = window.CardSDK;
@@ -59,32 +69,32 @@ const TapCardPayment = () => {
         
         // Initialize the SDK
         renderTapCard('card-sdk-id', {
-          publicKey: 'pk_test_FcYVGop4TyCRLb0qBhIHJzmn', // Replace with your actual key
+          publicKey: TAP_PUIBLIC_KEY, // Replace with your actual key
           merchant: {
-            id: '67979587',
+            id: process.env.REACT_APP_TAP_MERCHANT_ID,
           },
           transaction: {
-            amount: 10,
+            amount: parseFloat(amountDecoded),
             currency: Currencies.SAR,
           },
           customer: {
-            id: 'cus_TS06A4420250631e6HP0809471',
+            id: '',//'cus_TS06A4420250631e6HP0809471',
             name: [
               {
                 lang: Locale.EN,
-                first: 'Test',
-                last: 'Test',
-                middle: 'Test',
+                first: companyDecoded,
+                // last: 'Test',
+                // middle: 'Test',
               },
             ],
-            nameOnCard: 'Test Test',
+            // nameOnCard: 'Test Test',
             editable: true,
             contact: {
-              email: 'test@gmail.com',
-              phone: {
-                countryCode: '20',
-                number: '1000000000',
-              },
+              email: emailDecoded,
+              // phone: {
+              //   countryCode: '20',
+              //   number: '1000000000',
+              // },
             },
           },
           acceptance: {
@@ -120,7 +130,7 @@ const TapCardPayment = () => {
             setIsProcessing(false);
           },
           onSuccess: (data) => {
-            console.log('Tokenization successful:', data);
+          
             createChargeRequest(data);
           },
         });
@@ -140,13 +150,32 @@ const TapCardPayment = () => {
     }
   };
 
-  const createChargeRequest = (token) => {
-    console.log('Creating charge with token:', token);
+  const createChargeRequest = async(tokenDATA) => {
+  
+     const payload = {
+      salesOrderId: orderIdDecoded,
+      amount:amountDecoded,
+      customerName: companyDecoded,
+      tokenData:tokenDATA,
+    };
     // Simulate API call
-    setTimeout(() => {
-      setIsProcessing(false);
-      alert(`Payment tokenized successfully! Token: ${token.id}`);
-    }, 2000);
+     const { data } = await axios.post(
+          `${API_BASE_URL}/payment/generate-link`,
+          payload,
+          {
+            headers: { "Authorization": `Bearer ${token}` },
+          }
+        );
+     
+        console.log("data.url",data)
+         window.open(data?.data?.url, "_blank", "width=500,height=600");
+         setIsProcessing(false);
+    window.close();
+      
+    // setTimeout(() => {
+    //   setIsProcessing(false);
+    //   // alert(`Payment tokenized successfully! Token: ${token.id}`);
+    // }, 2000);
   };
 
 
@@ -155,7 +184,7 @@ const TapCardPayment = () => {
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '500px', margin: '0 auto' }}>
       <h2 style={{ color: '#333', textAlign: 'center' }}>Checkout</h2>
       <p style={{ fontSize: '18px', textAlign: 'center', marginBottom: '20px' }}>
-        Total Amount: <strong>10 SAR</strong>
+        Total Amount: <strong>{amountDecoded}SAR</strong>
       </p>
       
       <div 
