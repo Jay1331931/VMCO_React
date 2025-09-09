@@ -81,9 +81,9 @@ function Login({ title, userType }) {
           } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase())) {
             navigate("/bankTransactions");
           }
-        // else {
-        //   navigate("/catalog");
-        // }
+        else {
+          navigate("/catalog");
+        }
 
         setMessage(data.message);
         setError("");

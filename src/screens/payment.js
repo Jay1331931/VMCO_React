@@ -101,7 +101,7 @@ const PaymentPage = () => {
             {status && status !== 'failed' && (
                 <div className="payment-details">
                     <h2>{status}</h2>
-                    <p>paymentId: {paymentId}</p>
+                    <p>Payment ID: {paymentId}</p>
                 </div>
             )}
 

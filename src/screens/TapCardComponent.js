@@ -2,12 +2,17 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
+import { useTranslation } from 'react-i18next';
+import api from '../utilities/api';
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [paymentProcessing,setPaymentProcessing]=useState(false)
   const { orderId ,useremail,amount,companyNameEn} = useParams();
     const { token ,user} = useAuth();
+      const { t } = useTranslation();
   console.log("user",useremail,orderId,amount,companyNameEn)
   const orderIdDecoded = atob(decodeURIComponent(orderId));
 const amountDecoded = atob(decodeURIComponent(amount));
@@ -46,6 +51,13 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
       setTimeout(initializeTapCard, 100);
     }
   }, [sdkLoaded, initialized]);
+
+  // useEffect(()=>{
+  //   if(paymentProcessing)
+  //   {
+  //     setInitialized(true)
+  //   }
+  // },[paymentProcessing])
 console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
   const initializeTapCard = () => {
     if (window.CardSDK && !initialized) {
@@ -55,8 +67,15 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
         // Make sure the container exists
         const container = document.getElementById('card-sdk-container');
         if (!container) {
-          console.error('Container not found');
+         
+           Swal.fire({
+                  title: t("Error"),
+                  text: t("Container not found"),
+                  icon: "error",
+                  confirmButtonText: t("OK"),
+                });
           return;
+          // console.error('Container not found');
         }
         
         // Clear any existing content
@@ -121,7 +140,7 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           },
           onFocus: () => console.log('onFocus'),
           onBinIdentification: (data) => console.log('onBinIdentification', data),
-          onValidInput: (data) => console.log('onValidInputChange', data),
+          onValidInput: (data) =>  console.log('onValidInputChange', data),
           onInvalidInput: (data) => console.log('onInvalidInput', data),
           onChangeSaveCardLater: (isSaveCardSelected) => 
             console.log(isSaveCardSelected, ' :onChangeSaveCardLater'),
@@ -142,7 +161,9 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
 
   const createToken = () => {
     if (window.CardSDK && window.CardSDK.tokenize) {
+       setPaymentProcessing(true)
       setIsProcessing(true);
+     
       window.CardSDK.tokenize();
     } else {
       console.error('Tap Card SDK not loaded or tokenize method not available');
@@ -159,18 +180,20 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
       tokenData:tokenDATA,
     };
     // Simulate API call
-     const { data } = await axios.post(
-          `${API_BASE_URL}/payment/generate-link`,
+     const { data } = await api.post(
+          `/payment/generate-link`,
           payload,
-          {
-            headers: { "Authorization": `Bearer ${token}` },
-          }
+          // {
+          //   headers: { "Authorization": `Bearer ${token}` },
+          // }
         );
      
         console.log("data.url",data)
-         window.open(data?.data?.url, "_blank", "width=500,height=600");
+     
+          window.location.replace(data?.data?.url);
          setIsProcessing(false);
-    window.close();
+            setPaymentProcessing(false)
+ 
       
     // setTimeout(() => {
     //   setIsProcessing(false);
@@ -196,7 +219,7 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           borderRadius: '8px',
           padding: '15px',
           backgroundColor: '#f9f9f9',
-          display: initialized ? 'block' : 'none'
+          display: initialized ?  !paymentProcessing ?'block':"none" : 'none'
         }}
       />
       
@@ -217,6 +240,21 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           </div>
         </div>
       )}
+      {
+        paymentProcessing ? <div style={{ 
+          minHeight: '250px', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          marginBottom: '20px', 
+          border: '1px solid #ddd', 
+          borderRadius: '8px',
+          padding: '15px',
+          backgroundColor: '#f0f0f0'
+        }}><div style={{ textAlign: 'center', color: '#6c757d' }}>
+            Payment Processing...
+          </div> </div>: null
+      }
       
       <div style={{ textAlign: 'center', marginBottom: '15px' }}>
         <button 

@@ -665,7 +665,7 @@ function Cart() {
                 );
 
                         if (data?.details?.url) {
-                            window.open(data.details.url, '_blank', 'width=500,height=600');
+                            window.open(data.details.url, '_blank' );
                         } else {
                             console.error("Payment URL not found in response:", data);
                         }
@@ -1917,7 +1917,7 @@ function Cart() {
                     }
                 });
 
-                window.open(data.details.url, '_blank', 'width=500,height=600');
+                window.open(data.details.url, '_blank' );
 
             }
 
