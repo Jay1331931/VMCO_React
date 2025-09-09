@@ -67,7 +67,7 @@ function Login({ title, userType }) {
           console.log("data",data)
         const role= data?.data?.roles[0] && data.data.roles[0]?.toLowerCase() ==="employee" ?  data?.data?.designation : data.data.roles[0];
     
-        //  RbacManager.loadRbacConfig(role,data.token);
+         RbacManager.loadRbacConfig(role,data.token);
         if (data?.data?.customerStatus === "new") {
           navigate("/customerDetails", {
             state: { customerId: data?.data?.customerId, mode: "add" },
@@ -81,9 +81,9 @@ function Login({ title, userType }) {
           } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase())) {
             navigate("/bankTransactions");
           }
-        // else {
-        //   navigate("/catalog");
-        // }
+        else {
+          navigate("/catalog");
+        }
 
         setMessage(data.message);
         setError("");

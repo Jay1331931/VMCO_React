@@ -1463,7 +1463,7 @@ function OrderDetails() {
         });
       }
       if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank", "width=500,height=600");
+        window.open(data.details.url, "_blank");
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -2941,13 +2941,13 @@ function OrderDetails() {
 
                     {isV('erpOrderId') && (
                       <div className="order-details-field">
-                        <label>{t('ERP#')}</label>
+                        <label>{t('Sales Order ID')}</label>
                         <input
                           name="erpOrderId"
                           value={formData.erpOrderId !== undefined && formData.erpOrderId !== null ? formData.erpOrderId : ''}
                           onChange={handleInputChange}
                           disabled={!isE('erpOrderId')}
-                          placeholder={t('ERP ID')}
+                          placeholder={t('ERP#')}
                         />
                       </div>
                     )}
@@ -3052,7 +3052,7 @@ function OrderDetails() {
                         <label>{t('Total Amount')}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount ?? ''}
+                          value={orderFromNav.totalAmount === formData.totalProducts ? orderFromNav.totalAmount : formData.totalAmount}
                           disabled
                           readOnly
                         />
@@ -3097,7 +3097,7 @@ function OrderDetails() {
                         <label>{t('Amount Paid')}</label>
                         <input
                           name="paidAmount"
-                          value={parseFloat(formData.paidAmount).toFixed(2) ?? ''}
+                          value={parseFloat(formData.paidAmount).toFixed(2) ? parseFloat(formData.paidAmount).toFixed(2) : 0.00}
                           onChange={handleInputChange}
                           disabled={!isE('paidAmount')}
                         />
@@ -3213,7 +3213,7 @@ function OrderDetails() {
 
                     {isV('createdDate') && (
                       <div className="order-details-field">
-                        <label>{t('Created Date')}</label>
+                        <label>{t('Order Placement Date')}</label>
                         <input
                           name="createdDate"
                           value={formData.createdAt ? convertToTimezone(
@@ -3703,7 +3703,7 @@ function OrderDetails() {
               {isV('orderStatus') && (
                 <div className="order-status">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
                     {t(formData.status) || t('Open')}
                   </span>
                 </div>
@@ -3729,7 +3729,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && ["invoiced","delivered"].includes(formData?.status?.toLowerCase()) && (
                   <button className="order-action-btn" onClick={() =>
                     handleViewSignature(formData.id, formData.customerId, formData.invoices)
                   }>

@@ -22,19 +22,14 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Initial categories with their corresponding entity values
 const initialCategories = [
   {
-    value: Constants.CATEGORY.VMCO_MACHINES,
-    entity: Constants.ENTITY.VMCO,
-    label: Constants.TAB_NAMES.VMCO_MACHINES,
+    value: Constants.ENTITY.SHC,
+    entity: Constants.ENTITY.SHC,
+    label: Constants.ENTITY.SHC,
   },
   {
     value: Constants.CATEGORY.VMCO_CONSUMABLES,
     entity: Constants.ENTITY.VMCO,
     label: Constants.TAB_NAMES.VMCO_CONSUMABLES,
-  },
-  {
-    value: Constants.ENTITY.SHC,
-    entity: Constants.ENTITY.SHC,
-    label: Constants.ENTITY.SHC, 
   },
   {
     value: Constants.ENTITY.GMTC,
@@ -47,18 +42,23 @@ const initialCategories = [
     label: Constants.ENTITY.NAQI,
   },
   {
+    value: Constants.CATEGORY.VMCO_MACHINES,
+    entity: Constants.ENTITY.VMCO,
+    label: Constants.TAB_NAMES.VMCO_MACHINES,
+  },
+  {
     value: Constants.ENTITY.DAR,
     entity: Constants.ENTITY.DAR,
     label: Constants.ENTITY.DAR,
   },
-  { 
+  {
     value: "SPECIAL_PRODUCTS",
     entity: "",
     label: "Special Products"
   },
   {
     value: "FAVORITES",
-    entity: "", 
+    entity: "",
     label: "Favorites"
   },
 ];
@@ -179,9 +179,9 @@ function Catalog() {
           `${API_BASE_URL}/products?${params.toString()}`,
           {
             method: "GET",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}` 
+              "Authorization": `Bearer ${token}`
             }
           }
         );
@@ -271,7 +271,7 @@ function Catalog() {
       try {
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
           method: 'GET',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             "Authorization": `Bearer ${token}` // Include token for authentication
           },
@@ -282,13 +282,13 @@ function Catalog() {
         }
 
         const result = await response.json();
-        
-        setEntityDescriptions(result.data?.map(entity => 
-          ({
-            descriptionLc: entity.descriptionLc,
-            description: entity.description,
-            value: entity.value 
-          })
+
+        setEntityDescriptions(result.data?.map(entity =>
+        ({
+          descriptionLc: entity.descriptionLc,
+          description: entity.description,
+          value: entity.value
+        })
         ) || []);
 
       } catch (error) {
@@ -355,10 +355,10 @@ function Catalog() {
 
   // Create categoryTabs with localized labels and filter for interCompany customers
   useEffect(() => {
-    if(!entityDescriptions || entityDescriptions?.length === 0) {
+    if (!entityDescriptions || entityDescriptions?.length === 0) {
       return;
     }
-    
+
     if (!user) return;
 
     const allLocalizedTabs = initialCategories.map((category) => {
@@ -368,17 +368,17 @@ function Catalog() {
         label: response,
       };
     });
-        
+
     // Filter tabs based on user type and interCompany status
     let tabsToShow = allLocalizedTabs.filter(tab => {
       // First find the original category to get its entity
       const category = initialCategories.find(cat => cat.value === tab.value);
-      
+
       // For special tabs (FAVORITES and SPECIAL_PRODUCTS), only show them for customers
       if (category && (category.value === "FAVORITES" || category.value === "SPECIAL_PRODUCTS")) {
         return user.userType.toLowerCase() === "customer";
       }
-      
+
       return true;
     });
 
@@ -408,7 +408,7 @@ function Catalog() {
         // Include all other tabs
         return true;
       });
-      
+
       console.log("Filtered tabs for interCompany customer:", tabsToShow);
     }
 
@@ -419,7 +419,7 @@ function Catalog() {
     if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab?.value === activeCategory)) {
       setActiveCategory(tabsToShow[0]?.value);
     }
-      
+
   }, [entityDescriptions, i18n.language, initialCategories, user, activeCategory]);
 
   const customerId = user?.customerId;
@@ -455,7 +455,7 @@ function Catalog() {
       }
 
       // Choose the right product name based on language
-      let productName = product.productName ;
+      let productName = product.productName;
       if (currentLanguage !== "en" && product.productNameLc) {
         productName = product.productNameLc;
       }
@@ -490,7 +490,7 @@ function Catalog() {
   );
 
   useEffect(() => {
-   const selectedCategory = categories.find(
+    const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
@@ -691,7 +691,7 @@ function Catalog() {
               Accept: "application/json",
               "Authorization": `Bearer ${token}`
             },
-            
+
           }
         );
         if (!response.ok) {
@@ -723,9 +723,9 @@ function Catalog() {
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                  branch.branchNameLc ||
-                  branch.branch_name_en ||
-                  branch.branchNameEn,
+                branch.branchNameLc ||
+                branch.branch_name_en ||
+                branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -773,7 +773,7 @@ function Catalog() {
             Accept: "application/json",
             "Authorization": `Bearer ${token}`
           },
-          
+
         }
       );
       if (!response.ok) throw new Error("Failed to fetch cart items");
@@ -814,16 +814,16 @@ function Catalog() {
           : otherBranchId;
         // Make sure this function is already marked `async` (it looks like it is)
 
-       const { isConfirmed } = await Swal.fire({
-  icon: "warning",
-  title: t("Discard items?"),
-  html: `${t("There are items in the cart for branch")} <strong>${otherBranchLabel}</strong>.<br>${t("Do you want to discard them?")}`,
-  showCancelButton: true,
-  focusCancel: true,
-  confirmButtonText: t("Yes, discard"),
-  cancelButtonText: t("No, keep"),
-  reverseButtons: true,
-});
+        const { isConfirmed } = await Swal.fire({
+          icon: "warning",
+          title: t("Discard items?"),
+          html: `${t("There are items in the cart for branch")} <strong>${otherBranchLabel}</strong>.<br>${t("Do you want to discard them?")}`,
+          showCancelButton: true,
+          focusCancel: true,
+          confirmButtonText: t("Yes, discard"),
+          cancelButtonText: t("No, keep"),
+          reverseButtons: true,
+        });
 
 
         if (isConfirmed) {
@@ -838,7 +838,7 @@ function Catalog() {
                   Accept: "application/json",
                   "Authorization": `Bearer ${token}`
                 },
-                
+
               }
             );
 
@@ -958,7 +958,7 @@ function Catalog() {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-           // Send along auth cookies/JWT
+          // Send along auth cookies/JWT
         }
       );
 
@@ -979,7 +979,7 @@ function Catalog() {
               "Content-Type": "application/json",
               "Authorization": `Bearer ${token}`
             },
-            
+
             body: JSON.stringify({
               quantityOrdered: updatedQuantity,
               netAmount: unitPrice * updatedQuantity,
@@ -996,9 +996,9 @@ function Catalog() {
         }
         Swal.fire({
           icon: "success",
-          title: t("Success"),
-          text: t("Product quantity updated in cart successfully"),
-          confirmButtonText: t("OK"),
+          title: "Product quantity to cart successfully",
+          showConfirmButton: false,
+          timer: 1000
         });
       } else {
         // Item doesn't exist in cart, add it as new
@@ -1037,7 +1037,7 @@ function Catalog() {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          
+
           body: JSON.stringify(cartItem),
         });
 
@@ -1050,9 +1050,9 @@ function Catalog() {
         }
         Swal.fire({
           icon: "success",
-          title: t("Success"),
-          text: t("Product added to cart successfully"),
-          confirmButtonText: t("OK"),
+          title: "Product added to cart successfully",
+          showConfirmButton: false,
+          timer: 1000
         });
       }
 
@@ -1094,7 +1094,7 @@ function Catalog() {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          
+
           body: JSON.stringify({
             userId: user.userId,
             customerId: selectedCustomerId || user.customerId,
@@ -1115,7 +1115,7 @@ function Catalog() {
             headers: {
               "Authorization": `Bearer ${token}`
             },
-            
+
           }
         );
 
@@ -1125,26 +1125,26 @@ function Catalog() {
       }
 
       // Update local state to reflect changes immediately
-      setProducts(prevProducts => 
-        prevProducts.map(product => 
-          product.id === productId 
-            ? { ...product, favorite: isFavorite } 
+      setProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? { ...product, favorite: isFavorite }
             : product
         )
       );
 
       // Also update filtered/displayed products
-      setFilteredProducts(prevProducts => 
-        prevProducts.map(product => 
-          product.id === productId 
-            ? { ...product, favorite: isFavorite } 
+      setFilteredProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? { ...product, favorite: isFavorite }
             : product
         )
       );
-      setDisplayedProducts(prevProducts => 
-        prevProducts.map(product => 
-          product.id === productId 
-            ? { ...product, favorite: isFavorite } 
+      setDisplayedProducts(prevProducts =>
+        prevProducts.map(product =>
+          product.id === productId
+            ? { ...product, favorite: isFavorite }
             : product
         )
       );
@@ -1305,9 +1305,9 @@ function Catalog() {
 
         // Add isMachine parameter for VMCO entity tabs
         if (entity === Constants.ENTITY.VMCO) {
-          if(activeCategory === Constants.CATEGORY.VMCO_MACHINES){
-          const isMachine = true;
-          params.append('isMachine', isMachine);
+          if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
+            const isMachine = true;
+            params.append('isMachine', isMachine);
           }
           else {
             const isMachine = false;
@@ -1317,20 +1317,20 @@ function Catalog() {
 
         const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          
+
         });
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
         // Assuming result.data is an array of category names/objects
         const options = Array.isArray(result.data)
           ? result.data.map(cat => ({
-              name: cat.category || cat.name || cat, // adapt as per API response
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat, // adapt as per API response
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
         // Do not select any category by default
@@ -1359,20 +1359,20 @@ function Catalog() {
         });
         const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          
+
         });
         if (!response.ok) throw new Error("Failed to fetch subcategories");
         const result = await response.json();
         // Assuming result.data is an array of subcategory names/objects
         const options = Array.isArray(result.data)
           ? result.data.map(sub => ({
-              name: sub.subCategory || sub.sub_category || sub.name || sub,
-              value: sub.subCategory || sub.sub_category || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.sub_category || sub.name || sub,
+            value: sub.subCategory || sub.sub_category || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
         // Do not select any subcategory by default
@@ -1419,19 +1419,19 @@ function Catalog() {
               )}
             </div>
             {isV("goToCart") && (
-            <button
-              className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
-              style={{
-                opacity: !selectedLocation ? 0.6 : 1,
-                cursor: !selectedLocation ? "not-allowed" : "pointer",
-              }}
-              onClick={handleGoToCart}
-              disabled={!selectedLocation}
-            >
-              <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-              <span>{t("Go to Cart")}</span>
-            </button>
-          )}
+              <button
+                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                style={{
+                  opacity: !selectedLocation ? 0.6 : 1,
+                  cursor: !selectedLocation ? "not-allowed" : "pointer",
+                }}
+                onClick={handleGoToCart}
+                disabled={!selectedLocation}
+              >
+                <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                <span>{t("Go to Cart")}</span>
+              </button>
+            )}
           </div>
         )}
         <div className="filter-section">
@@ -1449,7 +1449,7 @@ function Catalog() {
             }}
             variant="category"
           />
-          
+
         </div>{" "}
         <div className="search-section">
           <div className="search-container">

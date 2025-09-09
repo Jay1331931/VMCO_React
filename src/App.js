@@ -32,6 +32,7 @@ import { useAuth } from "./context/AuthContext";
 import { isTokenValid } from './utilities/authUtils';
 import RbacManager from "./utilities/rbac";
 import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
+import TapCardComponent from "./screens/TapCardComponent";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -62,10 +63,7 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
-  //       const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
-  // if(tokenIsValid){
-  // RbacManager.loadRbacConfig(role,token);
-  // }
+
          
   return (
     <Router>
@@ -95,7 +93,7 @@ function App() {
         <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
-        <Route path="/rbacEditor" element={<RbacEditor />} />
+        <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
@@ -118,6 +116,7 @@ function App() {
         <Route path="/payment-opations/order/:orderId" element={<OptionsPage/>} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
+        <Route path="/tapcard/:orderId/:amount/:useremail/:companyNameEn" element={<TapCardComponent/>} />
       </Routes>
     </Router>
   );
