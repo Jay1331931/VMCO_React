@@ -109,20 +109,20 @@
   position: absolute;
   top: 0;
   right: 0;
-  /* background: #007bff; */
-  /* color: white; */
-  /* border: 1px solid #007bff; */
-  /* border-radius: 3px; */
-  /* padding: 2px 8px; */
+  background: #ccc;
+  color: white;
   border: none;
-  font-size: 20px;
+  border-radius: 3px;
+  padding: 2px 8px;
+  border: none;
+  /* font-size: 20px; */
   cursor: pointer;
 }
 
 .copy-btn:hover {
-  /* background-color: white; */
+  background-color: white;
   /* color: #007bff; */
-  color: #ccc;
+  color: #3b4256;
   /* border-color: #007bff; */
 }
 
