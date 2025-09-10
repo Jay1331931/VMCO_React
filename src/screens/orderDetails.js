@@ -1464,7 +1464,7 @@ function OrderDetails() {
         });
       }
       if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank", "width=500,height=600");
+        window.open(data.details.url, "_blank");
       }
     } catch (error) {
       console.error("Error generating payment link:", error);

@@ -1,20 +1,49 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
+import Swal from 'sweetalert2';
+import { useTranslation } from 'react-i18next';
+import api from '../utilities/api';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const { orderId ,useremail,amount,companyNameEn} = useParams();
+  const [paymentProcessing,setPaymentProcessing]=useState(false)
+  const { orderId ,amount,customerId} = useParams();
+    const [CustomerDetails,setCustomerDetails]=useState(null)
     const { token ,user} = useAuth();
-  console.log("user",useremail,orderId,amount,companyNameEn)
+      const { t } = useTranslation();
+
   const orderIdDecoded = atob(decodeURIComponent(orderId));
 const amountDecoded = atob(decodeURIComponent(amount));
-const emailDecoded = atob(decodeURIComponent(useremail));
-const companyDecoded = atob(decodeURIComponent(companyNameEn));
+// const emailDecoded = atob(decodeURIComponent(useremail));
+// const companyDecoded = atob(decodeURIComponent(companyNameEn));
+const customerIdDecoded=atob(decodeURIComponent(customerId));
 const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+useEffect(() => {
+  const fetchCustomerDetails = async () => {
+    try {
+      const token = localStorage.getItem("token"); // always use latest
+      const { data } = await api.get(
+        `/get_customer_details?customerId=${customerIdDecoded}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setCustomerDetails(data?.details);
+    } catch (error) {
+      console.error("Failed to fetch Customer details", error);
+    }
+  };
+
+  if (customerIdDecoded) {
+    fetchCustomerDetails();
+  }
+}, [customerIdDecoded]); // dependency array ensures it runs when customerIdDecoded changes
+
   useEffect(() => {
     // Check if script is already loaded
     if (window.CardSDK) {
@@ -46,7 +75,30 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
       setTimeout(initializeTapCard, 100);
     }
   }, [sdkLoaded, initialized]);
-console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
+
+  // useEffect(()=>{
+  //   if(paymentProcessing)
+  //   {
+  //     setInitialized(true)
+  //   }
+  // },[paymentProcessing])
+console.log(" CustomerDetails", CustomerDetails)
+let customerPhone;
+if(CustomerDetails?.contact_phone){
+customerPhone=parsePhoneNumberFromString(CustomerDetails?.contact_phone);
+}
+
+let phone;
+if (customerPhone && customerPhone.isValid()) {
+   phone = {
+    countryCode: customerPhone.countryCallingCode, // e.g., '966'
+    number: customerPhone.nationalNumber          // e.g., '501234581'
+  };
+  console.log("phone",phone)
+
+
+}
+  console.log("CustomerDetails?.contact_phone",CustomerDetails?.contact_phone,phone);
   const initializeTapCard = () => {
     if (window.CardSDK && !initialized) {
     //   const { renderTapCard, Theme, Currencies, Direction, Edges, Locale } = window.CardSDK;
@@ -55,8 +107,15 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
         // Make sure the container exists
         const container = document.getElementById('card-sdk-container');
         if (!container) {
-          console.error('Container not found');
+         
+           Swal.fire({
+                  title: t("Error"),
+                  text: t("Container not found"),
+                  icon: "error",
+                  confirmButtonText: t("OK"),
+                });
           return;
+          // console.error('Container not found');
         }
         
         // Clear any existing content
@@ -78,11 +137,11 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
             currency: Currencies.SAR,
           },
           customer: {
-            id: '',//'cus_TS06A4420250631e6HP0809471',
+            id: CustomerDetails?.tap_cust_id ?  CustomerDetails?.tap_cust_id : "",//'cus_TS06A4420250631e6HP0809471',
             name: [
               {
                 lang: Locale.EN,
-                first: companyDecoded,
+                first: CustomerDetails?.company_name_en,
                 // last: 'Test',
                 // middle: 'Test',
               },
@@ -90,7 +149,8 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
             // nameOnCard: 'Test Test',
             editable: true,
             contact: {
-              email: emailDecoded,
+              email: CustomerDetails?.contact_email,
+              phone
               // phone: {
               //   countryCode: '20',
               //   number: '1000000000',
@@ -121,7 +181,7 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           },
           onFocus: () => console.log('onFocus'),
           onBinIdentification: (data) => console.log('onBinIdentification', data),
-          onValidInput: (data) => console.log('onValidInputChange', data),
+          onValidInput: (data) =>  console.log('onValidInputChange', data),
           onInvalidInput: (data) => console.log('onInvalidInput', data),
           onChangeSaveCardLater: (isSaveCardSelected) => 
             console.log(isSaveCardSelected, ' :onChangeSaveCardLater'),
@@ -142,7 +202,9 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
 
   const createToken = () => {
     if (window.CardSDK && window.CardSDK.tokenize) {
+       setPaymentProcessing(true)
       setIsProcessing(true);
+     
       window.CardSDK.tokenize();
     } else {
       console.error('Tap Card SDK not loaded or tokenize method not available');
@@ -155,12 +217,12 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
      const payload = {
       salesOrderId: orderIdDecoded,
       amount:amountDecoded,
-      customerName: companyDecoded,
+      customerName: CustomerDetails?.company_name_en,
       tokenData:tokenDATA,
     };
     // Simulate API call
-     const { data } = await axios.post(
-          `${API_BASE_URL}/payment/generate-link`,
+     const { data } = await api.post(
+          `/payment/generate-link`,
           payload,
           {
             headers: { "Authorization": `Bearer ${token}` },
@@ -168,9 +230,11 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
         );
      
         console.log("data.url",data)
-         window.open(data?.data?.url, "_blank", "width=500,height=600");
+     
+          window.location.replace(data?.data?.url);
          setIsProcessing(false);
-    window.close();
+            setPaymentProcessing(false)
+ 
       
     // setTimeout(() => {
     //   setIsProcessing(false);
@@ -196,7 +260,7 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           borderRadius: '8px',
           padding: '15px',
           backgroundColor: '#f9f9f9',
-          display: initialized ? 'block' : 'none'
+          display: initialized ?  !paymentProcessing ?'block':"none" : 'none'
         }}
       />
       
@@ -217,6 +281,21 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
           </div>
         </div>
       )}
+      {
+        paymentProcessing ? <div style={{ 
+          minHeight: '250px', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center',
+          marginBottom: '20px', 
+          border: '1px solid #ddd', 
+          borderRadius: '8px',
+          padding: '15px',
+          backgroundColor: '#f0f0f0'
+        }}><div style={{ textAlign: 'center', color: '#6c757d' }}>
+            Payment Processing...
+          </div> </div>: null
+      }
       
       <div style={{ textAlign: 'center', marginBottom: '15px' }}>
         <button 
