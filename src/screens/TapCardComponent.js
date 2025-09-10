@@ -183,9 +183,9 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
      const { data } = await api.post(
           `/payment/generate-link`,
           payload,
-          // {
-          //   headers: { "Authorization": `Bearer ${token}` },
-          // }
+          {
+            headers: { "Authorization": `Bearer ${token}` },
+          }
         );
      
         console.log("data.url",data)
