@@ -1,25 +1,49 @@
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import Swal from 'sweetalert2';
 import { useTranslation } from 'react-i18next';
 import api from '../utilities/api';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
 const TapCardPayment = () => {
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [paymentProcessing,setPaymentProcessing]=useState(false)
-  const { orderId ,useremail,amount,companyNameEn} = useParams();
+  const { orderId ,amount,customerId} = useParams();
+    const [CustomerDetails,setCustomerDetails]=useState(null)
     const { token ,user} = useAuth();
       const { t } = useTranslation();
-  console.log("user",useremail,orderId,amount,companyNameEn)
+
   const orderIdDecoded = atob(decodeURIComponent(orderId));
 const amountDecoded = atob(decodeURIComponent(amount));
-const emailDecoded = atob(decodeURIComponent(useremail));
-const companyDecoded = atob(decodeURIComponent(companyNameEn));
+// const emailDecoded = atob(decodeURIComponent(useremail));
+// const companyDecoded = atob(decodeURIComponent(companyNameEn));
+const customerIdDecoded=atob(decodeURIComponent(customerId));
 const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+useEffect(() => {
+  const fetchCustomerDetails = async () => {
+    try {
+      const token = localStorage.getItem("token"); // always use latest
+      const { data } = await api.get(
+        `/get_customer_details?customerId=${customerIdDecoded}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setCustomerDetails(data?.details);
+    } catch (error) {
+      console.error("Failed to fetch Customer details", error);
+    }
+  };
+
+  if (customerIdDecoded) {
+    fetchCustomerDetails();
+  }
+}, [customerIdDecoded]); // dependency array ensures it runs when customerIdDecoded changes
+
   useEffect(() => {
     // Check if script is already loaded
     if (window.CardSDK) {
@@ -58,7 +82,23 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   //     setInitialized(true)
   //   }
   // },[paymentProcessing])
-console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
+console.log(" CustomerDetails", CustomerDetails)
+let customerPhone;
+if(CustomerDetails?.contact_phone){
+customerPhone=parsePhoneNumberFromString(CustomerDetails?.contact_phone);
+}
+
+let phone;
+if (customerPhone && customerPhone.isValid()) {
+   phone = {
+    countryCode: customerPhone.countryCallingCode, // e.g., '966'
+    number: customerPhone.nationalNumber          // e.g., '501234581'
+  };
+  console.log("phone",phone)
+
+
+}
+  console.log("CustomerDetails?.contact_phone",CustomerDetails?.contact_phone,phone);
   const initializeTapCard = () => {
     if (window.CardSDK && !initialized) {
     //   const { renderTapCard, Theme, Currencies, Direction, Edges, Locale } = window.CardSDK;
@@ -97,11 +137,11 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
             currency: Currencies.SAR,
           },
           customer: {
-            id: '',//'cus_TS06A4420250631e6HP0809471',
+            id: CustomerDetails?.tap_cust_id ?  CustomerDetails?.tap_cust_id : "",//'cus_TS06A4420250631e6HP0809471',
             name: [
               {
                 lang: Locale.EN,
-                first: companyDecoded,
+                first: CustomerDetails?.company_name_en,
                 // last: 'Test',
                 // middle: 'Test',
               },
@@ -109,7 +149,8 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
             // nameOnCard: 'Test Test',
             editable: true,
             contact: {
-              email: emailDecoded,
+              email: CustomerDetails?.contact_email,
+              phone
               // phone: {
               //   countryCode: '20',
               //   number: '1000000000',
@@ -176,7 +217,7 @@ console.log(" process.env.PAYMENT_TAP_PUBLIC_KEY", TAP_PUIBLIC_KEY)
      const payload = {
       salesOrderId: orderIdDecoded,
       amount:amountDecoded,
-      customerName: companyDecoded,
+      customerName: CustomerDetails?.company_name_en,
       tokenData:tokenDATA,
     };
     // Simulate API call
