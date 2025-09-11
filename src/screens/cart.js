@@ -665,7 +665,7 @@ function Cart() {
                 );
 
                         if (data?.details?.url) {
-                            window.open(data.details.url, '_blank', 'width=500,height=600');
+                            window.open(data.details.url, '_blank' );
                         } else {
                             console.error("Payment URL not found in response:", data);
                         }
@@ -738,14 +738,14 @@ function Cart() {
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
-                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
-                    : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                    ? t(`Your order is successfully placed and is under review for approval.`)+t(` #${orderIds[0]}`)
+                    : t(`Your orders is successfully placed and is under review for approval.:`) +` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
 
                 console.log('Order success message:', orderText);
 
                 Swal.fire({
                     icon: 'success',
-                    title: t('Order Placed'),
+                    title: t('Request Sent'),
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(async () => {
@@ -876,8 +876,8 @@ function Cart() {
                         
                         Swal.fire({
                             icon: 'success',
-                            title: t('Order Placed'),
-                            text: t(`Your order has been placed successfully! Order #${machineOrderId}`),
+                            title: t('Request Sent'),
+                            text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
                             confirmButtonText: t('OK')
                         }).then(() => {
                             // Update cart items state to remove ordered items
@@ -1917,7 +1917,7 @@ function Cart() {
                     }
                 });
 
-                window.open(data.details.url, '_blank', 'width=500,height=600');
+                window.open(data.details.url, '_blank' );
 
             }
 

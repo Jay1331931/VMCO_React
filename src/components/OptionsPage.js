@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faCreditCard, faMobile } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import api from "../utilities/api"
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 const getCookie = (name) => {
   // const cookies = document.cookie
@@ -26,14 +26,15 @@ const OptionsPage = () => {
   const { orderId } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [amount, setAmount] = useState(0);
+
   const { token ,user} = useAuth();
   const navigate = useNavigate();
-
+  const cookieToken = getCookie("token");
   // if (orderId &&!token ){
   //   try {
   //     const generateToken=async () => {
 
-  //       const response = await axios.post(`${API_BASE_URL}/auth/temporary-token-generation`,{"role":"Guest","userId":0,"userName":"payment" });
+  //       const response = await axios.post(`/auth/temporary-token-generation`,{"role":"Guest","userId":0,"userName":"payment" });
   //       return response?.data?.details;
   //     }
 
@@ -42,45 +43,114 @@ const OptionsPage = () => {
   //   }
 
   // }
- const generateToken = async () => {
-      try {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/auth/temporary-token-generation`,
-          {
-            role: "Guest",
-            userId: 0,
-            userName: "payment",
-          },
-          {
-            headers: { "Authorization": `Bearer ${token}` },
-          }
-        );
-        console.log("Temporary Token Response:", data.details);
-      } catch (error) {
-        console.error("Error generating temporary token:", error);
-      }
-    };
-  useEffect(() => {
-     const cookieToken = getCookie("token");
-   
-    if (orderId && !cookieToken) {
-      generateToken();
-    } 
-  }, [orderId, token]);
   const fetchDecodeddata = useCallback(async () => {
-    try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}`,
-        {
-          headers: { "Authorization": `Bearer ${token}` },
-        }
-      );
-      // setDecodedOrderID(parseInt(data?.details?.orderIds));
-      setDecodedOrderID(data?.details?.orderIds);
-    } catch (error) {
-      console.error("Failed to fetch decoded data", error);
-    }
-  }, [orderId]);
+  try {
+    const token = localStorage.getItem("token"); // always use latest
+    const { data } = await api.get(
+      `/decode-ids?encryptedorderIds=${orderId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    setDecodedOrderID(data?.details?.orderIds);
+  } catch (error) {
+    console.error("Failed to fetch decoded data", error);
+
+    // if (error.response?.status === 401) {
+    //   console.warn("Token invalid. Generating a new one...");
+
+    //   const newToken = await generateToken();
+    //   if (newToken) {
+    //     try {
+    //       const { data } = await axios.get(
+    //         `/decode-ids?encryptedorderIds=${orderId}`,
+    //         { headers: { Authorization: `Bearer ${newToken}` } }
+    //       );
+    //       setDecodedOrderID(data?.details?.orderIds);
+    //     } catch (retryError) {
+    //       console.error("Retry after new token failed:", retryError);
+    //     }
+    //   }
+    // }
+  }
+}, [orderId]);
+
+const fetchSaleOrder = useCallback(async () => {
+  try {
+    if (!decodedOrderID) return;
+
+    const token = localStorage.getItem("token"); // always use latest
+    const ids = decodedOrderID.toString().split(",");
+    console.log("Decoded Order ID(s):", ids);
+
+    const results = await Promise.all(
+      ids.map((id) =>
+        api.get(`/sales-order/id/${parseInt(id)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+    );
+
+    const allOrders = results.map((res) => res.data.data);
+    setOrderDetails(allOrders);
+    console.log("Sale Order Data:", allOrders);
+  } catch (error) {
+    console.error("Failed to fetch sale order", error);
+
+    // if (error.response?.status === 401) {
+    //   console.warn("Token invalid in sale order. Generating a new one...");
+
+    //   const newToken = await generateToken();
+    //   if (newToken) {
+    //     try {
+    //       const ids = decodedOrderID.toString().split(",");
+    //       const results = await Promise.all(
+    //         ids.map((id) =>
+    //           axios.get(`/sales-order/id/${parseInt(id)}`, {
+    //             headers: { Authorization: `Bearer ${newToken}` },
+    //           })
+    //         )
+    //       );
+
+    //       const allOrders = results.map((res) => res.data.data);
+    //       setOrderDetails(allOrders);
+    //     } catch (retryError) {
+    //       console.error("Retry after new token failed:", retryError);
+    //     }
+    //   }
+    // }
+  }
+}, [decodedOrderID]);
+
+//  const generateToken = async () => {
+//       try {
+//         const { data } = await axios.post(
+//           `/auth/temporary-token-generation`,
+//           {
+//             role: "Guest",
+//             userId: 0,
+//             userName: "payment",
+//           }
+//         );
+//         const newToken = data?.details?.token;
+//     if (newToken) {
+//       localStorage.setItem("token", newToken);
+     
+//       return newToken;
+//     }
+//         console.log("Temporary Token Response:", data.details);
+//       } catch (error) {
+//         console.error("Error generating temporary token:", error);
+//       }
+//     };
+//   useEffect(() => {
+//     if(!orderId){
+//       return;
+//     }
+//     if (orderId && !cookieToken) {
+//       generateToken();
+//     } 
+//   }, [orderId, token]);
+
   useEffect(() => {
     fetchDecodeddata();
   }, [fetchDecodeddata]);
@@ -89,7 +159,7 @@ const OptionsPage = () => {
   //     if (!decodedOrderID) return;
   //    console.log("Decoded Order ID:", decodedOrderID);
   //     const { data } = await axios.get(
-  //       `${API_BASE_URL}/sales-order/id/${decodedOrderID}`,
+  //       `/sales-order/id/${decodedOrderID}`,
   //       {
   //        
   //       }
@@ -102,28 +172,7 @@ const OptionsPage = () => {
   //   }
   // }, [decodedOrderID]);
 
-  const fetchSaleOrder = useCallback(async () => {
-    try {
-      if (!decodedOrderID) return;
 
-      const ids = decodedOrderID.toString().split(",");
-      console.log("Decoded Order ID(s):", ids);
-
-      const results = await Promise.all(
-        ids.map((id) =>
-          axios.get(`${API_BASE_URL}/sales-order/id/${parseInt(id)}`, {
-            headers: { "Authorization": `Bearer ${token}` },
-          })
-        )
-      );
-
-      const allOrders = results.map((res) => res.data.data);
-      setOrderDetails(allOrders); // array of orders
-      console.log("Sale Order Data:", allOrders);
-    } catch (error) {
-      console.error("Failed to fetch sales order", error);
-    }
-  }, [decodedOrderID]);
 
   useEffect(() => {
     if (decodedOrderID) {
@@ -313,15 +362,15 @@ const OptionsPage = () => {
 
  const handleBankTransaction = async (amount, decodedOrderID) => {
   try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/generatePayment-link`,
+    const { data } = await api.post(
+      `/generatePayment-link`,
       {
         id: decodedOrderID,
         endPoint: "bankTransactions/order",
         amount: amount,
       },
       {
-        headers: { "Authorization": `Bearer ${token}` },
+        headers: { "Authorization": `Bearer ${cookieToken}` },
       }
     );
 
@@ -339,8 +388,8 @@ const OptionsPage = () => {
       return;
     }
 
-    window.open(data.details.url, "_blank", "width=500,height=600");
-    window.close();
+    window.location.replace(data.details.url);
+    // window.close();
   } catch (error) {
     console.error("Error generating bank transaction link:", error);
 
@@ -354,12 +403,40 @@ const OptionsPage = () => {
         cancelButtonText: "Close",
       }).then(async (result) => {
         if (result.isConfirmed) {
-          try {
-            await generateToken();
-          } catch (err) {
-            console.error("Token regeneration failed:", err);
-              window.close();
-          }
+    //       try {
+    //        const responseToken= await generateToken();
+    //         const { data } = await api.post(
+    //   `/generatePayment-link`,
+    //   {
+    //     id: decodedOrderID,
+    //     endPoint: "bankTransactions/order",
+    //     amount: amount,
+    //   },
+    //   {
+    //     headers: { "Authorization": `Bearer ${responseToken}` },
+    //   }
+    // );
+
+    // console.log("Payment link generated:", data);
+
+    // if (!data || !data.details) {
+    //   Swal.fire({
+    //     title: "Error",
+    //     text: "Failed to generate payment link.",
+    //     icon: "error",
+    //     confirmButtonText: "OK",
+    //   }).then(() => {
+    //     window.close();
+    //   });
+    //   return;
+    // }
+
+    // window.location.replace(data.details.url);
+
+    //       } catch (err) {
+    //         console.error("Token regeneration failed:", err);
+    //           window.close();
+    //       }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           window.close();
         }
@@ -376,7 +453,6 @@ const OptionsPage = () => {
     }
   }
 };
-console.log("wi",window.location.host)
   const handlePayment = async (paymentType) => {
  
 
@@ -400,15 +476,15 @@ console.log("wi",window.location.host)
     };
     console.log("OrderDetails", OrderDetails,user);
     // const { data } = await axios.post(
-    //   `${API_BASE_URL}/payment/generate-link`,
+    //   `/payment/generate-link`,
     //   payload,
     //   {
     //    
     //   }
     // );
      const makeRequest = async () => {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/payment/generate-link`,
+    const { data } = await api.post(
+      `/payment/generate-link`,
       payload,
       {
         headers: { "Authorization": `Bearer ${token}` },
@@ -420,14 +496,15 @@ console.log("wi",window.location.host)
 try {
   const orderIdEncoded = encodeURIComponent(btoa(decodedOrderID));
 const amountEncoded = encodeURIComponent(btoa(amount.toString()));
-const emailEncoded = encodeURIComponent(btoa(user.email));
-const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
+// const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
+// const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
+const customerIdEncoded=encodeURIComponent(btoa(OrderDetails[0]?.customerId))
 
     // const response = await makeRequest();
 
-  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${emailEncoded}/${companyEncoded}`;
-    window.open(URL, "_blank", "width=500,height=600");
-    window.close();
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}`;
+   window.location.replace(URL)
+    // window.close();
     // navigate(URL)
   } catch (error) {
     console.error("Error generating payment link:", error);
@@ -442,7 +519,7 @@ const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
 }).then(async (result) => {
   if (result.isConfirmed) {
     try {
-      await generateToken(); // Call your API to get new token
+      // await generateToken(); // Call your API to get new token
      
     } catch (error) {
       console.error("Token regeneration failed:", error);
@@ -468,6 +545,7 @@ const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
   }
     // navigate(data?.data?.InvoiceURL)
   };
+
   return (
     <div className="options-container">
       <div className="button-wrapper">

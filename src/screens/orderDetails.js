@@ -1096,10 +1096,11 @@ function OrderDetails() {
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         status: sampleMode ? 'Approved' : orderStatus,
         salesExecutive: user.employeeId,
-        paymentStatus: paymentStatus,
+        paymentStatus: sampleMode ? "Paid" : paymentStatus,
         entity: formData.entity || '',
         deliveryCharges: formData.deliveryCharges || '0',
         totalAmount: formData.totalAmount || '0',
+        paidAmount: sampleMode ? 0.00 : finalPaymentMethod.toLowerCase() ==="credit" ? formData.totalAmount : 0.00,
         pricingPolicy: formData.pricingPolicy?.[formData.entity],
         customerRegion: formData.customerRegion || '',
         productCategory: formData.category || '',
@@ -1463,7 +1464,7 @@ function OrderDetails() {
         });
       }
       if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank", "width=500,height=600");
+        window.open(data.details.url, "_blank");
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -2231,8 +2232,8 @@ function OrderDetails() {
     // For non-sample orders, calculate the total including VAT
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       const total = formData.products.reduce((sum, p) => {
-        const net = parseFloat(p.netAmount) || 0;
-        const vatPercentage = parseFloat(p.vatPercentage) || 0;
+        const net = parseFloat(p.netAmount);
+        const vatPercentage = parseFloat(p.vatPercentage);
         const vatAmount = net * (vatPercentage / 100);
         return sum + net + vatAmount;
       }, 0);
@@ -3052,7 +3053,7 @@ function OrderDetails() {
                         <label>{t('Total Amount')}</label>
                         <input
                           name="totalAmount"
-                          value={orderFromNav.totalAmount === formData.totalProducts ? orderFromNav.totalAmount : formData.totalAmount}
+                          value={ formData.totalAmount }
                           disabled
                           readOnly
                         />
@@ -3213,7 +3214,7 @@ function OrderDetails() {
 
                     {isV('createdDate') && (
                       <div className="order-details-field">
-                        <label>{t('Created Date')}</label>
+                        <label>{t('Order Placement Date')}</label>
                         <input
                           name="createdDate"
                           value={formData.createdAt ? convertToTimezone(
@@ -3703,7 +3704,7 @@ function OrderDetails() {
               {isV('orderStatus') && (
                 <div className="order-status">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'open'}`}>
                     {t(formData.status) || t('Open')}
                   </span>
                 </div>
