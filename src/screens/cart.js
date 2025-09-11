@@ -745,7 +745,7 @@ function Cart() {
 
                 Swal.fire({
                     icon: 'success',
-                    title: t('Order Placed'),
+                    title: t('Request Sent'),
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(async () => {
@@ -876,8 +876,8 @@ function Cart() {
                         
                         Swal.fire({
                             icon: 'success',
-                            title: t('Order Placed'),
-                            text: t(`Your order is successfully placed and is under review for approval.`) +t(`#${machineOrderId}`),
+                            title: t('Request Sent'),
+                            text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
                             confirmButtonText: t('OK')
                         }).then(() => {
                             // Update cart items state to remove ordered items
