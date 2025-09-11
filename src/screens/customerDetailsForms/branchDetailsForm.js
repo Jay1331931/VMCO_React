@@ -619,7 +619,7 @@ const BranchDetailsForm = ({
           body: JSON.stringify({
             branch: {
               branchStatus: "pending",
-              customerId: customer?.id,
+              customerId: customer?.id
             },
             contacts: {},
           }),
@@ -707,6 +707,7 @@ const BranchDetailsForm = ({
                 customer?.isDeliveryChargesApplicable,
               erpCustId: customer?.erpCustId,
               hours: stringifyHours(hoursDetails),
+              custSeqId: customer?.sequenceId
             }),
             
           });

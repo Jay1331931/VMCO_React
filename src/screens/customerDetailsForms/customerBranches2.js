@@ -1049,6 +1049,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("customerId", customer.id);
+      formData.append("custSeqId", customer.sequenceId);
       formData.append("erpCustId", customer.erpCustId);
       formData.append(
         "isDeliveryChargesApplicable",
