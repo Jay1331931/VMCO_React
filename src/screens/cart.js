@@ -738,8 +738,8 @@ function Cart() {
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
-                    ? t(`Your request has been sent for approval! Order #${orderIds[0]}`)
-                    : t(`Your requests have been sent for approval! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                    ? t(`Your order is successfully placed and is under review for approval.`)+t(` #${orderIds[0]}`)
+                    : t(`Your orders is successfully placed and is under review for approval.:`) +` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
 
                 console.log('Order success message:', orderText);
 

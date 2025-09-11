@@ -46,7 +46,7 @@ function App() {
         "SidebarList"
       );
 
-      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company","Gen"];
+      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company"];
       const isV = rbacMgr.isV.bind(rbacMgr);
 
       for (const page of pages) {
@@ -63,7 +63,10 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
-
+  //     const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
+  // if(tokenIsValid){
+  // RbacManager.loadRbacConfig(role,token);
+  // }
          
   return (
     <Router>
