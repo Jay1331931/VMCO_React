@@ -26,6 +26,7 @@ const OptionsPage = () => {
   const { orderId } = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [amount, setAmount] = useState(0);
+
   const { token ,user} = useAuth();
   const navigate = useNavigate();
   const cookieToken = getCookie("token");
@@ -495,12 +496,13 @@ const fetchSaleOrder = useCallback(async () => {
 try {
   const orderIdEncoded = encodeURIComponent(btoa(decodedOrderID));
 const amountEncoded = encodeURIComponent(btoa(amount.toString()));
-const emailEncoded = encodeURIComponent(btoa(user?.email));
-const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
+// const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
+// const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
+const customerIdEncoded=encodeURIComponent(btoa(OrderDetails[0]?.customerId))
 
     // const response = await makeRequest();
 
-  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${emailEncoded}/${companyEncoded}`;
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}`;
    window.location.replace(URL)
     // window.close();
     // navigate(URL)
@@ -543,6 +545,7 @@ const companyEncoded = encodeURIComponent(btoa(OrderDetails[0].companyNameEn));
   }
     // navigate(data?.data?.InvoiceURL)
   };
+
   return (
     <div className="options-container">
       <div className="button-wrapper">

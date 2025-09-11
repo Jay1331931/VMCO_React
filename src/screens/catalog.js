@@ -996,7 +996,7 @@ function Catalog() {
         }
         Swal.fire({
           icon: "success",
-          title: "Product quantity to cart successfully",
+          title: t("Product quantity to cart successfully"),
           showConfirmButton: false,
           timer: 1000
         });
@@ -1050,7 +1050,7 @@ function Catalog() {
         }
         Swal.fire({
           icon: "success",
-          title: "Product added to cart successfully",
+          title: t("Product added to cart successfully"),
           showConfirmButton: false,
           timer: 1000
         });

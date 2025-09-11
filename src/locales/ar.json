@@ -727,5 +727,9 @@
     "Selected File": "الملف المحدد",
     "Sales Order ID":"أمر المبيعات",
     "Action":"فعل",
-    "Order Placement Date": "تاريخ وضع الطلب"
+    "Order Placement Date": "تاريخ وضع الطلب",
+    "Your orders is successfully placed and is under review for approval.:":"تم وضع طلباتك بنجاح وهي قيد المراجعة للموافقة عليها.:",
+    "Your order is successfully placed and is under review for approval.":"لقد تم تقديم طلبك بنجاح وهو قيد المراجعة للموافقة عليه.",
+    "and":"أيضا",
+    "Product quantity to cart successfully":"تم إضافة كمية المنتج إلى سلة التسوق بنجاح"
 }
