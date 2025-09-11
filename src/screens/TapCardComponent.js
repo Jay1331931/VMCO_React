@@ -64,6 +64,8 @@ const TapCardPayment = () => {
     };
     if (CustomerDetails?.tap_cust_id) {
       fetchCardDetails();
+    }else{
+       initializeTapCard();
     }
   }, [CustomerDetails]);
   useEffect(() => {
@@ -373,7 +375,7 @@ const TapCardPayment = () => {
           ))}
         </div>
       )}
-         {!isCardselected && <div style={{ textAlign: "center", color: "#6c757d" }}>
+         {!isCardselected &&  CustomerDetails?.tap_cust_id && <div style={{ textAlign: "center", color: "#6c757d" }}>
             Setting up your payment form...
           </div>}
         </div>
