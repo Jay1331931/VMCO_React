@@ -17,6 +17,7 @@ const TapCardPayment = () => {
   const [CardDetails, setCardDetails] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [isCardselected,setisCardselected]=useState(false)
+  const [isPayButtonValid,setisPayButtonValid]=useState(false)
   const { token, user } = useAuth();
   const { t } = useTranslation();
 
@@ -225,6 +226,7 @@ const TapCardPayment = () => {
           onValidInput: (data) => {
             console.log("onValidInputChange", data);
             setIsProcessing(!data);
+            setisPayButtonValid(data)
           },
           onInvalidInput: (data) => console.log("onInvalidInput", data),
           onChangeSaveCardLater: (isSaveCardSelected) =>
@@ -251,8 +253,15 @@ const TapCardPayment = () => {
       window.CardSDK.tokenize();
     } else {
       console.error("Tap Card SDK not loaded or tokenize method not available");
-      alert("Payment system not ready. Please try again.");
+      // alert("Payment system not ready. Please try again.");
+        Swal.fire({
+            title: t("Error"),
+            text: t("Payment system not ready. Please try again."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+          });
     }
+    setisPayButtonValid(false)
   };
 
   const createChargeRequest = async (tokenDATA) => {
@@ -332,50 +341,73 @@ const TapCardPayment = () => {
             backgroundColor: "#f0f0f0",
           }}
         >
-            {CardDetails?.length > 0 && !selectedCardId && (
-        <div
+           {CardDetails?.length > 0 && !selectedCardId && (
+  <div>
+    <div
+      style={{
+        maxHeight: "150px",
+        overflowY: "auto",
+        marginBottom: "20px",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        padding: "10px",
+        backgroundColor: "#f9f9f9",
+      }}
+    >
+      {CardDetails.map((card) => (
+        <label
+          key={card.id}
           style={{
-            maxHeight: "150px",
-            overflowY: "auto",
-            marginBottom: "20px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
+            display: "block",
             padding: "10px",
-            backgroundColor: "#f9f9f9",
+            marginBottom: "8px",
+            borderRadius: "6px",
+            border:
+              selectedCardId === card.id
+                ? "2px solid #0b4c45"
+                : "1px solid #ccc",
+            cursor: "pointer",
+            backgroundColor:
+              selectedCardId === card.id ? "#e6f7f5" : "#fff",
           }}
         >
-          {CardDetails?.map((card) => (
-            <label
-              key={card.id}
-              style={{
-                display: "block",
-                padding: "10px",
-                marginBottom: "8px",
-                borderRadius: "6px",
-                border:
-                  selectedCardId === card.id
-                    ? "2px solid #0b4c45"
-                    : "1px solid #ccc",
-                cursor: "pointer",
-                backgroundColor:
-                  selectedCardId === card.id ? "#e6f7f5" : "#fff",
-              }}
-            >
-              <input
-                type="radio"
-                name="selectedCard"
-                value={card.id}
-                checked={selectedCardId === card.id}
-                onChange={() => handleCardSelection(card.id)}
-                style={{ marginRight: "10px" }}
-              />
-              <strong>{card.brand}</strong> •••• {card.last_four} — {card.name}{" "}
-              (Exp: {card.exp_month}/{card.exp_year})
-            </label>
-          ))}
-        </div>
-      )}
-         {!isCardselected &&  CustomerDetails?.tap_cust_id && <div style={{ textAlign: "center", color: "#6c757d" }}>
+          <input
+            type="radio"
+            name="selectedCard"
+            value={card.id}
+            checked={selectedCardId === card.id}
+            onChange={() => handleCardSelection(card.id)}
+            style={{ marginRight: "10px" }}
+          />
+          <strong>{card.brand}</strong> •••• {card.last_four} — {card.name} (Exp: {card.exp_month}/{card.exp_year})
+        </label>
+      ))}
+    </div>
+
+    <div style={{ textAlign: "center", marginBottom: "20px" }}>
+      <button
+        onClick={()=>{
+          setisCardselected(false)
+          setCardDetails(null)
+          initializeTapCard()}}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#0b4c45",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontSize: "16px",
+          fontWeight: "bold",
+        }}
+      >
+        New Card
+      </button>
+    </div>
+  </div>
+)}
+
+         {!isCardselected  && <div style={{ textAlign: "center", color: "#6c757d" }}>
             Setting up your payment form...
           </div>}
         </div>
@@ -401,7 +433,7 @@ const TapCardPayment = () => {
         </div>
       ) : null}
 
-      <div style={{ textAlign: "center", marginBottom: "15px" }}>
+      {isPayButtonValid &&<div style={{ textAlign: "center", marginBottom: "15px" }}>
         <button
           onClick={createToken}
           disabled={isProcessing || !initialized}
@@ -419,9 +451,9 @@ const TapCardPayment = () => {
             marginRight: "10px",
           }}
         >
-          {isProcessing ? "Processing..." : "Confirm Payment"}
+       Confirm Payment
         </button>
-      </div>
+      </div>}
 
       {!sdkLoaded && (
         <div
