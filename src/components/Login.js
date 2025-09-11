@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Constants from "../constants";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import RbacManager from "../utilities/rbac";
 
 function Login({ title, userType }) {
@@ -48,14 +48,12 @@ function Login({ title, userType }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestBody),
-          
         });
 
         const data = await res.json();
 
         localStorage.setItem("token", data.token);
         console.log("Login response:", data);
-       
 
         login(data.token, data.data);
 
@@ -64,23 +62,49 @@ function Login({ title, userType }) {
           setError("Email or password is invalid");
           return;
         }
-          console.log("data",data)
-        const role= data?.data?.roles[0] && data.data.roles[0]?.toLowerCase() ==="employee" ?  data?.data?.designation : data.data.roles[0];
-    
-         RbacManager.loadRbacConfig(role,data.token);
+        console.log("data", data);
+        const role =
+          data?.data?.roles[0] &&
+          data.data.roles[0]?.toLowerCase() === "employee"
+            ? data?.data?.designation
+            : data.data.roles[0];
+
+        RbacManager.loadRbacConfig(role, data.token);
         if (data?.data?.customerStatus === "new") {
           navigate("/customerDetails", {
             state: { customerId: data?.data?.customerId, mode: "add" },
           });
-        } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() || data?.data?.roles[0].toLowerCase() === Constants.ROLES.SUPER_ADMIN.toLowerCase())) {
-
-            navigate("/customers");
-          } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() || data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())) {
-            navigate("/maintenance");
-
-          } else if (data?.data?.userType.toLowerCase() === "employee" && (data?.data?.designation.toLowerCase() === Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase())) {
-            navigate("/bankTransactions");
-          }
+        } else if (
+          data?.data?.userType.toLowerCase() === "employee" &&
+          (data?.data?.designation.toLowerCase() ===
+            Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
+            data?.data?.designation.toLowerCase() ===
+              Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
+            data?.data?.designation.toLowerCase() ===
+              Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
+            data?.data?.designation.toLowerCase() ===
+              Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
+            data?.data?.roles[0].toLowerCase() ===
+              Constants.ROLES.SUPER_ADMIN.toLowerCase())
+        ) {
+          navigate("/customers");
+        } else if (
+          data?.data?.userType.toLowerCase() === "employee" &&
+          (data?.data?.designation.toLowerCase() ===
+            Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
+            data?.data?.designation.toLowerCase() ===
+              Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
+            data?.data?.designation.toLowerCase() ===
+              Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
+        ) {
+          navigate("/maintenance");
+        } else if (
+          data?.data?.userType.toLowerCase() === "employee" &&
+          data?.data?.designation.toLowerCase() ===
+            Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
+        ) {
+          navigate("/bankTransactions");
+        }
         // else {
         //   navigate("/catalog");
         // }
@@ -129,8 +153,9 @@ function Login({ title, userType }) {
 
       <div className="login-component">
         <div className="login-header">{t("Login")}</div>
+        <form onSubmit={handleSubmit}>
         <div className="login-container">
-          <form onSubmit={handleSubmit}>
+          
             <div className="form-group">
               <label htmlFor="email">{t("Email (email)")}</label>
               <input
@@ -144,27 +169,32 @@ function Login({ title, userType }) {
             <div className="form-group">
               <label htmlFor="password">{t("Password")}</label>
               <div className="password-input-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                placeholder={t("Password")}
-                onChange={(e) => setPassword(e.target.value)}
-                className="password-input"
-              />
-              {password && (<button
-          type="button"
-          onClick={togglePasswordVisibility}
-          className="password-toggle-btn"
-          aria-label={showPassword ? "Hide password" : "Show password"}
-        >
-          <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye } />
-        </button>)}
-        </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  placeholder={t("Password")}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="password-input"
+                />
+                {password && (
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="password-toggle-btn"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                  </button>
+                )}
+              </div>
             </div>
             {error && <p className="error-message">{t(error)}</p>}
-          </form>
+         
         </div>
+
         <div className="login-footer">
           {title === "Customer Login" ? (
             <div className="login-footer-text">
@@ -215,7 +245,7 @@ function Login({ title, userType }) {
             <button
               type="submit"
               className="login-button"
-              onClick={handleSubmit}
+              // onSubmit={handleSubmit}
               disabled={isLoading}
               style={{
                 background: isLoading ? "#ccc" : "",
@@ -227,6 +257,7 @@ function Login({ title, userType }) {
             </button>
           </div>
         </div>
+         </form>
       </div>
       <style>
         {`
