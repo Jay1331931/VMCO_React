@@ -313,7 +313,7 @@ const TapCardPayment = () => {
       <div
         id="card-sdk-container"
         style={{
-          minHeight: "250px",
+          // minHeight: "250px",
           marginBottom: "20px",
           border: "1px solid #ddd",
           borderRadius: "8px",
@@ -330,7 +330,7 @@ const TapCardPayment = () => {
       {!initialized && sdkLoaded  &&  (
         <div
           style={{
-            minHeight: "250px",
+            // minHeight: "250px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -416,7 +416,7 @@ const TapCardPayment = () => {
       {paymentProcessing ? (
         <div
           style={{
-            minHeight: "250px",
+            // minHeight: "250px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",

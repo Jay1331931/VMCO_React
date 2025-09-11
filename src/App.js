@@ -81,8 +81,8 @@ function App() {
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
-        <Route path="/login" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
-        <Route path="/login/employee" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path="/login" element={!tokenIsValid  && <LoginScreen />} />
+        <Route path="/login/employee" element={!tokenIsValid && <LoginScreen />} />
         <Route
           path="/customers/registration"
           element={<CustomersOnboarding />}
