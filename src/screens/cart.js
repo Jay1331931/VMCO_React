@@ -738,14 +738,14 @@ function Cart() {
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
-                    ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
-                    : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+                    ? t(`Your request has been sent for approval! Order #${orderIds[0]}`)
+                    : t(`Your requests have been sent for approval! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
 
                 console.log('Order success message:', orderText);
 
                 Swal.fire({
                     icon: 'success',
-                    title: t('Order Placed'),
+                    title: t('Request Sent'),
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(async () => {
@@ -876,8 +876,8 @@ function Cart() {
                         
                         Swal.fire({
                             icon: 'success',
-                            title: t('Order Placed'),
-                            text: t(`Your order has been placed successfully! Order #${machineOrderId}`),
+                            title: t('Request Sent'),
+                            text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
                             confirmButtonText: t('OK')
                         }).then(() => {
                             // Update cart items state to remove ordered items
