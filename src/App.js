@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "../src/components/Sidebar";
 import Orders from "./screens/orders";
+import OrdersMui from "./screens/ordersmui";
 import Customers from "./screens/customers";
 import Catalog from "./screens/catalog";
 import Support from "./screens/support";
@@ -74,7 +75,8 @@ function App() {
         {/* <Route path="/" element={<LoginScreen />} /> */}
          <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
 
-        <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} />
+        {/* <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} /> */}
+        <Route path="/orders" element={<ProtectedRoute page="orders"><OrdersMui /></ProtectedRoute>} />
         <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/>
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/support" element={<ProtectedRoute page="support"><Support /></ProtectedRoute>} />
