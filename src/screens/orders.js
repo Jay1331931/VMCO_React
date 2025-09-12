@@ -122,6 +122,10 @@ function Orders() {
               order.selectedCustomerName ||
               order.erpCustId ||
               "",
+            branchNameEn:
+              order.branchNameEn + " (" + order.branchSequenceId + ")" ,
+            branchNameLc:
+              order.branchNameLc + " (" + order.branchSequenceId + ")" ,
           }));
           setFilteredOrders(processedOrders);
           setTotal(result.data.totalRecords);
@@ -147,7 +151,7 @@ function Orders() {
         page,
         pageSize,
         search: searchTerm,
-        sortBy: "id",
+        // sortBy: "id",
         sortOrder: "asc",
         filters: "{}",
       });
@@ -502,6 +506,7 @@ function Orders() {
 
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
+     setSelectedBranch(null);
     setShowCustomerPopup(false);
   };
 

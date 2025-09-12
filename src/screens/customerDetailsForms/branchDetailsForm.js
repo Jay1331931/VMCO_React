@@ -1087,12 +1087,15 @@ const BranchDetailsForm = ({
       }
 
       console.log("Data to be validated:", dataToBeValidated);
-      const errors = await validateData(
+      let errors = {};
+      if(approvalAction === "approve") {
+      errors = await validateData(
         dataToBeValidated,
         true,
         mandatoryFieldsForApproval
       );
       setFormErrors(errors);
+    }
       if (Object.keys(errors).length > 0) {
         setIsApproving(false);
         setIsRejecting(false);
