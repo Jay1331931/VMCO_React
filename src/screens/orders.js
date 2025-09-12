@@ -502,6 +502,7 @@ function Orders() {
 
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
+     setSelectedBranch(null);
     setShowCustomerPopup(false);
   };
 
