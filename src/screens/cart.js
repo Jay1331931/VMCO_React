@@ -60,6 +60,7 @@ function Cart() {
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
+    const [selectedBranchSequenceId, setSelectedBranchSequenceId] = useState('');
     const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [selectedBranchCity, setSelectedBranchCity] = useState('');
     const [selectedBranchStatus, setSelectedBranchStatus] = useState('');
@@ -85,6 +86,7 @@ function Cart() {
             if (location.state.selectedBranchName) setSelectedBranchName(location.state.selectedBranchName);
             if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
             if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
+            if (location.state.selectedBranchSequenceId) setSelectedBranchSequenceId(location.state.selectedBranchSequenceId);
             if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
             if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
         } else {
@@ -1266,6 +1268,7 @@ function Cart() {
                     branchNameLc: selectedBranchNameLc,
                     branchCity: selectedBranchCity,
                     erpBranchId: selectedBranchErpId,
+                    branchSequenceId: selectedBranchSequenceId,
                     branchRegion: selectedBranchRegion,
                     orderBy: orderByName,
                     entity,

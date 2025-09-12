@@ -663,6 +663,7 @@ function Catalog() {
         selectedBranchRegion,
         selectedBranchCity,
         selectedBranchStatus: selectedBranch?.raw?.branchStatus || "",
+        selectedBranchSequenceId: selectedBranch?.raw?.sequenceId,
       },
     });
   };
