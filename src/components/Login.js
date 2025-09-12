@@ -105,9 +105,9 @@ function Login({ title, userType }) {
         ) {
           navigate("/bankTransactions");
         }
-        // else {
-        //   navigate("/catalog");
-        // }
+        else {
+          navigate("/catalog");
+        }
 
         setMessage(data.message);
         setError("");
