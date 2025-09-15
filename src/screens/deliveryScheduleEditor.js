@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import axios from "axios";
 import SearchableDropdown from "../components/SearchableDropdown";
+import Tabs from "../components/Tabs";
 
 function DeliveryScheduleEditor() {
     const [deliverySchedules, setDeliverySchedules] = useState([]);
@@ -30,6 +31,7 @@ function DeliveryScheduleEditor() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [pageSize] = useState(10);
+    const [activeTab, setActiveTab] = useState(""); // Initialize as empty string
 
     // Geographic data states
     const [geoData, setGeoData] = useState(null);
@@ -44,14 +46,25 @@ function DeliveryScheduleEditor() {
 
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+    // Define tabs array
+    const tabs = [
+        { value: "VMCO", label: "VMCO" },
+        { value: "SHC", label: "SHC" },
+        { value: "GMTC", label: "GMTC" },
+        { value: "NAQI", label: "NAQI" },
+        { value: "DAR", label: "DAR" }
+    ];
+
     // Fetch geo data on component mount
     useEffect(() => {
         fetchGeoData();
     }, []);
 
     useEffect(() => {
-        fetchDeliverySchedules();
-    }, [currentPage, searchTerm]);
+        if (activeTab) { // Only fetch when there's an active tab
+            fetchDeliverySchedules();
+        }
+    }, [currentPage, searchTerm, activeTab]);
 
     const fetchGeoData = async () => {
         try {
@@ -76,13 +89,17 @@ function DeliveryScheduleEditor() {
         try {
             const apiUrl = `${API_BASE_URL}/delivery-schedule/pagination`;
 
+            // Remove entity from filters since we're passing it as a separate parameter
+            const filters = {};
+
             const params = new URLSearchParams({
                 page: currentPage,
                 pageSize: pageSize,
                 search: searchTerm,
                 sortBy: "id",
                 sortOrder: "asc",
-                filters: JSON.stringify({})
+                filters: JSON.stringify(filters),
+                entity: activeTab // Add entity as separate parameter
             });
 
             const response = await axios.get(`${apiUrl}?${params}`, {
@@ -107,6 +124,12 @@ function DeliveryScheduleEditor() {
         } finally {
             setLoading(false);
         }
+    };
+
+    // Handle tab change
+    const handleTabChange = (tabValue) => {
+        setActiveTab(tabValue);
+        setCurrentPage(1); // Reset to first page when tab changes
     };
 
     // Get region options
@@ -170,8 +193,9 @@ function DeliveryScheduleEditor() {
         try {
             const apiUrl = `${API_BASE_URL}/delivery-schedule`;
 
-            // Create the exact payload format you specified
+            // Create the payload with entity from active tab
             const payload = {
+                entity: activeTab, // Add entity from active tab
                 region: newSchedule.region,
                 city: newSchedule.city,
                 cutoffDay: newSchedule.cutoffDay,
@@ -213,7 +237,7 @@ function DeliveryScheduleEditor() {
             }
         } catch (err) {
             console.error("Error creating delivery schedule:", err);
-            console.error("Response data:", err.response?.data); // Additional debug info
+            console.error("Response data:", err.response?.data);
             Swal.fire({
                 title: "Error",
                 text: err.response?.data?.message || "Failed to create delivery schedule",
@@ -257,7 +281,7 @@ function DeliveryScheduleEditor() {
                 modifiedBy: user?.id || 1
             };
 
-            console.log("Updating with payload:", payload); // Debug log
+            console.log("Updating with payload:", payload);
 
             const response = await axios.patch(apiUrl, payload, {
                 headers: {
@@ -364,15 +388,18 @@ function DeliveryScheduleEditor() {
                             <button
                                 className="clear-filters-btn"
                                 onClick={() => setShowAddForm(!showAddForm)}
+                                disabled={!activeTab} // Disable when no tab is active
                                 style={{
                                     padding: '8px 16px',
-                                    backgroundColor: '#28a745',
+                                    backgroundColor: !activeTab ? '#ccc' : '#28a745', // Gray out when disabled
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: '4px',
-                                    cursor: 'pointer',
+                                    cursor: !activeTab ? 'not-allowed' : 'pointer', // Show not-allowed cursor when disabled
                                     fontWeight: 'bold',
+                                    opacity: !activeTab ? 0.6 : 1, // Reduce opacity when disabled
                                 }}
+                                title={!activeTab ? "Please select an entity tab first" : ""}
                             >
                                 {showAddForm ? 'Cancel' : 'Add Schedule'}
                             </button>
@@ -380,8 +407,43 @@ function DeliveryScheduleEditor() {
                     </div>
                 </div>
 
-                {/* Add Form */}
-                {showAddForm && (
+                {/* Tabs Section */}
+                <div className="tabs-section" style={{ marginTop: "20px" }}>
+                    <div style={{
+                        display: "flex",
+                        width: "60%",
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        gap: 12,
+                        overflowX: "auto",
+                        scrollbarWidth: "none"
+                    }}>
+                        <Tabs
+                            tabs={tabs}
+                            activeTab={activeTab}
+                            onTabChange={handleTabChange}
+                            variant="category"
+                        />
+                    </div>
+                </div>
+
+                {/* Show current entity info */}
+                {activeTab && (
+                    <div style={{
+                        marginTop: "10px",
+                        padding: "8px 12px",
+                        backgroundColor: "#e3f2fd",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        color: "#1976d2",
+                        border: "1px solid #bbdefb"
+                    }}>
+                        <strong>Current Entity:</strong> {activeTab}
+                    </div>
+                )}
+
+                {/* Add Form - Only show when activeTab exists */}
+                {showAddForm && activeTab && (
                     <div style={{
                         marginTop: "20px",
                         padding: "20px",
@@ -389,7 +451,7 @@ function DeliveryScheduleEditor() {
                         borderRadius: "8px",
                         border: "1px solid #dee2e6"
                     }}>
-                        <h4>Add New Delivery Schedule</h4>
+                        <h4>Add New Delivery Schedule for {activeTab}</h4>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "15px" }}>
                             <div>
                                 <label>Region *</label>
@@ -431,7 +493,7 @@ function DeliveryScheduleEditor() {
                                 <select
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
-                                        console.log("Cutoff Day selected:", e.target.value); // Debug log
+                                        console.log("Cutoff Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, cutoffDay: e.target.value });
                                     }}
                                     className="form-control"
@@ -451,13 +513,12 @@ function DeliveryScheduleEditor() {
                                 </select>
                             </div>
 
-                            {/* Pickup Day */}
                             <div>
                                 <label>Pickup Day *</label>
                                 <select
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
-                                        console.log("Pickup Day selected:", e.target.value); // Debug log
+                                        console.log("Pickup Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, pickupDay: e.target.value });
                                     }}
                                     className="form-control"
@@ -477,13 +538,12 @@ function DeliveryScheduleEditor() {
                                 </select>
                             </div>
 
-                            {/* Delivery Day */}
                             <div>
                                 <label>Delivery Day *</label>
                                 <select
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
-                                        console.log("Delivery Day selected:", e.target.value); // Debug log
+                                        console.log("Delivery Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, deliveryDay: e.target.value });
                                     }}
                                     className="form-control"
@@ -536,6 +596,7 @@ function DeliveryScheduleEditor() {
                     <table className="data-table">
                         <thead>
                             <tr>
+                                <th>Entity</th>
                                 <th>Region</th>
                                 <th>City</th>
                                 <th>Cut-off Day</th>
@@ -547,6 +608,7 @@ function DeliveryScheduleEditor() {
                         <tbody>
                             {deliverySchedules.map((schedule, index) => (
                                 <tr key={index}>
+                                    <td>{schedule.entity}</td>
                                     <td>{schedule.region}</td>
                                     <td>{schedule.city}</td>
                                     <td>{schedule.cutoffDay}</td>
@@ -593,7 +655,7 @@ function DeliveryScheduleEditor() {
 
                     {deliverySchedules.length === 0 && !loading && (
                         <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
-                            No delivery schedules found
+                            {!activeTab ? "Select an Entity Tab" : "No delivery schedules found"}
                         </div>
                     )}
                 </div>
@@ -683,7 +745,6 @@ function DeliveryScheduleEditor() {
                                 </select>
                             </div>
 
-                            {/* Delivery Day */}
                             <div style={{ marginBottom: "20px" }}>
                                 <label>Delivery Day *</label>
                                 <select
