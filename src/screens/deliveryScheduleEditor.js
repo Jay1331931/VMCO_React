@@ -31,7 +31,7 @@ function DeliveryScheduleEditor() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [pageSize] = useState(10);
-    const [activeTab, setActiveTab] = useState(""); // Initialize as empty string
+    const [activeTab, setActiveTab] = useState("SHC"); // Initialize with SHC as default
 
     // Geographic data states
     const [geoData, setGeoData] = useState(null);
@@ -273,7 +273,7 @@ function DeliveryScheduleEditor() {
 
         setLoading(true);
         try {
-            const apiUrl = `${API_BASE_URL}/delivery-schedule/${editData.region}/${editData.city}/${editData.cutoffDay}`;
+            const apiUrl = `${API_BASE_URL}/delivery-schedule/${activeTab}/${editData.region}/${editData.city}/${editData.cutoffDay}`;
 
             const payload = {
                 pickupDay: editData.pickupDay,
@@ -328,7 +328,7 @@ function DeliveryScheduleEditor() {
         if (result.isConfirmed) {
             setLoading(true);
             try {
-                const apiUrl = `${API_BASE_URL}/delivery-schedule/delete/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
+                const apiUrl = `${API_BASE_URL}/delivery-schedule/delete/${activeTab}/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
 
                 const response = await axios.delete(apiUrl, {
                     headers: {
@@ -615,7 +615,7 @@ function DeliveryScheduleEditor() {
                                     <td>{schedule.pickupDay}</td>
                                     <td>{schedule.deliveryDay}</td>
                                     <td>
-                                        <div style={{ display: "flex", gap: "8px" }}>
+                                        <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
                                             <button
                                                 onClick={() => handleEditClick(schedule)}
                                                 style={{
