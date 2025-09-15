@@ -2583,57 +2583,57 @@
 }
 
 .status-open{
-  background-color: var(--cool-grey);
+  background-color: var(--bg-transparent);
   color: var(--logo-orange);
 }
 
 .status-pending {
-  background-color: var(--logo-orange);
-  color: var(--bg-white);
+  background-color: var(--bg-transparent);
+  color: var(--logo-orange);
 }
 
 .status-approved {
-  background-color: var(--logo-light-green);
-  color: #fff;
+  background-color: var(--bg-transparent);
+  color: var(--logo-light-green);
 }
 
 .status-rejected {
-  background-color: var(--logo-red);
+  background-color: var(--bg-transparent);
   align-items: center;
-  color: #ffffff;
+  color: var(--logo-red);
 }
 
 .status-paid {
-  background-color: var(--logo-light-green);
-  color: #fff;
+  background-color: var(--bg-transparent);
+  color: var(--logo-light-green);
 }
 
 .status-under-review {
-  background-color: var(--logo-orange);
-  color: #fff;
+  background-color: var(--bg-transparent);
+  color: var(--logo-cyan);
 }
 
 .status-inprogress {
-  background: #fffbe6;
+  background: var(--bg-transparent);
   color: var(--logo-orange);
   padding: 10px;
     border-radius: var(--border-radius);
 }
 .status-new {
-  background: #e6f7ff;
+  background: var(--bg-transparent);
   color: var(--navy-blue);
     padding: 10px;
     border-radius: var(--border-radius);  
 }
 
 .status-completed {
-  background: #e6ffed;
+  background: var(--bg-transparent);
   color: var(--logo-light-green);
     padding: 10px;
     border-radius: var(--border-radius);
 }
 .status-closed {
-  background: #f0f0f0;
+  background: var(--bg-transparent);
   color: var(--logo-light-green);
     padding: 10px;
     border-radius: var(--border-radius);

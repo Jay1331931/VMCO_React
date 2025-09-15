@@ -1435,22 +1435,33 @@ function Catalog() {
           </div>
         )}
         <div className="filter-section">
-          <Tabs
-            tabs={filteredCategoryTabs}  // Use filtered tabs instead of all tabs
-            activeTab={activeCategory}
-            onTabChange={(newCategory) => {
-              setActiveCategory(newCategory);
-              setSearchQuery("");
-              setCurrentPage(1);
-              setLoadedPages([]);
-              setHasMore(true);
-              setSubCategoryFilter("");
-              setCategoryFilter("");
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 12,
+              overflowX: "auto",
+              scrollbarWidth: "none"
             }}
-            variant="category"
-          />
+          >
+            <Tabs
+              tabs={filteredCategoryTabs}  // Use filtered tabs instead of all tabs
+              activeTab={activeCategory}
+              onTabChange={(newCategory) => {
+                setActiveCategory(newCategory);
+                setSearchQuery("");
+                setCurrentPage(1);
+                setLoadedPages([]);
+                setHasMore(true);
+                setSubCategoryFilter("");
+                setCategoryFilter("");
+              }}
+              variant="category"
+            />
+          </div>
+        </div>
 
-        </div>{" "}
         <div className="search-section">
           <div className="search-container">
             {isV("search") && (
