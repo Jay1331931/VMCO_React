@@ -21,8 +21,14 @@ import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
 import { Chip, Box, Button } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-
+import {
+  DataGrid,
+  GridFooterContainer,
+  GridPagination,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import { CustomFilterPanel } from "../components/CustomFilterPanel";
+import { set } from "date-fns";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
@@ -75,6 +81,33 @@ function Orders() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [excelLoading, setExcelLoading] = useState(false);
   const [syncLoadingId, setSyncLoadingId] = useState(null);
+  const [sortModel, setSortModel] = useState([]);
+  const [sortField, setSortField] = useState("createdAt");
+  const [filterAnchor, setFilterAnchor] = useState(null);
+  const gridApiRef = useGridApiRef();
+
+  const columnsToDisplay = {
+    id: "OrderId",
+    erpOrderId: "Sales Order ID",
+    companyNameEn: "Customer",
+    branchNameEn: "Branch",
+    entity: "Entity",
+    paymentMethod: "Payment Method",
+    createdBy: "Created By",
+    paymentStatus: "Payment Status",
+    orderStatus: "status",
+  };
+  const searchableFields = [
+  "id",
+  "erpOrderId",
+  "companyNameEn",
+  "branchNameEn",
+  "entity",
+  "paymentMethod",
+  "createdByUsername",
+  "paymentStatus",
+  "status",
+];
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -87,19 +120,25 @@ function Orders() {
       return newMode;
     });
   };
+  const handleSortModelChange = (model) => {
+    console.log("Sort model changed:", model);
 
+    setSortModel(model);
+    fetchOrders(1, searchQuery, filters, model);
+  };
   // Fetch orders from API
   const fetchOrders = useCallback(
-    async (page = 1, searchTerm = "", customFilters = {}) => {
+    async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
       setLoading(true);
       setError(null);
+
       try {
         const params = new URLSearchParams({
           page,
           pageSize,
           search: searchTerm,
-          sortBy: "createdAt",
-          sortOrder: "desc",
+          sortBy: sortedModel[0]?.field || "createdAt",
+          sortOrder: sortedModel[0]?.sort || "desc",
           filters: JSON.stringify(customFilters),
         });
 
@@ -728,6 +767,16 @@ function Orders() {
     setColumnVisibilityModel(newModel);
   };
 
+  function CustomFooter() {
+    return (
+      <GridFooterContainer>
+        {/* Empty space above pagination */}
+        <Box sx={{ flexGrow: 1 }} />
+        <GridPagination />
+      </GridFooterContainer>
+    );
+  }
+
   return (
     <Sidebar title={t("Orders")}>
       <div className="orders-content">
@@ -761,17 +810,17 @@ function Orders() {
           </div>
         </div>
 
-        <CustomToolbar
+        {/* <CustomToolbar
           onSearch={handleSearch}
           onFilterChange={handleFilterChange}
           onColumnVisibilityChange={handleColumnVisibilityChange}
           columns={isApprovalMode ? approvalColumns : orderColumns}
           searchPlaceholder={t("Search orders...")}
           showColumnVisibility={true}
-          showFilters={true}
+          showFilters={false}
           filters={filters}
           columnVisibilityModel={columnVisibilityModel}
-        />
+        /> */}
 
         <div className="table-container">
           {loading ? (
@@ -779,19 +828,72 @@ function Orders() {
           ) : error ? (
             <div className="error-message">{error}</div>
           ) : (
+            //       <DataGrid
+            //         rows={filteredOrders}
+            //         columns={visibleColumns}
+            //         pageSize={pageSize}
+            //         rowCount={total}
+            //         //   paginationMode="server"
+            //         //   page={page - 1}
+            //         //   onPageChange={(newPage) => setPage(newPage + 1)}
+            //         onRowClick={handleRowClick}
+            //         columnVisibilityModel={columnVisibilityModel}
+            //         onColumnVisibilityModelChange={handleColumnVisibilityChange}
+            //         disableSelectionOnClick
+            //         disableColumnMenu
+            //         autoHeight
+            //     showToolbar
+            // // slotProps={{
+            // //   toolbar: {
+            // //     showQuickFilter: false,
+            // //     // other toolbar configurations
+            // //   },
+            // // }}
+            //         sx={{
+            //           "& .MuiDataGrid-row": {
+            //             cursor: "pointer",
+            //             "&:hover": {
+            //               backgroundColor: "rgba(0, 0, 0, 0.04)",
+            //             },
+            //           },
+            //         }}
+            //       />
             <DataGrid
+              apiRef={gridApiRef}
               rows={filteredOrders}
               columns={visibleColumns}
               pageSize={pageSize}
               rowCount={total}
-              //   paginationMode="server"
-              //   page={page - 1}
-              //   onPageChange={(newPage) => setPage(newPage + 1)}
               onRowClick={handleRowClick}
               columnVisibilityModel={columnVisibilityModel}
-              onColumnVisibilityModelChange={handleColumnVisibilityChange}
+              onColumnVisibilityModelChange={setColumnVisibilityModel}
+              sortModel={sortModel}
+              onSortModelChange={handleSortModelChange}
               disableSelectionOnClick
+              disableColumnMenu
               autoHeight
+              showToolbar
+              slots={{
+                filterPanel: CustomFilterPanel,
+                toolbar: () => (
+                  <CustomToolbar
+                    searchQuery={searchQuery}
+                    filterAnchor={filterAnchor}
+                    onSearch={handleSearch}
+                    setSearchQuery={setSearchQuery}
+                    setFilterAnchor={setFilterAnchor}
+                    handleFilterChange={handleFilterChange}
+                    onColumnVisibilityChange={setColumnVisibilityModel}
+                    columns={visibleColumns}
+                    filters={filters}
+                    columnVisibilityModel={columnVisibilityModel}
+                    searchPlaceholder="Search orders..."
+                    showColumnVisibility={true}
+                    showFilters={true}
+                    columnsToDisplay={columnsToDisplay}
+                  />
+                ),
+              }}
               sx={{
                 "& .MuiDataGrid-row": {
                   cursor: "pointer",
