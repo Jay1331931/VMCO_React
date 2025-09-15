@@ -636,7 +636,7 @@ function Customers() {
         page,
         pageSize,
         search: searchTerm,
-        sortBy: "id",
+        // sortBy: "id",
         sortOrder: "asc",
         filters: "{}",
       });
