@@ -1,7 +1,7 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { memo } from "react";
 // import { useAppTheme } from "../context/ThemeContext";
-
+import { useTranslation } from 'react-i18next';
 const AnimatedTabs = ({ 
   tabs = [], 
   value, 
@@ -12,7 +12,7 @@ const AnimatedTabs = ({
   rightLabel = "My Approval" 
 }) => {
     const { mode } = "light";
-
+    const { t } = useTranslation();
     const handleChange = (event, newIndex) => {
         if (toggleMode) {
             // For toggle mode, switch between true/false or "all"/"approval"
@@ -88,7 +88,7 @@ const AnimatedTabs = ({
                 {toggleTabs.map((tab) => (
                     <Tab 
                         key={tab.value} 
-                        label={tab.label} 
+                        label={t(tab.label)} 
                         disableRipple 
                     />
                 ))}

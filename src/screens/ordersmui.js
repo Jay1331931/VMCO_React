@@ -27,7 +27,6 @@ import {
   GridPagination,
   useGridApiRef,
 } from "@mui/x-data-grid";
-import { CustomFilterPanel } from "../components/CustomFilterPanel";
 import { set } from "date-fns";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -691,6 +690,19 @@ function Orders() {
     }
   };
 
+// Paginate the filtered orders
+  const totalPages =
+    Number.isFinite(total) &&
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
+      ? Math.ceil(total / pageSize)
+      : 1;
+  // Always pass totalPages as a string to Pagination to avoid NaN warning
+  const paginatedOrders = Array.isArray(filteredOrders)
+    ? filteredOrders.slice(0, pageSize)
+    : [];
+
   const HandleBulkOrderUpload = () => {
     setBulkUploadPopUp(true);
   };
@@ -828,36 +840,6 @@ function Orders() {
           ) : error ? (
             <div className="error-message">{error}</div>
           ) : (
-            //       <DataGrid
-            //         rows={filteredOrders}
-            //         columns={visibleColumns}
-            //         pageSize={pageSize}
-            //         rowCount={total}
-            //         //   paginationMode="server"
-            //         //   page={page - 1}
-            //         //   onPageChange={(newPage) => setPage(newPage + 1)}
-            //         onRowClick={handleRowClick}
-            //         columnVisibilityModel={columnVisibilityModel}
-            //         onColumnVisibilityModelChange={handleColumnVisibilityChange}
-            //         disableSelectionOnClick
-            //         disableColumnMenu
-            //         autoHeight
-            //     showToolbar
-            // // slotProps={{
-            // //   toolbar: {
-            // //     showQuickFilter: false,
-            // //     // other toolbar configurations
-            // //   },
-            // // }}
-            //         sx={{
-            //           "& .MuiDataGrid-row": {
-            //             cursor: "pointer",
-            //             "&:hover": {
-            //               backgroundColor: "rgba(0, 0, 0, 0.04)",
-            //             },
-            //           },
-            //         }}
-            //       />
             <DataGrid
               apiRef={gridApiRef}
               rows={filteredOrders}
@@ -871,10 +853,13 @@ function Orders() {
               onSortModelChange={handleSortModelChange}
               disableSelectionOnClick
               disableColumnMenu
+              hideFooter={true}
+  hideFooterPagination={true}
+  disableExtendRowFullWidth={true}
+  pagination={false}
               autoHeight
               showToolbar
               slots={{
-                filterPanel: CustomFilterPanel,
                 toolbar: () => (
                   <CustomToolbar
                     searchQuery={searchQuery}
@@ -956,6 +941,14 @@ function Orders() {
             }}
           />
         )}
+
+        {isV("ordersPagination") && paginatedOrders.length > 0 && (
+                    <Pagination
+                      currentPage={page}
+                      totalPages={String(totalPages)}
+                      onPageChange={setPage}
+                    />
+                  )}
       </div>
     </Sidebar>
   );
