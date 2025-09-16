@@ -32,6 +32,11 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { GridSearchIcon } from "@mui/x-data-grid";
+import { CalendarMonth as CalendarMonthIcon } from "@mui/icons-material";
+import { DateRange } from "react-date-range";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
+import { addDays, addYears } from "date-fns";
 
 const operators = [
   { value: "equals", label: "Equals" },
@@ -63,6 +68,15 @@ const CustomToolbar = ({
   const [searchValue, setSearchValue] = useState(searchQuery || "");
   const [filterObj, setFilterObj] = useState({});
   const [customFilters, setCustomFilters] = useState({});
+  const [dateFilter, setDateFilter] = useState([
+    {
+      startDate: new Date(),
+      endDate: addDays(new Date(), 7),
+      key: "selection",
+    },
+  ]);
+  const [dateCategory, setDateCategory] = useState("createdAt");
+  const [dateFilterAnchor, setDateFilterAnchor] = useState(null);
   const gridApiRef = useGridApiContext();
   const open = Boolean(filterAnchor);
   const [searchOptions, setSearchOptions] = useState([]);
@@ -164,7 +178,6 @@ const CustomToolbar = ({
   };
   const handleInputChange = useCallback(
     (event, newValue) => {
-      setSearchQuery(newValue);
       setSearchValue(newValue);
 
       if (!newValue?.trim()) {
@@ -172,234 +185,201 @@ const CustomToolbar = ({
         return;
       }
 
-      const trimmedValue = newValue.trim();
-
+      // Generate options from columns that can be searched
       const newOptions = columns
-        .filter((col) => columns.includes(col.field))
+        .filter(
+          (col) =>
+            col.field !== "updatedAt" &&
+            col.field !== "scheduledAt" &&
+            col.field !== "createdAt" &&
+            col.field !== "expectedAmount"
+        )
         .map((col) => ({
           column: col.field,
-          searchString: trimmedValue,
+          searchString: newValue.trim(),
           source: "search",
           operator: "contains",
         }));
 
-      setSearchOptions((prevOptions) => {
-        const isDifferent =
-          prevOptions.length !== newOptions.length ||
-          prevOptions.some(
-            (opt, index) =>
-              opt.column !== newOptions[index].column ||
-              opt.searchString !== newOptions[index].searchString
-          );
-
-        return isDifferent ? newOptions : prevOptions;
-      });
+      setSearchOptions(newOptions);
     },
     [columns]
   );
 
-  return (
-    <Toolbar
-      sx={{
-        gap: 2,
-        padding: 2,
-        backgroundColor: "background.paper",
-        borderBottom: 1,
-        borderColor: "divider",
-        flexWrap: "wrap",
-      }}
-    >
-      {/* Active Filters Display */}
-      {/* {showFilters && Object.values(filters).some((value) => value) && (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-          {Object.entries(filters).map(([key, value]) => {
-            if (!value) return null;
-            const column = columns.find((col) => col.field === key);
-            return (
-              <Chip
-                key={key}
-                label={`${column?.headerName || key}: ${value}`}
-                onDelete={() => {
-                  // Remove this specific filter from the grid
-                  const currentFilters = gridApiRef.current.getFilterModel();
-                  const newFilters = {
-                    items: currentFilters.items.filter(
-                      (item) => item.field !== key
-                    ),
-                  };
-                  gridApiRef.current.setFilterModel(newFilters);
+  const applyDateFilter = () => {
+    const { startDate, endDate } = dateFilter[0];
+    if (startDate && endDate) {
+      // setFilters((data) => ({
+      //   ...data,
+      //   [dateCategory]: `${startDate}-${endDate}`,
+      // }));
+      setCustomFilters((data) => ({
+        ...data,
+        [dateCategory]: {
+          searchString: `${startDate}-${endDate}`,
+        },
+      }));
+      setDateFilterAnchor(null);
+    }
+  };
 
-                  // Update custom filters
-                  // onFilterChange({ ...filters, [key]: "" });
-                  setFilterAnchor({ ...filters, [key]: "" });
-                }}
-                size="small"
-              />
-            );
-          })}
-          <Button
+  return (
+    <>
+      <Toolbar
+        sx={{
+          gap: 2,
+          padding: 2,
+          backgroundColor: "background.paper",
+          borderBottom: 1,
+          borderColor: "divider",
+          flexWrap: "wrap",
+          justifyContent: "flex-start",
+        }}
+      >
+        <Box sx={{ width: "400px", marginRight: "auto" }}>
+          <Autocomplete
+            multiple
+            freeSolo
+            fullWidth
             size="small"
-            onClick={handleFilterClear}
-            sx={{ minWidth: "auto" }}
-          >
-            {t("Clear All")}
-          </Button>
-        </Box>
-      )} */}
-      {/* Custom Search Input */}
-      <TextField
-        variant="outlined"
-        size="small"
-        placeholder={searchPlaceholder}
-        value={searchValue}
-        onChange={handleSearchChange}
-        onKeyDown={handleKeyDown}
-        InputProps={{
-          startAdornment: (
-            <SearchIcon sx={{ color: "text.secondary", mr: 1 }} />
-          ),
-          endAdornment: searchValue && (
-            <IconButton size="small" onClick={handleSearchClear}>
-              <ClearIcon />
-            </IconButton>
-          ),
-        }}
-        sx={{ minWidth: 300 }}
-      />
-      {/* <Autocomplete
-        multiple
-        freeSolo
-        size="small"
-        fullWidth
-        inputValue={searchValue}
-        onInputChange={handleInputChange}
-        value={Object.keys(customFilters).map((key) => ({
-          column: key,
-          searchString: customFilters[key]?.searchString || "",
-        }))}
-        options={searchValue ? searchOptions : []}
-        getOptionLabel={(option) => `${option.column}: ${option.searchString}`}
-        // onInputChange={(e, newInputValue) => handleSearchChange(newInputValue)}
-        onChange={(e, val) => handleOptionSelect(val)}
-        // clearIcon={
-        //   <Clear
-        //     onClick={(e) => {
-        //       e.stopPropagation();
-        //       setCustomFilters({});
-        //       handleSearchChange("");
-        //     }}
-        //   />
-        // }
-        renderOption={(props, option) => {
-          const { column, searchString } = option;
-          const { key, ...otherProps } = props;
-          return (
-            <Typography key={key} {...otherProps}>
-              {columnsToDisplay[column] || column} <KeyboardDoubleArrowRight />{" "}
-              {searchString}
-            </Typography>
-          );
-        }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            placeholder={searchPlaceholder || "Search"}
-            variant="outlined"
+            value={Object.entries(filters)
+              .map(([key, value]) => ({
+                column: value?.column || key,
+                searchString: value?.searchString || value,
+              }))
+              .filter((item) => item.searchString)} // Filter out empty entries
+            inputValue={searchValue || ""}
+            onInputChange={(event, newValue) =>
+              handleInputChange(event, newValue)
+            }
+            onChange={(event, newValue, details, reason) => {
+              if (details === "removeOption") {
+                const newFilterObj = {};
+                Object.entries(filters).forEach(([key, value]) => {
+                  if (key !== reason.option.column) {
+                    newFilterObj[key] = value;
+                  }
+                });
+                setFilterObj(newFilterObj);
+                handleFilterChange(newFilterObj);
+                setSearchQuery("");
+              } else {
+                const newFilterObj = { ...filterObj };
+                newValue.forEach((item) => {
+                  if (item.column && item.searchString) {
+                    newFilterObj[item.column] = item.searchString;
+                  }
+                });
+                setFilterObj(newFilterObj);
+                handleFilterChange({ ...filters, ...newFilterObj });
+                setSearchQuery("");
+              }
+            }}
+            options={searchOptions}
+            renderOption={(props, option) => {
+              const columnName =
+                columns.find((col) => col.field === option.column)
+                  ?.headerName || option.column;
+              return (
+                <Box component="li" {...props}>
+                  <Typography sx={{ fontSize: "14px" }}>
+                    {columnName} <KeyboardDoubleArrowRight fontSize="small" />{" "}
+                    {option.searchString}
+                  </Typography>
+                </Box>
+              );
+            }}
+            getOptionLabel={(option) => {
+              if (typeof option === "string") return option;
+
+              const columnName =
+                columns.find((col) => col.field === option.column)
+                  ?.headerName || option.column;
+              return `${columnName}: ${option.searchString}`;
+            }}
+            filterOptions={(options) => options} // Don't filter options, show all
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Search..."
+                variant="outlined"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "20px",
+                    fontSize: "12px",
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      border: "1px solid #3D5654",
+                    },
+                  },
+                }}
+              />
+            )}
             sx={{
-              "& .MuiInputLabel-root": { color: "#3D5654" },
-              "& .MuiInputLabel-root.Mui-focused": { color: "#3D5654" },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "20px",
+                fontSize: "12px",
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  border: "1px solid #3D5654",
+                },
+              },
+              "& .MuiAutocomplete-popupIndicator": { borderRadius: "20px" },
+              "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
             }}
           />
+        </Box>
+
+        {/* Default Grid Toolbar Components */}
+        {showColumnVisibility && (
+          <Tooltip title={t("Columns")}>
+            <ColumnsPanelTrigger
+              render={(params) => (
+                <ToolbarButton {...params} size="small">
+                  <ViewColumnIcon />
+                </ToolbarButton>
+              )}
+            >
+              {t("Columns")}
+            </ColumnsPanelTrigger>
+          </Tooltip>
         )}
-        renderTags={(values, getTagProps) =>
-          values?.map((option, index) => (
-            <Chip
-              key={index}
-              {...getTagProps({ index })}
-              label={`${columnsToDisplay[option.column] || option.column}: ${
-                option.searchString
-              }`}
-              onDelete={() => {
-                const updated = { ...customFilters };
-                delete updated[option.column];
-                setCustomFilters(updated);
-              }}
-              sx={{
-                backgroundColor: "#e3ebf2",
-                borderRadius: "80px",
-                maxHeight: "25px",
-              }}
-            />
-          ))
-        }
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            borderRadius: "20px",
-            fontSize: "14px",
-            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              border: "1px solid #3D5654",
-            },
-          },
-          "& .MuiAutocomplete-popupIndicator": { borderRadius: "20px" },
-          "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
-          "& .MuiChip-root": { borderRadius: "80px" },
-        }}
-      /> */}
 
-      {/* Default Grid Toolbar Components */}
-      {showColumnVisibility && (
-        <Tooltip title={t("Columns")}>
-          <ColumnsPanelTrigger
-            render={(params) => (
-              <ToolbarButton {...params} size="small">
-                <ViewColumnIcon />
-              </ToolbarButton>
-            )}
+        {showFilters && (
+          <Tooltip title={t("Filters")}>
+            <ToolbarButton
+              onClick={(e) => setFilterAnchor(e.currentTarget)}
+              size="small"
+            >
+              <FilterAlt sx={{ width: 20, height: 20 }} />
+            </ToolbarButton>
+          </Tooltip>
+        )}
+        {showExport && (
+          <Tooltip title={t("Export")}>
+            <ExportCsv
+              render={(params) => (
+                <ToolbarButton {...params} size="small">
+                  <FileDownloadIcon />
+                </ToolbarButton>
+              )}
+            >
+              {t("Export")}
+            </ExportCsv>
+          </Tooltip>
+        )}
+        {/* <Tooltip title="Date-Range">
+          <IconButton
+            component="span"
+            onClick={(e) => setDateFilterAnchor(e.currentTarget)}
           >
-            {t("Columns")}
-          </ColumnsPanelTrigger>
-        </Tooltip>
-      )}
-
-      <Tooltip title="Filters">
-        <Button
-          onClick={(e) => setFilterAnchor(e.currentTarget)}
-          sx={{
-            height: "30px",
-            aspectRatio: "0.1",
-            backgroundColor: "#FFFFFF",
-            color: "black",
-            "&:hover": { backgroundColor: "#ccc" },
-            borderRadius: "150px",
-            px: "20px",
-            fontSize: "12px",
-            fontWeight: "500px",
-            textTransform: "capitalize",
-            gap: "5px",
-            // minWidth: "100px !important",
-            display: { xs: "none", sm: "inline-flex" },
-          }}
-        >
-          <FilterAlt sx={{ width: 20, height: 20 }} />
-        </Button>
-      </Tooltip>
-      {showExport && (
-        <Tooltip title={t("Export")}>
-          <ExportCsv
-            render={(params) => (
-              <ToolbarButton {...params} size="small">
-                <FileDownloadIcon />
-              </ToolbarButton>
-            )}
-          >
-            {t("Export")}
-          </ExportCsv>
-        </Tooltip>
-      )}
+            <CalendarMonthIcon />
+          </IconButton>
+        </Tooltip> */}
+      </Toolbar>
       <Menu
         anchorEl={filterAnchor}
         open={open}
         onClose={() => setFilterAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Grid
           container
@@ -485,7 +465,7 @@ const CustomToolbar = ({
                 placeholder="Enter value"
                 value={filterObj?.searchString}
                 onChange={(e) => {
-                  setSearchValue(e.target.value);
+                  // setSearchValue(e.target.value);
                   setFilterObj((data) => ({
                     ...data,
                     searchString: e.target.value,
@@ -499,8 +479,9 @@ const CustomToolbar = ({
               <Button
                 sx={{ minWidth: 40 }}
                 onClick={() => {
-                  setSearchQuery(searchValue);
+                  // setSearchQuery(searchValue);
                   handleFilterChange({
+                    ...filters,
                     [filterObj?.column]: filterObj?.searchString,
                   });
                 }}
@@ -509,9 +490,87 @@ const CustomToolbar = ({
               </Button>
             </Grid>
           </Grid>
+          
         </Grid>
       </Menu>
-    </Toolbar>
+      <Menu
+        anchorEl={dateFilterAnchor}
+        open={Boolean(dateFilterAnchor)}
+        onClose={() => setDateFilterAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Grid item container sx={{ padding: 1, columnGap: 1 }}>
+            <Grid item sx={{ flex: 1 }}>
+              <Select
+                variant="standard"
+                value={dateCategory}
+                onChange={(e) => setDateCategory(e.target.value)}
+                displayEmpty
+                fullWidth
+                size="small"
+                sx={{ width: "100%" }}
+              >
+                <MenuItem value="" disabled>
+                  Select Date Column
+                </MenuItem>
+                {columns?.map((col) => {
+                  if (
+                    col.field === "updatedAt" ||
+                    col.field === "scheduledAt" ||
+                    col.field === "createdAt"
+                  ) {
+                    return (
+                      <MenuItem key={col.field} value={col.field}>
+                        {col.headerName}
+                      </MenuItem>
+                    );
+                  }
+                  return null;
+                })}
+              </Select>
+            </Grid>
+            <Grid item sx={{ flex: 1 }}>
+              <Button
+                onClick={(e) => setDateFilterAnchor(e.currentTarget)}
+                size="small"
+                sx={{ width: "100%" }}
+                variant="outlined"
+                startIcon={<CalendarMonthIcon />}
+              >
+                {`${dateFilter[0].startDate.toLocaleDateString()} - ${dateFilter[0].endDate.toLocaleDateString()}`}
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button
+                sx={{ minWidth: 40 }}
+                onClick={() => {
+                  handleFilterChange({
+                    ...filters,
+                    [dateCategory]: {
+                      startDate: dateFilter[0].startDate.toISOString(),
+                      endDate: dateFilter[0].endDate.toISOString(),
+                    },
+                  });
+                }}
+              >
+                <GridSearchIcon />
+              </Button>
+            </Grid>
+          </Grid>
+        <Box sx={{ padding: 2, width: 350 }}>
+          <DateRange
+            onChange={(item) => setDateFilter([item.selection])}
+            editableDateInputs={true}
+            style={{ width: "100%" }}
+            ranges={dateFilter}
+            months={2}
+            direction="horizontal"
+            preventSnapRefocus={true}
+          />
+        </Box>
+        
+      </Menu>
+    </>
   );
 };
 
