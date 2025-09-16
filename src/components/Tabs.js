@@ -18,8 +18,11 @@ const Tabs = ({
                         className={`
                             ${variant === 'category' ? 'category-tab' : 'tab-button'}
                             ${activeTab === tab.value ? 'active' : ''}
+                            ${tab.disabled ? 'disabled' : ''}
                         `}
-                        onClick={() => onTabChange(tab.value)}
+                        onClick={() => !tab.disabled && onTabChange(tab.value)}
+                        disabled={tab.disabled}
+                        title={tab.disabled ? 'This tab is currently disabled' : ''}
                     >
                         {t(tab.label)}
                     </button>
@@ -75,6 +78,16 @@ const Tabs = ({
                     color: #00205B;
                     font-weight: 600;
                     border-bottom: 2px solid #00205B;
+                }
+                .tab-button.disabled,
+                .category-tab.disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                    color: #999;
+                }
+                .tab-button.disabled:hover,
+                .category-tab.disabled:hover {
+                    color: #999;
                 }
                 @media (max-width: 768px) {
                     .tabs {
