@@ -732,5 +732,8 @@
     "Your order is successfully placed and is under review for approval.":"لقد تم تقديم طلبك بنجاح وهو قيد المراجعة للموافقة عليه.",
     "and":"أيضا",
     "Product quantity to cart successfully":"تم إضافة كمية المنتج إلى سلة التسوق بنجاح",
-    "Payment system not ready. Please try again.":"نظام الدفع غير جاهز. يُرجى المحاولة مرة أخرى."
+    "Payment system not ready. Please try again.":"نظام الدفع غير جاهز. يُرجى المحاولة مرة أخرى.",
+    "Please enter machine serial number to get Warranty End Date":"يرجى إدخال رقم السيريال للآلة للحصول على تاريخ انتهاء الضمان",
+    "Please enter valid machine serial number":"يرجى إدخال رقم سيريال للآلة صالح",
+    "Auto-populated": "تم التعبئة تلقائيًا"
 }
