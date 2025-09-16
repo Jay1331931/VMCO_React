@@ -227,7 +227,8 @@ function DeliveryScheduleEditor() {
                     title: "Success",
                     text: "Delivery schedule created successfully",
                     icon: "success",
-                    confirmButtonText: "OK",
+                    showConfirmButton: false,
+                    timer: 800
                 });
 
                 // Reset form and refresh data
@@ -597,7 +598,6 @@ function DeliveryScheduleEditor() {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th>Entity</th>
                                 <th>Region</th>
                                 <th>City</th>
                                 <th>Cut-off Day</th>
@@ -609,7 +609,6 @@ function DeliveryScheduleEditor() {
                         <tbody>
                             {deliverySchedules.map((schedule, index) => (
                                 <tr key={index}>
-                                    <td>{schedule.entity}</td>
                                     <td>{schedule.region}</td>
                                     <td>{schedule.city}</td>
                                     <td>{schedule.cutoffDay}</td>
