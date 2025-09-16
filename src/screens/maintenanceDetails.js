@@ -853,7 +853,17 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-
+    if (!ticket.warrantyEndDate) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter machine serial number to get Warranty End Date"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
+      return;
+    }
 
     try {
       // Get customer and branch regions
@@ -1113,35 +1123,35 @@ function MaintenanceDetails() {
 
 
 
-  const handleSerialNumberChange =async (SNo) => {
-  
+  const handleSerialNumberChange = async (SNo) => {
+
     // setTicket((prev) => ({ ...prev, machineSerialNumber: SNo }));
     // Clear any existing timeout
-   
+
 
     // Set new timeout
-   
-      try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
 
-          }
-        );
-        const rawDate = data?.details?.warrantdate || "";
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
 
-        setTicket((prev) => ({
-          ...prev,
-          warrantyEndDate: formatDateInput(rawDate, "date") || "",
-        }));
-      } catch (error) {
-        console.error("Error handling serial number change:", error);
-      }
-   
+        }
+      );
+      const rawDate = data?.details?.warrantdate || "";
+
+      setTicket((prev) => ({
+        ...prev,
+        warrantyEndDate: formatDateInput(rawDate, "date") || "",
+      }));
+    } catch (error) {
+      console.error("Error handling serial number change:", error);
+    }
+
   };
 
 
@@ -1242,17 +1252,17 @@ function MaintenanceDetails() {
                   value={ticket.machineSerialNumber || ""}
                   disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
-        {!ticket?.warrantyEndDate && (
-      <button
-        type="button"
-        className="machine-button"
-        disabled={!ticket.machineSerialNumber}
-        onClick={()=>handleSerialNumberChange(ticket.machineSerialNumber)}
-      >
-        {t("Get Warranty End Date")}
-      </button>
-    )}
-               </div>
+                {!ticket?.warrantyEndDate && (
+                  <button
+                    type="button"
+                    className="machine-button"
+                    disabled={!ticket.machineSerialNumber}
+                    onClick={() => handleSerialNumberChange(ticket.machineSerialNumber)}
+                  >
+                    {t("Get Warranty End Date")}
+                  </button>
+                )}
+              </div>
             )}
             {isV('warrantyEndDate') && (
               <div className='maintenance-details-field'>
@@ -1261,7 +1271,7 @@ function MaintenanceDetails() {
                   id='warrantyEndDate'
                   name='warrantyEndDate'
                   type='text'
-                  placeholder={t("Enter Machine Serial Number")}
+                  placeholder={t("Auto-populated")}
                   // onChange={handleInputChange}
                   value={formatDate(ticket?.warrantyEndDate, 'DD/MM/YYYY') || ""}
                   disabled
