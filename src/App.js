@@ -98,7 +98,7 @@ function App() {
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
-        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor type="Delivery Schedule Editor"/></ProtectedRoute>} />
+        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor/></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />

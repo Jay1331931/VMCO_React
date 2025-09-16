@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
+import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import axios from "axios";
 import SearchableDropdown from "../components/SearchableDropdown";
@@ -30,7 +31,7 @@ function DeliveryScheduleEditor() {
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [pageSize] = useState(10);
+    const [pageSize] = useState(1000);
     const [activeTab, setActiveTab] = useState("SHC"); // Initialize with SHC as default
 
     // Geographic data states
@@ -48,17 +49,21 @@ function DeliveryScheduleEditor() {
 
     // Define tabs array
     const tabs = [
-        { value: "VMCO", label: "VMCO" },
-        { value: "SHC", label: "SHC" },
-        { value: "GMTC", label: "GMTC" },
-        { value: "NAQI", label: "NAQI" },
-        { value: "DAR", label: "DAR" }
+        { value: "VMCO", label: "VMCO", disabled: true },
+        { value: "SHC", label: "SHC", disabled: false },
+        { value: "GMTC", label: "GMTC", disabled: true },
+        { value: "NAQI", label: "NAQI", disabled: true },
+        { value: "DAR", label: "DAR", disabled: true }
     ];
 
     // Fetch geo data on component mount
     useEffect(() => {
         fetchGeoData();
     }, []);
+
+
+    //RBAC
+    const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "deliveryScheduleEditor");
 
     useEffect(() => {
         if (activeTab) { // Only fetch when there's an active tab
@@ -128,8 +133,11 @@ function DeliveryScheduleEditor() {
 
     // Handle tab change
     const handleTabChange = (tabValue) => {
-        setActiveTab(tabValue);
-        setCurrentPage(1); // Reset to first page when tab changes
+        // Only allow SHC tab to be selected
+        if (tabValue === "SHC") {
+            setActiveTab(tabValue);
+            setCurrentPage(1); // Reset to first page when tab changes
+        }
     };
 
     // Get region options
@@ -454,7 +462,7 @@ function DeliveryScheduleEditor() {
                         <h4>Add New Delivery Schedule for {activeTab}</h4>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "15px" }}>
                             <div>
-                                <label>Region *</label>
+                                <label>Region</label>
                                 <SearchableDropdown
                                     name="region"
                                     value={selectedRegion}
@@ -462,6 +470,7 @@ function DeliveryScheduleEditor() {
                                     placeholder="Select Region"
                                     options={getRegionOptions()}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
@@ -471,7 +480,7 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>City *</label>
+                                <label>City</label>
                                 <SearchableDropdown
                                     name="city"
                                     value={selectedCity}
@@ -480,6 +489,7 @@ function DeliveryScheduleEditor() {
                                     options={getCityOptions(selectedRegion)}
                                     disabled={!selectedRegion}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
@@ -489,78 +499,69 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Cut-off Day *</label>
-                                <select
+                                <label>Cut-off Day</label>
+                                <SearchableDropdown
+                                    name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
                                         console.log("Cutoff Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, cutoffDay: e.target.value });
                                     }}
-                                    className="form-control"
+                                    placeholder="Select Day"
+                                    options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
-                                        padding: "8px 12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
                                         borderRadius: "4px",
                                         width: "100%",
                                     }}
-                                >
-                                    <option value="">Select Day</option>
-                                    {daysOfWeek.map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
 
                             <div>
-                                <label>Pickup Day *</label>
-                                <select
+                                <label>Pickup Day</label>
+                                <SearchableDropdown
+                                    name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
                                         console.log("Pickup Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, pickupDay: e.target.value });
                                     }}
-                                    className="form-control"
+                                    placeholder="Select Day"
+                                    options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
-                                        padding: "8px 12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
                                         borderRadius: "4px",
                                         width: "100%",
                                     }}
-                                >
-                                    <option value="">Select Day</option>
-                                    {daysOfWeek.map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
 
                             <div>
-                                <label>Delivery Day *</label>
-                                <select
+                                <label>Delivery Day</label>
+                                <SearchableDropdown
+                                    name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
                                         console.log("Delivery Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, deliveryDay: e.target.value });
                                     }}
-                                    className="form-control"
+                                    placeholder="Select Day"
+                                    options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
-                                        padding: "8px 12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
                                         borderRadius: "4px",
                                         width: "100%",
                                     }}
-                                >
-                                    <option value="">Select Day</option>
-                                    {daysOfWeek.map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
                         </div>
                         <div style={{ marginTop: "15px" }}>
@@ -723,49 +724,41 @@ function DeliveryScheduleEditor() {
                             <h4 style={{ marginBottom: "20px" }}>Edit Delivery Schedule</h4>
 
                             <div style={{ marginBottom: "15px" }}>
-                                <label>Pickup Day *</label>
-                                <select
+                                <label>Pickup Day</label>
+                                <SearchableDropdown
+                                    name="pickupDay"
                                     value={editData.pickupDay}
                                     onChange={(e) => setEditData({ ...editData, pickupDay: e.target.value })}
-                                    className="form-control"
+                                    placeholder="Select Day"
+                                    options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
-                                        padding: "8px 12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
                                         borderRadius: "4px",
                                         width: "100%",
-                                        marginTop: "5px"
                                     }}
-                                >
-                                    <option value="">Select Day</option>
-                                    {daysOfWeek.map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
 
                             <div style={{ marginBottom: "20px" }}>
-                                <label>Delivery Day *</label>
-                                <select
+                                <label>Delivery Day</label>
+                                <SearchableDropdown
+                                    name="deliveryDay"
                                     value={editData.deliveryDay}
                                     onChange={(e) => setEditData({ ...editData, deliveryDay: e.target.value })}
-                                    className="form-control"
+                                    placeholder="Select Day"
+                                    options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
+                                        marginTop: "10px",
                                         fontSize: "12px",
-                                        padding: "8px 12px",
                                         height: "40px",
                                         border: "1px solid #ccc",
                                         borderRadius: "4px",
                                         width: "100%",
-                                        marginTop: "5px"
                                     }}
-                                >
-                                    <option value="">Select Day</option>
-                                    {daysOfWeek.map(day => (
-                                        <option key={day} value={day}>{day}</option>
-                                    ))}
-                                </select>
+                                />
                             </div>
 
                             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
