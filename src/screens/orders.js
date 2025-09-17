@@ -123,9 +123,9 @@ function Orders() {
               order.erpCustId ||
               "",
             branchNameEn:
-              order.branchNameEn + " (" + order.branchSequenceId + ")" ,
+              order.branchNameEn + " (" + order.branchSequenceId + ")",
             branchNameLc:
-              order.branchNameLc + " (" + order.branchSequenceId + ")" ,
+              order.branchNameLc + " (" + order.branchSequenceId + ")",
           }));
           setFilteredOrders(processedOrders);
           setTotal(result.data.totalRecords);
@@ -367,8 +367,21 @@ function Orders() {
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
     { key: "erpOrderId", header: () => t("Sales Order ID"), include: isV("erpOrderId") },
     { key: isArabic ? "companyNameAr" : "companyNameEn", header: () => t("Customer"), include: isV("companyName") },
-    { key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName") },
-    {
+    { key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName"),
+      render: (item) => {
+        const branchName = isArabic ? item.branchNameLc : item.branchNameEn;
+        const parts = branchName.split(' (');
+        if (parts.length === 2) {
+          return (
+            <div>
+              <div>{parts[0]}</div>
+              <div>{parts[1]}</div>
+            </div>
+          );
+        }
+        return branchName;
+      }
+    }, {
       key: "entity",
       header: () => t("Entity"),
       include: isV("entity"),
@@ -387,7 +400,7 @@ function Orders() {
 
         return (
           <div>
-            {item.entity} {badge && <span style={{ marginLeft: "8px" }}>{badge}</span>}
+            {item.entity}<br /> {badge && <span style={{ marginLeft: "8px" }}>{badge}</span>}
           </div>
         );
       },
@@ -405,9 +418,11 @@ function Orders() {
     //       ? formatDate(item.expectedDeliveryDate, "DD/MM/YYYY")
     //       : " ",
     // },
-    {key: "totalAmount", header: () => t("Total Amount"), include: isV("totalAmount"),
-      render: (item) => parseFloat(item.totalAmount).toFixed(2),},
-    { key: "paymentStatus", header: () => t("Payment Status"), include: isV("paymentStatus")},
+    {
+      key: "totalAmount", header: () => t("Total Amount"), include: isV("totalAmount"),
+      render: (item) => parseFloat(item.totalAmount).toFixed(2),
+    },
+    { key: "paymentStatus", header: () => t("Payment Status"), include: isV("paymentStatus") },
     { key: "status", header: () => t("Status"), include: isV("status") },
     { key: "pay", header: () => t("Action"), include: isV("action") },
     { key: "sendLink", header: () => t("Action"), include: isV("sendLink") },
@@ -419,7 +434,9 @@ function Orders() {
     { key: isArabic ? "companyNameAr" : "companyNameEn", header: () => t("Customer"), include: isV("companyName"), },
     { key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName"), },
     { key: "workflowName", header: () => t("Workflow Name"), include: isV("workflowName"), },
-    { key: "entity", header: () => t("Entity"), include: isV("entity"), render: (item) => { let badge = null; 
+    {
+      key: "entity", header: () => t("Entity"), include: isV("entity"), render: (item) => {
+        let badge = null;
         if (item.entity === "VMCO") {
           badge = item.isMachine
             ? <span className="badge badge-blue">{t("Machines")}</span>
@@ -506,7 +523,7 @@ function Orders() {
 
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
-     setSelectedBranch(null);
+    setSelectedBranch(null);
     setShowCustomerPopup(false);
   };
 
