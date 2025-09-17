@@ -27,8 +27,11 @@ import {
   Clear as ClearIcon,
   ViewColumn as ViewColumnIcon,
   FileDownload as FileDownloadIcon,
+  UploadFile as UploadFileIcon,
+  Add as AddIcon,
   FilterAlt,
   KeyboardDoubleArrowRight,
+  Add,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { GridSearchIcon } from "@mui/x-data-grid";
@@ -61,6 +64,10 @@ const CustomToolbar = ({
   filters = {},
   columnVisibilityModel = {},
   showExport = true,
+  showUpload = false,
+  showAdd = false,
+  handleAddClick,
+  handleUploadClick,
   setSearchQuery,
   columnsToDisplay,
 }) => {
@@ -377,7 +384,21 @@ const CustomToolbar = ({
             </ExportCsv>
           </Tooltip>
         )}
-        
+
+        {showUpload && (
+          <Tooltip title={t("Upload")}>
+            <ToolbarButton onClick={handleUploadClick} size="small">
+              <UploadFileIcon />
+            </ToolbarButton>
+          </Tooltip>
+        )}
+         {showAdd && (
+          <Tooltip title={t("Add")}>
+            <ToolbarButton onClick={handleAddClick} size="small">
+              <AddIcon />
+            </ToolbarButton>
+          </Tooltip>
+         )}
       </Toolbar>
       
 <Menu

@@ -27,7 +27,8 @@ import {
   GridPagination,
   useGridApiRef,
 } from "@mui/x-data-grid";
-import { set } from "date-fns";
+import { max, min, set } from "date-fns";
+import { Height } from "@mui/icons-material";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
@@ -97,16 +98,16 @@ function Orders() {
     orderStatus: "status",
   };
   const searchableFields = [
-  "id",
-  "erpOrderId",
-  "companyNameEn",
-  "branchNameEn",
-  "entity",
-  "paymentMethod",
-  "createdByUsername",
-  "paymentStatus",
-  "status",
-];
+    "id",
+    "erpOrderId",
+    "companyNameEn",
+    "branchNameEn",
+    "entity",
+    "paymentMethod",
+    "createdByUsername",
+    "paymentStatus",
+    "status",
+  ];
 
   const toggleApprovalMode = () => {
     setApprovalMode((prev) => {
@@ -358,24 +359,24 @@ function Orders() {
   };
 
   const orderMenuItems = [
-    {
-      key: "upload orders",
-      label: t("Upload orders"),
-      visible: true,
-      onClick: () => HandleBulkOrderUpload(),
-    },
-    {
-      key: "download orders",
-      label: t("Download orders"),
-      visible: false,
-      onClick: () =>
-        Swal.fire({
-          title: t("Download Orders clicked"),
-          text: t("Button clicked"),
-          icon: "success",
-          confirmButtonText: t("OK"),
-        }),
-    },
+    // {
+    //   key: "upload orders",
+    //   label: t("Upload orders"),
+    //   visible: true,
+    //   onClick: () => HandleBulkOrderUpload(),
+    // },
+    // {
+    //   key: "download orders",
+    //   label: t("Download orders"),
+    //   visible: false,
+    //   onClick: () =>
+    //     Swal.fire({
+    //       title: t("Download Orders clicked"),
+    //       text: t("Button clicked"),
+    //       icon: "success",
+    //       confirmButtonText: t("OK"),
+    //     }),
+    // },
   ];
 
   const isArabic = i18n.language === "ar";
@@ -386,6 +387,7 @@ function Orders() {
       headerName: t("Order #"),
       include: isV("orderNumber"),
       searchable: false,
+      maxWidth: 80,
       flex: 1,
     },
     {
@@ -393,6 +395,8 @@ function Orders() {
       headerName: t("Sales Order ID"),
       include: isV("erpOrderId"),
       searchable: false,
+      minWidth: 120,
+      maxWidth: 120,
       flex: 1,
     },
     {
@@ -400,6 +404,7 @@ function Orders() {
       headerName: t("Customer"),
       include: isV("companyName"),
       searchable: false,
+      maxWidth: 180,
       flex: 2,
     },
     {
@@ -407,6 +412,8 @@ function Orders() {
       headerName: t("Branch"),
       include: isV("branchName"),
       searchable: false,
+      minWidth: 80,
+      maxWidth: 80,
       flex: 2,
     },
     {
@@ -414,27 +421,33 @@ function Orders() {
       headerName: t("Entity"),
       include: isV("entity"),
       searchable: true,
-      flex: 1,
+      maxWidth: 60,
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <Chip label={t("Machines")} size="small" color="primary" />
+            <Chip label={t("Machines")} size="smaller" color="primary" />
           ) : (
-            <Chip label={t("Consumables")} size="small" color="primary" />
+            <Chip label={t("Consumables")} size="smaller" color="primary" />
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <Chip label={t("Fresh")} size="small" color="primary" />
+            <Chip label={t("Fresh")} size="smaller" color="primary" />
           ) : (
-            <Chip label={t("Frozen")} size="small" color="primary" />
+            <Chip label={t("Frozen")} size="smaller" color="primary" />
           );
         }
 
         return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
             <span>{params.value}</span>
-            {badge}
+            <span>{badge}</span>
           </Box>
         );
       },
@@ -444,6 +457,8 @@ function Orders() {
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
       searchable: false,
+      minWidth: 130,
+      maxWidth: 150,
       flex: 1,
     },
     {
@@ -451,6 +466,8 @@ function Orders() {
       headerName: t("Created By"),
       include: isV("createdBy"),
       searchable: false,
+      minWidth: 100,
+      maxWidth: 120,
       flex: 1,
     },
     {
@@ -458,6 +475,8 @@ function Orders() {
       headerName: t("Order Placement Date"),
       include: isV("createdAt"),
       searchable: false,
+      minWidth: 100,
+      maxWidth: 120,
       flex: 1,
       valueFormatter: (params) =>
         params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
@@ -467,7 +486,8 @@ function Orders() {
       headerName: t("Total Amount"),
       include: isV("totalAmount"),
       searchable: false,
-      flex: 1,
+      minWidth: 100,
+      maxWidth: 120,
       valueFormatter: (params) => parseFloat(params.value || 0).toFixed(2),
     },
     {
@@ -475,28 +495,56 @@ function Orders() {
       headerName: t("Payment Status"),
       include: isV("paymentStatus"),
       searchable: true,
+      minWidth: 120,
+      maxWidth: 140,
       flex: 1,
-      cellClassName: (params) => getPaymentStatusClass(params.value),
+      // cellClassName: (params) => getPaymentStatusClass(params.value),
+      renderCell: (params) => (
+        // <Chip
+        //   label={params.value}
+        //   sx={{
+        //     backgroundColor:
+        //       params.value === "Cold"
+        //         ? "skyblue"
+        //         : params.value === "Pending"
+        //         ? "#fff8e1"
+        //         : "#EF0107",
+        //     width: "100%",
+        //   }}
+        // />
+        <label style={{ color:params.value === "Cold"
+                ? "skyblue"
+                : params.value === "Pending"
+                ? "#fff8e1"
+                : "#EF0107", }}>{params.value}</label>
+      ),
     },
     {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
       searchable: false,
+      minWidth: 100,
+      maxWidth: 120,
       flex: 1,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          sx={{
-            backgroundColor:
-              params.value === "Cold"
+        // <Chip
+        //   label={params.value}
+        //   sx={{
+        //     backgroundColor:
+        //       params.value === "Cold"
+        //         ? "skyblue"
+        //         : params.value === "Pending"
+        //         ? "#fff8e1"
+        //         : "#EF0107",
+        //     width: "100%",
+        //   }}
+        // />
+        <label style={{ color:params.value === "Cold"
                 ? "skyblue"
                 : params.value === "Pending"
                 ? "#fff8e1"
-                : "#EF0107",
-            width: "100%",
-          }}
-        />
+                : "#EF0107", }}>{params.value}</label>
       ),
     },
     {
@@ -664,6 +712,75 @@ function Orders() {
     ? approvalColumns.filter((col) => col.include)
     : orderColumns.filter((col) => col.include);
 
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setShowCustomerPopup(false);
+  };
+
+  const handleSelectBranch = (branch) => {
+    setSelectedBranch(branch);
+    setShowBranchPopup(false);
+  };
+
+  const handleTemplateDownload = async () => {
+    const result = await Swal.fire({
+      title: t("Confirm Download?"),
+      text: t("Are you sure you want to download the template?"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("Yes, download"),
+      cancelButtonText: t("No, cancel"),
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/get-files`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fileName: Constants.DOCUMENTS_NAME.ORDERS_UPLOAD_FORMAT,
+            containerType: "documents",
+          }),
+        });
+
+        const res = await response.json();
+        if (res.status === "Ok") {
+          window.open(res.data.url, "_blank", "noopener,noreferrer");
+        } else {
+          await Swal.fire({
+            title: t("Error"),
+            text: res.message || t("Failed to download template."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#dc3545",
+          });
+        }
+      } catch (error) {
+        console.error("Error downloading template:", error);
+        await Swal.fire({
+          title: t("Error"),
+          text: t("Failed to download template."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    }
+  };
+
+  const onClose = () => {
+    setBulkUploadPopUp(false);
+    setSelectedCustomer(null);
+    setSelectedFile(null);
+    setSelectedBranch(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleFandOFailSO = async (id) => {
     setSyncLoading(true);
     setSyncLoadingId(id);
@@ -701,13 +818,108 @@ function Orders() {
       setSyncLoadingId(null);
     }
   };
+  const handleSubmitFile = async (file) => {
+    if (!file) return;
+    setExcelLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("customerId", selectedCustomer.id);
+      formData.append("branchId", selectedBranch.id);
 
-// Paginate the filtered orders
+      const response = await axios.post(
+        `${API_BASE_URL}/bulk-order/upload-excel`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+          validateStatus: () => true,
+        }
+      );
+
+      if (
+        response?.status === 400 &&
+        response.headers["content-type"] !== "application/json"
+      ) {
+        const blob = new Blob([response.data], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+
+        Swal.fire({
+          title: t("Validation Failed"),
+          html: `
+    ${t("Some rows contain validation errors.")}<br>
+    ${t("The Excel file has been updated with a new column named")} <b>${t(
+            "Errors"
+          )}</b>.<br>
+    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
+            "column, fix the issues, and re-upload the file."
+          )}.
+  `,
+          icon: "warning",
+          confirmButtonText: t("Download Error File"),
+        }).then(() => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "sales_order_upload_errors.xlsx";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        });
+
+        return; // Make sure to return early to prevent success message
+      }
+      const blob = response?.data;
+      const text = await blob.text(); // convert blob to text
+      const data = JSON.parse(text); // parse text to JSON
+      console.log(response?.status, data?.response?.success);
+      if (response?.status === 200 && data?.response?.success) {
+        fetchOrders();
+
+        Swal.fire({
+          title: t("File Uploaded Successfully"),
+          text:
+            t(data.message) ||
+            t("Sales have been updated from the Excel file."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else {
+        Swal.fire({
+          title: t("File Upload Failed"),
+          text:
+            t(data.message) || t("An error occurred while uploading the file."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      Swal.fire({
+        title: t("File Upload Failed"),
+        text: t("An error occurred while uploading the file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+      });
+    } finally {
+      setBulkUploadPopUp(false);
+      setSelectedCustomer(null);
+      setSelectedBranch(null);
+      setSelectedFile(null); // reset file after submit
+      setExcelLoading(false);
+    }
+  };
+  // Paginate the filtered orders
   const totalPages =
     Number.isFinite(total) &&
-      Number.isFinite(pageSize) &&
-      total > 0 &&
-      pageSize > 0
+    Number.isFinite(pageSize) &&
+    total > 0 &&
+    pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
   // Always pass totalPages as a string to Pagination to avoid NaN warning
@@ -824,13 +1036,13 @@ function Orders() {
                 }
               }}
             />
-            {isE("addOrder") && (
+            {/* {isE("addOrder") && (
               <ActionButton
                 label={t("Add Order")}
                 onClick={handleAddOrder}
                 menuItems={orderMenuItems}
               />
-            )}
+            )} */}
           </div>
         </div>
 
@@ -866,10 +1078,10 @@ function Orders() {
               disableSelectionOnClick
               disableColumnMenu
               hideFooter={true}
-  hideFooterPagination={true}
-  disableExtendRowFullWidth={true}
-  pagination={false}
-              autoHeight
+              hideFooterPagination={true}
+              disableExtendRowFullWidth={true}
+              pagination={false}
+              // autoHeight
               showToolbar
               slots={{
                 toolbar: () => (
@@ -888,6 +1100,11 @@ function Orders() {
                     showColumnVisibility={true}
                     showFilters={true}
                     showExport={false}
+                    showUpload={true}
+                    showAdd={isE("addOrder")}
+                    // showAdd={true}
+                    handleAddClick={handleAddOrder}
+                    handleUploadClick={HandleBulkOrderUpload}
                     columnsToDisplay={columnsToDisplay}
                   />
                 ),
@@ -905,32 +1122,198 @@ function Orders() {
         </div>
 
         {bulkUploadPopUp && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <h2>{t("Upload Orders")}</h2>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".xlsx,.xls"
-              />
-              <div className="modal-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setBulkUploadPopUp(false)}
-                  disabled={excelLoading}
-                >
-                  {t("Cancel")}
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleUpload}
-                  disabled={excelLoading}
-                >
-                  {excelLoading ? t("Uploading...") : t("Upload")}
-                </button>
+          <div>
+            <div className="gp-backdrop" onClick={onClose} />
+            {excelLoading ? (
+              <div>
+                <LoadingSpinner />
               </div>
-            </div>
+            ) : (
+              <div className="gp-modal">
+                <div className="gp-header">
+                  <span className="gp-title">{t("Upload Orders Data")}</span>
+                  <button className="gp-close-btn" onClick={onClose}>
+                    {t("Close")}
+                  </button>
+                </div>
+
+                {loading ? (
+                  <div style={{ padding: 24 }}>
+                    <LoadingSpinner />
+                  </div>
+                ) : (
+                  <div style={{ padding: "0 28px 20px 28px" }}>
+                    <div
+                      className="customer-branch-names"
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      {isV("customerName") && (
+                        <div className="order-details-field">
+                          <label htmlFor="customerField">
+                            {t("Company Name")}
+                          </label>
+                          <div
+                            className="customer-input-container"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <input
+                              style={{ width: "310px" }}
+                              id="customerField"
+                              name="selectedCustomer"
+                              onClick={() => setShowCustomerPopup(true)}
+                              className="customer-input"
+                              placeholder={t("Click to select company")}
+                              value={
+                                selectedCustomer
+                                  ? isArabic
+                                    ? selectedCustomer.companyNameAr
+                                    : selectedCustomer.companyNameEn
+                                  : ""
+                              }
+                              disabled={!isE("customerName")}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {isV("branchName") && (
+                        <div className="order-details-field">
+                          <label>{t("Branch")}</label>
+                          <div
+                            className="customer-input-container"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <input
+                              style={{ width: "310px" }}
+                              id="branchField"
+                              name="selectedBranchName"
+                              onClick={() => {
+                                if (!selectedCustomer) {
+                                  Swal.fire({
+                                    icon: "warning",
+                                    title: t("No Customer Selected"),
+                                    text: t("Please select a customer first"),
+                                    confirmButtonText: t("OK"),
+                                  });
+                                  return;
+                                }
+                                if (isE("branchName")) setShowBranchPopup(true);
+                              }}
+                              className="customer-input"
+                              placeholder={t("Click to select branch")}
+                              value={
+                                selectedBranch
+                                  ? isArabic
+                                    ? selectedBranch.branchNameAr
+                                    : selectedBranch.branchNameEn
+                                  : ""
+                              }
+                              readOnly
+                              disabled={!isE("branchName")}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p style={{ marginTop: 20, marginBottom: 20 }}>
+                      {t(
+                        "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
+                      )}
+                    </p>
+
+                    <div className="popup-buttons-row">
+                      <button
+                        className="download-btn"
+                        onClick={() => handleTemplateDownload()}
+                        disabled={!selectedCustomer || !selectedBranch}
+                      >
+                        📥 {t("Download Excel Template")}
+                      </button>
+                      <button
+                        className="upload-btn"
+                        onClick={() => fileInputRef.current.click()}
+                        disabled={!selectedCustomer || !selectedBranch}
+                      >
+                        📤 {t("Upload Completed Excel File")}
+                      </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx, .xls"
+                        style={{ display: "none" }}
+                        // onChange={handleFileChange}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) setSelectedFile(file); // just store file in state
+                        }}
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div
+                        style={{
+                          marginTop: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <p style={{ margin: 0 }}>
+                          {t("Selected File")}: <b>{selectedFile.name}</b>
+                        </p>
+                        <button
+                          className="submit-btn"
+                          onClick={() => handleSubmitFile(selectedFile)}
+                        >
+                          ✅ {t("Submit File")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {showCustomerPopup && (
+                  <GetCustomers
+                    open={showCustomerPopup}
+                    onClose={() => setShowCustomerPopup(false)}
+                    onSelectCustomer={handleSelectCustomer}
+                    API_BASE_URL={API_BASE_URL}
+                    t={t}
+                    apiEndpoint="/customers/pagination"
+                    apiParams={{
+                      page: 1,
+                      pageSize: 10,
+                      sortBy: "id",
+                      sortOrder: "asc",
+                      purpose: "order creation",
+                    }}
+                  />
+                )}
+
+                {/* Branch Popup */}
+                {showBranchPopup && (
+                  <GetBranches
+                    open={showBranchPopup}
+                    onClose={() => setShowBranchPopup(false)}
+                    onSelectBranch={handleSelectBranch}
+                    customerId={selectedCustomer?.id}
+                    API_BASE_URL={API_BASE_URL}
+                    t={t}
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -956,12 +1339,12 @@ function Orders() {
         )}
 
         {isV("ordersPagination") && paginatedOrders.length > 0 && (
-                    <Pagination
-                      currentPage={page}
-                      totalPages={String(totalPages)}
-                      onPageChange={setPage}
-                    />
-                  )}
+          <Pagination
+            currentPage={page}
+            totalPages={String(totalPages)}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </Sidebar>
   );
