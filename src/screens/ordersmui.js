@@ -500,23 +500,7 @@ function Orders() {
       flex: 1,
       // cellClassName: (params) => getPaymentStatusClass(params.value),
       renderCell: (params) => (
-        // <Chip
-        //   label={params.value}
-        //   sx={{
-        //     backgroundColor:
-        //       params.value === "Cold"
-        //         ? "skyblue"
-        //         : params.value === "Pending"
-        //         ? "#fff8e1"
-        //         : "#EF0107",
-        //     width: "100%",
-        //   }}
-        // />
-        <label style={{ color:params.value === "Cold"
-                ? "skyblue"
-                : params.value === "Pending"
-                ? "#fff8e1"
-                : "#EF0107", }}>{params.value}</label>
+       <label className={getPaymentStatusClass(params.value)}>{params.value}</label>
       ),
     },
     {
@@ -528,23 +512,7 @@ function Orders() {
       maxWidth: 120,
       flex: 1,
       renderCell: (params) => (
-        // <Chip
-        //   label={params.value}
-        //   sx={{
-        //     backgroundColor:
-        //       params.value === "Cold"
-        //         ? "skyblue"
-        //         : params.value === "Pending"
-        //         ? "#fff8e1"
-        //         : "#EF0107",
-        //     width: "100%",
-        //   }}
-        // />
-        <label style={{ color:params.value === "Cold"
-                ? "skyblue"
-                : params.value === "Pending"
-                ? "#fff8e1"
-                : "#EF0107", }}>{params.value}</label>
+                <label className={getStatusClass(params.value)}>{params.value}</label>
       ),
     },
     {
