@@ -105,7 +105,12 @@ function Login({ title, userType }) {
         ) {
           navigate("/bankTransactions");
         }
-        else {
+        else if ( data?.data?.userType.toLowerCase() === "employee" &&
+          data?.data?.designation.toLowerCase() ===
+            Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
+        ) {
+          navigate("/orders");
+        } else {
           navigate("/catalog");
         }
 
@@ -157,12 +162,12 @@ function Login({ title, userType }) {
         <div className="login-container">
           
             <div className="form-group">
-              <label htmlFor="email">{t("Email (email)")}</label>
+              <label htmlFor="email">{t("Email")}</label>
               <input
                 type="text"
                 id="email"
                 value={email}
-                placeholder={t("Email (email)")}
+                placeholder={t("Email")}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>

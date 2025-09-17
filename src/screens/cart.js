@@ -60,6 +60,7 @@ function Cart() {
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
+    const [selectedBranchSequenceId, setSelectedBranchSequenceId] = useState('');
     const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [selectedBranchCity, setSelectedBranchCity] = useState('');
     const [selectedBranchStatus, setSelectedBranchStatus] = useState('');
@@ -85,6 +86,7 @@ function Cart() {
             if (location.state.selectedBranchName) setSelectedBranchName(location.state.selectedBranchName);
             if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
             if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
+            if (location.state.selectedBranchSequenceId) setSelectedBranchSequenceId(location.state.selectedBranchSequenceId);
             if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
             if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
         } else {
@@ -149,7 +151,7 @@ function Cart() {
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}` // Add authorization token if required
                 },
-                 // Include cookies/auth tokens
+                // Include cookies/auth tokens
             });
 
             if (!response.ok) {
@@ -373,11 +375,11 @@ function Cart() {
 
             const deleteResponse = await fetch(deleteUrl, {
                 method: 'DELETE',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                
+
             });
 
             if (!deleteResponse.ok) {
@@ -479,11 +481,11 @@ function Cart() {
 
                 const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    
+
                 });
 
                 if (!existingOrdersResponse.ok) {
@@ -491,7 +493,7 @@ function Cart() {
                 }
 
                 const existingOrdersResult = await existingOrdersResponse.json();
-                
+
                 // Calculate total amount of existing COD orders
                 let existingCODTotal = 0;
                 if (existingOrdersResult.data?.data) {
@@ -503,11 +505,11 @@ function Cart() {
                 // Get customer's COD limit
                 const customerResponse = await fetch(`${API_BASE_URL}/payment-method-balances/id/${selectedCustomerId}`, {
                     method: 'GET',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    
+
                 });
 
                 if (!customerResponse.ok) {
@@ -537,7 +539,7 @@ function Cart() {
                     text: t('Failed to verify COD limits. Please try again.'),
                     confirmButtonText: t('OK')
                 });
-    
+
                 return;
             }
             console.log('COD limit check passed. continuing with order placement.');
@@ -649,23 +651,23 @@ function Cart() {
                         return newQuantities;
                     });
                 });
-           if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase() && selectedPaymentMethod?.toLowerCase()==="pre payment") {
-            try {
-                const { data } = await axios.post(
-                `${API_BASE_URL}/generatePayment-link`,
-                {
-                    id: orderIds?.map(String).join(','),
-                    endPoint: "payment-opations/order",
-                    IsEmail: false,
-                },
-                { 
-                    headers: { "Authorization": `Bearer ${token}` },
-                    
-                }
-                );
+                if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase() && selectedPaymentMethod?.toLowerCase() === "pre payment") {
+                    try {
+                        const { data } = await axios.post(
+                            `${API_BASE_URL}/generatePayment-link`,
+                            {
+                                id: orderIds?.map(String).join(','),
+                                endPoint: "payment-opations/order",
+                                IsEmail: false,
+                            },
+                            {
+                                headers: { "Authorization": `Bearer ${token}` },
+
+                            }
+                        );
 
                         if (data?.details?.url) {
-                            window.open(data.details.url, '_blank' );
+                            window.open(data.details.url, '_blank');
                         } else {
                             console.error("Payment URL not found in response:", data);
                         }
@@ -738,8 +740,8 @@ function Cart() {
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
-                    ? t(`Your order is successfully placed and is under review for approval.`)+t(` #${orderIds[0]}`)
-                    : t(`Your orders is successfully placed and is under review for approval.:`) +` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
+                    ? t(`Your order is successfully placed and is under review for approval.`) + t(` #${orderIds[0]}`)
+                    : t(`Your orders is successfully placed and is under review for approval.:`) + ` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
 
                 console.log('Order success message:', orderText);
 
@@ -873,7 +875,7 @@ function Cart() {
                     const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
                     if (machineOrderId) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
-                        
+
                         Swal.fire({
                             icon: 'success',
                             title: t('Request Sent'),
@@ -1013,11 +1015,11 @@ function Cart() {
                 try {
                     const usernameRes = await fetch(`${API_BASE_URL}/user/get-username-by-id/${userId}`, {
                         method: 'GET',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
                         },
-                        
+
                     });
                     if (usernameRes.ok) {
                         const contentType = usernameRes.headers.get('content-type');
@@ -1040,11 +1042,11 @@ function Cart() {
             // Fetch customer data for delivery charge calculation - do this once up front
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                
+
             });
             if (!customerResponse.ok) {
                 throw new Error('Failed to fetch customer data for delivery charge evaluation');
@@ -1112,11 +1114,11 @@ function Cart() {
 
                 const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    
+
                 });
 
                 if (!existingOrderResponse.ok) {
@@ -1150,11 +1152,11 @@ function Cart() {
 
                         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
                             method: 'GET',
-                            headers: { 
+                            headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
-                            
+
                         });
 
                         if (!linesResponse.ok) {
@@ -1266,6 +1268,7 @@ function Cart() {
                     branchNameLc: selectedBranchNameLc,
                     branchCity: selectedBranchCity,
                     erpBranchId: selectedBranchErpId,
+                    branchSequenceId: selectedBranchSequenceId,
                     branchRegion: selectedBranchRegion,
                     orderBy: orderByName,
                     entity,
@@ -1306,12 +1309,12 @@ function Cart() {
 
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(orderPayload),
-                    
+
                 });
 
                 if (!orderResponse.ok) {
@@ -1399,12 +1402,12 @@ function Cart() {
                         // Using the new API endpoint that updates by orderId and productId
                         const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
                             method: 'PATCH',
-                            headers: { 
+                            headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify(patchPayload),
-                            
+
                         });
 
                         if (!patchResponse.ok) {
@@ -1473,12 +1476,12 @@ function Cart() {
                     try {
                         const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
                             method: 'POST',
-                            headers: { 
+                            headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
                             body: JSON.stringify(newLinePayload),
-                            
+
                         });
 
                         if (!createResponse.ok) {
@@ -1499,10 +1502,11 @@ function Cart() {
                         try {
                             const deleteResponse = await fetch(`${API_BASE_URL}/sales-order/hard-delete/${orderId}`, {
                                 method: 'DELETE',
-                                headers: { 'Content-Type': 'application/json',
+                                headers: {
+                                    'Content-Type': 'application/json',
                                     'Authorization': `Bearer ${token}`
-                                 },
-                                
+                                },
+
                             });
                             if (!deleteResponse.ok) {
                                 console.error(`Failed to hard delete sales order ${orderId}:`, await deleteResponse.text());
@@ -1538,9 +1542,11 @@ function Cart() {
             try {
                 recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-                    
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+
                 });
 
                 if (!recalcLinesResponse.ok) {
@@ -1555,9 +1561,11 @@ function Cart() {
                 try {
                     recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ order_id: orderId }))}`, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-                        
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+
                     });
 
                     if (!recalcLinesResponse.ok) {
@@ -1600,11 +1608,12 @@ function Cart() {
                     console.log('Attempting direct API call for order lines...');
                     const directResponse = await fetch(`${API_BASE_URL}/sales-order-lines/order/${orderId}`, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json',
-            
-                                'Authorization': `Bearer ${token}`
-                         },
-                        
+                        headers: {
+                            'Content-Type': 'application/json',
+
+                            'Authorization': `Bearer ${token}`
+                        },
+
                     });
 
                     if (directResponse.ok) {
@@ -1778,9 +1787,11 @@ function Cart() {
                     try {
                         const retryResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
                             method: 'GET',
-                            headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-                            
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+
                         });
 
                         if (retryResponse.ok) {
@@ -1840,10 +1851,12 @@ function Cart() {
 
             const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(updateOrderPayload),
-                
+
             });
 
             if (!updateOrderResponse.ok) {
@@ -1891,9 +1904,11 @@ function Cart() {
                         deleteUrl.searchParams.append('entity', entity);
                         const deleteResponse = await fetch(deleteUrl, {
                             method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}` },
-                            
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+
                         });
 
                         if (!deleteResponse.ok) {
@@ -1910,14 +1925,14 @@ function Cart() {
                     updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.DAR?.toLowerCase()
                     || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.NAQI?.toLowerCase()
                     || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.GMTC?.toLowerCase())) {
-                const { data } = await axios.post(`${API_BASE_URL}/generatePayment-link`, { id: updatedOrderResponse?.salesOrder.id, endPoint: "payment-opations/order", IsEmail: false }, { 
-                   
+                const { data } = await axios.post(`${API_BASE_URL}/generatePayment-link`, { id: updatedOrderResponse?.salesOrder.id, endPoint: "payment-opations/order", IsEmail: false }, {
+
                     headers: {
                         "Authorization": `Bearer ${token}`
                     }
                 });
 
-                window.open(data.details.url, '_blank' );
+                window.open(data.details.url, '_blank');
 
             }
 
@@ -1943,10 +1958,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json',
+                headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                 },
-                
+                },
+
             });
 
             if (!response.ok) {
@@ -1988,10 +2004,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json',
+                headers: {
+                    'Content-Type': 'application/json',
                     "Authorization": `Bearer ${token}`
-                 },
-                
+                },
+
             });
 
             if (!response.ok) {
@@ -2137,10 +2154,11 @@ function Cart() {
             try {
                 const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
                     method: 'GET',
-                    headers: { 'Content-Type': 'application/json',
+                    headers: {
+                        'Content-Type': 'application/json',
                         "Authorization": `Bearer ${token}` // Include token for authentication
-                     },
-                    
+                    },
+
                 });
 
                 if (!response.ok) {
@@ -2163,16 +2181,16 @@ function Cart() {
                         }
                     });
                 }
-                
-               
-                setEntityDescriptions(result.data?.map(entity => 
-                    ({
-                        descriptionLc: entity.descriptionLc ,
-                        description: entity.description,
-                        value: entity.value 
 
-                    })
-  ));
+
+                setEntityDescriptions(result.data?.map(entity =>
+                ({
+                    descriptionLc: entity.descriptionLc,
+                    description: entity.description,
+                    value: entity.value
+
+                })
+                ));
 
                 // Initialize cart items with these descriptions
                 initializeCartItems(descriptionMap);
@@ -2222,10 +2240,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json',
-                      "Authorization": `Bearer ${token}`
-                 },
-                
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${token}`
+                },
+
             });
 
             if (!response.ok) {
@@ -2289,10 +2308,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' ,
-                      "Authorization": `Bearer ${token}`
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${token}`
                 },
-                
+
             });
 
             if (!response.ok) {
@@ -2352,7 +2372,7 @@ function Cart() {
     };
 
     // Helper function to delete cart items with specific parameters
-   const deleteCartItems = async (customerId, branchId, entity, isFresh, isMachine, products) => {
+    const deleteCartItems = async (customerId, branchId, entity, isFresh, isMachine, products) => {
         try {
             const deletePromises = products.map(async (product) => {
                 let deleteUrl = new URL(`${API_BASE_URL}/cart/delete?customer_id=${customerId}&branch_id=${branchId}&entity=${entity}`);
@@ -2361,21 +2381,23 @@ function Cart() {
                 // deleteUrl.searchParams.append('entity', entity);
                 if (isFresh !== null && isFresh !== undefined) {
                     // deleteUrl.searchParams.append('isFresh', isFresh);
-                    deleteUrl+=`&isFresh=${isFresh}`
+                    deleteUrl += `&isFresh=${isFresh}`
                 }
                 if (isMachine !== null && isMachine !== undefined) {
-                        deleteUrl+=`&isMachine=${isMachine}`
+                    deleteUrl += `&isMachine=${isMachine}`
                     // deleteUrl.searchParams.append('isMachine', isMachine);
                 }
                 // deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
-                deleteUrl+=`&product_id=${product.product_id || product.productId}`
+                deleteUrl += `&product_id=${product.product_id || product.productId}`
                 console.log(`Deleting cart item with params: ${deleteUrl}`);
 
                 const deleteResponse = await fetch(deleteUrl, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' ,
-                                'Authorization': `Bearer ${token}`},
-                    
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+
                 });
 
                 if (!deleteResponse.ok) {
@@ -2399,10 +2421,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json',
-                      "Authorization": `Bearer ${token}`
-                 },
-                
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${token}`
+                },
+
             });
 
             if (!response.ok) {
@@ -2436,10 +2459,11 @@ function Cart() {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json' ,
-                      "Authorization": `Bearer ${token}`
+                headers: {
+                    'Content-Type': 'application/json',
+                    "Authorization": `Bearer ${token}`
                 },
-                
+
             });
 
             if (!response.ok) {
@@ -2467,12 +2491,12 @@ function Cart() {
             return 0;
         }
     };
-const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
-    console.log("getLocalizedEntityName called with:", { categoryName, currentLanguage, entityDescriptions });
-  const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === categoryName.toLowerCase());
-  if (!match) return categoryName;
-  return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
-};
+    const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
+        console.log("getLocalizedEntityName called with:", { categoryName, currentLanguage, entityDescriptions });
+        const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === categoryName.toLowerCase());
+        if (!match) return categoryName;
+        return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
+    };
     return (
         <Sidebar title={t('Your Cart')} dir={t('direction')}>
             <div className="cart-header">
@@ -2503,11 +2527,62 @@ const getLocalizedEntityName = (categoryName, currentLanguage, entityDescription
                                         <FontAwesomeIcon
                                             icon={collapsedCategories.has(category.category) ? faChevronDown : faChevronUp}
                                         />
-                                       <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
-
+                                        <h3>{getLocalizedEntityName(category.category, currentLanguage, entityDescriptions)}</h3>
                                     </div>
                                     <span className="category-count">{category.items.length} {t("Items")}</span>
+
+                                    {/* Only show Place Order button when category is collapsed */}
+                                    {collapsedCategories.has(category.category) && (
+                                        <button
+                                            className="checkout-btn"
+                                            onClick={async (e) => {
+                                                e.stopPropagation(); // Prevent triggering the header click
+                                                setPendingOrderCategory(category.category);
+                                                setPendingOrderItems(category.items);
+
+                                                // Check if this is a VMCO or SHC category
+                                                const entity = getEntityFromCategory(category.category);
+                                                if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
+                                                    entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                                                    // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
+                                                    handlePlaceOrder(category.items, category.category, null);
+                                                } else {
+                                                    // Other categories - existing logic
+                                                    let categoryTotal = 0;
+                                                    category.items.forEach(item => {
+                                                        const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                                                        const vatPercentage = Number(item.vatPercentage) || 0;
+                                                        const vatAmount = (baseAmount * vatPercentage) / 100;
+                                                        const totalAmount = baseAmount + vatAmount;
+                                                        categoryTotal += totalAmount;
+                                                    });
+
+                                                    const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId, entity);
+                                                    if (isCreditAllowed) {
+                                                        const isBalanceValid = await validateCreditBalance(selectedCustomerId, categoryTotal, entity);
+                                                        if (isBalanceValid) {
+                                                            handlePlaceOrder(category.items, category.category, 'Credit');
+                                                        }
+                                                    } else {
+                                                        // COD limit logic for non-credit entities
+                                                        const codLimit = await getCODLimit(selectedCustomerId);
+                                                        if (categoryTotal >= codLimit) {
+                                                            // Place order directly with Pre Payment
+                                                            handlePlaceOrder(category.items, category.category, 'Pre Payment');
+                                                        } else {
+                                                            // Show payment method popup (COD/Pre Payment)
+                                                            setShowPaymentPopup(true);
+                                                        }
+                                                    }
+                                                }
+                                            }}
+                                            disabled={isPlacingOrder}
+                                        >
+                                            {isPlacingOrder ? t('Processing...') : t('Place Order')}
+                                        </button>
+                                    )}
                                 </div>
+
                                 {!collapsedCategories.has(category.category) && (
                                     <div className="category-items">
                                         {category.items.length === 0 ? (
@@ -2603,7 +2678,8 @@ const getLocalizedEntityName = (categoryName, currentLanguage, entityDescription
                                                             <strong> {categoryTotal.toFixed(2)} <span className="sar-label" style={{ margin: '5px' }}>{t("SAR")}</span></strong>
                                                         );
                                                     })()}
-                                                </span>                                                <button
+                                                </span>
+                                                <button
                                                     className="checkout-btn" onClick={async () => {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
