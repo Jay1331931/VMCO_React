@@ -33,6 +33,7 @@ import { isTokenValid } from './utilities/authUtils';
 import RbacManager from "./utilities/rbac";
 import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
 import TapCardComponent from "./screens/TapCardComponent";
+import DeliveryScheduleEditor from "./screens/deliveryScheduleEditor";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -97,6 +98,7 @@ function App() {
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
+        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor/></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />

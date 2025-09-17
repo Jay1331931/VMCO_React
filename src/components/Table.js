@@ -160,20 +160,17 @@ const Table = ({
   SHC_GMTC: [
     // Approved cases
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
 
     // Open cases
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "open" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "open" },
   ],
 
   NAQI_DAR: [
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
   ],
