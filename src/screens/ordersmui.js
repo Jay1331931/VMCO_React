@@ -385,30 +385,35 @@ function Orders() {
       field: "id",
       headerName: t("Order #"),
       include: isV("orderNumber"),
+      searchable: false,
       flex: 1,
     },
     {
       field: "erpOrderId",
       headerName: t("Sales Order ID"),
       include: isV("erpOrderId"),
+      searchable: false,
       flex: 1,
     },
     {
       field: isArabic ? "companyNameAr" : "companyNameEn",
       headerName: t("Customer"),
       include: isV("companyName"),
+      searchable: false,
       flex: 2,
     },
     {
       field: isArabic ? "branchNameLc" : "branchNameEn",
       headerName: t("Branch"),
       include: isV("branchName"),
+      searchable: false,
       flex: 2,
     },
     {
       field: "entity",
       headerName: t("Entity"),
       include: isV("entity"),
+      searchable: true,
       flex: 1,
       renderCell: (params) => {
         let badge = null;
@@ -438,18 +443,21 @@ function Orders() {
       field: "paymentMethod",
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
+      searchable: false,
       flex: 1,
     },
     {
       field: "createdByUsername",
       headerName: t("Created By"),
       include: isV("createdBy"),
+      searchable: false,
       flex: 1,
     },
     {
       field: "createdAt",
       headerName: t("Order Placement Date"),
       include: isV("createdAt"),
+      searchable: false,
       flex: 1,
       valueFormatter: (params) =>
         params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
@@ -458,6 +466,7 @@ function Orders() {
       field: "totalAmount",
       headerName: t("Total Amount"),
       include: isV("totalAmount"),
+      searchable: false,
       flex: 1,
       valueFormatter: (params) => parseFloat(params.value || 0).toFixed(2),
     },
@@ -465,6 +474,7 @@ function Orders() {
       field: "paymentStatus",
       headerName: t("Payment Status"),
       include: isV("paymentStatus"),
+      searchable: true,
       flex: 1,
       cellClassName: (params) => getPaymentStatusClass(params.value),
     },
@@ -472,6 +482,7 @@ function Orders() {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
+      searchable: false,
       flex: 1,
       renderCell: (params) => (
         <Chip
@@ -492,6 +503,7 @@ function Orders() {
       field: "actions",
       headerName: t("Actions"),
       include: isV("action") || isV("sendLink") || isV("FandOSyncSO"),
+      searchable: false,
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -875,6 +887,7 @@ function Orders() {
                     searchPlaceholder="Search orders..."
                     showColumnVisibility={true}
                     showFilters={true}
+                    showExport={false}
                     columnsToDisplay={columnsToDisplay}
                   />
                 ),

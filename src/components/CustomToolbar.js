@@ -192,7 +192,8 @@ const CustomToolbar = ({
             col.field !== "updatedAt" &&
             col.field !== "scheduledAt" &&
             col.field !== "createdAt" &&
-            col.field !== "expectedAmount"
+            col.field !== "expectedAmount" &&
+            col?.searchable
         )
         .map((col) => ({
           column: col.field,
@@ -230,7 +231,7 @@ const CustomToolbar = ({
           gap: 2,
           padding: 2,
           backgroundColor: "background.paper",
-          borderBottom: 1,
+          // borderBottom: 1,
           borderColor: "divider",
           flexWrap: "wrap",
           justifyContent: "flex-start",
@@ -279,7 +280,7 @@ const CustomToolbar = ({
             renderOption={(props, option) => {
               const columnName =
                 columns.find((col) => col.field === option.column)
-                  ?.headerName || option.column;
+                  ?.headerName;
               return (
                 <Box component="li" {...props}>
                   <Typography sx={{ fontSize: "14px" }}>
@@ -316,8 +317,8 @@ const CustomToolbar = ({
             )}
             sx={{
               "& .MuiOutlinedInput-root": {
-                borderRadius: "20px",
-                fontSize: "12px",
+                borderRadius: "10px",
+                fontSize: "15px",
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   border: "1px solid #3D5654",
                 },
