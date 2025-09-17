@@ -1005,6 +1005,7 @@ function Cart() {
             return;
         }
         try {
+            let initialDeliveryCharges = 0.00;
             const entity = getEntityFromCategory(categoryName);
             console.log('Entity determination:', { categoryName, entity });
 
@@ -1052,7 +1053,7 @@ function Cart() {
                 throw new Error('Failed to fetch customer data for delivery charge evaluation');
             }
             const customerData = await customerResponse.json();
-            const isDeliveryChargesApplicable = customerData?.data?.is_delivery_charges_applicable === true;
+            const isDeliveryChargesApplicable = customerData?.data?.isDeliveryChargesApplicable;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
             const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
@@ -1182,6 +1183,7 @@ function Cart() {
             // we need to create a new order
             if (!orderId) {
                 // First calculate the initial totalAmount from cart items
+                // First calculate the initial totalAmount from cart items
                 let initialTotalAmount = 0;
                 for (const item of categoryItems) {
                     const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
@@ -1227,13 +1229,32 @@ function Cart() {
 
                 console.log('Initial total amount calculated:', initialTotalAmount);
 
-                let deliveryCharges = 0.00;
+                // Calculate delivery charges based on business logic
+                let initialDeliveryCharges = 0.00;
                 const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-                if (isDeliveryChargesApplicable) {
+
+                if (isDeliveryChargesApplicable === true) {
+                    // Check if it's NOT VMCO Machines AND total amount <= 150
                     if (!isVmcoMachine && initialTotalAmount <= 150) {
-                        deliveryCharges = 20.00;
+                        initialDeliveryCharges = 20.00;
+                        console.log('Delivery charges applied: 20.00 (not VMCO machine and total <= 150)');
+                    } else {
+                        console.log('No delivery charges:', isVmcoMachine ? 'VMCO machine' : `total amount ${initialTotalAmount} > 150`);
                     }
+                } else {
+                    console.log('Delivery charges not applicable for customer');
                 }
+
+                // Calculate final total including delivery charges
+                const finalTotalAmount = initialTotalAmount + initialDeliveryCharges;
+
+                console.log('Delivery charges calculation:', {
+                    isDeliveryChargesApplicable,
+                    isVmcoMachine,
+                    initialTotalAmount,
+                    initialDeliveryCharges,
+                    finalTotalAmount
+                });
 
                 // Determine if this is a machine order or fresh order based on category name and entity
                 const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
@@ -1257,7 +1278,6 @@ function Cart() {
                     }
                 }
 
-                const finalTotalAmount = initialTotalAmount + deliveryCharges;
                 const orderPayload = {
                     customerId: selectedCustomerId,
                     erpCustId: erpCustId,
@@ -1273,9 +1293,9 @@ function Cart() {
                     orderBy: orderByName,
                     entity,
                     paymentMethod: selectedPaymentMethod,
-                    totalAmount: finalTotalAmount.toFixed(2),
+                    totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
                     paidAmount: '0.00',
-                    deliveryCharges: deliveryCharges.toFixed(2),
+                    deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
                     paymentStatus: selectedPaymentMethod === 'Credit' ? 'Paid' : 'Pending',
                     status: orderStatus,
                     pricingPolicy: pricingPolicy,
@@ -1285,7 +1305,6 @@ function Cart() {
                     paymentPercentage: '100.00',
                     isMachine: isMachineOrder,
                     isFresh: isFresh
-                    //createdBy: userId // <-- Add createdBy field
                 };
 
                 // For VMCO Machines, set payment method to Pre Payment
@@ -1647,7 +1666,7 @@ function Cart() {
                     const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
 
                     console.log(`Line for product ${line.productId}: net_amount_raw=${netAmountRaw}, parsed=${validNetAmount}, sales_tax_amount_raw=${salesTaxAmountRaw}, parsed=${validSalesTaxAmount}`);
-
+                    //add delivery charges also
                     linesTotal += validNetAmount;
                     totalSalesTaxAmount += validSalesTaxAmount;
                 }
@@ -1693,29 +1712,12 @@ function Cart() {
             }
 
             // Get existing delivery charges if updating an order
-            let currentDeliveryCharges = existingOrderData ? parseFloat(existingOrderData.deliveryCharges || 0) : 0;
+            let currentDeliveryCharges = linesTotal > 150.00 ? 0.00 : 20.00;
 
-            // Calculate delivery charges based on recalculated line totals
-            let deliveryCharges = 0.00;
-            const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-
-            // Updated delivery charges logic according to requirements
-            if (isDeliveryChargesApplicable) {
-                // For VMCO Machines: always set deliveryCharges to 0.00 (already set to 0.00 by default)
-                // For VMCO Consumables, SHC, Naqi, or Green Mast: set deliveryCharges to 20.00 if total <= 150, otherwise 0.00
-                if (!isVmcoMachine && linesTotal <= 150) {
-                    deliveryCharges = 20.00;
-                }
-            } else if (existingOrderData) {
-                // Keep existing delivery charges if they exist and we don't need to add new ones
-                deliveryCharges = currentDeliveryCharges;
-            }
-
-            console.log('Delivery Charges calculated:', deliveryCharges);
-
-
-            // Calculate final total amount (lines total + delivery charges)
+            // Reuse the initial delivery charges calculation
+            let deliveryCharges = currentDeliveryCharges;
             const finalTotalAmount = linesTotal + deliveryCharges;
+            const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
 
             // Additional validation for final total
             if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
