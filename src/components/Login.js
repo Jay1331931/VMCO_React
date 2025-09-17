@@ -105,7 +105,12 @@ function Login({ title, userType }) {
         ) {
           navigate("/bankTransactions");
         }
-        else {
+        else if ( data?.data?.userType.toLowerCase() === "employee" &&
+          data?.data?.designation.toLowerCase() ===
+            Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
+        ) {
+          navigate("/orders");
+        } else {
           navigate("/catalog");
         }
 
