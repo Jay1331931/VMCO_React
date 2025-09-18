@@ -20,7 +20,7 @@ import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
-import { Chip, Box, Button } from "@mui/material";
+import { Chip, Box, Button, Typography } from "@mui/material";
 import {
   DataGrid,
   GridFooterContainer,
@@ -421,36 +421,29 @@ function Orders() {
       headerName: t("Entity"),
       include: isV("entity"),
       searchable: true,
-      maxWidth: 60,
+      maxWidth: 100,
+      
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <Chip label={t("Machines")} size="smaller" color="primary" />
+            <span className="badge badge-blue">{t("Machines")}</span>
           ) : (
-            <Chip label={t("Consumables")} size="smaller" color="primary" />
+            <span className="badge badge-blue">{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <Chip label={t("Fresh")} size="smaller" color="primary" />
+            <span className="badge badge-blue">{t("Fresh")}</span>
           ) : (
-            <Chip label={t("Frozen")} size="smaller" color="primary" />
+            <span className="badge badge-blue">{t("Frozen")}</span>
           );
         }
-
         return (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-          >
-            <span>{params.value}</span>
-            <span>{badge}</span>
-          </Box>
-        );
-      },
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+        <Typography align="center">{params.value}</Typography>
+        <Typography align="center">{badge}</Typography>
+      </Box>);
+    },
     },
     {
       field: "paymentMethod",
@@ -465,7 +458,8 @@ function Orders() {
       field: "createdByUsername",
       headerName: t("Created By"),
       include: isV("createdBy"),
-      searchable: false,
+      searchable: true,
+      sortable: false,
       minWidth: 100,
       maxWidth: 120,
       flex: 1,
@@ -500,7 +494,9 @@ function Orders() {
       flex: 1,
       // cellClassName: (params) => getPaymentStatusClass(params.value),
       renderCell: (params) => (
-       <label className={getPaymentStatusClass(params.value)}>{params.value}</label>
+        <label className={getPaymentStatusClass(params.value)}>
+          {params.value}
+        </label>
       ),
     },
     {
@@ -508,59 +504,111 @@ function Orders() {
       headerName: t("Status"),
       include: isV("status"),
       searchable: false,
-      minWidth: 100,
+      minWidth: 80,
       maxWidth: 120,
       flex: 1,
       renderCell: (params) => (
-                <label className={getStatusClass(params.value)}>{params.value}</label>
+        <label className={getStatusClass(params.value)}>{params.value}</label>
       ),
     },
     {
-      field: "actions",
-      headerName: t("Actions"),
-      include: isV("action") || isV("sendLink") || isV("FandOSyncSO"),
+      field: "pay",
+      headerName: t("Action"),
+      include: isV("action"),
       searchable: false,
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
           {isV("action") && (
-            <Button
-              size="small"
-              variant="outlined"
+            <Box
+              component="span"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePay(params.row);
               }}
+              sx={{
+                color: "primary.main",
+                cursor: "pointer",
+                // textDecoration: "underline",
+                fontSize: "0.875rem",
+                "&:hover": {
+                  textDecoration: "none",
+                },
+              }}
             >
               {t("Pay")}
-            </Button>
+            </Box>
           )}
+        </Box>
+      ),
+    },
+    {
+      field: "sendLink",
+      headerName: t("Action"),
+      include: isV("sendLink"),
+      searchable: false,
+      maxWidth: 80,
+      flex: 2,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
           {isV("sendLink") && (
-            <Button
-              size="small"
-              variant="outlined"
+            <Box
+              component="span"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePay(params.row, true);
               }}
+              sx={{
+                color: "primary.main",
+                cursor: "pointer",
+                // textDecoration: "underline",
+                fontSize: "0.875rem",
+              }}
             >
               {t("Send Link")}
-            </Button>
+            </Box>
           )}
+        </Box>
+      ),
+    },
+    {
+      field: "orderSync",
+      headerName: t("Sync"),
+      include: isV("FandOSyncSO"),
+      searchable: false,
+      maxWidth: 80,
+      flex: 2,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
           {isV("FandOSyncSO") && (
-            <Button
-              size="small"
-              variant="outlined"
+            <Box
+              component="span"
               onClick={(e) => {
                 e.stopPropagation();
-                handleFandOFailSO(params.row.id);
+                if (!(syncLoading && syncLoadingId === params.row.id)) {
+                  handleFandOFailSO(params.row.id);
+                }
               }}
-              disabled={syncLoading && syncLoadingId === params.row.id}
+              sx={{
+                color:
+                  syncLoading && syncLoadingId === params.row.id
+                    ? "text.disabled"
+                    : "primary.main",
+                cursor:
+                  syncLoading && syncLoadingId === params.row.id
+                    ? "default"
+                    : "pointer",
+                textDecoration:
+                  syncLoading && syncLoadingId === params.row.id
+                    ? "none"
+                    : "none",
+                fontSize: "0.875rem",
+              }}
             >
               {syncLoading && syncLoadingId === params.row.id
                 ? t("Syncing...")
                 : t("Sync")}
-            </Button>
+            </Box>
           )}
         </Box>
       ),
@@ -572,77 +620,99 @@ function Orders() {
       field: "id",
       headerName: t("Order #"),
       include: isV("orderNumber"),
+      searchable: false,
+      maxWidth: 80,
       flex: 1,
     },
     {
       field: "erpOrderId",
       headerName: t("ERP ID"),
       include: isV("erpOrderId"),
+      searchable: false,
+      minWidth: 120,
+      maxWidth: 120,
       flex: 1,
     },
     {
       field: isArabic ? "companyNameAr" : "companyNameEn",
       headerName: t("Customer"),
       include: isV("companyName"),
+      searchable: false,
+      maxWidth: 180,
       flex: 2,
     },
     {
       field: isArabic ? "branchNameLc" : "branchNameEn",
       headerName: t("Branch"),
       include: isV("branchName"),
+      searchable: false,
+      minWidth: 80,
+      maxWidth: 80,
       flex: 2,
     },
     {
       field: "workflowName",
       headerName: t("Workflow Name"),
       include: isV("workflowName"),
+      searchable: true,
+      maxWidth: 100,
       flex: 1,
     },
     {
       field: "entity",
       headerName: t("Entity"),
       include: isV("entity"),
+      searchable: true,
+      maxWidth: 100,
       flex: 1,
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <Chip label={t("Machines")} size="small" color="primary" />
+            <span className="badge badge-blue">{t("Machines")}</span>
           ) : (
-            <Chip label={t("Consumables")} size="small" color="primary" />
+            <span className="badge badge-blue">{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <Chip label={t("Fresh")} size="small" color="primary" />
+            <span className="badge badge-blue">{t("Fresh")}</span>
           ) : (
-            <Chip label={t("Frozen")} size="small" color="primary" />
+            <span className="badge badge-blue">{t("Frozen")}</span>
           );
         }
-
         return (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <span>{params.value}</span>
-            {badge}
-          </Box>
-        );
-      },
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+        <Typography align="center">{params.value}</Typography>
+        <Typography align="center">{badge}</Typography>
+      </Box>);
+    },
     },
     {
       field: "paymentMethod",
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
+      searchable: false,
+      minWidth: 130,
+      maxWidth: 150,
       flex: 1,
     },
     {
       field: "createdByUsername",
       headerName: t("Created By"),
       include: isV("createdBy"),
+      searchable: true,
+      sortable: false,
+      minWidth: 100,
+      maxWidth: 120,
       flex: 1,
     },
     {
       field: "createdAt",
       headerName: t("Order Placement Date"),
       include: isV("createdAt"),
+      searchable: false,
+      minWidth: 100,
+      maxWidth: 120,
       flex: 1,
       valueFormatter: (params) =>
         params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
@@ -651,27 +721,21 @@ function Orders() {
       field: "totalAmount",
       headerName: t("Total Amount"),
       include: isV("totalAmount"),
-      flex: 1,
+      searchable: false,
+      minWidth: 100,
+      maxWidth: 120,
       valueFormatter: (params) => parseFloat(params.value || 0).toFixed(2),
     },
     {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
+      searchable: false,
+      minWidth: 80,
+      maxWidth: 120,
       flex: 1,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          sx={{
-            backgroundColor:
-              params.value === "Cold"
-                ? "skyblue"
-                : params.value === "Pending"
-                ? "#fff8e1"
-                : "#EF0107",
-            width: "100%",
-          }}
-        />
+        <label className={getStatusClass(params.value)}>{params.value}</label>
       ),
     },
   ];
@@ -1049,7 +1113,8 @@ function Orders() {
               hideFooterPagination={true}
               disableExtendRowFullWidth={true}
               pagination={false}
-              // autoHeight
+              autoHeight
+              rowHeight={70}
               showToolbar
               slots={{
                 toolbar: () => (
@@ -1069,7 +1134,7 @@ function Orders() {
                     showFilters={true}
                     showExport={false}
                     showUpload={true}
-                    showAdd={isE("addOrder")}
+                    showAdd={isV("addButton")}
                     // showAdd={true}
                     handleAddClick={handleAddOrder}
                     handleUploadClick={HandleBulkOrderUpload}
