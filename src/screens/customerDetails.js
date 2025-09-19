@@ -1709,8 +1709,11 @@ if (uniqueFieldsList.includes(field)) {
       const errors = await validateData(
         {
           ...customerData,
+          ...updatedCustomerData.current,
           ...customerContactsData,
+          ...updatedCustomerContactsData.current,
           ...customerPaymentMethodsData,
+          ...updatedCustomerPaymentMethodsData.current,
         },
         true,
         mandatoryFields,
