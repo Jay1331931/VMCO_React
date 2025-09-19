@@ -16,9 +16,7 @@ import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import Constants from "../constants";
 import SearchableDropdown from "../components/SearchableDropdown";
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
 // Initial categories with their corresponding entity values
 const initialCategories = [
   {
@@ -54,15 +52,14 @@ const initialCategories = [
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
-    label: "Special Products"
+    label: "Special Products",
   },
   {
     value: "FAVORITES",
     entity: "",
-    label: "Favorites"
+    label: "Favorites",
   },
 ];
-
 function Catalog() {
   const location = useLocation();
   const { t, i18n } = useTranslation(); // Get i18n at component level
@@ -93,12 +90,10 @@ function Catalog() {
   const productsPerPage = 60;
   const { token, user, isAuthenticated, loading, logout } = useAuth();
   console.log("User Dataaaaa:", token);
-
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categoryOptions, setCategoryOptions] = useState([]); // For category dropdown options
   const [subCategoryOptions, setSubCategoryOptions] = useState([]); // For subcategory dropdown options
   const [entityDescriptions, setEntityDescriptions] = useState([]); // For entity descriptions from basics master
-
   const fetchAllPages = async () => {
     // Show loading state
     if (currentPage === 1) {
@@ -106,7 +101,6 @@ function Catalog() {
     } else {
       setIsLoadingMore(true);
     }
-
     try {
       // Determine which pages we need to fetch
       const pagesToFetch = [];
@@ -115,14 +109,12 @@ function Catalog() {
           pagesToFetch.push(i);
         }
       }
-
       if (pagesToFetch.length === 0) {
         // All needed pages are already loaded
         setIsLoading(false);
         setIsLoadingMore(false);
         return;
       }
-
       // Create a function to fetch a single page
       const fetchPage = async (pageNumber) => {
         const params = new URLSearchParams({
@@ -131,10 +123,9 @@ function Catalog() {
           sortBy: "id",
           sortOrder: "asc",
         });
-
         // Special handling for the Special Products tab
         if (activeCategory === "SPECIAL_PRODUCTS") {
-          params.append("filters", JSON.stringify({ "specialProduct": true }));
+          params.append("filters", JSON.stringify({ specialProduct: true }));
           // No entity filtering for special products
         } else if (activeCategory === "FAVORITES") {
           params.append("favorite", "true");
@@ -147,25 +138,23 @@ function Catalog() {
           const entityToFilter = selectedCategory
             ? selectedCategory.entity
             : null;
-
           if (entityToFilter) {
             params.append("entity", entityToFilter);
-
             // Special handling for VMCO entity tabs
             if (entityToFilter === Constants.ENTITY.VMCO) {
               if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
                 params.append("isMachine", "true");
-              } else if (activeCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
+              } else if (
+                activeCategory === Constants.CATEGORY.VMCO_CONSUMABLES
+              ) {
                 params.append("isMachine", "false");
               }
             }
           }
         }
-
         // Add category and subcategory filters
         if (categoryFilter) params.append("category", categoryFilter);
         if (subCategoryFilter) params.append("subCategory", subCategoryFilter);
-
         // Add search query
         if (searchQuery) {
           params.append("search", searchQuery);
@@ -174,29 +163,25 @@ function Catalog() {
             "productName,product_name,product_name_lc,productNameLc"
           );
         }
-
         const response = await fetch(
           `${API_BASE_URL}/products?${params.toString()}`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
-
         const result = await response.json();
         console.log(`Fetched page ${pageNumber} products:`, result);
         // Extract the new products from the response
         let pageProducts = [];
         let totalCount = 0;
-
         if (result.status === "Ok") {
           pageProducts = result.data.data;
           totalCount = result.data.totalRecords;
         }
-
         if (Array.isArray(result.data)) {
           pageProducts = result.data.data;
           totalCount = result.length;
@@ -217,14 +202,11 @@ function Catalog() {
               Number(result.pagination.total)) ||
             result.data.length;
         }
-
         return { pageProducts, totalCount, pageNumber };
       };
-
       // Key fix: Handle the reset products case differently
       let allProducts = [];
       let newLoadedPages = [];
-
       if (pagesToFetch.includes(1)) {
         allProducts = [];
         newLoadedPages = [];
@@ -232,26 +214,20 @@ function Catalog() {
         allProducts = [...products];
         newLoadedPages = [...loadedPages];
       }
-
       // Fetch all pages in sequence
       let maxTotalCount = 0;
-
       for (const page of pagesToFetch) {
         const { pageProducts, totalCount } = await fetchPage(page);
-
         // Add these products to our collection
         allProducts = [...allProducts, ...pageProducts];
         maxTotalCount = Math.max(maxTotalCount, totalCount);
-
         // Add to our new loaded pages array
         newLoadedPages.push(page);
       }
-
       // Set all products and loaded pages at once after we've loaded everything
       setProducts(allProducts);
       setTotalProducts(maxTotalCount);
       setLoadedPages(newLoadedPages);
-
       // Determine if there are more products to load
       const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
       const moreAvailable = loadedProductsCount < maxTotalCount;
@@ -264,47 +240,42 @@ function Catalog() {
       setIsLoadingMore(false);
     }
   };
-
   // Add this effect to fetch entity descriptions
   useEffect(() => {
     const fetchEntityDescriptions = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            "Authorization": `Bearer ${token}` // Include token for authentication
-          },
-        });
-
+        const response = await fetch(
+          `${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Include token for authentication
+            },
+          }
+        );
         if (!response.ok) {
-          throw new Error('Failed to fetch entity descriptions');
+          throw new Error("Failed to fetch entity descriptions");
         }
-
         const result = await response.json();
-
-        setEntityDescriptions(result.data?.map(entity =>
-        ({
-          descriptionLc: entity.descriptionLc,
-          description: entity.description,
-          value: entity.value
-        })
-        ) || []);
-
+        setEntityDescriptions(
+          result.data?.map((entity) => ({
+            descriptionLc: entity.descriptionLc,
+            description: entity.description,
+            value: entity.value,
+          })) || []
+        );
       } catch (error) {
-        console.error('Error fetching entity descriptions:', error);
+        console.error("Error fetching entity descriptions:", error);
       }
     };
-
     fetchEntityDescriptions();
   }, [i18n.language, API_BASE_URL, token]); // Re-fetch when language changes
-
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
     if (loading) {
       return;
     }
-
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
       // Logout instead of showing loading message
@@ -312,7 +283,6 @@ function Catalog() {
       navigate("/login");
       return; // Return while logout is processing
     }
-
     if (user && user.userType) {
       const fetchData = async () => {
         // Only fetch products, entity descriptions are fetched separately
@@ -330,7 +300,6 @@ function Catalog() {
     productsPerPage,
     API_BASE_URL,
   ]);
-
   //RBAC
   //use formMode to decide if it is editform or add form
   const rbacMgr = new RbacManager(
@@ -341,87 +310,114 @@ function Catalog() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   // Helper function to get localized entity name
-  const getLocalizedEntityName = (initialCategories, currentLanguage, entityDescriptions) => {
-    console.log("getLocalizedEntityName called with:", { initialCategories, currentLanguage, entityDescriptions });
-    const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === initialCategories.toLowerCase());
+  const getLocalizedEntityName = (
+    initialCategories,
+    currentLanguage,
+    entityDescriptions
+  ) => {
+    console.log("getLocalizedEntityName called with:", {
+      initialCategories,
+      currentLanguage,
+      entityDescriptions,
+    });
+    const match = entityDescriptions?.find(
+      (desc) => desc.value.toLowerCase() === initialCategories.toLowerCase()
+    );
     if (!match) return initialCategories;
-    return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
+    return currentLanguage === "ar"
+      ? match.descriptionLc || match.description
+      : match.description;
   };
-
-  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
-
-
+  const [filteredCategoryTabs, setFilteredCategoryTabs] =
+    useState(categoryTabs);
   // Create categoryTabs with localized labels and filter for interCompany customers
   useEffect(() => {
     if (!entityDescriptions || entityDescriptions?.length === 0) {
       return;
     }
-
     if (!user) return;
-
     const allLocalizedTabs = initialCategories.map((category) => {
-      const response = getLocalizedEntityName(category.label, i18n.language, entityDescriptions);
+      const response = getLocalizedEntityName(
+        category.label,
+        i18n.language,
+        entityDescriptions
+      );
       return {
         value: category.value,
         label: response,
       };
     });
-
     // Filter tabs based on user type and interCompany status
-    let tabsToShow = allLocalizedTabs.filter(tab => {
+    let tabsToShow = allLocalizedTabs.filter((tab) => {
       // First find the original category to get its entity
-      const category = initialCategories.find(cat => cat.value === tab.value);
-
+      const category = initialCategories.find((cat) => cat.value === tab.value);
       // For special tabs (FAVORITES and SPECIAL_PRODUCTS), only show them for customers
-      if (category && (category.value === "FAVORITES" || category.value === "SPECIAL_PRODUCTS")) {
+      if (
+        category &&
+        (category.value === "FAVORITES" ||
+          category.value === "SPECIAL_PRODUCTS")
+      ) {
         return user.userType.toLowerCase() === "customer";
       }
-
       return true;
     });
-
     // If user is a customer with interCompany set to true, filter out matching entity tabs
-    if (user.userType === "customer" && user.interCompany === true && user.entity) {
+    if (
+      user.userType === "customer" &&
+      user.interCompany === true &&
+      user.entity
+    ) {
       const customerEntity = user.entity.toLowerCase();
-      console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
-
-      tabsToShow = tabsToShow.filter(tab => {
+      console.log(
+        "Filtering tabs for interCompany customer with entity:",
+        customerEntity
+      );
+      tabsToShow = tabsToShow.filter((tab) => {
         // Find the original category to get its entity
-        const category = initialCategories.find(cat => cat.value === tab.value);
-
+        const category = initialCategories.find(
+          (cat) => cat.value === tab.value
+        );
         // If no matching category or no entity, include the tab
         if (!category || !category.entity) return true;
-
         // Check if this tab's entity exists in entityDescriptions and matches customer's entity
         const tabEntityExists = entityDescriptions.some(
-          desc => desc.value.toLowerCase() === category.entity.toLowerCase()
+          (desc) => desc.value.toLowerCase() === category.entity.toLowerCase()
         );
-
         // If the tab's entity exists in basic master and matches customer's entity, exclude it
-        if (tabEntityExists && category.entity.toLowerCase() === customerEntity) {
-          console.log("Excluding tab:", tab.label, "for entity:", category.entity);
+        if (
+          tabEntityExists &&
+          category.entity.toLowerCase() === customerEntity
+        ) {
+          console.log(
+            "Excluding tab:",
+            tab.label,
+            "for entity:",
+            category.entity
+          );
           return false;
         }
-
         // Include all other tabs
         return true;
       });
-
       console.log("Filtered tabs for interCompany customer:", tabsToShow);
     }
-
     setCategoryTabs(tabsToShow);
     setFilteredCategoryTabs(tabsToShow);
-
     // If current active category is not in filtered tabs, set to first available
-    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab?.value === activeCategory)) {
+    if (
+      tabsToShow.length > 0 &&
+      !tabsToShow.some((tab) => tab?.value === activeCategory)
+    ) {
       setActiveCategory(tabsToShow[0]?.value);
     }
-
-  }, [entityDescriptions, i18n.language, initialCategories, user, activeCategory]);
-
+  }, [
+    entityDescriptions,
+    i18n.language,
+    initialCategories,
+    user,
+    activeCategory,
+  ]);
   const customerId = user?.customerId;
   const userId = user?.userId;
   useEffect(() => {
@@ -429,14 +425,11 @@ function Catalog() {
       setSelectedCustomerId(customerId);
     }
   }, [customerId]);
-
   // Initial setup when component loads - for default tab
-
   // Map product fields from backend to component props
   const mapProductToCardProps = useCallback(
     (product) => {
       const currentLanguage = i18n.language;
-
       // Parse images JSON and extract URLs
       let imageUrls = [];
       if (product.images) {
@@ -453,13 +446,11 @@ function Catalog() {
           imageUrls = [product.images];
         }
       }
-
       // Choose the right product name based on language
       let productName = product.productName;
       if (currentLanguage !== "en" && product.productNameLc) {
         productName = product.productNameLc;
       }
-
       // Choose the right product description based on language
       let productDescription = product.description;
       if (
@@ -468,7 +459,6 @@ function Catalog() {
       ) {
         productDescription = product.description_lc || product.descriptionLc;
       }
-
       return {
         id: product.id,
         name: productName,
@@ -488,25 +478,20 @@ function Catalog() {
     },
     [i18n.language]
   );
-
   useEffect(() => {
     const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
     let filtered = [...products]; // Create a copy of products array for filtering
-
     // Filter by entity first
     if (entityToFilter) {
       filtered = filtered.filter((product) => {
         const productEntity = (product.entity || "").toLowerCase();
         return productEntity === entityToFilter.toLowerCase();
       });
-
       // No special handling for VMCO entities anymore
     }
-
     // Apply search filter on product name
     if (searchQuery && searchQuery.trim() !== "") {
       const searchLower = searchQuery.toLowerCase().trim();
@@ -532,7 +517,6 @@ function Catalog() {
           product.descriptionLc ||
           ""
         ).toLowerCase();
-
         return (
           productName.includes(searchLower) ||
           localizedName.includes(searchLower) ||
@@ -542,7 +526,6 @@ function Catalog() {
         );
       });
     }
-
     // Apply category filter
     if (categoryFilter && categoryFilter.trim() !== "") {
       filtered = filtered.filter(
@@ -551,7 +534,6 @@ function Catalog() {
           categoryFilter.toLowerCase()
       );
     }
-
     // Apply subcategory filter
     if (subCategoryFilter && subCategoryFilter.trim() !== "") {
       filtered = filtered.filter((product) => {
@@ -563,7 +545,6 @@ function Catalog() {
         return subCategory === subCategoryFilter.toLowerCase();
       });
     }
-
     setFilteredProducts(filtered);
     setDisplayedProducts(filtered);
   }, [
@@ -576,7 +557,6 @@ function Catalog() {
   // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
   useEffect(() => {
     let timeoutId = null;
-
     // Function to handle automatic loading of more pages
     const loadMorePagesWithDelay = () => {
       // Only load more if there are more products to fetch
@@ -592,7 +572,6 @@ function Catalog() {
         }, 3000);
       }
     };
-
     if (
       !isLoading &&
       !isLoadingMore &&
@@ -602,7 +581,6 @@ function Catalog() {
     ) {
       loadMorePagesWithDelay();
     }
-
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
     };
@@ -619,34 +597,26 @@ function Catalog() {
     setLoadedPages([]);
     setHasMore(true); // Reset hasMore when filters change to ensure new data is fetched
   }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery]);
-
   const handleProductClick = (product) => {
     setSelectedProduct(product);
   };
-
   const handleClosePopup = () => {
     setSelectedProduct(null);
   };
-
   // Update the handleQuantityChange function
-
   const handleQuantityChange = (productId, value) => {
     // Find the product to get its MOQ
     const product = products.find((p) => p.id === productId);
     if (!product) return;
-
     const moq = Number(product.moq || 0);
-
     // Calculate the new quantity ensuring it doesn't go below MOQ
     const currentQuantity = quantities[productId] || 0;
     const newQuantity = Math.max(moq, currentQuantity + value);
-
     setQuantities((prev) => ({
       ...prev,
       [productId]: newQuantity,
     }));
   };
-
   const handleGoToCart = () => {
     const selectedBranch = branches.find((b) => b.value === selectedLocation);
     navigate("/Cart", {
@@ -657,8 +627,10 @@ function Catalog() {
         selectedBranchName: selectedBranch?.label || "",
         selectedBranchNameLc:
           selectedBranch?.branch_name_lc ||
-          selectedBranch?.raw?.branchNameLc || "",
-        selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
+          selectedBranch?.raw?.branchNameLc ||
+          "",
+        selectedBranchNameEn:
+          selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
         selectedBranchCity,
@@ -667,9 +639,7 @@ function Catalog() {
       },
     });
   };
-
   const catalogId = React.useId();
-
   // Get unique categories and subcategories for dropdowns
   const uniqueCategories = Array.from(
     new Set(products.map((p) => p.category).filter(Boolean))
@@ -677,7 +647,6 @@ function Catalog() {
   const uniqueSubCategories = Array.from(
     new Set(products.map((p) => p.subCategory).filter(Boolean))
   );
-
   // NEW: Branch selection functionality moved here (before add to cart function)
   useEffect(() => {
     const fetchBranches = async () => {
@@ -690,15 +659,15 @@ function Catalog() {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-
           }
         );
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to fetch branches: ${errorData.message || response.statusText
+            `Failed to fetch branches: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -711,22 +680,25 @@ function Catalog() {
         } else if (result && Array.isArray(result.data)) {
           branchData = result.data;
           console.log("Fetched branch data:", branchData);
-          console.log("Status of branches:", branchData.map(b => b.branchStatus));
+          console.log(
+            "Status of branches:",
+            branchData.map((b) => b.branchStatus)
+          );
         } else {
           branchData = [];
         }
         const branchOptions = branchData.map((branch) => {
-          const status = (branch.branchStatus).toLowerCase();
-          const isApproved = status === 'approved';
+          const status = branch.branchStatus.toLowerCase();
+          const isApproved = status === "approved";
           return {
             value: String(branch.id || branch.branch_id),
             label:
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                branch.branchNameLc ||
-                branch.branch_name_en ||
-                branch.branchNameEn,
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -743,7 +715,6 @@ function Catalog() {
     };
     fetchBranches();
   }, [API_BASE_URL, i18n.language]);
-
   // Handler for branch selection with cart check
   const handleBranchSelect = async (e) => {
     const newBranchId = e.target.value;
@@ -772,9 +743,8 @@ function Catalog() {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-
         }
       );
       if (!response.ok) throw new Error("Failed to fetch cart items");
@@ -814,41 +784,40 @@ function Catalog() {
           ? otherBranch.label
           : otherBranchId;
         // Make sure this function is already marked `async` (it looks like it is)
-
         const { isConfirmed } = await Swal.fire({
           icon: "warning",
           title: t("Discard items?"),
-          html: `${t("There are items in the cart for branch")} <strong>${otherBranchLabel}</strong>.<br>${t("Do you want to discard them?")}`,
+          html: `${t(
+            "There are items in the cart for branch"
+          )} <strong>${otherBranchLabel}</strong>.<br>${t(
+            "Do you want to discard them?"
+          )}`,
           showCancelButton: true,
           focusCancel: true,
           confirmButtonText: t("Yes, discard"),
           cancelButtonText: t("No, keep"),
           reverseButtons: true,
         });
-
-
         if (isConfirmed) {
           try {
             await fetch(
-              `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId
+              `${API_BASE_URL}/cart/delete?customer_id=${
+                selectedCustomerId || customerId
               }&branch_id=${otherBranchId}`,
               {
                 method: "DELETE",
                 headers: {
                   "Content-Type": "application/json",
                   Accept: "application/json",
-                  "Authorization": `Bearer ${token}`
+                  Authorization: `Bearer ${token}`,
                 },
-
               }
             );
-
             setSelectedLocation(newBranchId);
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
             }
-
             await Swal.fire({
               icon: "success",
               title: t("Success"),
@@ -882,7 +851,6 @@ function Catalog() {
       setIsLoading(false);
     }
   };
-
   //  Add to cart functionality
   const handleAddToCart = async (productId) => {
     console.log("Adding product to cart:", productId);
@@ -902,15 +870,12 @@ function Catalog() {
         });
         return;
       }
-
       // Find the product being added
       const product = products.find((p) => p.id === productId);
       if (!product) return;
-
       // Get MOQ and ensure quantity meets it
       const moq = Number(product.moq);
       let quantity = quantities[productId];
-
       // If quantity is less than MOQ, set it to MOQ
       if (quantity < moq) {
         quantity = moq;
@@ -920,20 +885,16 @@ function Catalog() {
           [productId]: moq,
         }));
       }
-
       // Ensure quantity is at least 1
       quantity = Math.max(1, quantity);
-
       // Calculate needed values
       const unitPrice = product.unitPrice;
       const netAmount = unitPrice * quantity;
       const vatPercentage = parseFloat(product.vatPercentage) || 0;
       //const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
-
       // Calculate VAT and sugar tax
       const vatAmount = netAmount * (vatPercentage / 100);
       //const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
-
       // Parse images JSON and extract URLs
       let imageUrls = [];
       if (product.images) {
@@ -949,7 +910,6 @@ function Catalog() {
           imageUrls = [product.images];
         }
       }
-
       // First check if this item already exists in the cart
       const checkResponse = await fetch(
         `${API_BASE_URL}/cart/pagination?filters={"userId":${user.userId}, "customerId":${customerId},"branchId":${selectedLocation}, "productId":${productId}}`,
@@ -957,41 +917,37 @@ function Catalog() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           // Send along auth cookies/JWT
         }
       );
-
       const checkResult = await checkResponse.json();
       console.log("Check cart response:", checkResult);
-
       if (checkResult.data.data && checkResult.data.data.length > 0) {
         // Item exists in cart, update the quantity
         const existingItem = checkResult.data.data[0];
         const updatedQuantity =
           parseInt(existingItem.quantityOrdered) + parseInt(quantity);
-
         const updateResponse = await fetch(
           `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
           {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-
             body: JSON.stringify({
               quantityOrdered: updatedQuantity,
               netAmount: unitPrice * updatedQuantity,
             }),
           }
         );
-
         if (!updateResponse.ok) {
           const errorData = await updateResponse.json().catch(() => ({}));
           throw new Error(
-            `Failed to update cart item: ${errorData.message || updateResponse.statusText
+            `Failed to update cart item: ${
+              errorData.message || updateResponse.statusText
             }`
           );
         }
@@ -999,7 +955,7 @@ function Catalog() {
           icon: "success",
           title: t("Product quantity to cart successfully"),
           showConfirmButton: false,
-          timer: 1000
+          timer: 1000,
         });
       } else {
         // Item doesn't exist in cart, add it as new
@@ -1016,11 +972,9 @@ function Catalog() {
           entity: product.entity, // Keep original case
           category: product.category, // Keep original case
           unit: product.unit,
-
           // Add the two new properties
           isMachine: product.isMachine, // Add isMachine field
-          isFresh: product.isFresh,  // Add isFresh field
-
+          isFresh: product.isFresh, // Add isFresh field
           unitPrice: unitPrice,
           quantityOrdered: parseInt(quantity),
           netAmount: netAmount,
@@ -1029,23 +983,20 @@ function Catalog() {
             user.companyType === "non trading" ? 0.0 : vatPercentage.toFixed(2),
           images: JSON.stringify(imageUrls), // <-- Add images as JSONB
         };
-
         console.log("Adding new item to cart:", cartItem);
-
         const response = await fetch(`${API_BASE_URL}/cart`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify(cartItem),
         });
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to add item to cart: ${errorData.message || response.statusText
+            `Failed to add item to cart: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -1053,10 +1004,9 @@ function Catalog() {
           icon: "success",
           title: t("Product added to cart successfully"),
           showConfirmButton: false,
-          timer: 1000
+          timer: 1000,
         });
       }
-
       // Reset quantity after successful add/update
       setQuantities((prev) => ({
         ...prev,
@@ -1072,9 +1022,7 @@ function Catalog() {
       });
     }
   };
-
   // Add this function to your Catalog component
-
   const handleToggleFavorite = async (productId, isFavorite) => {
     try {
       if (!isAuthenticated || !user) {
@@ -1086,24 +1034,21 @@ function Catalog() {
         });
         return;
       }
-
       if (isFavorite) {
         // Add to favorites
         const response = await fetch(`${API_BASE_URL}/favorites`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             userId: user.userId,
             customerId: selectedCustomerId || user.customerId,
             productId: productId,
-            favorite: true
+            favorite: true,
           }),
         });
-
         if (!response.ok) {
           throw new Error("Failed to add to favorites");
         }
@@ -1114,42 +1059,37 @@ function Catalog() {
           {
             method: "DELETE",
             headers: {
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-
           }
         );
-
         if (!response.ok) {
           throw new Error("Failed to remove from favorites");
         }
       }
-
       // Update local state to reflect changes immediately
-      setProducts(prevProducts =>
-        prevProducts.map(product =>
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-
       // Also update filtered/displayed products
-      setFilteredProducts(prevProducts =>
-        prevProducts.map(product =>
+      setFilteredProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-      setDisplayedProducts(prevProducts =>
-        prevProducts.map(product =>
+      setDisplayedProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-
     } catch (error) {
       console.error("Error toggling favorite status:", error);
       Swal.fire({
@@ -1160,7 +1100,6 @@ function Catalog() {
       });
     }
   };
-
   // Get unique categories filtered by the current entity tab
   const getFilteredCategories = () => {
     // Get the entity for the current active tab
@@ -1168,9 +1107,7 @@ function Catalog() {
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
     if (!entityToFilter) return [];
-
     // First filter by entity
     let filteredProductsByEntity = products.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
@@ -1222,7 +1159,6 @@ function Catalog() {
       );
     }
   };
-
   // Get unique subcategories filtered by the current entity tab and selected category
   const getFilteredSubcategories = () => {
     // Get the entity for the current active tab
@@ -1230,25 +1166,19 @@ function Catalog() {
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
     if (!entityToFilter) return [];
-
     let filteredProducts = products;
-
     // Filter by entity first
     filteredProducts = filteredProducts.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
     );
-
     // No special handling for VMCO entities anymore
-
     // If a category is selected, filter by that category
     if (categoryFilter) {
       filteredProducts = filteredProducts.filter(
         (p) => (p.category || "").toLowerCase() === categoryFilter.toLowerCase()
       );
     }
-
     // Return unique subcategories from the filtered products
     return Array.from(
       new Set(
@@ -1258,13 +1188,11 @@ function Catalog() {
       )
     );
   };
-
   // Initialize quantities with MOQ values when products are loaded
   useEffect(() => {
     if (products.length > 0) {
       let initialQuantities = { ...quantities };
       let hasChanges = false;
-
       products.forEach((product) => {
         // Only set MOQ for products without quantity or with 0 quantity
         if (
@@ -1276,7 +1204,6 @@ function Catalog() {
           hasChanges = true;
         }
       });
-
       // Only update state if there were changes
       if (hasChanges) {
         setQuantities(initialQuantities);
@@ -1284,15 +1211,15 @@ function Catalog() {
     }
   }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
   // Removed effect that auto-selects category filter based on tab or products.
-
   // Determine direction and alignment
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
-
   // Fetch categories from API when active tab/entity changes
   useEffect(() => {
     const fetchCategories = async () => {
-      const selectedCategory = categories.find(cat => cat.value === activeCategory);
+      const selectedCategory = categories.find(
+        (cat) => cat.value === activeCategory
+      );
       const entity = selectedCategory?.entity;
       if (!entity) {
         setCategoryOptions([]);
@@ -1301,37 +1228,36 @@ function Catalog() {
       try {
         // Build query parameters
         const params = new URLSearchParams({
-          entity: entity
+          entity: entity,
         });
-
         // Add isMachine parameter for VMCO entity tabs
         if (entity === Constants.ENTITY.VMCO) {
           if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
             const isMachine = true;
-            params.append('isMachine', isMachine);
-          }
-          else {
+            params.append("isMachine", isMachine);
+          } else {
             const isMachine = false;
-            params.append('isMachine', isMachine);
+            params.append("isMachine", isMachine);
           }
         }
-
-        const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/product-categories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
         // Assuming result.data is an array of category names/objects
         const options = Array.isArray(result.data)
-          ? result.data.map(cat => ({
-            name: cat.category || cat.name || cat, // adapt as per API response
-            value: cat.category || cat.name || cat,
-          }))
+          ? result.data.map((cat) => ({
+              name: cat.category || cat.name || cat, // adapt as per API response
+              value: cat.category || cat.name || cat,
+            }))
           : [];
         setCategoryOptions(options);
         // Do not select any category by default
@@ -1343,11 +1269,12 @@ function Catalog() {
     fetchCategories();
     // eslint-disable-next-line
   }, [activeCategory, categories, API_BASE_URL]);
-
   // Fetch subcategories from API when category or active tab/entity changes
   useEffect(() => {
     const fetchSubCategories = async () => {
-      const selectedCategoryObj = categories.find(cat => cat.value === activeCategory);
+      const selectedCategoryObj = categories.find(
+        (cat) => cat.value === activeCategory
+      );
       const entity = selectedCategoryObj?.entity;
       if (!entity || !categoryFilter) {
         setSubCategoryOptions([]);
@@ -1358,22 +1285,24 @@ function Catalog() {
           entity: entity,
           category: categoryFilter,
         });
-        const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) throw new Error("Failed to fetch subcategories");
         const result = await response.json();
         // Assuming result.data is an array of subcategory names/objects
         const options = Array.isArray(result.data)
-          ? result.data.map(sub => ({
-            name: sub.subCategory || sub.sub_category || sub.name || sub,
-            value: sub.subCategory || sub.sub_category || sub.name || sub,
-          }))
+          ? result.data.map((sub) => ({
+              name: sub.subCategory || sub.sub_category || sub.name || sub,
+              value: sub.subCategory || sub.sub_category || sub.name || sub,
+            }))
           : [];
         setSubCategoryOptions(options);
         // Do not select any subcategory by default
@@ -1385,7 +1314,6 @@ function Catalog() {
     fetchSubCategories();
     // eslint-disable-next-line
   }, [activeCategory, categoryFilter, categories, API_BASE_URL]);
-
   return (
     <Sidebar title={t("Catalog")}>
       <div
@@ -1401,7 +1329,11 @@ function Catalog() {
                 name="locationSelect"
                 value={selectedLocation}
                 onChange={handleBranchSelect}
-                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value, disabled: b.disabled }))}
+                options={branches.map((b) => ({
+                  ...b,
+                  name: b.label || b.name || b.value,
+                  disabled: b.disabled,
+                }))}
                 className="location-select"
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}
@@ -1421,7 +1353,9 @@ function Catalog() {
             </div>
             {isV("goToCart") && (
               <button
-                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                className={`go-to-cart-btn ${
+                  !selectedLocation ? "disabled" : ""
+                }`}
                 style={{
                   opacity: !selectedLocation ? 0.6 : 1,
                   cursor: !selectedLocation ? "not-allowed" : "pointer",
@@ -1435,109 +1369,102 @@ function Catalog() {
             )}
           </div>
         )}
-        <div className="filter-section">
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 12,
-              overflowX: "auto",
-              scrollbarWidth: "none"
-            }}
-          >
-            <Tabs
-              tabs={filteredCategoryTabs}  // Use filtered tabs instead of all tabs
-              activeTab={activeCategory}
-              onTabChange={(newCategory) => {
-                setActiveCategory(newCategory);
-                setSearchQuery("");
-                setCurrentPage(1);
-                setLoadedPages([]);
-                setHasMore(true);
-                setSubCategoryFilter("");
-                setCategoryFilter("");
-              }}
-              variant="category"
-            />
-          </div>
-        </div>
-
-        <div className="search-section">
-          <div className="search-container">
-            {isV("search") && (
-              <SearchInput
-                onSearch={(searchTerm) => {
-                  setSearchQuery(searchTerm);
-                  setCurrentPage(1); // Reset to page 1 when searching
+        <div>
+          <div className="filter-section">
+            <div className="filter-tabs">
+              <Tabs
+                tabs={filteredCategoryTabs} // Use filtered tabs instead of all tabs
+                activeTab={activeCategory}
+                onTabChange={(newCategory) => {
+                  setActiveCategory(newCategory);
+                  setSearchQuery("");
+                  setCurrentPage(1);
+                  setLoadedPages([]);
+                  setHasMore(true);
+                  setSubCategoryFilter("");
+                  setCategoryFilter("");
                 }}
-                debounceTime={500}
+                variant="category"
               />
-            )}{" "}
-            <SearchableDropdown
-              id={`category-filter-${catalogId}`}
-              name="categoryFilter"
-              options={categoryOptions}
-              className={`category-filter ${[
-                Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
-                Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
-              ].includes(activeCategory.toLowerCase())
-                ? "tab-linked-filter"
-                : ""
+            </div>
+          </div>
+          <div className="search-section">
+            <div className="search-container">
+              {isV("search") && (
+                <SearchInput
+                  onSearch={(searchTerm) => {
+                    setSearchQuery(searchTerm);
+                    setCurrentPage(1); // Reset to page 1 when searching
+                  }}
+                  debounceTime={500}
+                />
+              )}{" "}
+              <SearchableDropdown
+                id={`category-filter-${catalogId}`}
+                name="categoryFilter"
+                options={categoryOptions}
+                className={`category-filter ${
+                  [
+                    Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
+                    Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
+                  ].includes(activeCategory.toLowerCase())
+                    ? "tab-linked-filter"
+                    : ""
                 }`}
-              placeholder={t("Category")}
-              value={categoryFilter}
-              onChange={(e) => {
-                // Always set category filter from dropdown selection only
-                setCategoryFilter(e.target.value);
-                setSubCategoryFilter(""); // Reset subcategory when category changes
-                setCurrentPage(1);
-              }}
-            />
-            <SearchableDropdown
-              id={`subcategory-filter-${catalogId}`}
-              name="subCategoryFilter"
-              options={subCategoryOptions}
-              className="category-filter"
-              placeholder={t("Sub category")}
-              value={subCategoryFilter}
-              onChange={(e) => {
-                // Always set subcategory filter from dropdown selection only
-                setSubCategoryFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              disabled={!categoryFilter}
-            />
+                placeholder={t("Category")}
+                value={categoryFilter}
+                onChange={(e) => {
+                  // Always set category filter from dropdown selection only
+                  setCategoryFilter(e.target.value);
+                  setSubCategoryFilter(""); // Reset subcategory when category changes
+                  setCurrentPage(1);
+                }}
+              />
+              <SearchableDropdown
+                id={`subcategory-filter-${catalogId}`}
+                name="subCategoryFilter"
+                options={subCategoryOptions}
+                className="category-filter"
+                placeholder={t("Sub category")}
+                value={subCategoryFilter}
+                onChange={(e) => {
+                  // Always set subcategory filter from dropdown selection only
+                  setSubCategoryFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+                disabled={!categoryFilter}
+              />
+            </div>
           </div>
         </div>
         <div className="products-grid">
           {displayedProducts.length > 0
             ? displayedProducts?.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={mapProductToCardProps(product)}
-                quantities={quantities}
-                onQuantityChange={handleQuantityChange}
-                onAddToCart={() => handleAddToCart(product.id)}
-                onProductClick={() => handleProductClick(product)}
-                setQuantities={setQuantities}
-                onToggleFavorite={handleToggleFavorite} // Add this prop
-              />
-            ))
+                <ProductCard
+                  key={product.id}
+                  product={mapProductToCardProps(product)}
+                  quantities={quantities}
+                  onQuantityChange={handleQuantityChange}
+                  onAddToCart={() => handleAddToCart(product.id)}
+                  onProductClick={() => handleProductClick(product)}
+                  setQuantities={setQuantities}
+                  onToggleFavorite={handleToggleFavorite} // Add this prop
+                />
+              ))
             : !isLoading && (
-              <div className="no-products-message">
-                {searchQuery ? (
-                  <p>
-                    {t(
-                      'No products found matching your search term "{{searchTerm}}".',
-                      { searchTerm: searchQuery }
-                    )}
-                  </p>
-                ) : (
-                  <p>{t("No products found matching your criteria.")}</p>
-                )}
-              </div>
-            )}
+                <div className="no-products-message">
+                  {searchQuery ? (
+                    <p>
+                      {t(
+                        'No products found matching your search term "{{searchTerm}}".',
+                        { searchTerm: searchQuery }
+                      )}
+                    </p>
+                  ) : (
+                    <p>{t("No products found matching your criteria.")}</p>
+                  )}
+                </div>
+              )}
           {isLoading && (
             <div className="loading-container">
               <LoadingSpinner size="medium" />
@@ -1582,7 +1509,6 @@ function Catalog() {
           />
         )}
       </div>
-
       <style jsx="true">{`
         .no-products-message {
           width: 100%;
@@ -1601,7 +1527,6 @@ function Catalog() {
           border-radius: 8px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-
         .product-search-input {
           padding: 10px 15px;
           width: 300px;
@@ -1614,7 +1539,6 @@ function Catalog() {
           margin-right: 10px;
           box-sizing: border-box;
         }
-
         .product-search-input:focus {
           border-color: #1d396d;
           box-shadow: 0 0 0 2px #e5e4e2;
@@ -1624,7 +1548,6 @@ function Catalog() {
           color: #d3d3d3;
           opacity: 1;
         }
-
         .loading-more-container {
           display: flex;
           flex-direction: column;
@@ -1637,7 +1560,6 @@ function Catalog() {
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
-
         .loading-more-text {
           margin-top: 15px;
           color: #666;
@@ -1658,14 +1580,11 @@ function Catalog() {
         // .category-filter {
         //     background-color: #f5f5f5;
         // }
-
-
         @media (max-width: 768px) {
           .product-search-input {
             width: 100%;
             margin-bottom: 10px;
           }
-
           .search-container {
             flex-direction: column;
           }
@@ -1674,5 +1593,4 @@ function Catalog() {
     </Sidebar>
   );
 }
-
 export default Catalog;

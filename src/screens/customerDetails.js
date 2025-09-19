@@ -464,6 +464,14 @@ function CustomerDetails() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+    useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   const fetchWorkflowDataOfCustomer = async (workflowId) => {
     try {
       const response = await fetch(
@@ -1705,8 +1713,8 @@ if (uniqueFieldsList.includes(field)) {
           ...customerPaymentMethodsData,
         },
         true,
-        mandatoryFields
-      );
+        mandatoryFields,
+      )
       setFormErrors(errors);
       if (Object.keys(errors).length > 0) {
         // Handle errors (e.g., show error messages)
@@ -2197,7 +2205,7 @@ if (uniqueFieldsList.includes(field)) {
             <div className="customer-onboarding-body">
               <div
                 className="customer-onboarding-tabs-vertical"
-                style={{ height: tabsHeight }}
+                style={!isMobile ? { height: tabsHeight } : {}}
               >
                 <div className="tabs-title">{t("Customer Details")}</div>
 
