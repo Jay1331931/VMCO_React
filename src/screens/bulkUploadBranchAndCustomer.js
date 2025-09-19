@@ -108,6 +108,8 @@ function BulkUploadBranchAndCustomer() {
       setLoading(false);
       setSelectedFile(null);
       setUploadType(null);
+       setPopup(false)
+      
     }
   };
 
