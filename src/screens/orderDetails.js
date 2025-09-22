@@ -3001,7 +3001,7 @@ function OrderDetails() {
 
                     {isV('category') && (
                       <div className="order-details-field">
-                        <label>{t('Category')}</label>
+                        <label>{t('VMCO Category')}</label>
                         {formMode === 'add' ? (
                           <Dropdown
                             name="category"
@@ -3012,7 +3012,7 @@ function OrderDetails() {
                                 : []
                             }
                             className="category-dropdown"
-                            placeholder={t('Select Category')}
+                            placeholder={t('Applicable for VMCO products')}
                             disabled={
                               !isE('category') ||
                               (formData.products && formData.products.length > 0) ||
@@ -3033,22 +3033,11 @@ function OrderDetails() {
                     {isV('paymentMethod') && (
                       <div className="order-details-field">
                         <label>{t('Payment Method')}</label>
-                        {formMode === 'add' ? (
-                          <input
-                            name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
-                            readOnly
-                            placeholder={t('Click Save to select')}
-                            style={{ background: '#f9f9f9', cursor: 'not-allowed' }}
-                            disabled
-                          />
-                        ) : (
-                          <input
-                            name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
-                            disabled
-                          />
-                        )}
+                        <input
+                          name="paymentMethod"
+                          value={t(formData.paymentMethod)}
+                          disabled
+                        />
                       </div>
                     )}
 
@@ -3724,11 +3713,11 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) &&formData?.paymentStatus?.toLowerCase()==="pending" && (
+                {isV('btnCancel', fromApproval, false) && formData?.paymentStatus?.toLowerCase() === "pending" && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
-                    disabled={(formData?.status?.toLowerCase() !== 'open')  }
+                    disabled={(formData?.status?.toLowerCase() !== 'open')}
                   >
                     {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
