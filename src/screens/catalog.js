@@ -163,9 +163,13 @@ function Catalog() {
         }
 
         // Add category and subcategory filters
-        if (categoryFilter) params.append("category", categoryFilter);
-        if (subCategoryFilter) params.append("subCategory", subCategoryFilter);
-
+        if (categoryFilter && categoryFilter.trim() !== "") {
+          params.append("category", categoryFilter);
+        }
+        // Only add subcategory if it's actually selected AND not empty
+        if (subCategoryFilter && subCategoryFilter.trim() !== "") {
+          params.append("subCategory", subCategoryFilter);
+        }
         // Add search query
         if (searchQuery) {
           params.append("search", searchQuery);
@@ -187,36 +191,45 @@ function Catalog() {
         );
 
         const result = await response.json();
-        console.log(`Fetched page ${pageNumber} products:`, result);
+
+        console.log('🔍 Full API Response Structure:', {
+          result,
+          hasStatus: result.hasOwnProperty('status'),
+          hasData: result.hasOwnProperty('data'),
+          dataType: typeof result.data,
+          dataIsArray: Array.isArray(result.data),
+          dataKeys: result.data ? Object.keys(result.data) : 'no data',
+          totalRecords: result.data?.totalRecords,
+          total: result.total,
+          pagination: result.pagination
+        });
+
+
         // Extract the new products from the response
         let pageProducts = [];
         let totalCount = 0;
 
-        if (result.status === "Ok") {
-          pageProducts = result.data.data;
-          totalCount = result.data.totalRecords;
+        // SIMPLIFIED LOGIC - Replace your complex if-else with this:
+        if (result && result.data) {
+          if (Array.isArray(result.data.data)) {
+            pageProducts = result.data.data;
+          } else if (Array.isArray(result.data)) {
+            pageProducts = result.data;
+          }
+
+          // Try different possible total count properties
+          totalCount = result.data.totalRecords ||
+            result.data.total ||
+            result.total ||
+            (result.pagination && result.pagination.total) ||
+            pageProducts.length;
         }
 
-        if (Array.isArray(result.data)) {
-          pageProducts = result.data.data;
-          totalCount = result.length;
-        } else if (result.status === "Ok" && Array.isArray(result.data.data)) {
-          pageProducts = result.data.data;
-          totalCount =
-            (result.total !== undefined && Number(result.total)) ||
-            (result.pagination &&
-              result.pagination.total !== undefined &&
-              Number(result.pagination.total)) ||
-            result.data.length;
-        } else if (result && Array.isArray(result?.data?.data)) {
-          pageProducts = result.data.data;
-          totalCount =
-            (result.total !== undefined && Number(result.total)) ||
-            (result.pagination &&
-              result.pagination.total !== undefined &&
-              Number(result.pagination.total)) ||
-            result.data.length;
-        }
+        console.log('📊 Extracted Data:', {
+          pageProducts: pageProducts.length,
+          totalCount,
+          pageNumber
+        });
 
         return { pageProducts, totalCount, pageNumber };
       };
@@ -252,9 +265,12 @@ function Catalog() {
       setTotalProducts(maxTotalCount);
       setLoadedPages(newLoadedPages);
 
-      // Determine if there are more products to load
-      const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
-      const moreAvailable = loadedProductsCount < maxTotalCount;
+      const moreAvailable = allProducts.length < maxTotalCount;
+      console.log('📈 hasMore updated:', {
+        allProductsLength: allProducts.length,
+        maxTotalCount,
+        moreAvailable
+      });
       setHasMore(moreAvailable);
     } catch (err) {
       console.error("Error fetching products:", err);
@@ -573,47 +589,97 @@ function Catalog() {
     categoryFilter,
     subCategoryFilter,
   ]);
-  // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
+  // Auto-loading pagination with delay - now increments maximum page number to load
+  // Intersection Observer for infinite scroll
+  // Intersection Observer for infinite scroll - CORRECTED VERSION
+  // Separate useEffect for intersection observer
   useEffect(() => {
-    let timeoutId = null;
+    let observer = null;
 
-    // Function to handle automatic loading of more pages
-    const loadMorePagesWithDelay = () => {
-      // Only load more if there are more products to fetch
+    const handleIntersection = (entries) => {
+      const lastProductElement = entries[0];
+
+      console.log('🔍 Intersection triggered:', {
+        isIntersecting: lastProductElement.isIntersecting,
+        hasMore,
+        isLoading,
+        isLoadingMore,
+        displayedCount: displayedProducts.length,
+        totalProducts
+      });
+
       if (
+        lastProductElement.isIntersecting &&
         hasMore &&
         !isLoading &&
         !isLoadingMore &&
         displayedProducts.length < totalProducts
       ) {
+        console.log('✅ Starting to load more products...');
         setIsLoadingMore(true);
-        timeoutId = setTimeout(() => {
-          setCurrentPage((prev) => prev + 1);
-        }, 3000);
       }
     };
 
-    if (
-      !isLoading &&
-      !isLoadingMore &&
-      displayedProducts.length > 0 &&
-      hasMore &&
-      displayedProducts.length < totalProducts
-    ) {
-      loadMorePagesWithDelay();
-    }
+    // Setup observer logic (same as before)
+    const setupObserver = () => {
+      if (displayedProducts.length === 0 || !hasMore || isLoading) return;
+
+      setTimeout(() => {
+        const productsGrid = document.querySelector('.products-grid');
+        if (!productsGrid || productsGrid.children.length === 0) return;
+
+        const lastProductElement = productsGrid.children[productsGrid.children.length - 1];
+        console.log('🎯 Found last product element:', lastProductElement);
+
+        if (lastProductElement) {
+          observer = new IntersectionObserver(handleIntersection, {
+            root: null,
+            rootMargin: '200px',
+            threshold: 0.1
+          });
+
+          observer.observe(lastProductElement);
+          console.log('👁️ Observer attached to last element');
+        }
+      }, 100);
+    };
+
+    setupObserver();
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (observer) {
+        observer.disconnect();
+        console.log('👁️ Observer disconnected');
+      }
     };
-  }, [
-    currentPage,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    displayedProducts.length,
-    totalProducts,
-  ]); // Reset page when filters change
+  }, [displayedProducts.length, hasMore, isLoading, totalProducts]);
+
+  // Separate useEffect to handle loading timeout
+  useEffect(() => {
+    if (isLoadingMore) {
+      console.log('⏱️ Starting 2-second loading delay...');
+      const timeoutId = setTimeout(() => {
+        console.log('📄 Incrementing page from', currentPage, 'to', currentPage + 1);
+        setCurrentPage((prev) => prev + 1);
+      }, 2000);
+
+      return () => {
+        clearTimeout(timeoutId);
+        console.log('⏰ Loading timeout cleared');
+      };
+    }
+  }, [isLoadingMore, currentPage]);
+
+  // Reset isLoadingMore after successful page fetch
+  useEffect(() => {
+    if (isLoadingMore && !isLoading && currentPage > 1) {
+      setIsLoadingMore(false);
+      console.log('✅ Loading completed, reset isLoadingMore');
+    }
+  }, [isLoading, isLoadingMore, currentPage]);
+
+
+
   useEffect(() => {
     setCurrentPage(1);
     setLoadedPages([]);
@@ -1488,12 +1554,14 @@ function Catalog() {
               placeholder={t("Category")}
               value={categoryFilter}
               onChange={(e) => {
-                // Always set category filter from dropdown selection only
                 setCategoryFilter(e.target.value);
-                setSubCategoryFilter(""); // Reset subcategory when category changes
+                setSubCategoryFilter("");
                 setCurrentPage(1);
+                setLoadedPages([]);
+                setProducts([]);
               }}
             />
+
             <SearchableDropdown
               id={`subcategory-filter-${catalogId}`}
               name="subCategoryFilter"
@@ -1544,28 +1612,25 @@ function Catalog() {
             </div>
           )}
         </div>
-        {/* Separate loading indicator at the bottom of the page */}
-        {isLoadingMore &&
-          hasMore &&
-          displayedProducts.length < totalProducts && (
-            <div className="loading-more-container">
-              <LoadingSpinner size="medium" />
-              <span className="loading-more-text">{t("Loading...")}</span>
-            </div>
-          )}
-        {!hasMore &&
-          displayedProducts.length >= totalProducts &&
-          !isLoading &&
-          !isLoadingMore && (
-            <div className="end-of-results-message">
-              <p>{t("All products loaded.")}</p>
-            </div>
-          )}
+        {/* Loading spinner when fetching more products */}
+        {isLoadingMore && hasMore && displayedProducts.length < totalProducts && (
+          <div className="loading-more-container">
+            <LoadingSpinner size="medium" />
+            <span className="loading-more-text">{t("Loading more products...")}</span>
+          </div>
+        )}
+
+        {/* End of catalog message */}
+        {!hasMore && displayedProducts.length > 0 && displayedProducts.length >= totalProducts && !isLoading && !isLoadingMore && (
+          <div className="end-of-catalog-message" style={{ textAlign: 'center', margin: '20px 0', color: '#666' }}>
+            <p>{t("End of product catalog")}</p>
+          </div>
+        )}
+        {/* 
         {!hasMore &&
           displayedProducts.length > 0 &&
           !isLoading &&
-          !isLoadingMore &&
-          currentPage < 3 && <div className="end-of-results-message"></div>}
+          !isLoadingMore && currentPage < 3 && <div className="end-of-results-message"></div>} */}
         {selectedProduct && (
           <ProductPopup
             product={mapProductToCardProps(selectedProduct)}
