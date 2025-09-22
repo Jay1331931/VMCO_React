@@ -1173,6 +1173,27 @@
     top: 3px;
     right: 5px;
   }
+  .maintenance-details-grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .attachments {
+    flex-direction: column !important;
+  }
+  .maintenance-details-images {
+    display: flex;
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: flex-start;
+    flex-direction: column;
+  }
+  .maintenance-details-videos {
+    display: flex;
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: flex-start;
+    flex-direction: column;
+  }
 }
 .login-screen {
   display: flex;
