@@ -148,11 +148,11 @@ function SupportDetails() {
         `${API_BASE_URL}/upload-files`,
         formDataUpload,
         {
-          headers: { 
+          headers: {
             "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-         
+
         }
       );
 
@@ -194,8 +194,8 @@ function SupportDetails() {
         const { data } = await axios.post(
           `${API_BASE_URL}/get-files`,
           { fileName, containerType: "support" },
-          { 
-           
+          {
+
             headers: {
               "Authorization": `Bearer ${token}`
             }
@@ -225,8 +225,8 @@ function SupportDetails() {
           fileName,
           containerType: "support",
         },
-        { 
-         
+        {
+
           headers: {
             "Authorization": `Bearer ${token}`
           }
@@ -329,11 +329,11 @@ function SupportDetails() {
         // Updated URL to include query parameter for supportIssueType master type
         const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "supportIssueType"}`, {
           method: 'GET',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
+
         });
 
         if (!response.ok) throw new Error('Failed to fetch issue type options');
@@ -345,7 +345,7 @@ function SupportDetails() {
           // Extract issue type values from the response data and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
-            displayText: currentLanguage=== "ar" ? item.valueLc : item.value
+            displayText: currentLanguage === "ar" ? item.valueLc : item.value
           }));
           setIssueTypeOptions(issueTypeValues);
         } else if (result.data && Array.isArray(result.data)) {
@@ -353,7 +353,7 @@ function SupportDetails() {
           // Handle the actual response structure and make them language-aware
           const issueTypeValues = options.map(item => ({
             value: item.value,
-            displayText:  currentLanguage=== "ar" ? item.valueLc : item.value
+            displayText: currentLanguage === "ar" ? item.valueLc : item.value
           }));
           setIssueTypeOptions(issueTypeValues);
         } else {
@@ -416,11 +416,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -457,11 +457,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -490,11 +490,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -523,7 +523,7 @@ function SupportDetails() {
     }
   };
 
-    const handleCancel = async () => {
+  const handleCancel = async () => {
     if (formMode === "add") {
       // In add mode, just reload the page
       for (let file of images) {
@@ -568,11 +568,11 @@ function SupportDetails() {
 
           const response = await fetch(apiUrl, {
             method: "PATCH",
-            headers: { 
+            headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}` 
+              "Authorization": `Bearer ${token}`
             },
-            
+
             body: JSON.stringify(ticketData),
           });
 
@@ -681,11 +681,11 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "GET",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
       });
 
       if (!response.ok) {
@@ -807,11 +807,11 @@ function SupportDetails() {
       const { createdAt, ...filterdata } = ticketData
       const response = await fetch(apiUrl, {
         method: method,
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
+
         body: JSON.stringify(filterdata),
       });
 
@@ -885,12 +885,12 @@ function SupportDetails() {
 
       const response = await fetch(apiUrl, {
         method: "PATCH",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
-        
-        body: JSON.stringify({ 
+
+        body: JSON.stringify({
           status: "Closed",
           comments: ticket.comments // Explicitly preserve comments
         }),
@@ -940,7 +940,7 @@ function SupportDetails() {
   // Add comment to ticket.comments in correct format and save to backend immediately
   const handleAddComment = async (commentText, newCommentObj) => {
     if (!commentText || !user || isReadOnly) return;
-    
+
     // Create the new comment object
     const newComment = {
       date: formatDate(new Date(), "DD/MM/YYYY HH:MM"),
@@ -949,44 +949,44 @@ function SupportDetails() {
       message: commentText,
       userName: user.userName
     };
-    
+
     // Update local state first for immediate UI feedback
-    const updatedComments = Array.isArray(ticket.comments) 
-      ? [...ticket.comments] 
+    const updatedComments = Array.isArray(ticket.comments)
+      ? [...ticket.comments]
       : [newComment];
-      
+
     setTicket(prev => ({
       ...prev,
       comments: updatedComments
     }));
-    
+
     try {
       // Only attempt to save to backend if we're in edit mode and have a ticket ID
       if (formMode === "edit" && ticket.id) {
         const apiUrl = `${API_BASE_URL}/grievances/id/${ticket.id}`;
-        
+
         const response = await fetch(apiUrl, {
           method: "PATCH",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            "Authorization": `Bearer ${token}`
           },
-          
-          body: JSON.stringify({ 
-            comments: updatedComments 
+
+          body: JSON.stringify({
+            comments: updatedComments
           })
         });
-        
+
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         // Optional: show a small success notification
         console.log("Comment saved successfully to backend");
       }
     } catch (error) {
       console.error("Failed to save comment to backend:", error);
-      
+
       // Optional: show error notification to user
       Swal.fire({
         title: t("Error"),
@@ -999,6 +999,75 @@ function SupportDetails() {
       });
     }
   };
+
+  const handleAddFeedback = async () => {
+    try {
+      // More robust validation
+      if (!ticket.feedback || !ticket.feedback.trim()) {
+        Swal.fire({
+          title: t("Validation Error"),
+          text: t("Please enter feedback before submitting"),
+          icon: "warning",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6"
+        });
+        return;
+      }
+
+      if (!ticket.id) {
+        console.error("No ticket ID available");
+        return;
+      }
+
+      const apiUrl = `${API_BASE_URL}/grievances/id/${ticket.id}`;
+
+      const response = await fetch(apiUrl, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          feedbackComment: ticket.feedback.trim() // Ensure it's trimmed
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log("Feedback submitted successfully:", result);
+
+      await Swal.fire({
+        title: t("Success!"),
+        text: t("Feedback submitted successfully!"),
+        icon: "success",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#28a745"
+      });
+
+      setTicket(prev => ({
+        ...prev,
+        feedbackComment: ticket.feedback.trim()
+      }));
+
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+
+      await Swal.fire({
+        title: t("Error!"),
+        text: t("Failed to submit feedback. Please try again."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#dc3545"
+      });
+    }
+  };
+
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -1128,7 +1197,7 @@ function SupportDetails() {
                       {uploadingImage && (
                         <div className='maintenance-image-placeholder upload-loading'>
                           <LoadingSpinner size="small" />
-                         </div>
+                        </div>
                       )}
                       {fileData.map((imageData, idx) => (
                         <div
@@ -1203,6 +1272,25 @@ function SupportDetails() {
               )}
             </div>
           )}
+
+          {isV('feedback') && ticket.status?.toLowerCase() === 'closed' && (
+            <div className='support-details-field support-details-textarea'>
+              <label>{t("Customer Feedback")}</label>
+              <textarea
+                id='feedback'
+                name='feedback'
+                onChange={handleInputChange}
+                value={ticket?.feedbackComment}
+                disabled={!isE("feedback") || ticket?.feedbackComment}
+              />
+              {isV('feedbackButton') && !ticket.feedbackComment && (
+                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment}>
+                  {t("Submit Feedback")}
+                </button>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
       <div className='support-details-footer' style={{ alignItems: 'center' }}>
@@ -1296,7 +1384,7 @@ function SupportDetails() {
           </div>
         </div>
       )}
-      
+
 
       {isV('videoPopup') && popupVideo && (
         <div className='image-popup-overlay' onClick={() => setPopupVideo(null)}>
@@ -1355,7 +1443,7 @@ function SupportDetails() {
 
       <style>
         {
-            `
+          `
             .maintenance-details-images,
 .maintenance-details-videos {
   flex: 1;

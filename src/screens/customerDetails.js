@@ -938,6 +938,7 @@ const handleVerifiedDataChange = (e) => {
     mandatoryFields = mandatoryFields
   ) => {
     const errors = {};
+    console.log(":::::",dataToValidate);
     const arabicList = ["companyNameAr", "brandNameAr"];
     const englishList = ["companyNameEn", "brandNameEn"];
     const tradingDocumentList = [
