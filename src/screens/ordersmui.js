@@ -380,6 +380,27 @@ function Orders() {
   ];
 
   const isArabic = i18n.language === "ar";
+const COMMON_RULES = {
+  SHC_GMTC: [
+    // Approved cases
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+
+    // Open cases
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "open" },
+  ],
+
+  NAQI_DAR: [
+    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+  ],
+};
+
+
 
   const orderColumns = [
     {
@@ -519,7 +540,10 @@ function Orders() {
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("action") && (
+          {isV("action") &&(params?.row?.paymentMethod?.toLowerCase()!="cash on delivery"&& params?.row?.paymentStatus?.toLowerCase() !== 'paid'  
+                  && (params?.row?.status?.toLowerCase() === 'approved' || (params?.row?.status?.toLowerCase() === 'open' 
+                  && (params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||params?.row?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| params?.row?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
+                  (params?.row?.status?.toLowerCase() === 'pending' && (params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || params?.row?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) &&(
             <Box
               component="span"
               onClick={(e) => {
@@ -551,7 +575,11 @@ function Orders() {
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("sendLink") && (
+          {isV("sendLink") &&( 
+                      params?.row?.paymentMethod?.toLowerCase()!="cash on delivery"&&  params?.row?.paymentStatus?.toLowerCase() !== 'paid'  
+                  && ( params?.row?.status?.toLowerCase() === 'approved'  || ( params?.row?.status?.toLowerCase() === 'open' 
+                  && ( params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || params?.row?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()||  params?.row?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
+                  ( params?.row?.status?.toLowerCase() === 'pending' && ( params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase()|| params?.row?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) && (
             <Box
               component="span"
               onClick={(e) => {
@@ -578,9 +606,34 @@ function Orders() {
       searchable: false,
       maxWidth: 80,
       flex: 2,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("FandOSyncSO") && (
+      renderCell: (params) => {
+        const rowdata=params.row
+        const SYNC_RULES = {
+  [Constants.ENTITY.VMCO]: (rowdata) =>
+    rowdata.isMachine
+      ? [
+          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
+        ]
+      : [
+          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
+          { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+          { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+        ],
+
+  [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+  [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+  [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+  [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+};
+         const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
+  const isValidForSync = rules.some(
+    (rule) =>
+      rule?.paymentMethod?.toLowerCase() === rowdata.paymentMethod?.toLowerCase() &&
+      rule?.paymentStatus?.toLowerCase() === rowdata.paymentStatus?.toLowerCase() &&
+      rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
+  );
+        return (<Box sx={{ display: "flex", gap: 1 }}>
+          {isV("FandOSyncSO") && !(rowdata.erpOrderId)&& isValidForSync&& (
             <Box
               component="span"
               onClick={(e) => {
@@ -610,8 +663,8 @@ function Orders() {
                 : t("Sync")}
             </Box>
           )}
-        </Box>
-      ),
+        </Box>)
+      },
     },
   ];
 
