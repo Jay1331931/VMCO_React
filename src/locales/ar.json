@@ -735,5 +735,9 @@
     "Payment system not ready. Please try again.":"نظام الدفع غير جاهز. يُرجى المحاولة مرة أخرى.",
     "Please enter machine serial number to get Warranty End Date":"يرجى إدخال رقم السيريال للآلة للحصول على تاريخ انتهاء الضمان",
     "Please enter valid machine serial number":"يرجى إدخال رقم سيريال للآلة صالح",
-    "Auto-populated": "تم التعبئة تلقائيًا"
+    "Auto-populated": "تم التعبئة تلقائيًا",
+    "City (Other)": "المدينة (أخرى)",
+    "District (Other)": "الحي (آخر)",
+    "Location Type (Other)": "نوع الموقع (آخر)",
+    "Branch Region": "منطقة الفرع"
 }
