@@ -332,6 +332,20 @@
   margin-right: 10px;
 }
 
+.feedback-btn {
+  background-color: var(--logo-deep-green);
+  color: var(--bg-white);
+  border: none;
+  width: 140px;
+  padding: 10px 16px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-top: 10px;
+  margin-left: auto;
+  /* Default for LTR */
+  margin-right: 10px;
+}
+
 /* RTL Support */
 [dir="rtl"] .add-button {
   margin-left: 10px;

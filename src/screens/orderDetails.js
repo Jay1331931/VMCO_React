@@ -3724,11 +3724,11 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) && (
+                {isV('btnCancel', fromApproval, false) &&formData?.paymentStatus?.toLowerCase()==="pending" && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
-                    disabled={(formData?.status?.toLowerCase() !== 'open')}
+                    disabled={(formData?.status?.toLowerCase() !== 'open')  }
                   >
                     {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
