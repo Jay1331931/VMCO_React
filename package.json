@@ -1,6 +1,6 @@
 {
   "name": "talabpoint",
- "homepage": ".",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",

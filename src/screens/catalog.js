@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
@@ -62,198 +62,413 @@ const initialCategories = [
 ];
 function Catalog() {
   const location = useLocation();
-  const { t, i18n } = useTranslation(); // Get i18n at component level
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const [categories] = useState(initialCategories); // No need for setCategories anymore
-  const [activeCategory, setActiveCategory] = useState(
-    initialCategories[0].value
-  );
+  const [categories] = useState(initialCategories);
+  const [activeCategory, setActiveCategory] = useState(initialCategories[0].value);
   const [selectedLocation, setSelectedLocation] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState(""); // Initialize empty
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [branches, setBranches] = useState([]);
   const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
   const [selectedBranchCity, setSelectedBranchCity] = useState("");
   const [quantities, setQuantities] = useState({});
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Simplified pagination states
   const [products, setProducts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [displayedProducts, setDisplayedProducts] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1); // Now represents the max page to load
-  const [loadedPages, setLoadedPages] = useState([]); // Track which pages have been loaded
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // New state for loading more products
-  const [hasMore, setHasMore] = useState(true); // New state to track if there are more products to load
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
   const [categoryFilter, setCategoryFilter] = useState("");
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryTabs, setCategoryTabs] = useState([]);
-  const productsPerPage = 60;
+  const productsPerPage = 20;
   const { token, user, isAuthenticated, loading, logout } = useAuth();
-  console.log("User Dataaaaa:", token);
+
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [categoryOptions, setCategoryOptions] = useState([]); // For category dropdown options
-  const [subCategoryOptions, setSubCategoryOptions] = useState([]); // For subcategory dropdown options
-  const [entityDescriptions, setEntityDescriptions] = useState([]); // For entity descriptions from basics master
-  const fetchAllPages = async () => {
-    // Show loading state
-    if (currentPage === 1) {
+  const [displayedProducts, setDisplayedProducts] = useState([]);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+  const [entityDescriptions, setEntityDescriptions] = useState([]);
+
+  // Refs for pagination and observer
+  const currentPageRef = useRef(1);
+  const isLoadingRef = useRef(false);
+  const observerRef = useRef(null);
+  const loadingTimeoutRef = useRef(null);
+
+  // FIXED: Add refs to track current values to prevent stale closures
+  const activeCategoryRef = useRef(activeCategory);
+  const categoryFilterRef = useRef(categoryFilter);
+  const subCategoryFilterRef = useRef(subCategoryFilter);
+  const searchQueryRef = useRef(searchQuery);
+
+  // FIXED: Update refs when values change
+  useEffect(() => {
+    activeCategoryRef.current = activeCategory;
+  }, [activeCategory]);
+
+  useEffect(() => {
+    categoryFilterRef.current = categoryFilter;
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    subCategoryFilterRef.current = subCategoryFilter;
+  }, [subCategoryFilter]);
+
+  useEffect(() => {
+    searchQueryRef.current = searchQuery;
+  }, [searchQuery]);
+
+  // FIXED: Helper function to reset all infinite scroll states
+  const resetInfiniteScrollStates = useCallback(() => {
+    console.log("🔄 Resetting infinite scroll states");
+    setProducts([]);
+    setCurrentPage(1);
+    currentPageRef.current = 1;
+    setHasMore(true);
+    setIsLoading(false);
+    setIsLoadingMore(false);
+    isLoadingRef.current = false;
+
+    // Clear any pending load timeout
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
+
+    // Disconnect existing observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+  }, []);
+
+  // FIXED: Fetch function with enhanced filter checking
+  const fetchProducts = async (page = 1, reset = false) => {
+    // Use ref values to get current state at the time of execution
+    const currentActiveCategory = activeCategoryRef.current;
+    const currentCategoryFilter = categoryFilterRef.current;
+    const currentSubCategoryFilter = subCategoryFilterRef.current;
+    const currentSearchQuery = searchQueryRef.current;
+
+    console.log(`🚀 fetchProducts called: page=${page}, reset=${reset}, tab=${currentActiveCategory}, category=${currentCategoryFilter}, subCategory=${currentSubCategoryFilter}`);
+
+    if (reset) {
       setIsLoading(true);
+      isLoadingRef.current = true;
     } else {
       setIsLoadingMore(true);
+      isLoadingRef.current = true;
     }
+
     try {
-      // Determine which pages we need to fetch
-      const pagesToFetch = [];
-      for (let i = 1; i <= currentPage; i++) {
-        if (!loadedPages.includes(i)) {
-          pagesToFetch.push(i);
-        }
-      }
-      if (pagesToFetch.length === 0) {
-        // All needed pages are already loaded
-        setIsLoading(false);
-        setIsLoadingMore(false);
-        return;
-      }
-      // Create a function to fetch a single page
-      const fetchPage = async (pageNumber) => {
-        const params = new URLSearchParams({
-          page: pageNumber,
-          pageSize: productsPerPage,
-          sortBy: "id",
-          sortOrder: "asc",
-        });
-        // Special handling for the Special Products tab
-        if (activeCategory === "SPECIAL_PRODUCTS") {
-          params.append("filters", JSON.stringify({ specialProduct: true }));
-          // No entity filtering for special products
-        } else if (activeCategory === "FAVORITES") {
-          params.append("favorite", "true");
-          // No entity filtering for favorites
-        } else {
-          // Handle entity filtering for regular tabs
-          const selectedCategory = categories.find(
-            (cat) => cat.value === activeCategory
-          );
-          const entityToFilter = selectedCategory
-            ? selectedCategory.entity
-            : null;
-          if (entityToFilter) {
-            params.append("entity", entityToFilter);
-            // Special handling for VMCO entity tabs
-            if (entityToFilter === Constants.ENTITY.VMCO) {
-              if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
-                params.append("isMachine", "true");
-              } else if (
-                activeCategory === Constants.CATEGORY.VMCO_CONSUMABLES
-              ) {
-                params.append("isMachine", "false");
-              }
+      const params = new URLSearchParams({
+        page: page,
+        pageSize: productsPerPage,
+        sortBy: "id",
+        sortOrder: "asc",
+      });
+
+      // Handle category-specific filtering using current ref values
+      if (currentActiveCategory === "SPECIAL_PRODUCTS") {
+        params.append("filters", JSON.stringify({ "specialProduct": true }));
+      } else if (currentActiveCategory === "FAVORITES") {
+        params.append("favorite", "true");
+      } else {
+        const selectedCategory = categories.find(cat => cat.value === currentActiveCategory);
+        const entityToFilter = selectedCategory ? selectedCategory.entity : null;
+
+        if (entityToFilter) {
+          params.append("entity", entityToFilter);
+
+          if (entityToFilter === Constants.ENTITY.VMCO) {
+            if (currentActiveCategory === Constants.CATEGORY.VMCO_MACHINES) {
+              params.append("isMachine", "true");
+            } else if (currentActiveCategory === Constants.CATEGORY.VMCO_CONSUMABLES) {
+              params.append("isMachine", "false");
             }
           }
         }
-        // Add category and subcategory filters
-        if (categoryFilter) params.append("category", categoryFilter);
-        if (subCategoryFilter) params.append("subCategory", subCategoryFilter);
-        // Add search query
-        if (searchQuery) {
-          params.append("search", searchQuery);
-          params.append(
-            "searchFields",
-            "productName,product_name,product_name_lc,productNameLc"
-          );
-        }
-        const response = await fetch(
-          `${API_BASE_URL}/products?${params.toString()}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+      }
+
+      // Add filters using current ref values
+      if (currentCategoryFilter && currentCategoryFilter.trim() !== "") {
+        params.append("category", currentCategoryFilter);
+      }
+      if (currentSubCategoryFilter && currentSubCategoryFilter.trim() !== "") {
+        params.append("subCategory", currentSubCategoryFilter);
+      }
+      if (currentSearchQuery) {
+        params.append("search", currentSearchQuery);
+        params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
+      }
+
+      console.log(`🌐 API call: ${API_BASE_URL}/products?${params.toString()}`);
+
+      const response = await fetch(
+        `${API_BASE_URL}/products?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           }
-        );
-        const result = await response.json();
-        console.log(`Fetched page ${pageNumber} products:`, result);
-        // Extract the new products from the response
-        let pageProducts = [];
-        let totalCount = 0;
-        if (result.status === "Ok") {
-          pageProducts = result.data.data;
-          totalCount = result.data.totalRecords;
         }
-        if (Array.isArray(result.data)) {
+      );
+
+      const result = await response.json();
+      console.log(`📦 API response for page ${page}:`, result);
+
+      // FIXED: Check if any filter changed while request was in flight
+      if (currentActiveCategory !== activeCategoryRef.current ||
+        currentCategoryFilter !== categoryFilterRef.current ||
+        currentSubCategoryFilter !== subCategoryFilterRef.current ||
+        currentSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed during fetch, ignoring response`);
+        return;
+      }
+
+      let pageProducts = [];
+      let totalCount = 0;
+
+      if (result && result.data) {
+        if (Array.isArray(result.data.data)) {
           pageProducts = result.data.data;
-          totalCount = result.length;
-        } else if (result.status === "Ok" && Array.isArray(result.data.data)) {
-          pageProducts = result.data.data;
-          totalCount =
-            (result.total !== undefined && Number(result.total)) ||
-            (result.pagination &&
-              result.pagination.total !== undefined &&
-              Number(result.pagination.total)) ||
-            result.data.length;
-        } else if (result && Array.isArray(result?.data?.data)) {
-          pageProducts = result.data.data;
-          totalCount =
-            (result.total !== undefined && Number(result.total)) ||
-            (result.pagination &&
-              result.pagination.total !== undefined &&
-              Number(result.pagination.total)) ||
-            result.data.length;
+        } else if (Array.isArray(result.data)) {
+          pageProducts = result.data;
         }
-        return { pageProducts, totalCount, pageNumber };
-      };
-      // Key fix: Handle the reset products case differently
-      let allProducts = [];
-      let newLoadedPages = [];
-      if (pagesToFetch.includes(1)) {
-        allProducts = [];
-        newLoadedPages = [];
+
+        totalCount = result.data.totalRecords ||
+          result.data.total ||
+          result.total ||
+          (result.pagination && result.pagination.total) ||
+          pageProducts.length;
+      }
+
+      // FIXED: Double-check filters haven't changed before updating state
+      if (currentActiveCategory !== activeCategoryRef.current ||
+        currentCategoryFilter !== categoryFilterRef.current ||
+        currentSubCategoryFilter !== subCategoryFilterRef.current ||
+        currentSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed before state update, ignoring response`);
+        return;
+      }
+
+      // Update products state
+      if (reset || page === 1) {
+        setProducts(pageProducts);
+        setCurrentPage(1);
+        currentPageRef.current = 1;
       } else {
-        allProducts = [...products];
-        newLoadedPages = [...loadedPages];
+        setProducts(prev => {
+          const newProducts = [...prev, ...pageProducts];
+          console.log(`📄 Added page ${page} products. Total: ${newProducts.length}`);
+          return newProducts;
+        });
+        setCurrentPage(page);
+        currentPageRef.current = page;
       }
-      // Fetch all pages in sequence
-      let maxTotalCount = 0;
-      for (const page of pagesToFetch) {
-        const { pageProducts, totalCount } = await fetchPage(page);
-        // Add these products to our collection
-        allProducts = [...allProducts, ...pageProducts];
-        maxTotalCount = Math.max(maxTotalCount, totalCount);
-        // Add to our new loaded pages array
-        newLoadedPages.push(page);
-      }
-      // Set all products and loaded pages at once after we've loaded everything
-      setProducts(allProducts);
-      setTotalProducts(maxTotalCount);
-      setLoadedPages(newLoadedPages);
-      // Determine if there are more products to load
-      const loadedProductsCount = productsPerPage * Math.max(...newLoadedPages);
-      const moreAvailable = loadedProductsCount < maxTotalCount;
-      setHasMore(moreAvailable);
+
+      setTotalProducts(totalCount);
+
+      // FIXED: Proper hasMore calculation with empty page check
+      const currentProductsCount = reset ? pageProducts.length : products.length + pageProducts.length;
+      const hasMoreProducts = currentProductsCount < totalCount && pageProducts.length > 0;
+      setHasMore(hasMoreProducts);
+
+      console.log(`📄 Loaded page ${page}:`, {
+        pageProducts: pageProducts.length,
+        totalProductsNow: currentProductsCount,
+        totalAvailable: totalCount,
+        hasMore: hasMoreProducts,
+        emptyPage: pageProducts.length === 0
+      });
+
     } catch (err) {
-      console.error("Error fetching products:", err);
+      console.error("❌ Error fetching products:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
+      isLoadingRef.current = false;
     }
   };
+
+  // FIXED: Load more function with enhanced filter checking
+  const loadMoreProducts = useCallback(() => {
+    if (isLoadingRef.current) {
+      console.log("🚫 Load more blocked: already loading");
+      return;
+    }
+
+    const currentHasMore = hasMore;
+    if (!currentHasMore) {
+      console.log("🚫 Load more blocked: no more products");
+      return;
+    }
+
+    console.log("⏳ Starting load more with 2s delay...");
+    setIsLoadingMore(true);
+    isLoadingRef.current = true;
+
+    if (loadingTimeoutRef.current) {
+      clearTimeout(loadingTimeoutRef.current);
+    }
+
+    // FIXED: Store current filters when scheduling the load
+    const scheduledTab = activeCategoryRef.current;
+    const scheduledCategoryFilter = categoryFilterRef.current;
+    const scheduledSubCategoryFilter = subCategoryFilterRef.current;
+    const scheduledSearchQuery = searchQueryRef.current;
+
+    loadingTimeoutRef.current = setTimeout(() => {
+      // FIXED: Check if any filter changed while waiting
+      if (scheduledTab !== activeCategoryRef.current ||
+        scheduledCategoryFilter !== categoryFilterRef.current ||
+        scheduledSubCategoryFilter !== subCategoryFilterRef.current ||
+        scheduledSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed during load delay, cancelling`);
+        setIsLoadingMore(false);
+        isLoadingRef.current = false;
+        return;
+      }
+
+      const nextPage = currentPageRef.current + 1;
+      console.log(`📈 Loading next page: ${nextPage} for current filters`);
+      fetchProducts(nextPage, false);
+    }, 2000);
+  }, [hasMore]);
+
+  // FIXED: Effect to handle tab changes and reset states
+  useEffect(() => {
+    if (loading || !user) return;
+
+    console.log("🔄 Tab/filters changed, resetting products", {
+      activeCategory,
+      categoryFilter,
+      subCategoryFilter,
+      searchQuery
+    });
+
+    // Reset all infinite scroll states when changing tabs or filters
+    resetInfiniteScrollStates();
+
+    // Clear quantities when changing tabs to avoid confusion
+    setQuantities({});
+
+    // Fetch fresh products for the new tab/filters
+    fetchProducts(1, true);
+  }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery, user, resetInfiniteScrollStates]);
+
+  // FIXED: Optimized intersection observer setup
+  useEffect(() => {
+    console.log("🔧 Setting up observer", { hasMore, productsLength: products.length });
+
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    if (!hasMore || isLoadingRef.current) {
+      console.log("⚠️ Observer not needed", { hasMore, isLoading: isLoadingRef.current });
+      return;
+    }
+
+    const handleIntersection = (entries) => {
+      const lastElement = entries[0];
+
+      console.log("👁️ Intersection detected:", {
+        isIntersecting: lastElement.isIntersecting,
+        hasMore,
+        isLoading: isLoadingRef.current,
+        activeTab: activeCategoryRef.current
+      });
+
+      if (lastElement.isIntersecting && hasMore && !isLoadingRef.current) {
+        console.log('🔄 Triggering load more for current filters');
+        loadMoreProducts();
+      }
+    };
+
+    // Setup observer after products are rendered
+    const setupObserver = () => {
+      const productsGrid = document.querySelector('.products-grid');
+      if (!productsGrid || productsGrid.children.length === 0) {
+        console.log("⚠️ Products grid not ready");
+        return;
+      }
+
+      const lastProductElement = productsGrid.children[productsGrid.children.length - 1];
+      if (!lastProductElement) {
+        console.log("⚠️ No last product element found");
+        return;
+      }
+
+      observerRef.current = new IntersectionObserver(handleIntersection, {
+        root: null,
+        rootMargin: '200px',
+        threshold: 0.1
+      });
+
+      observerRef.current.observe(lastProductElement);
+      console.log('👁️ Observer setup for element:', lastProductElement);
+    };
+
+    // Setup observer after products are rendered
+    if (products.length > 0) {
+      const timeoutId = setTimeout(setupObserver, 100);
+
+      return () => {
+        clearTimeout(timeoutId);
+        if (observerRef.current) {
+          observerRef.current.disconnect();
+        }
+      };
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [products.length, hasMore, loadMoreProducts]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  // FIXED: Simplified displayed products - API handles all filtering
+  useEffect(() => {
+    // Since API handles all filtering (entity, category, subcategory, search),
+    // displayedProducts should just mirror the products from API
+    setFilteredProducts(products);
+    setDisplayedProducts(products);
+  }, [products]); // Only depend on products since API handles all filtering
+
   // Add this effect to fetch entity descriptions
   useEffect(() => {
     const fetchEntityDescriptions = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // Include token for authentication
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${token}`
+          },
+        });
+
         if (!response.ok) {
           throw new Error("Failed to fetch entity descriptions");
         }
@@ -270,7 +485,8 @@ function Catalog() {
       }
     };
     fetchEntityDescriptions();
-  }, [i18n.language, API_BASE_URL, token]); // Re-fetch when language changes
+  }, [i18n.language, API_BASE_URL, token]);
+
   //NOTE: For fetching the user again after browser refersh - start
   useEffect(() => {
     if (loading) {
@@ -278,30 +494,16 @@ function Catalog() {
     }
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
-      // Logout instead of showing loading message
       logout();
       navigate("/login");
-      return; // Return while logout is processing
+      return;
     }
     if (user && user.userType) {
-      const fetchData = async () => {
-        // Only fetch products, entity descriptions are fetched separately
-        await fetchAllPages();
-      };
-      fetchData();
+      // Initial load will be handled by the filter change effect
     }
-  }, [
-    user,
-    activeCategory,
-    categoryFilter,
-    subCategoryFilter,
-    searchQuery,
-    currentPage,
-    productsPerPage,
-    API_BASE_URL,
-  ]);
+  }, [user, loading, logout, navigate]);
+
   //RBAC
-  //use formMode to decide if it is editform or add form
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -329,8 +531,9 @@ function Catalog() {
       ? match.descriptionLc || match.description
       : match.description;
   };
-  const [filteredCategoryTabs, setFilteredCategoryTabs] =
-    useState(categoryTabs);
+
+  const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
+
   // Create categoryTabs with localized labels and filter for interCompany customers
   useEffect(() => {
     if (!entityDescriptions || entityDescriptions?.length === 0) {
@@ -349,15 +552,10 @@ function Catalog() {
       };
     });
     // Filter tabs based on user type and interCompany status
-    let tabsToShow = allLocalizedTabs.filter((tab) => {
-      // First find the original category to get its entity
-      const category = initialCategories.find((cat) => cat.value === tab.value);
-      // For special tabs (FAVORITES and SPECIAL_PRODUCTS), only show them for customers
-      if (
-        category &&
-        (category.value === "FAVORITES" ||
-          category.value === "SPECIAL_PRODUCTS")
-      ) {
+    let tabsToShow = allLocalizedTabs.filter(tab => {
+      const category = initialCategories.find(cat => cat.value === tab.value);
+
+      if (category && (category.value === "FAVORITES" || category.value === "SPECIAL_PRODUCTS")) {
         return user.userType.toLowerCase() === "customer";
       }
       return true;
@@ -369,35 +567,22 @@ function Catalog() {
       user.entity
     ) {
       const customerEntity = user.entity.toLowerCase();
-      console.log(
-        "Filtering tabs for interCompany customer with entity:",
-        customerEntity
-      );
-      tabsToShow = tabsToShow.filter((tab) => {
-        // Find the original category to get its entity
-        const category = initialCategories.find(
-          (cat) => cat.value === tab.value
-        );
-        // If no matching category or no entity, include the tab
+      console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
+
+      tabsToShow = tabsToShow.filter(tab => {
+        const category = initialCategories.find(cat => cat.value === tab.value);
+
         if (!category || !category.entity) return true;
-        // Check if this tab's entity exists in entityDescriptions and matches customer's entity
+
         const tabEntityExists = entityDescriptions.some(
           (desc) => desc.value.toLowerCase() === category.entity.toLowerCase()
         );
-        // If the tab's entity exists in basic master and matches customer's entity, exclude it
-        if (
-          tabEntityExists &&
-          category.entity.toLowerCase() === customerEntity
-        ) {
-          console.log(
-            "Excluding tab:",
-            tab.label,
-            "for entity:",
-            category.entity
-          );
+
+        if (tabEntityExists && category.entity.toLowerCase() === customerEntity) {
+          console.log("Excluding tab:", tab.label, "for entity:", category.entity);
           return false;
         }
-        // Include all other tabs
+
         return true;
       });
       console.log("Filtered tabs for interCompany customer:", tabsToShow);
@@ -425,7 +610,7 @@ function Catalog() {
       setSelectedCustomerId(customerId);
     }
   }, [customerId]);
-  // Initial setup when component loads - for default tab
+
   // Map product fields from backend to component props
   const mapProductToCardProps = useCallback(
     (product) => {
@@ -463,8 +648,8 @@ function Catalog() {
         id: product.id,
         name: productName,
         code: product.erpProdId || product.erp_prod_id || "No ID",
-        image: imageUrls[0] || "", // Use first image for ProductCard
-        images: imageUrls, // Pass all images for ProductPopup
+        image: imageUrls[0] || "",
+        images: imageUrls,
         description: productDescription,
         category: product.category,
         subCategory: product.sub_category || product.subCategory,
@@ -472,131 +657,13 @@ function Catalog() {
         unit: product.unit,
         vat: product.vatPercentage || product.VAT_percentage,
         moq: product.moq || product.minimumOrderQuantity || 0,
-        favorite: product.favorite || false, // Add this line to include favorite status
+        favorite: product.favorite || false,
         ...product,
       };
     },
     [i18n.language]
   );
-  useEffect(() => {
-    const selectedCategory = categories.find(
-      (cat) => cat.value === activeCategory
-    );
-    const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-    let filtered = [...products]; // Create a copy of products array for filtering
-    // Filter by entity first
-    if (entityToFilter) {
-      filtered = filtered.filter((product) => {
-        const productEntity = (product.entity || "").toLowerCase();
-        return productEntity === entityToFilter.toLowerCase();
-      });
-      // No special handling for VMCO entities anymore
-    }
-    // Apply search filter on product name
-    if (searchQuery && searchQuery.trim() !== "") {
-      const searchLower = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((product) => {
-        const productName = (
-          product.productName ||
-          product.product_name ||
-          ""
-        ).toLowerCase();
-        const localizedName = (
-          product.product_name_lc ||
-          product.productNameLc ||
-          ""
-        ).toLowerCase();
-        const productCode = (
-          product.erpProdId ||
-          product.erp_prod_id ||
-          ""
-        ).toLowerCase();
-        const productDescription = (product.description || "").toLowerCase();
-        const localizedDescription = (
-          product.description_lc ||
-          product.descriptionLc ||
-          ""
-        ).toLowerCase();
-        return (
-          productName.includes(searchLower) ||
-          localizedName.includes(searchLower) ||
-          productCode.includes(searchLower) ||
-          productDescription.includes(searchLower) ||
-          localizedDescription.includes(searchLower)
-        );
-      });
-    }
-    // Apply category filter
-    if (categoryFilter && categoryFilter.trim() !== "") {
-      filtered = filtered.filter(
-        (product) =>
-          (product.category || "").toLowerCase() ===
-          categoryFilter.toLowerCase()
-      );
-    }
-    // Apply subcategory filter
-    if (subCategoryFilter && subCategoryFilter.trim() !== "") {
-      filtered = filtered.filter((product) => {
-        const subCategory = (
-          product.subCategory ||
-          product.sub_category ||
-          ""
-        ).toLowerCase();
-        return subCategory === subCategoryFilter.toLowerCase();
-      });
-    }
-    setFilteredProducts(filtered);
-    setDisplayedProducts(filtered);
-  }, [
-    products,
-    activeCategory,
-    searchQuery,
-    categoryFilter,
-    subCategoryFilter,
-  ]);
-  // We no longer need this effect as we're using infinite scroll with server-side pagination    // Auto-loading pagination with delay - now increments maximum page number to load
-  useEffect(() => {
-    let timeoutId = null;
-    // Function to handle automatic loading of more pages
-    const loadMorePagesWithDelay = () => {
-      // Only load more if there are more products to fetch
-      if (
-        hasMore &&
-        !isLoading &&
-        !isLoadingMore &&
-        displayedProducts.length < totalProducts
-      ) {
-        setIsLoadingMore(true);
-        timeoutId = setTimeout(() => {
-          setCurrentPage((prev) => prev + 1);
-        }, 3000);
-      }
-    };
-    if (
-      !isLoading &&
-      !isLoadingMore &&
-      displayedProducts.length > 0 &&
-      hasMore &&
-      displayedProducts.length < totalProducts
-    ) {
-      loadMorePagesWithDelay();
-    }
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [
-    currentPage,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    displayedProducts.length,
-    totalProducts,
-  ]); // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-    setLoadedPages([]);
-    setHasMore(true); // Reset hasMore when filters change to ensure new data is fetched
-  }, [activeCategory, categoryFilter, subCategoryFilter, searchQuery]);
+
   const handleProductClick = (product) => {
     setSelectedProduct(product);
   };
@@ -605,11 +672,9 @@ function Catalog() {
   };
   // Update the handleQuantityChange function
   const handleQuantityChange = (productId, value) => {
-    // Find the product to get its MOQ
     const product = products.find((p) => p.id === productId);
     if (!product) return;
     const moq = Number(product.moq || 0);
-    // Calculate the new quantity ensuring it doesn't go below MOQ
     const currentQuantity = quantities[productId] || 0;
     const newQuantity = Math.max(moq, currentQuantity + value);
     setQuantities((prev) => ({
@@ -783,7 +848,7 @@ function Catalog() {
         const otherBranchLabel = otherBranch
           ? otherBranch.label
           : otherBranchId;
-        // Make sure this function is already marked `async` (it looks like it is)
+
         const { isConfirmed } = await Swal.fire({
           icon: "warning",
           title: t("Discard items?"),
@@ -798,6 +863,7 @@ function Catalog() {
           cancelButtonText: t("No, keep"),
           reverseButtons: true,
         });
+
         if (isConfirmed) {
           try {
             await fetch(
@@ -840,7 +906,6 @@ function Catalog() {
       }
     } catch (error) {
       console.error("Error during branch change:", error);
-      // alert('Error checking cart. Branch change may not work correctly.');
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -857,7 +922,6 @@ function Catalog() {
     try {
       // Check if a branch is selected
       if (!selectedLocation) {
-        // alert(t('Please select a delivery branch first'));
         Swal.fire({
           icon: "warning",
           title: t("No Branch Selected"),
@@ -891,10 +955,10 @@ function Catalog() {
       const unitPrice = product.unitPrice;
       const netAmount = unitPrice * quantity;
       const vatPercentage = parseFloat(product.vatPercentage) || 0;
-      //const sugarTaxPrice = parseFloat(product.sugarTaxPrice) || 0;
-      // Calculate VAT and sugar tax
+
+      // Calculate VAT
       const vatAmount = netAmount * (vatPercentage / 100);
-      //const sugarTaxAmount = sugarTaxPrice ? netAmount * (sugarTaxPrice / 100) : 0;
+
       // Parse images JSON and extract URLs
       let imageUrls = [];
       if (product.images) {
@@ -919,7 +983,6 @@ function Catalog() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          // Send along auth cookies/JWT
         }
       );
       const checkResult = await checkResponse.json();
@@ -960,7 +1023,7 @@ function Catalog() {
       } else {
         // Item doesn't exist in cart, add it as new
         const cartItem = {
-          userId: userId, // Use user ID from auth context
+          userId: userId,
           customerId: selectedCustomerId,
           branchId: selectedLocation,
           branchRegion: selectedBranchRegion,
@@ -969,19 +1032,19 @@ function Catalog() {
           productNameLc: product.productNameLc || product.product_name_lc,
           erpProdId: product.erpProdId || product.erp_prod_id || "",
           moq: product.moq || product.minimumOrderQuantity,
-          entity: product.entity, // Keep original case
-          category: product.category, // Keep original case
+          entity: product.entity,
+          category: product.category,
           unit: product.unit,
           // Add the two new properties
-          isMachine: product.isMachine, // Add isMachine field
-          isFresh: product.isFresh, // Add isFresh field
+          isMachine: product.isMachine,
+          isFresh: product.isFresh,
+
           unitPrice: unitPrice,
           quantityOrdered: parseInt(quantity),
           netAmount: netAmount,
-          //sugarTaxPrice: sugarTaxPrice.toFixed(2) || '0.00',
           vatPercentage:
             user.companyType === "non trading" ? 0.0 : vatPercentage.toFixed(2),
-          images: JSON.stringify(imageUrls), // <-- Add images as JSONB
+          images: JSON.stringify(imageUrls),
         };
         console.log("Adding new item to cart:", cartItem);
         const response = await fetch(`${API_BASE_URL}/cart`, {
@@ -1022,7 +1085,7 @@ function Catalog() {
       });
     }
   };
-  // Add this function to your Catalog component
+
   const handleToggleFavorite = async (productId, isFavorite) => {
     try {
       if (!isAuthenticated || !user) {
@@ -1102,7 +1165,6 @@ function Catalog() {
   };
   // Get unique categories filtered by the current entity tab
   const getFilteredCategories = () => {
-    // Get the entity for the current active tab
     const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
@@ -1111,12 +1173,13 @@ function Catalog() {
     // First filter by entity
     let filteredProductsByEntity = products.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
-    ); // Additional filtering for VMCO tabs
+    );
+
+    // Additional filtering for VMCO tabs
     if (
       activeCategory.toLowerCase() ===
       Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
     ) {
-      // For VMCO Machines tab, exclude categories that have "consumable" in their name
       return Array.from(
         new Set(
           filteredProductsByEntity
@@ -1136,7 +1199,6 @@ function Catalog() {
       activeCategory.toLowerCase() ===
       Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase()
     ) {
-      // For VMCO Consumables tab, exclude categories that have "machine" in their name
       return Array.from(
         new Set(
           filteredProductsByEntity
@@ -1153,7 +1215,6 @@ function Catalog() {
         )
       );
     } else {
-      // For all other tabs, just filter by entity without special handling
       return Array.from(
         new Set(filteredProductsByEntity.map((p) => p.category).filter(Boolean))
       );
@@ -1161,7 +1222,6 @@ function Catalog() {
   };
   // Get unique subcategories filtered by the current entity tab and selected category
   const getFilteredSubcategories = () => {
-    // Get the entity for the current active tab
     const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
@@ -1172,7 +1232,7 @@ function Catalog() {
     filteredProducts = filteredProducts.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
     );
-    // No special handling for VMCO entities anymore
+
     // If a category is selected, filter by that category
     if (categoryFilter) {
       filteredProducts = filteredProducts.filter(
@@ -1209,8 +1269,8 @@ function Catalog() {
         setQuantities(initialQuantities);
       }
     }
-  }, [products]); // Only depends on products changing    // Auto-select category based on active tab when products load
-  // Removed effect that auto-selects category filter based on tab or products.
+  }, [products]);
+
   // Determine direction and alignment
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
@@ -1252,22 +1312,20 @@ function Catalog() {
         );
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
-        // Assuming result.data is an array of category names/objects
+
         const options = Array.isArray(result.data)
-          ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat, // adapt as per API response
-              value: cat.category || cat.name || cat,
-            }))
+          ? result.data.map(cat => ({
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
-        // Do not select any category by default
       } catch (err) {
         setCategoryOptions([]);
         console.error("Error fetching categories:", err);
       }
     };
     fetchCategories();
-    // eslint-disable-next-line
   }, [activeCategory, categories, API_BASE_URL]);
   // Fetch subcategories from API when category or active tab/entity changes
   useEffect(() => {
@@ -1285,35 +1343,39 @@ function Catalog() {
           entity: entity,
           category: categoryFilter,
         });
-        const response = await fetch(
-          `${API_BASE_URL}/product-subcategories?${params.toString()}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+        });
         if (!response.ok) throw new Error("Failed to fetch subcategories");
         const result = await response.json();
-        // Assuming result.data is an array of subcategory names/objects
+
         const options = Array.isArray(result.data)
-          ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.sub_category || sub.name || sub,
-              value: sub.subCategory || sub.sub_category || sub.name || sub,
-            }))
+          ? result.data.map(sub => ({
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
-        // Do not select any subcategory by default
       } catch (err) {
         setSubCategoryOptions([]);
         console.error("Error fetching subcategories:", err);
       }
     };
     fetchSubCategories();
-    // eslint-disable-next-line
-  }, [activeCategory, categoryFilter, categories, API_BASE_URL]);
+  }, [activeCategory, categoryFilter, categories, API_BASE_URL, token]); // ✅ Added token
+
+  // Reset subcategory filter when category filter changes or is cleared
+  useEffect(() => {
+    if (!categoryFilter) {
+      setSubCategoryFilter("");
+      setSubCategoryOptions([]);
+    }
+  }, [categoryFilter]);
+
   return (
     <Sidebar title={t("Catalog")}>
       <div
@@ -1338,13 +1400,11 @@ function Catalog() {
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}
               />
-              {/* Add a loading indicator within the location selector */}
               {isLoading && branches.length === 0 && (
                 <div className="dropdown-loading">
                   <LoadingSpinner size="small" />
                 </div>
               )}
-              {/* Add an error message if no branches are loaded */}
               {!isLoading && branches.length === 0 && (
                 <div className="no-branches-message">
                   {t("No branches available")}
@@ -1369,88 +1429,101 @@ function Catalog() {
             )}
           </div>
         )}
-        <div>
-          <div className="filter-section">
-            <div className="filter-tabs">
-              <Tabs
-                tabs={filteredCategoryTabs} // Use filtered tabs instead of all tabs
-                activeTab={activeCategory}
-                onTabChange={(newCategory) => {
-                  setActiveCategory(newCategory);
-                  setSearchQuery("");
-                  setCurrentPage(1);
-                  setLoadedPages([]);
-                  setHasMore(true);
-                  setSubCategoryFilter("");
-                  setCategoryFilter("");
-                }}
-                variant="category"
-              />
-            </div>
+        <div className="filter-section">
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 12,
+              overflowX: "auto",
+              scrollbarWidth: "none"
+            }}
+          >
+            <Tabs
+              tabs={filteredCategoryTabs}
+              activeTab={activeCategory}
+              onTabChange={(newCategory) => {
+                console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
+                setActiveCategory(newCategory);
+                setSearchQuery("");
+                setCategoryFilter(""); // Reset category filter
+                setSubCategoryFilter(""); // Reset subcategory filter
+                setSubCategoryOptions([]); // Clear subcategory options immediately
+              }}
+              variant="category"
+            />
+
           </div>
-          <div className="search-section">
-            <div className="search-container">
-              {isV("search") && (
-                <SearchInput
-                  onSearch={(searchTerm) => {
-                    setSearchQuery(searchTerm);
-                    setCurrentPage(1); // Reset to page 1 when searching
-                  }}
-                  debounceTime={500}
-                />
-              )}{" "}
-              <SearchableDropdown
-                id={`category-filter-${catalogId}`}
-                name="categoryFilter"
-                options={categoryOptions}
-                className={`category-filter ${
-                  [
-                    Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
-                    Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
-                  ].includes(activeCategory.toLowerCase())
-                    ? "tab-linked-filter"
-                    : ""
+        </div>
+
+        <div className="search-section">
+          <div className="search-container">
+            {isV("search") && (
+              <SearchInput
+                onSearch={(searchTerm) => {
+                  setSearchQuery(searchTerm);
+                }}
+                debounceTime={500}
+              />
+            )}{" "}
+            <SearchableDropdown
+              id={`category-filter-${catalogId}`}
+              name="categoryFilter"
+              options={categoryOptions}
+              className={`category-filter ${[
+                Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
+                Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
+              ].includes(activeCategory.toLowerCase())
+                ? "tab-linked-filter"
+                : ""
                 }`}
-                placeholder={t("Category")}
-                value={categoryFilter}
-                onChange={(e) => {
-                  // Always set category filter from dropdown selection only
-                  setCategoryFilter(e.target.value);
-                  setSubCategoryFilter(""); // Reset subcategory when category changes
-                  setCurrentPage(1);
-                }}
-              />
-              <SearchableDropdown
-                id={`subcategory-filter-${catalogId}`}
-                name="subCategoryFilter"
-                options={subCategoryOptions}
-                className="category-filter"
-                placeholder={t("Sub category")}
-                value={subCategoryFilter}
-                onChange={(e) => {
-                  // Always set subcategory filter from dropdown selection only
-                  setSubCategoryFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                disabled={!categoryFilter}
-              />
-            </div>
+              placeholder={t("Category")}
+              value={categoryFilter}
+              onChange={(e) => {
+                const newCategoryValue = e.target.value;
+                setCategoryFilter(newCategoryValue);
+
+                // Always reset subcategory when category changes
+                setSubCategoryFilter("");
+
+                // If no category is selected, clear subcategory options immediately
+                if (!newCategoryValue) {
+                  setSubCategoryOptions([]);
+                }
+                // If category is selected, subcategories will be fetched by useEffect
+              }}
+            />
+
+            <SearchableDropdown
+              id={`subcategory-filter-${catalogId}`}
+              name="subCategoryFilter"
+              options={subCategoryOptions}
+              className="category-filter"
+              placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+              value={subCategoryFilter}
+              onChange={(e) => {
+                setSubCategoryFilter(e.target.value);
+              }}
+              disabled={!categoryFilter || subCategoryOptions.length === 0}
+            />
+
           </div>
         </div>
         <div className="products-grid">
           {displayedProducts.length > 0
             ? displayedProducts?.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={mapProductToCardProps(product)}
-                  quantities={quantities}
-                  onQuantityChange={handleQuantityChange}
-                  onAddToCart={() => handleAddToCart(product.id)}
-                  onProductClick={() => handleProductClick(product)}
-                  setQuantities={setQuantities}
-                  onToggleFavorite={handleToggleFavorite} // Add this prop
-                />
-              ))
+              <ProductCard
+                key={product.id}
+                product={mapProductToCardProps(product)}
+                quantities={quantities}
+                onQuantityChange={handleQuantityChange}
+                onAddToCart={() => handleAddToCart(product.id)}
+                onProductClick={() => handleProductClick(product)}
+                setQuantities={setQuantities}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            ))
             : !isLoading && (
                 <div className="no-products-message">
                   {searchQuery ? (
@@ -1471,28 +1544,22 @@ function Catalog() {
             </div>
           )}
         </div>
-        {/* Separate loading indicator at the bottom of the page */}
-        {isLoadingMore &&
-          hasMore &&
-          displayedProducts.length < totalProducts && (
-            <div className="loading-more-container">
-              <LoadingSpinner size="medium" />
-              <span className="loading-more-text">{t("Loading...")}</span>
-            </div>
-          )}
-        {!hasMore &&
-          displayedProducts.length >= totalProducts &&
-          !isLoading &&
-          !isLoadingMore && (
-            <div className="end-of-results-message">
-              <p>{t("All products loaded.")}</p>
-            </div>
-          )}
-        {!hasMore &&
-          displayedProducts.length > 0 &&
-          !isLoading &&
-          !isLoadingMore &&
-          currentPage < 3 && <div className="end-of-results-message"></div>}
+
+        {/* Loading spinner when fetching more products */}
+        {isLoadingMore && (
+          <div className="loading-more-container">
+            <LoadingSpinner size="medium" />
+            <span className="loading-more-text">{t("Loading more products...")}</span>
+          </div>
+        )}
+
+        {/* End of catalog message */}
+        {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && (
+          <div className="end-of-catalog-message" style={{ textAlign: 'center', margin: '20px 0', color: '#666' }}>
+            <p>{t("End of product catalog")}</p>
+          </div>
+        )}
+
         {selectedProduct && (
           <ProductPopup
             product={mapProductToCardProps(selectedProduct)}
@@ -1566,20 +1633,7 @@ function Catalog() {
           font-size: 1rem;
           font-weight: 500;
         }
-        .end-of-results-message {
-          width: 100%;
-          text-align: center;
-          padding: 20px 0;
-          color: #666;
-          font-size: 0.9rem;
-          grid-column: 1 / -1;
-          border-top: 1px solid #eee;
-          margin-top: 20px;
-        }
-        /* Style for the category filter to show it's linked to tabs */
-        // .category-filter {
-        //     background-color: #f5f5f5;
-        // }
+
         @media (max-width: 768px) {
           .product-search-input {
             width: 100%;
