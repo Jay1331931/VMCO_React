@@ -1002,7 +1002,9 @@ const TableMobile = ({
                         // className="row-section action-section"
                         className="row-detail-row"
                       >
-                        <span className="row-details-label">{t("Actions")}</span>
+                        <span className="row-details-label">
+                          {t("Actions")}
+                        </span>
                         <div className="action-buttons-popup">
                           {actionButtons(selectedRow)}
                         </div>
@@ -1016,15 +1018,15 @@ const TableMobile = ({
 
                   return (
                     // <div key={column.key} className="row-section">
-                      <div className="row-detail-row">
-                        <span className="row-detail-label">
-                          {typeof column.header === "function"
-                            ? column.header()
-                            : t(column.header)}
-                          :
-                        </span>
-                        <span className="row-detail-value">{displayValue}</span>
-                      </div>
+                    <div className="row-detail-row">
+                      <span className="row-detail-label">
+                        {typeof column.header === "function"
+                          ? column.header()
+                          : t(column.header)}
+                        :
+                      </span>
+                      <span className="row-detail-value">{displayValue}</span>
+                    </div>
                   );
                 })}
 
