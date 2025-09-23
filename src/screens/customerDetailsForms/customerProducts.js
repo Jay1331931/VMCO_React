@@ -518,6 +518,29 @@ function Products({ customerId, customer, setTabsHeight }) {
       <div className="products-header-controls">
         {/* --- Second row: Category & Subcategory dropdowns --- */}
         <div className="products-page-header">
+          <ToggleButton
+          isToggled={isApprovalMode}
+          onToggle={toggleApprovalMode}
+          leftLabel={t("All")}
+          rightLabel={t("Selected")}
+        />
+          
+          
+        <div className="toggle-container">
+          {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
+          {isV("btnApplyAll") && (
+            <input type="text" className="product-text-input" />
+          )}
+          {isV("btnApplyAll") && (
+            <button
+              className="branches-approve-button"
+              disabled={currentItems?.filter((item) => item.visible).length < 2}
+              onClick={handleApplyAll}
+            >
+              {t("Apply All")}
+            </button>
+          )}
+        </div>
           {/* Search */}
           <input
             type="text"
@@ -530,7 +553,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             }}
             style={{
               padding: "10px 15px",
-              width: "300px",
+              width: "250px",
               border: "2px solid #00205b",
               borderRadius: "8px",
               fontSize: "1rem",
@@ -540,7 +563,12 @@ function Products({ customerId, customer, setTabsHeight }) {
               boxSizing: "border-box",
             }}
           />
-          {/* Category Filter - use SearchableDropdown */}
+        </div>
+      </div>
+
+      {/* --- Toggle and Apply All below filters --- */}
+      <div className="products-page-header">
+        {/* Category Filter - use SearchableDropdown */}
           <SearchableDropdown
             id="category-filter"
             name="categoryFilter"
@@ -568,33 +596,9 @@ function Products({ customerId, customer, setTabsHeight }) {
             }}
             disabled={!categoryFilter}
           />
-        </div>
       </div>
 
-      {/* --- Toggle and Apply All below filters --- */}
-      <div className="products-page-header">
-        <ToggleButton
-          isToggled={isApprovalMode}
-          onToggle={toggleApprovalMode}
-          leftLabel={t("All")}
-          rightLabel={t("Selected")}
-        />
-        <div className="toggle-container">
-          {isV("btnApplyAll") && <label>{t("MoQ")}</label>}
-          {isV("btnApplyAll") && (
-            <input type="text" className="product-text-input" />
-          )}
-          {isV("btnApplyAll") && (
-            <button
-              className="branches-approve-button"
-              disabled={currentItems?.filter((item) => item.visible).length < 2}
-              onClick={handleApplyAll}
-            >
-              {t("Apply All")}
-            </button>
-          )}
-        </div>
-      </div>
+      
       <div className="products-table-container">
         <table className="products-data-table">
           <thead>

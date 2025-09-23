@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar';
 import Table from '../components/Table';
+import TableMobile from '../components/TableMobile';
 import CommentPopup from '../components/commentPanel';
 import GetInventory from '../components/GetInventory';
 import Remarks from '../components/Remarks';
@@ -138,6 +139,13 @@ function OrderDetails() {
   const [pdfFiles, setPdfFiles] = useState([]);
   const [deliveryImages, setDeliveryImages] = useState([]);
   const [loadingProductId, setLoadingProductId] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
@@ -2101,6 +2109,81 @@ function OrderDetails() {
     // Spread the actions column if enabled
     ...(isE('deleteCol') ? [{ key: 'actions', header: () => t('Actions') }] : [])
   ];
+  const mobileColumns = [
+    {
+      key: 'productName',
+      header: () => t('Product Name'),
+      render: (row) =>
+        i18n.language === 'ar'
+          ? (row.productNameLc || row.product_name_lc || row.productName)
+          : (row.productName || row.product_name_en || row.productNameLc),
+      include: isV('productNameCol'),
+    },
+    {
+      key: 'quantity',
+      header: () => t('Quantity'),
+      render: (row) => (
+        <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <QuantityController
+            itemId={row.id || row.product_id}
+            quantity={row.quantity}
+            moq={Number(row.moq) || 1}
+            minQuantity={Number(row.moq) || 1}
+            disabled={!isE('products')}
+            onQuantityChange={(_, delta) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
+                const moq = Number(formData.products[idx].moq) || 1;
+                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
+                handleQuantityChange(idx, newQty);
+              }
+            }}
+            onInputChange={(_, value) => {
+              if (!isE('products')) return;
+              const idx = formData.products.findIndex(
+                p => (p.id || p.product_id) === (row.id || row.product_id)
+              );
+              if (idx !== -1) {
+                const moq = Number(formData.products[idx].moq) || 1;
+                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
+              }
+            }}
+          />
+          {isV('stock') &&
+            formData.entity &&
+            formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
+              <span>
+                <button
+                  type="button"
+                  style={{
+                    background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    padding: '2px 8px',
+                    marginLeft: '6px',
+                    marginRight: '6px',
+                    cursor: 'pointer'
+                  }}
+                  title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+                  onClick={() => handleStock(row.id, i18n.language === 'ar'
+                    ? (row.productNameLc || row.product_name_lc || row.productName)
+                    : (row.productName || row.product_name_en || row.productNameLc))
+                  }
+                >
+                  {t('Stock')}
+                </button>
+              </span>
+            )}
+          {InventoryLoading && loadingProductId === row.id && <LoadingSpinner />}
+        </div>
+      ),
+      include: isV('quantityCol'),
+    },
+  ]
 
 
   // Add this useEffect to fetch entity options
@@ -3412,8 +3495,8 @@ function OrderDetails() {
 
 
                         {/* Hide table in add mode until products are selected */}
-
-                        <Table
+                        
+                        {!isMobile && (<Table
                           columns={columns}
                           data={(formData.products || []).filter(
                             p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || /*p.sugarTaxPrice || */p.netAmount || p.vatPercentage
@@ -3435,7 +3518,32 @@ function OrderDetails() {
                               )
                             )
                           }
-                        />
+                        />)}
+
+                        {isMobile && (
+                          <TableMobile
+                          columns={mobileColumns}
+                          allColumns={columns}
+                          data={formData.products}
+                          actionButtons={
+                            (row) => (
+                              isV('deleteButton') && isE('deleteCol') && (
+                                <button className="order-action-btn reject"
+                                  style={{ padding: '4px 10px', fontSize: 14 }}
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    handleDeleteProductRow((formData.products || []).indexOf(row));
+                                  }}
+                                  type="button"
+                                  disabled={!isE('deleteButton') || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                                >
+                                  {t('Delete')}
+                                </button>
+                              )
+                            )
+                          }
+                           />
+                        )}
 
                       </div>
                     )}

@@ -17,8 +17,8 @@ import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
 
 const getStatusClass = (status) => {
   switch (status) {
@@ -72,7 +72,7 @@ function Customers() {
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [regionOptions, setRegionOptions] = useState([]);
   const [entityOptions, setEntityOptions] = useState([]);
-    const [syncLoading, setSyncLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -93,11 +93,10 @@ function Customers() {
         `${API_BASE_URL}/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
 
@@ -134,9 +133,9 @@ function Customers() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          
+
           body: JSON.stringify({
             id: invite.id,
           }),
@@ -149,9 +148,9 @@ function Customers() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-          
+
             body: JSON.stringify({
               eventName: "WELCOME_EMAIL",
               emailData: {
@@ -326,8 +325,10 @@ function Customers() {
         `${API_BASE_URL}/auth/registration/staging`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             companyEmail: inviteData.email,
             leadName: inviteData.name,
@@ -341,7 +342,6 @@ function Customers() {
             comments: inviteData.comments || "",
             registered: false,
           }),
-          
         }
       );
       const result = await response.json();
@@ -355,9 +355,9 @@ function Customers() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
               },
-              
+
               body: JSON.stringify({
                 id: result.lead.id,
               }),
@@ -373,9 +373,9 @@ function Customers() {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
               },
-              
+
               body: JSON.stringify({
                 eventName: "WELCOME_EMAIL",
                 emailData: {
@@ -554,8 +554,8 @@ function Customers() {
     },
     { key: "companyType", header: "Company Type" },
     { key: "typeOfBusiness", header: "Type Of Business" },
-    { key: "customerStatus", header: "Status", },
-    { key: "FandOSync", header: "Action" }
+    { key: "customerStatus", header: "Status" },
+    { key: "FandOSync", header: "Action" },
   ];
 
   const approvalColumns = [
@@ -602,10 +602,10 @@ function Customers() {
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-            "Authorization": `Bearer ${token}`
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
       const result = await response.json();
@@ -644,9 +644,10 @@ function Customers() {
         `${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -687,9 +688,10 @@ function Customers() {
         `${API_BASE_URL}/customer-registration-staging/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -775,9 +777,10 @@ function Customers() {
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -815,9 +818,10 @@ function Customers() {
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -868,15 +872,13 @@ function Customers() {
     getOptionsFromBasicsMaster("entity").then(setEntityOptions);
     const fetchGeoData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/geoLocation`,
-          {
-      method: "GET",
-      headers: { "Content-Type": "application/json",
-        ...(token && { "Authorization": `Bearer ${token}` })
-       },
-      
-    }
-        );
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);
@@ -964,10 +966,10 @@ function Customers() {
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-            "Authorization": `Bearer ${token}`
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
 
@@ -1024,11 +1026,11 @@ function Customers() {
             "Brand Name (EN)": customer.brandNameEn || "",
             "Brand Name (AR)": customer.brandNameAr || "",
             "Delivery Locations": customer.deliveryLocations || "",
-            "Status": customer.customerStatus || "",
-            "Region": customer.region || "",
-            "City": customer.city || "",
-            "District": customer.district || "",
-            "Street": customer.street || "",
+            Status: customer.customerStatus || "",
+            Region: customer.region || "",
+            City: customer.city || "",
+            District: customer.district || "",
+            Street: customer.street || "",
             "Building Name": customer.buildingName || "",
             "Location Type": customer.locationType || "",
 
@@ -1071,13 +1073,13 @@ function Customers() {
             // "Credit Balance": customer.creditBalance || "",
 
             // Geolocation
-            "Latitude": customer.geolocation?.x || "",
-            "Longitude": customer.geolocation?.y || "",
+            Latitude: customer.geolocation?.x || "",
+            Longitude: customer.geolocation?.y || "",
 
             // Assignment Information
             "Assigned To": customer.assignedTo || "",
             "Branch Region": customer.branch || "",
-            "Entity": customer.entity || "",
+            Entity: customer.entity || "",
             "Inter Company": customer.interCompany ? "Yes" : "No",
 
             "Created Date": customer.createdAt
@@ -1204,48 +1206,48 @@ function Customers() {
   const paginatedCustomers = filteredCustomers;
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
-const HandleFandOFailCustomer = async (customerId) => {
-  setSyncLoading(true);
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
-      {}, 
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  const HandleFandOFailCustomer = async (customerId) => {
+    setSyncLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    if (data?.success) {
-    fetchCustomers();
-      Swal.fire({
-        title: "Success",
-        text: data.message,
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3085d6",
-      });
-    } else {
+      if (data?.success) {
+        fetchCustomers();
+        Swal.fire({
+          title: "Success",
+          text: data.message,
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3085d6",
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: data.message || "Failed to Sync with FandO.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    } catch (error) {
+      console.error("Error handling FandO fail customer:", error);
       Swal.fire({
         title: "Error",
-        text: data.message || "Failed to Sync with FandO.",
+        text: error.message || "Failed to Sync with FandO.",
         icon: "error",
         confirmButtonText: "OK",
         confirmButtonColor: "#dc3545",
       });
+    } finally {
+      setSyncLoading(false);
     }
-  } catch (error) {
-    console.error("Error handling FandO fail customer:", error);
-    Swal.fire({
-      title: "Error",
-      text: error.message || "Failed to Sync with FandO.",
-      icon: "error",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#dc3545",
-    });
-  } finally {
-    setSyncLoading(false);
-  }
-};
+  };
 
   return (
     <Sidebar title={t("Customers")}>
@@ -1367,7 +1369,9 @@ const HandleFandOFailCustomer = async (customerId) => {
                   </div> */}
 
                   <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-                     <label style={{ marginBottom: "6px", display: "inline-block" }}>
+                    <label
+                      style={{ marginBottom: "6px", display: "inline-block" }}
+                    >
                       {t("Phone Number")}
                     </label>
                     <PhoneInput
@@ -1381,16 +1385,24 @@ const HandleFandOFailCustomer = async (customerId) => {
                         handleInputChange({
                           target: {
                             name: "mobile",
-                            value: value
-                          }
+                            value: value,
+                          },
                         });
                       }}
                       required
-                      style={inviteErrors.mobile ? { 
-                        borderColor: "red",
-                        '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
-                      } : {}}
-                      className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
+                      style={
+                        inviteErrors.mobile
+                          ? {
+                              borderColor: "red",
+                              "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                            }
+                          : {}
+                      }
+                      className={
+                        inviteErrors.mobile
+                          ? "phone-input-error"
+                          : "custom-phone-input"
+                      }
                     />
                     {inviteErrors.mobile && (
                       <div style={{ color: "red", fontSize: "0.8em" }}>
@@ -1432,9 +1444,7 @@ const HandleFandOFailCustomer = async (customerId) => {
                     <SearchableDropdown
                       name="primaryBusinessUnit"
                       // options={basicMasterLists?.region || []}
-                      options={
-                        entityOptions
-                      }
+                      options={entityOptions}
                       value={inviteData.primaryBusinessUnit}
                       onChange={handleInputChange}
                       placeholder={t("Enter Primary Business Unit")}
@@ -1557,11 +1567,7 @@ const HandleFandOFailCustomer = async (customerId) => {
         .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
         .form-group-1.full-width { flex: 1 1 100%;                 }
       }
-         @media (min-width: 320px) and (max-width: 700px)
-          {
-       .invite-dialog
-        {         top: 60%;    
-    }}
+         
         .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
         .form-group-1.full-width { flex: 1 1 100%;                 }
       }

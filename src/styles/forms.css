@@ -999,7 +999,8 @@ body::-webkit-scrollbar {
   border-bottom: 2px solid #00205b;
 }
 .products-page-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
   gap: 10px;
 }
@@ -1305,12 +1306,17 @@ td.file-display-cell {
   .customers .document-upload.full-width {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center the content horizontally */
+    align-items: flex-start; /* Center the content horizontally */
     margin-top: 10px; /* Add some space above the upload section */
     left: 5px; /* Reset margin-left */
     flex-wrap: wrap;
     align-content: start;
   }
+
+  [dir="rtl"] .customers .document-upload.full-width  {
+    align-items: flex-start;
+  }
+
   [dir="rtl"] .customers .document-upload.full-width label {
     position: relative;
     left: auto;
@@ -1681,6 +1687,14 @@ td.file-display-cell {
   }
   .hours-table input[type="time"] {
     width: 80px;
+  }
+  .friday-row {
+    display: flex;
+    flex-direction: column;
+  }
+  .hours-table tr {
+    display: flex;
+    flex-direction: column;
   }
 }
 @media (min-width: 768px) {
