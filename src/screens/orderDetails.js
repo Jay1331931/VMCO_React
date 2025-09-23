@@ -3001,7 +3001,7 @@ function OrderDetails() {
 
                     {isV('category') && (
                       <div className="order-details-field">
-                        <label>{t('Category')}</label>
+                        <label>{t('VMCO Category')}</label>
                         {formMode === 'add' ? (
                           <Dropdown
                             name="category"
@@ -3012,7 +3012,7 @@ function OrderDetails() {
                                 : []
                             }
                             className="category-dropdown"
-                            placeholder={t('Select Category')}
+                            placeholder={t('Applicable for VMCO products')}
                             disabled={
                               !isE('category') ||
                               (formData.products && formData.products.length > 0) ||
