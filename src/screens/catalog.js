@@ -89,7 +89,7 @@ function Catalog() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryTabs, setCategoryTabs] = useState([]);
-  const productsPerPage = 2;
+  const productsPerPage = 20;
   const { token, user, isAuthenticated, loading, logout } = useAuth();
 
   const [filteredProducts, setFilteredProducts] = useState([]);
