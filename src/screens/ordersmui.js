@@ -321,7 +321,7 @@ function Orders() {
     }
   };
 
-  const handlePay = async (order, email = false) => {
+  const handlePay = async (order, email = false, copyUrl = false) => {
     try {
       const { data } = await axios.post(
         `${API_BASE_URL}/generatePayment-link`,
@@ -344,7 +344,62 @@ function Orders() {
           icon: "success",
           confirmButtonText: t("OK"),
         });
-      } else if (!email && data?.details?.url) {
+      } else if (copyUrl) {
+        Swal.fire({
+          title: t(`Payment Link`),
+          html: `
+    <div style="display:flex;align-items:center;">
+      <input id="payment-link"
+             class="swal2-input"
+             style="flex:1;margin:0 8px 0 0;"
+             type="text"
+             value="${data.details.url}"
+             readonly />
+      <button id="copyBtn" 
+              style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
+        Copy
+      </button>
+    </div>
+  `,
+          showConfirmButton: false,
+          showCancelButton: false, // we’ll add our own Close button in footer
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          footer: `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
+      <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
+    </div>
+  `,
+          didOpen: () => {
+            const input = document.getElementById("payment-link");
+            const copyBtn = document.getElementById("copyBtn");
+            const sendLinkBtn = document.getElementById("sendLinkBtn");
+            const closeBtn = document.getElementById("closeBtn");
+
+            // Copy button
+            copyBtn.addEventListener("click", async () => {
+              input.select();
+              input.setSelectionRange(0, 99999); // for mobile
+              await navigator.clipboard.writeText(input.value);
+
+              copyBtn.textContent = "Copied!";
+              copyBtn.style.background = "#0b4c45";
+            });
+
+            // Send Link button
+            sendLinkBtn.addEventListener("click", () => {
+              handlePay(order, true, false);
+              Swal.close();
+            });
+
+            // Close button
+            closeBtn.addEventListener("click", () => {
+              Swal.close();
+            });
+          },
+        });
+      } else if (!email && !copyUrl && data?.details?.url) {
         window.open(data.details.url, "_blank");
       }
     } catch (error) {
@@ -380,27 +435,45 @@ function Orders() {
   ];
 
   const isArabic = i18n.language === "ar";
-const COMMON_RULES = {
-  SHC_GMTC: [
-    // Approved cases
-    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
+  const COMMON_RULES = {
+    SHC_GMTC: [
+      // Approved cases
+      {
+        paymentMethod: "Pre Payment",
+        paymentStatus: "Paid",
+        status: "approved",
+      },
+      { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "approved",
+      },
 
-    // Open cases
-    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
-    { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
-    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "open" },
-  ],
+      // Open cases
+      { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
+      { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "open",
+      },
+    ],
 
-  NAQI_DAR: [
-    { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
-  ],
-};
-
-
+    NAQI_DAR: [
+      {
+        paymentMethod: "Pre Payment",
+        paymentStatus: "Paid",
+        status: "approved",
+      },
+      { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+      {
+        paymentMethod: "Cash on Delivery",
+        paymentStatus: "Pending",
+        status: "approved",
+      },
+    ],
+  };
 
   const orderColumns = [
     {
@@ -443,7 +516,7 @@ const COMMON_RULES = {
       include: isV("entity"),
       searchable: true,
       maxWidth: 100,
-      
+
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
@@ -460,11 +533,19 @@ const COMMON_RULES = {
           );
         }
         return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-        <Typography align="center">{params.value}</Typography>
-        <Typography align="center">{badge}</Typography>
-      </Box>);
-    },
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <Typography align="center">{params.value}</Typography>
+            <Typography align="center">{badge}</Typography>
+          </Box>
+        );
+      },
     },
     {
       field: "paymentMethod",
@@ -540,29 +621,41 @@ const COMMON_RULES = {
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("action") &&(params?.row?.paymentMethod?.toLowerCase()!="cash on delivery"&& params?.row?.paymentStatus?.toLowerCase() !== 'paid'  
-                  && (params?.row?.status?.toLowerCase() === 'approved' || (params?.row?.status?.toLowerCase() === 'open' 
-                  && (params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() ||params?.row?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()|| params?.row?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
-                  (params?.row?.status?.toLowerCase() === 'pending' && (params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || params?.row?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) &&(
-            <Box
-              component="span"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePay(params.row);
-              }}
-              sx={{
-                color: "primary.main",
-                cursor: "pointer",
-                // textDecoration: "underline",
-                fontSize: "0.875rem",
-                "&:hover": {
-                  textDecoration: "none",
-                },
-              }}
-            >
-              {t("Pay")}
-            </Box>
-          )}
+          {isV("action") &&
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+            (params?.row?.status?.toLowerCase() === "approved" ||
+              (params?.row?.status?.toLowerCase() === "open" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.SHC.toLowerCase())) ||
+              (params?.row?.status?.toLowerCase() === "pending" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+              <Box
+                component="span"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePay(params.row);
+                }}
+                sx={{
+                  color: "primary.main",
+                  cursor: "pointer",
+                  // textDecoration: "underline",
+                  fontSize: "0.875rem",
+                  "&:hover": {
+                    textDecoration: "none",
+                  },
+                }}
+              >
+                {t("Pay")}
+              </Box>
+            )}
         </Box>
       ),
     },
@@ -575,27 +668,38 @@ const COMMON_RULES = {
       flex: 2,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("sendLink") &&( 
-                      params?.row?.paymentMethod?.toLowerCase()!="cash on delivery"&&  params?.row?.paymentStatus?.toLowerCase() !== 'paid'  
-                  && ( params?.row?.status?.toLowerCase() === 'approved'  || ( params?.row?.status?.toLowerCase() === 'open' 
-                  && ( params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || params?.row?.entity.toLowerCase()===Constants.ENTITY.GMTC.toLowerCase()||  params?.row?.entity.toLowerCase()===Constants.ENTITY.SHC.toLowerCase()  ) ) || 
-                  ( params?.row?.status?.toLowerCase() === 'pending' && ( params?.row?.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase()|| params?.row?.entity.toLowerCase()===Constants.ENTITY.NAQI.toLowerCase() )))) && (
-            <Box
-              component="span"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePay(params.row, true);
-              }}
-              sx={{
-                color: "primary.main",
-                cursor: "pointer",
-                // textDecoration: "underline",
-                fontSize: "0.875rem",
-              }}
-            >
-              {t("Send Link")}
-            </Box>
-          )}
+          {isV("sendLink") &&
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+            (params?.row?.status?.toLowerCase() === "approved" ||
+              (params?.row?.status?.toLowerCase() === "open" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.SHC.toLowerCase())) ||
+              (params?.row?.status?.toLowerCase() === "pending" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+              <Box
+                component="span"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePay(params.row,false,true);
+                }}
+                sx={{
+                  color: "primary.main",
+                  cursor: "pointer",
+                  // textDecoration: "underline",
+                  fontSize: "0.875rem",
+                }}
+              >
+                {t("Send Link")}
+              </Box>
+            )}
         </Box>
       ),
     },
@@ -607,63 +711,83 @@ const COMMON_RULES = {
       maxWidth: 80,
       flex: 2,
       renderCell: (params) => {
-        const rowdata=params.row
+        const rowdata = params.row;
         const SYNC_RULES = {
-  [Constants.ENTITY.VMCO]: (rowdata) =>
-    rowdata.isMachine
-      ? [
-          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
-        ]
-      : [
-          { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" },
-          { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
-          { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
-        ],
+          [Constants.ENTITY.VMCO]: (rowdata) =>
+            rowdata.isMachine
+              ? [
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ]
+              : [
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Credit",
+                    paymentStatus: "Paid",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Cash on Delivery",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ],
 
-  [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
-  [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
-  [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
-  [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
-};
-         const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
-  const isValidForSync = rules.some(
-    (rule) =>
-      rule?.paymentMethod?.toLowerCase() === rowdata.paymentMethod?.toLowerCase() &&
-      rule?.paymentStatus?.toLowerCase() === rowdata.paymentStatus?.toLowerCase() &&
-      rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
-  );
-        return (<Box sx={{ display: "flex", gap: 1 }}>
-          {isV("FandOSyncSO") && !(rowdata.erpOrderId)&& isValidForSync&& (
-            <Box
-              component="span"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!(syncLoading && syncLoadingId === params.row.id)) {
-                  handleFandOFailSO(params.row.id);
-                }
-              }}
-              sx={{
-                color:
-                  syncLoading && syncLoadingId === params.row.id
-                    ? "text.disabled"
-                    : "primary.main",
-                cursor:
-                  syncLoading && syncLoadingId === params.row.id
-                    ? "default"
-                    : "pointer",
-                textDecoration:
-                  syncLoading && syncLoadingId === params.row.id
-                    ? "none"
-                    : "none",
-                fontSize: "0.875rem",
-              }}
-            >
-              {syncLoading && syncLoadingId === params.row.id
-                ? t("Syncing...")
-                : t("Sync")}
-            </Box>
-          )}
-        </Box>)
+          [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+          [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+          [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+          [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+        };
+        const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
+        const isValidForSync = rules.some(
+          (rule) =>
+            rule?.paymentMethod?.toLowerCase() ===
+              rowdata.paymentMethod?.toLowerCase() &&
+            rule?.paymentStatus?.toLowerCase() ===
+              rowdata.paymentStatus?.toLowerCase() &&
+            rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
+        );
+        return (
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+              <Box
+                component="span"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!(syncLoading && syncLoadingId === params.row.id)) {
+                    handleFandOFailSO(params.row.id);
+                  }
+                }}
+                sx={{
+                  color:
+                    syncLoading && syncLoadingId === params.row.id
+                      ? "text.disabled"
+                      : "primary.main",
+                  cursor:
+                    syncLoading && syncLoadingId === params.row.id
+                      ? "default"
+                      : "pointer",
+                  textDecoration:
+                    syncLoading && syncLoadingId === params.row.id
+                      ? "none"
+                      : "none",
+                  fontSize: "0.875rem",
+                }}
+              >
+                {syncLoading && syncLoadingId === params.row.id
+                  ? t("Syncing...")
+                  : t("Sync")}
+              </Box>
+            )}
+          </Box>
+        );
       },
     },
   ];
@@ -734,11 +858,19 @@ const COMMON_RULES = {
           );
         }
         return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-        <Typography align="center">{params.value}</Typography>
-        <Typography align="center">{badge}</Typography>
-      </Box>);
-    },
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <Typography align="center">{params.value}</Typography>
+            <Typography align="center">{badge}</Typography>
+          </Box>
+        );
+      },
     },
     {
       field: "paymentMethod",
