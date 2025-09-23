@@ -28,6 +28,7 @@ const getStatusClass = (status) => {
     case "approved": return "status-approved";
     case "open": return "status-open";
     case "rejected": return "status-rejected";
+    case "cancelled": return "status-cancelled";
     default: return "status-pending";
   }
 };
@@ -298,7 +299,7 @@ function Orders() {
   };
 
 
-  const handlePay = async (order, email = false) => {
+  const handlePay = async (order, email = false, copyUrl = false) => {
     try {
       const { data } = await axios.post(
         `${API_BASE_URL}/generatePayment-link`,
@@ -308,10 +309,9 @@ function Orders() {
           IsEmail: email,
         },
         {
-
           headers: {
-            "Authorization": `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -319,11 +319,65 @@ function Orders() {
         Swal.fire({
           title: t("Payment Link Generated"),
           text: t("A payment link has been sent to the customer's email."),
-          icon: t("success"),
+          icon: "success",
           confirmButtonText: t("OK"),
         });
-      }
-      else if (!email && data?.details?.url) {
+      } else if (copyUrl) {
+        Swal.fire({
+          title: t(`Payment Link`),
+          html: `
+    <div style="display:flex;align-items:center;">
+      <input id="payment-link"
+             class="swal2-input"
+             style="flex:1;margin:0 8px 0 0;"
+             type="text"
+             value="${data.details.url}"
+             readonly />
+      <button id="copyBtn"
+              style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
+        Copy
+      </button>
+    </div>
+  `,
+          showConfirmButton: false,
+          showCancelButton: false, // we’ll add our own Close button in footer
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          footer: `
+    <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+      <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
+      <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
+    </div>
+  `,
+          didOpen: () => {
+            const input = document.getElementById("payment-link");
+            const copyBtn = document.getElementById("copyBtn");
+            const sendLinkBtn = document.getElementById("sendLinkBtn");
+            const closeBtn = document.getElementById("closeBtn");
+
+            // Copy button
+            copyBtn.addEventListener("click", async () => {
+              input.select();
+              input.setSelectionRange(0, 99999); // for mobile
+              await navigator.clipboard.writeText(input.value);
+
+              copyBtn.textContent = "Copied!";
+              copyBtn.style.background = "#0b4c45";
+            });
+
+            // Send Link button
+            sendLinkBtn.addEventListener("click", () => {
+              handlePay(order, true, false);
+              Swal.close();
+            });
+
+            // Close button
+            closeBtn.addEventListener("click", () => {
+              Swal.close();
+            });
+          },
+        });
+      } else if (!email && !copyUrl && data?.details?.url) {
         window.open(data.details.url, "_blank");
       }
     } catch (error) {
@@ -331,12 +385,10 @@ function Orders() {
       Swal.fire({
         title: t("Error"),
         text: t("Failed to generate payment link. Please try again later."),
-        icon: t("error"),
+        icon: "error",
         confirmButtonText: t("OK"),
       });
     }
-
-
   };
 
   // Action menu for Orders page
@@ -367,7 +419,8 @@ function Orders() {
     { key: "id", header: () => t("Order #"), include: isV("orderNumber") },
     { key: "erpOrderId", header: () => t("Sales Order ID"), include: isV("erpOrderId") },
     { key: isArabic ? "companyNameAr" : "companyNameEn", header: () => t("Customer"), include: isV("companyName") },
-    { key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName"),
+    {
+      key: isArabic ? "branchNameLc" : "branchNameEn", header: () => t("Branch"), include: isV("branchName"),
       render: (item) => {
         const branchName = isArabic ? item.branchNameLc : item.branchNameEn;
         const parts = branchName.split(' (');
