@@ -100,11 +100,11 @@ function Orders() {
   const searchableFields = [
     "id",
     "erpOrderId",
+    "erpCustId",
     "companyNameEn",
     "branchNameEn",
     "entity",
     "paymentMethod",
-    "createdByUsername",
     "paymentStatus",
     "status",
   ];
@@ -480,7 +480,7 @@ function Orders() {
       field: "id",
       headerName: t("Order #"),
       include: isV("orderNumber"),
-      searchable: false,
+      searchable: true,
       maxWidth: 80,
       flex: 1,
     },
@@ -488,7 +488,7 @@ function Orders() {
       field: "erpOrderId",
       headerName: t("Sales Order ID"),
       include: isV("erpOrderId"),
-      searchable: false,
+      searchable: true,
       minWidth: 120,
       maxWidth: 120,
       flex: 1,
@@ -497,7 +497,7 @@ function Orders() {
       field: isArabic ? "companyNameAr" : "companyNameEn",
       headerName: t("Customer"),
       include: isV("companyName"),
-      searchable: false,
+      searchable: true,
       maxWidth: 180,
       flex: 2,
     },
@@ -505,7 +505,7 @@ function Orders() {
       field: isArabic ? "branchNameLc" : "branchNameEn",
       headerName: t("Branch"),
       include: isV("branchName"),
-      searchable: false,
+      searchable: true,
       minWidth: 80,
       maxWidth: 80,
       flex: 2,
@@ -551,7 +551,7 @@ function Orders() {
       field: "paymentMethod",
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
-      searchable: false,
+      searchable: true,
       minWidth: 130,
       maxWidth: 150,
       flex: 1,
@@ -560,7 +560,7 @@ function Orders() {
       field: "createdByUsername",
       headerName: t("Created By"),
       include: isV("createdBy"),
-      searchable: true,
+      searchable: false,
       sortable: false,
       minWidth: 100,
       maxWidth: 120,
@@ -605,7 +605,7 @@ function Orders() {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
-      searchable: false,
+      searchable: true,
       minWidth: 80,
       maxWidth: 120,
       flex: 1,
@@ -797,7 +797,7 @@ function Orders() {
       field: "id",
       headerName: t("Order #"),
       include: isV("orderNumber"),
-      searchable: false,
+      searchable: true,
       maxWidth: 80,
       flex: 1,
     },
@@ -805,7 +805,7 @@ function Orders() {
       field: "erpOrderId",
       headerName: t("ERP ID"),
       include: isV("erpOrderId"),
-      searchable: false,
+      searchable: true,
       minWidth: 120,
       maxWidth: 120,
       flex: 1,
@@ -814,7 +814,7 @@ function Orders() {
       field: isArabic ? "companyNameAr" : "companyNameEn",
       headerName: t("Customer"),
       include: isV("companyName"),
-      searchable: false,
+      searchable: true,
       maxWidth: 180,
       flex: 2,
     },
@@ -822,7 +822,7 @@ function Orders() {
       field: isArabic ? "branchNameLc" : "branchNameEn",
       headerName: t("Branch"),
       include: isV("branchName"),
-      searchable: false,
+      searchable: true,
       minWidth: 80,
       maxWidth: 80,
       flex: 2,
@@ -876,7 +876,7 @@ function Orders() {
       field: "paymentMethod",
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
-      searchable: false,
+      searchable: true,
       minWidth: 130,
       maxWidth: 150,
       flex: 1,
@@ -885,7 +885,7 @@ function Orders() {
       field: "createdByUsername",
       headerName: t("Created By"),
       include: isV("createdBy"),
-      searchable: true,
+      searchable: false,
       sortable: false,
       minWidth: 100,
       maxWidth: 120,
@@ -915,7 +915,7 @@ function Orders() {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
-      searchable: false,
+      searchable: true,
       minWidth: 80,
       maxWidth: 120,
       flex: 1,
@@ -1229,7 +1229,7 @@ function Orders() {
       </GridFooterContainer>
     );
   }
-
+const filteredData = visibleColumns?.filter(item => searchableFields?.includes(item?.field));
   return (
     <Sidebar title={t("Orders")}>
       <div className="orders-content">
@@ -1285,6 +1285,7 @@ function Orders() {
               apiRef={gridApiRef}
               rows={filteredOrders}
               columns={visibleColumns}
+           
               pageSize={pageSize}
               rowCount={total}
               onRowClick={handleRowClick}
@@ -1311,7 +1312,7 @@ function Orders() {
                     setFilterAnchor={setFilterAnchor}
                     handleFilterChange={handleFilterChange}
                     onColumnVisibilityChange={setColumnVisibilityModel}
-                    columns={visibleColumns}
+                    columns={filteredData}
                     filters={filters}
                     columnVisibilityModel={columnVisibilityModel}
                     searchPlaceholder="Search orders..."

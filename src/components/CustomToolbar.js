@@ -197,9 +197,7 @@ const CustomToolbar = ({
         .filter(
           (col) =>
             col.field !== "updatedAt" &&
-            col.field !== "scheduledAt" &&
             col.field !== "createdAt" &&
-            col.field !== "expectedAmount" &&
             col?.searchable
         )
         .map((col) => ({
@@ -244,7 +242,13 @@ const CustomToolbar = ({
           justifyContent: "flex-start",
         }}
       >
-        <Box sx={{ width: "400px", marginRight: i18n.language === "en" ? "auto" : "none", marginLeft: i18n.language === "en" ? "none" : "auto" }}>
+        <Box
+          sx={{
+            width: "400px",
+            marginRight: i18n.language === "en" ? "auto" : "none",
+            marginLeft: i18n.language === "en" ? "none" : "auto",
+          }}
+        >
           <Autocomplete
             multiple
             freeSolo
@@ -285,9 +289,10 @@ const CustomToolbar = ({
             }}
             options={searchOptions}
             renderOption={(props, option) => {
-              const columnName =
-                columns.find((col) => col.field === option.column)
-                  ?.headerName;
+              console.log("columns", columns, option);
+              const columnName = columns.find(
+                (col) => col.field === option.column
+              )?.headerName;
               return (
                 <Box component="li" {...props}>
                   <Typography sx={{ fontSize: "14px" }}>
@@ -303,7 +308,13 @@ const CustomToolbar = ({
               const columnName =
                 columns.find((col) => col.field === option.column)
                   ?.headerName || option.column;
-              return `${columnName}: ${typeof option.searchString === "string" ? option.searchString : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${option.searchString?.endDate?.split("T")[0] ?? ""}`}`;
+              return `${columnName}: ${
+                typeof option.searchString === "string"
+                  ? option.searchString
+                  : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${
+                      option.searchString?.endDate?.split("T")[0] ?? ""
+                    }`
+              }`;
             }}
             filterOptions={(options) => options} // Don't filter options, show all
             renderInput={(params) => (
@@ -370,7 +381,7 @@ const CustomToolbar = ({
             </ToolbarButton>
           </Tooltip>
         )}
-        
+
         {showExport && (
           <Tooltip title={t("Export")}>
             <ExportCsv
@@ -392,16 +403,16 @@ const CustomToolbar = ({
             </ToolbarButton>
           </Tooltip>
         )}
-         {showAdd && (
+        {showAdd && (
           <Tooltip title={t("Add")}>
             <ToolbarButton onClick={handleAddClick} size="small">
               <AddIcon />
             </ToolbarButton>
           </Tooltip>
-         )}
+        )}
       </Toolbar>
-      
-<Menu
+
+      <Menu
         anchorEl={filterAnchor}
         open={open}
         onClose={() => setFilterAnchor(null)}
@@ -409,109 +420,105 @@ const CustomToolbar = ({
         sx={{ mt: 27, ml: i18n.language === "en" ? 110 : 0 }}
       >
         <Grid
-            item
-            container
-            sx={{
-              padding: 1,
-              columnGap: 1,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Grid item sx={{ flex: 1 }}>
-              <Select
-                variant="standard"
-                value={filterObj?.column}
-                onChange={(e) =>
-                  setFilterObj((data) => ({ ...data, column: e.target.value }))
-                }
-                // onChange={handleFilterChange}
-                displayEmpty
-                fullWidth
-                size="small"
-                sx={{ width: "100%" }}
-                MenuProps={{
-                  PaperProps: { style: { maxHeight: 300, overflowY: "auto" } },
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select Column
-                </MenuItem>
-                {columns?.map((col) => {
-                  if (
+          item
+          container
+          sx={{
+            padding: 1,
+            columnGap: 1,
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Grid item sx={{ flex: 1 }}>
+            <Select
+              variant="standard"
+              value={filterObj?.column || ""}
+              onChange={(e) =>
+                setFilterObj((data) => ({ ...data, column: e.target.value }))
+              }
+              displayEmpty
+              fullWidth
+              size="small"
+              sx={{ width: "100%" }}
+              MenuProps={{
+                PaperProps: { style: { maxHeight: 300, overflowY: "auto" } },
+              }}
+            >
+              <MenuItem value="" disabled>
+                Select Column
+              </MenuItem>
+              {columns
+                ?.filter(
+                  (col) =>
                     col.field !== "updatedAt" &&
                     col.field !== "scheduledAt" &&
                     col.field !== "createdAt" &&
                     col.field !== "expectedAmount"
-                  ) {
-                    return (
-                      <MenuItem key={col.field} value={col.field}>
-                        {col.headerName}
-                      </MenuItem>
-                    );
-                  }
-                  return null;
-                })}
-                <MenuItem value="requiredType">Required Type</MenuItem>
-                <MenuItem value="requiredUnit">Required Unit</MenuItem>
-              </Select>
-            </Grid>
-            <Grid item sx={{ flex: 1 }}>
-              <Select
-                variant="standard"
-                value={filterObj?.operator}
-                onChange={(e) =>
-                  setFilterObj((data) => ({
-                    ...data,
-                    operator: e.target.value,
-                  }))
-                }
-                // onChange={handleFilterChange}
-                displayEmpty
-                fullWidth
-                size="small"
-                sx={{ width: "100%" }}
-              >
-                {operators?.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
-                    {o.label}
+                )
+                .map((col) => (
+                  <MenuItem key={col.field} value={col.field}>
+                    {col.headerName}
                   </MenuItem>
                 ))}
-              </Select>
-            </Grid>
-            <Grid item sx={{ flex: 1 }}>
-              <TextField
-                variant="standard"
-                size="small"
-                fullWidth
-                placeholder="Enter value"
-                value={filterObj?.searchString}
-                onChange={(e) => {
-                  // setSearchValue(e.target.value);
-                  setFilterObj((data) => ({
-                    ...data,
-                    searchString: e.target.value,
-                  }));
-                }}
-                // onChange={handleFilterChange}
-                sx={{ width: "100%" }}
-              />
-            </Grid>
-            <Grid item>
-              <Button
-                sx={{ minWidth: 40 }}
-                onClick={() => {
-                  // setSearchQuery(searchValue);
-                  handleFilterChange({
-                    ...filters,
-                    [filterObj?.column]: filterObj?.searchString,
-                  });
-                }}
-              >
-                <GridSearchIcon />
-              </Button>
-            </Grid>
+            </Select>
           </Grid>
+
+          <Grid item sx={{ flex: 1 }}>
+            <Select
+              variant="standard"
+              value={filterObj?.operator || ""}
+              onChange={(e) =>
+                setFilterObj((data) => ({ ...data, operator: e.target.value }))
+              }
+              displayEmpty
+              fullWidth
+              size="small"
+              sx={{ width: "100%" }}
+            >
+              <MenuItem value="" disabled>
+                Select Operator
+              </MenuItem>
+              {operators?.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </Grid>
+
+          <Grid item sx={{ flex: 1 }}>
+            <TextField
+              variant="standard"
+              size="small"
+              fullWidth
+              placeholder="Enter value"
+              value={filterObj?.searchString}
+              onChange={(e) => {
+                // setSearchValue(e.target.value);
+                setFilterObj((data) => ({
+                  ...data,
+                  searchString: e.target.value,
+                }));
+              }}
+              // onChange={handleFilterChange}
+              sx={{ width: "100%" }}
+            />
+          </Grid>
+          <Grid item>
+            <Button
+              sx={{ minWidth: 40 }}
+              onClick={() => {
+                // setSearchQuery(searchValue);
+                handleFilterChange({
+                  ...filters,
+                  [filterObj?.column]: filterObj?.searchString,
+                });
+              }}
+            >
+              <GridSearchIcon />
+            </Button>
+          </Grid>
+        </Grid>
       </Menu>
       <Menu
         anchorEl={dateFilterAnchor}
@@ -521,36 +528,36 @@ const CustomToolbar = ({
         sx={{ ml: i18n.language === "en" ? -20 : 6 }}
       >
         <Grid item container sx={{ padding: 1, columnGap: 1 }}>
-            <Grid item sx={{ flex: 1 }}>
-              <Select
-                variant="standard"
-                value={dateCategory}
-                onChange={(e) => setDateCategory(e.target.value)}
-                displayEmpty
-                fullWidth
-                size="small"
-                sx={{ width: "100%" }}
-              >
-                <MenuItem value="" disabled>
-                  Select Date Column
-                </MenuItem>
-                {columns?.map((col) => {
-                  if (
-                    col.field === "updatedAt" ||
-                    col.field === "scheduledAt" ||
-                    col.field === "createdAt"
-                  ) {
-                    return (
-                      <MenuItem key={col.field} value={col.field}>
-                        {col.headerName}
-                      </MenuItem>
-                    );
-                  }
-                  return null;
-                })}
-              </Select>
-            </Grid>
-            {/* <Grid item sx={{ flex: 1 }}>
+          <Grid item sx={{ flex: 1 }}>
+            <Select
+              variant="standard"
+              value={dateCategory}
+              onChange={(e) => setDateCategory(e.target.value)}
+              displayEmpty
+              fullWidth
+              size="small"
+              sx={{ width: "100%" }}
+            >
+              <MenuItem value="" disabled>
+                Select Date Column
+              </MenuItem>
+              {columns?.map((col) => {
+                if (
+                  col.field === "updatedAt" ||
+                  col.field === "scheduledAt" ||
+                  col.field === "createdAt"
+                ) {
+                  return (
+                    <MenuItem key={col.field} value={col.field}>
+                      {col.headerName}
+                    </MenuItem>
+                  );
+                }
+                return null;
+              })}
+            </Select>
+          </Grid>
+          {/* <Grid item sx={{ flex: 1 }}>
               <Button
                 onClick={(e) => setDateFilterAnchor(e.currentTarget)}
                 size="small"
@@ -561,23 +568,23 @@ const CustomToolbar = ({
                 {`${dateFilter[0].startDate.toLocaleDateString()} - ${dateFilter[0].endDate.toLocaleDateString()}`}
               </Button>
             </Grid> */}
-            <Grid item>
-              <Button
-                sx={{ minWidth: 40 }}
-                onClick={() => {
-                  handleFilterChange({
-                    ...filters,
-                    [dateCategory]: {
-                      startDate: dateFilter[0].startDate.toISOString(),
-                      endDate: dateFilter[0].endDate.toISOString(),
-                    },
-                  });
-                }}
-              >
-                <GridSearchIcon />
-              </Button>
-            </Grid>
+          <Grid item>
+            <Button
+              sx={{ minWidth: 40 }}
+              onClick={() => {
+                handleFilterChange({
+                  ...filters,
+                  [dateCategory]: {
+                    startDate: dateFilter[0].startDate.toISOString(),
+                    endDate: dateFilter[0].endDate.toISOString(),
+                  },
+                });
+              }}
+            >
+              <GridSearchIcon />
+            </Button>
           </Grid>
+        </Grid>
         <Box sx={{ padding: 2, width: 350 }}>
           <DateRange
             onChange={(item) => setDateFilter([item.selection])}
@@ -589,9 +596,7 @@ const CustomToolbar = ({
             preventSnapRefocus={true}
           />
         </Box>
-        
       </Menu>
-      
     </>
   );
 };
