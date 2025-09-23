@@ -79,6 +79,7 @@ function BulkUploadBranchAndCustomer() {
       const data = JSON.parse(text);
 
       if (response?.status === 200 && data?.success) {
+        setPopup(false)
         Swal.fire({
           title: t("File Uploaded Successfully"),
           text:
@@ -107,6 +108,8 @@ function BulkUploadBranchAndCustomer() {
       setLoading(false);
       setSelectedFile(null);
       setUploadType(null);
+       setPopup(false)
+      
     }
   };
 

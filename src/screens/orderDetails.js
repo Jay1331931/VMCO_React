@@ -325,7 +325,10 @@ function OrderDetails() {
         updatedProducts[idx].netAmount = "0.00";
       } else {
         const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
-        updatedProducts[idx].netAmount = (unitPrice * value).toFixed(2);
+        const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage || 0);
+        const baseAmount = unitPrice * value;
+        const vatAmount = (baseAmount * vatPercentage) / 100;
+        updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
       }
 
       return { ...prev, products: updatedProducts };
@@ -1096,10 +1099,11 @@ function OrderDetails() {
         paymentPercentage: '100.00', // Always set to 100.00 when creating sales orders
         status: sampleMode ? 'Approved' : orderStatus,
         salesExecutive: user.employeeId,
-        paymentStatus: paymentStatus,
+        paymentStatus: sampleMode ? "Paid" : paymentStatus,
         entity: formData.entity || '',
         deliveryCharges: formData.deliveryCharges || '0',
         totalAmount: formData.totalAmount || '0',
+        paidAmount: sampleMode ? 0.00 : finalPaymentMethod.toLowerCase() === "credit" ? formData.totalAmount : 0.00,
         pricingPolicy: formData.pricingPolicy?.[formData.entity],
         customerRegion: formData.customerRegion || '',
         productCategory: formData.category || '',
@@ -1463,7 +1467,7 @@ function OrderDetails() {
         });
       }
       if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank", "width=500,height=600");
+        window.open(data.details.url, "_blank");
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
@@ -2220,34 +2224,8 @@ function OrderDetails() {
 
   // Calculate totalAmount as the sum of netAmount plus VAT for all products
   useEffect(() => {
-    // If it's a sample order, always set totalAmount to 0.00
+    // If it's a sample order, always set values to 0.00
     if (sampleMode || formData.sample_order) {
-      if (formData.totalAmount !== '0.00') {
-        setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
-      }
-      return;
-    }
-
-    // For non-sample orders, calculate the total including VAT
-    if (Array.isArray(formData.products) && formData.products.length > 0) {
-      const total = formData.products.reduce((sum, p) => {
-        const net = parseFloat(p.netAmount) || 0;
-        const vatPercentage = parseFloat(p.vatPercentage) || 0;
-        const vatAmount = net * (vatPercentage / 100);
-        return sum + net + vatAmount;
-      }, 0);
-      if (formData.totalAmount !== total.toFixed(2)) {
-        setFormData(prev => ({ ...prev, totalAmount: total.toFixed(2) }));
-      }
-    } else if (formData.totalAmount !== '0.00') {
-      setFormData(prev => ({ ...prev, totalAmount: '0.00' }));
-    }
-  }, [formData.products, sampleMode, formData.sample_order]);
-
-  // Calculate deliveryCharges and totalAmount based on entity and products
-  useEffect(() => {
-    if (sampleMode || formData.sample_order) {
-      // In sample mode, delivery charges and total amount are always 0
       setFormData(prev => ({
         ...prev,
         deliveryCharges: '0.00',
@@ -2256,26 +2234,53 @@ function OrderDetails() {
       return;
     }
 
-    let deliveryCharges = '0.00';
-    let total = 0;
+    // Calculate totals for non-sample orders
     if (Array.isArray(formData.products) && formData.products.length > 0) {
-      total = formData.products.reduce((sum, p) => {
+      // Since netAmount already includes VAT, just sum the netAmount values
+      const netTotalWithVAT = formData.products.reduce((sum, p) => {
         const net = parseFloat(p.netAmount) || 0;
         return sum + net;
-      }, 0);      // Delivery charges logic
+      }, 0);
+
+      // Calculate delivery charges based on net amount (this should use base amount without VAT if available)
+      // For delivery calculation, we might need base amount without VAT
+      const netTotalForDelivery = formData.products.reduce((sum, p) => {
+        const net = parseFloat(p.netAmount) || 0;
+        const vatPercentage = parseFloat(p.vatPercentage) || 0;
+        // Calculate base amount by removing VAT from netAmount
+        const baseAmount = vatPercentage > 0 ? net / (1 + (vatPercentage / 100)) : net;
+        return sum + baseAmount;
+      }, 0);
+
+      // Calculate delivery charges based on base amount (without VAT)
+      let deliveryCharges = '0.00';
       if (formData.entity && formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()) {
-        if (total <= 150) {
+        if (netTotalForDelivery <= 150) {
           deliveryCharges = '20.00';
         }
       }
-    }
-    // Only update if values have changed
-    if (formData.deliveryCharges !== deliveryCharges || formData.totalAmount !== (total + parseFloat(deliveryCharges)).toFixed(2)) {
-      setFormData(prev => ({
-        ...prev,
-        deliveryCharges,
-        totalAmount: (total + parseFloat(deliveryCharges)).toFixed(2)
-      }));
+
+      // Final total = net with VAT + delivery charges
+      const finalTotal = netTotalWithVAT + parseFloat(deliveryCharges);
+
+      // Update only if values have changed
+      if (formData.deliveryCharges !== deliveryCharges ||
+        formData.totalAmount !== finalTotal.toFixed(2)) {
+        setFormData(prev => ({
+          ...prev,
+          deliveryCharges,
+          totalAmount: finalTotal.toFixed(2)
+        }));
+      }
+    } else {
+      // No products, set everything to 0
+      if (formData.totalAmount !== '0.00' || formData.deliveryCharges !== '0.00') {
+        setFormData(prev => ({
+          ...prev,
+          deliveryCharges: '0.00',
+          totalAmount: '0.00'
+        }));
+      }
     }
   }, [formData.products, formData.entity, sampleMode, formData.sample_order]);
 
@@ -2941,13 +2946,13 @@ function OrderDetails() {
 
                     {isV('erpOrderId') && (
                       <div className="order-details-field">
-                        <label>{t('ERP#')}</label>
+                        <label>{t('Sales Order ID')}</label>
                         <input
                           name="erpOrderId"
                           value={formData.erpOrderId !== undefined && formData.erpOrderId !== null ? formData.erpOrderId : ''}
                           onChange={handleInputChange}
                           disabled={!isE('erpOrderId')}
-                          placeholder={t('ERP ID')}
+                          placeholder={t('ERP#')}
                         />
                       </div>
                     )}
@@ -2996,7 +3001,7 @@ function OrderDetails() {
 
                     {isV('category') && (
                       <div className="order-details-field">
-                        <label>{t('Category')}</label>
+                        <label>{t('VMCO Category')}</label>
                         {formMode === 'add' ? (
                           <Dropdown
                             name="category"
@@ -3007,7 +3012,7 @@ function OrderDetails() {
                                 : []
                             }
                             className="category-dropdown"
-                            placeholder={t('Select Category')}
+                            placeholder={t('Applicable for VMCO products')}
                             disabled={
                               !isE('category') ||
                               (formData.products && formData.products.length > 0) ||
@@ -3028,22 +3033,11 @@ function OrderDetails() {
                     {isV('paymentMethod') && (
                       <div className="order-details-field">
                         <label>{t('Payment Method')}</label>
-                        {formMode === 'add' ? (
-                          <input
-                            name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
-                            readOnly
-                            placeholder={t('Click Save to select')}
-                            style={{ background: '#f9f9f9', cursor: 'not-allowed' }}
-                            disabled
-                          />
-                        ) : (
-                          <input
-                            name="paymentMethod"
-                            value={t(formData.paymentMethod) || ''}
-                            disabled
-                          />
-                        )}
+                        <input
+                          name="paymentMethod"
+                          value={t(formData.paymentMethod)}
+                          disabled
+                        />
                       </div>
                     )}
 
@@ -3052,7 +3046,7 @@ function OrderDetails() {
                         <label>{t('Total Amount')}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount ?? ''}
+                          value={formData.totalAmount}
                           disabled
                           readOnly
                         />
@@ -3097,7 +3091,7 @@ function OrderDetails() {
                         <label>{t('Amount Paid')}</label>
                         <input
                           name="paidAmount"
-                          value={parseFloat(formData.paidAmount).toFixed(2) ?? ''}
+                          value={parseFloat(formData.paidAmount).toFixed(2) ? parseFloat(formData.paidAmount).toFixed(2) : 0.00}
                           onChange={handleInputChange}
                           disabled={!isE('paidAmount')}
                         />
@@ -3213,7 +3207,7 @@ function OrderDetails() {
 
                     {isV('createdDate') && (
                       <div className="order-details-field">
-                        <label>{t('Created Date')}</label>
+                        <label>{t('Order Placement Date')}</label>
                         <input
                           name="createdDate"
                           value={formData.createdAt ? convertToTimezone(
@@ -3703,7 +3697,7 @@ function OrderDetails() {
               {isV('orderStatus') && (
                 <div className="order-status">
                   <span className="status-label">{t('Status')}:</span>
-                  <span className={`order-status-badge status-${formData.status?.toLowerCase() || 'Open'}`}>
+                  <span className={`status-badge status-${formData.status?.toLowerCase() || 'open'}`}>
                     {t(formData.status) || t('Open')}
                   </span>
                 </div>
@@ -3719,7 +3713,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) && (
+                {isV('btnCancel', fromApproval, false) && formData?.paymentStatus?.toLowerCase() === "pending" && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
@@ -3729,7 +3723,7 @@ function OrderDetails() {
                   </button>
                 )}
 
-                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && (
+                {isV('btnInvoice', fromApproval, false) && isE('btnInvoice') && ["invoiced", "delivered"].includes(formData?.status?.toLowerCase()) && (
                   <button className="order-action-btn" onClick={() =>
                     handleViewSignature(formData.id, formData.customerId, formData.invoices)
                   }>
@@ -3746,7 +3740,7 @@ function OrderDetails() {
                 {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
                     <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                       {t('Pay')}
                     </button>
@@ -3754,7 +3748,7 @@ function OrderDetails() {
                 {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase()===Constants.ENTITY.DAR.toLowerCase()|| formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                    (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
 
                     <button className="order-action-btn" onClick={() => handleCheckout(orderId, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                       {t('Send Link')}

@@ -853,7 +853,17 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-
+    if (!ticket.warrantyEndDate) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please enter machine serial number to get Warranty End Date"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6"
+      });
+      setSaving(false); // End saving if validation fails
+      return;
+    }
 
     try {
       // Get customer and branch regions
@@ -1113,36 +1123,103 @@ function MaintenanceDetails() {
 
 
 
-  const handleSerialNumberChange =async (SNo) => {
-  
+  const handleSerialNumberChange = async (SNo) => {
+
     // setTicket((prev) => ({ ...prev, machineSerialNumber: SNo }));
     // Clear any existing timeout
-   
+
 
     // Set new timeout
-   
-      try {
-        const { data } = await axios.get(
-          `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
 
-          }
-        );
-        const rawDate = data?.details?.warrantdate || "";
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/warranty-end-date/${ticket.customerId}/${SNo}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
 
-        setTicket((prev) => ({
-          ...prev,
-          warrantyEndDate: formatDateInput(rawDate, "date") || "",
-        }));
-      } catch (error) {
-        console.error("Error handling serial number change:", error);
-      }
-   
+        }
+      );
+      const rawDate = data?.details?.warrantdate || "";
+
+      setTicket((prev) => ({
+        ...prev,
+        warrantyEndDate: formatDateInput(rawDate, "date") || "",
+      }));
+    } catch (error) {
+      console.error("Error handling serial number change:", error);
+    }
+
   };
+
+  const handleAddFeedback = async () => {
+      try {
+        // More robust validation
+        if (!ticket.feedback || !ticket.feedback.trim()) {
+          Swal.fire({
+            title: t("Validation Error"),
+            text: t("Please enter feedback before submitting"),
+            icon: "warning",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#3085d6"
+          });
+          return;
+        }
+  
+        if (!ticket.id) {
+          console.error("No ticket ID available");
+          return;
+        }
+
+        const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/maintenance/id/${ticket.id}`;
+
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            feedbackComment: ticket.feedback.trim()
+          })
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", errorText);
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+  
+        const result = await response.json();
+        console.log("Feedback submitted successfully:", result);
+  
+        await Swal.fire({
+          title: t("Success!"),
+          text: t("Feedback submitted successfully!"),
+          icon: "success",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#28a745"
+        });
+  
+        setTicket(prev => ({
+          ...prev,
+          feedbackComment: ticket.feedback.trim()
+        }));
+  
+      } catch (error) {
+        console.error("Failed to submit feedback:", error);
+  
+        await Swal.fire({
+          title: t("Error!"),
+          text: t("Failed to submit feedback. Please try again."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#dc3545"
+        });
+      }
+    };
 
 
   return (
@@ -1242,17 +1319,17 @@ function MaintenanceDetails() {
                   value={ticket.machineSerialNumber || ""}
                   disabled={!isE("machineSerialNumber") || isReadOnly}
                 />
-        {!ticket?.warrantyEndDate && (
-      <button
-        type="button"
-        className="machine-button"
-        disabled={!ticket.machineSerialNumber}
-        onClick={()=>handleSerialNumberChange(ticket.machineSerialNumber)}
-      >
-        {t("Get Warranty End Date")}
-      </button>
-    )}
-               </div>
+                {!ticket?.warrantyEndDate && (
+                  <button
+                    type="button"
+                    className="machine-button"
+                    disabled={!ticket.machineSerialNumber}
+                    onClick={() => handleSerialNumberChange(ticket.machineSerialNumber)}
+                  >
+                    {t("Get Warranty End Date")}
+                  </button>
+                )}
+              </div>
             )}
             {isV('warrantyEndDate') && (
               <div className='maintenance-details-field'>
@@ -1261,7 +1338,7 @@ function MaintenanceDetails() {
                   id='warrantyEndDate'
                   name='warrantyEndDate'
                   type='text'
-                  placeholder={t("Enter Machine Serial Number")}
+                  placeholder={t("Auto-populated")}
                   // onChange={handleInputChange}
                   value={formatDate(ticket?.warrantyEndDate, 'DD/MM/YYYY') || ""}
                   disabled
@@ -1372,6 +1449,25 @@ function MaintenanceDetails() {
               )}
             </div>
           )}
+
+          {isV('feedback') && ticket.status?.toLowerCase() === 'closed' && (
+            <div className='maintenance-details-field maintenance-details-textarea'>
+              <label>{t("Customer Feedback")}</label>
+              <textarea
+                id='feedback'
+                name='feedback'
+                onChange={handleInputChange}
+                value={ticket?.feedbackComment}
+                disabled={!isE("feedback") || ticket?.feedbackComment}
+              />
+              {isV('feedbackButton') && !ticket.feedbackComment && (
+                <button className='feedback-btn' onClick={handleAddFeedback} disabled={!!ticket?.feedbackComment }>
+                  {t("Submit Feedback")}
+                </button>
+              )}
+            </div>
+          )}
+
         </div>
       </div>
       <div className='support-details-footer'>

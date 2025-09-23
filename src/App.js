@@ -32,6 +32,10 @@ import { useAuth } from "./context/AuthContext";
 import { isTokenValid } from './utilities/authUtils';
 import RbacManager from "./utilities/rbac";
 import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
+import TapCardComponent from "./screens/TapCardComponent";
+import DeliveryScheduleEditor from "./screens/deliveryScheduleEditor";
+import PriceListEditor from "./screens/priceListEditor";
+
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -45,7 +49,7 @@ function App() {
         "SidebarList"
       );
 
-      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company","Gen"];
+      const pages = ["Catalog", "Orders", "Support", "Maintenance", "Customers", "Bank Transfer", "Company"];
       const isV = rbacMgr.isV.bind(rbacMgr);
 
       for (const page of pages) {
@@ -62,7 +66,7 @@ function App() {
   }
 
   const tokenIsValid = token && isTokenValid(token);
-  //       const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
+  //     const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];
   // if(tokenIsValid){
   // RbacManager.loadRbacConfig(role,token);
   // }
@@ -80,8 +84,8 @@ function App() {
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
-        <Route path="/login" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
-        <Route path="/login/employee" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path="/login" element={!tokenIsValid  && <LoginScreen />} />
+        <Route path="/login/employee" element={!tokenIsValid && <LoginScreen />} />
         <Route
           path="/customers/registration"
           element={<CustomersOnboarding />}
@@ -95,7 +99,9 @@ function App() {
         <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
-        <Route path="/rbacEditor" element={<RbacEditor />} />
+        <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
+        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor/></ProtectedRoute>} />
+        <Route path="/priceListEditor" element={<ProtectedRoute page ="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
@@ -118,6 +124,7 @@ function App() {
         <Route path="/payment-opations/order/:orderId" element={<OptionsPage/>} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
+        <Route path="/tapcard/:orderId/:amount/:customerId" element={<TapCardComponent/>} />
       </Routes>
     </Router>
   );

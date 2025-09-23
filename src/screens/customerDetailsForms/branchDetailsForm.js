@@ -619,7 +619,7 @@ const BranchDetailsForm = ({
           body: JSON.stringify({
             branch: {
               branchStatus: "pending",
-              customerId: customer?.id,
+              customerId: customer?.id
             },
             contacts: {},
           }),
@@ -707,6 +707,7 @@ const BranchDetailsForm = ({
                 customer?.isDeliveryChargesApplicable,
               erpCustId: customer?.erpCustId,
               hours: stringifyHours(hoursDetails),
+              custSeqId: customer?.sequenceId
             }),
             
           });
@@ -1086,12 +1087,15 @@ const BranchDetailsForm = ({
       }
 
       console.log("Data to be validated:", dataToBeValidated);
-      const errors = await validateData(
+      let errors = {};
+      if(approvalAction === "approve") {
+      errors = await validateData(
         dataToBeValidated,
         true,
         mandatoryFieldsForApproval
       );
       setFormErrors(errors);
+    }
       if (Object.keys(errors).length > 0) {
         setIsApproving(false);
         setIsRejecting(false);

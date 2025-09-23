@@ -1671,7 +1671,9 @@ function FinancialInformation({
       )}
      
          {/* Credit Balance Header */}
-          <h3 className="form-header full-width">{t("Credit Balance")}</h3>
+          {customerData?.customerStatus.toLowerCase() === "approved" &&
+          (<>
+            <h3 className="form-header full-width">{t("Credit Balance")}</h3>
           <div>
             <button
               onClick={handleGetCreditBalance}
@@ -1680,7 +1682,10 @@ function FinancialInformation({
             >
               {isLoading ? t("Loading...") : t("Get Credit Balance")}
             </button>
-          </div>          
+          </div>
+          </>
+          )
+           }         
           {isCreditBalanceData && (
             <>
             <div className="gi-backdrop" />
@@ -1701,7 +1706,7 @@ function FinancialInformation({
           </tr>
         </thead>
         <tbody>
-          {creditBalanceData && Object.entries(creditBalanceData).map(([entity, balance]) => (
+          {/* {creditBalanceData && Object.entries(creditBalanceData).map(([entity, balance]) => (
             <tr key={entity}>
               <td>{basicMasterLists?.entity?.filter((item) => item.value === entity).map((item) => i18n.language === "en" ? item?.description : item?.descriptionLc)}</td>
               <td className={`balance-amount ${balance === 0 ? 'zero' : balance > 0 ? 'positive' : 'negative'}`}>
@@ -1712,7 +1717,21 @@ function FinancialInformation({
                 })}
               </td>
             </tr>
-          ))}
+          ))} */}
+          {creditBalanceData && basicMasterLists?.entity?.map((item) => {
+            <tr key={item.value}>
+              <td>{i18n.language === "en" ? item.description : item.descriptionLc}</td>
+              <td className={`balance-amount ${creditBalanceData?.[item.value] === 0 ? 'zero' : creditBalanceData?.[item.value] > 0 ? 'positive' : 'negative'}`}>
+        {creditBalanceData?.[item.value].toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'SAR',
+          minimumFractionDigits: 2
+        })}
+      </td>
+            </tr>
+          })
+
+          }
         </tbody>
                 </table>
      </div>

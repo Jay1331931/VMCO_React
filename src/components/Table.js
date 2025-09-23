@@ -9,6 +9,7 @@ const Table = ({
     columns,
     data,
     getStatusClass,
+    getPaymentStatusClass,
     actionButtons,
     customCellRenderer,
     onRowClick,
@@ -66,7 +67,7 @@ const Table = ({
                     //     position: 'absolute',
                     //     top: '0',
                     //     right: '0',
-                    //     background: '#007bff',
+                    //     background: '#ccc',
                     //     color: 'white',
                     //     border: 'none',
                     //     borderRadius: '3px',
@@ -77,7 +78,8 @@ const Table = ({
                     className='copy-btn'
                     title={`Copy full ${title}`}
                 >
-                    <FontAwesomeIcon icon={faCopy} />
+                    {/* <FontAwesomeIcon icon={faCopy} /> */}
+                    {t("Copy")}
                 </button>
             </div>
         );
@@ -127,7 +129,7 @@ const Table = ({
         }
         if(column.key.toLowerCase() ==="paymentstatus"){
             return (
-                <span >
+                <span className={`status-badge ${getPaymentStatusClass(item[column.key])}`}>
                     {t(item[column.key])}
                 </span>
             );
@@ -158,20 +160,17 @@ const Table = ({
   SHC_GMTC: [
     // Approved cases
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
 
     // Open cases
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "open" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "open" },
   ],
 
   NAQI_DAR: [
     { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "approved" },
-    { paymentMethod: "Pre Payment", paymentStatus: "Pending", status: "approved" }, // FIX
     { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
     { paymentMethod: "Cash on Delivery", paymentStatus: "Pending", status: "approved" },
   ],

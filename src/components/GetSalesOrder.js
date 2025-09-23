@@ -5,11 +5,11 @@ import axios from 'axios';
 import { BiHandicap } from 'react-icons/bi';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import api from "../utilities/api"
 
-
-function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x }) {
+function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x) => x ,token}) {
   const { i18n } = useTranslation();
-  const { token } = useAuth();
+  // const { token } = useAuth();
   const isRTL = i18n.language === 'ar';
   
   const [search, setSearch] = useState('');
@@ -29,7 +29,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
       filteredData.entity= formData.entity;
       filteredData.paymentStatus="Pending";
       const filter=JSON.stringify(filteredData);
-      const { data } = await axios.get(`${API_BASE_URL}/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
+      const { data } = await api.get(`/sales-order/pagination?page=${pagination?.page}&pageSize=${pagination?.pageSize}&search=${searchQuery}&purpose=banktransactions&filters=${filter}`, {
         headers: { "Authorization": `Bearer ${token}` },
       });
       setCustomerOrders(data.data.data || []);

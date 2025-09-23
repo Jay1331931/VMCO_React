@@ -12,7 +12,7 @@ import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
-
+import api from "../utilities/api"
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -59,33 +59,38 @@ const AddBankTransaction = () => {
       : user?.roles[0],
     "BankTransactions"
   );
+   const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-  const generateToken = async () => {
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/auth/temporary-token-generation`,
-        {
-          role: "Guest",
-          userId: 0,
-          userName: "payment",
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("Temporary Token Response:", data.details);
-    } catch (error) {
-      console.error("Error generating temporary token:", error);
-    }
-  };
-  useEffect(() => {
-    const cookieToken = getCookie("token");
-
-    if (orderId && !cookieToken) {
-      generateToken();
-    }
-  }, [orderId]);
+  // const generateToken = async () => {
+  //   try {
+  //     const { data } = await axios.post(
+  //       `/auth/temporary-token-generation`,
+  //       {
+  //         role: "Guest",
+  //         userId: 0,
+  //         userName: "payment",
+  //       },
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     console.log("Temporary Token Response:", data.details);
+  //     const newToken = data?.details?.token;
+  //   if (newToken) {
+  //     localStorage.setItem("token", newToken);
+     
+  //     return newToken;
+  //   }
+  //   } catch (error) {
+  //     console.error("Error generating temporary token:", error);
+  //   }
+  // };
+  // useEffect(() => {
+  //   if (orderId && !cookieToken) {
+  //     generateToken();
+  //   }
+  // }, [orderId]);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -105,13 +110,13 @@ const AddBankTransaction = () => {
       formDataUpload.append("containerType", "transactions");
 
       try {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/upload-files`,
+        const { data } = await api.post(
+          `/upload-files`,
           formDataUpload,
           {
             headers: {
               "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${cookieToken}`,
             },
           }
         );
@@ -157,11 +162,11 @@ const AddBankTransaction = () => {
       };
       delete payload.entity;
 
-      const response = await axios.post(
-        `${API_BASE_URL}/bank-transactions`,
+      const response = await api.post(
+        `/bank-transactions`,
         payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
 
@@ -180,26 +185,26 @@ const AddBankTransaction = () => {
         navigate("/banktransactions");
       }
     } catch (error) {
-      if (error?.response?.status === 401 && orderIds) {
-        Swal.fire({
-          title: t("Session Expired"),
-          text: t("Please click Ok Session will be restarted"),
-          icon: "warning",
-          confirmButtonText: "OK",
-          cancelButtonText: "Close",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            try {
-              await generateToken();
-            } catch (err) {
-              console.error("Token regeneration failed:", err);
-              window.close();
-            }
-          } else if (result.dismiss === Swal.DismissReason.cancel) {
-            window.close();
-          }
-        });
-      }
+      // if (error?.response?.status === 401 && orderIds) {
+      //   Swal.fire({
+      //     title: t("Session Expired"),
+      //     text: t("Please click Ok Session will be restarted"),
+      //     icon: "warning",
+      //     confirmButtonText: "OK",
+      //     cancelButtonText: "Close",
+      //   }).then(async (result) => {
+      //     if (result.isConfirmed) {
+      //       try {
+      //         await generateToken();
+      //       } catch (err) {
+      //         console.error("Token regeneration failed:", err);
+      //         window.close();
+      //       }
+      //     } else if (result.dismiss === Swal.DismissReason.cancel) {
+      //       window.close();
+      //     }
+      //   });
+      // }
       console.error("Submission error:", error);
       const msg =
         error?.response?.data?.message ||
@@ -229,13 +234,13 @@ const AddBankTransaction = () => {
     try {
       const payload = { status };
 
-      const { data } = await axios.patch(
-        `${API_BASE_URL}/bank-transactions/id/${id}`,
+      const { data } = await api.patch(
+        `/bank-transactions/id/${id}`,
         payload,
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${cookieToken}`,
           },
         }
       );
@@ -262,10 +267,10 @@ const AddBankTransaction = () => {
   const fetchTransaction = useCallback(async () => {
     try {
       if (!id) return;
-      const { data } = await axios.get(
-        `${API_BASE_URL}/bank-transactions/id/${id}`,
+      const { data } = await api.get(
+        `/bank-transactions/id/${id}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
       setImageUrls(data.data.bankDocuments ? data.data.bankDocuments : []);
@@ -284,10 +289,10 @@ const AddBankTransaction = () => {
   }, [id]);
   const fetchDecodeddata = useCallback(async () => {
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/decode-ids?encryptedorderIds=${orderId}&amount=${amount}`,
+      const { data } = await api.get(
+        `/decode-ids?encryptedorderIds=${orderId}&amount=${amount}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
       setOrderIds(parseInt(data?.details?.orderIds));
@@ -303,10 +308,10 @@ const AddBankTransaction = () => {
   const fetchSaleOrder = useCallback(async () => {
     try {
       if (!orderIds) return;
-      const { data } = await axios.get(
-        `${API_BASE_URL}/sales-order/id/${orderIds}`,
+      const { data } = await api.get(
+        `/sales-order/id/${orderIds}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
       console.log("Sale Order Data:", amount);
@@ -343,11 +348,11 @@ const AddBankTransaction = () => {
       const fetched = [];
 
       for (let fileName of imageUrls) {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/get-files`,
+        const { data } = await api.post(
+          `/get-files`,
           { fileName, containerType: "transactions" },
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${cookieToken}` },
           }
         );
 
@@ -367,14 +372,14 @@ const AddBankTransaction = () => {
   }, [fetchFiles]);
   const handleRemoveImage = async (fileName) => {
     try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/delete-files`,
+      const { data } = await api.post(
+        `/delete-files`,
         {
           fileName: fileName,
           containerType: "transactions",
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
 
@@ -872,6 +877,7 @@ const AddBankTransaction = () => {
             API_BASE_URL={API_BASE_URL}
             setFormData={setFormData}
             t={t}
+            token={cookieToken}
           />
         </div>
         <>

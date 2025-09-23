@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
               const role= userData?.roles[0] && userData?.roles[0]?.toLowerCase() ==="employee" ?  userData?.designation : userData?.roles[0];
           
-            // RbacManager.loadRbacConfig(role,tokenFromCookie);
+            RbacManager.loadRbacConfig(role,tokenFromCookie);
             
           setLoading(false); // Done loading
         })

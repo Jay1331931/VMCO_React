@@ -724,5 +724,20 @@
     "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل طلبات متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل.",
     "Syncing...": "جارٍ المزامنة...",
     "F&O Sync": "مزامنة F&O",
-    "Selected File": "الملف المحدد"
+    "Selected File": "الملف المحدد",
+    "Sales Order ID":"أمر المبيعات",
+    "Action":"فعل",
+    "Order Placement Date": "تاريخ وضع الطلب",
+    "Your orders is successfully placed and is under review for approval.:":"تم وضع طلباتك بنجاح وهي قيد المراجعة للموافقة عليها.:",
+    "Your order is successfully placed and is under review for approval.":"لقد تم تقديم طلبك بنجاح وهو قيد المراجعة للموافقة عليه.",
+    "and":"أيضا",
+    "Product quantity to cart successfully":"تم إضافة كمية المنتج إلى سلة التسوق بنجاح",
+    "Payment system not ready. Please try again.":"نظام الدفع غير جاهز. يُرجى المحاولة مرة أخرى.",
+    "Please enter machine serial number to get Warranty End Date":"يرجى إدخال رقم السيريال للآلة للحصول على تاريخ انتهاء الضمان",
+    "Please enter valid machine serial number":"يرجى إدخال رقم سيريال للآلة صالح",
+    "Auto-populated": "تم التعبئة تلقائيًا",
+    "City (Other)": "المدينة (أخرى)",
+    "District (Other)": "الحي (آخر)",
+    "Location Type (Other)": "نوع الموقع (آخر)",
+    "Branch Region": "منطقة الفرع"
 }

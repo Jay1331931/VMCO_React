@@ -75,7 +75,6 @@ function Documents({
     nonTradingDocuments: useRef(),
   };
   const nonTradingDocumentTypes = [
-  "National ID / Iqama",
   "Freelance Work Certificate",
   "Passport",
   "Others (Specify)"
@@ -539,6 +538,477 @@ const [customDocName, setCustomDocName] = useState("");
         </td>
       </tr>
 
+          {/* Bank details on company letterhead */}
+          <tr className="document-upload full-width" key="bankLetter">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="bankLetter">
+                {t("Bank details on company letterhead")}
+                <span className="required-field">*</span>
+                {customerData?.bankLetter !==
+                  originalCustomerData?.bankLetter && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.bankLetter && (
+                <div className="error">{t(formErrors.bankLetter)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("bankLetterVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="bankLetterVerified"
+        name="bankLetterVerified"
+        checked={verifiedData?.bankLetterVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="bankLetterVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="bankLetter"
+                name="bankLetter"
+                className="hidden-file-input"
+                ref={fileInputRefs.bankLetter}
+                onChange={(e) => handleTradingDocumentChange(e, "bankLetter")}
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="bankLetter"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.bankLetter && (
+                <li
+                  key={tradingFilesToUpload.bankLetter.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.bankLetter && (
+                    <a
+                      href={tradingFilePreviews.bankLetter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.bankLetter.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("bankLetter")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.bankLetter &&
+                !tradingFilesToUpload?.bankLetter && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.bankLetter,
+                        "bankLetter"
+                      );
+                    }}
+                  >
+                    {typeof customerData.bankLetter === "string"
+                      ? customerData.bankLetter.split("_").slice(0, 2).join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.bankLetter && (
+                <div className="file-actions">
+                  {!tradingDocuments.bankLetter && customerData?.bankLetter && (
+                    <a
+                      href="#"
+                      className="file-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleViewFile(
+                          customerData.id,
+                          customerData.bankLetter,
+                          "bankLetter"
+                        );
+                      }}
+                    >
+                      {typeof customerData.bankLetter === "string"
+                        ? customerData.bankLetter
+                            .split("_")
+                            .slice(0, 2)
+                            .join(" ")
+                        : "View Document"}
+                    </a>
+                  )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Copy of National Address */}
+          <tr className="document-upload full-width" key="nationalAddress">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="nationalAddress">
+                {t("Copy of National Address")}
+                <span className="required-field">*</span>
+                {customerData?.nationalAddress !==
+                  originalCustomerData?.nationalAddress && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.nationalAddress && (
+                <div className="error">{t(formErrors.nationalAddress)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          {isV("nationalAddressVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalAddressVerified"
+        name="nationalAddressVerified"
+        checked={verifiedData?.nationalAddressVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalAddressVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="nationalAddress"
+                name="nationalAddress"
+                className="hidden-file-input"
+                ref={fileInputRefs.nationalAddress}
+                onChange={(e) =>
+                  handleTradingDocumentChange(e, "nationalAddress")
+                }
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="nationalAddress"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.nationalAddress && (
+                <li
+                  key={tradingFilesToUpload.nationalAddress.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.nationalAddress && (
+                    <a
+                      href={tradingFilePreviews.nationalAddress}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.nationalAddress.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("nationalAddress")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.nationalAddress &&
+                !tradingFilesToUpload?.nationalAddress && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.nationalAddress,
+                        "nationalAddress"
+                      );
+                    }}
+                  >
+                    {typeof customerData.nationalAddress === "string"
+                      ? customerData.nationalAddress
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.nationalAddress && (
+                <div className="file-actions">
+                  {!tradingDocuments.nationalAddress &&
+                    customerData?.nationalAddress && (
+                      <a
+                        href="#"
+                        className="file-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleViewFile(
+                            customerData.id,
+                            customerData.nationalAddress,
+                            "nationalAddress"
+                          );
+                        }}
+                      >
+                        {typeof customerData.nationalAddress === "string"
+                          ? customerData.nationalAddress
+                              .split("_")
+                              .slice(0, 2)
+                              .join(" ")
+                          : "View Document"}
+                      </a>
+                    )}
+                </div>
+              )}
+            </td>
+          </tr>
+
+          {/* Copy of national ID/Iqama */}
+          <tr className="document-upload full-width" key="nationalId">
+            <td
+              className="label-cell"
+              style={{
+                whiteSpace: "nowrap",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+            >
+              <label htmlFor="nationalId">
+                {t("Copy of national ID/Iqama of the auth. sign..")}
+                <span className="required-field">*</span>
+                {customerData?.nationalId !==
+                  originalCustomerData?.nationalId && mode === "edit" && (
+                  <span className="update-badge">Updated</span>
+                )}
+              </label>
+              {formErrors?.nationalId && (
+                <div className="error">{t(formErrors.nationalId)}</div>
+              )}
+            </td>
+            <div className="input-with-verification">
+          {/* <td
+          className="upload-cell"
+          style={{
+            whiteSpace: "nowrap",
+            paddingRight: "16px",
+            verticalAlign: "top",
+          }}
+        > */}
+          { isV("nationalIdVerified") && (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="nationalIdVerified"
+        name="nationalIdVerified"
+        checked={verifiedData?.nationalIdVerified || false}
+        onChange={onChangeVerifiedData}
+        // className="verified-checkbox"
+      />
+      <label htmlFor="nationalIdVerified">Verified</label>
+      </div>)}
+        {/* </td> */}
+        </div>
+            <td
+              className="upload-cell"
+              style={{
+                width: "100px",
+                paddingRight: "16px",
+                verticalAlign: "top",
+              }}
+              hidden={mode === "edit"}
+            >
+              <input
+                type="file"
+                accept=".pdf"
+                id="nationalId"
+                name="nationalId"
+                className="hidden-file-input"
+                ref={fileInputRefs.nationalId}
+                onChange={(e) => handleTradingDocumentChange(e, "nationalId")}
+                required
+                disabled={mode === "edit"}
+              />
+              <label
+                htmlFor="nationalId"
+                className="custom-file-button"
+                style={{
+                  display: "inline-block",
+                  width: "100%",
+                  textAlign: "center",
+                }}
+              >
+                {t("Upload")}
+              </label>
+            </td>
+            <td className="file-display-cell">
+              {tradingFilesToUpload?.nationalId && (
+                <li
+                  key={tradingFilesToUpload.nationalId.name}
+                  className="uploaded-file-item"
+                >
+                  {tradingFilePreviews?.nationalId && (
+                    <a
+                      href={tradingFilePreviews.nationalId}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-link"
+                      style={{ marginLeft: 8 }}
+                    >
+                      {tradingFilesToUpload.nationalId.name}
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className="delete-file-button"
+                    onClick={() => removeTradingFile("nationalId")}
+                  >
+                    ×
+                  </button>
+                </li>
+              )}
+              {tradingFilePreviews?.nationalId &&
+                !tradingFilesToUpload?.nationalId && (
+                  <a
+                    href="#"
+                    className="file-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleViewFile(
+                        customerData.id,
+                        customerData.nationalId,
+                        "nationalId"
+                      );
+                    }}
+                  >
+                    {typeof customerData.nationalId === "string"
+                      ? customerData.nationalId.split("_").slice(0, 2).join(" ")
+                      : "View Document"}
+                  </a>
+                )}
+              {customerData?.nationalId && (
+                <div className="file-actions">
+                  {!tradingDocuments.nationalId && customerData?.nationalId && (
+                    <a
+                      href="#"
+                      className="file-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleViewFile(
+                          customerData.id,
+                          customerData.nationalId,
+                          "nationalId"
+                        );
+                      }}
+                    >
+                      {typeof customerData.nationalId === "string"
+                        ? customerData.nationalId
+                            .split("_")
+                            .slice(0, 2)
+                            .join(" ")
+                        : "View Document"}
+                    </a>
+                  )}
+                </div>
+              )}
+            </td>
+          </tr>
+
       {isTrading ? (
         <>
           {/* Copy of Commercial Registration */}
@@ -864,477 +1334,7 @@ const [customDocName, setCustomDocName] = useState("");
               )}
             </td>
           </tr>
-
-          {/* Copy of national ID/Iqama */}
-          <tr className="document-upload full-width" key="nationalId">
-            <td
-              className="label-cell"
-              style={{
-                whiteSpace: "nowrap",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-            >
-              <label htmlFor="nationalId">
-                {t("Copy of national ID/Iqama of the auth. sign..")}
-                <span className="required-field">*</span>
-                {customerData?.nationalId !==
-                  originalCustomerData?.nationalId && mode === "edit" && (
-                  <span className="update-badge">Updated</span>
-                )}
-              </label>
-              {formErrors?.nationalId && (
-                <div className="error">{t(formErrors.nationalId)}</div>
-              )}
-            </td>
-            <div className="input-with-verification">
-          {/* <td
-          className="upload-cell"
-          style={{
-            whiteSpace: "nowrap",
-            paddingRight: "16px",
-            verticalAlign: "top",
-          }}
-        > */}
-          { isV("nationalIdVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="nationalIdVerified"
-        name="nationalIdVerified"
-        checked={verifiedData?.nationalIdVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="nationalIdVerified">Verified</label>
-      </div>)}
-        {/* </td> */}
-        </div>
-            <td
-              className="upload-cell"
-              style={{
-                width: "100px",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-              hidden={mode === "edit"}
-            >
-              <input
-                type="file"
-                accept=".pdf"
-                id="nationalId"
-                name="nationalId"
-                className="hidden-file-input"
-                ref={fileInputRefs.nationalId}
-                onChange={(e) => handleTradingDocumentChange(e, "nationalId")}
-                required
-                disabled={mode === "edit"}
-              />
-              <label
-                htmlFor="nationalId"
-                className="custom-file-button"
-                style={{
-                  display: "inline-block",
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
-                {t("Upload")}
-              </label>
-            </td>
-            <td className="file-display-cell">
-              {tradingFilesToUpload?.nationalId && (
-                <li
-                  key={tradingFilesToUpload.nationalId.name}
-                  className="uploaded-file-item"
-                >
-                  {tradingFilePreviews?.nationalId && (
-                    <a
-                      href={tradingFilePreviews.nationalId}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="file-link"
-                      style={{ marginLeft: 8 }}
-                    >
-                      {tradingFilesToUpload.nationalId.name}
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    className="delete-file-button"
-                    onClick={() => removeTradingFile("nationalId")}
-                  >
-                    ×
-                  </button>
-                </li>
-              )}
-              {tradingFilePreviews?.nationalId &&
-                !tradingFilesToUpload?.nationalId && (
-                  <a
-                    href="#"
-                    className="file-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleViewFile(
-                        customerData.id,
-                        customerData.nationalId,
-                        "nationalId"
-                      );
-                    }}
-                  >
-                    {typeof customerData.nationalId === "string"
-                      ? customerData.nationalId.split("_").slice(0, 2).join(" ")
-                      : "View Document"}
-                  </a>
-                )}
-              {customerData?.nationalId && (
-                <div className="file-actions">
-                  {!tradingDocuments.nationalId && customerData?.nationalId && (
-                    <a
-                      href="#"
-                      className="file-link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleViewFile(
-                          customerData.id,
-                          customerData.nationalId,
-                          "nationalId"
-                        );
-                      }}
-                    >
-                      {typeof customerData.nationalId === "string"
-                        ? customerData.nationalId
-                            .split("_")
-                            .slice(0, 2)
-                            .join(" ")
-                        : "View Document"}
-                    </a>
-                  )}
-                </div>
-              )}
-            </td>
-          </tr>
-
-          {/* Bank details on company letterhead */}
-          <tr className="document-upload full-width" key="bankLetter">
-            <td
-              className="label-cell"
-              style={{
-                whiteSpace: "nowrap",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-            >
-              <label htmlFor="bankLetter">
-                {t("Bank details on company letterhead")}
-                <span className="required-field">*</span>
-                {customerData?.bankLetter !==
-                  originalCustomerData?.bankLetter && mode === "edit" && (
-                  <span className="update-badge">Updated</span>
-                )}
-              </label>
-              {formErrors?.bankLetter && (
-                <div className="error">{t(formErrors.bankLetter)}</div>
-              )}
-            </td>
-            <div className="input-with-verification">
-          {/* <td
-          className="upload-cell"
-          style={{
-            whiteSpace: "nowrap",
-            paddingRight: "16px",
-            verticalAlign: "top",
-          }}
-        > */}
-          {isV("bankLetterVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="bankLetterVerified"
-        name="bankLetterVerified"
-        checked={verifiedData?.bankLetterVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="bankLetterVerified">Verified</label>
-      </div>)}
-        {/* </td> */}
-        </div>
-            <td
-              className="upload-cell"
-              style={{
-                width: "100px",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-              hidden={mode === "edit"}
-            >
-              <input
-                type="file"
-                accept=".pdf"
-                id="bankLetter"
-                name="bankLetter"
-                className="hidden-file-input"
-                ref={fileInputRefs.bankLetter}
-                onChange={(e) => handleTradingDocumentChange(e, "bankLetter")}
-                required
-                disabled={mode === "edit"}
-              />
-              <label
-                htmlFor="bankLetter"
-                className="custom-file-button"
-                style={{
-                  display: "inline-block",
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
-                {t("Upload")}
-              </label>
-            </td>
-            <td className="file-display-cell">
-              {tradingFilesToUpload?.bankLetter && (
-                <li
-                  key={tradingFilesToUpload.bankLetter.name}
-                  className="uploaded-file-item"
-                >
-                  {tradingFilePreviews?.bankLetter && (
-                    <a
-                      href={tradingFilePreviews.bankLetter}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="file-link"
-                      style={{ marginLeft: 8 }}
-                    >
-                      {tradingFilesToUpload.bankLetter.name}
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    className="delete-file-button"
-                    onClick={() => removeTradingFile("bankLetter")}
-                  >
-                    ×
-                  </button>
-                </li>
-              )}
-              {tradingFilePreviews?.bankLetter &&
-                !tradingFilesToUpload?.bankLetter && (
-                  <a
-                    href="#"
-                    className="file-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleViewFile(
-                        customerData.id,
-                        customerData.bankLetter,
-                        "bankLetter"
-                      );
-                    }}
-                  >
-                    {typeof customerData.bankLetter === "string"
-                      ? customerData.bankLetter.split("_").slice(0, 2).join(" ")
-                      : "View Document"}
-                  </a>
-                )}
-              {customerData?.bankLetter && (
-                <div className="file-actions">
-                  {!tradingDocuments.bankLetter && customerData?.bankLetter && (
-                    <a
-                      href="#"
-                      className="file-link"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleViewFile(
-                          customerData.id,
-                          customerData.bankLetter,
-                          "bankLetter"
-                        );
-                      }}
-                    >
-                      {typeof customerData.bankLetter === "string"
-                        ? customerData.bankLetter
-                            .split("_")
-                            .slice(0, 2)
-                            .join(" ")
-                        : "View Document"}
-                    </a>
-                  )}
-                </div>
-              )}
-            </td>
-          </tr>
-
-          {/* Copy of National Address */}
-          <tr className="document-upload full-width" key="nationalAddress">
-            <td
-              className="label-cell"
-              style={{
-                whiteSpace: "nowrap",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-            >
-              <label htmlFor="nationalAddress">
-                {t("Copy of National Address")}
-                <span className="required-field">*</span>
-                {customerData?.nationalAddress !==
-                  originalCustomerData?.nationalAddress && mode === "edit" && (
-                  <span className="update-badge">Updated</span>
-                )}
-              </label>
-              {formErrors?.nationalAddress && (
-                <div className="error">{t(formErrors.nationalAddress)}</div>
-              )}
-            </td>
-            <div className="input-with-verification">
-          {/* <td
-          className="upload-cell"
-          style={{
-            whiteSpace: "nowrap",
-            paddingRight: "16px",
-            verticalAlign: "top",
-          }}
-        > */}
-          {isV("nationalAddressVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="nationalAddressVerified"
-        name="nationalAddressVerified"
-        checked={verifiedData?.nationalAddressVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="nationalAddressVerified">Verified</label>
-      </div>)}
-        {/* </td> */}
-        </div>
-            <td
-              className="upload-cell"
-              style={{
-                width: "100px",
-                paddingRight: "16px",
-                verticalAlign: "top",
-              }}
-              hidden={mode === "edit"}
-            >
-              <input
-                type="file"
-                accept=".pdf"
-                id="nationalAddress"
-                name="nationalAddress"
-                className="hidden-file-input"
-                ref={fileInputRefs.nationalAddress}
-                onChange={(e) =>
-                  handleTradingDocumentChange(e, "nationalAddress")
-                }
-                required
-                disabled={mode === "edit"}
-              />
-              <label
-                htmlFor="nationalAddress"
-                className="custom-file-button"
-                style={{
-                  display: "inline-block",
-                  width: "100%",
-                  textAlign: "center",
-                }}
-              >
-                {t("Upload")}
-              </label>
-            </td>
-            <td className="file-display-cell">
-              {tradingFilesToUpload?.nationalAddress && (
-                <li
-                  key={tradingFilesToUpload.nationalAddress.name}
-                  className="uploaded-file-item"
-                >
-                  {tradingFilePreviews?.nationalAddress && (
-                    <a
-                      href={tradingFilePreviews.nationalAddress}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="file-link"
-                      style={{ marginLeft: 8 }}
-                    >
-                      {tradingFilesToUpload.nationalAddress.name}
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    className="delete-file-button"
-                    onClick={() => removeTradingFile("nationalAddress")}
-                  >
-                    ×
-                  </button>
-                </li>
-              )}
-              {tradingFilePreviews?.nationalAddress &&
-                !tradingFilesToUpload?.nationalAddress && (
-                  <a
-                    href="#"
-                    className="file-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleViewFile(
-                        customerData.id,
-                        customerData.nationalAddress,
-                        "nationalAddress"
-                      );
-                    }}
-                  >
-                    {typeof customerData.nationalAddress === "string"
-                      ? customerData.nationalAddress
-                          .split("_")
-                          .slice(0, 2)
-                          .join(" ")
-                      : "View Document"}
-                  </a>
-                )}
-              {customerData?.nationalAddress && (
-                <div className="file-actions">
-                  {!tradingDocuments.nationalAddress &&
-                    customerData?.nationalAddress && (
-                      <a
-                        href="#"
-                        className="file-link"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleViewFile(
-                            customerData.id,
-                            customerData.nationalAddress,
-                            "nationalAddress"
-                          );
-                        }}
-                      >
-                        {typeof customerData.nationalAddress === "string"
-                          ? customerData.nationalAddress
-                              .split("_")
-                              .slice(0, 2)
-                              .join(" ")
-                          : "View Document"}
-                      </a>
-                    )}
-                </div>
-              )}
-            </td>
-          </tr>
+          
           {isV("assignedToEntityWise") && (
             <>
             
@@ -2950,7 +2950,7 @@ const [customDocName, setCustomDocName] = useState("");
           </tr>
           </>
         
-)}
+          )}
         </>
       ) : (
         <>
@@ -4569,7 +4569,7 @@ const [customDocName, setCustomDocName] = useState("");
           </tr>
           </>
         
-)}
+          )}
           {/* Non-Trading Documents */}
           <div className="form-header full-width">
                 {t("Non-Trading Documents")}
@@ -4578,7 +4578,7 @@ const [customDocName, setCustomDocName] = useState("");
                   <span className="update-badge">Updated</span>
                 )}
                 </div>
-<tr className="document-upload full-width"
+          <tr className="document-upload full-width"
             key={"nonTradingDocuments"}>
   <td className="label-cell"
               style={{
