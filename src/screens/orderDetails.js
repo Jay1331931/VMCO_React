@@ -687,7 +687,7 @@ function OrderDetails() {
           console.warn(`Failed to fetch order lines: ${linesResponse.statusText}`);
         } else {
           const existingLines = await linesResponse.json();
-          if (existingLines.data?.data) {
+          if (existingLines.data?.data?.length > 0) {
             // Filter to ensure we only get lines for this specific order
             const orderLines = existingLines.data.data.filter(line => line.orderId === formData.id);
             console.log(`Existing order lines for orderId ${formData.id}:`, orderLines);
@@ -3471,7 +3471,7 @@ function OrderDetails() {
                                     handleDeleteProductRow((formData.products || []).indexOf(row));
                                   }}
                                   type="button"
-                                  disabled={!isE('deleteButton') || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                                  disabled={!isE('deleteButton') || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                                 >
                                   {t('Delete')}
                                 </button>
@@ -3761,17 +3761,17 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave('save')}
-                    disabled={saving || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                    disabled={saving || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                   >
                     {saving ? t('Saving...') : t('Save Changes')}
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) && (formData?.paymentStatus?.toLowerCase() === "pending" || formData?.status?.toLowerCase() === "open") && (
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
-                    disabled={cancelling || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                    disabled={cancelling || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                   >
                     {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
