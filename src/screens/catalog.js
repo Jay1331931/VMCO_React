@@ -925,9 +925,7 @@ function Catalog() {
         Swal.fire({
           icon: "warning",
           title: t("No Branch Selected"),
-          text: t(
-            "Please select a delivery branch before adding products to the cart."
-          ),
+          text: t("Please select a delivery branch before adding products to the cart."),
           timer: 5000,
           showConfirmButton: false,
           timerProgressBar: true,
