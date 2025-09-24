@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Swal from 'sweetalert2';
 
 const QuantityController = ({
@@ -13,11 +14,24 @@ const QuantityController = ({
     moq = 0
 }) => {
     const timeoutRef = useRef(null);
+    const { t, i18n } = useTranslation();
+    
+    // Use multiple methods to detect RTL/Arabic
+    const currentLanguage = i18n.language;
+    const dir = i18n.dir();
+    const isRTL = dir === 'rtl' || currentLanguage === 'ar' || i18n.language === 'ar';
+
+    console.log('QuantityController Debug:', {
+        currentLanguage,
+        dir,
+        isRTL,
+        language: i18n.language
+    });
 
     const showMOQWarning = () => {
         Swal.fire({
-            title: 'Minimum Order Quantity',
-            text: `The quantity is below the minimum order quantity.`,
+            title: t('Minimum Order Quantity'),
+            text: t('The quantity is below the minimum order quantity'),
             icon: 'warning',
             showConfirmButton: false,
             timer: 1000,
@@ -130,33 +144,79 @@ const QuantityController = ({
 
     return (
         <div className="quantity-controls">
-            <button
-                style={{background:"#d2d2d2"}}
-                className="quantity-btn"
-                onClick={(e) => handleButtonClick(e, -1)}
-                aria-label="Decrease quantity"
-            >
-                <FontAwesomeIcon icon={faMinus} />
-            </button>
-            <input
-                type="text"  // Use text type for better control
-                className="quantity-input"
-                id={`quantity-${itemId}`}
-                name={`quantity-${itemId}`}
-                value={quantity === 0 && moq > 0 ? moq : quantity}  // Show MOQ as default but allow empty
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                onFocus={handleInputFocus}
-                onClick={(e) => stopPropagation && e.stopPropagation()}
-                style={{border:"none",width:"40px"}}
-            />
-            <button
-                className="quantity-btn-2"
-                onClick={(e) => handleButtonClick(e, 1)}
-                aria-label="Increase quantity"
-            >
-                <FontAwesomeIcon icon={faPlus} />
-            </button>
+            {isRTL ? (
+                // Arabic (RTL) layout: + button first, then input, then - button
+                <>
+                    <button
+                        className="quantity-btn-2"
+                        onClick={(e) => handleButtonClick(e, 1)}
+                        aria-label={t("Increase quantity")}
+                    >
+                        <FontAwesomeIcon icon={faPlus} />
+                    </button>
+                    <input
+                        type="text"
+                        className="quantity-input"
+                        id={`quantity-${itemId}`}
+                        name={`quantity-${itemId}`}
+                        value={quantity === 0 && moq > 0 ? moq : quantity}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        onFocus={handleInputFocus}
+                        onClick={(e) => stopPropagation && e.stopPropagation()}
+                        style={{
+                            border:"none",
+                            width:"40px",
+                            textAlign: "center",
+                            direction: 'ltr' // Keep numbers LTR even in RTL layout
+                        }}
+                    />
+                    <button
+                        style={{background:"#d2d2d2"}}
+                        className="quantity-btn"
+                        onClick={(e) => handleButtonClick(e, -1)}
+                        aria-label={t("Decrease quantity")}
+                    >
+                        <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                </>
+            ) : (
+                // English (LTR) layout: - button first, then input, then + button
+                <>
+                    <button
+                        style={{background:"#d2d2d2"}}
+                        className="quantity-btn"
+                        onClick={(e) => handleButtonClick(e, -1)}
+                        aria-label={t("Decrease quantity")}
+                    >
+                        <FontAwesomeIcon icon={faMinus} />
+                    </button>
+                    <input
+                        type="text"
+                        className="quantity-input"
+                        id={`quantity-${itemId}`}
+                        name={`quantity-${itemId}`}
+                        value={quantity === 0 && moq > 0 ? moq : quantity}
+                        onChange={handleInputChange}
+                        onBlur={handleInputBlur}
+                        onFocus={handleInputFocus}
+                        onClick={(e) => stopPropagation && e.stopPropagation()}
+                        style={{
+                            border:"none",
+                            width:"40px",
+                            textAlign: "center",
+                            direction: 'ltr' // Keep numbers LTR
+                        }}
+                    />
+                    <button
+                        className="quantity-btn-2"
+                        onClick={(e) => handleButtonClick(e, 1)}
+                        aria-label={t("Increase quantity")}
+                    >
+                        <FontAwesomeIcon icon={faPlus} />
+                    </button>
+                </>
+            )}
             
             <style>{`
                 .quantity-controls {
@@ -182,9 +242,9 @@ const QuantityController = ({
                 .quantity-btn-2 {
                     width: 30px;
                     height: 30px;
-                    border: 1px solid #0a5640;
+                    border: 1px solid var(--logo-deep-green, #0a5640);
                     border-radius: 4px;
-                    background: #0a5640;
+                    background: var(--logo-deep-green, #0a5640);
                     color: white;
                     cursor: pointer;
                     display: flex;
@@ -195,7 +255,7 @@ const QuantityController = ({
                 }
                 .quantity-btn:hover {
                     background: #c0c0c0;
-                    color: #0a5640;
+                    color: var(--logo-deep-green, #0a5640);
                 }
                 .quantity-btn-2:hover {
                     background: #0d6b4f;
@@ -221,6 +281,7 @@ const QuantityController = ({
                     -webkit-appearance: none;
                     margin: 0;
                 }
+                
                 @media (max-width: 768px) {
                     .quantity-controls {
                         gap: 5px;

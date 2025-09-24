@@ -167,7 +167,7 @@
     "Category": "الفئة",
     "Sub category": "الفئة الفرعية",
     "ADD TO CART": "أضف إلى السلة",
-    "Price:": ": السعر:",
+    "Price: ": " السعر:",
     "Unit Price:": ": سعر الوحدة",
     "VMCO Machines": "آلات VMCO",
     "VMCO Consumables": "VMCO مستهلكات",
@@ -300,6 +300,7 @@
     "Branch ID": "معرف الفرع",
     "Products & MoQ - Company Name": "المنتجات والحد الأدنى للطلب - اسم الشركة",
     "Minimum Order Quantity": "الحد الأدنى للطلب",
+    "The quantity is below the minimum order quantity": "الكمية أقل من الحد الأدنى للطلب",
     "Name": "الاسم",
     "Selected": "المحدد",
     "Apply All": "تطبيق الكل",
@@ -741,5 +742,9 @@
     "Location Type (Other)": "نوع الموقع (آخر)",
     "Branch Region": "منطقة الفرع",
     "VMCO Category": "فئة في إم سي أو",
-    "Applicable for VMCO products": "ينطبق على منتجات في إم سي أو"
+    "Applicable for VMCO products": "ينطبق على منتجات في إم سي أو",
+    "Select Products": "اختر منتجات",
+    "Select All": "اختر الكل",
+    "Select category first": "اختر الفئة أولاً"
+
 }

@@ -547,7 +547,7 @@ function GetProducts({
           position: fixed;
           top: 50%; left: 50%;
           transform: translate(-50%, -50%);
-          background: #fff;
+          background: var(--bg-white);
           border-radius: 12px;
           box-shadow: 0 8px 32px rgba(0,0,0,0.18);
           width: 600px;
@@ -578,15 +578,15 @@ function GetProducts({
         .gp-select-btn {
           padding: 7px 18px;
           border-radius: 6px;
-          border: 1px solid #28a745;
-          background: #28a745;
+          border: 1px solid var(--logo-deep-green);
+          background: var(--logo-deep-green);
           color: white;
           font-size: 1rem;
           cursor: pointer;
           transition: background 0.15s;
         }
         .gp-select-btn:hover:not(:disabled) {
-          background: #218838;
+          background: var(--logo-light-green);
         }
         .gp-select-btn:disabled {
           opacity: 0.5;
