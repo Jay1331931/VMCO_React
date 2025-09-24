@@ -20,7 +20,7 @@ import GetCustomers from "../components/GetCustomers";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
-import { Chip, Box, Button, Typography } from "@mui/material";
+import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
 import {
   DataGrid,
   GridFooterContainer,
@@ -29,6 +29,9 @@ import {
 } from "@mui/x-data-grid";
 import { max, min, set } from "date-fns";
 import { Height } from "@mui/icons-material";
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import IosShareIcon from '@mui/icons-material/IosShare';
+import SyncIcon from '@mui/icons-material/Sync';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
@@ -506,8 +509,8 @@ function Orders() {
       headerName: t("Branch"),
       include: isV("branchName"),
       searchable: true,
-      minWidth: 80,
-      maxWidth: 80,
+      // minWidth: 100,
+      // maxWidth: 180,
       flex: 2,
     },
     {
@@ -574,8 +577,8 @@ function Orders() {
       minWidth: 100,
       maxWidth: 120,
       flex: 1,
-      valueFormatter: (params) =>
-        params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
+      renderCell: (params) =>
+        params?.row?.createdAt ? formatDate( params?.row?.createdAt, "DD/MM/YYYY") : " ",
     },
     {
       field: "totalAmount",
@@ -584,7 +587,7 @@ function Orders() {
       searchable: false,
       minWidth: 100,
       maxWidth: 120,
-      valueFormatter: (params) => parseFloat(params.value || 0).toFixed(2),
+      renderCell: (params) => parseFloat(params?.row?.totalAmount || 0).toFixed(2),
     },
     {
       field: "paymentStatus",
@@ -606,8 +609,8 @@ function Orders() {
       headerName: t("Status"),
       include: isV("status"),
       searchable: true,
-      minWidth: 80,
-      maxWidth: 120,
+      minWidth: 70,
+      maxWidth: 80,
       flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
@@ -619,6 +622,8 @@ function Orders() {
       include: isV("action"),
       searchable: false,
       flex: 2,
+         minWidth: 70,
+      maxWidth: 80,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
           {isV("action") &&
@@ -653,7 +658,10 @@ function Orders() {
                   },
                 }}
               >
-                {t("Pay")}
+                {/* {t("Pay")} */}
+                      <Tooltip title={t("Pay")} arrow>
+                <AccountBalanceWalletIcon/>
+                </Tooltip>
               </Box>
             )}
         </Box>
@@ -662,56 +670,13 @@ function Orders() {
     {
       field: "sendLink",
       headerName: t("Action"),
-      include: isV("sendLink"),
+      include: isV("sendLink")||isV("FandOSyncSO"),
       searchable: false,
-      maxWidth: 80,
       flex: 2,
-      renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("sendLink") &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
-              <Box
-                component="span"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePay(params.row,false,true);
-                }}
-                sx={{
-                  color: "primary.main",
-                  cursor: "pointer",
-                  // textDecoration: "underline",
-                  fontSize: "0.875rem",
-                }}
-              >
-                {t("Send Link")}
-              </Box>
-            )}
-        </Box>
-      ),
-    },
-    {
-      field: "orderSync",
-      headerName: t("Sync"),
-      include: isV("FandOSyncSO"),
-      searchable: false,
+        minWidth: 70,
       maxWidth: 80,
-      flex: 2,
-      renderCell: (params) => {
-        const rowdata = params.row;
+      renderCell: (params) =>{
+         const rowdata = params.row;
         const SYNC_RULES = {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
@@ -755,8 +720,44 @@ function Orders() {
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
-          <Box sx={{ display: "flex", gap: 1 }}>
-            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          {isV("sendLink") &&
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+            (params?.row?.status?.toLowerCase() === "approved" ||
+              (params?.row?.status?.toLowerCase() === "open" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.SHC.toLowerCase())) ||
+              (params?.row?.status?.toLowerCase() === "pending" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+              <Box
+                component="span"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePay(params.row, false, true);
+                }}
+                sx={{
+                  color: "primary.main",
+                  cursor: "pointer",
+                  // textDecoration: "underline",
+                  fontSize: "0.875rem",
+                }}
+              >
+                <Tooltip title= {t("Send Link")} arrow>
+                {/* {t("Send Link")} */}
+                <IosShareIcon/>
+                </Tooltip>
+              </Box>
+            )}
+
+              {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -781,15 +782,112 @@ function Orders() {
                   fontSize: "0.875rem",
                 }}
               >
-                {syncLoading && syncLoadingId === params.row.id
+                
+ <Tooltip title= {syncLoading && syncLoadingId === params.row.id
                   ? t("Syncing...")
-                  : t("Sync")}
+                  : t("Sync")}  arrow>
+<SyncIcon/>
+ </Tooltip>
+                  
               </Box>
             )}
-          </Box>
-        );
-      },
+
+            
+        </Box>
+      )},
     },
+//     {
+//       field: "orderSync",
+//       headerName: t("Sync"),
+//       include: isV("FandOSyncSO"),
+//       searchable: false,
+//      minWidth: 70,
+//       maxWidth: 80,
+//       flex: 2,
+//       renderCell: (params) => {
+//         const rowdata = params.row;
+//         const SYNC_RULES = {
+//           [Constants.ENTITY.VMCO]: (rowdata) =>
+//             rowdata.isMachine
+//               ? [
+//                   {
+//                     paymentMethod: "Pre Payment",
+//                     paymentStatus: "Pending",
+//                     status: "approved",
+//                   },
+//                 ]
+//               : [
+//                   {
+//                     paymentMethod: "Pre Payment",
+//                     paymentStatus: "Pending",
+//                     status: "approved",
+//                   },
+//                   {
+//                     paymentMethod: "Credit",
+//                     paymentStatus: "Paid",
+//                     status: "approved",
+//                   },
+//                   {
+//                     paymentMethod: "Cash on Delivery",
+//                     paymentStatus: "Pending",
+//                     status: "approved",
+//                   },
+//                 ],
+
+//           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+//           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+//           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+//           [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+//         };
+//         const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
+//         const isValidForSync = rules.some(
+//           (rule) =>
+//             rule?.paymentMethod?.toLowerCase() ===
+//               rowdata.paymentMethod?.toLowerCase() &&
+//             rule?.paymentStatus?.toLowerCase() ===
+//               rowdata.paymentStatus?.toLowerCase() &&
+//             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
+//         );
+//         return (
+//           <Box sx={{ display: "flex", gap: 1 }}>
+//             {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+//               <Box
+//                 component="span"
+//                 onClick={(e) => {
+//                   e.stopPropagation();
+//                   if (!(syncLoading && syncLoadingId === params.row.id)) {
+//                     handleFandOFailSO(params.row.id);
+//                   }
+//                 }}
+//                 sx={{
+//                   color:
+//                     syncLoading && syncLoadingId === params.row.id
+//                       ? "text.disabled"
+//                       : "primary.main",
+//                   cursor:
+//                     syncLoading && syncLoadingId === params.row.id
+//                       ? "default"
+//                       : "pointer",
+//                   textDecoration:
+//                     syncLoading && syncLoadingId === params.row.id
+//                       ? "none"
+//                       : "none",
+//                   fontSize: "0.875rem",
+//                 }}
+//               >
+                
+//  <Tooltip title= {syncLoading && syncLoadingId === params.row.id
+//                   ? t("Syncing...")
+//                   : t("Sync")}  arrow>
+// <SyncIcon/>
+//  </Tooltip>
+                  
+//               </Box>
+//             )}
+//           </Box>
+//         );
+//       },
+//     },
   ];
 
   const approvalColumns = [
@@ -899,8 +997,8 @@ function Orders() {
       minWidth: 100,
       maxWidth: 120,
       flex: 1,
-      valueFormatter: (params) =>
-        params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
+      renderCell: (params) =>
+        params?.row?.createdAt? formatDate( params?.row?.createdAt, "DD/MM/YYYY") : " ",
     },
     {
       field: "totalAmount",
@@ -909,7 +1007,7 @@ function Orders() {
       searchable: false,
       minWidth: 100,
       maxWidth: 120,
-      valueFormatter: (params) => parseFloat(params.value || 0).toFixed(2),
+      renderCell: (params) => parseFloat(params?.row?.totalAmount || 0).toFixed(2),
     },
     {
       field: "status",
@@ -1002,16 +1100,15 @@ function Orders() {
     setSyncLoading(true);
     setSyncLoadingId(id);
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/sales-order/fail-sync/${id}`,
-        {},
+      const {data} = await axios.get(
+        `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      if (response.data.status === "Ok") {
+      if (data?.success) {
         fetchOrders(page, searchQuery, filters);
         Swal.fire({
           title: t("Success"),
@@ -1020,7 +1117,12 @@ function Orders() {
           confirmButtonText: t("OK"),
         });
       } else {
-        throw new Error(response.data.message);
+        Swal.fire({
+          title: t("Error"),
+          text: t(`${data?.message}`),
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
       }
     } catch (error) {
       console.error("Error syncing order:", error);
@@ -1229,18 +1331,31 @@ function Orders() {
       </GridFooterContainer>
     );
   }
-const filteredData = visibleColumns?.filter(item => searchableFields?.includes(item?.field));
+  const filteredData = visibleColumns?.filter((item) =>
+    searchableFields?.includes(item?.field)
+  );
+  const handleApproval = (mode) => {
+    setFilters({})
+    setApprovalMode(mode === "approval");
+    // Refresh data based on mode
+    if (mode === "approval") {
+      fetchApprovals();
+    } else {
+      fetchOrders();
+    }
+  };
+
   return (
     <Sidebar title={t("Orders")}>
       <div className="orders-content">
-        <div className="page-header">
-          <div className="header-actions">
+        {/* <div className="page-header">
+          <div className="header-actions"> */}
             {/* <ToggleButton
               checked={isApprovalMode}
               onChange={toggleApprovalMode}
               label={t("Approval Mode")}
             /> */}
-            <AnimatedTabs
+            {/* <AnimatedTabs
               toggleMode={true}
               value={isApprovalMode ? "approval" : "all"}
               onChange={(mode) => {
@@ -1252,7 +1367,7 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
                   fetchOrders();
                 }
               }}
-            />
+            /> */}
             {/* {isE("addOrder") && (
               <ActionButton
                 label={t("Add Order")}
@@ -1260,8 +1375,8 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
                 menuItems={orderMenuItems}
               />
             )} */}
-          </div>
-        </div>
+          {/* </div>
+        </div> */}
 
         {/* <CustomToolbar
           onSearch={handleSearch}
@@ -1285,7 +1400,6 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
               apiRef={gridApiRef}
               rows={filteredOrders}
               columns={visibleColumns}
-           
               pageSize={pageSize}
               rowCount={total}
               onRowClick={handleRowClick}
@@ -1321,10 +1435,13 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
                     showExport={false}
                     showUpload={true}
                     showAdd={isV("addButton")}
+                    showApproval={isV("approvalButton") }
                     // showAdd={true}
                     handleAddClick={handleAddOrder}
                     handleUploadClick={HandleBulkOrderUpload}
                     columnsToDisplay={columnsToDisplay}
+                    handleApproval={handleApproval}
+                    isApprovalMode={isApprovalMode}
                   />
                 ),
               }}

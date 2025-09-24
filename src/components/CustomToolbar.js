@@ -40,6 +40,7 @@ import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { addDays, addYears } from "date-fns";
+import AnimatedTabs from "./AnimatedTabs";
 
 const operators = [
   { value: "equals", label: "Equals" },
@@ -70,6 +71,10 @@ const CustomToolbar = ({
   handleUploadClick,
   setSearchQuery,
   columnsToDisplay,
+  isApprovalMode,
+  handleApproval,
+  showApproval
+
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
@@ -244,7 +249,11 @@ const CustomToolbar = ({
       >
         <Box
           sx={{
-            width: "400px",
+            width: "500px",
+           gap :"20px",
+             display: "flex",
+    flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
+    alignItems: { xs: "stretch", sm: "center" },
             marginRight: i18n.language === "en" ? "auto" : "none",
             marginLeft: i18n.language === "en" ? "none" : "auto",
           }}
@@ -345,6 +354,11 @@ const CustomToolbar = ({
               "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
             }}
           />
+         {showApproval && (<AnimatedTabs
+                        toggleMode={true}
+                        value={isApprovalMode ? "approval" : "all"}
+                        onChange={(mode) => handleApproval(mode)} 
+                      />)}
         </Box>
 
         {/* Default Grid Toolbar Components */}
