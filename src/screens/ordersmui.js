@@ -609,8 +609,8 @@ function Orders() {
       headerName: t("Status"),
       include: isV("status"),
       searchable: true,
-      minWidth: 70,
-      maxWidth: 80,
+      minWidth: 120,
+      maxWidth: 140,
       flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
@@ -1014,8 +1014,8 @@ function Orders() {
       headerName: t("Status"),
       include: isV("status"),
       searchable: true,
-      minWidth: 80,
-      maxWidth: 120,
+       minWidth: 120,
+      maxWidth: 140,
       flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
