@@ -739,5 +739,7 @@
     "City (Other)": "المدينة (أخرى)",
     "District (Other)": "الحي (آخر)",
     "Location Type (Other)": "نوع الموقع (آخر)",
-    "Branch Region": "منطقة الفرع"
+    "Branch Region": "منطقة الفرع",
+    "VMCO Category": "فئة في إم سي أو",
+    "Applicable for VMCO products": "ينطبق على منتجات في إم سي أو"
 }

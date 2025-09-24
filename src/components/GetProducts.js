@@ -402,8 +402,9 @@ function GetProducts({
                   <button
                     className="gp-product-btn"
                     onClick={() => onSelectProduct(product)}
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
                   >
-                    {product.id} - {i18n.language === 'ar' ? product.productNameLc : product.productName}
+                    {i18n.language === 'ar' ? `${product.id} - ${product.productNameLc}` : `${product.id} - ${product.productName}`}
                   </button>
                 </li>
               ))}
