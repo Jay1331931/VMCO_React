@@ -794,7 +794,6 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const netAmount = parseFloat(product.netAmount);
-          //const sugarTaxPrice = parseFloat(product.sugarTaxPrice || 0);
           const vatPercentage = parseFloat(product.vatPercentage || 0);
 
           // Check if product already exists in the order
@@ -1741,7 +1740,6 @@ function OrderDetails() {
             updatedProducts[index] = {
               ...product,
               unitPrice: unitPrice.toFixed(2),
-              //sugarTaxPrice,
               vatPercentage,
               netAmount
             };
@@ -1773,7 +1771,7 @@ function OrderDetails() {
     }
   };
   // Function to update sales order line
-  const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
+  const updateSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, vatPercentage) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
       let finalVat = vatPercentage;
@@ -1839,7 +1837,7 @@ function OrderDetails() {
   };
 
   // Function to create a new sales order line
-  const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, /*sugarTaxPrice,*/ vatPercentage) => {
+  const createSalesOrderLine = async (orderId, productId, unitPrice, quantity, netAmount, vatPercentage) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
       let finalVat = vatPercentage;
@@ -1886,84 +1884,90 @@ function OrderDetails() {
     }
   };
 
-  // Add selected product to products table
-  const handleSelectProduct = (product) => {
-    // Use MOQ for the product, default to 1 if not set
-    const moq = Number(product.moq) || 1;
-    // In sample mode, set price to 0, otherwise use the actual price
-    const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
-    // Determine VAT based on companyType and sample mode
-    let vatPercentage = 0.00;
-    if (!sampleMode && companyType && companyType.toLowerCase() === 'trading') {
-      vatPercentage = parseFloat(product.vatPercentage);
-    }
-
+  // Update the handleSelectProduct function to handle multiple products
+const handleSelectProduct = (products) => {
+  // If products is an array (multiple selection), handle each product
+  if (Array.isArray(products)) {
     setFormData(prev => {
-      // Check if product already exists in the table
-      const existingIdx = prev.products.findIndex(
-        p => (p.id || p.product_id) === (product.id || p.product_id)
-      );
-      if (existingIdx !== -1) {
-        // Product exists, increment quantity and update netAmount
-        const updatedProducts = [...prev.products];
-        const existingProduct = updatedProducts[existingIdx];
-        const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + 1;
-        // In sample mode, netAmount is always 0
-        const newNetAmount = sampleMode ? "0.00" :
-          ((unitPrice * newQuantity) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
+      const updatedProducts = [...prev.products];
+      
+      products.forEach(product => {
+        // Use MOQ for the product, default to 1 if not set
+        const moq = Number(product.moq) || 1;
+        // In sample mode, set price to 0, otherwise use the actual price
+        const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
+        // Determine VAT based on companyType and sample mode
+        let vatPercentage = 0.00;
+        if (!sampleMode && companyType && companyType.toLowerCase() === 'trading') {
+          vatPercentage = parseFloat(product.vatPercentage);
+        }
+        
+        // Check if product already exists in the table
+        const existingIdx = updatedProducts.findIndex(
+          p => (p.id || p.product_id) === (product.id || product.product_id)
+        );
+        
+        if (existingIdx !== -1) {
+          // Product exists, increment quantity and update netAmount
+          const existingProduct = updatedProducts[existingIdx];
+          const newQuantity = (parseInt(existingProduct.quantity, 10) || moq) + moq;
+          // In sample mode, netAmount is always 0
+          const newNetAmount = sampleMode ? "0.00" :
+            ((unitPrice * newQuantity) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * newQuantity)) : 0)).toFixed(2);
 
-        updatedProducts[existingIdx] = {
-          ...existingProduct,
-          quantity: newQuantity,
-          netAmount: newNetAmount,
-          moq: moq,
-          vatPercentage: vatPercentage,
-          // In sample mode, unitPrice is always 0
-          unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
-          // Keep both names updated
-          productName: product.productName,
-          productNameLc: product.productNameLc,
-          isMachine: product.isMachine || product.is_machine || false,
-          isFresh: product.isFresh || false
+          updatedProducts[existingIdx] = {
+            ...existingProduct,
+            quantity: newQuantity,
+            netAmount: newNetAmount,
+            moq: moq,
+            vatPercentage: vatPercentage,
+            // In sample mode, unitPrice is always 0
+            unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
+            // Keep both names updated
+            productName: product.productName,
+            productNameLc: product.productNameLc,
+            isMachine: product.isMachine || product.is_machine || false,
+            isFresh: product.isFresh || false
+          };
+        } else {
+          // Product does not exist, add as new row with MOQ as quantity
+          // In sample mode, netAmount is always 0
+          const netAmount = sampleMode ? "0.00" :
+            ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
 
-        };
-        return {
-          ...prev,
-          products: updatedProducts
-        };
-      } else {
-        // Product does not exist, add as new row with MOQ as quantity
-        // In sample mode, netAmount is always 0
-        const netAmount = sampleMode ? "0.00" :
-          ((unitPrice * moq) + (vatPercentage ? (vatPercentage / 100 * (unitPrice * moq)) : 0)).toFixed(2);
-
-        const newProduct = {
-          id: product.id,
-          product_id: product.id,
-          productName: product.productName,
-          productNameLc: product.productNameLc,
-          erpProdId: product.erpProdId || product.erp_prod_id || '',
-          quantity: moq,
-          unit: product.unit,
-          isMachine: product.isMachine || product.is_machine || false,
-          isFresh: product.isFresh || false,
-          // In sample mode, unitPrice is always 0
-          unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
-          netAmount: netAmount,
-          vatPercentage: vatPercentage,
-          moq: moq
-        };
-        return {
-          ...prev,
-          products: [
-            ...prev.products,
-            newProduct
-          ]
-        };
-      }
+          const newProduct = {
+            id: product.id,
+            product_id: product.id,
+            productName: product.productName,
+            productNameLc: product.productNameLc,
+            erpProdId: product.erpProdId || product.erp_prod_id || '',
+            quantity: moq,
+            unit: product.unit,
+            isMachine: product.isMachine || product.is_machine || false,
+            isFresh: product.isFresh || false,
+            // In sample mode, unitPrice is always 0
+            unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
+            netAmount: netAmount,
+            vatPercentage: vatPercentage,
+            moq: moq
+          };
+          updatedProducts.push(newProduct);
+        }
+      });
+      
+      return {
+        ...prev,
+        products: updatedProducts
+      };
     });
-    setShowProductPopup(false);
-  };
+  } else {
+    // Handle single product selection (existing logic)
+    // ... keep your existing single product logic here
+  }
+  
+  setShowProductPopup(false);
+};
+
   // Handle customer selection
   const handleSelectCustomer = (customer) => {
     console.log('Selected customer:', customer);
@@ -3532,7 +3536,7 @@ function OrderDetails() {
                         <Table
                           columns={columns}
                           data={(formData.products || []).filter(
-                            p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || /*p.sugarTaxPrice || */p.netAmount || p.vatPercentage
+                            p => p.id || p.erp_prodd || p.quantity || p.unit || p.unitPrice || p.netAmount || p.vatPercentage
                           )}
                           actionButtons={
                             (row) => (

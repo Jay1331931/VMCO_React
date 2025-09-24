@@ -26,6 +26,9 @@ function GetProducts({
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState(""); // actual query sent to backend
 
+  // NEW: State for selected products
+  const [selectedProducts, setSelectedProducts] = useState([]);
+
   // Category and Subcategory filters
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -39,6 +42,52 @@ function GetProducts({
   const debounceTimeout = useRef();
   const categoryDropdownRef = useRef();
   const subcategoryDropdownRef = useRef();
+
+  // Clear selected products when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSelectedProducts([]);
+    }
+  }, [open]);
+
+  // NEW: Handle individual product selection
+  const handleProductCheck = (product, isChecked) => {
+    if (isChecked) {
+      setSelectedProducts(prev => [...prev, product]);
+    } else {
+      setSelectedProducts(prev => prev.filter(p => p.id !== product.id));
+    }
+  };
+
+  // NEW: Handle select all functionality
+  const handleSelectAll = (isChecked) => {
+    if (isChecked) {
+      setSelectedProducts([...backendProducts]);
+    } else {
+      setSelectedProducts([]);
+    }
+  };
+
+  // NEW: Handle select button click
+  const handleSelectProducts = () => {
+    if (selectedProducts.length === 0) {
+      alert(t("Please select at least one product."));
+      return;
+    }
+    
+    // Call the parent callback with selected products array
+    onSelectProduct(selectedProducts);
+    setSelectedProducts([]);
+    onClose();
+  };
+
+  // Check if product is selected
+  const isProductSelected = (productId) => {
+    return selectedProducts.some(p => p.id === productId);
+  };
+
+  // Check if all products are selected
+  const areAllSelected = backendProducts.length > 0 && selectedProducts.length === backendProducts.length;
 
   // Debounce search input
   useEffect(() => {
@@ -322,14 +371,28 @@ function GetProducts({
       <div className="gp-backdrop" onClick={onClose} />
       <div className="gp-modal">
         <div className="gp-header">
-          <span className="gp-title">{t("Select a Product")}</span>
-          <button
-            className="gp-close-btn"
-            onClick={onClose}
-            style={{ marginLeft: isRTL ? '0' : 'auto', marginRight: isRTL ? 'auto' : '0' }}
-          >
-            {t("Close")}
-          </button>
+          <span className="gp-title">{t("Select Products")}</span>
+          <div className="gp-header-buttons">
+            <button
+              className="gp-close-btn"
+              onClick={onClose}
+            >
+              {t("Cancel")}
+            </button>
+             <button
+              className="gp-select-btn"
+              onClick={handleSelectProducts}
+              disabled={selectedProducts.length === 0}
+              style={{ 
+                marginRight: isRTL ? '0' : '8px', 
+                marginLeft: isRTL ? '8px' : '0',
+                opacity: selectedProducts.length === 0 ? 0.5 : 1,
+                cursor: selectedProducts.length === 0 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {t("Select")} ({selectedProducts.length})
+            </button>
+          </div>
         </div>
 
         {/* Search Input */}
@@ -396,24 +459,69 @@ function GetProducts({
           {productLoading ? (
             <div style={{ padding: 24 }}>{t("Loading...")}</div>
           ) : (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {backendProducts.map((product) => (
-                <li key={product.id}>
-                  <button
-                    className="gp-product-btn"
-                    onClick={() => onSelectProduct(product)}
-                    style={{ textAlign: isRTL ? 'right' : 'left' }}
-                  >
-                    {i18n.language === 'ar' ? `${product.id} - ${product.productNameLc}` : `${product.id} - ${product.productName}`}
-                  </button>
-                </li>
-              ))}
-              {backendProducts.length === 0 && <li>{t("No products found.")}</li>}
-            </ul>
+            <>
+              {/* Select All Checkbox */}
+              {backendProducts.length > 0 && (
+                <div className="gp-select-all" style={{ padding: "8px 12px", borderBottom: "1px solid #eee" }}>
+                  <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={areAllSelected}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      style={{ marginRight: isRTL ? "0" : "8px", marginLeft: isRTL ? "8px" : "0" }}
+                    />
+                    <span style={{ fontWeight: "bold", fontSize: "14px" }}>
+                      {t("Select All")} ({backendProducts.length})
+                    </span>
+                  </label>
+                </div>
+              )}
+              
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {backendProducts.map((product) => (
+                  <li key={product.id}>
+                    <label className="gp-product-item" style={{ 
+                      display: "flex", 
+                      alignItems: "center", 
+                      padding: "8px 12px", 
+                      cursor: "pointer",
+                      backgroundColor: isProductSelected(product.id) ? "#f0f8ff" : "#f9f9f9",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      marginBottom: "8px",
+                      transition: "background-color 0.15s"
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={isProductSelected(product.id)}
+                        onChange={(e) => handleProductCheck(product, e.target.checked)}
+                        style={{ 
+                          marginRight: isRTL ? "0" : "12px", 
+                          marginLeft: isRTL ? "12px" : "0",
+                          cursor: "pointer"
+                        }}
+                      />
+                      <span style={{ 
+                        flex: 1, 
+                        textAlign: isRTL ? 'right' : 'left',
+                        fontSize: "1rem"
+                      }}>
+                        {i18n.language === 'ar' ? `${product.id} - ${product.productNameLc}` : `${product.id} - ${product.productName}`}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+                {backendProducts.length === 0 && (
+                  <li style={{ padding: "20px", textAlign: "center", color: "#666" }}>
+                    {t("No products found.")}
+                  </li>
+                )}
+              </ul>
+            </>
           )}
         </div>
 
-        {/* Footer with Pagination and Close Button */}
+        {/* Footer with Pagination */}
         <div className="gp-footer">
           {totalPages > 0 && (
             <Pagination
@@ -454,13 +562,35 @@ function GetProducts({
         }
         .gp-header {
           display: flex;
-          justify-content: flex-start;
+          justify-content: space-between;
           align-items: center;
           padding: 22px 28px 10px 28px;
         }
         .gp-title {
           font-size: 1.25rem;
           font-weight: light;
+        }
+        .gp-header-buttons {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .gp-select-btn {
+          padding: 7px 18px;
+          border-radius: 6px;
+          border: 1px solid #28a745;
+          background: #28a745;
+          color: white;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .gp-select-btn:hover:not(:disabled) {
+          background: #218838;
+        }
+        .gp-select-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
         .gp-filters-row {
           display: flex;
@@ -560,20 +690,8 @@ function GetProducts({
           max-height: 300px;
           overflow-y: auto;
         }
-        .gp-product-btn {
-          width: 100%;
-          text-align: left;
-          border-radius: 4px;
-          background: #f9f9f9;
-          cursor: pointer;
-          border: 1px solid #ddd;
-          padding: 8px 12px;
-          margin-bottom: 8px;
-          font-size: 1rem;
-          transition: background 0.15s;
-        }
-        .gp-product-btn:hover {
-          background: #f2f2f2;
+        .gp-product-item:hover {
+          background-color: #e8f4fd !important;
         }
         .gp-footer {
           display: flex;
