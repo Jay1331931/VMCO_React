@@ -28,6 +28,7 @@ import {
 } from "@mui/x-data-grid";
 import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from '@mui/icons-material/Sync';
+import IosShareIcon from '@mui/icons-material/IosShare';
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -741,7 +742,7 @@ const inviteColumns = [
     field: "createdAt",
     headerName: t("Date"),
     include: isV("createdAt"),
-    searchable: false,
+    searchable: true,
     minWidth: 120,
     maxWidth: 150,
     flex: 1,
@@ -825,7 +826,9 @@ const inviteColumns = [
             "&:hover": { textDecoration: "underline" },
           }}
         >
-          {t("Resend")}
+          
+           <Tooltip title= {t("Resend")} arrow>
+          <IosShareIcon/></Tooltip>
         </Box>
       </Box>
     ),
@@ -1440,7 +1443,7 @@ const filertInvites =  (inviteColumns.filter((col) => col.include))?.filter(item
         const handleInviteSortModelChange = (model) => {
     console.log("Sort model changed:", model);
 
-    setSortModel(model);
+    setInviteSortModel(model);
        fetchInvites(1,searchQuery,filters,model);
   }
     switch (activeTab) {
@@ -1659,7 +1662,9 @@ const handleApproval =(mode)=>{
       fetchCustomers();
     }
 }
-
+ useEffect(() => {
+setFilters({})
+},[activeTab])
   return (
     <Sidebar title={t("Customers")}>
       <div className="page-content">
