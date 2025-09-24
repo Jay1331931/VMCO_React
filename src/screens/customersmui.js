@@ -133,15 +133,15 @@ const columnsToDisplay =
       return []; // Return empty array on error
     }
   };
-  const toggleApprovalMode = () => {
-    setApprovalMode(!isApprovalMode);
-    console.log("Approval mode:", isApprovalMode);
-    if (!isApprovalMode) {
-      fetchApprovals();
-    } else {
-      fetchCustomers();
-    }
-  };
+  // const toggleApprovalMode = () => {
+  //   setApprovalMode(!isApprovalMode);
+  //   console.log("Approval mode:", isApprovalMode);
+  //   if (!isApprovalMode) {
+  //     fetchApprovals();
+  //   } else {
+  //     fetchCustomers();
+  //   }
+  // };
   //  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
   //   const isV = rbacMgr.isV.bind(rbacMgr);
   //   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -827,7 +827,7 @@ const inviteColumns = [
   //  const handlePageChange = (newPage) => {
   //   setPagination(prev => ({ ...prev, page: newPage }));
   // };
-  const fetchCustomers = async (page = 1, searchTerm = "") => {
+  const fetchCustomers = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
     try {
@@ -835,9 +835,9 @@ const inviteColumns = [
         page,
         pageSize,
         search: searchTerm,
-        sortBy: "id",
-        sortOrder: "asc",
-        filters: "{}",
+         sortBy: sortedModel[0]?.field || "id",
+          sortOrder: sortedModel[0]?.sort || "asc", 
+        filters:  JSON.stringify(customFilters),
       });
 
       const response = await fetch(
@@ -1097,14 +1097,14 @@ const inviteColumns = [
   useEffect(() => {
     if (activeTab === "customers") {
       if (isApprovalMode) {
-        fetchApprovals(page, searchQuery);
+        fetchApprovals(1, searchQuery,filters);
       } else {
-        fetchCustomers(page, searchQuery);
+        fetchCustomers(1, searchQuery,filters);
       }
     } else if (activeTab === "invites") {
       fetchInvites(page, searchQuery);
     }
-  }, [activeTab, isApprovalMode, page, searchQuery]);
+  }, [activeTab, isApprovalMode, page, searchQuery,filters]);
 
   useEffect(() => {
     getOptionsFromBasicsMaster("entity").then(setEntityOptions);
@@ -1418,7 +1418,11 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
     console.log("Sort model changed:", model);
 
     setSortModel(model);
-    // fetchOrders(1, searchQuery, filters, model);
+      if (isApprovalMode) {
+        fetchApprovals(1, searchQuery,filters,model);
+      } else {
+        fetchCustomers(1, searchQuery,filters,model);
+      }
   };
     switch (activeTab) {
       case t("customers"):
@@ -1472,12 +1476,15 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
                             showColumnVisibility={true}
                             showFilters={true}
                             showExport={false}
-                            showUpload={true}
+                            showUpload={false}
+                                showApproval={true}
                             // showAdd={isV("addButton")}
                             // showAdd={true}
                             // handleAddClick={handleAddOrder}
                             // handleUploadClick={HandleBulkOrderUpload}
                             columnsToDisplay={columnsToDisplay}
+                                handleApproval={handleApproval}
+                    isApprovalMode={isApprovalMode}
                           />
                         ),
                       }}
@@ -1487,6 +1494,7 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
                           "&:hover": {
                             backgroundColor: "rgba(0, 0, 0, 0.04)",
                           },
+                          
                         },
                       }}
                     />
@@ -1513,6 +1521,7 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
    const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
     setPage(1);
+     setFilterAnchor(null)
   };
 const HandleFandOFailCustomer = async (customerId) => {
   setSyncLoading(true);
@@ -1557,6 +1566,16 @@ const HandleFandOFailCustomer = async (customerId) => {
   }
 };
 
+const handleApproval =(mode)=>{
+    setFilters({})
+  setApprovalMode(mode === "approval");
+    if (mode === "approval") {
+      fetchApprovals();
+    } else {
+      fetchCustomers();
+    }
+}
+
   return (
     <Sidebar title={t("Customers")}>
       <div className="page-content">
@@ -1568,7 +1587,7 @@ const HandleFandOFailCustomer = async (customerId) => {
           />
 
           <div className="page-header">
-            {activeTab === t("customers") && (
+            {/* {activeTab === t("customers") && (
               <div className="header-controls" style={{ width: "100%" }}>
                 <SearchInput onSearch={handleSearch} />
                 <div className="header-actions">
@@ -1585,7 +1604,7 @@ const HandleFandOFailCustomer = async (customerId) => {
                   <ActionButton menuItems={customerMenuItems} />
                 </div>
               </div>
-            )}
+            )} */}
 
             {activeTab === t("invites") && isV("btnAddInvite") && (
               <>

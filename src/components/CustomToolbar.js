@@ -339,6 +339,9 @@ const CustomToolbar = ({
                       border: "1px solid #3D5654",
                     },
                   },
+                  "& .css-1uhhrmm-MuiAutocomplete-endAdornment":{
+                            display:"none"
+                          }
                 }}
               />
             )}
