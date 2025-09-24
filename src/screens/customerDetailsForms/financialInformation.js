@@ -96,7 +96,7 @@ function FinancialInformation({
       }
     });
     const data = await response.json();
-    if (response.ok) {
+    if (data?.status?.toLowerCase()==="ok") {
       setCreditBalanceData(data?.data?.currentBalance || {});
       setIsCreditBalanceData(true);
       setIsLoading(false);
@@ -1719,7 +1719,8 @@ function FinancialInformation({
             </tr>
           ))} */}
           {creditBalanceData && basicMasterLists?.entity?.map((item) => {
-            <tr key={item.value}>
+          
+           return(<tr key={item.value}>
               <td>{i18n.language === "en" ? item.description : item.descriptionLc}</td>
               <td className={`balance-amount ${creditBalanceData?.[item.value] === 0 ? 'zero' : creditBalanceData?.[item.value] > 0 ? 'positive' : 'negative'}`}>
         {creditBalanceData?.[item.value].toLocaleString('en-US', {
@@ -1728,14 +1729,14 @@ function FinancialInformation({
           minimumFractionDigits: 2
         })}
       </td>
-            </tr>
+            </tr>)
           })
 
           }
         </tbody>
                 </table>
      </div>
-                {(!creditBalanceData || Object.keys(creditBalanceData).length === 0) && (
+                {(!creditBalanceData || Object.keys(creditBalanceData)?.length === 0) && (
         <p className="no-data">{t("No credit balance data available")}</p>
                 )}
               </div>
