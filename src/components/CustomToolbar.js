@@ -73,7 +73,8 @@ const CustomToolbar = ({
   columnsToDisplay,
   isApprovalMode,
   handleApproval,
-  showApproval
+  showApproval,
+  buttonName
 
 }) => {
   const { t, i18n } = useTranslation();
@@ -421,7 +422,7 @@ const CustomToolbar = ({
           </Tooltip>
         )}
         {showAdd && (
-          <Tooltip title={t("Add")}>
+          <Tooltip title={buttonName}>
             <ToolbarButton onClick={handleAddClick} size="small">
               <AddIcon />
             </ToolbarButton>

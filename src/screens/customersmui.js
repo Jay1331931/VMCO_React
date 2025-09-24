@@ -19,7 +19,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { Chip, Box, Button, Typography } from "@mui/material";
+import { Chip, Box, Button, Typography ,Tooltip} from "@mui/material";
 import {
   DataGrid,
   GridFooterContainer,
@@ -27,6 +27,7 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import CustomToolbar from "../components/CustomToolbar";
+import SyncIcon from '@mui/icons-material/Sync';
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -69,7 +70,7 @@ function Customers() {
   // Add validation and loading states
   const [inviteErrors, setInviteErrors] = useState({});
   const [isInviteLoading, setIsInviteLoading] = useState(false);
-
+const [syncLoadingId,setSyncLoadingId]=useState(null)
   const customerTabs = [
     { value: "customers", label: "Customers" },
     { value: "invites", label: "Invites" },
@@ -81,7 +82,9 @@ function Customers() {
   const [entityOptions, setEntityOptions] = useState([]);
     const [syncLoading, setSyncLoading] = useState(false);
       const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+      const [invitecolumnVisibilityModel, setInviteColumnVisibilityModel] = useState({});
    const [sortModel, setSortModel] = useState([]);
+   const [inviteSortModel,setInviteSortModel]=useState([])
      const [filters, setFilters] = useState({});
      const [filterAnchor, setFilterAnchor] = useState(null);
   const rbacMgr = new RbacManager(
@@ -565,6 +568,7 @@ const columnsToDisplay =
   };
 
   const searchableFields=["id","erpCustId","companyNameAr" ,"companyNameEn","companyType","customerStatus","typeOfBusiness"]
+  const searchableFieldsInvites=["leadName","source","region","companyName","companyPhone"]
 const customerColumns = [
   {
     field: "id",
@@ -627,12 +631,13 @@ const customerColumns = [
     include: isV("FandOSync"),
     searchable: false,
     flex: 1,
-    renderCell: (params) => (
-      <Box
+    renderCell: (params) => 
+      {!params?.row?.erpCustId &&params?.row?.status?.toLowerCase()==='approved'&& (<Box
         component="span"
+        disabled={syncLoading}
         onClick={(e) => {
           e.stopPropagation();
-        //   handleCustomerSync(params.row);
+          HandleFandOFailCustomer(params.row.id);
         }}
         sx={{
           color: "primary.main",
@@ -643,9 +648,12 @@ const customerColumns = [
           },
         }}
       >
-        {t("Sync")}
-      </Box>
-    ),
+      <Tooltip title= {syncLoading && syncLoadingId === params.row.id
+                       ? t("Syncing...")
+                       : t("Sync")}  arrow>
+       <SyncIcon/> </Tooltip>
+      </Box>)}
+    ,
   },
 ];
 
@@ -808,7 +816,7 @@ const inviteColumns = [
           component="span"
           onClick={(e) => {
             e.stopPropagation();
-            // handleInviteAction(params.row);
+            handleResend(params.row);
           }}
           sx={{
             color: "primary.main",
@@ -869,7 +877,7 @@ const inviteColumns = [
       setLoading(false);
     }
   };
-  const fetchApprovals = async (page = 1, searchTerm = "") => {
+  const fetchApprovals = async (page = 1, searchTerm = "",customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
     console.log("Fetching approvals");
@@ -878,9 +886,12 @@ const inviteColumns = [
         page,
         pageSize,
         search: searchTerm,
-        // sortBy: "id",
-        sortOrder: "asc",
-        filters: "{}",
+        // // sortBy: "id",
+        // sortOrder: "asc",
+        // filters: "{}",
+             sortBy: sortedModel[0]?.field || "id",
+          sortOrder: sortedModel[0]?.sort || "asc", 
+        filters:  JSON.stringify(customFilters),
       });
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`,
@@ -912,7 +923,7 @@ const inviteColumns = [
     }
   };
 
-  const fetchInvites = async (page = 1, searchTerm = "") => {
+  const fetchInvites = async (page = 1, searchTerm = "",customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
     try {
@@ -920,9 +931,12 @@ const inviteColumns = [
         page,
         pageSize,
         search: searchTerm,
-        sortBy: "id",
-        sortOrder: "asc",
-        filters: "{}",
+        // sortBy: "id",
+        // sortOrder: "asc",
+        // filters: "{}",
+             sortBy: sortedModel[0]?.field || "id",
+          sortOrder: sortedModel[0]?.sort || "asc", 
+        filters:  JSON.stringify(customFilters),
       });
 
       const response = await fetch(
@@ -1102,7 +1116,7 @@ const inviteColumns = [
         fetchCustomers(1, searchQuery,filters);
       }
     } else if (activeTab === "invites") {
-      fetchInvites(page, searchQuery);
+      fetchInvites(page, searchQuery,filters);
     }
   }, [activeTab, isApprovalMode, page, searchQuery,filters]);
 
@@ -1413,10 +1427,9 @@ const inviteColumns = [
     ? approvalColumns.filter((col) => col.include)
     : customerColumns.filter((col) => col.include);
 const filteredData = visibleColumns?.filter(item => searchableFields?.includes(item?.field));
+const filertInvites =  (inviteColumns.filter((col) => col.include))?.filter(item => searchableFieldsInvites?.includes(item?.field));
   const renderContent = () => {
           const handleSortModelChange = (model) => {
-    console.log("Sort model changed:", model);
-
     setSortModel(model);
       if (isApprovalMode) {
         fetchApprovals(1, searchQuery,filters,model);
@@ -1424,6 +1437,12 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
         fetchCustomers(1, searchQuery,filters,model);
       }
   };
+        const handleInviteSortModelChange = (model) => {
+    console.log("Sort model changed:", model);
+
+    setSortModel(model);
+       fetchInvites(1,searchQuery,filters,model);
+  }
     switch (activeTab) {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
@@ -1501,12 +1520,75 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
         );
       case t("invites"):
         return (
-          <Table
-            columns={inviteColumns}
-            data={paginatedInvites}
-            getStatusClass={getStatusClass}
-            actionButtons={renderActionButtons}
-          />
+          // <Table
+          //   columns={inviteColumns}
+          //   data={paginatedInvites}
+          //   getStatusClass={getStatusClass}
+          //   actionButtons={renderActionButtons}
+          // />
+           <DataGrid
+                    //   apiRef={gridApiRef}
+                      rows={paginatedInvites}
+                      columns={inviteColumns}
+                   
+                      pageSize={pageSize}
+                      // rowCount={total}
+                      // onRowClick={handleRowClick}
+                      columnVisibilityModel={invitecolumnVisibilityModel}
+                      onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                      sortModel={inviteSortModel}
+                      onSortModelChange={handleInviteSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      hideFooterPagination={true}
+                      disableExtendRowFullWidth={true}
+                      pagination={false}
+                      autoHeight
+                      rowHeight={70}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filertInvites}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search orders..."
+                            showColumnVisibility={true}
+                            showFilters={true}
+                            showExport={false}
+                            showUpload={false}
+                                showApproval={false}
+                                showAdd={isV("btnAddInvite")}
+                                buttonName={t("invite")}
+                            // showAdd={isV("addButton")}
+                            // showAdd={true}
+                            
+                            handleAddClick={handleInvite}
+                            // handleUploadClick={HandleBulkOrderUpload}
+                            columnsToDisplay={columnsToDisplay}
+                                handleApproval={handleApproval}
+                    isApprovalMode={false}
+                          />
+                        ),
+                      }}
+                      sx={{
+                        "& .MuiDataGrid-row": {
+                          cursor: "pointer",
+                          "&:hover": {
+                            backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          },
+                          
+                        },
+                      }}
+                    />
         );
       default:
         return null;
@@ -1524,6 +1606,7 @@ const filteredData = visibleColumns?.filter(item => searchableFields?.includes(i
      setFilterAnchor(null)
   };
 const HandleFandOFailCustomer = async (customerId) => {
+  setSyncLoadingId(customerId)
   setSyncLoading(true);
   try {
     const { data } = await axios.post(
@@ -1563,6 +1646,7 @@ const HandleFandOFailCustomer = async (customerId) => {
     });
   } finally {
     setSyncLoading(false);
+      setSyncLoadingId(null)
   }
 };
 
@@ -1606,7 +1690,7 @@ const handleApproval =(mode)=>{
               </div>
             )} */}
 
-            {activeTab === t("invites") && isV("btnAddInvite") && (
+            {/* {activeTab === t("invites") && isV("btnAddInvite") && (
               <>
                 <SearchInput onSearch={handleSearch} />
                 {
@@ -1616,8 +1700,11 @@ const handleApproval =(mode)=>{
                 }
                 <ActionButton menuItems={customerMenuItems} />
               </>
-            )}
+            )} */}
 
+          </div>
+          {renderContent()}
+          
             {isInviteModalOpen && (
               <dialog className="invite-dialog" open>
                 <h2>{t("Invite")}</h2>
@@ -1829,8 +1916,6 @@ const handleApproval =(mode)=>{
                 </div>
               </dialog>
             )}
-          </div>
-          {renderContent()}
         </div>
         {((activeTab === "customers" &&
           paginatedCustomers.length > 0 &&

@@ -1436,6 +1436,7 @@ function Orders() {
                     showExport={false}
                     showUpload={true}
                     showAdd={isV("addButton")}
+                    buttonName={t("add")}
                     showApproval={isV("approvalButton") }
                     // showAdd={true}
                     handleAddClick={handleAddOrder}
