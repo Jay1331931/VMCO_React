@@ -339,7 +339,6 @@ function Cart() {
         });
     };
 
-    // Add this function to the Cart component
     const handleRemoveItem = async (item) => {
         if (!item || !item.id) {
             console.error('Invalid item provided to handleRemoveItem');
@@ -354,13 +353,11 @@ function Cart() {
                 showConfirmButton: false,
                 timer: 2000
             });
-            // alert(t('An order is being processed. Please wait.'));
             return;
         }
 
         try {
-            setIsPlacingOrder(true); // Use the same state to prevent multiple actions
-
+            setIsPlacingOrder(true);
             // Build the URL for the delete request with correct query params
             const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
             deleteUrl.searchParams.append('customer_id', customerId);
@@ -421,16 +418,19 @@ function Cart() {
         } finally {
             setIsPlacingOrder(false);
         }
-    }; const handleQuantityChange = (itemId, delta) => {
+    };
+
+    const handleQuantityChange = (itemId, delta) => {
         // Find the item in any category to get its MOQ
         const item = cartItems.flatMap(category => category.items).find(item => item.id === itemId);
         const moq = item ? Number(item.moq) || 1 : 1;
 
         setQuantities(prev => {
             // Ensure we're working with numbers, not strings
-            const currentQty = Number(prev[itemId] || item?.quantity || 1);
-            // Ensure we don't go below MOQ
-            const newQty = Math.max(moq, currentQty + Number(delta));
+            const currentQty = Number(prev[itemId] || item?.quantity || 0);
+            // Allow quantity changes without MOQ restrictions for button clicks
+            const newQty = Math.max(0, currentQty + Number(delta));
+
             return {
                 ...prev,
                 [itemId]: newQty
@@ -438,6 +438,12 @@ function Cart() {
         });
     };
 
+    const handleQuantityInputChange = (itemId, value) => {
+        setQuantities(prev => ({
+            ...prev,
+            [itemId]: value
+        }));
+    };
 
     const handleContinueShopping = () => {
         navigate('/catalog', {
@@ -801,7 +807,6 @@ function Cart() {
 
     // Handle place order button click
     const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
-
         if (categoryItems.length === 0) {
             Swal.fire({
                 icon: 'info',
@@ -812,8 +817,27 @@ function Cart() {
             return;
         }
 
-        // Check customer and branch status before placing order
-        if ((selectedCustomerStatus).toLowerCase() !== 'approved') {
+        const itemsWithInvalidMOQ = [];
+
+        for (const item of categoryItems) {
+            const currentQuantity = Number(quantities[item.id]) || 0;
+            const moq = Number(item.moq) || 1;
+            if (currentQuantity < moq) {
+                itemsWithInvalidMOQ.push(item);
+            }
+        }
+
+        if (itemsWithInvalidMOQ.length > 0) {
+            const updatedQuantities = { ...quantities };
+            itemsWithInvalidMOQ.forEach(item => {
+                const itemMoq = Number(item.moq) || 1;
+                updatedQuantities[item.id] = itemMoq;
+            });
+            setQuantities(updatedQuantities);
+            return;
+        }
+
+        if (selectedCustomerStatus.toLowerCase() !== 'approved') {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
@@ -822,7 +846,8 @@ function Cart() {
             });
             return;
         }
-        if ((selectedBranchStatus).toLowerCase() !== 'approved' || !selectedBranchErpId) {
+
+        if (selectedBranchStatus.toLowerCase() !== 'approved' || !selectedBranchErpId) {
             Swal.fire({
                 icon: 'warning',
                 title: t('Order Blocked'),
@@ -847,143 +872,22 @@ function Cart() {
         setError(null);
 
         try {
-            // Check if this is a VMCO category and handle special logic
             const entity = getEntityFromCategory(categoryName);
-            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                // Separate VMCO products into machines and consumables
-                const machineProducts = categoryItems.filter(item => item.isMachine === true);
-                const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
-
-                console.log('VMCO products separated:', {
-                    total: categoryItems.length,
-                    machines: machineProducts.length,
-                    consumables: nonMachineProducts.length,
-                    machineProductIds: machineProducts.map(p => p.product_id),
-                    nonMachineProductIds: nonMachineProducts.map(p => p.product_id)
-                });
-
-                // For VMCO, first show payment method popup for consumables, then process both machines and consumables
-                if (nonMachineProducts.length > 0) {
-                    console.log('Showing payment method selection for VMCO consumables first');
-                    setPendingOrderCategory(categoryName);
-                    setPendingOrderItems(categoryItems); // Pass all items so we can separate later
-                    setShowPaymentPopup(true);
-                    return; // Exit function to wait for user payment method selection
-                } else if (machineProducts.length > 0) {
-                    // If only machines, proceed directly
-                    console.log('Only VMCO machines found, placing order directly with Pre Payment');
-                    const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
-                    if (machineOrderId) {
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: t('Request Sent'),
-                            text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
-                            confirmButtonText: t('OK')
-                        }).then(() => {
-                            // Update cart items state to remove ordered items
-                            setCartItems(prevCartItems =>
-                                prevCartItems.map(category => ({
-                                    ...category,
-                                    items: category.items.filter(
-                                        cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                                })));
-
-                            // Clear quantities for ordered items
-                            setQuantities(prevQuantities => {
-                                const newQuantities = { ...prevQuantities };
-                                categoryItems.forEach(item => {
-                                    delete newQuantities[item.id];
-                                });
-                                return newQuantities;
-                            });
-
-                            // Force a refresh of cart items
-                            fetchCartItems();
-                        });
-                    }
-                }
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                // For SHC entity, handle fresh/non-fresh splitting with payment method determination
-                // Calculate total amount for all products
-                let totalAmount = 0;
-                categoryItems.forEach(item => {
-                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                    const vatPercentage = Number(item.vatPercentage) || 0;
-                    const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const itemTotal = baseAmount + vatAmount;
-                    totalAmount += itemTotal;
-                });
-
-                // Determine payment method for SHC products
-                const shcPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, totalAmount, entity);
-
-                // If payment method determination returned null (insufficient balance), cancel the order
-                if (shcPaymentMethod === null) {
-                    console.log('Payment method determination cancelled due to insufficient balance');
-                    return; // Exit the function early
-                }
-
-                // If a specific payment method was determined, use it directly
-                if (shcPaymentMethod && shcPaymentMethod !== 'Cash on Delivery') {
-                    console.log(`Using determined payment method ${shcPaymentMethod} for SHC entity`);
-                    await handleSHCOrderSplitting(categoryItems, categoryName, shcPaymentMethod);
-                } else {
-                    // For COD or when payment method needs user selection, show popup
-                    console.log(`Showing payment method selection for SHC splitting`);
-                    setPendingOrderCategory(categoryName);
-                    setPendingOrderItems(categoryItems);
-                    setShowPaymentPopup(true);
-                    return; // Exit function to wait for user selection
-                }
-            } else if (entity && [Constants.ENTITY.NAQI.toLowerCase(), Constants.ENTITY.GMTC.toLowerCase(), Constants.ENTITY.DAR.toLowerCase()].includes(entity.toLowerCase())) {
-                // Calculate total amount for all products
-                let totalAmount = 0;
-                categoryItems.forEach(item => {
-                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
-                    const vatPercentage = Number(item.vatPercentage) || 0;
-                    const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const itemTotal = baseAmount + vatAmount;
-                    totalAmount += itemTotal;
-                });
-
-                // Determine payment method for non-machine products
-                const paymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, totalAmount, entity);
-
-                // If payment method determination returned null (insufficient balance), cancel the order
-                if (paymentMethod === null) {
-                    console.log('Payment method determination cancelled due to insufficient balance');
-                    return; // Exit the function early
-                }
-
-                // If a specific payment method was determined, use it directly
-                if (paymentMethod === 'Pre Payment') {
-                    // Directly place order with Pre Payment, do not show popup
-                    console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
-                    await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
-                    return;
-                } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
-                    console.log(`Using determined payment method ${paymentMethod} for ${entity} entity`);
-                    await placeOrderForCategory(categoryItems, categoryName, paymentMethod, true);
-                } else {
-                    // For COD or when payment method needs user selection, show popup
-                    console.log(`Showing payment method selection for ${entity} entity`);
-                    setPendingOrderCategory(categoryName);
-                    setPendingOrderItems(categoryItems);
-                    setShowPaymentPopup(true);
-                    return;
-                }
+            if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                await handleSHCOrderSplitting(categoryItems, categoryName, selectedPaymentMethod);
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                await handleVMCOOrderProcessing(categoryItems, categoryName, selectedPaymentMethod);
             } else {
-                // For other categories, place order as usual
+                // For NAQI, GMTC, DAR - directly place order with selected payment method
                 await placeOrderForCategory(categoryItems, categoryName, selectedPaymentMethod, true);
             }
+
         } catch (err) {
             setError(err.message);
             Swal.fire({
                 icon: 'error',
                 title: t('Order Failed'),
-                text: t(`Failed to place order: ${err.message}`),
+                text: t('Failed to place order: ') + err.message,
                 confirmButtonText: t('OK')
             });
         } finally {
@@ -991,9 +895,7 @@ function Cart() {
         }
     };
 
-    // Helper function to place order for a single category
     const placeOrderForCategory = async (categoryItems, categoryName, selectedPaymentMethod, showSuccessMessage = true, isFresh = false) => {
-        // Copy the original handlePlaceOrder logic here, but add productCategory to orderPayload
         if (categoryItems.length === 0) {
             Swal.fire({
                 icon: 'info',
@@ -1001,7 +903,6 @@ function Cart() {
                 text: t('No items in this category to order.'),
                 confirmButtonText: t('OK')
             });
-            // alert(t('No items in this category to order.'));
             return;
         }
         try {
@@ -1009,7 +910,6 @@ function Cart() {
             const entity = getEntityFromCategory(categoryName);
             console.log('Entity determination:', { categoryName, entity });
 
-            // --- Fetch the user name using userId for orderBy field (same as orderDetails.js) ---
             let orderByName = '';
             const userId = user?.userId;
             if (userId) {
@@ -1040,7 +940,6 @@ function Cart() {
                 }
             }
 
-            // Fetch customer data for delivery charge calculation - do this once up front
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
                 headers: {
@@ -2609,24 +2508,12 @@ function Cart() {
                                                         {item.description && <p className="item-description">{item.description}</p>}
                                                         <QuantityController
                                                             itemId={item.id}
-                                                            quantity={Number(quantities[item.id] || item.quantity || 1)}
+                                                            quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
                                                             onQuantityChange={handleQuantityChange}
-                                                            onInputChange={(itemId, value) => {
-                                                                // Find the item to get its MOQ
-                                                                const item = cartItems.flatMap(category => category.items).find(item => item.id === itemId);
-                                                                const moq = item ? Number(item.moq) || 1 : 1;
-
-                                                                // Ensure value is treated as a number, not a string
-                                                                const numValue = value === '' ? moq : Number(value);
-
-                                                                // Ensure we don't go below MOQ
-                                                                setQuantities(prev => ({
-                                                                    ...prev,
-                                                                    [itemId]: Math.max(moq, numValue)
-                                                                }));
-                                                            }}
-                                                            moq={item.moq ? Number(item.moq) : 1}
-                                                            minQuantity={item.moq ? Number(item.moq) : 1}
+                                                            onInputChange={handleQuantityInputChange}  // Add this new handler
+                                                            stopPropagation={true}
+                                                            minQuantity={Number(item.moq) || 0}
+                                                            moq={Number(item.moq) || 0}
                                                         />
                                                     </div>
                                                     <div className="item-price-panel">                                                        <span className="item-price">
@@ -2686,14 +2573,12 @@ function Cart() {
                                                         setPendingOrderCategory(category.category);
                                                         setPendingOrderItems(category.items);
 
-                                                        // Check if this is a VMCO or SHC category
                                                         const entity = getEntityFromCategory(category.category);
                                                         if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
                                                             entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
                                                             // For VMCO and SHC, let handlePlaceOrder handle the payment method determination
                                                             handlePlaceOrder(category.items, category.category, null);
                                                         } else {
-                                                            // Other categories - existing logic
                                                             let categoryTotal = 0;
                                                             category.items.forEach(item => {
                                                                 const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
