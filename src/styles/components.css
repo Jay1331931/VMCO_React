@@ -1829,7 +1829,12 @@
 
 .status-rejected {
   background: var(--logo-red);
-  color: #ffffff;
+  color: var(--bg-transparent);
+}
+
+.status-cancelled {
+  color: var(--logo-red);
+  background-color: var(--bg-transparent);
 }
 
 .order-details-actions {
@@ -1848,6 +1853,13 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+}
+
+.order-action-btn:disabled {
+  background: #f0f0f0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  border: 1px solid #d9d9d6;
 }
 
 .order-action-btn.approve {

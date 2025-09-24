@@ -274,7 +274,7 @@ if (
                     onClick={(e) => {
                         console.log('Pay button clicked for item:', item);
                         e.stopPropagation(); // Prevent row click event
-                        onPay(item,true);
+                        onPay(item,false,true);
                     }}
                 >
                     {t('Send Link')}

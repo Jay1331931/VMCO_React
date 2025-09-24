@@ -687,7 +687,7 @@ function OrderDetails() {
           console.warn(`Failed to fetch order lines: ${linesResponse.statusText}`);
         } else {
           const existingLines = await linesResponse.json();
-          if (existingLines.data?.data) {
+          if (existingLines.data?.data?.length > 0) {
             // Filter to ensure we only get lines for this specific order
             const orderLines = existingLines.data.data.filter(line => line.orderId === formData.id);
             console.log(`Existing order lines for orderId ${formData.id}:`, orderLines);
@@ -1442,42 +1442,96 @@ function OrderDetails() {
     }
   };
 
-  const handleCheckout = async (orderId, email = false) => {
+  const handleCheckout = async (orderId, email = false, copyUrl = false) => {
     try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/generatePayment-link`,
-        {
-          id: orderId,
-          endPoint: "payment-opations/order",
-          IsEmail: email,
-        },
-        {
-
-          headers: {
-            "Authorization": `Bearer ${token}`
+        const { data } = await axios.post(
+          `${API_BASE_URL}/generatePayment-link`,
+          {
+            id: orderId,
+            endPoint: "payment-opations/order",
+            IsEmail: email,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
+        );
+  
+        if (email) {
+          Swal.fire({
+            title: t("Payment Link Generated"),
+            text: t("A payment link has been sent to the customer's email."),
+            icon: "success",
+            confirmButtonText: t("OK"),
+          });
+        } else if (copyUrl) {
+          Swal.fire({
+            title: t(`Payment Link`),
+            html: `
+      <div style="display:flex;align-items:center;">
+        <input id="payment-link"
+               class="swal2-input"
+               style="flex:1;margin:0 8px 0 0;"
+               type="text"
+               value="${data.details.url}"
+               readonly />
+        <button id="copyBtn"
+                style="padding:10px 16px; border-radius:5px; background:#32a19f; color:#fff; border:none; cursor:pointer;">
+          Copy
+        </button>
+      </div>
+    `,
+            showConfirmButton: false,
+            showCancelButton: false, // we’ll add our own Close button in footer
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            footer: `
+      <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+        <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
+        <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
+      </div>
+    `,
+            didOpen: () => {
+              const input = document.getElementById("payment-link");
+              const copyBtn = document.getElementById("copyBtn");
+              const sendLinkBtn = document.getElementById("sendLinkBtn");
+              const closeBtn = document.getElementById("closeBtn");
+  
+              // Copy button
+              copyBtn.addEventListener("click", async () => {
+                input.select();
+                input.setSelectionRange(0, 99999); // for mobile
+                await navigator.clipboard.writeText(input.value);
+  
+                copyBtn.textContent = "Copied!";
+                copyBtn.style.background = "#0b4c45";
+              });
+  
+              // Send Link button
+              sendLinkBtn.addEventListener("click", () => {
+                handleCheckout(orderId, true, false);
+                Swal.close();
+              });
+  
+              // Close button
+              closeBtn.addEventListener("click", () => {
+                Swal.close();
+              });
+            },
+          });
+        } else if (!email && !copyUrl && data?.details?.url) {
+          window.open(data.details.url, "_blank");
         }
-      );
-      if (email) {
+      } catch (error) {
+        console.error("Error generating payment link:", error);
         Swal.fire({
-          title: t("Payment Link Generated"),
-          text: t("A payment link has been sent to the customer's email."),
-          icon: "success",
+          title: t("Error"),
+          text: t("Failed to generate payment link. Please try again later."),
+          icon: "error",
           confirmButtonText: t("OK"),
         });
       }
-      if (!email && data?.details?.url) {
-        window.open(data.details.url, "_blank");
-      }
-    } catch (error) {
-      console.error("Error generating payment link:", error);
-      Swal.fire({
-        title: t("Error"),
-        text: t("Failed to generate payment link. Please try again later."),
-        icon: "error",
-        confirmButtonText: t("OK"),
-      });
-    }
   };
 
 
@@ -3417,7 +3471,7 @@ function OrderDetails() {
                                     handleDeleteProductRow((formData.products || []).indexOf(row));
                                   }}
                                   type="button"
-                                  disabled={!isE('deleteButton') || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                                  disabled={!isE('deleteButton') || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                                 >
                                   {t('Delete')}
                                 </button>
@@ -3707,17 +3761,17 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave('save')}
-                    disabled={saving || (formData.status && !['open', 'pending'].includes(formData.status.toLowerCase()))}
+                    disabled={saving || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                   >
                     {saving ? t('Saving...') : t('Save Changes')}
                   </button>
                 )}
 
-                {isV('btnCancel', fromApproval, false) && formData?.paymentStatus?.toLowerCase() === "pending" && (
+                {isV('btnCancel', fromApproval, false) && isE('btnCancel') && (
                   <button
                     className="order-action-btn"
                     onClick={() => handleCancelOrder('cancel order')}
-                    disabled={(formData?.status?.toLowerCase() !== 'open')}
+                    disabled={cancelling || (formData.status && !['open'].includes(formData.status.toLowerCase()))}
                   >
                     {cancelling ? t('Cancelling...') : t('Cancel Order')}
                   </button>
@@ -3750,7 +3804,7 @@ function OrderDetails() {
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
                     (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
 
-                    <button className="order-action-btn" onClick={() => handleCheckout(orderId, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
+                    <button className="order-action-btn" onClick={() => handleCheckout(orderId, false, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                       {t('Send Link')}
                     </button>
                   )}
