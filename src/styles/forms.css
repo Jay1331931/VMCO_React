@@ -1245,7 +1245,7 @@ td.file-display-cell {
     border-right: none;
   }
   .customers .customer-onboarding-tabs-vertical {
-    width: 90%; /* Full width on smaller screens */
+    width: 85%; /* Full width on smaller screens */
     border-right: none; /* Remove right border on smaller screens */
     z-index: 10;
     flex-direction: row;
@@ -1294,11 +1294,13 @@ td.file-display-cell {
     white-space: nowrap;
   }
   .customers .customer-onboarding-body {
+    border: 1px solid lightgray;
+    border-radius: 10px;
     flex-direction: column; /* Stack content vertically on smaller screens */
     gap: 20px; /* Space between sections */
   }
   .customers .text-field.small {
-    width: 280px;
+    width: 250px;
   }
   .customers .dropdown {
     width: 280px;
@@ -1318,7 +1320,6 @@ td.file-display-cell {
   }
 
   [dir="rtl"] .customers .document-upload.full-width label {
-    position: relative;
     left: auto;
     right: 50px;
   }
@@ -1381,6 +1382,7 @@ td.file-display-cell {
     justify-self: center;
     align-items: center;
     align-self: flex-start;
+    text-wrap: auto;
   }
   .upload-row label {
     position: absolute;
@@ -1405,6 +1407,10 @@ td.file-display-cell {
   gap: 10px;
   flex-direction: column;
   margin-top: 20px;
+}
+td.label-cell {
+  width: 100%;
+  text-wrap: auto;
 }
 }
 .signature-wrapper {
@@ -1548,7 +1554,6 @@ td.file-display-cell {
   .products-header-controls {
     flex-direction: column;
     overflow-x: auto;
-    margin-top: 40px;
     scrollbar-width: none;
   }
   .products-content {
@@ -1598,6 +1603,7 @@ td.file-display-cell {
   cursor: none; /* Hide default cursor */
   display: block;
   background-color: white;
+  max-width: -webkit-fill-available;
 }
 .fa-cursor {
   position: absolute;
