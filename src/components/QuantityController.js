@@ -1,6 +1,7 @@
-import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { useRef, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
 const QuantityController = ({
     itemId,
@@ -8,20 +9,61 @@ const QuantityController = ({
     onQuantityChange,
     onInputChange,
     stopPropagation = false,
-    minQuantity = 0,  // Add minQuantity prop with default of 0
-    moq = 0          // Add moq prop with default of 0
+    minQuantity = 0,
+    moq = 0
 }) => {
+    const timeoutRef = useRef(null);
+
+    const showMOQWarning = () => {
+        Swal.fire({
+            title: 'Minimum Order Quantity',
+            text: `The quantity is below the minimum order quantity.`,
+            icon: 'warning',
+            showConfirmButton: false,
+            timer: 1000,
+            backdrop: true,
+            allowOutsideClick: true
+        }).then(() => {
+            // After the alert is shown, reset quantity to MOQ
+            onInputChange(itemId, moq);
+        });
+    };
+
+    const clearValidationTimeout = () => {
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+        }
+    };
+
+    const validateQuantityWithDelay = (currentQuantity) => {
+        // Clear any existing timeout
+        clearValidationTimeout();
+        
+        // Only validate if quantity is a valid number, below MOQ and MOQ is greater than 0
+        const numQuantity = typeof currentQuantity === 'number' ? currentQuantity : parseInt(currentQuantity);
+        if (!isNaN(numQuantity) && numQuantity < moq && moq > 0) {
+            timeoutRef.current = setTimeout(() => {
+                showMOQWarning();
+            }, 3000); // 3 seconds delay
+        }
+    };
+
     const handleButtonClick = (e, delta) => {
         if (stopPropagation) {
             e.stopPropagation();
         }
         
-        // Prevent decreasing below MOQ
-        if (delta < 0 && quantity <= moq) {
-            return;
-        }
+        // Clear any pending validation timeout when user interacts
+        clearValidationTimeout();
         
+        // Allow all operations, no restrictions on button clicks
         onQuantityChange(itemId, delta);
+        
+        // Set up validation for the new quantity
+        const currentQty = typeof quantity === 'number' ? quantity : parseInt(quantity) || 0;
+        const newQuantity = currentQty + delta;
+        validateQuantityWithDelay(newQuantity);
     };
 
     const handleInputChange = (e) => {
@@ -29,39 +71,84 @@ const QuantityController = ({
             e.stopPropagation();
         }
         
-        const newValue = e.target.value === '' ? '' : parseInt(e.target.value);
+        // Clear any pending validation timeout when user types
+        clearValidationTimeout();
         
-        // Ensure the value isn't less than MOQ
-        const validValue = newValue === '' ? '' : Math.max(moq, newValue);
-        onInputChange(itemId, validValue);
+        const inputValue = e.target.value;
+        
+        // Handle completely empty input (backspace to empty)
+        if (inputValue === '') {
+            onInputChange(itemId, '');
+            return;
+        }
+        
+        // Handle negative signs and partial inputs - allow while typing
+        if (inputValue === '-' || inputValue.match(/^-?\d*$/)) {
+            // Allow temporary states while typing, pass the exact input value
+            onInputChange(itemId, inputValue);
+            
+            // Only validate if it's a complete valid number
+            const numValue = parseInt(inputValue);
+            if (!isNaN(numValue)) {
+                validateQuantityWithDelay(numValue);
+            }
+            return;
+        }
+        
+        // If input contains non-numeric characters, ignore it
+        // This prevents the input from accepting invalid characters
     };
 
-    // Disable the minus button if quantity is at or below MOQ
-    const isMinusDisabled = quantity <= moq;
+    const handleInputBlur = () => {
+        // Clear existing timeout
+        clearValidationTimeout();
+        
+        // Convert empty strings or invalid values to MOQ on blur
+        if (quantity === '' || quantity === '-' || isNaN(parseInt(quantity))) {
+            onInputChange(itemId, moq || 0);
+            return;
+        }
+        
+        // Validate immediately on blur if quantity is below MOQ
+        const finalQuantity = typeof quantity === 'number' ? quantity : parseInt(quantity) || 0;
+        if (finalQuantity < moq && moq > 0) {
+            showMOQWarning();
+        }
+    };
+
+    const handleInputFocus = () => {
+        // Clear any pending validation when user focuses back on input
+        clearValidationTimeout();
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            clearValidationTimeout();
+        };
+    }, []);
 
     return (
         <div className="quantity-controls">
             <button
                 style={{background:"#d2d2d2"}}
-                className={`quantity-btn ${isMinusDisabled ? 'disabled' : ''}`}
+                className="quantity-btn"
                 onClick={(e) => handleButtonClick(e, -1)}
-                disabled={isMinusDisabled}
                 aria-label="Decrease quantity"
             >
                 <FontAwesomeIcon icon={faMinus} />
             </button>
             <input
-            
-                type="number"
+                type="text"  // Use text type for better control
                 className="quantity-input"
                 id={`quantity-${itemId}`}
                 name={`quantity-${itemId}`}
-                value={quantity}
+                value={quantity === 0 && moq > 0 ? moq : quantity}  // Show MOQ as default but allow empty
                 onChange={handleInputChange}
+                onBlur={handleInputBlur}
+                onFocus={handleInputFocus}
                 onClick={(e) => stopPropagation && e.stopPropagation()}
-                min={moq}  // Set the min attribute to MOQ
-                style={{border:"none",width:"40px"
-                }}
+                style={{border:"none",width:"40px"}}
             />
             <button
                 className="quantity-btn-2"
@@ -72,13 +159,11 @@ const QuantityController = ({
             </button>
             
             <style>{`
-                
                 .quantity-controls {
                     display: flex;
                     gap: 0px;
                     align-items: center;
                     margin-bottom: 0;
-                    
                 }
                 .quantity-btn {
                     width: 30px;
@@ -90,27 +175,34 @@ const QuantityController = ({
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    justify-items: center;
+                    justify-content: center;
                     font-size: 1rem;
                     transition: background 0.15s, color 0.15s;
                 }
                 .quantity-btn-2 {
-                width: 30px;
+                    width: 30px;
                     height: 30px;
                     border: 1px solid #0a5640;
                     border-radius: 4px;
                     background: #0a5640;
-                    color:  white;
+                    color: white;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1rem;
+                    transition: background 0.15s, color 0.15s;
                 }
                 .quantity-btn:hover {
-                    background: #d2d2d2;
+                    background: #c0c0c0;
                     color: #0a5640;
                 }
+                .quantity-btn-2:hover {
+                    background: #0d6b4f;
+                }
                 .quantity-input {
-                   // width: 50px;
                     height: 30px;
                     text-align: center;
-                    // border: 1px solid #D9D9D6;
                     border-radius: 4px;
                     -webkit-appearance: none;
                     appearance: textfield;
@@ -119,34 +211,22 @@ const QuantityController = ({
                     color: #222;
                     background: #fff;
                 }
-                   .quantity-input:focus {
+                .quantity-input:focus {
                     outline: none;
                     box-shadow: none;
                     border: none;
-                    }
+                }
                 .quantity-input::-webkit-outer-spin-button,
                 .quantity-input::-webkit-inner-spin-button {
                     -webkit-appearance: none;
                     margin: 0;
-                }
-                
-                .quantity-btn.disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-                .moq-indicator {
-                    position: absolute;
-                    bottom: -20px;
-                    left: 0;
-                    font-size: 0.7rem;
-                    color: #666;
-                    white-space: nowrap;
                 }
                 @media (max-width: 768px) {
                     .quantity-controls {
                         gap: 5px;
                     }
                     .quantity-btn,
+                    .quantity-btn-2,
                     .quantity-input {
                         width: 26px;
                         height: 26px;

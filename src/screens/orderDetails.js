@@ -314,26 +314,48 @@ function OrderDetails() {
   }, [formMode]);
 
   // quantity change handler
+  // Quantity change handler
   const handleQuantityChange = (idx, value) => {
     setFormData(prev => {
       const updatedProducts = [...prev.products];
-      // Make sure we store the value as a number
-      updatedProducts[idx].quantity = parseInt(value, 10);
 
-      // Update the net amount based on the new quantity
-      if (sampleMode) {
-        updatedProducts[idx].netAmount = "0.00";
+      // Handle both numeric and string values (for partial input states)
+      if (typeof value === 'string' && value !== '') {
+        // For string inputs, store as-is to allow user typing
+        updatedProducts[idx].quantity = value;
+      } else if (typeof value === 'number') {
+        // For numeric inputs, ensure it's a valid number
+        updatedProducts[idx].quantity = Math.max(0, parseInt(value, 10) || 0);
+      } else if (value === '' || value === undefined) {
+        // For empty values, store as empty string
+        updatedProducts[idx].quantity = '';
       } else {
-        const unitPrice = parseFloat(updatedProducts[idx].unitPrice || 0);
-        const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage || 0);
-        const baseAmount = unitPrice * value;
-        const vatAmount = (baseAmount * vatPercentage) / 100;
-        updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
+        // Fallback to 0 for any other case
+        updatedProducts[idx].quantity = 0;
       }
 
-      return { ...prev, products: updatedProducts };
+      // Only calculate net amount for valid numeric quantities
+      const numericQuantity = typeof value === 'number' ? value : parseInt(value, 10);
+      if (!isNaN(numericQuantity) && numericQuantity >= 0) {
+        // Update the net amount based on the new quantity
+        if (sampleMode) {
+          updatedProducts[idx].netAmount = '0.00';
+        } else {
+          const unitPrice = parseFloat(updatedProducts[idx].unitPrice) || 0;
+          const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage) || 0;
+          const baseAmount = unitPrice * numericQuantity;
+          const vatAmount = baseAmount * (vatPercentage / 100);
+          updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
+        }
+      }
+
+      return {
+        ...prev,
+        products: updatedProducts
+      };
     });
   };
+
 
   // Delete product row handler
   const handleDeleteProductRow = (idx) => {
@@ -355,6 +377,62 @@ function OrderDetails() {
   };
 
   const handleSave = async (action, selectedMethod) => {
+
+    const itemsWithInvalidMOQ = [];
+    const updatedProducts = [...formData.products];
+
+    for (let i = 0; i < formData.products.length; i++) {
+      const product = formData.products[i];
+      const currentQuantity = Number(product.quantity) || 0;
+      const moq = Number(product.moq) || 1;
+
+      // Check if quantity is below MOQ
+      if (currentQuantity < moq) {
+        itemsWithInvalidMOQ.push({
+          name: product.productName,
+          currentQuantity,
+          moq,
+          index: i
+        });
+
+        // Update the quantity to MOQ
+        updatedProducts[i] = {
+          ...product,
+          quantity: moq
+        };
+      }
+    }
+
+    // If there are items with invalid MOQ, show warning and update quantities
+    if (itemsWithInvalidMOQ.length > 0) {
+      // Update the formData with MOQ values
+      setFormData(prev => ({
+        ...prev,
+        products: updatedProducts
+      }));
+
+      // Recalculate net amounts after MOQ correction
+      const finalUpdatedProducts = updatedProducts.map(product => {
+        const unitPrice = parseFloat(product.unitPrice) || 0;
+        const quantity = parseInt(product.quantity) || 0;
+        const vatPercentage = parseFloat(product.vatPercentage) || 0;
+        const baseAmount = unitPrice * quantity;
+        const vatAmount = baseAmount * (vatPercentage / 100);
+
+        return {
+          ...product,
+          netAmount: (baseAmount + vatAmount).toFixed(2)
+        };
+      });
+
+      // Final update with recalculated amounts
+      setFormData(prev => ({
+        ...prev,
+        products: finalUpdatedProducts
+      }));
+
+      return;
+    }
     setSaving(true);
     // Basic validations first
     if (!formData.customerId) {
@@ -1444,31 +1522,31 @@ function OrderDetails() {
 
   const handleCheckout = async (orderId, email = false, copyUrl = false) => {
     try {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/generatePayment-link`,
-          {
-            id: orderId,
-            endPoint: "payment-opations/order",
-            IsEmail: email,
+      const { data } = await axios.post(
+        `${API_BASE_URL}/generatePayment-link`,
+        {
+          id: orderId,
+          endPoint: "payment-opations/order",
+          IsEmail: email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-  
-        if (email) {
-          Swal.fire({
-            title: t("Payment Link Generated"),
-            text: t("A payment link has been sent to the customer's email."),
-            icon: "success",
-            confirmButtonText: t("OK"),
-          });
-        } else if (copyUrl) {
-          Swal.fire({
-            title: t(`Payment Link`),
-            html: `
+        }
+      );
+
+      if (email) {
+        Swal.fire({
+          title: t("Payment Link Generated"),
+          text: t("A payment link has been sent to the customer's email."),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+      } else if (copyUrl) {
+        Swal.fire({
+          title: t(`Payment Link`),
+          html: `
       <div style="display:flex;align-items:center;">
         <input id="payment-link"
                class="swal2-input"
@@ -1482,56 +1560,56 @@ function OrderDetails() {
         </button>
       </div>
     `,
-            showConfirmButton: false,
-            showCancelButton: false, // we’ll add our own Close button in footer
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            footer: `
+          showConfirmButton: false,
+          showCancelButton: false, // we’ll add our own Close button in footer
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          footer: `
       <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
         <button id="sendLinkBtn" class="swal2-confirm swal2-styled" style=" background:#009345">Send Link</button>
         <button id="closeBtn" class="swal2-cancel swal2-styled">Close</button>
       </div>
     `,
-            didOpen: () => {
-              const input = document.getElementById("payment-link");
-              const copyBtn = document.getElementById("copyBtn");
-              const sendLinkBtn = document.getElementById("sendLinkBtn");
-              const closeBtn = document.getElementById("closeBtn");
-  
-              // Copy button
-              copyBtn.addEventListener("click", async () => {
-                input.select();
-                input.setSelectionRange(0, 99999); // for mobile
-                await navigator.clipboard.writeText(input.value);
-  
-                copyBtn.textContent = "Copied!";
-                copyBtn.style.background = "#0b4c45";
-              });
-  
-              // Send Link button
-              sendLinkBtn.addEventListener("click", () => {
-                handleCheckout(orderId, true, false);
-                Swal.close();
-              });
-  
-              // Close button
-              closeBtn.addEventListener("click", () => {
-                Swal.close();
-              });
-            },
-          });
-        } else if (!email && !copyUrl && data?.details?.url) {
-          window.open(data.details.url, "_blank");
-        }
-      } catch (error) {
-        console.error("Error generating payment link:", error);
-        Swal.fire({
-          title: t("Error"),
-          text: t("Failed to generate payment link. Please try again later."),
-          icon: "error",
-          confirmButtonText: t("OK"),
+          didOpen: () => {
+            const input = document.getElementById("payment-link");
+            const copyBtn = document.getElementById("copyBtn");
+            const sendLinkBtn = document.getElementById("sendLinkBtn");
+            const closeBtn = document.getElementById("closeBtn");
+
+            // Copy button
+            copyBtn.addEventListener("click", async () => {
+              input.select();
+              input.setSelectionRange(0, 99999); // for mobile
+              await navigator.clipboard.writeText(input.value);
+
+              copyBtn.textContent = "Copied!";
+              copyBtn.style.background = "#0b4c45";
+            });
+
+            // Send Link button
+            sendLinkBtn.addEventListener("click", () => {
+              handleCheckout(orderId, true, false);
+              Swal.close();
+            });
+
+            // Close button
+            closeBtn.addEventListener("click", () => {
+              Swal.close();
+            });
+          },
         });
+      } else if (!email && !copyUrl && data?.details?.url) {
+        window.open(data.details.url, "_blank");
       }
+    } catch (error) {
+      console.error("Error generating payment link:", error);
+      Swal.fire({
+        title: t("Error"),
+        text: t("Failed to generate payment link. Please try again later."),
+        icon: "error",
+        confirmButtonText: t("OK"),
+      });
+    }
   };
 
 
@@ -2063,63 +2141,58 @@ function OrderDetails() {
     },
     {
       key: 'quantity',
-      header: () => t('Quantity'),
-      render: (row) => (
+      header: t('Quantity'),
+      render: row => (
         <div className="quantity-controller" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <QuantityController
-            itemId={row.id || row.product_id}
+            itemId={row.id || row.productid}
             quantity={row.quantity}
             moq={Number(row.moq) || 1}
             minQuantity={Number(row.moq) || 1}
             disabled={!isE('products')}
-            onQuantityChange={(_, delta) => {
+            onQuantityChange={(itemId, delta) => {
               if (!isE('products')) return;
-              const idx = formData.products.findIndex(
-                p => (p.id || p.product_id) === (row.id || row.product_id)
-              );
+
+              const idx = formData.products.findIndex(p => (p.id || p.productid) === itemId);
               if (idx !== -1) {
-                const currentQty = parseInt(formData.products[idx].quantity || 1, 10);
-                const moq = Number(formData.products[idx].moq) || 1;
-                const newQty = Math.max(moq, currentQty + parseInt(delta, 10));
+                const currentQty = parseInt(formData.products[idx].quantity) || 0;
+                const newQty = Math.max(0, currentQty + delta);
                 handleQuantityChange(idx, newQty);
               }
             }}
-            onInputChange={(_, value) => {
+            onInputChange={(itemId, value) => {
               if (!isE('products')) return;
-              const idx = formData.products.findIndex(
-                p => (p.id || p.product_id) === (row.id || row.product_id)
-              );
+
+              const idx = formData.products.findIndex(p => (p.id || p.productid) === itemId);
               if (idx !== -1) {
-                const moq = Number(formData.products[idx].moq) || 1;
-                handleQuantityChange(idx, Math.max(moq, parseInt(value, 10) || moq));
+                // Allow any input value - let QuantityController handle validation
+                handleQuantityChange(idx, value === '' ? '' : value);
               }
             }}
           />
-          {isV('stock') &&
-            formData.entity &&
-            formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
-              <span>
-                <button
-                  type="button"
-                  style={{
-                    background: '#e6f2ef', color: '#0a5640', border: '1px solid #0a5640',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    padding: '2px 8px',
-                    marginLeft: '6px',
-                    marginRight: '6px',
-                    cursor: 'pointer'
-                  }}
-                  title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
-                  onClick={() => handleStock(row.id, i18n.language === 'ar'
-                    ? (row.productNameLc || row.product_name_lc || row.productName)
-                    : (row.productName || row.product_name_en || row.productNameLc))
-                  }
-                >
-                  {t('Stock')}
-                </button>
-              </span>
-            )}
+          {/* Rest of your existing stock button code */}
+          {isV('stock') && formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && (
+            <span>
+              <button
+                type="button"
+                style={{
+                  background: '#e6f2ef',
+                  color: '#0a5640',
+                  border: '1px solid #0a5640',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  padding: '2px 8px',
+                  marginLeft: '6px',
+                  marginRight: '6px',
+                  cursor: 'pointer'
+                }}
+                title={row.unit ? `Stock for ${row.unit}` : 'Stock'}
+                onClick={() => handleStock(row.id, i18n.language === 'ar' ? (row.productNameLc || row.productnamelc || row.productName) : (row.productName || row.productnameen || row.productNameLc))}
+              >
+                {t('Stock')}
+              </button>
+            </span>
+          )}
           {InventoryLoading && loadingProductId === row.id && <LoadingSpinner />}
         </div>
       ),
