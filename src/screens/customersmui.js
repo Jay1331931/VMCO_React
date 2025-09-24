@@ -17,9 +17,10 @@ import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import axios from "axios";
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
-import { Chip, Box, Button, Typography ,Tooltip} from "@mui/material";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import { formatDate } from "../utilities/dateFormatter";
 import {
   DataGrid,
   GridFooterContainer,
@@ -27,8 +28,8 @@ import {
   useGridApiRef,
 } from "@mui/x-data-grid";
 import CustomToolbar from "../components/CustomToolbar";
-import SyncIcon from '@mui/icons-material/Sync';
-import IosShareIcon from '@mui/icons-material/IosShare';
+import SyncIcon from "@mui/icons-material/Sync";
+import IosShareIcon from "@mui/icons-material/IosShare";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -71,7 +72,7 @@ function Customers() {
   // Add validation and loading states
   const [inviteErrors, setInviteErrors] = useState({});
   const [isInviteLoading, setIsInviteLoading] = useState(false);
-const [syncLoadingId,setSyncLoadingId]=useState(null)
+  const [syncLoadingId, setSyncLoadingId] = useState(null);
   const customerTabs = [
     { value: "customers", label: "Customers" },
     { value: "invites", label: "Invites" },
@@ -81,13 +82,14 @@ const [syncLoadingId,setSyncLoadingId]=useState(null)
   const [dropdownOptions, setDropdownOptions] = useState({});
   const [regionOptions, setRegionOptions] = useState([]);
   const [entityOptions, setEntityOptions] = useState([]);
-    const [syncLoading, setSyncLoading] = useState(false);
-      const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
-      const [invitecolumnVisibilityModel, setInviteColumnVisibilityModel] = useState({});
-   const [sortModel, setSortModel] = useState([]);
-   const [inviteSortModel,setInviteSortModel]=useState([])
-     const [filters, setFilters] = useState({});
-     const [filterAnchor, setFilterAnchor] = useState(null);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+  const [invitecolumnVisibilityModel, setInviteColumnVisibilityModel] =
+    useState({});
+  const [sortModel, setSortModel] = useState([]);
+  const [inviteSortModel, setInviteSortModel] = useState([]);
+  const [filters, setFilters] = useState({});
+  const [filterAnchor, setFilterAnchor] = useState(null);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -95,15 +97,14 @@ const [syncLoadingId,setSyncLoadingId]=useState(null)
     "custDetailsAdd"
   );
   console.log("RBAC Manager:", rbacMgr);
-const columnsToDisplay =
-{"id": t("Registration ID"),
-    "erpCustId":t("ERP ID"),
-    "companyNameEn":t("Company"),
-   "companyType": t("Company Type"),
-  "typeOfBusiness": t("Type Of Business"),
-   "customerStatus": t("Status"),
- 
-}
+  const columnsToDisplay = {
+    id: t("Registration ID"),
+    erpCustId: t("ERP ID"),
+    companyNameEn: t("Company"),
+    companyType: t("Company Type"),
+    typeOfBusiness: t("Type Of Business"),
+    customerStatus: t("Status"),
+  };
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   const getOptionsFromBasicsMaster = async (fieldName) => {
@@ -116,11 +117,10 @@ const columnsToDisplay =
         `${API_BASE_URL}/basics-masters?${params.toString()}`,
         {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}` 
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
 
@@ -157,9 +157,9 @@ const columnsToDisplay =
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-          
+
           body: JSON.stringify({
             id: invite.id,
           }),
@@ -172,9 +172,9 @@ const columnsToDisplay =
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-          
+
             body: JSON.stringify({
               eventName: "WELCOME_EMAIL",
               emailData: {
@@ -349,8 +349,10 @@ const columnsToDisplay =
         `${API_BASE_URL}/auth/registration/staging`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             companyEmail: inviteData.email,
             leadName: inviteData.name,
@@ -364,7 +366,6 @@ const columnsToDisplay =
             comments: inviteData.comments || "",
             registered: false,
           }),
-          
         }
       );
       const result = await response.json();
@@ -378,9 +379,9 @@ const columnsToDisplay =
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
               },
-              
+
               body: JSON.stringify({
                 id: result.lead.id,
               }),
@@ -396,9 +397,9 @@ const columnsToDisplay =
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}`
+                Authorization: `Bearer ${token}`,
               },
-              
+
               body: JSON.stringify({
                 eventName: "WELCOME_EMAIL",
                 emailData: {
@@ -568,277 +569,309 @@ const columnsToDisplay =
     }
   };
 
-  const searchableFields=["id","erpCustId","companyNameAr" ,"companyNameEn","companyType","customerStatus","typeOfBusiness"]
-  const searchableFieldsInvites=["leadName","source","region","companyName","companyPhone"]
-const customerColumns = [
-  {
-    field: "id",
-    headerName: t("Registration ID"),
-    include: isV("id"),
-    searchable: true,
-    minWidth: 100,
-    maxWidth: 120,
-    flex: 1,
-  },
-  {
-    field: "erpCustId",
-    headerName: t("ERP ID"),
-    include: isV("erpCustId"),
-    searchable: true,
-    minWidth: 120,
-    maxWidth: 140,
-    flex: 1,
-  },
-  {
-    field: i18n.language === "ar" ?  "companyNameAr" : "companyNameEn",
-    headerName: t("Company"),
-    include: isV("companyName"),
-    searchable: true,
-    minWidth: 150,
-    flex: 2,
-  },
-  {
-    field: "companyType",
-    headerName: t("Company Type"),
-    include: isV("companyType"),
-    searchable: true,
-    minWidth: 120,
-    maxWidth: 150,
-    flex: 1,
-  },
-  {
-    field: "typeOfBusiness",
-    headerName: t("Type Of Business"),
-    include: isV("typeOfBusiness"),
-    searchable: true,
-    minWidth: 140,
-    flex: 1,
-  },
-  {
-    field: "customerStatus",
-    headerName: t("Status"),
-    include: isV("customerStatus"),
-    searchable: true,
-    minWidth: 100,
-    maxWidth: 120,
-    flex: 1,
-    renderCell: (params) => (
-      <label className={getStatusClass(params.value)}>{params.value}</label>
-    ),
-  },
-  {
-    field: "FandOSync",
-    headerName: t("Action"),
-    include: isV("FandOSync"),
-    searchable: false,
-    flex: 1,
-    renderCell: (params) => 
-      {!params?.row?.erpCustId &&params?.row?.status?.toLowerCase()==='approved'&& (<Box
-        component="span"
-        disabled={syncLoading}
-        onClick={(e) => {
-          e.stopPropagation();
-          HandleFandOFailCustomer(params.row.id);
-        }}
-        sx={{
-          color: "primary.main",
-          cursor: "pointer",
-          fontSize: "0.875rem",
-          "&:hover": {
-            textDecoration: "underline",
-          },
-        }}
-      >
-      <Tooltip title= {syncLoading && syncLoadingId === params.row.id
-                       ? t("Syncing...")
-                       : t("Sync")}  arrow>
-       <SyncIcon/> </Tooltip>
-      </Box>)}
-    ,
-  },
-];
+  const searchableFields = [
+    "id",
+    "erpCustId",
+    "companyNameAr",
+    "companyNameEn",
+    "companyType",
+    "customerStatus",
+    "typeOfBusiness",
+  ];
+  const searchableFieldsInvites = [
+    "leadName",
+    "source",
+    "region",
+    "companyName",
+    "companyPhone",
+  ];
+  const customerColumns = [
+    {
+      field: "id",
+      headerName: t("Registration ID"),
+      include: isV("id"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "erpCustId",
+      headerName: t("ERP ID"),
+      include: isV("erpCustId"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 140,
+      flex: 1,
+    },
+    {
+      field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      headerName: t("Company"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyType",
+      headerName: t("Company Type"),
+      include: isV("companyType"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "typeOfBusiness",
+      headerName: t("Type Of Business"),
+      include: isV("typeOfBusiness"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+    },
+    {
+      field: "customerStatus",
+      headerName: t("Status"),
+      include: isV("customerStatus"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{params.value}</label>
+      ),
+    },
+    {
+      field: "FandOSync",
+      headerName: t("Action"),
+      include: isV("FandOSync"),
+      searchable: false,
+      flex: 1,
+      renderCell: (params) => {
+        !params?.row?.erpCustId &&
+          params?.row?.status?.toLowerCase() === "approved" && (
+            <Box
+              component="span"
+              disabled={syncLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                HandleFandOFailCustomer(params.row.id);
+              }}
+              sx={{
+                color: "primary.main",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}
+            >
+              <Tooltip
+                title={
+                  syncLoading && syncLoadingId === params.row.id
+                    ? t("Syncing...")
+                    : t("Sync")
+                }
+                arrow
+              >
+                <SyncIcon />{" "}
+              </Tooltip>
+            </Box>
+          );
+      },
+    },
+  ];
 
+  // Approval Columns
+  const approvalColumns = [
+    {
+      field: "id",
+      headerName: t("Registration ID"),
+      include: isV("id"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "erpCustId",
+      headerName: t("ERP ID"),
+      include: isV("erpCustId"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 140,
+      flex: 1,
+    },
+    {
+      field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      headerName: t("Company"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "workflowName",
+      headerName: t("Workflow Name"),
+      include: isV("workflowName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyType",
+      headerName: t("Company Type"),
+      include: isV("companyType"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "typeOfBusiness",
+      headerName: t("Type Of Business"),
+      include: isV("typeOfBusiness"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+    },
+    {
+      field: "customerStatus",
+      headerName: t("Status"),
+      include: isV("customerStatus"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{params.value}</label>
+      ),
+    },
+    {
+      field: "createdByUsername",
+      headerName: t("Created By"),
+      include: isV("createdBy"),
+      searchable: false,
+      sortable: false,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+  ];
 
- // Approval Columns
-const approvalColumns = [
-  {
-    field: "id",
-    headerName: t("Registration ID"),
-    include: isV("id"),
-    searchable: true,
-    minWidth: 100,
-    maxWidth: 120,
-    flex: 1,
-  },
-  {
-    field: "erpCustId",
-    headerName: t("ERP ID"),
-    include: isV("erpCustId"),
-    searchable: true,
-    minWidth: 120,
-    maxWidth: 140,
-    flex: 1,
-  },
-  {
-    field: i18n.language === "ar"  ? "companyNameAr" : "companyNameEn",
-    headerName: t("Company"),
-    include: isV("companyName"),
-    searchable: true,
-    minWidth: 150,
-    flex: 2,
-  },
-  {
-    field: "workflowName",
-    headerName: t("Workflow Name"),
-    include: isV("workflowName"),
-    searchable: true,
-    minWidth: 150,
-    flex: 2,
-  },
-  {
-    field: "companyType",
-    headerName: t("Company Type"),
-    include: isV("companyType"),
-    searchable: true,
-    minWidth: 120,
-    maxWidth: 150,
-    flex: 1,
-  },
-  {
-    field: "typeOfBusiness",
-    headerName: t("Type Of Business"),
-    include: isV("typeOfBusiness"),
-    searchable: true,
-    minWidth: 140,
-    flex: 1,
-  },
-  {
-    field: "customerStatus",
-    headerName: t("Status"),
-    include: isV("customerStatus"),
-    searchable: true,
-    minWidth: 100,
-    maxWidth: 120,
-    flex: 1,
-    renderCell: (params) => (
-      <label className={getStatusClass(params.value)}>{params.value}</label>
-    ),
-  },
-  {
-    field: "createdByUsername",
-    headerName: t("Created By"),
-    include: isV("createdBy"),
-    searchable: false,
-    sortable: false,
-    minWidth: 120,
-    maxWidth: 150,
-    flex: 1,
-  },
-];
+  // Invite Columns
+  const inviteColumns = [
+    {
+      field: "createdAt",
+      headerName: t("Date"),
+      include: isV("createdAt"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+      renderCell: (params) =>
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
 
-// Invite Columns
-const inviteColumns = [
-  {
-    field: "createdAt",
-    headerName: t("Date"),
-    include: isV("createdAt"),
-    searchable: true,
-    minWidth: 120,
-    maxWidth: 150,
-    flex: 1,
-    // valueFormatter: (params) =>
-    //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
-  },
-  {
-    field: "leadName",
-    headerName: t("Customer Name"),
-    include: isV("leadName"),
-    searchable: true,
-    minWidth: 150,
-    flex: 2,
-  },
-  {
-    field: "companyEmail",
-    headerName: t("Email"),
-    include: isV("companyEmail"),
-    searchable: true,
-    minWidth: 150,
-    flex: 1,
-  },
-  {
-    field: "companyPhone",
-    headerName: t("Phone"),
-    include: isV("companyPhone"),
-    searchable: true,
-    minWidth: 120,
-    flex: 1,
-  },
-  {
-    field: "companyName",
-    headerName: t("Company Name"),
-    include: isV("companyName"),
-    searchable: true,
-    minWidth: 150,
-    flex: 2,
-  },
-  {
-    field: "region",
-    headerName: t("Region"),
-    include: isV("region"),
-    searchable: true,
-    minWidth: 120,
-    flex: 1,
-  },
-  {
-    field: "employeeId",
-    headerName: t("Assigned To"),
-    include: isV("employeeId"),
-    searchable: true,
-    minWidth: 150,
-    flex: 1,
-  },
-  {
-    field: "source",
-    headerName: t("Source"),
-    include: isV("source"),
-    searchable: true,
-    minWidth: 120,
-    flex: 1,
-  },
-  {
-    field: "actions",
-    headerName: t("Action"),
-    include: isV("actions"),
-    searchable: false,
-    flex: 1,
-    renderCell: (params) => (
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Box
-          component="span"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleResend(params.row);
-          }}
-          sx={{
-            color: "primary.main",
-            cursor: "pointer",
-            fontSize: "0.875rem",
-            "&:hover": { textDecoration: "underline" },
-          }}
-        >
-          
-           <Tooltip title= {t("Resend")} arrow>
-          <IosShareIcon/></Tooltip>
+      // valueFormatter: (params) =>
+      //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
+    },
+    {
+      field: "leadName",
+      headerName: t("Customer Name"),
+      include: isV("leadName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyEmail",
+      headerName: t("Email"),
+      include: isV("companyEmail"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "companyPhone",
+      headerName: t("Phone"),
+      include: isV("companyPhone"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "companyName",
+      headerName: t("Company Name"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "region",
+      headerName: t("Region"),
+      include: isV("region"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "employeeId",
+      headerName: t("Assigned To"),
+      include: isV("employeeId"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "source",
+      headerName: t("Source"),
+      include: isV("source"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "actions",
+      headerName: t("Action"),
+      include: isV("actions"),
+      searchable: false,
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Box
+            component="span"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResend(params.row);
+            }}
+            sx={{
+              color: "primary.main",
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            <Tooltip title={t("Resend")} arrow>
+              <IosShareIcon />
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
-    ),
-  },
-];
+      ),
+    },
+  ];
 
   //  const handlePageChange = (newPage) => {
   //   setPagination(prev => ({ ...prev, page: newPage }));
   // };
-  const fetchCustomers = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
+  const fetchCustomers = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -846,19 +879,19 @@ const inviteColumns = [
         page,
         pageSize,
         search: searchTerm,
-         sortBy: sortedModel[0]?.field || "id",
-          sortOrder: sortedModel[0]?.sort || "asc", 
-        filters:  JSON.stringify(customFilters),
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
       });
 
       const response = await fetch(
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-            "Authorization": `Bearer ${token}`
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
       const result = await response.json();
@@ -880,7 +913,12 @@ const inviteColumns = [
       setLoading(false);
     }
   };
-  const fetchApprovals = async (page = 1, searchTerm = "",customFilters = {}, sortedModel = []) => {
+  const fetchApprovals = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
     setLoading(true);
     setError(null);
     console.log("Fetching approvals");
@@ -892,17 +930,18 @@ const inviteColumns = [
         // // sortBy: "id",
         // sortOrder: "asc",
         // filters: "{}",
-             sortBy: sortedModel[0]?.field || "id",
-          sortOrder: sortedModel[0]?.sort || "asc", 
-        filters:  JSON.stringify(customFilters),
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
       });
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json",
-                                'Authorization': `Bearer ${token}` },
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -926,7 +965,12 @@ const inviteColumns = [
     }
   };
 
-  const fetchInvites = async (page = 1, searchTerm = "",customFilters = {}, sortedModel = []) => {
+  const fetchInvites = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -937,18 +981,19 @@ const inviteColumns = [
         // sortBy: "id",
         // sortOrder: "asc",
         // filters: "{}",
-             sortBy: sortedModel[0]?.field || "id",
-          sortOrder: sortedModel[0]?.sort || "asc", 
-        filters:  JSON.stringify(customFilters),
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
       });
 
       const response = await fetch(
         `${API_BASE_URL}/customer-registration-staging/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -1034,9 +1079,10 @@ const inviteColumns = [
         `${API_BASE_URL}/payment-method/id/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -1074,9 +1120,10 @@ const inviteColumns = [
         `${API_BASE_URL}/customer-contacts/${customerId}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-                                'Authorization': `Bearer ${token}`},
-          
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       const result = await response.json();
@@ -1114,28 +1161,26 @@ const inviteColumns = [
   useEffect(() => {
     if (activeTab === "customers") {
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery,filters);
+        fetchApprovals(1, searchQuery, filters);
       } else {
-        fetchCustomers(1, searchQuery,filters);
+        fetchCustomers(1, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
-      fetchInvites(page, searchQuery,filters);
+      fetchInvites(page, searchQuery, filters);
     }
-  }, [activeTab, isApprovalMode, page, searchQuery,filters]);
+  }, [activeTab, isApprovalMode, page, searchQuery, filters]);
 
   useEffect(() => {
     getOptionsFromBasicsMaster("entity").then(setEntityOptions);
     const fetchGeoData = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/geoLocation`,
-          {
-      method: "GET",
-      headers: { "Content-Type": "application/json",
-        ...(token && { "Authorization": `Bearer ${token}` })
-       },
-      
-    }
-        );
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setGeoData(data.data);
@@ -1156,7 +1201,7 @@ const inviteColumns = [
   }, []);
 
   const handleRowClick = async (params) => {
-    let  customer=params.row
+    let customer = params.row;
     let transformedCustomer = await fetchCustomerContacts(
       customer.id,
       customer
@@ -1224,10 +1269,10 @@ const inviteColumns = [
         `${API_BASE_URL}/customers/pagination?${params.toString()}`,
         {
           method: "GET",
-          headers: { "Content-Type": "application/json" ,
-            "Authorization": `Bearer ${token}`
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          
         }
       );
 
@@ -1284,11 +1329,11 @@ const inviteColumns = [
             "Brand Name (EN)": customer.brandNameEn || "",
             "Brand Name (AR)": customer.brandNameAr || "",
             "Delivery Locations": customer.deliveryLocations || "",
-            "Status": customer.customerStatus || "",
-            "Region": customer.region || "",
-            "City": customer.city || "",
-            "District": customer.district || "",
-            "Street": customer.street || "",
+            Status: customer.customerStatus || "",
+            Region: customer.region || "",
+            City: customer.city || "",
+            District: customer.district || "",
+            Street: customer.street || "",
             "Building Name": customer.buildingName || "",
             "Location Type": customer.locationType || "",
 
@@ -1331,13 +1376,13 @@ const inviteColumns = [
             // "Credit Balance": customer.creditBalance || "",
 
             // Geolocation
-            "Latitude": customer.geolocation?.x || "",
-            "Longitude": customer.geolocation?.y || "",
+            Latitude: customer.geolocation?.x || "",
+            Longitude: customer.geolocation?.y || "",
 
             // Assignment Information
             "Assigned To": customer.assignedTo || "",
             "Branch Region": customer.branch || "",
-            "Entity": customer.entity || "",
+            Entity: customer.entity || "",
             "Inter Company": customer.interCompany ? "Yes" : "No",
 
             "Created Date": customer.createdAt
@@ -1426,100 +1471,102 @@ const inviteColumns = [
       visible: isV("btnDownloadCustomers"),
     },
   ];
-   const visibleColumns = isApprovalMode
+  const visibleColumns = isApprovalMode
     ? approvalColumns.filter((col) => col.include)
     : customerColumns.filter((col) => col.include);
-const filteredData = visibleColumns?.filter(item => searchableFields?.includes(item?.field));
-const filertInvites =  (inviteColumns.filter((col) => col.include))?.filter(item => searchableFieldsInvites?.includes(item?.field));
+  const filteredData = visibleColumns?.filter((item) =>
+    searchableFields?.includes(item?.field)
+  );
+  const filertInvites = inviteColumns
+    .filter((col) => col.include)
+    ?.filter((item) => searchableFieldsInvites?.includes(item?.field));
   const renderContent = () => {
-          const handleSortModelChange = (model) => {
-    setSortModel(model);
+    const handleSortModelChange = (model) => {
+      setSortModel(model);
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery,filters,model);
+        fetchApprovals(1, searchQuery, filters, model);
       } else {
-        fetchCustomers(1, searchQuery,filters,model);
+        fetchCustomers(1, searchQuery, filters, model);
       }
-  };
-        const handleInviteSortModelChange = (model) => {
-    console.log("Sort model changed:", model);
+    };
+    const handleInviteSortModelChange = (model) => {
+      console.log("Sort model changed:", model);
 
-    setInviteSortModel(model);
-       fetchInvites(1,searchQuery,filters,model);
-  }
+      setInviteSortModel(model);
+      fetchInvites(1, searchQuery, filters, model);
+    };
     switch (activeTab) {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
         return (
-        //   <Table
-        //     columns={customerColumnsToUse}
-        //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-        //     getStatusClass={getStatusClass}
-        //     customCellRenderer={customCellRenderer}
-        //     onRowClick={handleRowClick}
-        //     onPay={HandleFandOFailCustomer}
-        //     syncLoading={syncLoading}
-        //   />
-         <DataGrid
-                    //   apiRef={gridApiRef}
-                      rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                      columns={customerColumnsToUse}
-                   
-                      pageSize={pageSize}
-                      rowCount={total}
-                      onRowClick={handleRowClick}
-                      columnVisibilityModel={columnVisibilityModel}
-                      onColumnVisibilityModelChange={setColumnVisibilityModel}
-                      sortModel={sortModel}
-                      onSortModelChange={handleSortModelChange}
-                      disableSelectionOnClick
-                      disableColumnMenu
-                      hideFooter={true}
-                      hideFooterPagination={true}
-                      disableExtendRowFullWidth={true}
-                      pagination={false}
-                      autoHeight
-                      rowHeight={70}
-                      showToolbar
-                      slots={{
-                        toolbar: () => (
-                          <CustomToolbar
-                            searchQuery={searchQuery}
-                            filterAnchor={filterAnchor}
-                            onSearch={handleSearch}
-                            setSearchQuery={setSearchQuery}
-                            setFilterAnchor={setFilterAnchor}
-                            handleFilterChange={handleFilterChange}
-                            onColumnVisibilityChange={setColumnVisibilityModel}
-                            columns={filteredData}
-                            filters={filters}
-                            columnVisibilityModel={columnVisibilityModel}
-                            searchPlaceholder="Search orders..."
-                            showColumnVisibility={true}
-                            showFilters={true}
-                            showExport={false}
-                            showUpload={false}
-                                showApproval={true}
-                            // showAdd={isV("addButton")}
-                            // showAdd={true}
-                            // handleAddClick={handleAddOrder}
-                            // handleUploadClick={HandleBulkOrderUpload}
-                            columnsToDisplay={columnsToDisplay}
-                                handleApproval={handleApproval}
-                    isApprovalMode={isApprovalMode}
-                          />
-                        ),
-                      }}
-                      sx={{
-                        "& .MuiDataGrid-row": {
-                          cursor: "pointer",
-                          "&:hover": {
-                            backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          },
-                          
-                        },
-                      }}
-                    />
+          //   <Table
+          //     columns={customerColumnsToUse}
+          //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+          //     getStatusClass={getStatusClass}
+          //     customCellRenderer={customCellRenderer}
+          //     onRowClick={handleRowClick}
+          //     onPay={HandleFandOFailCustomer}
+          //     syncLoading={syncLoading}
+          //   />
+          <DataGrid
+            //   apiRef={gridApiRef}
+            rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+            columns={customerColumnsToUse}
+            pageSize={pageSize}
+            rowCount={total}
+            onRowClick={handleRowClick}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={setColumnVisibilityModel}
+            sortModel={sortModel}
+            onSortModelChange={handleSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  searchQuery={searchQuery}
+                  filterAnchor={filterAnchor}
+                  onSearch={handleSearch}
+                  setSearchQuery={setSearchQuery}
+                  setFilterAnchor={setFilterAnchor}
+                  handleFilterChange={handleFilterChange}
+                  onColumnVisibilityChange={setColumnVisibilityModel}
+                  columns={filteredData}
+                  filters={filters}
+                  columnVisibilityModel={columnVisibilityModel}
+                  searchPlaceholder="Search orders..."
+                  showColumnVisibility={true}
+                  showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={true}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+                  // handleAddClick={handleAddOrder}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  columnsToDisplay={columnsToDisplay}
+                  handleApproval={handleApproval}
+                  isApprovalMode={isApprovalMode}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          />
         );
       case t("invites"):
         return (
@@ -1529,69 +1576,67 @@ const filertInvites =  (inviteColumns.filter((col) => col.include))?.filter(item
           //   getStatusClass={getStatusClass}
           //   actionButtons={renderActionButtons}
           // />
-           <DataGrid
-                    //   apiRef={gridApiRef}
-                      rows={paginatedInvites}
-                      columns={inviteColumns}
-                   
-                      pageSize={pageSize}
-                      // rowCount={total}
-                      // onRowClick={handleRowClick}
-                      columnVisibilityModel={invitecolumnVisibilityModel}
-                      onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
-                      sortModel={inviteSortModel}
-                      onSortModelChange={handleInviteSortModelChange}
-                      disableSelectionOnClick
-                      disableColumnMenu
-                      hideFooter={true}
-                      hideFooterPagination={true}
-                      disableExtendRowFullWidth={true}
-                      pagination={false}
-                      autoHeight
-                      rowHeight={70}
-                      showToolbar
-                      slots={{
-                        toolbar: () => (
-                          <CustomToolbar
-                            searchQuery={searchQuery}
-                            filterAnchor={filterAnchor}
-                            onSearch={handleSearch}
-                            setSearchQuery={setSearchQuery}
-                            setFilterAnchor={setFilterAnchor}
-                            handleFilterChange={handleFilterChange}
-                            onColumnVisibilityChange={setColumnVisibilityModel}
-                            columns={filertInvites}
-                            filters={filters}
-                            columnVisibilityModel={columnVisibilityModel}
-                            searchPlaceholder="Search orders..."
-                            showColumnVisibility={true}
-                            showFilters={true}
-                            showExport={false}
-                            showUpload={false}
-                                showApproval={false}
-                                showAdd={isV("btnAddInvite")}
-                                buttonName={t("invite")}
-                            // showAdd={isV("addButton")}
-                            // showAdd={true}
-                            
-                            handleAddClick={handleInvite}
-                            // handleUploadClick={HandleBulkOrderUpload}
-                            columnsToDisplay={columnsToDisplay}
-                                handleApproval={handleApproval}
-                    isApprovalMode={false}
-                          />
-                        ),
-                      }}
-                      sx={{
-                        "& .MuiDataGrid-row": {
-                          cursor: "pointer",
-                          "&:hover": {
-                            backgroundColor: "rgba(0, 0, 0, 0.04)",
-                          },
-                          
-                        },
-                      }}
-                    />
+          <DataGrid
+            //   apiRef={gridApiRef}
+            rows={paginatedInvites}
+            columns={inviteColumns}
+            pageSize={pageSize}
+            // rowCount={total}
+            // onRowClick={handleRowClick}
+            columnVisibilityModel={invitecolumnVisibilityModel}
+            onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+            sortModel={inviteSortModel}
+            onSortModelChange={handleInviteSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  searchQuery={searchQuery}
+                  filterAnchor={filterAnchor}
+                  onSearch={handleSearch}
+                  setSearchQuery={setSearchQuery}
+                  setFilterAnchor={setFilterAnchor}
+                  handleFilterChange={handleFilterChange}
+                  onColumnVisibilityChange={setColumnVisibilityModel}
+                  columns={filertInvites}
+                  filters={filters}
+                  columnVisibilityModel={columnVisibilityModel}
+                  searchPlaceholder="Search orders..."
+                  showColumnVisibility={true}
+                  showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={false}
+                  showAdd={isV("btnAddInvite")}
+                  buttonName={t("invite")}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+
+                  handleAddClick={handleInvite}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  columnsToDisplay={columnsToDisplay}
+                  handleApproval={handleApproval}
+                  isApprovalMode={false}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          />
         );
       default:
         return null;
@@ -1600,71 +1645,71 @@ const filertInvites =  (inviteColumns.filter((col) => col.include))?.filter(item
   // Paginate the filtered orders
   // const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
   // const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
-  const paginatedCustomers =  filteredCustomers;
+  const paginatedCustomers = filteredCustomers;
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
-   const handleFilterChange = (newFilters) => {
+  const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
     setPage(1);
-     setFilterAnchor(null)
+    setFilterAnchor(null);
   };
-const HandleFandOFailCustomer = async (customerId) => {
-  setSyncLoadingId(customerId)
-  setSyncLoading(true);
-  try {
-    const { data } = await axios.post(
-      `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
-      {}, 
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+  const HandleFandOFailCustomer = async (customerId) => {
+    setSyncLoadingId(customerId);
+    setSyncLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    if (data?.success) {
-    fetchCustomers();
-      Swal.fire({
-        title: "Success",
-        text: data.message,
-        icon: "success",
-        confirmButtonText: "OK",
-        confirmButtonColor: "#3085d6",
-      });
-    } else {
+      if (data?.success) {
+        fetchCustomers();
+        Swal.fire({
+          title: "Success",
+          text: data.message,
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3085d6",
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: data.message || "Failed to Sync with FandO.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    } catch (error) {
+      console.error("Error handling FandO fail customer:", error);
       Swal.fire({
         title: "Error",
-        text: data.message || "Failed to Sync with FandO.",
+        text: error.message || "Failed to Sync with FandO.",
         icon: "error",
         confirmButtonText: "OK",
         confirmButtonColor: "#dc3545",
       });
+    } finally {
+      setSyncLoading(false);
+      setSyncLoadingId(null);
     }
-  } catch (error) {
-    console.error("Error handling FandO fail customer:", error);
-    Swal.fire({
-      title: "Error",
-      text: error.message || "Failed to Sync with FandO.",
-      icon: "error",
-      confirmButtonText: "OK",
-      confirmButtonColor: "#dc3545",
-    });
-  } finally {
-    setSyncLoading(false);
-      setSyncLoadingId(null)
-  }
-};
+  };
 
-const handleApproval =(mode)=>{
-    setFilters({})
-  setApprovalMode(mode === "approval");
+  const handleApproval = (mode) => {
+    setFilters({});
+    setApprovalMode(mode === "approval");
     if (mode === "approval") {
       fetchApprovals();
     } else {
       fetchCustomers();
     }
-}
- useEffect(() => {
-setFilters({})
-},[activeTab])
+  };
+  useEffect(() => {
+    setFilters({});
+  }, [activeTab]);
   return (
     <Sidebar title={t("Customers")}>
       <div className="page-content">
@@ -1706,67 +1751,66 @@ setFilters({})
                 <ActionButton menuItems={customerMenuItems} />
               </>
             )} */}
-
           </div>
           {renderContent()}
-          
-            {isInviteModalOpen && (
-              <dialog className="invite-dialog" open>
-                <h2>{t("Invite")}</h2>
 
-                <div className="form-row-1">
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Customer Name")}
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={inviteData.name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+          {isInviteModalOpen && (
+            <dialog className="invite-dialog" open>
+              <h2>{t("Invite")}</h2>
 
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Email")}
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={inviteData.email}
-                      onChange={handleInputChange}
-                      required
-                      style={inviteErrors.email ? { borderColor: "red" } : {}}
-                    />
-                    {inviteErrors.email && (
-                      <div style={{ color: "red", fontSize: "0.8em" }}>
-                        {inviteErrors.email}
-                      </div>
-                    )}
-                  </div>
+              <div className="form-row-1">
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Customer Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={inviteData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
 
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Company Name")}
-                    </label>
-                    <input
-                      type="text"
-                      name="company"
-                      value={inviteData.company}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Email")}
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={inviteData.email}
+                    onChange={handleInputChange}
+                    required
+                    style={inviteErrors.email ? { borderColor: "red" } : {}}
+                  />
+                  {inviteErrors.email && (
+                    <div style={{ color: "red", fontSize: "0.8em" }}>
+                      {inviteErrors.email}
+                    </div>
+                  )}
+                </div>
 
-                  {/* <div className="form-group-1">
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Company Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    value={inviteData.company}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                {/* <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
                     >
@@ -1787,140 +1831,148 @@ setFilters({})
                     )}
                   </div> */}
 
-                  <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-                     <label style={{ marginBottom: "6px", display: "inline-block" }}>
-                      {t("Phone Number")}
-                    </label>
-                    <PhoneInput
-                      international
-                      defaultCountry="SA" // Set your preferred default country
-                      withCountryCallingCode={true}
-                      countryCallingCodeEditable={false}
-                      name="mobile"
-                      value={inviteData.mobile}
-                      onChange={(value) => {
-                        handleInputChange({
-                          target: {
-                            name: "mobile",
-                            value: value
-                          }
-                        });
-                      }}
-                      required
-                      style={inviteErrors.mobile ? { 
-                        borderColor: "red",
-                        '--PhoneInput-color--error': 'red' // Custom CSS variable for error state
-                      } : {}}
-                      className={inviteErrors.mobile ? "phone-input-error" : "custom-phone-input"}
-                    />
-                    {inviteErrors.mobile && (
-                      <div style={{ color: "red", fontSize: "0.8em" }}>
-                        {inviteErrors.mobile}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Region")}
-                    </label>
-                    <SearchableDropdown
-                      name="region"
-                      // options={basicMasterLists?.region || []}
-                      options={
-                        geoData
-                          ? Object.keys(geoData).map((region) => ({
-                              value: region,
-                              name: region,
-                            }))
-                          : []
-                      }
-                      value={inviteData.region}
-                      onChange={handleInputChange}
-                      placeholder={t("Enter Region")}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Primary Business Unit")}
-                    </label>
-                    <SearchableDropdown
-                      name="primaryBusinessUnit"
-                      // options={basicMasterLists?.region || []}
-                      options={
-                        entityOptions
-                      }
-                      value={inviteData.primaryBusinessUnit}
-                      onChange={handleInputChange}
-                      placeholder={t("Enter Primary Business Unit")}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group-1">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Source")}
-                    </label>
-                    <select
-                      name="source"
-                      value={inviteData.source}
-                      onChange={handleInputChange}
-                      disabled
-                      required
-                    >
-                      <option value="">{t("Select a source")}</option>
-                      <option value="portal">{t("Portal")}</option>
-                      <option value="crm">{t("CRM")}</option>
-                      <option value="salesexecutive">
-                        {t("Sales Executive")}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div className="form-group-1 full-width">
-                    <label
-                      style={{ marginBottom: "6px", display: "inline-block" }}
-                    >
-                      {t("Comments")}
-                    </label>
-                    <textarea
-                      name="comments"
-                      value={inviteData.comments}
-                      onChange={handleInputChange}
-                      placeholder={t("Comments...")}
-                    />
-                  </div>
-                </div>
-
-                <div className="modal-actions">
-                  <button
-                    className="cancel-button"
-                    onClick={() => {
-                      setIsInviteModalOpen(false);
-                      clearInviteFields();
+                <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Phone Number")}
+                  </label>
+                  <PhoneInput
+                    international
+                    defaultCountry="SA" // Set your preferred default country
+                    withCountryCallingCode={true}
+                    countryCallingCodeEditable={false}
+                    name="mobile"
+                    value={inviteData.mobile}
+                    onChange={(value) => {
+                      handleInputChange({
+                        target: {
+                          name: "mobile",
+                          value: value,
+                        },
+                      });
                     }}
-                    disabled={isInviteLoading}
-                  >
-                    {isInviteLoading ? t("Please wait...") : t("Cancel")}
-                  </button>
-                  <button
-                    className="invite-button"
-                    onClick={handleInviteSubmit}
-                    disabled={isInviteLoading}
-                  >
-                    {isInviteLoading ? t("Sending...") : t("Send Invite")}
-                  </button>
+                    required
+                    style={
+                      inviteErrors.mobile
+                        ? {
+                            borderColor: "red",
+                            "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                          }
+                        : {}
+                    }
+                    className={
+                      inviteErrors.mobile
+                        ? "phone-input-error"
+                        : "custom-phone-input"
+                    }
+                  />
+                  {inviteErrors.mobile && (
+                    <div style={{ color: "red", fontSize: "0.8em" }}>
+                      {inviteErrors.mobile}
+                    </div>
+                  )}
                 </div>
-              </dialog>
-            )}
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Region")}
+                  </label>
+                  <SearchableDropdown
+                    name="region"
+                    // options={basicMasterLists?.region || []}
+                    options={
+                      geoData
+                        ? Object.keys(geoData).map((region) => ({
+                            value: region,
+                            name: region,
+                          }))
+                        : []
+                    }
+                    value={inviteData.region}
+                    onChange={handleInputChange}
+                    placeholder={t("Enter Region")}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Primary Business Unit")}
+                  </label>
+                  <SearchableDropdown
+                    name="primaryBusinessUnit"
+                    // options={basicMasterLists?.region || []}
+                    options={entityOptions}
+                    value={inviteData.primaryBusinessUnit}
+                    onChange={handleInputChange}
+                    placeholder={t("Enter Primary Business Unit")}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Source")}
+                  </label>
+                  <select
+                    name="source"
+                    value={inviteData.source}
+                    onChange={handleInputChange}
+                    disabled
+                    required
+                  >
+                    <option value="">{t("Select a source")}</option>
+                    <option value="portal">{t("Portal")}</option>
+                    <option value="crm">{t("CRM")}</option>
+                    <option value="salesexecutive">
+                      {t("Sales Executive")}
+                    </option>
+                  </select>
+                </div>
+
+                <div className="form-group-1 full-width">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Comments")}
+                  </label>
+                  <textarea
+                    name="comments"
+                    value={inviteData.comments}
+                    onChange={handleInputChange}
+                    placeholder={t("Comments...")}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="cancel-button"
+                  onClick={() => {
+                    setIsInviteModalOpen(false);
+                    clearInviteFields();
+                  }}
+                  disabled={isInviteLoading}
+                >
+                  {isInviteLoading ? t("Please wait...") : t("Cancel")}
+                </button>
+                <button
+                  className="invite-button"
+                  onClick={handleInviteSubmit}
+                  disabled={isInviteLoading}
+                >
+                  {isInviteLoading ? t("Sending...") : t("Send Invite")}
+                </button>
+              </div>
+            </dialog>
+          )}
         </div>
         {((activeTab === "customers" &&
           paginatedCustomers.length > 0 &&
