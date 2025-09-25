@@ -29,9 +29,9 @@ import {
 } from "@mui/x-data-grid";
 import { max, min, set } from "date-fns";
 import { Height } from "@mui/icons-material";
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import IosShareIcon from '@mui/icons-material/IosShare';
-import SyncIcon from '@mui/icons-material/Sync';
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import IosShareIcon from "@mui/icons-material/IosShare";
+import SyncIcon from "@mui/icons-material/Sync";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
@@ -544,7 +544,9 @@ function Orders() {
               height: "100%",
             }}
           >
-            <Typography align="center">{params.value}</Typography>
+            <Typography align="center">
+              {params.value?.toUpperCase()}
+            </Typography>
             <Typography align="center">{badge}</Typography>
           </Box>
         );
@@ -578,7 +580,9 @@ function Orders() {
       maxWidth: 120,
       flex: 1,
       renderCell: (params) =>
-        params?.row?.createdAt ? formatDate( params?.row?.createdAt, "DD/MM/YYYY") : " ",
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
     },
     {
       field: "totalAmount",
@@ -587,7 +591,8 @@ function Orders() {
       searchable: false,
       minWidth: 100,
       maxWidth: 120,
-      renderCell: (params) => parseFloat(params?.row?.totalAmount || 0).toFixed(2),
+      renderCell: (params) =>
+        parseFloat(params?.row?.totalAmount || 0).toFixed(2),
     },
     {
       field: "paymentStatus",
@@ -622,7 +627,7 @@ function Orders() {
       include: isV("action"),
       searchable: false,
       flex: 2,
-         minWidth: 70,
+      minWidth: 70,
       maxWidth: 80,
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
@@ -659,8 +664,8 @@ function Orders() {
                 }}
               >
                 {/* {t("Pay")} */}
-                      <Tooltip title={t("Pay")} arrow>
-                <AccountBalanceWalletIcon/>
+                <Tooltip title={t("Pay")} arrow>
+                  <AccountBalanceWalletIcon />
                 </Tooltip>
               </Box>
             )}
@@ -670,13 +675,13 @@ function Orders() {
     {
       field: "sendLink",
       headerName: t("Action"),
-      include: isV("sendLink")||isV("FandOSyncSO"),
+      include: isV("sendLink") || isV("FandOSyncSO"),
       searchable: false,
       flex: 2,
-        minWidth: 70,
+      minWidth: 70,
       maxWidth: 80,
-      renderCell: (params) =>{
-         const rowdata = params.row;
+      renderCell: (params) => {
+        const rowdata = params.row;
         const SYNC_RULES = {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
@@ -720,44 +725,44 @@ function Orders() {
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
-        <Box sx={{ display: "flex", gap: 1 }}>
-          {isV("sendLink") &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
-              <Box
-                component="span"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePay(params.row, false, true);
-                }}
-                sx={{
-                  color: "primary.main",
-                  cursor: "pointer",
-                  // textDecoration: "underline",
-                  fontSize: "0.875rem",
-                }}
-              >
-                <Tooltip title= {t("Send Link")} arrow>
-                {/* {t("Send Link")} */}
-                <IosShareIcon/>
-                </Tooltip>
-              </Box>
-            )}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {isV("sendLink") &&
+              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+              params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+              (params?.row?.status?.toLowerCase() === "approved" ||
+                (params?.row?.status?.toLowerCase() === "open" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
+                      Constants.ENTITY.GMTC.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
+                      Constants.ENTITY.SHC.toLowerCase())) ||
+                (params?.row?.status?.toLowerCase() === "pending" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
+                      Constants.ENTITY.NAQI.toLowerCase()))) && (
+                <Box
+                  component="span"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePay(params.row, false, true);
+                  }}
+                  sx={{
+                    color: "primary.main",
+                    cursor: "pointer",
+                    // textDecoration: "underline",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  <Tooltip title={t("Send Link")} arrow>
+                    {/* {t("Send Link")} */}
+                    <IosShareIcon />
+                  </Tooltip>
+                </Box>
+              )}
 
-              {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -782,112 +787,114 @@ function Orders() {
                   fontSize: "0.875rem",
                 }}
               >
-                
- <Tooltip title= {syncLoading && syncLoadingId === params.row.id
-                  ? t("Syncing...")
-                  : t("Sync")}  arrow>
-<SyncIcon/>
- </Tooltip>
-                  
+                <Tooltip
+                  title={
+                    syncLoading && syncLoadingId === params.row.id
+                      ? t("Syncing...")
+                      : t("Sync")
+                  }
+                  arrow
+                >
+                  <SyncIcon />
+                </Tooltip>
               </Box>
             )}
-
-            
-        </Box>
-      )},
+          </Box>
+        );
+      },
     },
-//     {
-//       field: "orderSync",
-//       headerName: t("Sync"),
-//       include: isV("FandOSyncSO"),
-//       searchable: false,
-//      minWidth: 70,
-//       maxWidth: 80,
-//       flex: 2,
-//       renderCell: (params) => {
-//         const rowdata = params.row;
-//         const SYNC_RULES = {
-//           [Constants.ENTITY.VMCO]: (rowdata) =>
-//             rowdata.isMachine
-//               ? [
-//                   {
-//                     paymentMethod: "Pre Payment",
-//                     paymentStatus: "Pending",
-//                     status: "approved",
-//                   },
-//                 ]
-//               : [
-//                   {
-//                     paymentMethod: "Pre Payment",
-//                     paymentStatus: "Pending",
-//                     status: "approved",
-//                   },
-//                   {
-//                     paymentMethod: "Credit",
-//                     paymentStatus: "Paid",
-//                     status: "approved",
-//                   },
-//                   {
-//                     paymentMethod: "Cash on Delivery",
-//                     paymentStatus: "Pending",
-//                     status: "approved",
-//                   },
-//                 ],
+    //     {
+    //       field: "orderSync",
+    //       headerName: t("Sync"),
+    //       include: isV("FandOSyncSO"),
+    //       searchable: false,
+    //      minWidth: 70,
+    //       maxWidth: 80,
+    //       flex: 2,
+    //       renderCell: (params) => {
+    //         const rowdata = params.row;
+    //         const SYNC_RULES = {
+    //           [Constants.ENTITY.VMCO]: (rowdata) =>
+    //             rowdata.isMachine
+    //               ? [
+    //                   {
+    //                     paymentMethod: "Pre Payment",
+    //                     paymentStatus: "Pending",
+    //                     status: "approved",
+    //                   },
+    //                 ]
+    //               : [
+    //                   {
+    //                     paymentMethod: "Pre Payment",
+    //                     paymentStatus: "Pending",
+    //                     status: "approved",
+    //                   },
+    //                   {
+    //                     paymentMethod: "Credit",
+    //                     paymentStatus: "Paid",
+    //                     status: "approved",
+    //                   },
+    //                   {
+    //                     paymentMethod: "Cash on Delivery",
+    //                     paymentStatus: "Pending",
+    //                     status: "approved",
+    //                   },
+    //                 ],
 
-//           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
-//           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
-//           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
-//           [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
-//         };
-//         const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
-//         const isValidForSync = rules.some(
-//           (rule) =>
-//             rule?.paymentMethod?.toLowerCase() ===
-//               rowdata.paymentMethod?.toLowerCase() &&
-//             rule?.paymentStatus?.toLowerCase() ===
-//               rowdata.paymentStatus?.toLowerCase() &&
-//             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
-//         );
-//         return (
-//           <Box sx={{ display: "flex", gap: 1 }}>
-//             {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
-//               <Box
-//                 component="span"
-//                 onClick={(e) => {
-//                   e.stopPropagation();
-//                   if (!(syncLoading && syncLoadingId === params.row.id)) {
-//                     handleFandOFailSO(params.row.id);
-//                   }
-//                 }}
-//                 sx={{
-//                   color:
-//                     syncLoading && syncLoadingId === params.row.id
-//                       ? "text.disabled"
-//                       : "primary.main",
-//                   cursor:
-//                     syncLoading && syncLoadingId === params.row.id
-//                       ? "default"
-//                       : "pointer",
-//                   textDecoration:
-//                     syncLoading && syncLoadingId === params.row.id
-//                       ? "none"
-//                       : "none",
-//                   fontSize: "0.875rem",
-//                 }}
-//               >
-                
-//  <Tooltip title= {syncLoading && syncLoadingId === params.row.id
-//                   ? t("Syncing...")
-//                   : t("Sync")}  arrow>
-// <SyncIcon/>
-//  </Tooltip>
-                  
-//               </Box>
-//             )}
-//           </Box>
-//         );
-//       },
-//     },
+    //           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
+    //           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
+    //           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
+    //           [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
+    //         };
+    //         const rules = SYNC_RULES[rowdata.entity]?.(rowdata) || [];
+    //         const isValidForSync = rules.some(
+    //           (rule) =>
+    //             rule?.paymentMethod?.toLowerCase() ===
+    //               rowdata.paymentMethod?.toLowerCase() &&
+    //             rule?.paymentStatus?.toLowerCase() ===
+    //               rowdata.paymentStatus?.toLowerCase() &&
+    //             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
+    //         );
+    //         return (
+    //           <Box sx={{ display: "flex", gap: 1 }}>
+    //             {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+    //               <Box
+    //                 component="span"
+    //                 onClick={(e) => {
+    //                   e.stopPropagation();
+    //                   if (!(syncLoading && syncLoadingId === params.row.id)) {
+    //                     handleFandOFailSO(params.row.id);
+    //                   }
+    //                 }}
+    //                 sx={{
+    //                   color:
+    //                     syncLoading && syncLoadingId === params.row.id
+    //                       ? "text.disabled"
+    //                       : "primary.main",
+    //                   cursor:
+    //                     syncLoading && syncLoadingId === params.row.id
+    //                       ? "default"
+    //                       : "pointer",
+    //                   textDecoration:
+    //                     syncLoading && syncLoadingId === params.row.id
+    //                       ? "none"
+    //                       : "none",
+    //                   fontSize: "0.875rem",
+    //                 }}
+    //               >
+
+    //  <Tooltip title= {syncLoading && syncLoadingId === params.row.id
+    //                   ? t("Syncing...")
+    //                   : t("Sync")}  arrow>
+    // <SyncIcon/>
+    //  </Tooltip>
+
+    //               </Box>
+    //             )}
+    //           </Box>
+    //         );
+    //       },
+    //     },
   ];
 
   const approvalColumns = [
@@ -964,7 +971,9 @@ function Orders() {
               height: "100%",
             }}
           >
-            <Typography align="center">{params.value}</Typography>
+            <Typography align="center">
+              {params.value?.toUpperCase()}
+            </Typography>
             <Typography align="center">{badge}</Typography>
           </Box>
         );
@@ -998,7 +1007,9 @@ function Orders() {
       maxWidth: 120,
       flex: 1,
       renderCell: (params) =>
-        params?.row?.createdAt? formatDate( params?.row?.createdAt, "DD/MM/YYYY") : " ",
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
     },
     {
       field: "totalAmount",
@@ -1007,14 +1018,15 @@ function Orders() {
       searchable: false,
       minWidth: 100,
       maxWidth: 120,
-      renderCell: (params) => parseFloat(params?.row?.totalAmount || 0).toFixed(2),
+      renderCell: (params) =>
+        parseFloat(params?.row?.totalAmount || 0).toFixed(2),
     },
     {
       field: "status",
       headerName: t("Status"),
       include: isV("status"),
       searchable: true,
-       minWidth: 120,
+      minWidth: 120,
       maxWidth: 140,
       flex: 1,
       renderCell: (params) => (
@@ -1100,7 +1112,7 @@ function Orders() {
     setSyncLoading(true);
     setSyncLoadingId(id);
     try {
-      const {data} = await axios.get(
+      const { data } = await axios.get(
         `${API_BASE_URL}/sales-order/sync_to_fando?orderId=${id}`,
         {
           headers: {
@@ -1316,7 +1328,7 @@ function Orders() {
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
     setPage(1);
-     setFilterAnchor(null)
+    setFilterAnchor(null);
   };
 
   const handleColumnVisibilityChange = (newModel) => {
@@ -1336,7 +1348,7 @@ function Orders() {
     searchableFields?.includes(item?.field)
   );
   const handleApproval = (mode) => {
-    setFilters({})
+    setFilters({});
     setApprovalMode(mode === "approval");
     // Refresh data based on mode
     if (mode === "approval") {
@@ -1351,12 +1363,12 @@ function Orders() {
       <div className="orders-content">
         {/* <div className="page-header">
           <div className="header-actions"> */}
-            {/* <ToggleButton
+        {/* <ToggleButton
               checked={isApprovalMode}
               onChange={toggleApprovalMode}
               label={t("Approval Mode")}
             /> */}
-            {/* <AnimatedTabs
+        {/* <AnimatedTabs
               toggleMode={true}
               value={isApprovalMode ? "approval" : "all"}
               onChange={(mode) => {
@@ -1369,14 +1381,14 @@ function Orders() {
                 }
               }}
             /> */}
-            {/* {isE("addOrder") && (
+        {/* {isE("addOrder") && (
               <ActionButton
                 label={t("Add Order")}
                 onClick={handleAddOrder}
                 menuItems={orderMenuItems}
               />
             )} */}
-          {/* </div>
+        {/* </div>
         </div> */}
 
         {/* <CustomToolbar
@@ -1437,7 +1449,7 @@ function Orders() {
                     showUpload={true}
                     showAdd={isV("addButton")}
                     buttonName={t("add")}
-                    showApproval={isV("approvalButton") }
+                    showApproval={isV("approvalButton")}
                     // showAdd={true}
                     handleAddClick={handleAddOrder}
                     handleUploadClick={HandleBulkOrderUpload}
