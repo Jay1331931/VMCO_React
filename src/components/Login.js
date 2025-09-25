@@ -57,9 +57,9 @@ function Login({ title, userType }) {
 
         login(data.token, data.data);
 
-        if (!res.ok) {
+        if (!data?.success) {
           // setError(data.message || 'Login failed');
-          setError("Email or password is invalid");
+          setError(data?.message);
           return;
         }
         console.log("data", data);
