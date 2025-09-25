@@ -31,7 +31,6 @@ import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
 import axios from "axios";
 import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
-
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -74,7 +73,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   } else {
     customerFormMode = "custDetailsAdd";
   }
-
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -83,7 +81,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   const handleAddBranch = () => {
     setActionMenuOpen(false);
     if (customer?.isBlocked) {
@@ -95,7 +92,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       });
       return;
     }
-
     if (branches.length === 0) {
       setIsFirstBranch(true); // Set flag for first branch
     }
@@ -123,7 +119,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       customerId: customer.id,
       isNew: true,
     };
-
     setTemporaryBranches((prev) => [newBranch, ...prev]);
     setBranches((prev) => [newBranch, ...prev]);
     setExpandedRows([tempId]); // Expand the new branch row
@@ -140,7 +135,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       : branchContacts
       ? [branchContacts]
       : [];
-
     return branchesArray.map((branch) => {
       const branchContacts = contactsArray.filter(
         (contact) => contact.branchId === branch.id
@@ -149,7 +143,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         acc[contact.contactType] = contact;
         return acc;
       }, {});
-
       return {
         ...branch,
         primaryContactName: contactsMap.primary?.name || "",
@@ -168,12 +161,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       };
     });
   };
-
   const checkIfBranchIsInApproval = async (branchId) => {
     console.log("Branch Id", branchId);
     console.log("check approval called");
     let isAppMode = false;
-
     try {
       const res = await fetch(`${API_BASE_URL}/workflow-instance/check/id`, {
         method: "POST",
@@ -186,13 +177,10 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           module: "branch",
         }),
       });
-
       console.log("!!!!!!!", res);
-
       if (res.ok) {
         const responseText = await res.text(); // Get raw response text ('t' or 'f')
         console.log("^^^^^^^", responseText);
-
         try {
           // Try to parse as JSON first
           const data = responseText ? JSON.parse(responseText) : {};
@@ -215,7 +203,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             isAppMode
           );
           // setIsApprovalMode(isAppMode);
-
           return isAppMode;
         }
       } else {
@@ -226,16 +213,13 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       console.error("Error fetching workflow instance:", err);
       return false;
     }
-
     // Fallback return - shouldn't reach here, but added for safety
     return false;
   };
-
   // Fetch contacts for a specific branch
   const fetchBranchContacts = async (branchId) => {
     setError(null);
     const customerId = customer.id;
-
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-contacts/branch/${branchId}/customer/${customerId}`,
@@ -247,15 +231,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           },
         }
       );
-
       const result = await response.json();
-
       if (result.status === "Ok") {
         const transformed = transformBranchData(
           branches.filter((branch) => branch.id === branchId),
           result.data
         );
-
         if (transformed.length > 0) {
           setTransformedBranches(transformed);
           setBranches((prevBranches) =>
@@ -272,7 +253,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       console.error("Error fetching contacts:", err);
     }
   };
-
   const fetchBranches = useCallback(async () => {
     console.log("~~~~~Fetching branches for customer:", customer);
     setError(null);
@@ -281,7 +261,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       customer_id: customer?.id,
       id: customer?.workflowId,
     };
-
     const query = new URLSearchParams({
       page: currentPage,
       pageSize: pageSize,
@@ -290,7 +269,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       search: search,
       filters: JSON.stringify(filters),
     });
-
     try {
       const response = await fetch(
         `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
@@ -302,11 +280,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error("Failed to fetch branches");
       }
-
       const data = await response.json();
       setCurrentPage(data.page);
       setBranches(data.data);
@@ -318,7 +294,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       setLoading(false);
     }
   }, [customer, currentPage]);
-
   // Toggle row expansion and fetch contacts if expanding
   const toggleRow = async (branchId) => {
     if (!expandedRows.includes(branchId)) {
@@ -328,7 +303,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     const isAppMode = await checkIfBranchIsInApproval(branchId);
     // setIsApprovalMode(isAppMode);
   };
-
   // Update tabs height when expanded rows change
   useEffect(() => {
     const baseRowHeight = 80;
@@ -341,14 +315,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       (expandedRows.length > 0 ? expandedExtraHeight : collapsedExtraHeight);
     setTabsHeight(`${contentHeight}px`);
   }, [expandedRows.length, branches.length]);
-
   // Fetch branches on mount
   useEffect(() => {
     if (customer?.id) {
       fetchBranches();
     }
   }, [customer?.id, search, currentPage]);
-
   // Pagination variables
   const itemsPerPage = pageSize;
   const totalPages = Math.ceil(total / itemsPerPage);
@@ -357,7 +329,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   // const currentItems = branches.slice(startIndex, endIndex);
   const currentItems = [...branches].slice(startIndex, endIndex);
   const isExpanded = (branchId) => expandedRows.includes(branchId);
-
   const getStatusClass = (status) => {
     switch (status) {
       case "approved":
@@ -370,7 +341,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         return "status-default";
     }
   };
-
   const handleBranchFieldChange = (branchId, fieldName, value) => {
     setBranchChanges((prev) => ({
       ...prev,
@@ -379,7 +349,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         [fieldName]: value,
       },
     }));
-
     console.log("Branch changes:", branchChanges);
   };
   const isArabicText = (text) => {
@@ -407,7 +376,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     Object.keys(branchData).forEach((fieldName) => {
       //   const field = formsByTab[activeTab].find(f => f.name === fieldName);
       const value = branchData[fieldName];
-
       if (checkRequired && mandatoryFields.includes(fieldName) && !value) {
         errors[fieldName] = t("This field is required.");
       }
@@ -418,14 +386,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       ) {
         errors[fieldName] = t("Please enter Arabic text.");
       }
-
       if (fieldName.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
           errors[fieldName] = t("Invalid email format");
         }
       }
-
       if (
         fieldName.toLowerCase().includes("phone") ||
         fieldName.toLowerCase().includes("number") ||
@@ -436,20 +402,16 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         }
       }
     });
-
     // setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
   const handleApprovalSubmit = async (action) => {
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
   };
-
   const handleDialogSubmit = async (comment) => {
     const branchId = customer.workflowData.id;
     const branchUpdates = branchChanges[branchId];
-
     // Check if branchUpdates exists and is iterable
     if (branchUpdates && typeof branchUpdates === "object") {
       Object.keys(branchUpdates).forEach((fieldName) => {
@@ -458,7 +420,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         }
       });
     }
-
     const payload = {
       workflowData: customer.workflowData || {},
       approvedStatus: approvalAction === "approve" ? "approved" : "rejected",
@@ -476,7 +437,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           body: JSON.stringify(payload),
         }
       );
-
       if (response.ok) {
         const result = await response.json();
         navigate("/customers");
@@ -503,7 +463,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     "supervisorContactEmail",
     "supervisorContactMobile",
   ];
-
   const addBranchDetails = async (id, branchData) => {
     const branchPayload = {};
     Object.keys(branchData).forEach((fieldName) => {
@@ -513,7 +472,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         branchPayload["region"] = branchData["region"]?.toLowerCase();
       }
     });
-
     const response = await fetch(`${API_BASE_URL}/customer-branches`, {
       method: "POST",
       headers: {
@@ -526,9 +484,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
       }),
     });
-
     const result = await response.json();
-
     if (response.ok) {
       // Update local state with real ID from server
       setBranches((prev) =>
@@ -546,7 +502,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       // setTemporaryBranches((prev) => prev.filter((b) => b.id !== id));
     }
   };
-
   const addContactDetails = async (branchId, branchData) => {
     const contactPayload = {};
     Object.keys(branchData).forEach((fieldName) => {
@@ -572,11 +527,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       );
     }
   };
-
   const handleSave = async (id, branch, action) => {
     const isNewBranch = id < 0; // Negative IDs are temporary
     const branchData = branchChanges[id] || {};
-
     console.log("Branch data to save:", branchData);
     if (action === "save") {
       if (!validateChangedFields(branchData, false)) {
@@ -590,7 +543,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         return;
       }
     }
-
     const branchPayload = {};
     const contactPayload = {};
     if (action === "block") {
@@ -601,7 +553,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       branchPayload["branchStatus"] = "approved";
       branchPayload["isBlocked"] = false;
     }
-
     // Define contact detail fields
     const contactDetailFields = [
       "primaryContactName",
@@ -617,9 +568,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       "supervisorContactEmail",
       "supervisorContactMobile",
     ];
-
     // Prepare payloads
-
     if (action === "save" || action === "save changes") {
       Object.keys(branchData).forEach((fieldName) => {
         if (contactDetailFields.includes(fieldName)) {
@@ -656,9 +605,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             isDeliveryChargesApplicable: customer.isDeliveryChargesApplicable,
           }),
         });
-
         const result = await response.json();
-
         if (response.ok) {
           // Update local state with real ID from server
           setBranches((prev) =>
@@ -722,14 +669,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           );
         }
       }
-
       // Clear changes for this branch
       // setBranchChanges(prev => {
       //     const newChanges = { ...prev };
       //     delete newChanges[id];
       //     return newChanges;
       // });
-
       // Refresh data
       // await fetchBranches();
     } catch (error) {
@@ -739,7 +684,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const handleSaveChanges = async (id, branch, action) => {
     // const isNewBranch = id < 0; // Negative IDs are temporary
     const branchData = branchChanges[id] || {};
-
     console.log("Branch data to save:", branchData);
     if (action === "save") {
       if (!validateChangedFields(branchData, false)) {
@@ -753,7 +697,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         return;
       }
     }
-
     const branchPayload = {};
     const contactPayload = {};
     if (action === "block") {
@@ -764,7 +707,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       branchPayload["branchStatus"] = "approved";
       branchPayload["isBlocked"] = false;
     }
-
     // Define contact detail fields
     const contactDetailFields = [
       "primaryContactName",
@@ -780,9 +722,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       "supervisorContactEmail",
       "supervisorContactMobile",
     ];
-
     // Prepare payloads
-
     if (action === "save" || action === "save changes") {
       Object.keys(branchData).forEach((fieldName) => {
         if (contactDetailFields.includes(fieldName)) {
@@ -817,9 +757,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //     }),
       //
       //   });
-
       //   const result = await response.json();
-
       //   if (response.ok) {
       //     // Update local state with real ID from server
       //     setBranches((prev) =>
@@ -882,14 +820,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       //   );
       // }
       // }
-
       // Clear changes for this branch
       // setBranchChanges(prev => {
       //     const newChanges = { ...prev };
       //     delete newChanges[id];
       //     return newChanges;
       // });
-
       // Refresh data
       // await fetchBranches();
     } catch (error) {
@@ -902,7 +838,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       alert(t("Please fill all required fields before submitting."));
       return;
     }
-
     console.log("Submitting branch data:", branchData);
     console.log("Branch Changes:", branchChanges);
     // Branch Payload
@@ -956,7 +891,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           }),
         }
       );
-
       const result = await response.json();
       function showLoadingScreen(message) {
         document.body.innerHTML = `
@@ -988,14 +922,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     </style>
   `;
       }
-
       // Usage:
       showLoadingScreen("Updating...");
       setTimeout(() => window.location.reload(true), 3000);
     } catch (error) {
       console.error("Error saving branch:", error);
     }
-
     // Create user if primary contact email exists with default password
     const primaryContactEmail = branchData.primaryContactEmail;
     if (primaryContactEmail) {
@@ -1005,7 +937,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         userType: "customer",
         roles: ["branch_primary"],
       };
-
       try {
         const userResponse = await fetch(
           `${API_BASE_URL}/auth/registration/user`,
@@ -1015,11 +946,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             body: JSON.stringify(userPayload),
           }
         );
-
         if (!userResponse.ok) {
           throw new Error("Failed to create user");
         }
-
         const userResult = await userResponse.json();
         console.log("User created:", userResult);
       } catch (error) {
@@ -1027,7 +956,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       }
     }
   };
-
   const handleButtonClick = () => {
     if (loading) return;
     if (!customer?.erpCustId) {
@@ -1045,7 +973,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     if (!file) return;
     try {
       setLoading(true);
-
       const formData = new FormData();
       formData.append("file", file);
       formData.append("customerId", customer.id);
@@ -1055,7 +982,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         "isDeliveryChargesApplicable",
         customer.isDeliveryChargesApplicable
       );
-
       const response = await axios.post(
         `${API_BASE_URL}/customer-branches/upload-excel`,
         formData,
@@ -1068,7 +994,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           validateStatus: () => true,
         }
       );
-
       if (
         response?.status === 400 &&
         response.headers["content-type"] !== "application/json"
@@ -1076,7 +1001,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         const blob = new Blob([response.data], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
-
         Swal.fire({
           title: t("Validation Failed"),
           html: `
@@ -1100,18 +1024,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           a.remove();
           window.URL.revokeObjectURL(url);
         });
-
         return; // Make sure to return early to prevent success message
       }
       const blob = response?.data;
       const text = await blob.text(); // convert blob to text
       const data = JSON.parse(text); // parse text to JSON
-
       if (response?.status === 200 && data?.success) {
         setBranches((prev) => [...data?.details, ...prev]);
         setCurrentPage(1); // Reset to first page after upload
         setTotal(data?.details.length); // Update total count based on new data
-
         Swal.fire({
           title: t("File Uploaded Successfully"),
           text:
@@ -1147,7 +1068,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //     console.log("File input changed:", e);
   //     const file = e.target.files[0];
   //     if (!file) return;
-
   //     if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
   //       Swal.fire({
   //         title: t("Invalid File Type"),
@@ -1157,11 +1077,9 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //       });
   //       return;
   //     }
-
   //     try {
   //        setLoading(true)
   //       const formData =  new FormData();
-
   //       formData.append("file", file);
   //       formData.append("customerId", customer.id); // assumes customer object is passed as prop
   //       formData.append("erpCustId", customer.erpCustId);
@@ -1174,7 +1092,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //             "Content-Type": "multipart/form-data",
   //             "Authorization": `Bearer ${token}`,
   //           },
-
   //            responseType: "blob", // <-- Important to receive Excel file
   //         validateStatus: () => true
   //         }
@@ -1186,7 +1103,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //   const blob = new Blob([response.data], {
   //     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   //   });
-
   //  Swal.fire({
   //   title: t('Validation Failed'),
   //   html: `
@@ -1206,18 +1122,15 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //     a.remove();
   //     window.URL.revokeObjectURL(url);
   //   });
-
   //   return; // Make sure to return early to prevent success message
   // }
   // const blob = response?.data;
   // const text = await blob.text(); // convert blob to text
   // const data = JSON.parse(text);  // parse text to JSON
-
   // if (response?.status === 200 && data?.success) {
   //       setBranches((prev) => [...data?.details, ...prev]);
   //       setCurrentPage(1); // Reset to first page after upload
   //       setTotal(data?.details.length); // Update total count based on new data
-
   //   Swal.fire({
   //     title: t("File Uploaded Successfully"),
   //     text: t(data.message) || t("Branches have been updated from the Excel file."),
@@ -1232,7 +1145,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //     confirmButtonText: t("OK"),
   //   });
   // }
-
   //     } catch (error) {
   //       console.error("Error uploading file:", error);
   //       Swal.fire({
@@ -1256,7 +1168,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       if (data?.success) {
         fetchBranches();
         Swal.fire({
@@ -1333,7 +1244,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       fileExcelInputRef.current.value = "";
     }
   };
-
   return (
     <div className="branches-content" ref={contentRef}>
       {isV("customerApprovalChecklist") && (
@@ -1346,7 +1256,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 alert(t("No checklist URL configured."));
                 return;
               }
-
               try {
                 const response = await fetch(`${API_BASE_URL}/get-files`, {
                   method: "POST",
@@ -1367,7 +1276,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 }
               } catch (error) {
                 console.error("Error viewing checklist:", error);
-
                 window.open(
                   CUSTOMER_APPROVAL_CHECKLIST_URL,
                   "_blank",
@@ -1394,7 +1302,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
         <span> {loading ? t("Uploading Excel") : t("Upload Excel")}</span>
         <PiMicrosoftExcelLogoFill size={20} />
                 </button>
-
                 <input
                   type="file"
                   accept=".xlsx,.xls"
@@ -1402,7 +1309,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   onChange={handleFileChange}
                   style={{ display: "none" }}
                 />
-
 
             {isV("btnBranchAdd") && (
               <button
@@ -1442,7 +1348,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   {/* <div className="action-menu-item">
           {t("Export")}
         </div> */}
-
                   {isV("btnUploadExcel") && (
                     <div
                       className="action-menu-item"
@@ -1451,7 +1356,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                       {loading ? t("Uploading Excel...") : t("Upload Excel")}
                     </div>
                   )}
-
                   {isV("btnBranchAdd") && (
                     <div
                       className="action-menu-item"
@@ -1468,13 +1372,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                       {t("Add Branch")}
                     </div>
                   )}
-
                   {/* <div className="action-menu-item">{t("Import")}</div>
         <div className="action-menu-item">{t("Settings")}</div> */}
                 </div>
               )}
             </div>
-
             {/* Hidden file input stays outside */}
             {/* <input
     type="file"
@@ -1532,7 +1434,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     branchId={branch.id}
                     handleBranchFieldChange={handleBranchFieldChange}
                   />
-
                   <div className="customer-onboarding-form-actions">
                     <div className="action-buttons">
                       {!isApprovalMode && (
@@ -1582,10 +1483,11 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     >
                       <div className="mobile-content">
                         <span className="mobile-title">
-                          {branch.erp_branch_id || branch.id}
+                          {branch.erpBranchId || branch.id}
                         </span>
+                        <br />
                         <span className="mobile-subtitle">
-                          {branch.branch_name_en}
+                          {branch.branchNameEn}
                         </span>
                       </div>
                     </td>
@@ -1595,7 +1497,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                           branch.branchStatus
                         )}`}
                       >
-                        {t(branch.branch_status)}
+                        {t(branch.branchStatus)}
                       </span>
                     </td>
                     <td className="desktop-only">
@@ -1654,7 +1556,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                             customerFormMode === "custDetailsAdd" && (
                               <h3>{t("Branch is currently under approval")}</h3>
                             )}
-
                           <BranchDetailsForm
                             branchId={branch?.id}
                             branch={branch}
@@ -1670,7 +1571,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                             isFirstBranch={isFirstBranch}
                           />
                           {console.log(branch)}
-
                           <ApprovalDialog
                             isOpen={isApprovalDialogOpen}
                             onClose={() => setIsApprovalDialogOpen(false)}
@@ -1747,7 +1647,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
                   )}
                 </p>
-
                 <div className="popup-buttons-row">
                   <button
                     className="download-btn"
@@ -1761,7 +1660,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                   >
                     📤 {t("Choose Excel File")}
                   </button>
-
                   <input
                     type="file"
                     ref={fileExcelInputRef}
@@ -1773,7 +1671,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     }}
                   />
                 </div>
-
                 {/* Show selected file and submit button */}
                 {selectedFile && (
                   <div style={{ marginTop: 16 , display: "flex",
@@ -1792,7 +1689,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 )}
               </div>
             )}
-
             <style>{`
         .popup-buttons-row {
           display: flex;
@@ -1837,7 +1733,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   background: rgba(0,0,0,0.15);
   z-index: 1000;
 }
-
 .gp-modal {
   position: fixed;
   top: 50%; 
@@ -1851,24 +1746,20 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   z-index: 1001;
   animation: gp-fadein 0.2s;
 }
-
 @keyframes gp-fadein {
   from { opacity: 0; transform: translate(-50%, -60%);}
   to { opacity: 1; transform: translate(-50%, -50%);}
 }
-
 .gp-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 22px 28px 10px 28px;
 }
-
 .gp-title {
   font-size: 1.25rem;
   font-weight: 500;
 }
-
 .gp-close-btn {
   padding: 7px 18px;
   border-radius: 6px;
@@ -1882,7 +1773,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
 .gp-close-btn:hover {
   background: #f2f2f2;
 }
-
       `}</style>
           </div>
         </div>

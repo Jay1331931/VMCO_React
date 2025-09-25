@@ -4,17 +4,80 @@ import Swal from "sweetalert2";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
-
+import { useAuth } from "../context/AuthContext";
+import RbacManager from "../utilities/rbac";
+import Constants from "../constants";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
 function BulkUploadBranchAndCustomer() {
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadType, setUploadType] = useState(null); // "customer" | "branch"
   const [popup, setPopup] = useState(false);
-
+  const { token, user, logout } = useAuth();
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
+  const rbacMgr = new RbacManager(
+    user?.userType === "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    "BulkUpload"
+  );
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+
+  const handleTemplateDownload = async () => {
+    const fileConfig = {
+      customer: Constants.DOCUMENTS_NAME.CUSTOMERS_BULK_UPLOAD_FORMAT,
+      branch: Constants.DOCUMENTS_NAME.BRANCH_BULK_UPLOAD_FORMAT,
+      product: Constants.DOCUMENTS_NAME.PRODUCTS_UPLOAD_FORMAT,
+    };
+    const result = await Swal.fire({
+      title: t("Confirm Download?"),
+      text: t("Are you sure you want to download the template?"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("Yes, download"),
+      cancelButtonText: t("No, cancel"),
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/get-files`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fileName: fileConfig[uploadType],
+            containerType: "documents",
+          }),
+        });
+
+        const res = await response.json();
+        if (res.status === "Ok") {
+          window.open(res.data.url, "_blank", "noopener,noreferrer");
+        } else {
+          await Swal.fire({
+            title: t("Error"),
+            text: res.message || t("Failed to download template."),
+            icon: "error",
+            confirmButtonText: t("OK"),
+            confirmButtonColor: "#dc3545",
+          });
+        }
+      } catch (error) {
+        console.error("Error downloading template:", error);
+        await Swal.fire({
+          title: t("Error"),
+          text: t("Failed to download template."),
+          icon: "error",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    }
+  };
 
   const handleSubmitFile = async (file) => {
     if (!file || !uploadType) return;
@@ -26,9 +89,12 @@ function BulkUploadBranchAndCustomer() {
       formData.append("file", file);
 
       const apiUrl =
-        uploadType === "customer"
-          ? `${API_BASE_URL}/auth/bulk-excel-upload`
-          : `${API_BASE_URL}/auth/bulk_upload_branch`;
+        (uploadType === "customer" &&
+          `${API_BASE_URL}/auth/bulk-excel-upload`) ||
+        (uploadType === "branch" &&
+          `${API_BASE_URL}/auth/bulk_upload_branch`) ||
+        (uploadType === "product" &&
+          `${API_BASE_URL}/auth/bulk_upload_product`);
 
       const response = await axios.post(apiUrl, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -62,9 +128,9 @@ function BulkUploadBranchAndCustomer() {
           const a = document.createElement("a");
           a.href = url;
           a.download =
-            uploadType === "customer"
-              ? "customer_upload_errors.xlsx"
-              : "branch_upload_errors.xlsx";
+            (uploadType === "customer" && "customer_upload_errors.xlsx") ||
+            (uploadType === "branch" && "branch_upload_errors.xlsx") ||
+            (uploadType === "product" && "product_upload_errors.xlsx");
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -77,9 +143,10 @@ function BulkUploadBranchAndCustomer() {
       const blob = response?.data;
       const text = await blob.text();
       const data = JSON.parse(text);
-
+      console.log("????", response);
+      console.log("^^^^", data);
       if (response?.status === 200 && data?.success) {
-        setPopup(false)
+        setPopup(false);
         Swal.fire({
           title: t("File Uploaded Successfully"),
           text:
@@ -108,8 +175,7 @@ function BulkUploadBranchAndCustomer() {
       setLoading(false);
       setSelectedFile(null);
       setUploadType(null);
-       setPopup(false)
-      
+      setPopup(false);
     }
   };
 
@@ -144,45 +210,72 @@ function BulkUploadBranchAndCustomer() {
           gap: "20px",
         }}
       >
-        <button
-          style={{
-            padding: "12px 20px",
-            backgroundColor: "var(--light-blue)",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            fontWeight: 500,
-            transition: "background-color 0.3s ease",
-          }}
-          className="customer-btn"
-          onClick={() => {
-            setUploadType("customer");
-            setPopup(true);
-          }}
-        >
-          📤 Upload Customer Data
-        </button>
+        {isV("BulkCustomer") && (
+          <button
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "var(--light-blue)",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 500,
+              transition: "background-color 0.3s ease",
+            }}
+            className="customer-btn"
+            onClick={() => {
+              console.log(isV("BulkCustomer"));
+              setUploadType("customer");
+              setPopup(true);
+            }}
+          >
+            📤 Upload Customer Data
+          </button>
+        )}
 
-        <button
-          className="branch-btn"
-          style={{
-            padding: "12px 20px",
-            backgroundColor: "var(--deep-green)",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "16px",
-            cursor: "pointer",
-            fontWeight: 500,
-            transition: "background-color 0.3s ease",
-          }}
-          onClick={() => {
-            setUploadType("branch");
-            setPopup(true);
-          }}
-        >
-          📤 Upload Branch Data
-        </button>
+        {isV("BulkBranch") && (
+          <button
+            className="branch-btn"
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "var(--deep-green)",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 500,
+              transition: "background-color 0.3s ease",
+            }}
+            onClick={() => {
+              setUploadType("branch");
+              setPopup(true);
+            }}
+          >
+            📤 Upload Branch Data
+          </button>
+        )}
+
+        {isV("BulkProduct") && (
+          <button
+            className="branch-btn"
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "var(--orange)",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 500,
+              transition: "background-color 0.3s ease",
+            }}
+            onClick={() => {
+              setUploadType("product");
+              setPopup(true);
+            }}
+          >
+            📤 Upload Products Data
+          </button>
+        )}
       </div>
 
       {popup && (
@@ -191,9 +284,9 @@ function BulkUploadBranchAndCustomer() {
           <div className="gp-modal">
             <div className="gp-header">
               <span className="gp-title">
-                {uploadType === "customer"
-                  ? t("Upload Customer Data")
-                  : t("Upload Branch Data")}
+                {uploadType === "customer" && t("Upload Customer Data")}
+                {uploadType === "branch" && t("Upload Branch Data")}
+                {uploadType === "product" && t("Upload Products Data")}
               </span>
               <button className="gp-close-btn" onClick={onClose}>
                 {t("Close")}
@@ -207,12 +300,39 @@ function BulkUploadBranchAndCustomer() {
             ) : (
               <div style={{ padding: "0 28px 20px 28px" }}>
                 <p style={{ marginBottom: 20 }}>
-                  {uploadType === "customer"
-                    ? t("Please upload a valid Customer Excel file.")
-                    : t("Please upload a valid Branch Excel file.")}
+                  {uploadType === "customer" &&
+                    t("Please upload a valid Customer Excel file.")}
+                  {uploadType === "branch" &&
+                    t("Please upload a valid Branch Excel file.")}
+                  {uploadType === "product" &&
+                    t("Please upload a valid Product Excel file.")}
                 </p>
-
-                <input
+                <div className="popup-buttons-row">
+                  <button
+                    className="download-btn"
+                    onClick={() => handleTemplateDownload()}
+                  >
+                    📥 {t("Download Excel Template")}
+                  </button>
+                  <button
+                    className="upload-btn"
+                    onClick={() => fileExcelInputRef.current.click()}
+                  >
+                    📤 {t("Upload Completed Excel File")}
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileExcelInputRef}
+                    accept=".xlsx, .xls"
+                    style={{ display: "none" }}
+                    // onChange={handleFileChange}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) setSelectedFile(file); // just store file in state
+                    }}
+                  />
+                </div>
+                {/* <input
                   type="file"
                   ref={fileExcelInputRef}
                   accept=".xlsx, .xls"
@@ -220,7 +340,7 @@ function BulkUploadBranchAndCustomer() {
                     const file = e.target.files[0];
                     if (file) setSelectedFile(file);
                   }}
-                />
+                /> */}
 
                 {selectedFile && (
                   <div

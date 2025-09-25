@@ -16,9 +16,7 @@ import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import Constants from "../constants";
 import SearchableDropdown from "../components/SearchableDropdown";
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-
 // Initial categories with their corresponding entity values
 const initialCategories = [
   {
@@ -54,15 +52,14 @@ const initialCategories = [
   {
     value: "SPECIAL_PRODUCTS",
     entity: "",
-    label: "Special Products"
+    label: "Special Products",
   },
   {
     value: "FAVORITES",
     entity: "",
-    label: "Favorites"
+    label: "Favorites",
   },
 ];
-
 function Catalog() {
   const location = useLocation();
   const { t, i18n } = useTranslation();
@@ -473,24 +470,20 @@ function Catalog() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch entity descriptions');
+          throw new Error("Failed to fetch entity descriptions");
         }
-
         const result = await response.json();
-
-        setEntityDescriptions(result.data?.map(entity =>
-        ({
-          descriptionLc: entity.descriptionLc,
-          description: entity.description,
-          value: entity.value
-        })
-        ) || []);
-
+        setEntityDescriptions(
+          result.data?.map((entity) => ({
+            descriptionLc: entity.descriptionLc,
+            description: entity.description,
+            value: entity.value,
+          })) || []
+        );
       } catch (error) {
-        console.error('Error fetching entity descriptions:', error);
+        console.error("Error fetching entity descriptions:", error);
       }
     };
-
     fetchEntityDescriptions();
   }, [i18n.language, API_BASE_URL, token]);
 
@@ -499,14 +492,12 @@ function Catalog() {
     if (loading) {
       return;
     }
-
     if (!user) {
       console.log("$$$$$$$$$$$ logging out");
       logout();
       navigate("/login");
       return;
     }
-
     if (user && user.userType) {
       // Initial load will be handled by the filter change effect
     }
@@ -521,13 +512,24 @@ function Catalog() {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
-
   // Helper function to get localized entity name
-  const getLocalizedEntityName = (initialCategories, currentLanguage, entityDescriptions) => {
-    console.log("getLocalizedEntityName called with:", { initialCategories, currentLanguage, entityDescriptions });
-    const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === initialCategories.toLowerCase());
+  const getLocalizedEntityName = (
+    initialCategories,
+    currentLanguage,
+    entityDescriptions
+  ) => {
+    console.log("getLocalizedEntityName called with:", {
+      initialCategories,
+      currentLanguage,
+      entityDescriptions,
+    });
+    const match = entityDescriptions?.find(
+      (desc) => desc.value.toLowerCase() === initialCategories.toLowerCase()
+    );
     if (!match) return initialCategories;
-    return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
+    return currentLanguage === "ar"
+      ? match.descriptionLc || match.description
+      : match.description;
   };
 
   const [filteredCategoryTabs, setFilteredCategoryTabs] = useState(categoryTabs);
@@ -537,17 +539,18 @@ function Catalog() {
     if (!entityDescriptions || entityDescriptions?.length === 0) {
       return;
     }
-
     if (!user) return;
-
     const allLocalizedTabs = initialCategories.map((category) => {
-      const response = getLocalizedEntityName(category.label, i18n.language, entityDescriptions);
+      const response = getLocalizedEntityName(
+        category.label,
+        i18n.language,
+        entityDescriptions
+      );
       return {
         value: category.value,
         label: response,
       };
     });
-
     // Filter tabs based on user type and interCompany status
     let tabsToShow = allLocalizedTabs.filter(tab => {
       const category = initialCategories.find(cat => cat.value === tab.value);
@@ -555,12 +558,14 @@ function Catalog() {
       if (category && (category.value === "FAVORITES" || category.value === "SPECIAL_PRODUCTS")) {
         return user.userType.toLowerCase() === "customer";
       }
-
       return true;
     });
-
     // If user is a customer with interCompany set to true, filter out matching entity tabs
-    if (user.userType === "customer" && user.interCompany === true && user.entity) {
+    if (
+      user.userType === "customer" &&
+      user.interCompany === true &&
+      user.entity
+    ) {
       const customerEntity = user.entity.toLowerCase();
       console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
 
@@ -570,7 +575,7 @@ function Catalog() {
         if (!category || !category.entity) return true;
 
         const tabEntityExists = entityDescriptions.some(
-          desc => desc.value.toLowerCase() === category.entity.toLowerCase()
+          (desc) => desc.value.toLowerCase() === category.entity.toLowerCase()
         );
 
         if (tabEntityExists && category.entity.toLowerCase() === customerEntity) {
@@ -580,20 +585,24 @@ function Catalog() {
 
         return true;
       });
-
       console.log("Filtered tabs for interCompany customer:", tabsToShow);
     }
-
     setCategoryTabs(tabsToShow);
     setFilteredCategoryTabs(tabsToShow);
-
     // If current active category is not in filtered tabs, set to first available
-    if (tabsToShow.length > 0 && !tabsToShow.some(tab => tab?.value === activeCategory)) {
+    if (
+      tabsToShow.length > 0 &&
+      !tabsToShow.some((tab) => tab?.value === activeCategory)
+    ) {
       setActiveCategory(tabsToShow[0]?.value);
     }
-
-  }, [entityDescriptions, i18n.language, initialCategories, user, activeCategory]);
-
+  }, [
+    entityDescriptions,
+    i18n.language,
+    initialCategories,
+    user,
+    activeCategory,
+  ]);
   const customerId = user?.customerId;
   const userId = user?.userId;
   useEffect(() => {
@@ -606,7 +615,6 @@ function Catalog() {
   const mapProductToCardProps = useCallback(
     (product) => {
       const currentLanguage = i18n.language;
-
       // Parse images JSON and extract URLs
       let imageUrls = [];
       if (product.images) {
@@ -623,13 +631,11 @@ function Catalog() {
           imageUrls = [product.images];
         }
       }
-
       // Choose the right product name based on language
       let productName = product.productName;
       if (currentLanguage !== "en" && product.productNameLc) {
         productName = product.productNameLc;
       }
-
       // Choose the right product description based on language
       let productDescription = product.description;
       if (
@@ -638,7 +644,6 @@ function Catalog() {
       ) {
         productDescription = product.description_lc || product.descriptionLc;
       }
-
       return {
         id: product.id,
         name: productName,
@@ -662,26 +667,21 @@ function Catalog() {
   const handleProductClick = (product) => {
     setSelectedProduct(product);
   };
-
   const handleClosePopup = () => {
     setSelectedProduct(null);
   };
-
   // Update the handleQuantityChange function
   const handleQuantityChange = (productId, value) => {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
-
     const moq = Number(product.moq || 0);
     const currentQuantity = quantities[productId] || 0;
     const newQuantity = Math.max(moq, currentQuantity + value);
-
     setQuantities((prev) => ({
       ...prev,
       [productId]: newQuantity,
     }));
   };
-
   const handleGoToCart = () => {
     const selectedBranch = branches.find((b) => b.value === selectedLocation);
     navigate("/Cart", {
@@ -692,8 +692,10 @@ function Catalog() {
         selectedBranchName: selectedBranch?.label || "",
         selectedBranchNameLc:
           selectedBranch?.branch_name_lc ||
-          selectedBranch?.raw?.branchNameLc || "",
-        selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
+          selectedBranch?.raw?.branchNameLc ||
+          "",
+        selectedBranchNameEn:
+          selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
         selectedBranchCity,
@@ -702,9 +704,7 @@ function Catalog() {
       },
     });
   };
-
   const catalogId = React.useId();
-
   // Get unique categories and subcategories for dropdowns
   const uniqueCategories = Array.from(
     new Set(products.map((p) => p.category).filter(Boolean))
@@ -712,7 +712,6 @@ function Catalog() {
   const uniqueSubCategories = Array.from(
     new Set(products.map((p) => p.subCategory).filter(Boolean))
   );
-
   // NEW: Branch selection functionality moved here (before add to cart function)
   useEffect(() => {
     const fetchBranches = async () => {
@@ -725,15 +724,15 @@ function Catalog() {
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
-
           }
         );
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to fetch branches: ${errorData.message || response.statusText
+            `Failed to fetch branches: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -746,22 +745,25 @@ function Catalog() {
         } else if (result && Array.isArray(result.data)) {
           branchData = result.data;
           console.log("Fetched branch data:", branchData);
-          console.log("Status of branches:", branchData.map(b => b.branchStatus));
+          console.log(
+            "Status of branches:",
+            branchData.map((b) => b.branchStatus)
+          );
         } else {
           branchData = [];
         }
         const branchOptions = branchData.map((branch) => {
-          const status = (branch.branchStatus).toLowerCase();
-          const isApproved = status === 'approved';
+          const status = branch.branchStatus.toLowerCase();
+          const isApproved = status === "approved";
           return {
             value: String(branch.id || branch.branch_id),
             label:
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                branch.branchNameLc ||
-                branch.branch_name_en ||
-                branch.branchNameEn,
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -778,7 +780,6 @@ function Catalog() {
     };
     fetchBranches();
   }, [API_BASE_URL, i18n.language]);
-
   // Handler for branch selection with cart check
   const handleBranchSelect = async (e) => {
     const newBranchId = e.target.value;
@@ -807,9 +808,8 @@ function Catalog() {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-
         }
       );
       if (!response.ok) throw new Error("Failed to fetch cart items");
@@ -852,7 +852,11 @@ function Catalog() {
         const { isConfirmed } = await Swal.fire({
           icon: "warning",
           title: t("Discard items?"),
-          html: `${t("There are items in the cart for branch")} <strong>${otherBranchLabel}</strong>.<br>${t("Do you want to discard them?")}`,
+          html: `${t(
+            "There are items in the cart for branch"
+          )} <strong>${otherBranchLabel}</strong>.<br>${t(
+            "Do you want to discard them?"
+          )}`,
           showCancelButton: true,
           focusCancel: true,
           confirmButtonText: t("Yes, discard"),
@@ -863,25 +867,23 @@ function Catalog() {
         if (isConfirmed) {
           try {
             await fetch(
-              `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId
+              `${API_BASE_URL}/cart/delete?customer_id=${
+                selectedCustomerId || customerId
               }&branch_id=${otherBranchId}`,
               {
                 method: "DELETE",
                 headers: {
                   "Content-Type": "application/json",
                   Accept: "application/json",
-                  "Authorization": `Bearer ${token}`
+                  Authorization: `Bearer ${token}`,
                 },
-
               }
             );
-
             setSelectedLocation(newBranchId);
             if (selectedBranch) {
               setSelectedBranchRegion(selectedBranch.branchRegion || "");
               setSelectedBranchCity(selectedBranch.branchCity || "");
             }
-
             await Swal.fire({
               icon: "success",
               title: t("Success"),
@@ -914,7 +916,6 @@ function Catalog() {
       setIsLoading(false);
     }
   };
-
   //  Add to cart functionality
   const handleAddToCart = async (productId) => {
     console.log("Adding product to cart:", productId);
@@ -931,15 +932,12 @@ function Catalog() {
         });
         return;
       }
-
       // Find the product being added
       const product = products.find((p) => p.id === productId);
       if (!product) return;
-
       // Get MOQ and ensure quantity meets it
       const moq = Number(product.moq);
       let quantity = quantities[productId];
-
       // If quantity is less than MOQ, set it to MOQ
       if (quantity < moq) {
         quantity = moq;
@@ -949,10 +947,8 @@ function Catalog() {
           [productId]: moq,
         }));
       }
-
       // Ensure quantity is at least 1
       quantity = Math.max(1, quantity);
-
       // Calculate needed values
       const unitPrice = product.unitPrice;
       const netAmount = unitPrice * quantity;
@@ -976,7 +972,6 @@ function Catalog() {
           imageUrls = [product.images];
         }
       }
-
       // First check if this item already exists in the cart
       const checkResponse = await fetch(
         `${API_BASE_URL}/cart/pagination?filters={"userId":${user.userId}, "customerId":${customerId},"branchId":${selectedLocation}, "productId":${productId}}`,
@@ -984,27 +979,24 @@ function Catalog() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-
       const checkResult = await checkResponse.json();
       console.log("Check cart response:", checkResult);
-
       if (checkResult.data.data && checkResult.data.data.length > 0) {
         // Item exists in cart, update the quantity
         const existingItem = checkResult.data.data[0];
         const updatedQuantity =
           parseInt(existingItem.quantityOrdered) + parseInt(quantity);
-
         const updateResponse = await fetch(
           `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
           {
             method: "PATCH",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
               quantityOrdered: updatedQuantity,
@@ -1012,11 +1004,11 @@ function Catalog() {
             }),
           }
         );
-
         if (!updateResponse.ok) {
           const errorData = await updateResponse.json().catch(() => ({}));
           throw new Error(
-            `Failed to update cart item: ${errorData.message || updateResponse.statusText
+            `Failed to update cart item: ${
+              errorData.message || updateResponse.statusText
             }`
           );
         }
@@ -1024,7 +1016,7 @@ function Catalog() {
           icon: "success",
           title: t("Product quantity to cart successfully"),
           showConfirmButton: false,
-          timer: 1000
+          timer: 1000,
         });
       } else {
         // Item doesn't exist in cart, add it as new
@@ -1041,7 +1033,6 @@ function Catalog() {
           entity: product.entity,
           category: product.category,
           unit: product.unit,
-
           // Add the two new properties
           isMachine: product.isMachine,
           isFresh: product.isFresh,
@@ -1053,22 +1044,20 @@ function Catalog() {
             user.companyType === "non trading" ? 0.0 : vatPercentage.toFixed(2),
           images: JSON.stringify(imageUrls),
         };
-
         console.log("Adding new item to cart:", cartItem);
-
         const response = await fetch(`${API_BASE_URL}/cart`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(cartItem),
         });
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to add item to cart: ${errorData.message || response.statusText
+            `Failed to add item to cart: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -1076,10 +1065,9 @@ function Catalog() {
           icon: "success",
           title: t("Product added to cart successfully"),
           showConfirmButton: false,
-          timer: 1000
+          timer: 1000,
         });
       }
-
       // Reset quantity after successful add/update
       setQuantities((prev) => ({
         ...prev,
@@ -1107,23 +1095,21 @@ function Catalog() {
         });
         return;
       }
-
       if (isFavorite) {
         // Add to favorites
         const response = await fetch(`${API_BASE_URL}/favorites`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             userId: user.userId,
             customerId: selectedCustomerId || user.customerId,
             productId: productId,
-            favorite: true
+            favorite: true,
           }),
         });
-
         if (!response.ok) {
           throw new Error("Failed to add to favorites");
         }
@@ -1134,41 +1120,37 @@ function Catalog() {
           {
             method: "DELETE",
             headers: {
-              "Authorization": `Bearer ${token}`
+              Authorization: `Bearer ${token}`,
             },
           }
         );
-
         if (!response.ok) {
           throw new Error("Failed to remove from favorites");
         }
       }
-
       // Update local state to reflect changes immediately
-      setProducts(prevProducts =>
-        prevProducts.map(product =>
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-
       // Also update filtered/displayed products
-      setFilteredProducts(prevProducts =>
-        prevProducts.map(product =>
+      setFilteredProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-      setDisplayedProducts(prevProducts =>
-        prevProducts.map(product =>
+      setDisplayedProducts((prevProducts) =>
+        prevProducts.map((product) =>
           product.id === productId
             ? { ...product, favorite: isFavorite }
             : product
         )
       );
-
     } catch (error) {
       console.error("Error toggling favorite status:", error);
       Swal.fire({
@@ -1179,16 +1161,13 @@ function Catalog() {
       });
     }
   };
-
   // Get unique categories filtered by the current entity tab
   const getFilteredCategories = () => {
     const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
     if (!entityToFilter) return [];
-
     // First filter by entity
     let filteredProductsByEntity = products.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
@@ -1239,18 +1218,14 @@ function Catalog() {
       );
     }
   };
-
   // Get unique subcategories filtered by the current entity tab and selected category
   const getFilteredSubcategories = () => {
     const selectedCategory = categories.find(
       (cat) => cat.value === activeCategory
     );
     const entityToFilter = selectedCategory ? selectedCategory.entity : null;
-
     if (!entityToFilter) return [];
-
     let filteredProducts = products;
-
     // Filter by entity first
     filteredProducts = filteredProducts.filter(
       (p) => (p.entity || "").toLowerCase() === entityToFilter.toLowerCase()
@@ -1262,7 +1237,6 @@ function Catalog() {
         (p) => (p.category || "").toLowerCase() === categoryFilter.toLowerCase()
       );
     }
-
     // Return unique subcategories from the filtered products
     return Array.from(
       new Set(
@@ -1272,13 +1246,11 @@ function Catalog() {
       )
     );
   };
-
   // Initialize quantities with MOQ values when products are loaded
   useEffect(() => {
     if (products.length > 0) {
       let initialQuantities = { ...quantities };
       let hasChanges = false;
-
       products.forEach((product) => {
         // Only set MOQ for products without quantity or with 0 quantity
         if (
@@ -1290,7 +1262,6 @@ function Catalog() {
           hasChanges = true;
         }
       });
-
       // Only update state if there were changes
       if (hasChanges) {
         setQuantities(initialQuantities);
@@ -1301,11 +1272,12 @@ function Catalog() {
   // Determine direction and alignment
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
-
   // Fetch categories from API when active tab/entity changes
   useEffect(() => {
     const fetchCategories = async () => {
-      const selectedCategory = categories.find(cat => cat.value === activeCategory);
+      const selectedCategory = categories.find(
+        (cat) => cat.value === activeCategory
+      );
       const entity = selectedCategory?.entity;
       if (!entity) {
         setCategoryOptions([]);
@@ -1314,29 +1286,28 @@ function Catalog() {
       try {
         // Build query parameters
         const params = new URLSearchParams({
-          entity: entity
+          entity: entity,
         });
-
         // Add isMachine parameter for VMCO entity tabs
         if (entity === Constants.ENTITY.VMCO) {
           if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
             const isMachine = true;
-            params.append('isMachine', isMachine);
-          }
-          else {
+            params.append("isMachine", isMachine);
+          } else {
             const isMachine = false;
-            params.append('isMachine', isMachine);
+            params.append("isMachine", isMachine);
           }
         }
-
-        const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-
-        });
+        const response = await fetch(
+          `${API_BASE_URL}/product-categories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (!response.ok) throw new Error("Failed to fetch categories");
         const result = await response.json();
 
@@ -1354,11 +1325,12 @@ function Catalog() {
     };
     fetchCategories();
   }, [activeCategory, categories, API_BASE_URL]);
-
   // Fetch subcategories from API when category or active tab/entity changes
   useEffect(() => {
     const fetchSubCategories = async () => {
-      const selectedCategoryObj = categories.find(cat => cat.value === activeCategory);
+      const selectedCategoryObj = categories.find(
+        (cat) => cat.value === activeCategory
+      );
       const entity = selectedCategoryObj?.entity;
       if (!entity || !categoryFilter) {
         setSubCategoryOptions([]);
@@ -1417,7 +1389,11 @@ function Catalog() {
                 name="locationSelect"
                 value={selectedLocation}
                 onChange={handleBranchSelect}
-                options={branches.map(b => ({ ...b, name: b.label || b.name || b.value, disabled: b.disabled }))}
+                options={branches.map((b) => ({
+                  ...b,
+                  name: b.label || b.name || b.value,
+                  disabled: b.disabled,
+                }))}
                 className="location-select"
                 placeholder={t("Select Branch")}
                 disabled={isLoading || branches.length === 0}
@@ -1435,7 +1411,9 @@ function Catalog() {
             </div>
             {isV("goToCart") && (
               <button
-                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                className={`go-to-cart-btn ${
+                  !selectedLocation ? "disabled" : ""
+                }`}
                 style={{
                   opacity: !selectedLocation ? 0.6 : 1,
                   cursor: !selectedLocation ? "not-allowed" : "pointer",
@@ -1545,19 +1523,19 @@ function Catalog() {
               />
             ))
             : !isLoading && (
-              <div className="no-products-message">
-                {searchQuery ? (
-                  <p>
-                    {t(
-                      'No products found matching your search term "{{searchTerm}}".',
-                      { searchTerm: searchQuery }
-                    )}
-                  </p>
-                ) : (
-                  <p>{t("No products found matching your criteria.")}</p>
-                )}
-              </div>
-            )}
+                <div className="no-products-message">
+                  {searchQuery ? (
+                    <p>
+                      {t(
+                        'No products found matching your search term "{{searchTerm}}".',
+                        { searchTerm: searchQuery }
+                      )}
+                    </p>
+                  ) : (
+                    <p>{t("No products found matching your criteria.")}</p>
+                  )}
+                </div>
+              )}
           {isLoading && (
             <div className="loading-container">
               <LoadingSpinner size="medium" />
@@ -1596,7 +1574,6 @@ function Catalog() {
           />
         )}
       </div>
-
       <style jsx="true">{`
         .no-products-message {
           width: 100%;
@@ -1615,7 +1592,6 @@ function Catalog() {
           border-radius: 8px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-
         .product-search-input {
           padding: 10px 15px;
           width: 300px;
@@ -1628,7 +1604,6 @@ function Catalog() {
           margin-right: 10px;
           box-sizing: border-box;
         }
-
         .product-search-input:focus {
           border-color: #1d396d;
           box-shadow: 0 0 0 2px #e5e4e2;
@@ -1638,7 +1613,6 @@ function Catalog() {
           color: #d3d3d3;
           opacity: 1;
         }
-
         .loading-more-container {
           display: flex;
           flex-direction: column;
@@ -1651,7 +1625,6 @@ function Catalog() {
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
-
         .loading-more-text {
           margin-top: 15px;
           color: #666;
@@ -1664,7 +1637,6 @@ function Catalog() {
             width: 100%;
             margin-bottom: 10px;
           }
-
           .search-container {
             flex-direction: column;
           }
@@ -1673,5 +1645,4 @@ function Catalog() {
     </Sidebar>
   );
 }
-
 export default Catalog;

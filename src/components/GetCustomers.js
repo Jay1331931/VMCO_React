@@ -151,7 +151,9 @@ function GetCustomers({ open, onClose, onSelectCustomer, API_BASE_URL, apiEndpoi
                             : (customer.company_name_en || customer.companyNameEn)
                           }
                         </td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd', 
+                          // position: 'sticky', right: 0, zIndex: 1, background: 'white'  
+                          }}>
                           <button
                             className="gp-product-btn"
                             onClick={() => onSelectCustomer(customer)}
