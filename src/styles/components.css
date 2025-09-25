@@ -1956,20 +1956,11 @@
   }
 }
 
-/* Support related styles */
-.support-content {
-  padding: 20px;
-}
-
 .support-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-}
-
-.maintenance-content {
-  padding: 20px;
 }
 
 .maintenance-header {

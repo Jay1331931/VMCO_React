@@ -853,17 +853,6 @@ function MaintenanceDetails() {
       setSaving(false); // End saving if validation fails
       return;
     }
-    if (!ticket.warrantyEndDate) {
-      Swal.fire({
-        title: t("Validation Error"),
-        text: t("Please enter machine serial number to get Warranty End Date"),
-        icon: "warning",
-        confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
-      });
-      setSaving(false); // End saving if validation fails
-      return;
-    }
 
     try {
       // Get customer and branch regions

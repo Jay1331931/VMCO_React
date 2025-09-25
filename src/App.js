@@ -6,7 +6,9 @@ import OrdersMui from "./screens/ordersmui";
 import Customers from "./screens/customers";
 import Catalog from "./screens/catalog";
 import Support from "./screens/support";
+import SupportMui from "./screens/supportmui";
 import Maintenance from "./screens/maintenance";
+import MaintenanceMui from "./screens/maintenancemui";
 import Cart from "./screens/cart";
 import CustomersDetails from "./screens/customersDetails";
 import LoginScreen from "./screens/login";
@@ -15,6 +17,7 @@ import Checkout from "./screens/checkout";
 import ForgotPassword from "./components/ForgotPassword";
 import EmployeeLogin from "./screens/employeeLogin";
 import OrderDetails from "./screens/orderDetails";
+import OrderDetailsMui from "./screens/orderDetailsmui";
 import SupportDetails from "./screens/supportDetails";
 import MaintenanceDetails from "./screens/maintenanceDetails";
 // import Logout from "./screens/logout";
@@ -83,8 +86,8 @@ function App() {
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
         <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>}/> 
         <Route path="/catalog" element={<Catalog />} />
-        <Route path="/support" element={<ProtectedRoute page="support"><Support /></ProtectedRoute>} />
-        <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute page="support"><SupportMui /></ProtectedRoute>} />
+        <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><MaintenanceMui /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={!tokenIsValid  && <LoginScreen />} />
@@ -99,7 +102,7 @@ function App() {
         />
         <Route path="/checkout" element={<ProtectedRoute page="checkout"><Checkout /></ProtectedRoute>} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
-        <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
+        <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetailsMui /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
@@ -109,18 +112,9 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
-        <Route
-          path="/bankTransactions/edit/:id"
-          element={<AddBankTransaction />}
-        />
-        <Route
-          path="/bankTransactions/order/:amount/:orderId"
-          element={<AddBankTransaction />}
-        />
-         <Route
-          path="/admin/upload"
-          element={<BulkUploadBranchAndCustomer />}
-        />
+        <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/order/:amount/:orderId" element={<AddBankTransaction />} />
+        <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
