@@ -16,6 +16,7 @@ import Checkout from "./screens/checkout";
 import ForgotPassword from "./components/ForgotPassword";
 import EmployeeLogin from "./screens/employeeLogin";
 import OrderDetails from "./screens/orderDetails";
+import OrderDetailsMui from "./screens/orderDetailsmui";
 import SupportDetails from "./screens/supportDetails";
 import MaintenanceDetails from "./screens/maintenanceDetails";
 // import Logout from "./screens/logout";
@@ -100,7 +101,7 @@ function App() {
         />
         <Route path="/checkout" element={<ProtectedRoute page="checkout"><Checkout /></ProtectedRoute>} />
         <Route path="/forgotPassword" element={<ForgotPassword />} />
-        <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetails /></ProtectedRoute>} />
+        <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetailsMui /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
         <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
@@ -110,18 +111,9 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
         <Route path="/bankTransactions/add" element={<AddBankTransaction />} />
-        <Route
-          path="/bankTransactions/edit/:id"
-          element={<AddBankTransaction />}
-        />
-        <Route
-          path="/bankTransactions/order/:amount/:orderId"
-          element={<AddBankTransaction />}
-        />
-         <Route
-          path="/admin/upload"
-          element={<BulkUploadBranchAndCustomer />}
-        />
+        <Route path="/bankTransactions/edit/:id" element={<AddBankTransaction />} />
+        <Route path="/bankTransactions/order/:amount/:orderId" element={<AddBankTransaction />} />
+        <Route path="/admin/upload" element={<BulkUploadBranchAndCustomer />} />
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />

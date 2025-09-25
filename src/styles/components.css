@@ -1956,11 +1956,6 @@
   }
 }
 
-/* Support related styles */
-.support-content {
-  padding: 20px;
-}
-
 .support-header {
   display: flex;
   justify-content: space-between;
