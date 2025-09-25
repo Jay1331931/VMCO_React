@@ -8,6 +8,7 @@ import Catalog from "./screens/catalog";
 import Support from "./screens/support";
 import SupportMui from "./screens/supportmui";
 import Maintenance from "./screens/maintenance";
+import MaintenanceMui from "./screens/maintenancemui";
 import Cart from "./screens/cart";
 import CustomersDetails from "./screens/customersDetails";
 import LoginScreen from "./screens/login";
@@ -86,7 +87,7 @@ function App() {
         <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>}/> 
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/support" element={<ProtectedRoute page="support"><SupportMui /></ProtectedRoute>} />
-        <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
+        <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><MaintenanceMui /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={!tokenIsValid  && <LoginScreen />} />

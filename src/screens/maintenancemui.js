@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
-import ActionButton from "../components/ActionButton";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CustomToolbar from "../components/CustomToolbar";
 import "../styles/components.css";
@@ -10,6 +9,7 @@ import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
+import Constants from "../constants";
 import { formatDate } from "../utilities/dateFormatter";
 import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
 import {
@@ -18,12 +18,10 @@ import {
     GridPagination,
     useGridApiRef,
 } from "@mui/x-data-grid";
-import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-// Status class helper functions
+// Status class helper function
 const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
         case "closed":
@@ -36,11 +34,12 @@ const getStatusClass = (status) => {
     }
 };
 
-function Support() {
+function Maintenance() {
     const { t, i18n } = useTranslation();
     const currentLanguage = i18n.language;
     const isArabic = i18n.language === "ar";
     const [searchQuery, setSearchQuery] = useState("");
+    const [isMyTicketsMode, setMyTicketsMode] = useState(false);
     const navigate = useNavigate();
 
     const [initialTickets, setTickets] = useState([]);
@@ -62,19 +61,12 @@ function Support() {
     const gridApiRef = useGridApiRef();
 
     //RBAC
-    const rbacMgr = new RbacManager(
-        user?.userType === "employee" && user?.roles[0] !== "admin"
-            ? user?.designation
-            : user?.roles[0],
-        "supList"
-    );
+    const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "maintList");
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
 
-    console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
-
-    // Fetch tickets from API
-    const fetchTickets = useCallback(async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
+    // Fetch all tickets from API
+    const fetchMaintenanceTickets = useCallback(async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
         setLoading(true);
         setError(null);
         try {
@@ -82,18 +74,28 @@ function Support() {
                 page,
                 pageSize,
                 search: searchTerm,
-                sortBy: sortedModel[0]?.field || "ticket_id",
+                sortBy: sortedModel[0]?.field || "request_id",
                 sortOrder: sortedModel[0]?.sort || "asc",
                 filters: JSON.stringify(customFilters),
             });
 
-            const apiUrl = `${API_BASE_URL}/grievances/pagination?${params.toString()}`;
-
+            let apiUrl;
+            
+            // Only include access parameter if user is maintenance head
+            if (user?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+                const accessParam = isMyTicketsMode ? 'region' : 'all';
+                apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}&access=${accessParam}`;
+            } else {
+                // For other designations, don't include access parameter
+                apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}`;
+            }
+            
+            console.log("Fetching maintenance tickets from:", apiUrl);
             const response = await fetch(apiUrl, {
                 method: "GET",
-                headers: {
+                headers: { 
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}` 
                 },
             });
 
@@ -112,8 +114,8 @@ function Support() {
             }
 
             const resp = await response.json();
-            console.log("Fetched tickets:", resp);
-
+            console.log("Fetched maintenance tickets:", resp);
+            
             if (resp.status === 'Ok' || resp.data) {
                 const processedTickets = (resp.data?.data || resp.data || []).map(ticket => ({
                     ...ticket,
@@ -122,31 +124,33 @@ function Support() {
                 setTickets(processedTickets);
                 setTotal(resp.data?.totalRecords || resp.totalRecords || processedTickets.length);
             } else {
-                throw new Error(resp.message || 'Failed to fetch support tickets');
+                throw new Error(resp.message || 'Failed to fetch maintenance tickets');
             }
         } catch (err) {
-            console.error("Failed to fetch support tickets:", err);
+            console.error("Failed to fetch maintenance tickets:", err);
             setError(err.message);
             setTickets([]);
         } finally {
             setLoading(false);
         }
-    }, [navigate, logout, user?.userType, token, pageSize]);
+    }, [navigate, logout, user?.userType, user?.designation, isMyTicketsMode, token, pageSize]);
 
+    //NOTE: For fetching the user again after browser refresh - start
     useEffect(() => {
         if (loading) {
-            return;
+            return; // Wait while loading
         }
 
-        console.log("$$$$$$$$$$$ user in support page", user);
+        console.log("$$$$$$$$$$$ user in maintenance page", user);
         if (user) {
-            fetchTickets(page, searchQuery, filters, sortModel);
+            fetchMaintenanceTickets(page, searchQuery, filters, sortModel);
         }
 
         if (!user) {
             console.log("$$$$$$$$$$$ logging out");
         }
-    }, [page, searchQuery, user, fetchTickets, filters, sortModel]);
+    }, [page, searchQuery, user, fetchMaintenanceTickets, filters, sortModel, isMyTicketsMode]);
+    //For fetching the user again after browser refresh - End
 
     // Handle search functionality
     const handleSearch = (searchTerm) => {
@@ -158,31 +162,38 @@ function Support() {
     const handleSortModelChange = (model) => {
         console.log("Sort model changed:", model);
         setSortModel(model);
-        fetchTickets(1, searchQuery, filters, model);
+        fetchMaintenanceTickets(1, searchQuery, filters, model);
+    };
+
+    // Toggle between all tickets and my tickets
+    const handleApproval = (mode) => {
+        setFilters({});
+        setMyTicketsMode(mode === "approval");
+        setPage(1);
     };
 
     // Define columns for the DataGrid
-    const supportColumns = [
-        {
-            field: "ticketId",
-            headerName: t("Ticket #"),
-            include: isV('ticketIdCol'),
+    const maintenanceColumns = [
+        { 
+            field: "requestId", 
+            headerName: t("Request #"), 
+            include: isV('requestIdCol'),
             searchable: true,
             maxWidth: 100,
             flex: 1,
         },
-        {
-            field: isArabic ? "companyNameAr" : "companyNameEn",
-            headerName: t("Customer"),
+        { 
+            field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", 
+            headerName: t("Customer"), 
             include: isV('customerCol'),
             searchable: false,
             sortable: false,
             maxWidth: 180,
             flex: 2,
         },
-        {
-            field: isArabic ? "branchNameLc" : "branchNameEn",
-            headerName: t("Branch"),
+        { 
+            field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", 
+            headerName: t("Branch"), 
             include: isV('branchCol'),
             searchable: false,
             sortable: false,
@@ -190,25 +201,25 @@ function Support() {
             maxWidth: 180,
             flex: 2,
         },
-        {
-            field: "grievanceName",
-            headerName: t("Issue Name"),
+        { 
+            field: "issueName", 
+            headerName: t("Issue Name"), 
             include: isV('issueNameCol'),
             searchable: true,
             minWidth: 150,
             flex: 2,
         },
-        {
-            field: "grievanceType",
-            headerName: t("Issue Type"),
+        { 
+            field: "issueType", 
+            headerName: t("Issue Type"), 
             include: isV('issueTypeCol'),
             searchable: true,
             minWidth: 120,
             flex: 1,
         },
-        {
-            field: "createdAt",
-            headerName: t("Created Date"),
+        { 
+            field: "createdAt", 
+            headerName: t("Created Date"), 
             include: isV('createdDateCol'),
             searchable: false,
             minWidth: 100,
@@ -219,9 +230,9 @@ function Support() {
                     ? formatDate(params?.row?.createdAt, 'DD/MM/YYYY')
                     : convertToTimezone(params?.row?.createdAt, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY'),
         },
-        {
-            field: "createdByUsername",
-            headerName: t("Created By"),
+        { 
+            field: "createdByUsername", 
+            headerName: t("Created By"), 
             include: isV('createdByCol'),
             searchable: false,
             sortable: false,
@@ -229,18 +240,26 @@ function Support() {
             maxWidth: 120,
             flex: 1,
         },
-        {
-            field: "assignedTo",
-            headerName: t("Assigned To"),
+        { 
+            field: "urgencyLevel", 
+            headerName: t("Urgency Level"), 
+            include: isV('urgencyLevelCol'),
+            searchable: true,
+            minWidth: 120,
+            flex: 1,
+        },
+        { 
+            field: "assignedTo", 
+            headerName: t("Assigned To"), 
             include: isV('assignedToCol'),
             searchable: false,
             minWidth: 100,
             maxWidth: 120,
             flex: 1,
         },
-        {
-            field: "status",
-            headerName: t("Status"),
+        { 
+            field: "status", 
+            headerName: t("Status"), 
             include: isV('statusCol'),
             searchable: true,
             minWidth: 80,
@@ -254,25 +273,21 @@ function Support() {
     ];
 
     // Filter visible columns
-    const visibleColumns = supportColumns.filter(col => col.include !== false);
+    const visibleColumns = maintenanceColumns.filter(col => col.include !== false);
 
     // Searchable fields for the toolbar
     const searchableFields = visibleColumns.filter(item => item.searchable).map(item => item.field);
 
-    // Handle row click to navigate to supportDetails page with ticket details
-    const handleRowClick = (ticket) => {
-        navigate("/supportDetails", { state: { ticket: ticket, mode: "edit" } });
-    };
-
-    // Handle view ticket
-    const handleViewTicket = (ticket) => {
-        navigate("/supportDetails", { state: { ticket: ticket, mode: "view" } });
+    // Handle row click to navigate to Maintenance details page with ticket details
+    const handleRowClick = (params) => {
+        const ticket = params.row;
+        navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
     };
 
     // Handle adding a new ticket
-    const handleAddTicket = () => {
+    const handleAdd = () => {
         if (isAuthenticated) {
-            navigate("/supportDetails", { state: { ticket: {}, mode: "add" } });
+            navigate("/maintenanceDetails", { state: { ticket: {}, mode: "add" } });
         } else {
             navigate(user?.userType === "customer" ? "/login" : "/login/employee");
         }
@@ -292,21 +307,22 @@ function Support() {
 
     // Columns to display mapping
     const columnsToDisplay = {
-        ticketId: "Ticket #",
+        requestId: "Request #",
         companyNameEn: "Customer",
         branchNameEn: "Branch",
-        grievanceName: "Issue Name",
-        grievanceType: "Issue Type",
+        issueName: "Issue Name",
+        issueType: "Issue Type",
         createdAt: "Created Date",
         createdByUsername: "Created By",
+        urgencyLevel: "Urgency Level",
         assignedTo: "Assigned To",
         status: "Status",
     };
 
     return (
-        <Sidebar title={t("Support")}>
-            {isV('supportContent') && (
-                <div className='support-content'>
+        <Sidebar title={t("Maintenance")}>
+            {isV('maintenanceContent') && (
+                <div className='maintenance-content'>
                     <div className="table-container">
                         {loading ? (
                             <LoadingSpinner />
@@ -319,7 +335,7 @@ function Support() {
                                 columns={visibleColumns}
                                 pageSize={pageSize}
                                 rowCount={total}
-                                onRowClick={(params) => handleRowClick(params.row)}
+                                onRowClick={handleRowClick}
                                 columnVisibilityModel={columnVisibilityModel}
                                 onColumnVisibilityModelChange={setColumnVisibilityModel}
                                 sortModel={sortModel}
@@ -346,16 +362,18 @@ function Support() {
                                             columns={filteredData}
                                             filters={filters}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            searchPlaceholder="Search tickets..."
+                                            searchPlaceholder="Search maintenance tickets..."
                                             showColumnVisibility={true}
                                             showFilters={true}
                                             showExport={false}
                                             showUpload={false}
-                                            showAdd={isV("btnAdd")}
-                                            buttonName={t("Add Ticket")}
-                                            showApproval={false}
-                                            handleAddClick={handleAddTicket}
+                                            showAdd={isV("btnAdd") && isE("btnAdd")}
+                                            buttonName={t("Add")}
+                                            showApproval={isV('toggleButton') && user?.designation === "maintenance head"}
+                                            handleAddClick={handleAdd}
                                             columnsToDisplay={columnsToDisplay}
+                                            handleApproval={handleApproval}
+                                            isApprovalMode={isMyTicketsMode}
                                         />
                                     ),
                                 }}
@@ -376,4 +394,4 @@ function Support() {
     );
 }
 
-export default Support;
+export default Maintenance;
