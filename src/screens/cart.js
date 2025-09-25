@@ -872,11 +872,133 @@ function Cart() {
         setError(null);
 
         try {
+            // Check if this is a VMCO category and handle special logic
             const entity = getEntityFromCategory(categoryName);
-            if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                await handleSHCOrderSplitting(categoryItems, categoryName, selectedPaymentMethod);
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                await handleVMCOOrderProcessing(categoryItems, categoryName, selectedPaymentMethod);
+            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                // Separate VMCO products into machines and consumables
+                const machineProducts = categoryItems.filter(item => item.isMachine === true);
+                const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
+
+                console.log('VMCO products separated:', {
+                    total: categoryItems.length,
+                    machines: machineProducts.length,
+                    consumables: nonMachineProducts.length,
+                    machineProductIds: machineProducts.map(p => p.product_id),
+                    nonMachineProductIds: nonMachineProducts.map(p => p.product_id)
+                });
+
+                // For VMCO, first show payment method popup for consumables, then process both machines and consumables
+                if (nonMachineProducts.length > 0) {
+                    console.log('Showing payment method selection for VMCO consumables first');
+                    setPendingOrderCategory(categoryName);
+                    setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+                    setShowPaymentPopup(true);
+                    return; // Exit function to wait for user payment method selection
+                } else if (machineProducts.length > 0) {
+                    // If only machines, proceed directly
+                    console.log('Only VMCO machines found, placing order directly with Pre Payment');
+                    const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
+                    if (machineOrderId) {
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: t('Request Sent'),
+                            text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
+                            confirmButtonText: t('OK')
+                        }).then(() => {
+                            // Update cart items state to remove ordered items
+                            setCartItems(prevCartItems =>
+                                prevCartItems.map(category => ({
+                                    ...category,
+                                    items: category.items.filter(
+                                        cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                                })));
+
+                            // Clear quantities for ordered items
+                            setQuantities(prevQuantities => {
+                                const newQuantities = { ...prevQuantities };
+                                categoryItems.forEach(item => {
+                                    delete newQuantities[item.id];
+                                });
+                                return newQuantities;
+                            });
+
+                            // Force a refresh of cart items
+                            fetchCartItems();
+                        });
+                    }
+                }
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                // For SHC entity, handle fresh/non-fresh splitting with payment method determination
+                // Calculate total amount for all products
+                let totalAmount = 0;
+                categoryItems.forEach(item => {
+                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                    const vatPercentage = Number(item.vatPercentage) || 0;
+                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                    const itemTotal = baseAmount + vatAmount;
+                    totalAmount += itemTotal;
+                });
+
+                // Determine payment method for SHC products
+                const shcPaymentMethod = await determinePaymentMethodForSHC(selectedCustomerId, totalAmount, entity);
+
+                // If payment method determination returned null (insufficient balance), cancel the order
+                if (shcPaymentMethod === null) {
+                    console.log('Payment method determination cancelled due to insufficient balance');
+                    return; // Exit the function early
+                }
+
+                // If a specific payment method was determined, use it directly
+                if (shcPaymentMethod && shcPaymentMethod !== 'Cash on Delivery') {
+                    console.log(`Using determined payment method ${shcPaymentMethod} for SHC entity`);
+                    await handleSHCOrderSplitting(categoryItems, categoryName, shcPaymentMethod);
+                } else {
+                    // For COD or when payment method needs user selection, show popup
+                    console.log(`Showing payment method selection for SHC splitting`);
+                    setPendingOrderCategory(categoryName);
+                    setPendingOrderItems(categoryItems);
+                    setShowPaymentPopup(true);
+                    return; // Exit function to wait for user selection
+                }
+            } else if (entity && [Constants.ENTITY.NAQI.toLowerCase(), Constants.ENTITY.GMTC.toLowerCase(), Constants.ENTITY.DAR.toLowerCase()].includes(entity.toLowerCase())) {
+                // Calculate total amount for all products
+                let totalAmount = 0;
+                categoryItems.forEach(item => {
+                    const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                    const vatPercentage = Number(item.vatPercentage) || 0;
+                    const vatAmount = (baseAmount * vatPercentage) / 100;
+                    const itemTotal = baseAmount + vatAmount;
+                    totalAmount += itemTotal;
+                });
+
+                // Determine payment method for non-machine products
+                const paymentMethod = await determinePaymentMethodForNonMachines(selectedCustomerId, totalAmount, entity);
+
+                // If payment method determination returned null (insufficient balance), cancel the order
+                if (paymentMethod === null) {
+                    console.log('Payment method determination cancelled due to insufficient balance');
+                    return; // Exit the function early
+                }
+
+                // If a specific payment method was determined, use it directly
+                if (paymentMethod === 'Pre Payment') {
+                    // Directly place order with Pre Payment, do not show popup
+                    console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
+                    await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
+                    return;
+                } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
+                    console.log(`Using determined payment method ${paymentMethod} for ${entity} entity`);
+                    await placeOrderForCategory(categoryItems, categoryName, paymentMethod, true);
+                } else {
+                    // For COD or when payment method needs user selection, show popup
+                    console.log(`Showing payment method selection for ${entity} entity`);
+                    setPendingOrderCategory(categoryName);
+                    setPendingOrderItems(categoryItems);
+                    setShowPaymentPopup(true);
+                    return;
+                }
             } else {
                 // For NAQI, GMTC, DAR - directly place order with selected payment method
                 await placeOrderForCategory(categoryItems, categoryName, selectedPaymentMethod, true);
@@ -1168,8 +1290,7 @@ function Cart() {
                 } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
                     orderStatus = 'Open';
                 } else {
-                    // For Naqi and DAR entity, set status based on payment method
-                    const pm = (selectedPaymentMethod || '').toLowerCase();
+                    const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                     if (pm === 'credit' || pm === 'cash on delivery') {
                         orderStatus = 'Approved';
                     } else if (pm === 'pre payment') {
@@ -1633,7 +1754,7 @@ function Cart() {
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
                 orderStatusUpdate = 'Open';
             } else {
-                const pm = (selectedPaymentMethod || '').toLowerCase();
+                const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                 if (pm === 'credit' || pm === 'cash on delivery') {
                     orderStatusUpdate = 'Approved';
                 } else if (pm === 'pre payment') {
@@ -1679,7 +1800,6 @@ function Cart() {
                     categoryItemsCount: categoryItems.length
                 });
 
-                // If we have cart items but no order lines, this might be a timing issue
                 // Let's try one more time with a longer delay
                 if (categoryItems.length > 0 && allLines.length === 0) {
                     console.log('Retrying order line fetch after longer delay...');
@@ -1820,8 +1940,8 @@ function Cart() {
                     }
                 }
             }
-            if (updatedOrderResponse && updatedOrderResponse.status.toLowerCase() === 'ok' &&
-                updatedOrderResponse?.salesOrder?.paymentMethod.toLowerCase() === "pre payment" &&
+            if (updatedOrderResponse && updatedOrderResponse.status && updatedOrderResponse.status.toLowerCase() === 'ok' &&
+                updatedOrderResponse?.salesOrder?.paymentMethod?.toLowerCase() === "pre payment" &&
                 (
                     updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.DAR?.toLowerCase()
                     || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.NAQI?.toLowerCase()
@@ -1842,15 +1962,15 @@ function Cart() {
             return orderId;
 
         } catch (err) {
-            console.error('Error placing order:', err);
+            console.log('Error placing order:', err); // This is line 1845
             setError(err.message);
-            // alert(t(`Failed to place order: ${err.message}`));
             Swal.fire({
                 icon: 'error',
                 title: t('Order Failed'),
                 text: t(`Failed to place order: ${err.message}`),
                 confirmButtonText: t('OK')
             });
+            return null;
         } finally {
             setIsPlacingOrder(false);
         }
