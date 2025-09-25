@@ -750,6 +750,8 @@
     "Applicable for VMCO products": "ينطبق على منتجات في إم سي أو",
     "Select Products": "اختر منتجات",
     "Select All": "اختر الكل",
-    "Select category first": "اختر الفئة أولاً"
+    "Select category first": "اختر الفئة أولاً",
+    "Invalid email or password":"البريد الإلكتروني أو كلمة المرور غير صالحة",
+    "Customer Email is Not Verified":"لم يتم التحقق من بريد العميل الإلكتروني"
 
 }
