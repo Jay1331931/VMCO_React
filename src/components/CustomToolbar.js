@@ -51,6 +51,19 @@ const operators = [
   // { value: "greaterThan", label: "Greater than" },
   // { value: "lessThan", label: "Less than" },
 ];
+function formatDatePure(date) {
+  if (!date) return null;
+
+  // Get year, month, day directly from Date object (local)
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+
+
 const CustomToolbar = ({
   searchQuery,
   onSearch,
@@ -545,8 +558,8 @@ const CustomToolbar = ({
         // anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         sx={{ ml: i18n.language === "en" ? -20 : 6 }}
       >
-        <Grid item container sx={{ padding: 1, columnGap: 1 }}>
-          <Grid item sx={{ flex: 1 }}>
+        {/* <Grid item container sx={{ padding: 1, columnGap: 1 }}> */}
+          {/* <Grid item sx={{ flex: 1 }}>
             <Select
               variant="standard"
               value={dateCategory}
@@ -562,7 +575,6 @@ const CustomToolbar = ({
               {columns?.map((col) => {
                 if (
                   col.field === "updatedAt" ||
-                  col.field === "scheduledAt" ||
                   col.field === "createdAt"
                 ) {
                   return (
@@ -574,7 +586,7 @@ const CustomToolbar = ({
                 return null;
               })}
             </Select>
-          </Grid>
+          </Grid> */}
           {/* <Grid item sx={{ flex: 1 }}>
               <Button
                 onClick={(e) => setDateFilterAnchor(e.currentTarget)}
@@ -586,7 +598,7 @@ const CustomToolbar = ({
                 {`${dateFilter[0].startDate.toLocaleDateString()} - ${dateFilter[0].endDate.toLocaleDateString()}`}
               </Button>
             </Grid> */}
-          <Grid item>
+          {/* <Grid item>
             <Button
               sx={{ minWidth: 40 }}
               onClick={() => {
@@ -601,18 +613,40 @@ const CustomToolbar = ({
             >
               <GridSearchIcon />
             </Button>
-          </Grid>
-        </Grid>
-        <Box sx={{ padding: 2, width: 350 }}>
+          </Grid> */}
+        {/* </Grid> */}
+        <Box sx={{ padding: 2, width: 350, display: "flex", flexDirection: "column", height: "100%" }}>
           <DateRange
             onChange={(item) => setDateFilter([item.selection])}
             editableDateInputs={true}
             style={{ width: "100%" }}
             ranges={dateFilter}
-            months={2}
+            months={1}
             direction="horizontal"
             preventSnapRefocus={true}
           />
+               <Grid item sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <Button
+  sx={{ minWidth: 40 }}
+  onClick={() => {
+    const startDate = formatDatePure(dateFilter[0].startDate);
+    const endDate = formatDatePure(dateFilter[0].endDate);
+
+    console.log("Selected Dates:", { startDate, endDate });
+
+    handleFilterChange({
+      ...filters,
+      [dateCategory]: {
+        startDate,
+        endDate,
+      },
+    });
+  }}
+>
+  Apply
+</Button>
+
+          </Grid>
         </Box>
       </Menu>
     </>

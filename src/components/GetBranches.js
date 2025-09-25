@@ -160,7 +160,9 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                             : (branch.branch_name_en || branch.branchNameEn)
                           }
                         </td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd', 
+                          // position: 'sticky', right: 0, zIndex: 5, background: 'white', boxShadow: '-1px 0 8px rgba(0, 0, 0, .98)' 
+                          }}>
                           <button
                             className="gb-branch-btn"
                             onClick={() => onSelectBranch(branch)}
@@ -279,3 +281,4 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
 }
 
 export default GetBranches;
+
