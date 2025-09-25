@@ -1,0 +1,2084 @@
+import React, { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
+import "../styles/components.css";
+import { useTranslation } from "react-i18next";
+import ActionButton from "../components/ActionButton";
+import ToggleButton from "../components/ToggleButton";
+import SearchInput from "../components/SearchInput";
+import Pagination from "../components/Pagination";
+import Table from "../components/Table";
+import Tabs from "../components/Tabs";
+import RbacManager from "../utilities/rbac";
+import getBusinessDetailsFormData from "./customerDetailsForms/customerBusinessDetails";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import LoadingSpinner from "../components/LoadingSpinner";
+import Swal from "sweetalert2";
+import SearchableDropdown from "../components/SearchableDropdown";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import PhoneInput from "react-phone-number-input";
+import "react-phone-number-input/style.css";
+import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import { formatDate } from "../utilities/dateFormatter";
+import {
+  DataGrid,
+  GridFooterContainer,
+  GridPagination,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import CustomToolbar from "../components/CustomToolbar";
+import SyncIcon from "@mui/icons-material/Sync";
+import IosShareIcon from "@mui/icons-material/IosShare";
+const getStatusClass = (status) => {
+  switch (status) {
+    case "Approved":
+      return "status-approved";
+    case "Rejected":
+      return "status-rejected";
+    default:
+      return "status-pending";
+  }
+};
+
+function Customers() {
+  const { t, i18n } = useTranslation();
+  const [activeTab, setActiveTab] = useState("customers");
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [filteredApprovals, setFilteredApprovals] = useState([]);
+  const [customerContacts, setCustomerContacts] = useState({});
+  const [filteredInvites, setFilteredInvites] = useState([]);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token, user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(5);
+  const [total, setTotal] = useState(0);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteData, setInviteData] = useState({
+    name: "",
+    email: "",
+    company: "",
+    mobile: "",
+    region: "",
+    source: "salesexecutive",
+    comments: "",
+  });
+  const [geoData, setGeoData] = useState(null);
+  // Add validation and loading states
+  const [inviteErrors, setInviteErrors] = useState({});
+  const [isInviteLoading, setIsInviteLoading] = useState(false);
+  const [syncLoadingId, setSyncLoadingId] = useState(null);
+  const customerTabs = [
+    { value: "customers", label: "Customers" },
+    { value: "invites", label: "Invites" },
+  ];
+  const [isApprovalMode, setApprovalMode] = useState(false);
+  // const { token, user, isAuthenticated, logout } = useAuth();
+  const [dropdownOptions, setDropdownOptions] = useState({});
+  const [regionOptions, setRegionOptions] = useState([]);
+  const [entityOptions, setEntityOptions] = useState([]);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+  const [invitecolumnVisibilityModel, setInviteColumnVisibilityModel] =
+    useState({});
+  const [sortModel, setSortModel] = useState([]);
+  const [inviteSortModel, setInviteSortModel] = useState([]);
+  const [filters, setFilters] = useState({});
+  const [filterAnchor, setFilterAnchor] = useState(null);
+  const rbacMgr = new RbacManager(
+    user?.userType == "employee" && user?.roles[0] !== "admin"
+      ? user?.designation
+      : user?.roles[0],
+    "custDetailsAdd"
+  );
+  console.log("RBAC Manager:", rbacMgr);
+  const columnsToDisplay = {
+    id: t("Registration ID"),
+    erpCustId: t("ERP ID"),
+    companyNameEn: t("Company"),
+    companyType: t("Company Type"),
+    typeOfBusiness: t("Type Of Business"),
+    customerStatus: t("Status"),
+  };
+  const isV = rbacMgr.isV.bind(rbacMgr);
+  const isE = rbacMgr.isE.bind(rbacMgr);
+  const getOptionsFromBasicsMaster = async (fieldName) => {
+    const params = new URLSearchParams({
+      filters: JSON.stringify({ master_name: fieldName }), // Properly stringify the filter
+    });
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/basics-masters?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json(); // Don't forget 'await' here
+
+      const options = result.data.map((item) => item.value);
+      return options;
+    } catch (err) {
+      console.error("Error fetching options:", err);
+      return []; // Return empty array on error
+    }
+  };
+  // const toggleApprovalMode = () => {
+  //   setApprovalMode(!isApprovalMode);
+  //   console.log("Approval mode:", isApprovalMode);
+  //   if (!isApprovalMode) {
+  //     fetchApprovals();
+  //   } else {
+  //     fetchCustomers();
+  //   }
+  // };
+  //  const rbacMgr = new RbacManager(user?.userType == 'employee' && user?.roles[0] !== 'admin' ? user?.designation : user?.roles[0], customerFormMode);
+  //   const isV = rbacMgr.isV.bind(rbacMgr);
+  //   const isE = rbacMgr.isE.bind(rbacMgr);
+  const handleResend = async (invite) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/generate-registration-link`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            id: invite.id,
+          }),
+        }
+      );
+      if (response.ok) {
+        const result = await response.json();
+        try {
+          await fetch(`${API_BASE_URL}/send`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              eventName: "WELCOME_EMAIL",
+              emailData: {
+                to: invite?.companyEmail,
+                customerName: invite?.companyName,
+                activationLink: result?.data,
+              },
+            }),
+          });
+          Swal.fire({
+            title: "Invite Resent",
+            html: `
+            <p>${t("The invite has been resent successfully.")}</p>
+
+            <div style="display:flex;align-items:center;">
+              <input
+                id="invite-link"
+                class="swal2-input"
+                style="flex:1;margin:0 8px 0 0;"
+                type="text"
+                value="${result?.data}"
+                readonly
+              />
+              <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+            </div>
+          `,
+            icon: "success",
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+
+            didOpen: () => {
+              const input = document.getElementById("invite-link");
+              const icon = document.getElementById("copy-icon");
+
+              icon.addEventListener("click", () => {
+                input.select();
+                input.setSelectionRange(0, 99999); // mobile-friendly
+                navigator.clipboard.writeText(input.value).then(() => {
+                  icon.classList.replace("fa-copy", "fa-check");
+                  setTimeout(
+                    () => icon.classList.replace("fa-check", "fa-copy"),
+                    2000
+                  );
+                });
+              });
+            },
+          });
+        } catch (err) {
+          console.error("Error generating invite link:", err);
+          // alert('Failed to generate invite link. Please try again later.');
+          Swal.fire({
+            title: "Error",
+            text: t("Failed to generate invite link. Please try again later."),
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      // console.error('Error resending in  vite:', err);
+      console.log("Error resending invite:", err.message);
+      Swal.fire({
+        title: "Error",
+        text: t("Failed to resend invite. Please try again later."),
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      // alert('Failed to resend invite. Please try again later.');
+      return;
+    }
+    // alert('Invite resent successfully!');
+  };
+  const clearInviteFields = () => {
+    setInviteData({
+      name: "",
+      email: "",
+      company: "",
+      mobile: "",
+      region: "",
+      source: "salesexecutive",
+      comments: "",
+    });
+    setInviteErrors({});
+  };
+
+  const handleInvite = () => {
+    setInviteData((prev) => ({
+      ...prev,
+      source: "salesexecutive",
+    }));
+    setIsInviteModalOpen(true);
+  };
+
+  const validateInviteData = (data) => {
+    const errors = {};
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!data.email || !emailRegex.test(data.email)) {
+      errors.email = t("Invalid email format");
+    }
+    // Saudi mobile validation (accepts 05XXXXXXXX or 9665XXXXXXXX)
+    const saudiMobileRegex = /^\+?[1-9]\d{7,14}$/;
+    if (!data.mobile || !saudiMobileRegex.test(data.mobile)) {
+      errors.mobile = t("Invalid mobile number.");
+    }
+    // Name required
+    if (!data.name) errors.name = t("This field is required.");
+    // Company required
+    if (!data.company) errors.company = t("This field is required.");
+    // Region required
+    if (!data.region) errors.region = t("This field is required.");
+    return errors;
+  };
+
+  const handleInviteSubmit = async () => {
+    setIsInviteLoading(true);
+
+    // Validate fields
+    const errors = validateInviteData(inviteData);
+    setInviteErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setIsInviteLoading(false);
+      Swal.fire({
+        title: "Error",
+        text: t("Please fix the errors before sending invite."),
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    // Check for duplicate email in filteredInvites (Registration table)
+    const emailExists = filteredInvites.some(
+      (invite) =>
+        invite.companyEmail?.toLowerCase() ===
+        inviteData.email.trim().toLowerCase()
+    );
+    if (emailExists) {
+      Swal.fire({
+        title: "Error",
+        text: t("This email is already invited. Please use a different email."),
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      setIsInviteLoading(false); // Stop loading
+      return;
+    }
+
+    if (
+      !inviteData.email ||
+      !inviteData.name ||
+      !inviteData.company ||
+      !inviteData.mobile ||
+      !inviteData.source ||
+      !inviteData.region ||
+      !inviteData.primaryBusinessUnit
+    ) {
+      Swal.fire({
+        title: "Error",
+        text: t("Please fill in all fields"),
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      setIsInviteLoading(false); // Stop loading
+      return;
+    }
+    // Add your API call to send the invite
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/registration/staging`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            companyEmail: inviteData.email,
+            leadName: inviteData.name,
+            companyName: inviteData.company,
+            companyPhone: inviteData.mobile,
+            region: inviteData.region,
+            source: inviteData.source,
+            employeeId: user?.employeeId,
+            primaryBusinessUnit: inviteData?.primaryBusinessUnit,
+            // submissionDate: new Date(),
+            comments: inviteData.comments || "",
+            registered: false,
+          }),
+        }
+      );
+      const result = await response.json();
+      console.log(result);
+      if (result.status === "Ok") {
+        fetchInvites(); // Refresh the invites list
+        try {
+          const response = await fetch(
+            `${API_BASE_URL}/generate-registration-link`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                id: result.lead.id,
+              }),
+            }
+          );
+          console.log("Response:", response);
+          // if (response.status=="Ok") {
+          const res = await response.json();
+          console.log("Invite link:", res);
+          // alert('Invite link: ' + res.data);
+          try {
+            const result = await fetch(`${API_BASE_URL}/send`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+
+              body: JSON.stringify({
+                eventName: "WELCOME_EMAIL",
+                emailData: {
+                  to: inviteData.email,
+                  customerName: inviteData.name,
+                  lastName: "",
+                  activationLink: res.data,
+                },
+              }),
+            });
+          } catch (err) {
+            console.error("Error generating invite link:", err);
+            Swal.fire({
+              title: "Error",
+              text: "Failed to generate invite link. Please try again later.",
+              icon: "error",
+              confirmButtonText: "OK",
+              confirmButtonColor: "#dc3545",
+            });
+            return;
+          }
+          Swal.fire({
+            title: "Invite Link Sent",
+            html: `
+            <p>${t("The invite has been sent successfully.")}</p>
+            <div style="display:flex;align-items:center;">
+              <input  id="invite-link"
+                      class="swal2-input"
+                      style="flex:1;margin:0 8px 0 0;"
+                      type="text"
+                      value="${res.data}"
+                      readonly />
+ <button id="copy-icon" style="padding:18px ; border-radius: 5px;">Copy</button>
+
+            </div>
+          `,
+            icon: "success",
+            showConfirmButton: true,
+            confirmButtonText: "OK",
+
+            didOpen: () => {
+              const input = document.getElementById("invite-link");
+              const icon = document.getElementById("copy-icon");
+
+              icon.addEventListener("click", () => {
+                input.select();
+                input.setSelectionRange(0, 99999);
+                navigator.clipboard.writeText(input.value).then(() => {
+                  icon.classList.replace("fa-copy", "fa-check");
+                  setTimeout(
+                    () => icon.classList.replace("fa-check", "fa-copy"),
+                    2000
+                  );
+                });
+              });
+            },
+          });
+
+          // }
+        } catch (err) {
+          // console.error('Error resending invite:', err);
+          console.log("Error sending invite:", err.message);
+          Swal.fire({
+            title: "Error",
+            text: t("Failed to send invite. Please try again later."),
+            icon: "error",
+            confirmButtonText: "OK",
+          });
+          // alert('Failed to send invite. Please try again later.');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Error during registration:", error);
+    }
+    setIsInviteLoading(false); // Stop loading after process
+    clearInviteFields();
+    setIsInviteModalOpen(false);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setInviteData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error for this field when user starts typing
+    if (inviteErrors[name]) {
+      setInviteErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
+  };
+  // const handleSearch = (searchTerm) => {
+  //   if (activeTab === 'customers') {
+  //     const filtered = filteredCustomers.filter((customer) =>
+  //       Object.values(customer).some((value) =>
+  //         typeof value === 'object'
+  //           ? Object.values(value).some(v =>
+  //               v.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //             )
+  //           : value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       )
+  //     );
+  //     setFilteredCustomers(filtered);
+  //   } else {
+  //     const filtered = filteredInvites.filter((invite) =>
+  //       Object.values(invite).some((value) =>
+  //         value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //       )
+  //     );
+  //     setFilteredInvites(filtered);
+  //   }
+  // };
+  const handleSearch = (searchTerm) => {
+    setSearchQuery(searchTerm);
+    setPage(1);
+    if (!searchTerm) {
+      // Reset filters if search term is empty
+      if (activeTab === "customers") {
+        fetchCustomers();
+        // setFilteredCustomers(filteredCustomers);
+      } else {
+        fetchInvites();
+        // setFilteredInvites(filteredInvites);
+      }
+      return;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+
+    // if (activeTab === "customers") {
+    //   const filtered = filteredCustomers.filter((customer) => {
+    //     if (!customer) return false; // Skip null/undefined customers
+
+    //     return Object.values(customer).some((value) => {
+    //       if (value === null || value === undefined) return false;
+
+    //       if (typeof value === "object") {
+    //         const nestedValues = Object.values(value || {});
+    //         return nestedValues.some((v) =>
+    //           v?.toString().toLowerCase().includes(searchLower)
+    //         );
+    //       }
+
+    //       return value?.toString().toLowerCase().includes(searchLower);
+    //     });
+    //   });
+    //   setFilteredCustomers(filtered);
+    // } else {
+    //   const filtered = filteredInvites.filter((invite) => {
+    //     if (!invite) return false; // Skip null/undefined invites
+
+    //     return Object.values(invite).some((value) =>
+    //       value?.toString().toLowerCase().includes(searchLower)
+    //     );
+    //   });
+    //   setFilteredInvites(filtered);
+    // }
+    if (activeTab === "customers") {
+      fetchCustomers(1, searchLower);
+    } else {
+      fetchInvites(1, searchLower);
+    }
+  };
+
+  const searchableFields = [
+    "id",
+    "erpCustId",
+    "companyNameAr",
+    "companyNameEn",
+    "companyType",
+    "customerStatus",
+    "typeOfBusiness",
+  ];
+  const searchableFieldsInvites = [
+    "leadName",
+    "source",
+    "region",
+    "companyName",
+    "companyPhone",
+  ];
+  const customerColumns = [
+    {
+      field: "id",
+      headerName: t("Registration ID"),
+      include: isV("id"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "erpCustId",
+      headerName: t("ERP ID"),
+      include: isV("erpCustId"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 140,
+      flex: 1,
+    },
+    {
+      field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      headerName: t("Company"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyType",
+      headerName: t("Company Type"),
+      include: isV("companyType"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "typeOfBusiness",
+      headerName: t("Type Of Business"),
+      include: isV("typeOfBusiness"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+    },
+    {
+      field: "customerStatus",
+      headerName: t("Status"),
+      include: isV("customerStatus"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{params.value}</label>
+      ),
+    },
+    {
+      field: "FandOSync",
+      headerName: t("Action"),
+      include: isV("FandOSync"),
+      searchable: false,
+      flex: 1,
+      renderCell: (params) => {
+        !params?.row?.erpCustId &&
+          params?.row?.status?.toLowerCase() === "approved" && (
+            <Box
+              component="span"
+              disabled={syncLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                HandleFandOFailCustomer(params.row.id);
+              }}
+              sx={{
+                color: "primary.main",
+                cursor: "pointer",
+                fontSize: "0.875rem",
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}
+            >
+              <Tooltip
+                title={
+                  syncLoading && syncLoadingId === params.row.id
+                    ? t("Syncing...")
+                    : t("Sync")
+                }
+                arrow
+              >
+                <SyncIcon />{" "}
+              </Tooltip>
+            </Box>
+          );
+      },
+    },
+  ];
+
+  // Approval Columns
+  const approvalColumns = [
+    {
+      field: "id",
+      headerName: t("Registration ID"),
+      include: isV("id"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "erpCustId",
+      headerName: t("ERP ID"),
+      include: isV("erpCustId"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 140,
+      flex: 1,
+    },
+    {
+      field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
+      headerName: t("Company"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "workflowName",
+      headerName: t("Workflow Name"),
+      include: isV("workflowName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyType",
+      headerName: t("Company Type"),
+      include: isV("companyType"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "typeOfBusiness",
+      headerName: t("Type Of Business"),
+      include: isV("typeOfBusiness"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+    },
+    {
+      field: "customerStatus",
+      headerName: t("Status"),
+      include: isV("customerStatus"),
+      searchable: true,
+      minWidth: 100,
+      maxWidth: 120,
+      flex: 1,
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{params.value}</label>
+      ),
+    },
+    {
+      field: "createdByUsername",
+      headerName: t("Created By"),
+      include: isV("createdBy"),
+      searchable: false,
+      sortable: false,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+    },
+  ];
+
+  // Invite Columns
+  const inviteColumns = [
+    {
+      field: "createdAt",
+      headerName: t("Date"),
+      include: isV("createdAt"),
+      searchable: true,
+      minWidth: 120,
+      maxWidth: 150,
+      flex: 1,
+      renderCell: (params) =>
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
+
+      // valueFormatter: (params) =>
+      //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
+    },
+    {
+      field: "leadName",
+      headerName: t("Customer Name"),
+      include: isV("leadName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "companyEmail",
+      headerName: t("Email"),
+      include: isV("companyEmail"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "companyPhone",
+      headerName: t("Phone"),
+      include: isV("companyPhone"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "companyName",
+      headerName: t("Company Name"),
+      include: isV("companyName"),
+      searchable: true,
+      minWidth: 150,
+      flex: 2,
+    },
+    {
+      field: "region",
+      headerName: t("Region"),
+      include: isV("region"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "employeeId",
+      headerName: t("Assigned To"),
+      include: isV("employeeId"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+    },
+    {
+      field: "source",
+      headerName: t("Source"),
+      include: isV("source"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+    },
+    {
+      field: "actions",
+      headerName: t("Action"),
+      include: isV("actions"),
+      searchable: false,
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Box
+            component="span"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleResend(params.row);
+            }}
+            sx={{
+              color: "primary.main",
+              cursor: "pointer",
+              fontSize: "0.875rem",
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            <Tooltip title={t("Resend")} arrow>
+              <IosShareIcon />
+            </Tooltip>
+          </Box>
+        </Box>
+      ),
+    },
+  ];
+
+  //  const handlePageChange = (newPage) => {
+  //   setPagination(prev => ({ ...prev, page: newPage }));
+  // };
+  const fetchCustomers = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page,
+        pageSize,
+        search: searchTerm,
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/customers/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      if (result.status === "Ok") {
+        setFilteredCustomers(result.data.data);
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   // total: result.data.data.length
+        // }));
+        setTotal(result.data.totalRecords);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch customers");
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching customers:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchApprovals = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
+    setLoading(true);
+    setError(null);
+    console.log("Fetching approvals");
+    try {
+      const params = new URLSearchParams({
+        page,
+        pageSize,
+        search: searchTerm,
+        // // sortBy: "id",
+        // sortOrder: "asc",
+        // filters: "{}",
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
+      });
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/pending-customer-approval?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      console.log("API Response:", result);
+      if (result.status === "Ok") {
+        setFilteredApprovals(result.data.data);
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   total: result.data.data.length
+        // }));
+        setTotal(result.data.totalRecords);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch approvals");
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching approvals:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInvites = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page,
+        pageSize,
+        search: searchTerm,
+        // sortBy: "id",
+        // sortOrder: "asc",
+        // filters: "{}",
+        sortBy: sortedModel[0]?.field || "id",
+        sortOrder: sortedModel[0]?.sort || "asc",
+        filters: JSON.stringify(customFilters),
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/customer-registration-staging/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      console.log("API Response:", result);
+      if (result.status === "Ok") {
+        setFilteredInvites(result.data.data);
+        // setPagination(prev => ({
+        //   ...prev,
+        //   page,
+        //   total: result.data.data.length
+        // }));
+        setTotal(result.data.totalRecords);
+      } else {
+        throw new Error(response.data.message || "Failed to fetch invites");
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching invites:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modified transform function
+  function transformCustomerData(customer, customerContacts) {
+    // Ensure contacts is always an array
+    console.log("customerContacts", customerContacts);
+    const contacts = Array.isArray(customerContacts)
+      ? customerContacts
+      : customerContacts
+      ? [customerContacts]
+      : [];
+
+    // Create a map of contactType to contact data (note: using contactType instead of contact_type)
+    const contactsMap = contacts.reduce((acc, contact) => {
+      acc[contact.contactType] = contact;
+      return acc;
+    }, {});
+
+    console.log("Customer Contacts Map:", contactsMap);
+
+    return {
+      ...customer,
+      ...customerContacts,
+      // Contact details - each contact type is a separate row in DB
+      // primaryContactName: contactsMap.primary?.name || "",
+      // primaryContactDesignation: contactsMap.primary?.designation || "",
+      // primaryContactEmail: contactsMap.primary?.email || "",
+      // primaryContactMobile: contactsMap.primary?.mobile || "", // Changed from phone to mobile
+
+      // businessHeadName: contactsMap.business?.name || "",
+      // businessHeadDesignation: contactsMap.business?.designation || "",
+      // businessHeadEmail: contactsMap.business?.email || "",
+      // businessHeadMobile: contactsMap.business?.mobile || "",
+
+      // financeHeadName: contactsMap.finance?.name || "",
+      // financeHeadDesignation: contactsMap.finance?.designation || "",
+      // financeHeadEmail: contactsMap.finance?.email || "",
+      // financeHeadMobile: contactsMap.finance?.mobile || "",
+
+      // purchasingHeadName: contactsMap.purchasing?.name || "",
+      // purchasingHeadDesignation: contactsMap.purchasing?.designation || "",
+      // purchasingHeadEmail: contactsMap.purchasing?.email || "",
+      // purchasingHeadMobile: contactsMap.purchasing?.mobile || "",
+
+      // // Adding operations contact if needed
+      // operationsHeadName: contactsMap.operations?.name || "",
+      // operationsHeadDesignation: contactsMap.operations?.designation || "",
+      // operationsHeadEmail: contactsMap.operations?.email || "",
+      // operationsHeadMobile: contactsMap.operations?.mobile || "",
+      // Adding isApprovalMode to indicate if the customer is in approval mode
+      isApprovalMode: false,
+      workflowData: [],
+    };
+  }
+
+  const fetchCustomerPaymentMethods = async (customerId, customer) => {
+    console.log("fetching customer payment methods");
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/payment-method/id/${customerId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      console.log("API Response:", result);
+      if (result.status === "Ok") {
+        // if method details values exists Add each method detail field as field name and its value in customer
+        if (result.data.methodDetails) {
+          Object.keys(result.data.methodDetails).forEach((fieldName) => {
+            const newValue = result.data.methodDetails[fieldName];
+            if (newValue) {
+              customer[fieldName] = newValue;
+              if (fieldName === "credit") {
+                customer["creditLimit"] = newValue.limit;
+                customer["creditPeriod"] = newValue.period;
+                customer["creditBalance"] = newValue.balance;
+              }
+            }
+          });
+        }
+      }
+      return customer;
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching customer payment methods:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCustomerContacts = async (customerId, customer) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/customer-contacts/${customerId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      console.log("API Response:", result);
+      if (result.status === "Ok") {
+        setCustomerContacts(result.data);
+        let transformedCustomer = transformCustomerData(customer, result.data);
+        transformedCustomer = await fetchCustomerPaymentMethods(
+          customerId,
+          transformedCustomer
+        );
+        console.log("Transformed Customer:", transformedCustomer);
+        // Navigate to customer details with approval mode if applicable
+        if (isApprovalMode) {
+          transformedCustomer.isApprovalMode = true;
+          transformedCustomer.workflowData = customer.workflowData || [];
+        } else {
+          transformedCustomer.isApprovalMode = false;
+        }
+        // navigate(`/customersDetails`, { state: { transformedCustomer, mode: isApprovalMode ? 'edit' : 'add' } });
+        return transformedCustomer;
+      } else {
+        throw new Error(
+          response.data.message || "Failed to fetch customer contacts"
+        );
+      }
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching customer contacts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "customers") {
+      if (isApprovalMode) {
+        fetchApprovals(1, searchQuery, filters);
+      } else {
+        fetchCustomers(1, searchQuery, filters);
+      }
+    } else if (activeTab === "invites") {
+      fetchInvites(page, searchQuery, filters);
+    }
+  }, [activeTab, isApprovalMode, page, searchQuery, filters]);
+
+  useEffect(() => {
+    getOptionsFromBasicsMaster("entity").then(setEntityOptions);
+    const fetchGeoData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGeoData(data.data);
+          setRegionOptions(
+            geoData
+              ? Object.keys(geoData).map((region) => ({
+                  value: region,
+                  name: region,
+                }))
+              : []
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching geo data:", error);
+      }
+    };
+    fetchGeoData();
+  }, []);
+
+  const handleRowClick = async (params) => {
+    let customer = params.row;
+    let transformedCustomer = await fetchCustomerContacts(
+      customer.id,
+      customer
+    );
+    navigate(`/customerDetails`, {
+      state: {
+        customerId: customer.id,
+        workflowId: transformedCustomer?.workflowData?.id,
+        workflowInstanceId: transformedCustomer?.workflowInstanceId,
+        mode: isApprovalMode ? "edit" : "add",
+      },
+    });
+    // console.log('Customer ID:', customer.id);
+    // console.log('Customer Contacts:', customerContacts);
+    // const transformedCustomer = transformCustomerData(customer, customerContacts);
+    // console.log('Transformed Customer:', transformedCustomer);
+    //  navigate(`/customersDetails`, { state: { transformedCustomer } });
+  };
+
+  const customCellRenderer = {
+    primaryContact: (item) => (
+      <div className="contact-info">
+        <div>{item.primaryContactName}</div>
+        <div className="email">{item.primaryContactEmail}</div>
+      </div>
+    ),
+  };
+
+  const renderActionButtons = (invite) => (
+    <div className="action-buttons">
+      {!invite.registered && (
+        <button
+          className="action-button resend"
+          onClick={() => handleResend(invite)}
+        >
+          {t("Resend")}
+        </button>
+      )}
+      {/* {!invite.registered && (
+        <button
+          className="action-button invite"
+          onClick={() => handleInvite(invite)}
+        >
+          {t('Invite')}
+        </button>
+      )} */}
+    </div>
+  );
+
+  const downloadCustomersAsExcel = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch all customers for download (without pagination)
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 10000, // Large number to get all customers
+        search: searchQuery,
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: "{}",
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/customers/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.status === "Ok" && result.data.data.length > 0) {
+        // Show progress message
+        Swal.fire({
+          title: "Preparing Export",
+          text: "Fetching customer details, please wait...",
+          icon: "info",
+          allowOutsideClick: false,
+          showConfirmButton: false,
+          didOpen: () => {
+            Swal.showLoading();
+          },
+        });
+
+        try {
+          // Fetch transformed data for each customer
+          const transformedCustomers = await Promise.all(
+            result.data.data.map(async (customer) => {
+              try {
+                const transformedCustomer = await fetchCustomerContacts(
+                  customer.id,
+                  customer
+                );
+                console.log("Transformed Customer:", transformedCustomer);
+                return transformedCustomer;
+              } catch (error) {
+                console.error(
+                  `Error fetching contacts for customer ${customer.id}:`,
+                  error
+                );
+                // Return original customer data if contact fetch fails
+                return customer;
+              }
+            })
+          );
+          console.log("Transformed Customers:", transformedCustomers);
+          // Prepare data for Excel export with transformed customer data
+          const exportData = transformedCustomers.map((customer) => ({
+            "Registration ID": customer.id,
+            "ERP ID": customer.erpCustId || "",
+            "Company Name (EN)": customer.companyNameEn || "",
+            "Company Name (AR)": customer.companyNameAr || "",
+            "Company Type": customer.companyType || "",
+            "Type of Business": customer.typeOfBusiness || "",
+            "CR Number": customer.crNumber || "",
+            "VAT Number": customer.vatNumber || "",
+            "Government Registration #":
+              customer.governmentRegistrationNumber || "",
+            "Baladeah License #": customer.baladeahLicenseNumber || "",
+            "Brand Name (EN)": customer.brandNameEn || "",
+            "Brand Name (AR)": customer.brandNameAr || "",
+            "Delivery Locations": customer.deliveryLocations || "",
+            Status: customer.customerStatus || "",
+            Region: customer.region || "",
+            City: customer.city || "",
+            District: customer.district || "",
+            Street: customer.street || "",
+            "Building Name": customer.buildingName || "",
+            "Location Type": customer.locationType || "",
+
+            // Primary Contact
+            "Primary Contact Name": customer.primaryContactName || "",
+            "Primary Contact Designation":
+              customer.primaryContactDesignation || "",
+            "Primary Contact Email": customer.primaryContactEmail || "",
+            "Primary Contact Mobile": customer.primaryContactMobile || "",
+
+            // Business Head Contact
+            "Business Head Name": customer.businessHeadName || "",
+            "Business Head Designation": customer.businessHeadDesignation || "",
+            "Business Head Email": customer.businessHeadEmail || "",
+            "Business Head Mobile": customer.businessHeadMobile || "",
+
+            // Finance Head Contact
+            "Finance Head Name": customer.financeHeadName || "",
+            "Finance Head Designation": customer.financeHeadDesignation || "",
+            "Finance Head Email": customer.financeHeadEmail || "",
+            "Finance Head Mobile": customer.financeHeadMobile || "",
+
+            // Purchasing Head Contact
+            "Purchasing Head Name": customer.purchasingHeadName || "",
+            "Purchasing Head Designation":
+              customer.purchasingHeadDesignation || "",
+            "Purchasing Head Email": customer.purchasingHeadEmail || "",
+            "Purchasing Head Mobile": customer.purchasingHeadMobile || "",
+
+            // Operations Head Contact
+            // "Operations Head Name": customer.operationsHeadName || "",
+            // "Operations Head Designation":
+            //   customer.operationsHeadDesignation || "",
+            // "Operations Head Email": customer.operationsHeadEmail || "",
+            // "Operations Head Mobile": customer.operationsHeadMobile || "",
+
+            // Payment Method Information
+            // "Credit Limit": customer.creditLimit || "",
+            // "Credit Period": customer.creditPeriod || "",
+            // "Credit Balance": customer.creditBalance || "",
+
+            // Geolocation
+            Latitude: customer.geolocation?.x || "",
+            Longitude: customer.geolocation?.y || "",
+
+            // Assignment Information
+            "Assigned To": customer.assignedTo || "",
+            "Branch Region": customer.branch || "",
+            Entity: customer.entity || "",
+            "Inter Company": customer.interCompany ? "Yes" : "No",
+
+            "Created Date": customer.createdAt
+              ? new Date(customer.createdAt).toLocaleDateString()
+              : "",
+          }));
+
+          // Close the loading dialog
+          Swal.close();
+
+          // Create Excel file
+          const XLSX = require("xlsx");
+          const ws = XLSX.utils.json_to_sheet(exportData);
+
+          // Auto-size columns
+          const colWidths = [];
+          exportData.forEach((row) => {
+            Object.keys(row).forEach((key, index) => {
+              const value = row[key] ? row[key].toString() : "";
+              const width = Math.max(key.length, value.length);
+              colWidths[index] = Math.max(
+                colWidths[index] || 0,
+                Math.min(width, 50)
+              );
+            });
+          });
+          ws["!cols"] = colWidths.map((w) => ({ width: w + 2 }));
+
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, ws, "Customers");
+
+          // Generate filename with current date
+          const now = new Date();
+          const filename = `customers_export_${now.getFullYear()}-${String(
+            now.getMonth() + 1
+          ).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}.xlsx`;
+
+          // Download file
+          XLSX.writeFile(wb, filename);
+
+          Swal.fire({
+            title: "Export Successful",
+            text: `${result.data.data.length} customers exported successfully with complete details.`,
+            icon: "success",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (error) {
+          console.error("Error during export preparation:", error);
+          Swal.fire({
+            title: "Export Error",
+            text: "Failed to prepare customer details for export. Please try again.",
+            icon: "error",
+            confirmButtonText: "OK",
+            confirmButtonColor: "#dc3545",
+          });
+        }
+      } else {
+        Swal.fire({
+          title: t("No Data"),
+          text: t("No customers found to export."),
+          icon: "info",
+          confirmButtonText: t("OK"),
+          confirmButtonColor: "#3085d6",
+        });
+      }
+    } catch (error) {
+      console.error("Error downloading customers:", error);
+      Swal.fire({
+        title: "Export Failed",
+        text: "Failed to export customers. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const customerMenuItems = [
+    {
+      key: "download customers",
+      label: t("Download Customers"),
+      onClick: downloadCustomersAsExcel, // Add the download functionality
+      visible: isV("btnDownloadCustomers"),
+    },
+  ];
+  const visibleColumns = isApprovalMode
+    ? approvalColumns.filter((col) => col.include)
+    : customerColumns.filter((col) => col.include);
+  const filteredData = visibleColumns?.filter((item) =>
+    searchableFields?.includes(item?.field)
+  );
+  const filertInvites = inviteColumns
+    .filter((col) => col.include)
+    ?.filter((item) => searchableFieldsInvites?.includes(item?.field));
+  const renderContent = () => {
+    const handleSortModelChange = (model) => {
+      setSortModel(model);
+      if (isApprovalMode) {
+        fetchApprovals(1, searchQuery, filters, model);
+      } else {
+        fetchCustomers(1, searchQuery, filters, model);
+      }
+    };
+    const handleInviteSortModelChange = (model) => {
+      console.log("Sort model changed:", model);
+
+      setInviteSortModel(model);
+      fetchInvites(1, searchQuery, filters, model);
+    };
+    switch (activeTab) {
+      case t("customers"):
+        const customerColumnsToUse = visibleColumns;
+
+        return (
+          //   <Table
+          //     columns={customerColumnsToUse}
+          //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+          //     getStatusClass={getStatusClass}
+          //     customCellRenderer={customCellRenderer}
+          //     onRowClick={handleRowClick}
+          //     onPay={HandleFandOFailCustomer}
+          //     syncLoading={syncLoading}
+          //   />
+          <DataGrid
+            //   apiRef={gridApiRef}
+            rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+            columns={customerColumnsToUse}
+            pageSize={pageSize}
+            rowCount={total}
+            onRowClick={handleRowClick}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={setColumnVisibilityModel}
+            sortModel={sortModel}
+            onSortModelChange={handleSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  searchQuery={searchQuery}
+                  filterAnchor={filterAnchor}
+                  onSearch={handleSearch}
+                  setSearchQuery={setSearchQuery}
+                  setFilterAnchor={setFilterAnchor}
+                  handleFilterChange={handleFilterChange}
+                  onColumnVisibilityChange={setColumnVisibilityModel}
+                  columns={filteredData}
+                  filters={filters}
+                  columnVisibilityModel={columnVisibilityModel}
+                  searchPlaceholder="Search orders..."
+                  showColumnVisibility={true}
+                  showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={true}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+                  // handleAddClick={handleAddOrder}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  columnsToDisplay={columnsToDisplay}
+                  handleApproval={handleApproval}
+                  isApprovalMode={isApprovalMode}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          />
+        );
+      case t("invites"):
+        return (
+          // <Table
+          //   columns={inviteColumns}
+          //   data={paginatedInvites}
+          //   getStatusClass={getStatusClass}
+          //   actionButtons={renderActionButtons}
+          // />
+          <DataGrid
+            //   apiRef={gridApiRef}
+            rows={paginatedInvites}
+            columns={inviteColumns}
+            pageSize={pageSize}
+            // rowCount={total}
+            // onRowClick={handleRowClick}
+            columnVisibilityModel={invitecolumnVisibilityModel}
+            onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+            sortModel={inviteSortModel}
+            onSortModelChange={handleInviteSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  searchQuery={searchQuery}
+                  filterAnchor={filterAnchor}
+                  onSearch={handleSearch}
+                  setSearchQuery={setSearchQuery}
+                  setFilterAnchor={setFilterAnchor}
+                  handleFilterChange={handleFilterChange}
+                  onColumnVisibilityChange={setColumnVisibilityModel}
+                  columns={filertInvites}
+                  filters={filters}
+                  columnVisibilityModel={columnVisibilityModel}
+                  searchPlaceholder="Search orders..."
+                  showColumnVisibility={true}
+                  showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={false}
+                  showAdd={isV("btnAddInvite")}
+                  buttonName={t("invite")}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+
+                  handleAddClick={handleInvite}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  columnsToDisplay={columnsToDisplay}
+                  handleApproval={handleApproval}
+                  isApprovalMode={false}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+  // Paginate the filtered orders
+  // const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
+  // const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
+  const paginatedCustomers = filteredCustomers;
+  const paginatedApprovals = filteredApprovals;
+  const paginatedInvites = filteredInvites;
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+    setFilterAnchor(null);
+  };
+  const HandleFandOFailCustomer = async (customerId) => {
+    setSyncLoadingId(customerId);
+    setSyncLoading(true);
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/customers/fando_sync_customer?customerId=${customerId}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (data?.success) {
+        fetchCustomers();
+        Swal.fire({
+          title: "Success",
+          text: data.message,
+          icon: "success",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#3085d6",
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: data.message || "Failed to Sync with FandO.",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+      }
+    } catch (error) {
+      console.error("Error handling FandO fail customer:", error);
+      Swal.fire({
+        title: "Error",
+        text: error.message || "Failed to Sync with FandO.",
+        icon: "error",
+        confirmButtonText: "OK",
+        confirmButtonColor: "#dc3545",
+      });
+    } finally {
+      setSyncLoading(false);
+      setSyncLoadingId(null);
+    }
+  };
+
+  const handleApproval = (mode) => {
+    setFilters({});
+    setApprovalMode(mode === "approval");
+    if (mode === "approval") {
+      fetchApprovals();
+    } else {
+      fetchCustomers();
+    }
+  };
+  useEffect(() => {
+    setFilters({});
+  }, [activeTab]);
+  return (
+    <Sidebar title={t("Customers")}>
+      <div className="page-content">
+        <div className="customer-content">
+          <Tabs
+            tabs={customerTabs}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+
+          <div className="page-header">
+            {/* {activeTab === t("customers") && (
+              <div className="header-controls" style={{ width: "100%" }}>
+                <SearchInput onSearch={handleSearch} />
+                <div className="header-actions">
+                  <ToggleButton
+                    isToggled={isApprovalMode}
+                    onToggle={toggleApprovalMode}
+                    leftLabel={t("All")}
+                    rightLabel={t("My Approval")}
+                  />
+                  <button
+                    className="add-button"
+                    style={{ visibility: "hidden" }}
+                  ></button>
+                  <ActionButton menuItems={customerMenuItems} />
+                </div>
+              </div>
+            )} */}
+
+            {/* {activeTab === t("invites") && isV("btnAddInvite") && (
+              <>
+                <SearchInput onSearch={handleSearch} />
+                {
+                  <button className="add-button" onClick={handleInvite}>
+                    {t("+ Invite")}
+                  </button>
+                }
+                <ActionButton menuItems={customerMenuItems} />
+              </>
+            )} */}
+          </div>
+          {renderContent()}
+
+          {isInviteModalOpen && (
+            <dialog className="invite-dialog" open>
+              <h2>{t("Invite")}</h2>
+
+              <div className="form-row-1">
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Customer Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={inviteData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Email")}
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={inviteData.email}
+                    onChange={handleInputChange}
+                    required
+                    style={inviteErrors.email ? { borderColor: "red" } : {}}
+                  />
+                  {inviteErrors.email && (
+                    <div style={{ color: "red", fontSize: "0.8em" }}>
+                      {inviteErrors.email}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Company Name")}
+                  </label>
+                  <input
+                    type="text"
+                    name="company"
+                    value={inviteData.company}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                {/* <div className="form-group-1">
+                    <label
+                      style={{ marginBottom: "6px", display: "inline-block" }}
+                    >
+                      {t("Phone Number")}
+                    </label>
+                    <input
+                      type="text"
+                      name="mobile"
+                      value={inviteData.mobile}
+                      onChange={handleInputChange}
+                      required
+                      style={inviteErrors.mobile ? { borderColor: "red" } : {}}
+                    />
+                    {inviteErrors.mobile && (
+                      <div style={{ color: "red", fontSize: "0.8em" }}>
+                        {inviteErrors.mobile}
+                      </div>
+                    )}
+                  </div> */}
+
+                <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Phone Number")}
+                  </label>
+                  <PhoneInput
+                    international
+                    defaultCountry="SA" // Set your preferred default country
+                    withCountryCallingCode={true}
+                    countryCallingCodeEditable={false}
+                    name="mobile"
+                    value={inviteData.mobile}
+                    onChange={(value) => {
+                      handleInputChange({
+                        target: {
+                          name: "mobile",
+                          value: value,
+                        },
+                      });
+                    }}
+                    required
+                    style={
+                      inviteErrors.mobile
+                        ? {
+                            borderColor: "red",
+                            "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                          }
+                        : {}
+                    }
+                    className={
+                      inviteErrors.mobile
+                        ? "phone-input-error"
+                        : "custom-phone-input"
+                    }
+                  />
+                  {inviteErrors.mobile && (
+                    <div style={{ color: "red", fontSize: "0.8em" }}>
+                      {inviteErrors.mobile}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Region")}
+                  </label>
+                  <SearchableDropdown
+                    name="region"
+                    // options={basicMasterLists?.region || []}
+                    options={
+                      geoData
+                        ? Object.keys(geoData).map((region) => ({
+                            value: region,
+                            name: region,
+                          }))
+                        : []
+                    }
+                    value={inviteData.region}
+                    onChange={handleInputChange}
+                    placeholder={t("Enter Region")}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Primary Business Unit")}
+                  </label>
+                  <SearchableDropdown
+                    name="primaryBusinessUnit"
+                    // options={basicMasterLists?.region || []}
+                    options={entityOptions}
+                    value={inviteData.primaryBusinessUnit}
+                    onChange={handleInputChange}
+                    placeholder={t("Enter Primary Business Unit")}
+                    required
+                  />
+                </div>
+
+                <div className="form-group-1">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Source")}
+                  </label>
+                  <select
+                    name="source"
+                    value={inviteData.source}
+                    onChange={handleInputChange}
+                    disabled
+                    required
+                  >
+                    <option value="">{t("Select a source")}</option>
+                    <option value="portal">{t("Portal")}</option>
+                    <option value="crm">{t("CRM")}</option>
+                    <option value="salesexecutive">
+                      {t("Sales Executive")}
+                    </option>
+                  </select>
+                </div>
+
+                <div className="form-group-1 full-width">
+                  <label
+                    style={{ marginBottom: "6px", display: "inline-block" }}
+                  >
+                    {t("Comments")}
+                  </label>
+                  <textarea
+                    name="comments"
+                    value={inviteData.comments}
+                    onChange={handleInputChange}
+                    placeholder={t("Comments...")}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="cancel-button"
+                  onClick={() => {
+                    setIsInviteModalOpen(false);
+                    clearInviteFields();
+                  }}
+                  disabled={isInviteLoading}
+                >
+                  {isInviteLoading ? t("Please wait...") : t("Cancel")}
+                </button>
+                <button
+                  className="invite-button"
+                  onClick={handleInviteSubmit}
+                  disabled={isInviteLoading}
+                >
+                  {isInviteLoading ? t("Sending...") : t("Send Invite")}
+                </button>
+              </div>
+            </dialog>
+          )}
+        </div>
+        {((activeTab === "customers" &&
+          paginatedCustomers.length > 0 &&
+          !isApprovalMode) ||
+          (activeTab === "invites" && paginatedInvites.length > 0) ||
+          (activeTab === "customers" &&
+            isApprovalMode &&
+            paginatedApprovals.length > 0)) && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / pageSize)}
+            onPageChange={setPage}
+          />
+        )}
+        {loading && (
+          <div className="loading-container">
+            <LoadingSpinner size="medium" />
+          </div>
+        )}
+      </div>
+      <style>{`
+      .invite-dialog {
+        position: fixed;             
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -45%);
+        width: 95vw;                 
+        max-width: 600px;              
+        border: none;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0,0,0,.35);
+        max-height: 90vh;              
+        overflow-y: auto;              
+      }
+
+    
+      .invite-dialog h2 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 1rem;
+      }
+      .form-row-1 {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .form-group-1 { flex: 1 1 100%; }
+
+      @media (min-width: 768px) and (max-width: 1000px) {
+       .invite-dialog {         top: 60%;         }
+        .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
+        .form-group-1.full-width { flex: 1 1 100%;                 }
+      }
+         @media (min-width: 320px) and (max-width: 700px)
+          {
+       .invite-dialog
+        {         top: 60%;    
+    }}
+        .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }
+        .form-group-1.full-width { flex: 1 1 100%;                 }
+      }
+
+      .form-group-1 label {
+        display:block;
+        margin-bottom:.4rem;
+        font-weight:500;
+      }
+      .form-group-1 input,
+      .form-group-1 select,
+      .form-group-1 textarea {
+      display: flex;
+        width:250px;
+        padding:.5rem;
+        border:1px solid #ccc;
+        border-radius:8px;
+        font-size:1rem;
+        box-sizing:border-box;
+      }
+      .form-group-1 textarea { width:100%;
+        padding:.5rem;
+        border:1px solid #ccc;
+        border-radius:8px;
+        font-size:1rem;
+        box-sizing:border-box;min-height:80px; resize:vertical; }
+
+      .modal-actions {
+        margin-top:1.5rem;
+        display:flex;
+        justify-content:flex-end;
+        gap:1rem;
+      }
+      .cancel-button,
+      .invite-button {
+        padding:.5rem 1rem;
+        font-size:1rem;
+        border:none;
+        border-radius:4px;
+        cursor:pointer;
+      }
+      .cancel-button { background:#ccc; color:#000; }
+      .invite-button { background:#03584d; color:#fff; }
+    `}</style>
+    </Sidebar>
+  );
+}
+
+export default Customers;
