@@ -6,6 +6,7 @@ import OrdersMui from "./screens/ordersmui";
 import Customers from "./screens/customers";
 import Catalog from "./screens/catalog";
 import Support from "./screens/support";
+import SupportMui from "./screens/supportmui";
 import Maintenance from "./screens/maintenance";
 import Cart from "./screens/cart";
 import CustomersDetails from "./screens/customersDetails";
@@ -83,7 +84,7 @@ function App() {
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
         <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>}/> 
         <Route path="/catalog" element={<Catalog />} />
-        <Route path="/support" element={<ProtectedRoute page="support"><Support /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute page="support"><SupportMui /></ProtectedRoute>} />
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><Maintenance /></ProtectedRoute>} />
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
