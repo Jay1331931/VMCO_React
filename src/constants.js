@@ -61,7 +61,10 @@ const Constants = {
         CUSTOMER_APPROVAL_CHECKLIST:"Customer_data_verification_checklist.pdf",
         TERMS_AND_CONDITIONS_AR: "Terms_and_condition_ar.pdf",
         TERMS_AND_CONDITIONS_EN: "Terms_and_condition_en.pdf",
-        ORDERS_UPLOAD_FORMAT: "orders_upload_format.xlsx"
+        ORDERS_UPLOAD_FORMAT: "orders_upload_format.xlsx",
+        PRODUCTS_UPLOAD_FORMAT: "product_mapping_upload_format.xlsx",
+        CUSTOMERS_BULK_UPLOAD_FORMAT: "customers_bulk_upload_format.xlsx",
+        BRANCH_BULK_UPLOAD_FORMAT: "branches_bulk_upload_format.xlsx"
     }
 
 };
