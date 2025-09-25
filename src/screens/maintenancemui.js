@@ -82,7 +82,7 @@ function Maintenance() {
             let apiUrl;
             
             // Only include access parameter if user is maintenance head
-            if (user?.designation.toLowerCase() === Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase()) {
+            if (user?.designation?.toLowerCase() === Constants.DESIGNATIONS?.MAINTENANCE_HEAD?.toLowerCase()) {
                 const accessParam = isMyTicketsMode ? 'region' : 'all';
                 apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}&access=${accessParam}`;
             } else {
