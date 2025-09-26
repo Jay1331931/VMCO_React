@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import ActionButton from "../components/ActionButton";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CustomToolbar from "../components/CustomToolbar";
+import Pagination from "../components/Pagination";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -70,8 +71,6 @@ function Support() {
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
-
-    console.log("~~~~~~~~~~~~~User Data:~~~~~~~~~~~~~~~~~~~\n", user);
 
     // Fetch tickets from API
     const fetchTickets = useCallback(async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
@@ -266,6 +265,10 @@ function Support() {
         status: "Status",
     };
 
+    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
+        ? Math.ceil(total / pageSize) 
+        : 1;
+
     return (
         <Sidebar title={t("Support")}>
             {isV('supportContent') && (
@@ -332,11 +335,21 @@ function Support() {
                                 }}
                             />
                         )}
+                        
+                        {/* Pagination component - added from Orders page */}
+                        {isV('supportPagination') && initialTickets.length > 0 && (
+                            <Pagination
+                                currentPage={page}
+                                totalPages={String(totalPages)}
+                                onPageChange={setPage}
+                            />
+                        )}
                     </div>
                 </div>
             )}
         </Sidebar>
     );
 }
+
 
 export default Support;

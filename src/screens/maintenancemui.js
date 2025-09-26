@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import LoadingSpinner from "../components/LoadingSpinner";
 import CustomToolbar from "../components/CustomToolbar";
+import Pagination from "../components/Pagination";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -278,6 +279,11 @@ function Maintenance() {
         status: "Status",
     };
 
+    // Pagination calculation - same as Orders and Support pages
+    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
+        ? Math.ceil(total / pageSize) 
+        : 1;
+
     return (
         <Sidebar title={t("Maintenance")}>
             {isV('maintenanceContent') && (
@@ -346,11 +352,21 @@ function Maintenance() {
                                 }}
                             />
                         )}
+
+                        {/* Pagination component - added from Orders and Support pages */}
+                        {isV('maintenancePagination') && initialTickets.length > 0 && (
+                            <Pagination
+                                currentPage={page}
+                                totalPages={String(totalPages)}
+                                onPageChange={setPage}
+                            />
+                        )}
                     </div>
                 </div>
             )}
         </Sidebar>
     );
 }
+
 
 export default Maintenance;
