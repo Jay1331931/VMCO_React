@@ -29,8 +29,9 @@ const TableMobile = ({
   selectedRow,
   setSelectedRow,
   showRowPopup,
-  setShowRowPopup
+  setShowRowPopup,
 }) => {
+  console.log(selectedRow, showRowPopup);
   const { t } = useTranslation();
   // const [selectedRow, setSelectedRow] = useState(null);
   // const [showRowPopup, setShowRowPopup] = useState(false);
@@ -150,7 +151,9 @@ const TableMobile = ({
     if (column.field.toLowerCase() === "paymentstatus") {
       return (
         <span
-          className={`status-badge ${getPaymentStatusClass(item[column.field])}`}
+          className={`status-badge ${getPaymentStatusClass(
+            item[column.field]
+          )}`}
         >
           {t(item[column.field])}
         </span>
@@ -766,7 +769,7 @@ const TableMobile = ({
                 }
             `}</style>
       </div> */}
-{/* <DataGrid
+      {/* <DataGrid
             //   apiRef={gridApiRef}
             rows={data}
             columns={columns}
@@ -824,7 +827,7 @@ const TableMobile = ({
               },
             }}
           /> */}
-          {dataGridComponent}
+      {dataGridComponent}
       {showRowPopup && selectedRow && (
         <div className="row-popup-overlay" onClick={handleClosePopup}>
           <div className="row-popup" onClick={(e) => e.stopPropagation()}>
@@ -930,17 +933,31 @@ const TableMobile = ({
               </div>
 
               {/* All Details Button */}
-  {showAllDetails && (<div className="all-details-button-section">
-    <button 
-      className="all-details-button"
-      onClick={() => handleAllDetailsClick(selectedRow)}
-    >
-      <span>{t("View All Details")}</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </button>
-  </div>)}
+              {showAllDetails && (
+                <div className="all-details-button-section">
+                  <button
+                    className="all-details-button"
+                    onClick={() => handleAllDetailsClick(selectedRow)}
+                  >
+                    <span>{t("View All Details")}</span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 18L15 12L9 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
 
             <style>{`

@@ -21,7 +21,7 @@ import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
 import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
-import TableMobile from '../components/TableMobile';
+import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
   GridFooterContainer,
@@ -89,16 +89,16 @@ function Orders() {
   const [sortField, setSortField] = useState("createdAt");
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
-      const [showRowPopup, setShowRowPopup] = useState(false);
+  const [showRowPopup, setShowRowPopup] = useState(false);
   const gridApiRef = useGridApiRef();
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-      // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-      useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        console.log("isMobile", isMobile);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-      }, []);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const columnsToDisplay = {
     id: "OrderId",
     erpOrderId: "Sales Order ID",
@@ -279,7 +279,6 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   };
 
   const handleShowAllDetailsClick = async (order) => {
-    
     try {
       const params = new URLSearchParams({
         page: 1,
@@ -319,7 +318,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
           approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
         },
       });
-  } catch (err) {
+    } catch (err) {
       console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
         state: {
@@ -332,10 +331,12 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
         },
       });
     }
-}
+  };
 
   const handleRowClick = async (params) => {
     const order = params?.row;
+    console.log("----order");
+    console.log(order);
     try {
       const params = new URLSearchParams({
         page: 1,
@@ -364,23 +365,23 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
       ) {
         salesOrderLines = result.data.data;
       }
-      if(isMobile){
-      // setShowTableMobilePopup(true);
-      setSelectedRow(params?.row);
-    setShowRowPopup(true);
-    }else{
-      navigate("/orderDetails", {
-        state: {
-          order: { ...order, salesOrderLines },
-          mode: "edit",
-          fromApproval: isApprovalMode,
-          wfid: isApprovalMode ? order.workflowInstanceId : undefined,
-          workflowName: isApprovalMode ? order.workflowName : undefined,
-          workflowData: isApprovalMode ? order.workflowData : undefined,
-          approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
-        },
-      });
-    }
+      if (isMobile) {
+        // setShowTableMobilePopup(true);
+        setSelectedRow(order);
+        setShowRowPopup(true);
+      } else {
+        navigate("/orderDetails", {
+          state: {
+            order: { ...order, salesOrderLines },
+            mode: "edit",
+            fromApproval: isApprovalMode,
+            wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+            workflowName: isApprovalMode ? order.workflowName : undefined,
+            workflowData: isApprovalMode ? order.workflowData : undefined,
+            approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
+          },
+        });
+      }
     } catch (err) {
       console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
@@ -1398,7 +1399,6 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   };
 
   const handleFilterChange = (newFilters) => {
-
     setFilters(newFilters);
     setPage(1);
     setFilterAnchor(null);
@@ -1476,153 +1476,157 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
           columnVisibilityModel={columnVisibilityModel}
         /> */}
 
-        {isMobile ? 
-        (<div className="table-container">
-          {loading ? (
-            <LoadingSpinner />
-          ) : error ? (
-            <div className="error-message">{error}</div>
-          ) : (
-            <TableMobile
-            columns={visibleColumns}
-            allColumns={isApprovalMode ? approvalColumns : orderColumns}
-            data={filteredOrders}
-            showAllDetails={true}
-        handleAllDetailsClick={handleShowAllDetailsClick}
-        selectedRow={selectedRow}
-        setSelectedRow={setSelectedRow}
-        showRowPopup={showRowPopup}
-        setShowRowPopup={setShowRowPopup}
-        dataGridComponent={<DataGrid
-              apiRef={gridApiRef}
-              rows={filteredOrders}
-              columns={visibleColumns}
-              pageSize={pageSize}
-              rowCount={total}
-              onRowClick={handleRowClick}
-              columnVisibilityModel={columnVisibilityModel}
-              onColumnVisibilityModelChange={setColumnVisibilityModel}
-              sortModel={sortModel}
-              onSortModelChange={handleSortModelChange}
-              disableSelectionOnClick
-              disableColumnMenu
-              hideFooter={true}
-              hideFooterPagination={true}
-              disableExtendRowFullWidth={true}
-              pagination={false}
-              autoHeight
-              rowHeight={70}
-              showToolbar
-              slots={{
-                toolbar: () => (
-                  <CustomToolbar
-                    searchQuery={searchQuery}
-                    filterAnchor={filterAnchor}
-                    onSearch={handleSearch}
-                    setSearchQuery={setSearchQuery}
-                    setFilterAnchor={setFilterAnchor}
-                    handleFilterChange={handleFilterChange}
-                    onColumnVisibilityChange={setColumnVisibilityModel}
-                    columns={filteredData}
-                    filters={filters}
+        {isMobile ? (
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <TableMobile
+                columns={visibleColumns}
+                allColumns={isApprovalMode ? approvalColumns : orderColumns}
+                data={filteredOrders}
+                showAllDetails={true}
+                handleAllDetailsClick={handleShowAllDetailsClick}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                showRowPopup={showRowPopup}
+                setShowRowPopup={setShowRowPopup}
+                getPaymentStatusClass={getPaymentStatusClass}
+                dataGridComponent={
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={filteredOrders}
+                    columns={visibleColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    onRowClick={handleRowClick}
                     columnVisibilityModel={columnVisibilityModel}
-                    searchPlaceholder="Search orders..."
-                    showColumnVisibility={true}
-                    showFilters={true}
-                    showExport={false}
-                    showUpload={true}
-                    showAdd={isV("addButton")}
-                    buttonName={t("add")}
-                    showApproval={isV("approvalButton")}
-                    // showAdd={true}
-                    handleAddClick={handleAddOrder}
-                    handleUploadClick={HandleBulkOrderUpload}
-                    columnsToDisplay={columnsToDisplay}
-                    handleApproval={handleApproval}
-                    isApprovalMode={isApprovalMode}
+                    onColumnVisibilityModelChange={setColumnVisibilityModel}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    disableExtendRowFullWidth={true}
+                    pagination={false}
+                    autoHeight
+                    rowHeight={70}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search orders..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={false}
+                          showUpload={true}
+                          showAdd={isV("addButton")}
+                          buttonName={t("add")}
+                          showApproval={isV("approvalButton")}
+                          // showAdd={true}
+                          handleAddClick={handleAddOrder}
+                          handleUploadClick={HandleBulkOrderUpload}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiDataGrid-row": {
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+                    }}
                   />
-                ),
-              }}
-              sx={{
-                "& .MuiDataGrid-row": {
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                }
+              />
+            )}
+          </div>
+        ) : (
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <DataGrid
+                // apiRef={gridApiRef}
+                rows={filteredOrders}
+                columns={visibleColumns}
+                pageSize={pageSize}
+                rowCount={total}
+                onRowClick={handleRowClick}
+                columnVisibilityModel={columnVisibilityModel}
+                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                sortModel={sortModel}
+                onSortModelChange={handleSortModelChange}
+                disableSelectionOnClick
+                disableColumnMenu
+                hideFooter={true}
+                hideFooterPagination={true}
+                disableExtendRowFullWidth={true}
+                pagination={false}
+                autoHeight
+                rowHeight={70}
+                showToolbar
+                slots={{
+                  toolbar: () => (
+                    <CustomToolbar
+                      searchQuery={searchQuery}
+                      filterAnchor={filterAnchor}
+                      onSearch={handleSearch}
+                      setSearchQuery={setSearchQuery}
+                      setFilterAnchor={setFilterAnchor}
+                      handleFilterChange={handleFilterChange}
+                      onColumnVisibilityChange={setColumnVisibilityModel}
+                      columns={filteredData}
+                      filters={filters}
+                      columnVisibilityModel={columnVisibilityModel}
+                      searchPlaceholder="Search orders..."
+                      showColumnVisibility={true}
+                      showFilters={true}
+                      showExport={false}
+                      showUpload={true}
+                      showAdd={isV("addButton")}
+                      buttonName={t("add")}
+                      showApproval={isV("approvalButton")}
+                      // showAdd={true}
+                      handleAddClick={handleAddOrder}
+                      handleUploadClick={HandleBulkOrderUpload}
+                      columnsToDisplay={columnsToDisplay}
+                      handleApproval={handleApproval}
+                      isApprovalMode={isApprovalMode}
+                    />
+                  ),
+                }}
+                sx={{
+                  "& .MuiDataGrid-row": {
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
                   },
-                },
-              }}
-            />}
-             />
-            
-          )}
-        </div>) :
-        (<div className="table-container">
-          {loading ? (
-            <LoadingSpinner />
-          ) : error ? (
-            <div className="error-message">{error}</div>
-          ) : (
-            <DataGrid
-              apiRef={gridApiRef}
-              rows={filteredOrders}
-              columns={visibleColumns}
-              pageSize={pageSize}
-              rowCount={total}
-              onRowClick={handleRowClick}
-              columnVisibilityModel={columnVisibilityModel}
-              onColumnVisibilityModelChange={setColumnVisibilityModel}
-              sortModel={sortModel}
-              onSortModelChange={handleSortModelChange}
-              disableSelectionOnClick
-              disableColumnMenu
-              hideFooter={true}
-              hideFooterPagination={true}
-              disableExtendRowFullWidth={true}
-              pagination={false}
-              autoHeight
-              rowHeight={70}
-              showToolbar
-              slots={{
-                toolbar: () => (
-                  <CustomToolbar
-                    searchQuery={searchQuery}
-                    filterAnchor={filterAnchor}
-                    onSearch={handleSearch}
-                    setSearchQuery={setSearchQuery}
-                    setFilterAnchor={setFilterAnchor}
-                    handleFilterChange={handleFilterChange}
-                    onColumnVisibilityChange={setColumnVisibilityModel}
-                    columns={filteredData}
-                    filters={filters}
-                    columnVisibilityModel={columnVisibilityModel}
-                    searchPlaceholder="Search orders..."
-                    showColumnVisibility={true}
-                    showFilters={true}
-                    showExport={false}
-                    showUpload={true}
-                    showAdd={isV("addButton")}
-                    buttonName={t("add")}
-                    showApproval={isV("approvalButton")}
-                    // showAdd={true}
-                    handleAddClick={handleAddOrder}
-                    handleUploadClick={HandleBulkOrderUpload}
-                    columnsToDisplay={columnsToDisplay}
-                    handleApproval={handleApproval}
-                    isApprovalMode={isApprovalMode}
-                  />
-                ),
-              }}
-              sx={{
-                "& .MuiDataGrid-row": {
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.04)",
-                  },
-                },
-              }}
-            />
-          )}
-        </div>)}
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {bulkUploadPopUp && (
           <div>

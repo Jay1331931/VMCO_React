@@ -30,7 +30,7 @@ import {
 import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
-import TableMobile from '../components/TableMobile';
+import TableMobile from "../components/TableMobile";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -92,7 +92,7 @@ function Customers() {
   const [filters, setFilters] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
-    const [showRowPopup, setShowRowPopup] = useState(false);
+  const [showRowPopup, setShowRowPopup] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -101,13 +101,13 @@ function Customers() {
   );
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-      // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-      useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        console.log("isMobile", isMobile);
-        window.addEventListener("resize", handleResize);
-        return () => window.removeEventListener("resize", handleResize);
-      }, []);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [showTableMobilePopup, setShowTableMobilePopup] = useState(false);
   const columnsToDisplay = {
     id: t("Registration ID"),
@@ -1225,27 +1225,28 @@ function Customers() {
         mode: isApprovalMode ? "edit" : "add",
       },
     });
-  }
+  };
   const handleRowClick = async (params) => {
     let customer = params.row;
     let transformedCustomer = await fetchCustomerContacts(
       customer.id,
       customer
     );
-    if(isMobile){
-      setShowTableMobilePopup(true);
-      setSelectedRow(params.row);
-    setShowRowPopup(true);
-    }else{
+    if (isMobile) {
+      // setShowTableMobilePopup(true);
+      setSelectedRow(params?.row);
+      setShowRowPopup(true);
+    } else {
       navigate(`/customerDetails`, {
-      state: {
-        customerId: customer.id,
-        workflowId: transformedCustomer?.workflowData?.id,
-        workflowInstanceId: transformedCustomer?.workflowInstanceId,
-        mode: isApprovalMode ? "edit" : "add",
-      },
-    });}
-    
+        state: {
+          customerId: customer.id,
+          workflowId: transformedCustomer?.workflowData?.id,
+          workflowInstanceId: transformedCustomer?.workflowInstanceId,
+          mode: isApprovalMode ? "edit" : "add",
+        },
+      });
+    }
+
     // console.log('Customer ID:', customer.id);
     // console.log('Customer Contacts:', customerContacts);
     // const transformedCustomer = transformCustomerData(customer, customerContacts);
@@ -1531,80 +1532,83 @@ function Customers() {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
-        return isMobile ? 
-        (<>
-        
-        <TableMobile
-        columns={customerColumnsToUse}
-        allColumns={isApprovalMode ? approvalColumns : customerColumns}
-        data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-        showAllDetails={true}
-        handleAllDetailsClick={handleShowAllDetailsClick}
-        selectedRow={selectedRow}
-        setSelectedRow={setSelectedRow}
-        showRowPopup={showRowPopup}
-        setShowRowPopup={setShowRowPopup}
-        dataGridComponent={<DataGrid
-            //   apiRef={gridApiRef}
-            rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-            columns={customerColumnsToUse}
-            pageSize={pageSize}
-            rowCount={total}
-            onRowClick={handleRowClick}
-            columnVisibilityModel={columnVisibilityModel}
-            onColumnVisibilityModelChange={setColumnVisibilityModel}
-            sortModel={sortModel}
-            onSortModelChange={handleSortModelChange}
-            disableSelectionOnClick
-            disableColumnMenu
-            hideFooter={true}
-            hideFooterPagination={true}
-            disableExtendRowFullWidth={true}
-            pagination={false}
-            autoHeight
-            rowHeight={70}
-            showToolbar
-            slots={{
-              toolbar: () => (
-                <CustomToolbar
-                  searchQuery={searchQuery}
-                  filterAnchor={filterAnchor}
-                  onSearch={handleSearch}
-                  setSearchQuery={setSearchQuery}
-                  setFilterAnchor={setFilterAnchor}
-                  handleFilterChange={handleFilterChange}
-                  onColumnVisibilityChange={setColumnVisibilityModel}
-                  columns={filteredData}
-                  filters={filters}
+        return isMobile ? (
+          <>
+            <TableMobile
+              columns={customerColumnsToUse}
+              allColumns={isApprovalMode ? approvalColumns : customerColumns}
+              data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+              showAllDetails={true}
+              handleAllDetailsClick={handleShowAllDetailsClick}
+              selectedRow={selectedRow}
+              setSelectedRow={setSelectedRow}
+              showRowPopup={showRowPopup}
+              setShowRowPopup={setShowRowPopup}
+              dataGridComponent={
+                <DataGrid
+                  //   apiRef={gridApiRef}
+                  rows={
+                    isApprovalMode ? paginatedApprovals : paginatedCustomers
+                  }
+                  columns={customerColumnsToUse}
+                  pageSize={pageSize}
+                  rowCount={total}
+                  onRowClick={handleRowClick}
                   columnVisibilityModel={columnVisibilityModel}
-                  searchPlaceholder="Search orders..."
-                  showColumnVisibility={true}
-                  showFilters={true}
-                  showExport={false}
-                  showUpload={false}
-                  showApproval={true}
-                  // showAdd={isV("addButton")}
-                  // showAdd={true}
-                  // handleAddClick={handleAddOrder}
-                  // handleUploadClick={HandleBulkOrderUpload}
-                  columnsToDisplay={columnsToDisplay}
-                  handleApproval={handleApproval}
-                  isApprovalMode={isApprovalMode}
+                  onColumnVisibilityModelChange={setColumnVisibilityModel}
+                  sortModel={sortModel}
+                  onSortModelChange={handleSortModelChange}
+                  disableSelectionOnClick
+                  disableColumnMenu
+                  hideFooter={true}
+                  hideFooterPagination={true}
+                  disableExtendRowFullWidth={true}
+                  pagination={false}
+                  autoHeight
+                  rowHeight={70}
+                  showToolbar
+                  slots={{
+                    toolbar: () => (
+                      <CustomToolbar
+                        searchQuery={searchQuery}
+                        filterAnchor={filterAnchor}
+                        onSearch={handleSearch}
+                        setSearchQuery={setSearchQuery}
+                        setFilterAnchor={setFilterAnchor}
+                        handleFilterChange={handleFilterChange}
+                        onColumnVisibilityChange={setColumnVisibilityModel}
+                        columns={filteredData}
+                        filters={filters}
+                        columnVisibilityModel={columnVisibilityModel}
+                        searchPlaceholder="Search orders..."
+                        showColumnVisibility={true}
+                        showFilters={true}
+                        showExport={false}
+                        showUpload={false}
+                        showApproval={true}
+                        // showAdd={isV("addButton")}
+                        // showAdd={true}
+                        // handleAddClick={handleAddOrder}
+                        // handleUploadClick={HandleBulkOrderUpload}
+                        columnsToDisplay={columnsToDisplay}
+                        handleApproval={handleApproval}
+                        isApprovalMode={isApprovalMode}
+                      />
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiDataGrid-row": {
+                      cursor: "pointer",
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    },
+                  }}
                 />
-              ),
-            }}
-            sx={{
-              "& .MuiDataGrid-row": {
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.04)",
-                },
-              },
-            }}
-          />}
-        />
-      </>) : 
-        (
+              }
+            />
+          </>
+        ) : (
           //   <Table
           //     columns={customerColumnsToUse}
           //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1614,8 +1618,7 @@ function Customers() {
           //     onPay={HandleFandOFailCustomer}
           //     syncLoading={syncLoading}
           //   />
-          
-          
+
           <DataGrid
             //   apiRef={gridApiRef}
             rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1674,8 +1677,6 @@ function Customers() {
               },
             }}
           />
-
-
         );
       case t("invites"):
         return (
@@ -2101,7 +2102,6 @@ function Customers() {
             <LoadingSpinner size="medium" />
           </div>
         )}
-        
       </div>
       <style>{`
       .invite-dialog {
