@@ -1161,9 +1161,9 @@ function Customers() {
   useEffect(() => {
     if (activeTab === "customers") {
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery, filters);
+        fetchApprovals(page, searchQuery, filters);
       } else {
-        fetchCustomers(1, searchQuery, filters);
+        fetchCustomers(page, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
       fetchInvites(page, searchQuery, filters);
@@ -1484,16 +1484,16 @@ function Customers() {
     const handleSortModelChange = (model) => {
       setSortModel(model);
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery, filters, model);
+        fetchApprovals(page, searchQuery, filters, model);
       } else {
-        fetchCustomers(1, searchQuery, filters, model);
+        fetchCustomers(page, searchQuery, filters, model);
       }
     };
     const handleInviteSortModelChange = (model) => {
       console.log("Sort model changed:", model);
 
       setInviteSortModel(model);
-      fetchInvites(1, searchQuery, filters, model);
+      fetchInvites(page, searchQuery, filters, model);
     };
     switch (activeTab) {
       case t("customers"):
