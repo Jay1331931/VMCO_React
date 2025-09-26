@@ -1271,6 +1271,7 @@
   flex-direction: row;
   justify-content: space-between;
   width: 100%;
+  gap:5px;
 }
 .login-footer a {
   color: var(--navy-blue);

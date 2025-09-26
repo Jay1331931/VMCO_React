@@ -148,6 +148,10 @@ function Login({ title, userType }) {
     e.preventDefault();
     navigate("/customers/registration");
   };
+  const handleNavigation = (e) => {
+    e.preventDefault();
+    navigate("/login/employee");
+  };
   return (
     <div className="login-screen">
       {/* {title === 'Customer Login' ?
@@ -201,6 +205,7 @@ function Login({ title, userType }) {
         </div>
 
         <div className="login-footer">
+          <div>
           {title === "Customer Login" ? (
             <div className="login-footer-text">
               <a
@@ -228,6 +233,18 @@ function Login({ title, userType }) {
               >
                 {t("Register")}
               </a>
+                <span> | </span>
+              <a
+                href="#"
+                onClick={isLoading ? (e) => e.preventDefault() : handleNavigation}
+                style={{
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.5 : 1,
+                  pointerEvents: isLoading ? "none" : "auto",
+                }}
+              >
+                {t("Employee")}
+              </a>
             </div>
           ) : (
             <div className="login-footer-text">
@@ -246,6 +263,7 @@ function Login({ title, userType }) {
               </a>
             </div>
           )}
+          </div>
           <div>
             <button
               type="submit"
