@@ -456,7 +456,7 @@ const CustomToolbar = ({
         open={open}
         onClose={() => setFilterAnchor(null)}
         // anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        sx={{ mt: isMobile ? 40 : 27, ml: isMobile ? 0 : i18n.language === "en" ? 110 : 0 }}
+        sx={{ mt: isMobile ? 15 : 15, ml: isMobile ? 0 : i18n.language === "en" ? 110 : 0 }}
       >
         <Grid
           item
@@ -490,9 +490,7 @@ const CustomToolbar = ({
                 ?.filter(
                   (col) =>
                     col.field !== "updatedAt" &&
-                    col.field !== "scheduledAt" &&
-                    col.field !== "createdAt" &&
-                    col.field !== "expectedAmount"
+                    col.field !== "createdAt"
                 )
                 .map((col) => (
                   <MenuItem key={col.field} value={col.field}>
@@ -623,39 +621,47 @@ const CustomToolbar = ({
             </Button>
           </Grid> */}
         {/* </Grid> */}
-        <Box sx={{ padding: 2, width: 350, display: "flex", flexDirection: "column", height: "100%" }}>
-          <DateRange
-            onChange={(item) => setDateFilter([item.selection])}
-            editableDateInputs={true}
-            style={{ width: "100%" }}
-            ranges={dateFilter}
-            months={1}
-            direction="horizontal"
-            preventSnapRefocus={true}
-          />
-               <Grid item sx={{ display: "flex", justifyContent: "flex-end" }}>
-        <Button
-  sx={{ minWidth: 40 }}
-  onClick={() => {
-    const startDate = formatDatePure(dateFilter[0].startDate);
-    const endDate = formatDatePure(dateFilter[0].endDate);
-
-    console.log("Selected Dates:", { startDate, endDate });
-
-    handleFilterChange({
-      ...filters,
-      [dateCategory]: {
-        startDate,
-        endDate,
-      },
-    });
+       <Box
+  sx={{
+    padding: 2,
+    width: { xs: "100%", sm: 350 }, // full width on mobile, 350px from small screens up
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
   }}
 >
-  Apply
-</Button>
+  <DateRange
+    onChange={(item) => setDateFilter([item.selection])}
+    editableDateInputs={true}
+    style={{ width: "100%" }}
+    ranges={dateFilter}
+    months={1}
+    direction="horizontal"
+    preventSnapRefocus={true}
+  />
+  <Grid item sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+    <Button
+      sx={{ minWidth: 40 }}
+      onClick={() => {
+        const startDate = formatDatePure(dateFilter[0].startDate);
+        const endDate = formatDatePure(dateFilter[0].endDate);
 
-          </Grid>
-        </Box>
+        console.log("Selected Dates:", { startDate, endDate });
+
+        handleFilterChange({
+          ...filters,
+          [dateCategory]: {
+            startDate,
+            endDate,
+          },
+        });
+      }}
+    >
+      Apply
+    </Button>
+  </Grid>
+</Box>
+
       </Menu>
     </>
   );
