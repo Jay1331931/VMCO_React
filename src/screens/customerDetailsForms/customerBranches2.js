@@ -1246,7 +1246,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   };
   return (
     <div className="branches-content" ref={contentRef}>
-      {isV("customerApprovalChecklist") && (
+      {/* {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
             href="#"
@@ -1288,7 +1288,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
             {t("Customer Branch Approval Checklist")}
           </a>
         </div>
-      )}
+      )} */}
       <div className="branches-page-header">
         <div className="branches-header-controls">
           <input

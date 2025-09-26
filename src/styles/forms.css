@@ -1910,3 +1910,55 @@ td.label-cell {
                 .action-button:hover {
                     opacity: 0.9;
                 }
+/* Styles for the download icon */
+.label-with-download {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a5640;
+  transition: all 0.2s ease;
+}
+
+.download-icon-button:hover {
+  background-color: rgba(10, 86, 64, 0.1);
+  transform: translateY(-1px);
+}
+
+.download-icon-button:active {
+  transform: translateY(0);
+}
+
+.download-icon-button svg {
+  transition: transform 0.2s ease;
+}
+
+.download-icon-button:hover svg {
+  transform: translateY(1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .label-with-download {
+    gap: 6px;
+  }
+  
+  .download-icon-button {
+    padding: 3px;
+  }
+  
+  .download-icon-button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
