@@ -30,6 +30,7 @@ import {
 import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
+import TableMobile from '../components/TableMobile';
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -97,6 +98,15 @@ function Customers() {
     "custDetailsAdd"
   );
   console.log("RBAC Manager:", rbacMgr);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+      // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+      useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+      }, []);
+  const [showTableMobilePopup, setShowTableMobilePopup] = useState(false);
   const columnsToDisplay = {
     id: t("Registration ID"),
     erpCustId: t("ERP ID"),
@@ -624,7 +634,7 @@ function Customers() {
     {
       field: "typeOfBusiness",
       headerName: t("Type Of Business"),
-      include: isV("typeOfBusiness"),
+      include: isMobile ? false : isV("typeOfBusiness"),
       searchable: true,
       minWidth: 140,
       flex: 1,
@@ -632,7 +642,7 @@ function Customers() {
     {
       field: "customerStatus",
       headerName: t("Status"),
-      include: isV("customerStatus"),
+      include: isMobile ? false : isV("customerStatus"),
       searchable: true,
       minWidth: 100,
       maxWidth: 120,
@@ -644,7 +654,7 @@ function Customers() {
     {
       field: "FandOSync",
       headerName: t("Action"),
-      include: isV("FandOSync"),
+      include: isMobile ? false : isV("FandOSync"),
       searchable: false,
       flex: 1,
       renderCell: (params) => {
@@ -1199,9 +1209,7 @@ function Customers() {
     };
     fetchGeoData();
   }, []);
-
-  const handleRowClick = async (params) => {
-    let customer = params.row;
+  const handleShowAllDetailsClick = async (customer) => {
     let transformedCustomer = await fetchCustomerContacts(
       customer.id,
       customer
@@ -1214,6 +1222,25 @@ function Customers() {
         mode: isApprovalMode ? "edit" : "add",
       },
     });
+  }
+  const handleRowClick = async (params) => {
+    let customer = params.row;
+    let transformedCustomer = await fetchCustomerContacts(
+      customer.id,
+      customer
+    );
+    if(isMobile){
+      setShowTableMobilePopup(true);
+    }else{
+      navigate(`/customerDetails`, {
+      state: {
+        customerId: customer.id,
+        workflowId: transformedCustomer?.workflowData?.id,
+        workflowInstanceId: transformedCustomer?.workflowInstanceId,
+        mode: isApprovalMode ? "edit" : "add",
+      },
+    });}
+    
     // console.log('Customer ID:', customer.id);
     // console.log('Customer Contacts:', customerContacts);
     // const transformedCustomer = transformCustomerData(customer, customerContacts);
@@ -1472,8 +1499,8 @@ function Customers() {
     },
   ];
   const visibleColumns = isApprovalMode
-    ? approvalColumns.filter((col) => col.include)
-    : customerColumns.filter((col) => col.include);
+    ? approvalColumns.filter((col) => col?.include)
+    : customerColumns.filter((col) => col?.include);
   const filteredData = visibleColumns?.filter((item) =>
     searchableFields?.includes(item?.field)
   );
@@ -1499,7 +1526,15 @@ function Customers() {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
-        return (
+        return isMobile ? 
+        (<TableMobile
+        columns={customerColumnsToUse}
+        allColumns={isApprovalMode ? approvalColumns : customerColumns}
+        data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+        showAllDetails={true}
+        handleAllDetailsClick={handleShowAllDetailsClick}
+        />) : 
+        (
           //   <Table
           //     columns={customerColumnsToUse}
           //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1509,6 +1544,8 @@ function Customers() {
           //     onPay={HandleFandOFailCustomer}
           //     syncLoading={syncLoading}
           //   />
+          
+          
           <DataGrid
             //   apiRef={gridApiRef}
             rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1567,6 +1604,8 @@ function Customers() {
               },
             }}
           />
+
+
         );
       case t("invites"):
         return (
@@ -1992,6 +2031,7 @@ function Customers() {
             <LoadingSpinner size="medium" />
           </div>
         )}
+        
       </div>
       <style>{`
       .invite-dialog {
