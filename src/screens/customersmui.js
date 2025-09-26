@@ -91,6 +91,8 @@ function Customers() {
   const [inviteSortModel, setInviteSortModel] = useState([]);
   const [filters, setFilters] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+    const [showRowPopup, setShowRowPopup] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -598,11 +600,11 @@ function Customers() {
   const customerColumns = [
     {
       field: "id",
-      headerName: t("Registration ID"),
+      headerName: isMobile ? t("ID") : t("Registration ID"),
       include: isV("id"),
       searchable: true,
-      minWidth: 100,
-      maxWidth: 120,
+      minWidth: isMobile ? 50 : 100,
+      maxWidth: isMobile ? 50 : 120,
       flex: 1,
     },
     {
@@ -610,8 +612,8 @@ function Customers() {
       headerName: t("ERP ID"),
       include: isV("erpCustId"),
       searchable: true,
-      minWidth: 120,
-      maxWidth: 140,
+      minWidth: isMobile ? 70 : 120,
+      maxWidth: isMobile ? 70 : 140,
       flex: 1,
     },
     {
@@ -619,15 +621,16 @@ function Customers() {
       headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
-      minWidth: 150,
+      minWidth: isMobile ? 100 : 150,
+      maxWidth: isMobile ? 100 : 200,
       flex: 2,
     },
     {
       field: "companyType",
-      headerName: t("Company Type"),
+      headerName: isMobile ? t("Type") : t("Company Type"),
       include: isV("companyType"),
       searchable: true,
-      minWidth: 120,
+      minWidth: isMobile ? 80 : 120,
       maxWidth: 150,
       flex: 1,
     },
@@ -1231,6 +1234,8 @@ function Customers() {
     );
     if(isMobile){
       setShowTableMobilePopup(true);
+      setSelectedRow(params.row);
+    setShowRowPopup(true);
     }else{
       navigate(`/customerDetails`, {
       state: {
@@ -1527,13 +1532,78 @@ function Customers() {
         const customerColumnsToUse = visibleColumns;
 
         return isMobile ? 
-        (<TableMobile
+        (<>
+        
+        <TableMobile
         columns={customerColumnsToUse}
         allColumns={isApprovalMode ? approvalColumns : customerColumns}
         data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
         showAllDetails={true}
         handleAllDetailsClick={handleShowAllDetailsClick}
-        />) : 
+        selectedRow={selectedRow}
+        setSelectedRow={setSelectedRow}
+        showRowPopup={showRowPopup}
+        setShowRowPopup={setShowRowPopup}
+        dataGridComponent={<DataGrid
+            //   apiRef={gridApiRef}
+            rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+            columns={customerColumnsToUse}
+            pageSize={pageSize}
+            rowCount={total}
+            onRowClick={handleRowClick}
+            columnVisibilityModel={columnVisibilityModel}
+            onColumnVisibilityModelChange={setColumnVisibilityModel}
+            sortModel={sortModel}
+            onSortModelChange={handleSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  searchQuery={searchQuery}
+                  filterAnchor={filterAnchor}
+                  onSearch={handleSearch}
+                  setSearchQuery={setSearchQuery}
+                  setFilterAnchor={setFilterAnchor}
+                  handleFilterChange={handleFilterChange}
+                  onColumnVisibilityChange={setColumnVisibilityModel}
+                  columns={filteredData}
+                  filters={filters}
+                  columnVisibilityModel={columnVisibilityModel}
+                  searchPlaceholder="Search orders..."
+                  showColumnVisibility={true}
+                  showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={true}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+                  // handleAddClick={handleAddOrder}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  columnsToDisplay={columnsToDisplay}
+                  handleApproval={handleApproval}
+                  isApprovalMode={isApprovalMode}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          />}
+        />
+      </>) : 
         (
           //   <Table
           //     columns={customerColumnsToUse}

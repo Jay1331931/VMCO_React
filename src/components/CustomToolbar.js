@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   Toolbar,
   ColumnsPanelTrigger,
@@ -106,6 +106,14 @@ const CustomToolbar = ({
   const gridApiRef = useGridApiContext();
   const open = Boolean(filterAnchor);
   const [searchOptions, setSearchOptions] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+        // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+        useEffect(() => {
+          const handleResize = () => setIsMobile(window.innerWidth < 768);
+          console.log("isMobile", isMobile);
+          window.addEventListener("resize", handleResize);
+          return () => window.removeEventListener("resize", handleResize);
+        }, []);
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setSearchValue(value);
@@ -448,7 +456,7 @@ const CustomToolbar = ({
         open={open}
         onClose={() => setFilterAnchor(null)}
         // anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        sx={{ mt: 27, ml: i18n.language === "en" ? 110 : 0 }}
+        sx={{ mt: isMobile ? 40 : 27, ml: isMobile ? 0 : i18n.language === "en" ? 110 : 0 }}
       >
         <Grid
           item
@@ -556,7 +564,7 @@ const CustomToolbar = ({
         open={Boolean(dateFilterAnchor)}
         onClose={() => setDateFilterAnchor(null)}
         // anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        sx={{ ml: i18n.language === "en" ? -20 : 6 }}
+        sx={{ ml: isMobile ? 0 : i18n.language === "en" ? -20 : 6 }}
       >
         {/* <Grid item container sx={{ padding: 1, columnGap: 1 }}> */}
           {/* <Grid item sx={{ flex: 1 }}>
