@@ -3,7 +3,13 @@ import { useTranslation } from "react-i18next";
 import Constants from "../constants";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import "../styles/components.css";
-
+import {
+  DataGrid,
+  GridFooterContainer,
+  GridPagination,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import CustomToolbar from "./CustomToolbar";
 const TableMobile = ({
   columns,
   allColumns,
@@ -19,10 +25,16 @@ const TableMobile = ({
   actionButtons,
   showAllDetails = false,
   handleAllDetailsClick,
+  dataGridComponent,
+  selectedRow,
+  setSelectedRow,
+  showRowPopup,
+  setShowRowPopup,
 }) => {
+  console.log(selectedRow, showRowPopup);
   const { t } = useTranslation();
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [showRowPopup, setShowRowPopup] = useState(false);
+  // const [selectedRow, setSelectedRow] = useState(null);
+  // const [showRowPopup, setShowRowPopup] = useState(false);
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -139,7 +151,9 @@ const TableMobile = ({
     if (column.field.toLowerCase() === "paymentstatus") {
       return (
         <span
-          className={`status-badge ${getPaymentStatusClass(item[column.field])}`}
+          className={`status-badge ${getPaymentStatusClass(
+            item[column.field]
+          )}`}
         >
           {t(item[column.field])}
         </span>
@@ -619,7 +633,7 @@ const TableMobile = ({
   };
   return (
     <>
-      <div className="table-container">
+      {/* <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
@@ -754,8 +768,66 @@ const TableMobile = ({
                     }
                 }
             `}</style>
-      </div>
-
+      </div> */}
+      {/* <DataGrid
+            //   apiRef={gridApiRef}
+            rows={data}
+            columns={columns}
+            // pageSize={pageSize}
+            // rowCount={total}
+            onRowClick={handleRowClick}
+            // columnVisibilityModel={columnVisibilityModel}
+            // onColumnVisibilityModelChange={setColumnVisibilityModel}
+            // sortModel={sortModel}
+            // onSortModelChange={handleSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  // searchQuery={searchQuery}
+                  // filterAnchor={filterAnchor}
+                  // onSearch={handleSearch}
+                  // setSearchQuery={setSearchQuery}
+                  // setFilterAnchor={setFilterAnchor}
+                  // handleFilterChange={handleFilterChange}
+                  // onColumnVisibilityChange={setColumnVisibilityModel}
+                  // columns={filteredData}
+                  // filters={filters}
+                  // columnVisibilityModel={columnVisibilityModel}
+                  // searchPlaceholder="Search orders..."
+                  // showColumnVisibility={true}
+                  // showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={true}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+                  // handleAddClick={handleAddOrder}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  // columnsToDisplay={columnsToDisplay}
+                  // handleApproval={handleApproval}
+                  // isApprovalMode={isApprovalMode}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          /> */}
+      {dataGridComponent}
       {showRowPopup && selectedRow && (
         <div className="row-popup-overlay" onClick={handleClosePopup}>
           <div className="row-popup" onClick={(e) => e.stopPropagation()}>
@@ -861,17 +933,31 @@ const TableMobile = ({
               </div>
 
               {/* All Details Button */}
-  {showAllDetails && (<div className="all-details-button-section">
-    <button 
-      className="all-details-button"
-      onClick={() => handleAllDetailsClick(selectedRow)}
-    >
-      <span>{t("View All Details")}</span>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-    </button>
-  </div>)}
+              {showAllDetails && (
+                <div className="all-details-button-section">
+                  <button
+                    className="all-details-button"
+                    onClick={() => handleAllDetailsClick(selectedRow)}
+                  >
+                    <span>{t("View All Details")}</span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 18L15 12L9 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
 
             <style>{`
