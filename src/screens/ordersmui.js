@@ -543,7 +543,7 @@ function Orders() {
       ),
     },
     {
-      field: "status", headerName: t("Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
+      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
       ),
@@ -758,24 +758,24 @@ function Orders() {
         );
       },
     },
-    { field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 150, flex: 1,
+    { field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 180, flex: 1,
       renderCell: (params) => (
         <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
       ),
     }, 
-    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1 },
-    { field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 120, flex: 1,
+    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 180, flex: 1 },
+    { field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 140, flex: 1,
       renderCell: (params) =>
         params?.row?.createdAt
           ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
           : " ",
     },
-    { field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 120, 
+    { field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 180, 
       renderCell: (params) =>
         parseFloat(params?.row?.totalAmount || 0).toFixed(2),
     },
     {
-      field: "status", headerName: t(" Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
+      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
       ),

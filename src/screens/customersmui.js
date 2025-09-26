@@ -631,11 +631,11 @@ function Customers() {
     },
     {
       field: "customerStatus",
-      headerName: t("Status"),
+      headerName: t("Approval Status"),
       include: isV("customerStatus"),
       searchable: true,
       minWidth: 100,
-      maxWidth: 120,
+      maxWidth: 180,
       flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{t(params.value)}</label>
@@ -737,11 +737,11 @@ function Customers() {
     },
     {
       field: "customerStatus",
-      headerName: t("Status"),
+      headerName: t("Approval Status"),
       include: isV("customerStatus"),
       searchable: true,
       minWidth: 100,
-      maxWidth: 120,
+      maxWidth: 180,
       flex: 1,
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
