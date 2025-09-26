@@ -638,7 +638,7 @@ function Customers() {
       maxWidth: 120,
       flex: 1,
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>{params.value}</label>
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
       ),
     },
     {

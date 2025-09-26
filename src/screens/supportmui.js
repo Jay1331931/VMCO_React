@@ -163,92 +163,55 @@ function Support() {
 
     // Define columns for the DataGrid
     const supportColumns = [
-        {
-            field: "ticketId",
-            headerName: t("Ticket #"),
-            include: isV('ticketIdCol'),
-            searchable: true,
-            maxWidth: 100,
-            flex: 1,
+        { field: "ticketId", headerName: t("Ticket #"), include: isV('ticketIdCol'), searchable: true, maxWidth: 100, flex: 1, align: "center",
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
+        },
+        { field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV('customerCol'), searchable: false, sortable: false, minWidth: 60, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
+        },
+        { field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV('branchCol'), searchable: false, sortable: false, minWidth: 60, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
+        },
+        { field: "grievanceName", headerName: t("Issue Name"), include: isV('issueNameCol'), searchable: true, minWidth: 100, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
+        },
+        { field: "grievanceType", headerName: t("Issue Type"), include: isV('issueTypeCol'), searchable: true, minWidth: 120, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
+        },
+        { field: "createdAt", headerName: t("Created Date"), include: isV('createdDateCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>
+                    {params?.row?.createdAt
+                        ? formatDate(params?.row?.createdAt, 'DD/MM/YYYY')
+                        : convertToTimezone(params?.row?.createdAt, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY')}
+                </label>
+            )
+        },
+        { field: "createdByUsername", headerName: t("Created By"), include: isV('createdByCol'), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1,
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
         },
         {
-            field: isArabic ? "companyNameAr" : "companyNameEn",
-            headerName: t("Customer"),
-            include: isV('customerCol'),
-            searchable: false,
-            sortable: false,
-            maxWidth: 180,
-            flex: 2,
+            field: "assignedTo", headerName: t("Assigned To"), include: isV('assignedToCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, 
+            renderCell: (params) => (
+                <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
+            )
         },
-        {
-            field: isArabic ? "branchNameLc" : "branchNameEn",
-            headerName: t("Branch"),
-            include: isV('branchCol'),
-            searchable: false,
-            sortable: false,
-            minWidth: 100,
-            maxWidth: 180,
-            flex: 2,
-        },
-        {
-            field: "grievanceName",
-            headerName: t("Issue Name"),
-            include: isV('issueNameCol'),
-            searchable: true,
-            minWidth: 150,
-            flex: 2,
-        },
-        {
-            field: "grievanceType",
-            headerName: t("Issue Type"),
-            include: isV('issueTypeCol'),
-            searchable: true,
-            minWidth: 120,
-            flex: 1,
-        },
-        {
-            field: "createdAt",
-            headerName: t("Created Date"),
-            include: isV('createdDateCol'),
-            searchable: false,
-            minWidth: 100,
-            maxWidth: 120,
-            flex: 1,
-            renderCell: (params) =>
-                params?.row?.createdAt
-                    ? formatDate(params?.row?.createdAt, 'DD/MM/YYYY')
-                    : convertToTimezone(params?.row?.createdAt, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY'),
-        },
-        {
-            field: "createdByUsername",
-            headerName: t("Created By"),
-            include: isV('createdByCol'),
-            searchable: false,
-            sortable: false,
-            minWidth: 100,
-            maxWidth: 120,
-            flex: 1,
-        },
-        {
-            field: "assignedTo",
-            headerName: t("Assigned To"),
-            include: isV('assignedToCol'),
-            searchable: false,
-            minWidth: 100,
-            maxWidth: 120,
-            flex: 1,
-        },
-        {
-            field: "status",
-            headerName: t("Status"),
-            include: isV('statusCol'),
-            searchable: true,
-            minWidth: 80,
-            maxWidth: 100,
-            flex: 1,
+        {field: "status", headerName: t("Status"), include: isV('statusCol'), searchable: true, minWidth: 80, maxWidth: 100, flex: 1,
             cellClassName: (params) => getStatusClass(params.value),
             renderCell: (params) => (
-                <label className={getStatusClass(params.value)}>{params.value}</label>
+                <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
             ),
         },
     ];

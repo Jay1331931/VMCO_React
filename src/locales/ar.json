@@ -41,11 +41,6 @@
     "Order Status :": ": حالة الطلب:",
     "Approve": "موافقة",
     "Reject": "رفض",
-    "approved": "موافقة",
-    "Rejected": "رفض",
-    "Pending": "قيد الانتظار",
-    "In Progress": "قيد التنفيذ",
-    "Closed": "مغلق",
     "Differ": "تأجيل",
     "Save": "حفظ",
     "Download Invoice": "تحميل الفاتورة",
@@ -451,8 +446,6 @@
     "dd-mm-yyyy": "يوم-شهر-سنة",
     "Select Urgency Level": "اختر مستوى العجلة",
     "Select department first": "اختر القسم أولاً",
-    "New": "جديد",
-    "Approved": "موافق",
     "Click to select customer": "انقر لتحديد عميل",
     "Click to select branch": "انقر لتحديد فرع",
     "Select a Branch": "اختر فرعًا",
@@ -752,6 +745,20 @@
     "Select All": "اختر الكل",
     "Select category first": "اختر الفئة أولاً",
     "Invalid email or password":"البريد الإلكتروني أو كلمة المرور غير صالحة",
-    "Customer Email is Not Verified":"لم يتم التحقق من بريد العميل الإلكتروني"
+    "Customer Email is Not Verified":"لم يتم التحقق من بريد العميل الإلكتروني",
+    "approved": "موافقة",
+    "New": "جديد",
+    "Approved": "موافق",
+    "Confirmed": "مؤكد",
+    "Delivered": "تم التوصيل",
+    "Invoiced": "تم إصدار الفاتورة",
+    "Rejected": "رفض",
+    "Pending": "قيد الانتظار",
+    "Paid": "مدفوع",
+    "Under Review": "قيد المراجعة",
+    "In Progress": "قيد التنفيذ",
+    "Closed": "مغلق",
+    "Approval Status": "حالة الموافقة"
+
 
 }
