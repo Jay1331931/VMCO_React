@@ -479,24 +479,45 @@ function Orders() {
   };
 
   const orderColumns = [
-    { field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1 },
-    { field: "erpOrderId", headerName: t("Sales Order ID"), include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1 },
-    { field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Company Name"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 2 },
-    { field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch Name"), include: isV("branchName"), searchable: true, maxWidth: 180, flex: 2 },
-    { field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100,
+    {
+      field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "erpOrderId", headerName: t("Sales Order ID"), include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Company Name"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 2, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch Name"), include: isV("branchName"), searchable: true, maxWidth: 180, flex: 2, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100, headerAlign: "center",
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <span className="badge badge-blue">{t("Machines")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Machines")}</span>
           ) : (
-            <span className="badge badge-blue">{t("Consumables")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <span className="badge badge-blue">{t("Fresh")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Fresh")}</span>
           ) : (
-            <span className="badge badge-blue">{t("Frozen")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Frozen")}</span>
           );
         }
         return (
@@ -516,42 +537,46 @@ function Orders() {
         );
       },
     },
-    { field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 150, flex: 1,
+    {
+      field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 150, flex: 1, headerAlign: "center",
       renderCell: (params) => (
         <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
       ),
     },
-    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1 },
     {
-      field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 120, flex: 1,
-      renderCell: (params) =>
-        params?.row?.createdAt
-          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
-          : " ", 
-    },
-    {
-      field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 120,
-      renderCell: (params) =>
-        parseFloat(params?.row?.totalAmount || 0).toFixed(2),
-    },
-    {
-      field: "paymentStatus", headerName: t("Payment Status"), include: isV("paymentStatus"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
+      field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
       renderCell: (params) => (
-        <label className={getPaymentStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>
-          {t(params.value)}
-        </label>
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      )
+    },
+    {
+      field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params?.row?.createdAt ? formatDate(params?.row?.createdAt, "DD/MM/YYYY") : " "}</span>
       ),
     },
     {
-      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
+      field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 120, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{parseFloat(params?.row?.totalAmount || 0).toFixed(2)}</span>
+      ),
+    },
+    {
+      field: "paymentStatus", headerName: t("Payment Status"), include: isV("paymentStatus"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <label className={getPaymentStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
+      ),
+    },
+    {
+      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
       renderCell: (params) => (
         <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
       ),
     },
     {
-      field: "pay", headerName: t("Action"), include: isV("action"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80,
+      field: "pay", headerName: t("Action"), include: isV("action"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80, headerAlign: "center",
       renderCell: (params) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
             params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
@@ -593,7 +618,7 @@ function Orders() {
       ),
     },
     {
-      field: "sendLink", headerName: t("Action"), include: isV("sendLink") || isV("FandOSyncSO"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80,
+      field: "sendLink", headerName: t("Action"), include: isV("sendLink") || isV("FandOSyncSO"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80, headerAlign: "center",
       renderCell: (params) => {
         const rowdata = params.row;
         const SYNC_RULES = {
@@ -639,7 +664,7 @@ function Orders() {
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
-          <Box sx={{ display: "flex", gap: 1 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
               params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
               params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
@@ -720,25 +745,51 @@ function Orders() {
   ];
 
   const approvalColumns = [
-    { field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1 },
-    { field: "erpOrderId", include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1 },
-    { field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 1, },
-    { field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV("branchName"), searchable: true, minWidth: 80, flex: 1, },
-    { field: "workflowName", headerName: t("Workflow Name"), include: isV("workflowName"), searchable: true, minWidth: 100, flex: 1 },
-    { field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100, flex: 1,
+    {
+      field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "erpOrderId", include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV("branchName"), searchable: true, minWidth: 80, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "workflowName", headerName: t("Workflow Name"), include: isV("workflowName"), searchable: true, minWidth: 100, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100, flex: 1, headerAlign: "center",
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <span className="badge badge-blue">{t("Machines")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Machines")}</span>
           ) : (
-            <span className="badge badge-blue">{t("Consumables")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <span className="badge badge-blue">{t("Fresh")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Fresh")}</span>
           ) : (
-            <span className="badge badge-blue">{t("Frozen")}</span>
+            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Frozen")}</span>
           );
         }
         return (
@@ -758,24 +809,27 @@ function Orders() {
         );
       },
     },
-    { field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 180, flex: 1,
+    {
+      field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 180, flex: 1, headerAlign: "center",
       renderCell: (params) => (
         <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
       ),
-    }, 
-    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 180, flex: 1 },
-    { field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 140, flex: 1,
-      renderCell: (params) =>
-        params?.row?.createdAt
-          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
-          : " ",
     },
-    { field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 180, 
-      renderCell: (params) =>
-        parseFloat(params?.row?.totalAmount || 0).toFixed(2),
+    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 180, flex: 1, headerAlign: "center" },
+    {
+      field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 140, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value ? formatDate(params.value, "DD/MM/YYYY") : " "}</span>
+      ),
     },
     {
-      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1,
+      field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 180, flex: 1, headerAlign: "center",
+      renderCell: (params) => (
+        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
+      ),
+    },
+    {
+      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
       renderCell: (params) => (
         <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
       ),
@@ -1214,6 +1268,12 @@ function Orders() {
                     backgroundColor: "rgba(0, 0, 0, 0.04)",
                   },
                 },
+                '.MuiDataGrid-cell': {
+                  textAlign: 'center', // Add this line to center all cell content
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }
               }}
             />
           )}

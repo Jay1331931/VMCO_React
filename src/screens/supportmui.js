@@ -162,32 +162,38 @@ function Support() {
 
     // Define columns for the DataGrid
     const supportColumns = [
-        { field: "ticketId", headerName: t("Ticket #"), include: isV('ticketIdCol'), searchable: true, maxWidth: 100, flex: 1, align: "center",
+        {
+            field: "ticketId", headerName: t("Ticket #"), include: isV('ticketIdCol'), searchable: true, maxWidth: 100, flex: 1, align: "center", headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        { field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV('customerCol'), searchable: false, sortable: false, minWidth: 60, flex: 1,
+        {
+            field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV('customerCol'), searchable: false, sortable: false, minWidth: 60, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        { field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV('branchCol'), searchable: false, sortable: false, minWidth: 60, flex: 1,
+        {
+            field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV('branchCol'), searchable: false, sortable: false, minWidth: 60, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        { field: "grievanceName", headerName: t("Issue Name"), include: isV('issueNameCol'), searchable: true, minWidth: 100, flex: 1,
+        {
+            field: "grievanceName", headerName: t("Issue Name"), include: isV('issueNameCol'), searchable: true, minWidth: 100, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        { field: "grievanceType", headerName: t("Issue Type"), include: isV('issueTypeCol'), searchable: true, minWidth: 120, flex: 1,
+        {
+            field: "grievanceType", headerName: t("Issue Type"), include: isV('issueTypeCol'), searchable: true, minWidth: 120, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        { field: "createdAt", headerName: t("Created Date"), include: isV('createdDateCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1,
+        {
+            field: "createdAt", headerName: t("Created Date"), include: isV('createdDateCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>
                     {params?.row?.createdAt
@@ -196,18 +202,20 @@ function Support() {
                 </label>
             )
         },
-        { field: "createdByUsername", headerName: t("Created By"), include: isV('createdByCol'), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1,
+        {
+            field: "createdByUsername", headerName: t("Created By"), include: isV('createdByCol'), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
         {
-            field: "assignedTo", headerName: t("Assigned To"), include: isV('assignedToCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, 
+            field: "assignedTo", headerName: t("Assigned To"), include: isV('assignedToCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
             renderCell: (params) => (
                 <label style={{ display: "flex", justifyContent: "center" }}>{params.value}</label>
             )
         },
-        {field: "status", headerName: t("Status"), include: isV('statusCol'), searchable: true, minWidth: 80, maxWidth: 100, flex: 1,
+        {
+            field: "status", headerName: t("Status"), include: isV('statusCol'), searchable: true, minWidth: 80, maxWidth: 100, flex: 1, headerAlign: "center",
             cellClassName: (params) => getStatusClass(params.value),
             renderCell: (params) => (
                 <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
@@ -265,8 +273,8 @@ function Support() {
         status: "Status",
     };
 
-    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
-        ? Math.ceil(total / pageSize) 
+    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
+        ? Math.ceil(total / pageSize)
         : 1;
 
     return (
@@ -332,10 +340,16 @@ function Support() {
                                             backgroundColor: 'rgba(0, 0, 0, 0.04)',
                                         },
                                     },
+                                    '.MuiDataGrid-cell': {
+                                        textAlign: 'center', // Add this line to center all cell content
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }
                                 }}
                             />
                         )}
-                        
+
                         {/* Pagination component - added from Orders page */}
                         {isV('supportPagination') && initialTickets.length > 0 && (
                             <Pagination

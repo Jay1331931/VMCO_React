@@ -594,6 +594,8 @@ function Customers() {
       minWidth: 100,
       maxWidth: 120,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "erpCustId",
@@ -603,6 +605,8 @@ function Customers() {
       minWidth: 120,
       maxWidth: 140,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
@@ -611,6 +615,8 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "companyType",
@@ -620,6 +626,8 @@ function Customers() {
       minWidth: 120,
       maxWidth: 150,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "typeOfBusiness",
@@ -628,6 +636,8 @@ function Customers() {
       searchable: true,
       minWidth: 140,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "customerStatus",
@@ -637,9 +647,8 @@ function Customers() {
       minWidth: 100,
       maxWidth: 180,
       flex: 1,
-      renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
-      ),
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "FandOSync",
@@ -647,6 +656,7 @@ function Customers() {
       include: isV("FandOSync"),
       searchable: false,
       flex: 1,
+      headerAlign: "center",
       renderCell: (params) => {
         !params?.row?.erpCustId &&
           params?.row?.status?.toLowerCase() === "approved" && (
@@ -692,6 +702,8 @@ function Customers() {
       minWidth: 100,
       maxWidth: 120,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "erpCustId",
@@ -701,6 +713,8 @@ function Customers() {
       minWidth: 120,
       maxWidth: 140,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
@@ -709,6 +723,8 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "workflowName",
@@ -717,6 +733,8 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "companyType",
@@ -726,6 +744,8 @@ function Customers() {
       minWidth: 120,
       maxWidth: 150,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "typeOfBusiness",
@@ -734,6 +754,8 @@ function Customers() {
       searchable: true,
       minWidth: 140,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "customerStatus",
@@ -743,8 +765,9 @@ function Customers() {
       minWidth: 100,
       maxWidth: 180,
       flex: 1,
+      headerAlign: "center",
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>{params.value}</label>
+        <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
       ),
     },
     {
@@ -756,6 +779,8 @@ function Customers() {
       minWidth: 120,
       maxWidth: 150,
       flex: 1,
+      headerAlign: "center",
+      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
   ];
 
@@ -769,6 +794,7 @@ function Customers() {
       minWidth: 120,
       maxWidth: 150,
       flex: 1,
+      headerAlign: "center",
       renderCell: (params) =>
         params?.row?.createdAt
           ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
@@ -784,6 +810,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
+      headerAlign: "center"
     },
     {
       field: "companyEmail",
@@ -792,6 +819,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 1,
+      headerAlign: "center"
     },
     {
       field: "companyPhone",
@@ -800,6 +828,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
+      headerAlign: "center"
     },
     {
       field: "companyName",
@@ -808,6 +837,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
+      headerAlign: "center"
     },
     {
       field: "region",
@@ -816,6 +846,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
+      headerAlign: "center"
     },
     {
       field: "employeeId",
@@ -824,6 +855,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 1,
+      headerAlign: "center"
     },
     {
       field: "source",
@@ -832,6 +864,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
+      headerAlign: "center"
     },
     {
       field: "actions",
@@ -839,6 +872,7 @@ function Customers() {
       include: isV("actions"),
       searchable: false,
       flex: 1,
+      headerAlign: "center",
       renderCell: (params) => (
         <Box sx={{ display: "flex", gap: 1 }}>
           <Box
@@ -1024,8 +1058,8 @@ function Customers() {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-      ? [customerContacts]
-      : [];
+        ? [customerContacts]
+        : [];
 
     // Create a map of contactType to contact data (note: using contactType instead of contact_type)
     const contactsMap = contacts.reduce((acc, contact) => {
@@ -1187,9 +1221,9 @@ function Customers() {
           setRegionOptions(
             geoData
               ? Object.keys(geoData).map((region) => ({
-                  value: region,
-                  name: region,
-                }))
+                value: region,
+                name: region,
+              }))
               : []
           );
         }
@@ -1565,6 +1599,12 @@ function Customers() {
                   backgroundColor: "rgba(0, 0, 0, 0.04)",
                 },
               },
+              '.MuiDataGrid-cell': {
+                textAlign: 'center', // Add this line to center all cell content
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
             }}
           />
         );
@@ -1635,6 +1675,13 @@ function Customers() {
                   backgroundColor: "rgba(0, 0, 0, 0.04)",
                 },
               },
+              '.MuiDataGrid-cell': {
+                textAlign: 'center', // Add this line to center all cell content
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+
             }}
           />
         );
@@ -1856,9 +1903,9 @@ function Customers() {
                     style={
                       inviteErrors.mobile
                         ? {
-                            borderColor: "red",
-                            "--PhoneInput-color--error": "red", // Custom CSS variable for error state
-                          }
+                          borderColor: "red",
+                          "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                        }
                         : {}
                     }
                     className={
@@ -1886,9 +1933,9 @@ function Customers() {
                     options={
                       geoData
                         ? Object.keys(geoData).map((region) => ({
-                            value: region,
-                            name: region,
-                          }))
+                          value: region,
+                          name: region,
+                        }))
                         : []
                     }
                     value={inviteData.region}
@@ -1981,12 +2028,12 @@ function Customers() {
           (activeTab === "customers" &&
             isApprovalMode &&
             paginatedApprovals.length > 0)) && (
-          <Pagination
-            currentPage={page}
-            totalPages={Math.ceil(total / pageSize)}
-            onPageChange={setPage}
-          />
-        )}
+            <Pagination
+              currentPage={page}
+              totalPages={Math.ceil(total / pageSize)}
+              onPageChange={setPage}
+            />
+          )}
         {loading && (
           <div className="loading-container">
             <LoadingSpinner size="medium" />
