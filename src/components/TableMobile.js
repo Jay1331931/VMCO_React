@@ -3,7 +3,13 @@ import { useTranslation } from "react-i18next";
 import Constants from "../constants";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import "../styles/components.css";
-
+import {
+  DataGrid,
+  GridFooterContainer,
+  GridPagination,
+  useGridApiRef,
+} from "@mui/x-data-grid";
+import CustomToolbar from "./CustomToolbar";
 const TableMobile = ({
   columns,
   allColumns,
@@ -17,10 +23,18 @@ const TableMobile = ({
   syncLoading,
   syncLoadingId,
   actionButtons,
+  showAllDetails = false,
+  handleAllDetailsClick,
+  dataGridComponent,
+  selectedRow,
+  setSelectedRow,
+  showRowPopup,
+  setShowRowPopup,
 }) => {
+  console.log(selectedRow, showRowPopup);
   const { t } = useTranslation();
-  const [selectedRow, setSelectedRow] = useState(null);
-  const [showRowPopup, setShowRowPopup] = useState(false);
+  // const [selectedRow, setSelectedRow] = useState(null);
+  // const [showRowPopup, setShowRowPopup] = useState(false);
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -101,8 +115,8 @@ const TableMobile = ({
   };
   const renderCell = (item, column) => {
     // If there's a custom renderer for this column, use it
-    if (customCellRenderer && customCellRenderer[column.key]) {
-      return customCellRenderer[column.key](item);
+    if (customCellRenderer && customCellRenderer[column.field]) {
+      return customCellRenderer[column.field](item);
     }
 
     if (column?.render) {
@@ -110,8 +124,8 @@ const TableMobile = ({
     }
 
     // Handle nested objects (e.g., primaryContact.email)
-    if (column.key.includes(".")) {
-      const keys = column.key.split(".");
+    if (column.field.includes(".")) {
+      const keys = column.field.split(".");
       let value = item;
       for (const key of keys) {
         value = value[key];
@@ -119,36 +133,38 @@ const TableMobile = ({
       return value;
     }
     // Handle requestBody and responseBody specially
-    if (column.key === "requestBody") {
+    if (column.field === "requestBody") {
       return renderBodyCell(item.requestBody, "Request Body");
     }
 
-    if (column.key === "responseBody") {
+    if (column.field === "responseBody") {
       return renderBodyCell(item.responseBody, "Response Body");
     }
     // Handle status badges
-    if (column.key === "status" && getStatusClass) {
+    if (column.field === "status" && getStatusClass) {
       return (
-        <span className={`status-badge ${getStatusClass(item[column.key])}`}>
-          {t(item[column.key])}
+        <span className={`status-badge ${getStatusClass(item[column.field])}`}>
+          {t(item[column.field])}
         </span>
       );
     }
-    if (column.key.toLowerCase() === "paymentstatus") {
+    if (column.field.toLowerCase() === "paymentstatus") {
       return (
         <span
-          className={`status-badge ${getPaymentStatusClass(item[column.key])}`}
+          className={`status-badge ${getPaymentStatusClass(
+            item[column.field]
+          )}`}
         >
-          {t(item[column.key])}
+          {t(item[column.field])}
         </span>
       );
     }
-    if (column.key?.toLowerCase() === "paymentmethod") {
-      return <span>{t(item[column.key])}</span>;
+    if (column.field?.toLowerCase() === "paymentmethod") {
+      return <span>{t(item[column.field])}</span>;
     }
 
     if (
-      column.key?.toLowerCase() == "fandosync" &&
+      column.field?.toLowerCase() == "fandosync" &&
       item.customerStatus?.toLowerCase() === "approved" &&
       !item.erpCustId
     ) {
@@ -239,7 +255,7 @@ const TableMobile = ({
       [Constants.ENTITY.DAR]: () => COMMON_RULES.NAQI_DAR,
     };
 
-    if (column.key?.toLowerCase() === "ordersync" && !item.erpOrderId) {
+    if (column.field?.toLowerCase() === "ordersync" && !item.erpOrderId) {
       const entity = item.entity?.toLowerCase();
       const rules = SYNC_RULES[item.entity]?.(item) || [];
 
@@ -271,7 +287,7 @@ const TableMobile = ({
       }
     }
 
-    // if(column.key?.toLowerCase()=="ordersync" && item.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && item.status.toLowerCase()=="approved" &&!item.erpOrderId  ){
+    // if(column.field?.toLowerCase()=="ordersync" && item.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && item.status.toLowerCase()=="approved" &&!item.erpOrderId  ){
     //     return (
     //         <button
     //             className="action-button pay"
@@ -286,12 +302,12 @@ const TableMobile = ({
     //     );
     // }
     // Handle action buttons
-    if (column.key === "actions" && actionButtons) {
+    if (column.field === "actions" && actionButtons) {
       return actionButtons(item);
     }
     // Handle pay button
     if (
-      column.key.toLowerCase() === "pay" &&
+      column.field.toLowerCase() === "pay" &&
       onPay &&
       item?.paymentMethod?.toLowerCase() != "cash on delivery" &&
       item.paymentStatus?.toLowerCase() !== "paid" &&
@@ -319,7 +335,7 @@ const TableMobile = ({
       );
     }
     if (
-      column.key?.toLowerCase() === "sendlink" &&
+      column.field?.toLowerCase() === "sendlink" &&
       item?.paymentMethod?.toLowerCase() != "cash on delivery" &&
       item.paymentStatus?.toLowerCase() !== "paid" &&
       (item.status?.toLowerCase() === "approved" ||
@@ -346,7 +362,7 @@ const TableMobile = ({
       );
     }
 
-    const value = item[column.key];
+    const value = item[column.field];
 
     // If value is an object, stringify it
     if (typeof value === "object" && value !== null) {
@@ -370,7 +386,7 @@ const TableMobile = ({
     }
 
     // Default cell rendering
-    return item[column.key];
+    return item[column.field];
   };
   const isDateString = (val) => {
     if (val instanceof Date) return true;
@@ -384,8 +400,8 @@ const TableMobile = ({
   };
   const renderPopupCell = (item, column) => {
     // If there's a custom renderer for this column, use it
-    if (customCellRenderer && customCellRenderer[column.key]) {
-      return customCellRenderer[column.key](item);
+    if (customCellRenderer && customCellRenderer[column.field]) {
+      return customCellRenderer[column.field](item);
     }
 
     if (column?.render) {
@@ -393,8 +409,8 @@ const TableMobile = ({
     }
 
     // Handle nested objects
-    if (column.key.includes(".")) {
-      const keys = column.key.split(".");
+    if (column.field.includes(".")) {
+      const keys = column.field.split(".");
       let value = item;
       for (const key of keys) {
         value = value[key];
@@ -403,42 +419,42 @@ const TableMobile = ({
     }
 
     // Handle requestBody and responseBody specially
-    if (column.key === "requestBody") {
+    if (column.field === "requestBody") {
       return renderBodyCell(item.requestBody, "Request Body");
     }
 
-    if (column.key === "responseBody") {
+    if (column.field === "responseBody") {
       return renderBodyCell(item.responseBody, "Response Body");
     }
 
     // Handle status badges
-    if (column.key === "status" && getStatusClass) {
+    if (column.field === "status" && getStatusClass) {
       return (
         <span
-          className={`status-badge-large ${getStatusClass(item[column.key])}`}
+          className={`status-badge-large ${getStatusClass(item[column.field])}`}
         >
-          {t(item[column.key])}
+          {t(item[column.field])}
         </span>
       );
     }
 
-    if (column.key.toLowerCase() === "paymentstatus") {
+    if (column.field.toLowerCase() === "paymentstatus") {
       return (
         <span
           className={`status-badge-large ${getPaymentStatusClass(
-            item[column.key]
+            item[column.field]
           )}`}
         >
-          {t(item[column.key])}
+          {t(item[column.field])}
         </span>
       );
     }
 
-    if (column.key?.toLowerCase() === "paymentmethod") {
-      return <span>{t(item[column.key])}</span>;
+    if (column.field?.toLowerCase() === "paymentmethod") {
+      return <span>{t(item[column.field])}</span>;
     }
 
-    const value = item[column.key];
+    const value = item[column.field];
 
     // If value is an object, stringify it
     if (typeof value === "object" && value !== null) {
@@ -617,15 +633,15 @@ const TableMobile = ({
   };
   return (
     <>
-      <div className="table-container">
+      {/* <div className="table-container">
         <table className="data-table">
           <thead>
             <tr>
               {columns.map((column) => (
-                <th key={column.key}>
-                  {typeof column.header === "function"
-                    ? column.header()
-                    : t(column.header)}
+                <th key={column.field}>
+                  {typeof column.headerName === "function"
+                    ? column.headerName()
+                    : t(column.headerName)}
                 </th>
               ))}
             </tr>
@@ -644,7 +660,7 @@ const TableMobile = ({
                 // style={{ cursor: onRowClick ? 'pointer' : 'default' }}
               >
                 {columns.map((column) => (
-                  <td key={`${row.id || index}-${column.key}`}>
+                  <td key={`${row.id || index}-${column.field}`}>
                     {renderCell(row, column)}
                   </td>
                 ))}
@@ -752,234 +768,66 @@ const TableMobile = ({
                     }
                 }
             `}</style>
-      </div>
-      {/* {showRowPopup && (
-            <div className="row-popup-overlay" onClick={handleClosePopup}>
-            <div className="row-popup" onClick={e => e.stopPropagation()}>
-                <button className="popup-close" onClick={handleClosePopup}>×</button>
-                
-                <div className="popup-content">
-                    <div className="popup-header-section">
-                    </div>
-
-                </div>
-
-                <style>{`
-                    .row-popup-overlay {
-                        position: fixed;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        background: rgba(0,0,0,0.12);
-                        z-index: 1000;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 24px;
-                    }
-                    .row-popup {
-                        background: #fff;
-                        border-radius: 8px;
-                        box-shadow: 0 4px 16px rgba(0,0,0,0.10);
-                        padding: 0;
-                        max-width: 800px;
-                        width: 100%;
-                        max-height: 90vh;
-                        overflow-y: auto;
-                        position: relative;
-                        animation: popup-fade-in 0.18s;
-                    }
-                    @keyframes popup-fade-in {
-                        from { opacity: 0; transform: scale(0.97); }
-                        to { opacity: 1; transform: scale(1); }
-                    }
-                    .popup-close {
-                        position: absolute;
-                        top: 18px;
-                        right: 18px;
-                        background: none;
-                        border: none;
-                        font-size: 2rem;
-                        color: #888;
-                        cursor: pointer;
-                        z-index: 2;
-                        transition: color 0.15s;
-                    }
-                    .popup-close:hover {
-                        color: #0a5640;
-                    }
-                    .popup-content {
-                        padding: 48px 48px 40px 48px;
-                    }
-                    .popup-header-section {
-                        margin-bottom: 32px;
-                        border-bottom: 1px solid #e0e0e0;
-                        padding-bottom: 16px;
-                    }
-                    .popup-order-title {
-                        font-size: 1.5rem;
-                        font-weight: 600;
-                        margin: 0 0 8px 0;
-                        color: #222;
-                    }
-                    .order-id {
-                        font-size: 1rem;
-                        color: #666;
-                        font-weight: 500;
-                    }
-                    .order-details-grid {
-                        display: grid;
-                        gap: 24px;
-                        margin-bottom: 32px;
-                    }
-                    .order-section {
-                        background: #f8f9fa;
-                        padding: 20px;
-                        border-radius: 8px;
-                        border: 1px solid #e0e0e0;
-                    }
-                    .section-title {
-                        font-size: 1.1rem;
-                        font-weight: 600;
-                        margin: 0 0 16px 0;
-                        color: #222;
-                        border-bottom: 1px solid #ddd;
-                        padding-bottom: 8px;
-                    }
-                    .order-detail-row {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        margin-bottom: 12px;
-                        padding: 8px 0;
-                    }
-                    .order-detail-label {
-                        font-weight: 600;
-                        color: #555;
-                        min-width: 140px;
-                    }
-                    .order-detail-value {
-                        color: #222;
-                        text-align: right;
-                        flex: 1;
-                    }
-                    .status-badge-large {
-                        padding: 6px 16px;
-                        border-radius: 20px;
-                        font-size: 0.9rem;
-                        font-weight: 600;
-                        display: inline-block;
-                    }
-                    .address-details {
-                        color: #555;
-                        line-height: 1.5;
-                    }
-                    .items-section {
-                        grid-column: 1 / -1;
-                    }
-                    .order-items-list {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 12px;
-                    }
-                    .order-item {
-                        background: white;
-                        padding: 16px;
-                        border-radius: 6px;
-                        border: 1px solid #e0e0e0;
-                    }
-                    .item-name {
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        color: #222;
-                    }
-                    .item-details {
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 16px;
-                        font-size: 0.9rem;
-                        color: #555;
-                    }
-                    .popup-actions {
-                        display: flex;
-                        gap: 12px;
-                        justify-content: flex-end;
-                        flex-wrap: wrap;
-                        margin-top: 24px;
-                        padding-top: 24px;
-                        border-top: 1px solid #e0e0e0;
-                    }
-                    .action-button {
-                        padding: 10px 20px;
-                        border-radius: 4px;
-                        border: none;
-                        font-size: 0.9rem;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.2s;
-                        min-width: 120px;
-                    }
-                    .action-button.primary {
-                        background-color: #0a5640;
-                        color: white;
-                    }
-                    .action-button.secondary {
-                        background-color: #00205B;
-                        color: white;
-                    }
-                    .action-button.outline {
-                        background-color: transparent;
-                        color: #666;
-                        border: 1px solid #666;
-                    }
-                    .action-button:hover {
-                        opacity: 0.9;
-                        transform: translateY(-1px);
-                    }
-                    .action-button:disabled {
-                        opacity: 0.6;
-                        cursor: not-allowed;
-                        transform: none;
-                    }
-                    @media (max-width: 768px) {
-                        .row-popup {
-                            margin: 20px;
-                            max-height: 95vh;
-                        }
-                        .popup-content {
-                            padding: 32px 16px 24px 16px;
-                        }
-                        .order-details-grid {
-                            gap: 16px;
-                        }
-                        .order-detail-row {
-                            flex-direction: column;
-                            align-items: flex-start;
-                            gap: 4px;
-                        }
-                        .order-detail-value {
-                            text-align: left;
-                        }
-                        .item-details {
-                            flex-direction: column;
-                            gap: 4px;
-                        }
-                        .popup-actions {
-                            flex-direction: column;
-                        }
-                        .action-button {
-                            min-width: 100%;
-                        }
-                    }
-                    @media (max-width: 480px) {
-                        .row-popup-overlay {
-                            padding: 16px;
-                        }
-                        .row-popup {
-                            margin: 0;
-                        }
-                    }
-                `}</style>
-            </div>
-        </div>)} */}
+      </div> */}
+      {/* <DataGrid
+            //   apiRef={gridApiRef}
+            rows={data}
+            columns={columns}
+            // pageSize={pageSize}
+            // rowCount={total}
+            onRowClick={handleRowClick}
+            // columnVisibilityModel={columnVisibilityModel}
+            // onColumnVisibilityModelChange={setColumnVisibilityModel}
+            // sortModel={sortModel}
+            // onSortModelChange={handleSortModelChange}
+            disableSelectionOnClick
+            disableColumnMenu
+            hideFooter={true}
+            hideFooterPagination={true}
+            disableExtendRowFullWidth={true}
+            pagination={false}
+            autoHeight
+            rowHeight={70}
+            showToolbar
+            slots={{
+              toolbar: () => (
+                <CustomToolbar
+                  // searchQuery={searchQuery}
+                  // filterAnchor={filterAnchor}
+                  // onSearch={handleSearch}
+                  // setSearchQuery={setSearchQuery}
+                  // setFilterAnchor={setFilterAnchor}
+                  // handleFilterChange={handleFilterChange}
+                  // onColumnVisibilityChange={setColumnVisibilityModel}
+                  // columns={filteredData}
+                  // filters={filters}
+                  // columnVisibilityModel={columnVisibilityModel}
+                  // searchPlaceholder="Search orders..."
+                  // showColumnVisibility={true}
+                  // showFilters={true}
+                  showExport={false}
+                  showUpload={false}
+                  showApproval={true}
+                  // showAdd={isV("addButton")}
+                  // showAdd={true}
+                  // handleAddClick={handleAddOrder}
+                  // handleUploadClick={HandleBulkOrderUpload}
+                  // columnsToDisplay={columnsToDisplay}
+                  // handleApproval={handleApproval}
+                  // isApprovalMode={isApprovalMode}
+                />
+              ),
+            }}
+            sx={{
+              "& .MuiDataGrid-row": {
+                cursor: "pointer",
+                "&:hover": {
+                  backgroundColor: "rgba(0, 0, 0, 0.04)",
+                },
+              },
+            }}
+          /> */}
+      {dataGridComponent}
       {showRowPopup && selectedRow && (
         <div className="row-popup-overlay" onClick={handleClosePopup}>
           <div className="row-popup" onClick={(e) => e.stopPropagation()}>
@@ -995,10 +843,10 @@ const TableMobile = ({
 
               <div className="row-details-grid">
                 {allColumns.map((column) => {
-                  if (column.key === "actions" && actionButtons) {
+                  if (column.field === "actions" && actionButtons) {
                     return (
                       <div
-                        key={column.key}
+                        key={column.field}
                         // className="row-section action-section"
                         className="row-detail-row"
                       >
@@ -1017,12 +865,12 @@ const TableMobile = ({
                     value !== undefined && value !== null ? value : "-";
 
                   return (
-                    // <div key={column.key} className="row-section">
+                    // <div key={column.field} className="row-section">
                     <div className="row-detail-row">
                       <span className="row-detail-label">
-                        {typeof column.header === "function"
-                          ? column.header()
-                          : t(column.header)}
+                        {typeof column.headerName === "function"
+                          ? column.headerName()
+                          : t(column.headerName)}
                         :
                       </span>
                       <span className="row-detail-value">{displayValue}</span>
@@ -1083,6 +931,33 @@ const TableMobile = ({
                   </div>
                 </div> */}
               </div>
+
+              {/* All Details Button */}
+              {showAllDetails && (
+                <div className="all-details-button-section">
+                  <button
+                    className="all-details-button"
+                    onClick={() => handleAllDetailsClick(selectedRow)}
+                  >
+                    <span>{t("View All Details")}</span>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 18L15 12L9 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
 
             <style>{`
@@ -1252,6 +1127,76 @@ const TableMobile = ({
                                     padding: 24px 12px 20px 12px;
                                 }
                             }
+                                /* All Details Button Styles */
+.all-details-button-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+}
+
+.all-details-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #0a5640 0%, #0d6e52 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(10, 86, 64, 0.2);
+}
+
+.all-details-button:hover {
+  background: linear-gradient(135deg, #084532 0%, #0b5c46 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(10, 86, 64, 0.3);
+}
+
+.all-details-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(10, 86, 64, 0.2);
+}
+
+.all-details-button svg {
+  transition: transform 0.3s ease;
+}
+
+.all-details-button:hover svg {
+  transform: translateX(2px);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .all-details-button-section {
+    margin-top: 20px;
+    padding-top: 16px;
+  }
+  
+  .all-details-button {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .all-details-button {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+  
+  .all-details-button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
                         `}</style>
           </div>
         </div>
