@@ -9,12 +9,12 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import RbacManager from "../utilities/rbac";
 
 function Login({ title, userType }) {
-  const { login } = useAuth();
+  const { login} = useAuth();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+const [isLogin,setLogin]=useState(false)
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
@@ -28,8 +28,11 @@ function Login({ title, userType }) {
   useEffect(() => {
     document.title = t("Login");
   }, [t]);
-
+if (!isLogin){
+  localStorage.removeItem("token")
+}
   const handleSubmit = async (e) => {
+    setLogin(false)
     e.preventDefault();
     if (email === "" || password === "") {
       setError(t("Please fill in all fields"));
@@ -54,7 +57,6 @@ function Login({ title, userType }) {
 
         localStorage.setItem("token", data.token);
         console.log("Login response:", data);
-
         login(data.token, data.data);
 
         if (!data?.success) {
@@ -75,38 +77,38 @@ function Login({ title, userType }) {
             state: { customerId: data?.data?.customerId, mode: "add" },
           });
         } else if (
-          data?.data?.userType.toLowerCase() === "employee" &&
-          (data?.data?.designation.toLowerCase() ===
+          data?.data?.userType?.toLowerCase() === "employee" &&
+          (data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase() ||
-            data?.data?.designation.toLowerCase() ===
+            data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.OPS_MANAGER.toLowerCase() ||
-            data?.data?.designation.toLowerCase() ===
+            data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.SALES_EXECUTIVE.toLowerCase() ||
-            data?.data?.designation.toLowerCase() ===
+            data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.AREA_SALES_MANAGER.toLowerCase() ||
             data?.data?.roles[0].toLowerCase() ===
               Constants.ROLES.SUPER_ADMIN.toLowerCase())
         ) {
           navigate("/customers");
         } else if (
-          data?.data?.userType.toLowerCase() === "employee" &&
-          (data?.data?.designation.toLowerCase() ===
+          data?.data?.userType?.toLowerCase() === "employee" &&
+          (data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.MAINTENANCE_HEAD.toLowerCase() ||
-            data?.data?.designation.toLowerCase() ===
+            data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.MAINTENANCE_TECHNICIAN.toLowerCase() ||
-            data?.data?.designation.toLowerCase() ===
+            data?.data?.designation?.toLowerCase() ===
               Constants.DESIGNATIONS.MAINTENANCE_MANAGER.toLowerCase())
         ) {
           navigate("/maintenance");
         } else if (
-          data?.data?.userType.toLowerCase() === "employee" &&
-          data?.data?.designation.toLowerCase() ===
+          data?.data?.userType?.toLowerCase() === "employee" &&
+          data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.BRANCH_ACCOUNTANT.toLowerCase()
         ) {
           navigate("/bankTransactions");
         }
-        else if ( data?.data?.userType.toLowerCase() === "employee" &&
-          data?.data?.designation.toLowerCase() ===
+        else if ( data?.data?.userType?.toLowerCase() === "employee" &&
+          data?.data?.designation?.toLowerCase() ===
             Constants.DESIGNATIONS.PRODUCTION_MANAGER.toLowerCase()
         ) {
           navigate("/orders");
@@ -121,10 +123,12 @@ function Login({ title, userType }) {
         setError("Unable to connect to server");
       } finally {
         setIsLoading(false); // Reset loading state
+        setLogin(true)
       }
       setError("");
     }
   };
+
 
   // const getCookie = (name) => {
   //   const cookies = document.cookie
@@ -148,6 +152,10 @@ function Login({ title, userType }) {
     e.preventDefault();
     navigate("/customers/registration");
   };
+  const handleNavigation = (e) => {
+    e.preventDefault();
+    navigate("/login/employee");
+  };
   return (
     <div className="login-screen">
       {/* {title === 'Customer Login' ?
@@ -157,7 +165,21 @@ function Login({ title, userType }) {
                 </div>) : []} */}
 
       <div className="login-component">
-        <div className="login-header">{t("Login")}</div>
+        <div className="login-header-container"><div className="login-header">{t("Login")}</div>
+                 {title === "Customer Login" &&(  <a className="login-employee-link"
+                href="#"
+                onClick={isLoading ? (e) => e.preventDefault() : handleNavigation}
+                style={{
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.5 : 1,
+                  pointerEvents: isLoading ? "none" : "auto",
+                      
+
+                }}
+              >
+                {t("Employee")}
+              </a>)}
+              </div>
         <form onSubmit={handleSubmit}>
         <div className="login-container">
           
@@ -201,6 +223,7 @@ function Login({ title, userType }) {
         </div>
 
         <div className="login-footer">
+          <div>
           {title === "Customer Login" ? (
             <div className="login-footer-text">
               <a
@@ -228,6 +251,7 @@ function Login({ title, userType }) {
               >
                 {t("Register")}
               </a>
+             
             </div>
           ) : (
             <div className="login-footer-text">
@@ -246,6 +270,7 @@ function Login({ title, userType }) {
               </a>
             </div>
           )}
+          </div>
           <div>
             <button
               type="submit"

@@ -134,7 +134,7 @@ const AddBankTransaction = () => {
     try {
       const errors = {};
       if (!formData.erpCustId) errors.erpCustId = "ERP Customer ID is required";
-      if (!formData.entity) errors.entity = "Entity is required";
+      // if (!formData.entity) errors.entity = "Entity is required";
       if (!formData.transactionDate)
         errors.transactionDate = "Transaction Date is required";
       if (imageUrls?.length === 0)
@@ -502,7 +502,7 @@ const AddBankTransaction = () => {
                   updateTransaction?.amountTransferred ||
                   ""
                 }
-                disabled={true}
+                disabled={!formData.orderId || !updateTransaction?.orderId }
                 onChange={handleChange}
               />
               {fieldErrors.amountTransferred && (

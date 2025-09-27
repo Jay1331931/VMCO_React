@@ -115,7 +115,7 @@ function FinancialInformation({
 
   return (
     <div className="customer-onboarding-form-grid">
-      {isV("customerApprovalChecklist") && (
+      {/* {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
             href="#"
@@ -163,7 +163,7 @@ function FinancialInformation({
             {t("Customer Approval Checklist")}
           </a>
         </div>
-      )}
+      )} */}
       {/* Bank Details Header */}
       <h3 className="form-header full-width">{t("Bank Details")}</h3>
       {/* <div className="form-group">
