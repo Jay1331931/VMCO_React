@@ -1132,17 +1132,17 @@ function OrderDetails() {
           paymentStatus = 'Pending';
         } else if (finalPaymentMethod.toLowerCase() === 'credit') {
           orderStatus = 'Pending';
-          paymentStatus = 'Paid';
+          paymentStatus = 'Credited';
         }
       } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
         // For other entities (SHC)
         orderStatus = 'Open';
-        paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
+        paymentStatus = finalPaymentMethod === 'Credit' ? 'Credited' : 'Pending';
       }
       else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
         // For other entities (GMTC)
         orderStatus = 'Open';
-        paymentStatus = finalPaymentMethod === 'Credit' ? 'Paid' : 'Pending';
+        paymentStatus = finalPaymentMethod === 'Credit' ? 'Credited' : 'Pending';
       }
       else {
         // For NAQI and DAR entities
@@ -1151,7 +1151,7 @@ function OrderDetails() {
           paymentStatus = 'Pending';
         } else if (finalPaymentMethod.toLowerCase() === 'credit' || finalPaymentMethod.toLowerCase() === 'cash on delivery') {
           orderStatus = 'Approved';
-          paymentStatus = finalPaymentMethod.toLowerCase() === 'credit' ? 'Paid' : 'Pending';
+          paymentStatus = finalPaymentMethod.toLowerCase() === 'credit' ? 'Credited' : 'Pending';
         } else {
           orderStatus = 'Approved';
           paymentStatus = 'Pending';
@@ -3868,7 +3868,7 @@ const handleSelectProduct = (products) => {
                   </button>
                 )}
 
-                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
+                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== 'paid' || formData?.paymentStatus?.toLowerCase() !== 'credited')
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
                     (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
@@ -3876,7 +3876,7 @@ const handleSelectProduct = (products) => {
                       {t('Pay')}
                     </button>
                   )}
-                {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
+                {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== 'paid' || formData?.paymentStatus?.toLowerCase() !== 'credited')
                   && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                     && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
                     (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (

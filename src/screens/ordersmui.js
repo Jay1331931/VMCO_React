@@ -51,6 +51,8 @@ const getPaymentStatusClass = (paymentStatus) => {
   switch (paymentStatus?.toLowerCase()) {
     case "paid":
       return "status-paid";
+    case "credited":
+      return "status-credited";
     case "under review":
       return "status-under-review";
     case "pending":
