@@ -3933,7 +3933,7 @@ function OrderDetails() {
                                     </button>
                                 )}
 
-                                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
+                                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== "paid" || formData?.paymentStatus?.toLowerCase() !== "credited" ) 
                                     && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                                         && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
                                         (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
@@ -3941,7 +3941,7 @@ function OrderDetails() {
                                             {t('Pay')}
                                         </button>
                                     )}
-                                {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && formData?.paymentStatus?.toLowerCase() !== 'paid'
+                                {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== "paid" || formData?.paymentStatus?.toLowerCase() !== "credited" ) 
                                     && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
                                         && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
                                         (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
