@@ -2448,7 +2448,7 @@ if (uniqueFieldsList.includes(field)) {
               style={{ display: "flex", alignItems: "center", gap: "8px" }}
             >
               <span className="status-label">{t("Status")}:</span>
-              <span className="status-badge">
+              <span className={`status-${customerData?.customerStatus?.toLowerCase()}`}>
                 {t(customerData?.customerStatus) || t("Pending")}
               </span>
             </div>

@@ -1610,6 +1610,11 @@
   background-color: var(--bg-transparent);
   color: var(--logo-light-green);
 }
+
+.status-credited {
+  background-color: var(--bg-transparent);
+  color: var(--logo-light-green);
+}
 .status-under-review {
   background-color: var(--bg-transparent);
   color: var(--logo-cyan);
