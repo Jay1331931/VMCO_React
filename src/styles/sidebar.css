@@ -4,7 +4,6 @@
     --sidebar-collapsed-width: 70px;
     --header-height: 60px;
     --menu-item-height: 36px;
-
     /* Primary colors */
     --primary-color: #00205B;    /* Deep blue for primary actions */
     --primary-hover: #001845;    /* Darker blue for hover states */
@@ -17,19 +16,16 @@
     --bg-light: #F9FAFB;        /* Light gray background */
     --bg-white: #FFFFFF;        /* White background */
     --border-color: #D9D9D6;    /* Light gray for borders */
-
     /* Status colors */
     --status-approved: #00594C;  /* Green for approved status */
     --status-rejected: #EF7C00;  /* Orange for rejected status */
     --status-pending: #6D787D;   /* Gray for pending status */
-
     /* Font families */
     --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     
     /* Animation */
     --transition-speed: 0.3s;
 }
-
 * {
     margin: 0;
     padding: 0;
@@ -38,7 +34,6 @@
 */
    
 }
-
 /* Sidebar Styles */
 .sidebar {
     width: var(--sidebar-width);
@@ -54,11 +49,9 @@
     display: flex;
     flex-direction: column;
 }
-
 .sidebar.collapsed {
     width: var(--sidebar-collapsed-width);
 }
-
 /* Mobile - hidden by default */
 @media (max-width: 768px) {
     .sidebar {
@@ -71,26 +64,21 @@
         z-index: 1000;
         transition: transform var(--transition-speed);
     }
-
     .sidebar.expanded {
         transform: translateX(0);
     }
 
-
     .toggle-btn-container {
         display: none; /* Hide toggle button in mobile view */
     }
-
     .mobile-menu-btn {
         display: block; /* Show mobile menu button */
     }
-
     .main-content {
         margin-left: 0; /* No margin when sidebar is hidden */
         margin-right: 0;
     }
 }
-
 /* Mobile - RTL adjustments */
 @media (max-width: 768px) {
     .app.rtl .sidebar {
@@ -98,26 +86,21 @@
         right: 0;
         transform: translateX(100%); /* Hide sidebar in RTL */
     }
-
     .app.rtl .sidebar.expanded {
         transform: translateX(0); /* Show sidebar in RTL */
     }
-
     .app.rtl .sidebar.collapsed {
         transform: translateX(100%); /* Hide collapsed sidebar in RTL */
     }
-
     .app.rtl .mobile-menu-btn {
         margin-right: 10px; /* Adjust mobile menu button for RTL */
         margin-left: auto;
     }
-
     .app.rtl .main-content {
         margin-left: 0;
         margin-right: 0; /* No margin for main content in mobile view */
     }
 }
-
 .sidebar-header {
     height: var(--header-height);
     display: flex;
@@ -125,30 +108,25 @@
     padding: 0 10px;
     border-bottom: 1px solid var(--border-color);
 }
-
 .sidebar-header h1 {
     font-size: 1.3rem;
     font-weight: 600;
     margin-left: 12px;
     white-space: nowrap;
 }
-
 .sidebar-menu {
     flex: 1;
     padding: 12px 0;
     display: flex;
     flex-direction: column;
 }
-
 .main-menu-items {
     flex: 1;
 }
-
 .bottom-menu-section {
     margin-top: auto;
     margin-bottom: 16px;
 }
-
 .menu-section-title {
     font-size: 0.75rem;
     font-weight: 600;
@@ -157,7 +135,6 @@
     padding: 8px 16px;
     letter-spacing: 0.5px;
 }
-
 .menu-item {
     height: var(--menu-item-height);
     padding: 0 16px;
@@ -171,32 +148,26 @@
     border-radius: 6px;
     font-size: 0.9rem;
 }
-
 .menu-item:hover {
     background-color: var(--border-color);
 }
-
 .menu-item.active {
     background-color: #EEF2FF;
     color: var(--primary-color);
     font-weight: 500;
 }
-
 .menu-item i {
     font-size: 1rem;
     width: 20px;
     text-align: center;
 }
-
 .menu-item span {
     margin-left: 12px;
     transition: opacity var(--transition-speed);
 }
-
 .sidebar-footer {
     padding: 0 16px 16px;
 }
-
 .user-card {
     display: flex;
     flex-direction: column;
@@ -205,21 +176,18 @@
     padding: 12px;
     background-color: var(--bg-light);
 }
-
 .user-info {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
 }
-
 .user-details {
     display: flex;
     align-items: center;
     flex: 1;
     overflow: hidden;
 }
-
 .user-avatar {
     width: 32px;
     height: 32px;
@@ -230,18 +198,15 @@
     justify-content: center;
     color: var(--text-secondary);
 }
-
 .user-text {
     margin-left: 10px;
     overflow: hidden;
 }
-
 .user-name {
     font-weight: 500;
     font-size: 0.9rem;
     white-space: nowrap;
 }
-
 .user-email {
     font-size: 0.75rem;
     color: var(--text-secondary);
@@ -249,7 +214,6 @@
     text-overflow: ellipsis;
     overflow: hidden;
 }
-
 .logout-icon {
     font-size: 0.9rem;
     color: var(--text-secondary);
@@ -258,11 +222,9 @@
     transition: background-color 0.2s;
     cursor: pointer;
 }
-
 .logout-icon:hover {
     background-color: var(--border-color);
 }
-
 /* Collapsed state styles */
 .sidebar.collapsed .menu-item span,
 .sidebar.collapsed .user-text,
@@ -272,17 +234,14 @@
     width: 0;
     display: none;
 }
-
 .sidebar.collapsed .user-card {
     border: none;
     padding: 0px;
     background-color: transparent;
 }
-
 .sidebar.collapsed .sidebar-header h1 {
     display: none;
 }
-
 /* Toggle button styles */
 .toggle-btn-container {
     position: fixed;
@@ -290,31 +249,25 @@
     z-index: 1000;
     transition: all 0.3s ease;
 }
-
 .rtl .toggle-btn-container {
     right: 70px; /* Adjust this value to match the collapsed sidebar width */
     left: auto;
 }
-
 .ltr .toggle-btn-container {
     left: 70px; /* Adjust this value to match the collapsed sidebar width */
     right: auto;
 }
-
 .sidebar.expanded + .toggle-btn-container {
     right: 240px; /* Adjust this value to match the expanded sidebar width */
 }
-
 .rtl .sidebar.expanded + .toggle-btn-container {
     right: 240px; /* Adjust this value to match the expanded sidebar width */
     left: auto;
 }
-
 .ltr .sidebar.expanded + .toggle-btn-container {
     left: 240px; /* Adjust this value to match the expanded sidebar width */
     right: auto;
 }
-
 .toggle-btn {
     width: 20px;
     height: 48px;
@@ -330,7 +283,6 @@
     color: var(--text-secondary);
     box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
 }
-
 .app.rtl .toggle-btn {
     width: 20px;
     height: 48px;
@@ -346,26 +298,21 @@
     color: var(--text-secondary);
     box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
 }
-
 .toggle-btn i {
     transition: transform var(--transition-speed);
 }
-
 .sidebar:not(.collapsed) .toggle-btn i {
     transform: rotate(0deg);
 }
-
 .sidebar.collapsed .toggle-btn i {
     transform: rotate(180deg);
 }
-
 /* Hide toggle button on mobile */
 @media (max-width: 768px) {
     .toggle-btn-container {
         display: none;
     }
 }
-
 /* Adjust toggle button for mobile */
 @media (max-width: 768px) {
     .mobile-menu-btn {
@@ -377,7 +324,6 @@
         margin-left: 10px;
     }
 }
-
 /* Main Content Styles */
 .main-content {
     flex: 1;
@@ -385,11 +331,9 @@
     transition: margin-left var(--transition-speed);
     min-height: 100vh;
 }
-
 .sidebar.collapsed ~ .main-content {
     margin-left: var(--sidebar-collapsed-width);
 }
-
 /* Mobile - no margin when sidebar is hidden */
 @media (max-width: 768px) {
     .main-content {
@@ -397,7 +341,6 @@
         margin-right: 0;
     }
 }
-
 .header {
     height: var(--header-height);
     background-color: white;
@@ -408,7 +351,6 @@
     top: 0;
     z-index: 100;
 }
-
 .mobile-menu-btn {
     background: none;
     border: none;
@@ -418,29 +360,36 @@
     margin-right: 16px;
     display: none;
 }
-
 @media (max-width: 768px) {
     .mobile-menu-btn {
         display: block;
     }
+    .content {
+    padding: 20px;
+    padding-top: 0px !important;
+    overflow-x: hidden !important;
+    touch-action: none;
+    -webkit-text-size-adjust: none;
+    text-size-adjust: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
-
+}
 .header-title {
     padding: 35px;
     font-size: 1.5rem;
     font-weight: 600;
 }
-
 .content {
     padding: 20px;
 }
-
 .page-title {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 20px;
 }
-
 .lang-switch-btn {
     margin-left: auto;
     background: none;
@@ -455,16 +404,13 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-
 .lang-switch-btn:hover {
     background-color: var(--border-color);
 }
-
 /* RTL toggle */
 .app.rtl {
     direction: rtl;
 }
-
 /* Position sidebar on right in RTL */
 .app.rtl .sidebar {
     left: auto;
@@ -472,33 +418,27 @@
     border-right: none;
     border-left: 1px solid var(--border-color);
 }
-
 /* Sidebar collapsed adjustments for RTL */
 .app.rtl .sidebar.collapsed {
     right: 0;
 }
 
-
 .app.rtl .sidebar-header h1 {
     margin-left: 0;
     margin-right: 12px;
 }
-
 .app.rtl .menu-item span {
     margin-left: 0;
     margin-right: 12px;
 }
-
 /* Sidebar footer adjustments for RTL */
 .app.rtl .sidebar-footer {
     padding: 0 16px 16px;
 }
-
 .app.rtl .user-text {
     margin-left: 0;
     margin-right: 10px;
 }
-
 .app.rtl .toggle-btn {
     border-left: 1px solid var(--border-color);
     border-right: none;
@@ -508,11 +448,9 @@
     justify-content: left;
 }
 
-
 .app.rtl .sidebar.collapsed ~ .main-content {
     margin-right: var(--sidebar-collapsed-width);
 }
-
 /* Language switch button */
 .lang-switch-btn {
     margin-left: auto; /* Default for LTR (English) */
@@ -529,11 +467,9 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
-
 .lang-switch-btn:hover {
     background-color: var(--border-color);
 }
-
 .app.rtl .lang-switch-btn {
     margin-left: 20px;
     margin-right: auto; /* Adjust for RTL (Arabic) */

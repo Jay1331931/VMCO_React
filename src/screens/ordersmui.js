@@ -21,6 +21,7 @@ import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
 import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
   GridFooterContainer,
@@ -89,8 +90,17 @@ function Orders() {
   const [sortModel, setSortModel] = useState([]);
   const [sortField, setSortField] = useState("createdAt");
   const [filterAnchor, setFilterAnchor] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [showRowPopup, setShowRowPopup] = useState(false);
   const gridApiRef = useGridApiRef();
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const columnsToDisplay = {
     id: "OrderId",
     erpOrderId: "Sales Order ID",
@@ -270,8 +280,7 @@ function Orders() {
     navigate("/orderDetails", { state: { mode: "add" } });
   };
 
-  const handleRowClick = async (params) => {
-    const order = params?.row;
+  const handleShowAllDetailsClick = async (order) => {
     try {
       const params = new URLSearchParams({
         page: 1,
@@ -311,6 +320,70 @@ function Orders() {
           approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
         },
       });
+    } catch (err) {
+      console.error("Failed to fetch sales order lines:", err);
+      navigate("/orderDetails", {
+        state: {
+          order,
+          mode: "edit",
+          fromApproval: isApprovalMode,
+          wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+          workflowName: isApprovalMode ? order.workflowName : undefined,
+          workflowData: isApprovalMode ? order.workflowData : undefined,
+        },
+      });
+    }
+  };
+
+  const handleRowClick = async (params) => {
+    const order = params?.row;
+    console.log("----order");
+    console.log(order);
+    try {
+      const params = new URLSearchParams({
+        page: 1,
+        pageSize: 100,
+        search: "",
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: JSON.stringify({ order_id: order.id }),
+      });
+      const response = await fetch(
+        `${API_BASE_URL}/sales-order-lines/pagination?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const result = await response.json();
+      let salesOrderLines = result.data ? result.data.data : [];
+      if (
+        result.status === "Ok" &&
+        result.data &&
+        Array.isArray(result.data.data)
+      ) {
+        salesOrderLines = result.data.data;
+      }
+      if (isMobile) {
+        // setShowTableMobilePopup(true);
+        setSelectedRow(order);
+        setShowRowPopup(true);
+      } else {
+        navigate("/orderDetails", {
+          state: {
+            order: { ...order, salesOrderLines },
+            mode: "edit",
+            fromApproval: isApprovalMode,
+            wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+            workflowName: isApprovalMode ? order.workflowName : undefined,
+            workflowData: isApprovalMode ? order.workflowData : undefined,
+            approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
+          },
+        });
+      }
     } catch (err) {
       console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
@@ -448,7 +521,7 @@ function Orders() {
         paymentStatus: "Paid",
         status: "approved",
       },
-      { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+      { paymentMethod: "Credit", paymentStatus: "Credited", status: "approved" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -457,7 +530,7 @@ function Orders() {
 
       // Open cases
       { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
-      { paymentMethod: "Credit", paymentStatus: "Paid", status: "open" },
+      { paymentMethod: "Credit", paymentStatus: "Credited", status: "open" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -471,7 +544,7 @@ function Orders() {
         paymentStatus: "Paid",
         status: "approved",
       },
-      { paymentMethod: "Credit", paymentStatus: "Paid", status: "approved" },
+      { paymentMethod: "Credit", paymentStatus: "Credited", status: "approved" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -581,7 +654,7 @@ function Orders() {
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+         (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credited" ) &&
             (params?.row?.status?.toLowerCase() === "approved" ||
               (params?.row?.status?.toLowerCase() === "open" &&
                 (params?.row?.entity.toLowerCase() ===
@@ -634,22 +707,22 @@ function Orders() {
                 },
               ]
               : [
-                {
-                  paymentMethod: "Pre Payment",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Credit",
-                  paymentStatus: "Paid",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Cash on Delivery",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-              ],
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Credit",
+                    paymentStatus: "Credited",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Cash on Delivery",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ],
 
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
@@ -669,7 +742,7 @@ function Orders() {
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
               params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-              params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credited" ) &&
               (params?.row?.status?.toLowerCase() === "approved" ||
                 (params?.row?.status?.toLowerCase() === "open" &&
                   (params?.row?.entity.toLowerCase() ===
@@ -1129,7 +1202,6 @@ function Orders() {
   };
 
   const handleFilterChange = (newFilters) => {
-
     setFilters(newFilters);
     setPage(1);
     setFilterAnchor(null);
@@ -1207,79 +1279,157 @@ function Orders() {
           columnVisibilityModel={columnVisibilityModel}
         /> */}
 
-        <div className="table-container">
-          {loading ? (
-            <LoadingSpinner />
-          ) : error ? (
-            <div className="error-message">{error}</div>
-          ) : (
-            <DataGrid
-              apiRef={gridApiRef}
-              rows={filteredOrders}
-              columns={visibleColumns}
-              pageSize={pageSize}
-              rowCount={total}
-              onRowClick={handleRowClick}
-              columnVisibilityModel={columnVisibilityModel}
-              onColumnVisibilityModelChange={setColumnVisibilityModel}
-              sortModel={sortModel}
-              onSortModelChange={handleSortModelChange}
-              disableSelectionOnClick
-              disableColumnMenu
-              hideFooter={true}
-              hideFooterPagination={true}
-              disableExtendRowFullWidth={true}
-              pagination={false}
-              autoHeight
-              rowHeight={70}
-              showToolbar
-              slots={{
-                toolbar: () => (
-                  <CustomToolbar
-                    searchQuery={searchQuery}
-                    filterAnchor={filterAnchor}
-                    onSearch={handleSearch}
-                    setSearchQuery={setSearchQuery}
-                    setFilterAnchor={setFilterAnchor}
-                    handleFilterChange={handleFilterChange}
-                    onColumnVisibilityChange={setColumnVisibilityModel}
-                    columns={filteredData}
-                    filters={filters}
+        {isMobile ? (
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <TableMobile
+                columns={visibleColumns}
+                allColumns={isApprovalMode ? approvalColumns : orderColumns}
+                data={filteredOrders}
+                showAllDetails={true}
+                handleAllDetailsClick={handleShowAllDetailsClick}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                showRowPopup={showRowPopup}
+                setShowRowPopup={setShowRowPopup}
+                getPaymentStatusClass={getPaymentStatusClass}
+                dataGridComponent={
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={filteredOrders}
+                    columns={visibleColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    onRowClick={handleRowClick}
                     columnVisibilityModel={columnVisibilityModel}
-                    searchPlaceholder="Search orders..."
-                    showColumnVisibility={true}
-                    showFilters={true}
-                    showExport={false}
-                    showUpload={true}
-                    showAdd={isV("addButton")}
-                    buttonName={t("add")}
-                    showApproval={isV("approvalButton")}
-                    // showAdd={true}
-                    handleAddClick={handleAddOrder}
-                    handleUploadClick={HandleBulkOrderUpload}
-                    columnsToDisplay={columnsToDisplay}
-                    handleApproval={handleApproval}
-                    isApprovalMode={isApprovalMode}
+                    onColumnVisibilityModelChange={setColumnVisibilityModel}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    disableExtendRowFullWidth={true}
+                    pagination={false}
+                    autoHeight
+                    rowHeight={70}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search orders..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={false}
+                          showUpload={true}
+                          showAdd={isV("addButton")}
+                          buttonName={t("add")}
+                          showApproval={isV("approvalButton")}
+                          // showAdd={true}
+                          handleAddClick={handleAddOrder}
+                          handleUploadClick={HandleBulkOrderUpload}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiDataGrid-row": {
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+                    }}
                   />
-                ),
-              }}
-              sx={{
-                "& .MuiDataGrid-row": {
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "rgba(0, 0, 0, 0.04)",
-                  },
-                },
-                '.MuiDataGrid-cell': {
-                  textAlign: 'center', // Add this line to center all cell content
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                 }
-              }}
-            />
-          )}
-        </div>
+              />
+            )}
+          </div>
+        ) : (
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <DataGrid
+                // apiRef={gridApiRef}
+                rows={filteredOrders}
+                columns={visibleColumns}
+                pageSize={pageSize}
+                rowCount={total}
+                onRowClick={handleRowClick}
+                columnVisibilityModel={columnVisibilityModel}
+                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                sortModel={sortModel}
+                onSortModelChange={handleSortModelChange}
+                disableSelectionOnClick
+                disableColumnMenu
+                hideFooter={true}
+                hideFooterPagination={true}
+                disableExtendRowFullWidth={true}
+                pagination={false}
+                autoHeight
+                rowHeight={70}
+                showToolbar
+                slots={{
+                  toolbar: () => (
+                    <CustomToolbar
+                      searchQuery={searchQuery}
+                      filterAnchor={filterAnchor}
+                      onSearch={handleSearch}
+                      setSearchQuery={setSearchQuery}
+                      setFilterAnchor={setFilterAnchor}
+                      handleFilterChange={handleFilterChange}
+                      onColumnVisibilityChange={setColumnVisibilityModel}
+                      columns={filteredData}
+                      filters={filters}
+                      columnVisibilityModel={columnVisibilityModel}
+                      searchPlaceholder="Search orders..."
+                      showColumnVisibility={true}
+                      showFilters={true}
+                      showExport={false}
+                      showUpload={true}
+                      showAdd={isV("addButton")}
+                      buttonName={t("add")}
+                      showApproval={isV("approvalButton")}
+                      // showAdd={true}
+                      handleAddClick={handleAddOrder}
+                      handleUploadClick={HandleBulkOrderUpload}
+                      columnsToDisplay={columnsToDisplay}
+                      handleApproval={handleApproval}
+                      isApprovalMode={isApprovalMode}
+                    />
+                  ),
+                }}
+                sx={{
+                  "& .MuiDataGrid-row": {
+                    cursor: "pointer",
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    },
+                  },
+                }}
+              />
+            )}
+          </div>
+        )}
 
         {bulkUploadPopUp && (
           <div>

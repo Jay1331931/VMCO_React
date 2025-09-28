@@ -183,7 +183,7 @@ function BusinessDetails({
         mode === "edit" && (
           <h3 className="form-header full-width">{t("Customer Unblocked")}</h3>
         )}
-      {isV("customerApprovalChecklist") && (
+      {/* {isV("customerApprovalChecklist") && (
         <div className="form-main-header">
           <a
             href="#"
@@ -233,7 +233,7 @@ function BusinessDetails({
             {t("Customer Approval Checklist")}
           </a>
         </div>
-      )}
+      )} */}
 
       {/* Company Type Dropdown */}
       <div className="form-group">

@@ -30,6 +30,7 @@ import {
 import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
+import TableMobile from "../components/TableMobile";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -90,6 +91,8 @@ function Customers() {
   const [inviteSortModel, setInviteSortModel] = useState([]);
   const [filters, setFilters] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
+  const [showRowPopup, setShowRowPopup] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -97,6 +100,15 @@ function Customers() {
     "custDetailsAdd"
   );
   console.log("RBAC Manager:", rbacMgr);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const [showTableMobilePopup, setShowTableMobilePopup] = useState(false);
   const columnsToDisplay = {
     id: t("Registration ID"),
     erpCustId: t("ERP ID"),
@@ -588,11 +600,11 @@ function Customers() {
   const customerColumns = [
     {
       field: "id",
-      headerName: t("Registration ID"),
+      headerName: isMobile ? t("ID") : t("Registration ID"),
       include: isV("id"),
       searchable: true,
-      minWidth: 100,
-      maxWidth: 120,
+      minWidth: isMobile ? 50 : 100,
+      maxWidth: isMobile ? 50 : 120,
       flex: 1,
       headerAlign: "center",
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
@@ -602,8 +614,8 @@ function Customers() {
       headerName: t("ERP ID"),
       include: isV("erpCustId"),
       searchable: true,
-      minWidth: 120,
-      maxWidth: 140,
+      minWidth: isMobile ? 70 : 120,
+      maxWidth: isMobile ? 70 : 140,
       flex: 1,
       headerAlign: "center",
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
@@ -613,17 +625,18 @@ function Customers() {
       headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
-      minWidth: 150,
+      minWidth: isMobile ? 100 : 150,
+      maxWidth: isMobile ? 100 : 200,
       flex: 2,
       headerAlign: "center",
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
       field: "companyType",
-      headerName: t("Company Type"),
+      headerName: isMobile ? t("Type") : t("Company Type"),
       include: isV("companyType"),
       searchable: true,
-      minWidth: 120,
+      minWidth: isMobile ? 80 : 120,
       maxWidth: 150,
       flex: 1,
       headerAlign: "center",
@@ -632,7 +645,7 @@ function Customers() {
     {
       field: "typeOfBusiness",
       headerName: t("Type Of Business"),
-      include: isV("typeOfBusiness"),
+      include: isMobile ? false : isV("typeOfBusiness"),
       searchable: true,
       minWidth: 140,
       flex: 1,
@@ -642,7 +655,7 @@ function Customers() {
     {
       field: "customerStatus",
       headerName: t("Approval Status"),
-      include: isV("customerStatus"),
+      include: isMobile ? false : isV("customerStatus"),
       searchable: true,
       minWidth: 100,
       maxWidth: 180,
@@ -653,7 +666,7 @@ function Customers() {
     {
       field: "FandOSync",
       headerName: t("Action"),
-      include: isV("FandOSync"),
+      include: isMobile ? false : isV("FandOSync"),
       searchable: false,
       flex: 1,
       headerAlign: "center",
@@ -1195,9 +1208,9 @@ function Customers() {
   useEffect(() => {
     if (activeTab === "customers") {
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery, filters);
+        fetchApprovals(page, searchQuery, filters);
       } else {
-        fetchCustomers(1, searchQuery, filters);
+        fetchCustomers(page, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
       fetchInvites(page, searchQuery, filters);
@@ -1233,9 +1246,7 @@ function Customers() {
     };
     fetchGeoData();
   }, []);
-
-  const handleRowClick = async (params) => {
-    let customer = params.row;
+  const handleShowAllDetailsClick = async (customer) => {
     let transformedCustomer = await fetchCustomerContacts(
       customer.id,
       customer
@@ -1248,6 +1259,28 @@ function Customers() {
         mode: isApprovalMode ? "edit" : "add",
       },
     });
+  };
+  const handleRowClick = async (params) => {
+    let customer = params.row;
+    let transformedCustomer = await fetchCustomerContacts(
+      customer.id,
+      customer
+    );
+    if (isMobile) {
+      // setShowTableMobilePopup(true);
+      setSelectedRow(params?.row);
+      setShowRowPopup(true);
+    } else {
+      navigate(`/customerDetails`, {
+        state: {
+          customerId: customer.id,
+          workflowId: transformedCustomer?.workflowData?.id,
+          workflowInstanceId: transformedCustomer?.workflowInstanceId,
+          mode: isApprovalMode ? "edit" : "add",
+        },
+      });
+    }
+
     // console.log('Customer ID:', customer.id);
     // console.log('Customer Contacts:', customerContacts);
     // const transformedCustomer = transformCustomerData(customer, customerContacts);
@@ -1506,8 +1539,8 @@ function Customers() {
     },
   ];
   const visibleColumns = isApprovalMode
-    ? approvalColumns.filter((col) => col.include)
-    : customerColumns.filter((col) => col.include);
+    ? approvalColumns.filter((col) => col?.include)
+    : customerColumns.filter((col) => col?.include);
   const filteredData = visibleColumns?.filter((item) =>
     searchableFields?.includes(item?.field)
   );
@@ -1518,22 +1551,98 @@ function Customers() {
     const handleSortModelChange = (model) => {
       setSortModel(model);
       if (isApprovalMode) {
-        fetchApprovals(1, searchQuery, filters, model);
+        fetchApprovals(page, searchQuery, filters, model);
       } else {
-        fetchCustomers(1, searchQuery, filters, model);
+        fetchCustomers(page, searchQuery, filters, model);
       }
     };
     const handleInviteSortModelChange = (model) => {
       console.log("Sort model changed:", model);
 
       setInviteSortModel(model);
-      fetchInvites(1, searchQuery, filters, model);
+      fetchInvites(page, searchQuery, filters, model);
     };
     switch (activeTab) {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
-        return (
+        return isMobile ? (
+          <>
+            <TableMobile
+              columns={customerColumnsToUse}
+              allColumns={isApprovalMode ? approvalColumns : customerColumns}
+              data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+              showAllDetails={true}
+              handleAllDetailsClick={handleShowAllDetailsClick}
+              selectedRow={selectedRow}
+              setSelectedRow={setSelectedRow}
+              showRowPopup={showRowPopup}
+              setShowRowPopup={setShowRowPopup}
+              dataGridComponent={
+                <DataGrid
+                  //   apiRef={gridApiRef}
+                  rows={
+                    isApprovalMode ? paginatedApprovals : paginatedCustomers
+                  }
+                  columns={customerColumnsToUse}
+                  pageSize={pageSize}
+                  rowCount={total}
+                  onRowClick={handleRowClick}
+                  columnVisibilityModel={columnVisibilityModel}
+                  onColumnVisibilityModelChange={setColumnVisibilityModel}
+                  sortModel={sortModel}
+                  onSortModelChange={handleSortModelChange}
+                  disableSelectionOnClick
+                  disableColumnMenu
+                  hideFooter={true}
+                  hideFooterPagination={true}
+                  disableExtendRowFullWidth={true}
+                  pagination={false}
+                  autoHeight
+                  rowHeight={70}
+                  showToolbar
+                  slots={{
+                    toolbar: () => (
+                      <CustomToolbar
+                        searchQuery={searchQuery}
+                        filterAnchor={filterAnchor}
+                        onSearch={handleSearch}
+                        setSearchQuery={setSearchQuery}
+                        setFilterAnchor={setFilterAnchor}
+                        handleFilterChange={handleFilterChange}
+                        onColumnVisibilityChange={setColumnVisibilityModel}
+                        columns={filteredData}
+                        filters={filters}
+                        columnVisibilityModel={columnVisibilityModel}
+                        searchPlaceholder="Search orders..."
+                        showColumnVisibility={true}
+                        showFilters={true}
+                        showExport={false}
+                        showUpload={false}
+                        showApproval={true}
+                        // showAdd={isV("addButton")}
+                        // showAdd={true}
+                        // handleAddClick={handleAddOrder}
+                        // handleUploadClick={HandleBulkOrderUpload}
+                        columnsToDisplay={columnsToDisplay}
+                        handleApproval={handleApproval}
+                        isApprovalMode={isApprovalMode}
+                      />
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiDataGrid-row": {
+                      cursor: "pointer",
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      },
+                    },
+                  }}
+                />
+              }
+            />
+          </>
+        ) : (
           //   <Table
           //     columns={customerColumnsToUse}
           //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1543,6 +1652,7 @@ function Customers() {
           //     onPay={HandleFandOFailCustomer}
           //     syncLoading={syncLoading}
           //   />
+
           <DataGrid
             //   apiRef={gridApiRef}
             rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
