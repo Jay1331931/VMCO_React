@@ -2173,9 +2173,9 @@ function OrderDetails() {
                             quantity={row.quantity}
                             moq={Number(row.moq) || 1}
                             minQuantity={Number(row.moq) || 1}
-                            disabled={!isE('products')}
+                            disabled={!isE('quantityCol')}
                             onQuantityChange={(itemId, delta) => {
-                                if (!isE('products')) return;
+                                if (!isE('quantityCol')) return;
 
                                 if (idx !== -1) {
                                     const currentQty = parseInt(formData.products[idx].quantity) || 0;
