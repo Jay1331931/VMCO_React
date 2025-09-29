@@ -1316,7 +1316,7 @@ function Cart() {
                     totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
                     paidAmount: '0.00',
                     deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credited' : 'Pending',
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
                     status: orderStatus,
                     pricingPolicy: pricingPolicy,
                     salesExecutive: assignedTo,

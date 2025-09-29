@@ -52,8 +52,8 @@ const getPaymentStatusClass = (paymentStatus) => {
   switch (paymentStatus?.toLowerCase()) {
     case "paid":
       return "status-paid";
-    case "credited":
-      return "status-credited";
+    case "credit":
+      return "status-credit";
     case "under review":
       return "status-under-review";
     case "pending":
@@ -521,7 +521,7 @@ function Orders() {
         paymentStatus: "Paid",
         status: "approved",
       },
-      { paymentMethod: "Credit", paymentStatus: "Credited", status: "approved" },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "approved" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -530,7 +530,7 @@ function Orders() {
 
       // Open cases
       { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
-      { paymentMethod: "Credit", paymentStatus: "Credited", status: "open" },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "open" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -544,7 +544,7 @@ function Orders() {
         paymentStatus: "Paid",
         status: "approved",
       },
-      { paymentMethod: "Credit", paymentStatus: "Credited", status: "approved" },
+      { paymentMethod: "Credit", paymentStatus: "Credit", status: "approved" },
       {
         paymentMethod: "Cash on Delivery",
         paymentStatus: "Pending",
@@ -654,7 +654,7 @@ function Orders() {
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-         (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credited" ) &&
+         (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "Credit" ) &&
             (params?.row?.status?.toLowerCase() === "approved" ||
               (params?.row?.status?.toLowerCase() === "open" &&
                 (params?.row?.entity.toLowerCase() ===
@@ -714,7 +714,7 @@ function Orders() {
                   },
                   {
                     paymentMethod: "Credit",
-                    paymentStatus: "Credited",
+                    paymentStatus: "Credit",
                     status: "approved",
                   },
                   {
@@ -742,7 +742,7 @@ function Orders() {
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
               params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credited" ) &&
+              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credit" ) &&
               (params?.row?.status?.toLowerCase() === "approved" ||
                 (params?.row?.status?.toLowerCase() === "open" &&
                   (params?.row?.entity.toLowerCase() ===

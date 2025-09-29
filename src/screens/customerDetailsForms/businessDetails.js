@@ -1843,7 +1843,7 @@ function BusinessDetails({
                 })) || []
               }
               value={
-                customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] || ""
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR]?.toString() || ""
               }
               onChange={setEntityWiseAssignment}
               disabled={
@@ -1914,7 +1914,7 @@ function BusinessDetails({
                 })) || []
               }
               value={
-                customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] ||
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO]?.toString()||
                 ""
               }
               onChange={setEntityWiseAssignment}
@@ -1986,7 +1986,7 @@ function BusinessDetails({
                 })) || []
               }
               value={
-                customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] || ""
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC]?.toString() || ""
               }
               onChange={setEntityWiseAssignment}
               disabled={
@@ -2056,7 +2056,7 @@ function BusinessDetails({
                 })) || []
               }
               value={
-                customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] ||
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI]?.toString() ||
                 ""
               }
               onChange={setEntityWiseAssignment}
@@ -2128,7 +2128,7 @@ function BusinessDetails({
                 })) || []
               }
               value={
-                customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] ||
+                customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC]?.toString()  ||
                 ""
               }
               onChange={setEntityWiseAssignment}
