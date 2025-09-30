@@ -673,7 +673,7 @@ function Orders() {
     },
     {
       field: "status", 
-      headerName: t("Approval Status"), 
+      headerName: t("Status"), 
       include: isV("status"), 
       searchable: true, 
       minWidth: 120, 
