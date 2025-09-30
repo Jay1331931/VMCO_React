@@ -22,11 +22,5 @@
     ".js": "application/javascript",
     ".css": "text/css",
     ".json": "application/json"
-  },
-  "platform": {
-    "apiLocation": "api",
-    "appLocation": "build",
-    "outputLocation": ".",
-    "environment": "production"
   }
 }

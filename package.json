@@ -1,6 +1,6 @@
 {
   "name": "talabpoint",
-  "homepage": "https://polite-sea-0d2c99f00.2.azurestaticapps.net",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
