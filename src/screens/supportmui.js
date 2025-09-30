@@ -111,8 +111,6 @@ function Support() {
             }
 
             const resp = await response.json();
-            console.log("Fetched tickets:", resp);
-
             if (resp.status === 'Ok' || resp.data) {
                 const processedTickets = (resp.data?.data || resp.data || []).map(ticket => ({
                     ...ticket,
@@ -124,7 +122,6 @@ function Support() {
                 throw new Error(resp.message || 'Failed to fetch support tickets');
             }
         } catch (err) {
-            console.error("Failed to fetch support tickets:", err);
             setError(err.message);
             setTickets([]);
         } finally {
@@ -136,14 +133,8 @@ function Support() {
         if (loading) {
             return;
         }
-
-        console.log("$$$$$$$$$$$ user in support page", user);
         if (user) {
             fetchTickets(page, searchQuery, filters, sortModel);
-        }
-
-        if (!user) {
-            console.log("$$$$$$$$$$$ logging out");
         }
     }, [page, searchQuery, user, fetchTickets, filters, sortModel]);
 
@@ -155,7 +146,6 @@ function Support() {
 
     // Handle sort model change
     const handleSortModelChange = (model) => {
-        console.log("Sort model changed:", model);
         setSortModel(model);
         fetchTickets(1, searchQuery, filters, model);
     };
@@ -163,10 +153,10 @@ function Support() {
     // Define columns for the DataGrid
     const supportColumns = [
         {
-            field: "ticketId", 
-            headerName: t("Ticket #"), 
-            include: isV('ticketIdCol'), 
-            searchable: true, 
+            field: "ticketId",
+            headerName: t("Ticket #"),
+            include: isV('ticketIdCol'),
+            searchable: true,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -175,12 +165,12 @@ function Support() {
             )
         },
         {
-            field: isArabic ? "companyNameAr" : "companyNameEn", 
-            headerName: t("Customer"), 
-            include: isV('customerCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 60, 
+            field: isArabic ? "companyNameAr" : "companyNameEn",
+            headerName: t("Customer"),
+            include: isV('customerCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 60,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -189,12 +179,12 @@ function Support() {
             )
         },
         {
-            field: isArabic ? "branchNameLc" : "branchNameEn", 
-            headerName: t("Branch"), 
-            include: isV('branchCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 60, 
+            field: isArabic ? "branchNameLc" : "branchNameEn",
+            headerName: t("Branch"),
+            include: isV('branchCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 60,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -203,11 +193,11 @@ function Support() {
             )
         },
         {
-            field: "grievanceName", 
-            headerName: t("Issue Name"), 
-            include: isV('issueNameCol'), 
-            searchable: true, 
-            minWidth: 100, 
+            field: "grievanceName",
+            headerName: t("Issue Name"),
+            include: isV('issueNameCol'),
+            searchable: true,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -216,11 +206,11 @@ function Support() {
             )
         },
         {
-            field: "grievanceType", 
-            headerName: t("Issue Type"), 
-            include: isV('issueTypeCol'), 
-            searchable: true, 
-            minWidth: 120, 
+            field: "grievanceType",
+            headerName: t("Issue Type"),
+            include: isV('issueTypeCol'),
+            searchable: true,
+            minWidth: 120,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -229,11 +219,11 @@ function Support() {
             )
         },
         {
-            field: "createdAt", 
-            headerName: t("Created Date"), 
-            include: isV('createdDateCol'), 
-            searchable: false, 
-            minWidth: 100, 
+            field: "createdAt",
+            headerName: t("Created Date"),
+            include: isV('createdDateCol'),
+            searchable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -246,12 +236,12 @@ function Support() {
             )
         },
         {
-            field: "createdByUsername", 
-            headerName: t("Created By"), 
-            include: isV('createdByCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 100, 
+            field: "createdByUsername",
+            headerName: t("Created By"),
+            include: isV('createdByCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -260,11 +250,11 @@ function Support() {
             )
         },
         {
-            field: "assignedTo", 
-            headerName: t("Assigned To"), 
-            include: isV('assignedToCol'), 
-            searchable: false, 
-            minWidth: 100, 
+            field: "assignedTo",
+            headerName: t("Assigned To"),
+            include: isV('assignedToCol'),
+            searchable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -273,11 +263,11 @@ function Support() {
             )
         },
         {
-            field: "status", 
-            headerName: t("Status"), 
-            include: isV('statusCol'), 
-            searchable: true, 
-            minWidth: 80, 
+            field: "status",
+            headerName: t("Status"),
+            include: isV('statusCol'),
+            searchable: true,
+            minWidth: 80,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',

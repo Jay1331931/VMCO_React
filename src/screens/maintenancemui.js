@@ -81,7 +81,7 @@ function Maintenance() {
             });
 
             let apiUrl;
-            
+
             // Only include access parameter if user is maintenance head
             if (user?.designation?.toLowerCase() === Constants.DESIGNATIONS?.MAINTENANCE_HEAD?.toLowerCase()) {
                 const accessParam = isMyTicketsMode ? 'region' : 'all';
@@ -90,13 +90,11 @@ function Maintenance() {
                 // For other designations, don't include access parameter
                 apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}`;
             }
-            
-            console.log("Fetching maintenance tickets from:", apiUrl);
             const response = await fetch(apiUrl, {
                 method: "GET",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
             });
 
@@ -115,8 +113,6 @@ function Maintenance() {
             }
 
             const resp = await response.json();
-            console.log("Fetched maintenance tickets:", resp);
-            
             if (resp.status === 'Ok' || resp.data) {
                 const processedTickets = (resp.data?.data || resp.data || []).map(ticket => ({
                     ...ticket,
@@ -128,7 +124,6 @@ function Maintenance() {
                 throw new Error(resp.message || 'Failed to fetch maintenance tickets');
             }
         } catch (err) {
-            console.error("Failed to fetch maintenance tickets:", err);
             setError(err.message);
             setTickets([]);
         } finally {
@@ -141,14 +136,8 @@ function Maintenance() {
         if (loading) {
             return; // Wait while loading
         }
-
-        console.log("$$$$$$$$$$$ user in maintenance page", user);
         if (user) {
             fetchMaintenanceTickets(page, searchQuery, filters, sortModel);
-        }
-
-        if (!user) {
-            console.log("$$$$$$$$$$$ logging out");
         }
     }, [page, searchQuery, user, fetchMaintenanceTickets, filters, sortModel, isMyTicketsMode]);
     //For fetching the user again after browser refresh - End
@@ -161,7 +150,6 @@ function Maintenance() {
 
     // Handle sort model change
     const handleSortModelChange = (model) => {
-        console.log("Sort model changed:", model);
         setSortModel(model);
         fetchMaintenanceTickets(1, searchQuery, filters, model);
     };
@@ -175,11 +163,11 @@ function Maintenance() {
 
     // Define columns for the DataGrid
     const maintenanceColumns = [
-        { 
-            field: "requestId", 
-            headerName: t("Request #"), 
-            include: isV('requestIdCol'), 
-            searchable: true, 
+        {
+            field: "requestId",
+            headerName: t("Request #"),
+            include: isV('requestIdCol'),
+            searchable: true,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -187,13 +175,13 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", 
-            headerName: t("Customer"), 
-            include: isV('customerCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 100, 
+        {
+            field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr",
+            headerName: t("Customer"),
+            include: isV('customerCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -201,13 +189,13 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", 
-            headerName: t("Branch"), 
-            include: isV('branchCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 100, 
+        {
+            field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc",
+            headerName: t("Branch"),
+            include: isV('branchCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -215,12 +203,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "issueName", 
-            headerName: t("Issue Name"), 
-            include: isV('issueNameCol'), 
-            searchable: true, 
-            minWidth: 100, 
+        {
+            field: "issueName",
+            headerName: t("Issue Name"),
+            include: isV('issueNameCol'),
+            searchable: true,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -228,12 +216,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "issueType", 
-            headerName: t("Issue Type"), 
-            include: isV('issueTypeCol'), 
-            searchable: true, 
-            minWidth: 120, 
+        {
+            field: "issueType",
+            headerName: t("Issue Type"),
+            include: isV('issueTypeCol'),
+            searchable: true,
+            minWidth: 120,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -241,12 +229,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "createdAt", 
-            headerName: t("Created Date"), 
-            include: isV('createdDateCol'), 
-            searchable: false, 
-            minWidth: 100, 
+        {
+            field: "createdAt",
+            headerName: t("Created Date"),
+            include: isV('createdDateCol'),
+            searchable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -258,13 +246,13 @@ function Maintenance() {
                 </span>
             ),
         },
-        { 
-            field: "createdByUsername", 
-            headerName: t("Created By"), 
-            include: isV('createdByCol'), 
-            searchable: false, 
-            sortable: false, 
-            minWidth: 100, 
+        {
+            field: "createdByUsername",
+            headerName: t("Created By"),
+            include: isV('createdByCol'),
+            searchable: false,
+            sortable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -272,12 +260,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "urgencyLevel", 
-            headerName: t("Urgency Level"), 
-            include: isV('urgencyLevelCol'), 
-            searchable: true, 
-            minWidth: 120, 
+        {
+            field: "urgencyLevel",
+            headerName: t("Urgency Level"),
+            include: isV('urgencyLevelCol'),
+            searchable: true,
+            minWidth: 120,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -285,12 +273,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "assignedTo", 
-            headerName: t("Assigned To"), 
-            include: isV('assignedToCol'), 
-            searchable: false, 
-            minWidth: 100, 
+        {
+            field: "assignedTo",
+            headerName: t("Assigned To"),
+            include: isV('assignedToCol'),
+            searchable: false,
+            minWidth: 100,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -298,12 +286,12 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
-            field: "status", 
-            headerName: t("Status"), 
-            include: isV('statusCol'), 
-            searchable: true, 
-            minWidth: 80, 
+        {
+            field: "status",
+            headerName: t("Status"),
+            include: isV('statusCol'),
+            searchable: true,
+            minWidth: 80,
             flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
@@ -362,8 +350,8 @@ function Maintenance() {
     };
 
     // Pagination calculation - same as Orders and Support pages
-    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
-        ? Math.ceil(total / pageSize) 
+    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
+        ? Math.ceil(total / pageSize)
         : 1;
 
     return (

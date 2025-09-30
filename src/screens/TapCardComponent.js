@@ -36,7 +36,6 @@ const TapCardPayment = () => {
 
         setCustomerDetails(data?.details);
       } catch (error) {
-        console.error("Failed to fetch Customer details", error);
       }
     };
 
@@ -60,7 +59,6 @@ const TapCardPayment = () => {
           initializeTapCard();
         }
       } catch (error) {
-        console.error("Failed to fetch Card details", error);
       }
     };
     if (CustomerDetails?.tap_cust_id) {
@@ -84,7 +82,6 @@ const TapCardPayment = () => {
       setSdkLoaded(true);
     };
     script.onerror = () => {
-      console.error("Failed to load Tap Card SDK");
     };
 
     document.head.appendChild(script);
@@ -123,8 +120,6 @@ const TapCardPayment = () => {
     setSelectedCardId(id);
     setisCardselected(false)
     initializeTapCard(id);
-    console.log("Selected card ID:", id);
-    // You can now send this id when creating the charge request
   };
   const initializeTapCard = (selectedCard = null) => {
     if (window.CardSDK && !initialized) {
@@ -150,7 +145,6 @@ const TapCardPayment = () => {
             confirmButtonText: t("OK"),
           });
           return;
-          // console.error('Container not found');
         }
 
         // Clear any existing content
@@ -213,26 +207,17 @@ const TapCardPayment = () => {
             direction: Direction.LTR,
           },
           onReady: () => {
-            console.log("Tap Card SDK Ready", selectedCard);
             if (selectedCard) {
               loadSavedCard(selectedCard);
             }
 
             setInitialized(true);
           },
-          onFocus: () => console.log("onFocus"),
-          onBinIdentification: (data) =>
-            console.log("onBinIdentification", data),
           onValidInput: (data) => {
-            console.log("onValidInputChange", data);
             setIsProcessing(!data);
             setisPayButtonValid(data)
           },
-          onInvalidInput: (data) => console.log("onInvalidInput", data),
-          onChangeSaveCardLater: (isSaveCardSelected) =>
-            console.log(isSaveCardSelected, " :onChangeSaveCardLater"),
           onError: (data) => {
-            console.log("onError111111111111111", data);
             setIsProcessing(false);
           },
           onSuccess: (data) => {
@@ -240,7 +225,6 @@ const TapCardPayment = () => {
           },
         });
       } catch (error) {
-        console.error("Error initializing Tap Card:", error);
       }
     }
   };
@@ -252,8 +236,6 @@ const TapCardPayment = () => {
 
       window.CardSDK.tokenize();
     } else {
-      console.error("Tap Card SDK not loaded or tokenize method not available");
-      // alert("Payment system not ready. Please try again.");
         Swal.fire({
             title: t("Error"),
             text: t("Payment system not ready. Please try again."),
@@ -277,15 +259,12 @@ const TapCardPayment = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("data.url", data);
 
       if (data?.data?.url) {
         window.location.replace(data.data.url);
       } else {
-        console.error("Payment URL not found in response");
       }
     } catch (error) {
-      console.error("Failed to create charge request", error);
     } finally {
       setIsProcessing(false);
       setPaymentProcessing(false);

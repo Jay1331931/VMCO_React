@@ -27,13 +27,11 @@ function PriceListEditor() {
     const fetchPriceList = useCallback(async () => {
         // Early return if no token or user (prevents API calls during logout)
         if (!token || !user) {
-            console.log("No token or user available, skipping API call");
             return;
         }
 
         // Check if component is still mounted
         if (!isMountedRef.current) {
-            console.log("Component unmounted, skipping API call");
             return;
         }
 
@@ -60,7 +58,6 @@ function PriceListEditor() {
                 signal: abortController.signal, // Add abort signal
             });
 
-            console.log("API Response:", response.data);
 
             // Check if component is still mounted before updating state
             if (!isMountedRef.current) {
@@ -77,14 +74,12 @@ function PriceListEditor() {
                 setPriceList(response.data);
                 setTotalRecords(response.data.length);
             } else {
-                console.warn("Unexpected response format:", response.data);
                 setPriceList([]);
                 setTotalRecords(0);
             }
         } catch (err) {
             // Don't show error if request was aborted (component unmounted)
             if (axios.isCancel(err) || err.name === 'CanceledError') {
-                console.log("Request was cancelled");
                 return;
             }
 
@@ -93,7 +88,6 @@ function PriceListEditor() {
                 return;
             }
 
-            console.error("Error fetching price list:", err);
             setPriceList([]);
             setTotalRecords(0);
             
