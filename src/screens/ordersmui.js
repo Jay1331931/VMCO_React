@@ -94,10 +94,9 @@ function Orders() {
   const [showRowPopup, setShowRowPopup] = useState(false);
   const gridApiRef = useGridApiRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -136,8 +135,6 @@ function Orders() {
     });
   };
   const handleSortModelChange = (model) => {
-    console.log("Sort model changed:", model);
-
     setSortModel(model);
     fetchOrders(1, searchQuery, filters, model);
   };
@@ -256,7 +253,6 @@ function Orders() {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery, filters);
       } else {
-        console.log("ddddd");
         fetchOrders(page, searchQuery, filters);
       }
     }
@@ -321,7 +317,6 @@ function Orders() {
         },
       });
     } catch (err) {
-      console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
         state: {
           order,
@@ -337,9 +332,7 @@ function Orders() {
 
   const handleRowClick = async (params) => {
     const order = params?.row;
-    console.log("----order");
-    console.log(order);
-    try {
+     try {
       const params = new URLSearchParams({
         page: 1,
         pageSize: 100,
@@ -368,7 +361,6 @@ function Orders() {
         salesOrderLines = result.data.data;
       }
       if (isMobile) {
-        // setShowTableMobilePopup(true);
         setSelectedRow(order);
         setShowRowPopup(true);
       } else {
@@ -385,7 +377,6 @@ function Orders() {
         });
       }
     } catch (err) {
-      console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
         state: {
           order,
@@ -440,7 +431,7 @@ function Orders() {
     </div>
   `,
           showConfirmButton: false,
-          showCancelButton: false, // we’ll add our own Close button in footer
+          showCancelButton: false,
           allowOutsideClick: false,
           allowEscapeKey: false,
           footer: `
@@ -455,23 +446,20 @@ function Orders() {
             const sendLinkBtn = document.getElementById("sendLinkBtn");
             const closeBtn = document.getElementById("closeBtn");
 
-            // Copy button
             copyBtn.addEventListener("click", async () => {
               input.select();
-              input.setSelectionRange(0, 99999); // for mobile
+              input.setSelectionRange(0, 99999);
               await navigator.clipboard.writeText(input.value);
 
               copyBtn.textContent = "Copied!";
               copyBtn.style.background = "#0b4c45";
             });
 
-            // Send Link button
             sendLinkBtn.addEventListener("click", () => {
               handlePay(order, true, false);
               Swal.close();
             });
 
-            // Close button
             closeBtn.addEventListener("click", () => {
               Swal.close();
             });
@@ -481,7 +469,6 @@ function Orders() {
         window.open(data.details.url, "_blank");
       }
     } catch (error) {
-      console.error("Error generating payment link:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to generate payment link. Please try again later."),
@@ -491,31 +478,11 @@ function Orders() {
     }
   };
 
-  const orderMenuItems = [
-    // {
-    //   key: "upload orders",
-    //   label: t("Upload orders"),
-    //   visible: true,
-    //   onClick: () => HandleBulkOrderUpload(),
-    // },
-    // {
-    //   key: "download orders",
-    //   label: t("Download orders"),
-    //   visible: false,
-    //   onClick: () =>
-    //     Swal.fire({
-    //       title: t("Download Orders clicked"),
-    //       text: t("Button clicked"),
-    //       icon: "success",
-    //       confirmButtonText: t("OK"),
-    //     }),
-    // },
-  ];
+  const orderMenuItems = [];
 
   const isArabic = i18n.language === "ar";
   const COMMON_RULES = {
     SHC_GMTC: [
-      // Approved cases
       {
         paymentMethod: "Pre Payment",
         paymentStatus: "Paid",
@@ -527,8 +494,6 @@ function Orders() {
         paymentStatus: "Pending",
         status: "approved",
       },
-
-      // Open cases
       { paymentMethod: "Pre Payment", paymentStatus: "Paid", status: "open" },
       { paymentMethod: "Credit", paymentStatus: "Credit", status: "open" },
       {
@@ -537,7 +502,6 @@ function Orders() {
         status: "open",
       },
     ],
-
     NAQI_DAR: [
       {
         paymentMethod: "Pre Payment",
@@ -555,44 +519,74 @@ function Orders() {
 
   const orderColumns = [
     {
-      field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1, headerAlign: "center",
+      field: "id", 
+      headerName: t("Order #"), 
+      include: isV("orderNumber"), 
+      searchable: true, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "erpOrderId", headerName: t("Sales Order ID"), include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1, headerAlign: "center",
+      field: "erpOrderId", 
+      headerName: t("Sales Order ID"), 
+      include: isV("erpOrderId"), 
+      searchable: true, 
+      minWidth: 120, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Company Name"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 2, headerAlign: "center",
+      field: isArabic ? "companyNameAr" : "companyNameEn", 
+      headerName: t("Company Name"), 
+      include: isV("companyName"), 
+      searchable: true, 
+      flex: 2,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch Name"), include: isV("branchName"), searchable: true, maxWidth: 180, flex: 2, headerAlign: "center",
+      field: isArabic ? "branchNameLc" : "branchNameEn", 
+      headerName: t("Branch Name"), 
+      include: isV("branchName"), 
+      searchable: true, 
+      flex: 2,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100, headerAlign: "center",
+      field: "entity", 
+      headerName: t("Entity"), 
+      include: isV("entity"), 
+      searchable: true, 
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Machines")}</span>
+            <span className="badge badge-blue">{t("Machines")}</span>
           ) : (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Consumables")}</span>
+            <span className="badge badge-blue">{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Fresh")}</span>
+            <span className="badge badge-blue">{t("Fresh")}</span>
           ) : (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Frozen")}</span>
+            <span className="badge badge-blue">{t("Frozen")}</span>
           );
         }
         return (
@@ -613,48 +607,97 @@ function Orders() {
       },
     },
     {
-      field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 150, flex: 1, headerAlign: "center",
+      field: "paymentMethod", 
+      headerName: t("Payment Method"), 
+      include: isV("paymentMethod"), 
+      searchable: true, 
+      minWidth: 130, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+      field: "createdByUsername", 
+      headerName: t("Created By"), 
+      include: isV("createdBy"), 
+      searchable: false, 
+      sortable: false, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       )
     },
     {
-      field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+      field: "createdAt", 
+      headerName: t("Order Placement Date"), 
+      include: isV("createdAt"), 
+      searchable: false, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params?.row?.createdAt ? formatDate(params?.row?.createdAt, "DD/MM/YYYY") : " "}</span>
+        <span>{params?.row?.createdAt ? formatDate(params?.row?.createdAt, "DD/MM/YYYY") : " "}</span>
       ),
     },
     {
-      field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 120, headerAlign: "center",
+      field: "totalAmount", 
+      headerName: t("Total Amount"), 
+      include: isV("totalAmount"), 
+      searchable: false, 
+      minWidth: 100, 
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{parseFloat(params?.row?.totalAmount || 0).toFixed(2)}</span>
+        <span>{parseFloat(params?.row?.totalAmount || 0).toFixed(2)}</span>
       ),
     },
     {
-      field: "paymentStatus", headerName: t("Payment Status"), include: isV("paymentStatus"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
+      field: "paymentStatus", 
+      headerName: t("Payment Status"), 
+      include: isV("paymentStatus"), 
+      searchable: true, 
+      minWidth: 120, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <label className={getPaymentStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
+        <label className={getPaymentStatusClass(params.value)}>{t(params.value)}</label>
       ),
     },
     {
-      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
+      field: "status", 
+      headerName: t("Status"), 
+      include: isV("status"), 
+      searchable: true, 
+      minWidth: 120, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
       ),
     },
     {
-      field: "pay", headerName: t("Action"), include: isV("action"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80, headerAlign: "center",
+      field: "pay", 
+      headerName: t("Action"), 
+      include: isV("action"), 
+      searchable: false, 
+      flex: 2, 
+      minWidth: 70, 
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-         (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "Credit" ) &&
+            (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "Credit") &&
             (params?.row?.status?.toLowerCase() === "approved" ||
               (params?.row?.status?.toLowerCase() === "open" &&
                 (params?.row?.entity.toLowerCase() ===
@@ -677,7 +720,6 @@ function Orders() {
                 sx={{
                   color: "primary.main",
                   cursor: "pointer",
-                  // textDecoration: "underline",
                   fontSize: "0.875rem",
                   "&:hover": {
                     textDecoration: "none",
@@ -693,7 +735,14 @@ function Orders() {
       ),
     },
     {
-      field: "sendLink", headerName: t("Action"), include: isV("sendLink") || isV("FandOSyncSO"), searchable: false, flex: 2, minWidth: 70, maxWidth: 80, headerAlign: "center",
+      field: "sendLink", 
+      headerName: t("Action"), 
+      include: isV("sendLink") || isV("FandOSyncSO"), 
+      searchable: false, 
+      flex: 2, 
+      minWidth: 70, 
+      headerAlign: "center",
+      align: isArabic ? 'right' : 'left',
       renderCell: (params) => {
         const rowdata = params.row;
         const SYNC_RULES = {
@@ -707,23 +756,22 @@ function Orders() {
                 },
               ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
-
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -742,7 +790,7 @@ function Orders() {
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
               params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credit" ) &&
+              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credit") &&
               (params?.row?.status?.toLowerCase() === "approved" ||
                 (params?.row?.status?.toLowerCase() === "open" &&
                   (params?.row?.entity.toLowerCase() ===
@@ -765,12 +813,10 @@ function Orders() {
                   sx={{
                     color: "primary.main",
                     cursor: "pointer",
-                    // textDecoration: "underline",
                     fontSize: "0.875rem",
                   }}
                 >
                   <Tooltip title={t("Send Link")} arrow>
-                    {/* {t("Send Link")} */}
                     <IosShareIcon />
                   </Tooltip>
                 </Box>
@@ -821,50 +867,88 @@ function Orders() {
 
   const approvalColumns = [
     {
-      field: "id", headerName: t("Order #"), include: isV("orderNumber"), searchable: true, maxWidth: 80, flex: 1, headerAlign: "center",
+      field: "id", 
+      headerName: t("Order #"), 
+      include: isV("orderNumber"), 
+      searchable: true, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "erpOrderId", include: isV("erpOrderId"), searchable: true, minWidth: 120, maxWidth: 120, flex: 1, headerAlign: "center",
+      field: "erpOrderId", 
+      include: isV("erpOrderId"), 
+      searchable: true, 
+      minWidth: 120, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: isArabic ? "companyNameAr" : "companyNameEn", headerName: t("Customer"), include: isV("companyName"), searchable: true, maxWidth: 180, flex: 1, headerAlign: "center",
+      field: isArabic ? "companyNameAr" : "companyNameEn", 
+      headerName: t("Customer"), 
+      include: isV("companyName"), 
+      searchable: true, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: isArabic ? "branchNameLc" : "branchNameEn", headerName: t("Branch"), include: isV("branchName"), searchable: true, minWidth: 80, flex: 1, headerAlign: "center",
+      field: isArabic ? "branchNameLc" : "branchNameEn", 
+      headerName: t("Branch"), 
+      include: isV("branchName"), 
+      searchable: true, 
+      minWidth: 80, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "workflowName", headerName: t("Workflow Name"), include: isV("workflowName"), searchable: true, minWidth: 100, flex: 1, headerAlign: "center",
+      field: "workflowName", 
+      headerName: t("Workflow Name"), 
+      include: isV("workflowName"), 
+      searchable: true, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
     {
-      field: "entity", headerName: t("Entity"), include: isV("entity"), searchable: true, maxWidth: 100, flex: 1, headerAlign: "center",
+      field: "entity", 
+      headerName: t("Entity"), 
+      include: isV("entity"), 
+      searchable: true, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
           badge = params.row.isMachine ? (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Machines")}</span>
+            <span className="badge badge-blue">{t("Machines")}</span>
           ) : (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Consumables")}</span>
+            <span className="badge badge-blue">{t("Consumables")}</span>
           );
         } else if (params.value === "SHC") {
           badge = params.row.isFresh ? (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Fresh")}</span>
+            <span className="badge badge-blue">{t("Fresh")}</span>
           ) : (
-            <span className="badge badge-blue" style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t("Frozen")}</span>
+            <span className="badge badge-blue">{t("Frozen")}</span>
           );
         }
         return (
@@ -876,37 +960,75 @@ function Orders() {
               height: "100%",
             }}
           >
-            <Typography align="center">
+            <Typography align={isArabic ? "right" : "center"}>
               {params.value?.toUpperCase()}
             </Typography>
-            <Typography align="center">{badge}</Typography>
+            <Typography align={isArabic ? "right" : "center"}>{badge}</Typography>
           </Box>
         );
       },
     },
     {
-      field: "paymentMethod", headerName: t("Payment Method"), include: isV("paymentMethod"), searchable: true, minWidth: 130, maxWidth: 180, flex: 1, headerAlign: "center",
+      field: "paymentMethod", 
+      headerName: t("Payment Method"), 
+      include: isV("paymentMethod"), 
+      searchable: true, 
+      minWidth: 130, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</span>
+        <span>{t(params.value)}</span>
       ),
     },
-    { field: "createdByUsername", headerName: t("Created By"), include: isV("createdBy"), searchable: false, sortable: false, minWidth: 100, maxWidth: 180, flex: 1, headerAlign: "center" },
+    { 
+      field: "createdByUsername", 
+      headerName: t("Created By"), 
+      include: isV("createdBy"), 
+      searchable: false, 
+      sortable: false, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+    },
     {
-      field: "createdAt", headerName: t("Order Placement Date"), include: isV("createdAt"), searchable: false, minWidth: 100, maxWidth: 140, flex: 1, headerAlign: "center",
+      field: "createdAt", 
+      headerName: t("Order Placement Date"), 
+      include: isV("createdAt"), 
+      searchable: false, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value ? formatDate(params.value, "DD/MM/YYYY") : " "}</span>
+        <span>{params.value ? formatDate(params.value, "DD/MM/YYYY") : " "}</span>
       ),
     },
     {
-      field: "totalAmount", headerName: t("Total Amount"), include: isV("totalAmount"), searchable: false, minWidth: 100, maxWidth: 180, flex: 1, headerAlign: "center",
+      field: "totalAmount", 
+      headerName: t("Total Amount"), 
+      include: isV("totalAmount"), 
+      searchable: false, 
+      minWidth: 100, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
+        <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
       ),
     },
     {
-      field: "status", headerName: t("Approval Status"), include: isV("status"), searchable: true, minWidth: 120, maxWidth: 140, flex: 1, headerAlign: "center",
+      field: "status", 
+      headerName: t("Approval Status"), 
+      include: isV("status"), 
+      searchable: true, 
+      minWidth: 120, 
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
       ),
     },
   ];
@@ -962,7 +1084,6 @@ function Orders() {
           });
         }
       } catch (error) {
-        console.error("Error downloading template:", error);
         await Swal.fire({
           title: t("Error"),
           text: t("Failed to download template."),
@@ -1013,7 +1134,6 @@ function Orders() {
         });
       }
     } catch (error) {
-      console.error("Error syncing order:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to sync order. Please try again later."),
@@ -1025,6 +1145,7 @@ function Orders() {
       setSyncLoadingId(null);
     }
   };
+
   const handleSubmitFile = async (file) => {
     if (!file) return;
     setExcelLoading(true);
@@ -1079,12 +1200,11 @@ function Orders() {
           window.URL.revokeObjectURL(url);
         });
 
-        return; // Make sure to return early to prevent success message
+        return;
       }
       const blob = response?.data;
-      const text = await blob.text(); // convert blob to text
-      const data = JSON.parse(text); // parse text to JSON
-      console.log(response?.status, data?.response?.success);
+      const text = await blob.text();
+      const data = JSON.parse(text);
       if (response?.status === 200 && data?.response?.success) {
         fetchOrders();
 
@@ -1106,7 +1226,6 @@ function Orders() {
         });
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
       Swal.fire({
         title: t("File Upload Failed"),
         text: t("An error occurred while uploading the file."),
@@ -1117,11 +1236,11 @@ function Orders() {
       setBulkUploadPopUp(false);
       setSelectedCustomer(null);
       setSelectedBranch(null);
-      setSelectedFile(null); // reset file after submit
+      setSelectedFile(null);
       setExcelLoading(false);
     }
   };
-  // Paginate the filtered orders
+
   const totalPages =
     Number.isFinite(total) &&
       Number.isFinite(pageSize) &&
@@ -1129,11 +1248,10 @@ function Orders() {
       pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
-  // Always pass totalPages as a string to Pagination to avoid NaN warning
+
   const paginatedOrders = Array.isArray(filteredOrders)
     ? filteredOrders.slice(0, pageSize)
     : [];
-
   const HandleBulkOrderUpload = () => {
     setBulkUploadPopUp(true);
   };
@@ -1189,7 +1307,6 @@ function Orders() {
         throw new Error(response.data.message);
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to upload file. Please try again later."),
@@ -1214,19 +1331,19 @@ function Orders() {
   function CustomFooter() {
     return (
       <GridFooterContainer>
-        {/* Empty space above pagination */}
         <Box sx={{ flexGrow: 1 }} />
         <GridPagination />
       </GridFooterContainer>
     );
   }
+
   const filteredData = visibleColumns?.filter((item) =>
     searchableFields?.includes(item?.field)
   );
+
   const handleApproval = (mode) => {
     setFilters({});
     setApprovalMode(mode === "approval");
-    // Refresh data based on mode
     if (mode === "approval") {
       fetchApprovals();
     } else {
@@ -1237,48 +1354,6 @@ function Orders() {
   return (
     <Sidebar title={t("Orders")}>
       <div className="orders-content">
-        {/* <div className="page-header">
-          <div className="header-actions"> */}
-        {/* <ToggleButton
-              checked={isApprovalMode}
-              onChange={toggleApprovalMode}
-              label={t("Approval Mode")}
-            /> */}
-        {/* <AnimatedTabs
-              toggleMode={true}
-              value={isApprovalMode ? "approval" : "all"}
-              onChange={(mode) => {
-                setApprovalMode(mode === "approval");
-                // Refresh data based on mode
-                if (mode === "approval") {
-                  fetchApprovals();
-                } else {
-                  fetchOrders();
-                }
-              }}
-            /> */}
-        {/* {isE("addOrder") && (
-              <ActionButton
-                label={t("Add Order")}
-                onClick={handleAddOrder}
-                menuItems={orderMenuItems}
-              />
-            )} */}
-        {/* </div>
-        </div> */}
-
-        {/* <CustomToolbar
-          onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-          onColumnVisibilityChange={handleColumnVisibilityChange}
-          columns={isApprovalMode ? approvalColumns : orderColumns}
-          searchPlaceholder={t("Search orders...")}
-          showColumnVisibility={true}
-          showFilters={false}
-          filters={filters}
-          columnVisibilityModel={columnVisibilityModel}
-        /> */}
-
         {isMobile ? (
           <div className="table-container">
             {loading ? (
@@ -1317,6 +1392,9 @@ function Orders() {
                     pagination={false}
                     autoHeight
                     rowHeight={70}
+                    display="flex"
+                    textAlign={i18n.language === "ar" ? "right" : "left"}
+                    justifyContent={i18n.language === "ar" ? "right" : "left"}
                     showToolbar
                     slots={{
                       toolbar: () => (
@@ -1339,7 +1417,6 @@ function Orders() {
                           showAdd={isV("addButton")}
                           buttonName={t("add")}
                           showApproval={isV("approvalButton")}
-                          // showAdd={true}
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
                           columnsToDisplay={columnsToDisplay}
@@ -1355,6 +1432,22 @@ function Orders() {
                           backgroundColor: "rgba(0, 0, 0, 0.04)",
                         },
                       },
+                      // Arabic RTL styling for mobile
+                      ...(i18n.language === "ar" && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      })
                     }}
                   />
                 }
@@ -1369,7 +1462,6 @@ function Orders() {
               <div className="error-message">{error}</div>
             ) : (
               <DataGrid
-                // apiRef={gridApiRef}
                 rows={filteredOrders}
                 columns={visibleColumns}
                 pageSize={pageSize}
@@ -1387,6 +1479,9 @@ function Orders() {
                 pagination={false}
                 autoHeight
                 rowHeight={70}
+                display="flex"
+                textAlign={i18n.language === "ar" ? "right" : "left"}
+                justifyContent={i18n.language === "ar" ? "right" : "left"}
                 showToolbar
                 slots={{
                   toolbar: () => (
@@ -1409,7 +1504,6 @@ function Orders() {
                       showAdd={isV("addButton")}
                       buttonName={t("add")}
                       showApproval={isV("approvalButton")}
-                      // showAdd={true}
                       handleAddClick={handleAddOrder}
                       handleUploadClick={HandleBulkOrderUpload}
                       columnsToDisplay={columnsToDisplay}
@@ -1425,6 +1519,22 @@ function Orders() {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
                     },
                   },
+                  // Arabic RTL styling for desktop
+                  ...(i18n.language === "ar" && {
+                    direction: "rtl",
+                    "& .MuiDataGrid-cell": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-cellContent": {
+                      textAlign: "right !important",
+                    }
+                  })
                 }}
               />
             )}
@@ -1564,10 +1674,9 @@ function Orders() {
                         ref={fileInputRef}
                         accept=".xlsx, .xls"
                         style={{ display: "none" }}
-                        // onChange={handleFileChange}
                         onChange={(e) => {
                           const file = e.target.files[0];
-                          if (file) setSelectedFile(file); // just store file in state
+                          if (file) setSelectedFile(file);
                         }}
                       />
                     </div>
@@ -1611,7 +1720,6 @@ function Orders() {
                   />
                 )}
 
-                {/* Branch Popup */}
                 {showBranchPopup && (
                   <GetBranches
                     open={showBranchPopup}

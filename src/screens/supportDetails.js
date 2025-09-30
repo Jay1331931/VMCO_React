@@ -164,7 +164,6 @@ function SupportDetails() {
         }
       }
     } catch (err) {
-      console.error("Upload error:", err);
       Swal.fire({
         title: t("Upload Error"),
         text: t("Failed to upload file. Please try again."),
@@ -213,7 +212,6 @@ function SupportDetails() {
         setVideoData(fetched);
       }
     } catch (error) {
-      console.error(`Error fetching ${type} files:`, error);
     }
   }, []);
 
@@ -247,7 +245,6 @@ function SupportDetails() {
         }
       }
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error);
     }
   };
 
@@ -277,7 +274,6 @@ function SupportDetails() {
         setImages(attachmentData.images || []);
         setVideos(attachmentData.videos || []);
       } catch (error) {
-        console.error('Error parsing attachment data:', error);
       }
     }
   };
@@ -360,7 +356,6 @@ function SupportDetails() {
           throw new Error('Unexpected response format for issue type options');
         }
       } catch (err) {
-        console.error('Error fetching issue type options:', err);
       }
     };
 
@@ -373,8 +368,6 @@ function SupportDetails() {
   }
 
   if (!user) {
-    console.log("$$$$$$$$$$$ logging out");
-    // Logout instead of showing loading message
     logout();
     navigate("/login");
     return null; // Return null while logout is processing
@@ -405,7 +398,6 @@ function SupportDetails() {
 
     // Don't fetch branches if no customer ID is available
     if (!customerIdToUse) {
-      console.log("No customer ID available for fetching branches");
       return;
     }
 
@@ -434,7 +426,6 @@ function SupportDetails() {
 
       setBranches(branchNames || []);
     } catch (err) {
-      console.error("Failed to fetch branches:", err);
     } finally {
       setLoadingBranches(false);
     }
@@ -452,9 +443,6 @@ function SupportDetails() {
     try {
       // Replace with your actual API endpoint URL
       const apiUrl = `${process.env.REACT_APP_API_BASE_URL}/employees/pagination?page=1&pageSize=50000&sortOrder=asc&filters={"department": "${targetDepartment}"}`;
-      console.log('Fetching employees for department:', targetDepartment);
-      console.log('API URL:', apiUrl);
-
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -469,10 +457,8 @@ function SupportDetails() {
       }
 
       const resp = await response.json();
-      console.log('Employees API response:', resp);
       setEmployees(resp.data.data || []);
     } catch (err) {
-      console.error("Failed to fetch employees:", err);
       setEmployees([]);
     } finally {
       setLoadingEmployees(false);
@@ -511,13 +497,11 @@ function SupportDetails() {
           .filter(department => department && department.trim() !== '')
         )];
 
-        console.log('Extracted departments:', uniqueDepartments);
         setDepartments(uniqueDepartments);
       } else {
         throw new Error('Unexpected response format for employees');
       }
     } catch (err) {
-      console.error("Failed to fetch departments:", err);
     } finally {
       setLoadingDepartments(false);
     }
@@ -578,12 +562,10 @@ function SupportDetails() {
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error("API Error:", errorText);
             throw new Error(`Error ${response.status}: ${response.statusText}`);
           }
 
           const responseResult = await response.json();
-          console.log("Cancel ticket successful:", responseResult);
 
           // Show success message
           await Swal.fire({
@@ -599,7 +581,6 @@ function SupportDetails() {
           setIsEditing(false);
           navigate("/support");
         } catch (error) {
-          console.error("Error cancelling ticket:", error);
 
           // Show error message
           await Swal.fire({
@@ -671,7 +652,6 @@ function SupportDetails() {
   // Fetch branches for a specific customer
   const fetchBranchesForCustomer = async (customerId) => {
     if (!customerId) {
-      console.log("No customer ID provided for fetching branches");
       return;
     }
 
@@ -695,7 +675,6 @@ function SupportDetails() {
       const data = await response.json();
       setBranches(data || []);
     } catch (err) {
-      console.error("Error fetching branches:", err);
     } finally {
       setLoadingBranches(false);
     }
@@ -817,12 +796,10 @@ function SupportDetails() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("API Error:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log("Save successful:", result);
 
       const savedTicketId = formMode === "add" ? result.grievance.id : ticket.id;
 
@@ -842,7 +819,6 @@ function SupportDetails() {
       setIsEditing(false);
       navigate("/support");
     } catch (error) {
-      console.error("Error saving ticket:", error);
 
       // Show error message with SweetAlert
       await Swal.fire({
@@ -859,7 +835,6 @@ function SupportDetails() {
       setSaving(false); // End saving
     }
   };
-  console.log("Ticket data before save:", images);
   // Handle close ticket
   const handleCloseTicket = async () => {
     setClosing(true); // Start closing
@@ -898,12 +873,10 @@ function SupportDetails() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("API Error:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const responseResult = await response.json();
-      console.log("Close ticket successful:", responseResult);
 
       // Show success message
       await Swal.fire({
@@ -922,9 +895,6 @@ function SupportDetails() {
       setIsEditing(false);
       navigate("/support");
     } catch (error) {
-      console.error("Error closing ticket:", error);
-
-      // Show error message
       await Swal.fire({
         title: t("Error!"),
         text: t("Failed to close ticket. Please try again."),
@@ -980,14 +950,8 @@ function SupportDetails() {
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-
-        // Optional: show a small success notification
-        console.log("Comment saved successfully to backend");
       }
     } catch (error) {
-      console.error("Failed to save comment to backend:", error);
-
-      // Optional: show error notification to user
       Swal.fire({
         title: t("Error"),
         text: t("Failed to save comment. The comment will be saved when you save the ticket."),
@@ -1015,7 +979,6 @@ function SupportDetails() {
       }
 
       if (!ticket.id) {
-        console.error("No ticket ID available");
         return;
       }
 
@@ -1034,12 +997,10 @@ function SupportDetails() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("API Error:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log("Feedback submitted successfully:", result);
 
       await Swal.fire({
         title: t("Success!"),
@@ -1055,8 +1016,6 @@ function SupportDetails() {
       }));
 
     } catch (error) {
-      console.error("Failed to submit feedback:", error);
-
       await Swal.fire({
         title: t("Error!"),
         text: t("Failed to submit feedback. Please try again."),
@@ -1084,7 +1043,6 @@ function SupportDetails() {
   // Handle department selection
   const handleDepartmentChange = (e) => {
     const department = e.target.value;
-    console.log('Department selected:', department);
     setSelectedDepartment(department);
     setTicket(prev => ({
       ...prev,
@@ -1095,7 +1053,6 @@ function SupportDetails() {
     setEmployees([]); // Clear current employees
 
     if (department) {
-      console.log('Fetching employees for department:', department);
       fetchEmployees(department);
     }
   };
