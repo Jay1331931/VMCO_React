@@ -93,6 +93,7 @@ function Customers() {
   const [filterAnchor, setFilterAnchor] = useState(null);
   const [selectedRow, setSelectedRow] = useState(null);
   const [showRowPopup, setShowRowPopup] = useState(false);
+  const isArabic = i18n.language === "ar";
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -604,10 +605,9 @@ function Customers() {
       include: isV("id"),
       searchable: true,
       minWidth: isMobile ? 50 : 100,
-      maxWidth: isMobile ? 50 : 120,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "erpCustId",
@@ -615,10 +615,9 @@ function Customers() {
       include: isV("erpCustId"),
       searchable: true,
       minWidth: isMobile ? 70 : 120,
-      maxWidth: isMobile ? 70 : 140,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
@@ -626,10 +625,9 @@ function Customers() {
       include: isV("companyName"),
       searchable: true,
       minWidth: isMobile ? 100 : 150,
-      maxWidth: isMobile ? 100 : 200,
-      flex: 2,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "companyType",
@@ -637,10 +635,9 @@ function Customers() {
       include: isV("companyType"),
       searchable: true,
       minWidth: isMobile ? 80 : 120,
-      maxWidth: 150,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "typeOfBusiness",
@@ -649,8 +646,8 @@ function Customers() {
       searchable: true,
       minWidth: 140,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "customerStatus",
@@ -658,10 +655,9 @@ function Customers() {
       include: isMobile ? false : isV("customerStatus"),
       searchable: true,
       minWidth: 100,
-      maxWidth: 180,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "FandOSync",
@@ -713,10 +709,9 @@ function Customers() {
       include: isV("id"),
       searchable: true,
       minWidth: 100,
-      maxWidth: 120,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "erpCustId",
@@ -724,10 +719,9 @@ function Customers() {
       include: isV("erpCustId"),
       searchable: true,
       minWidth: 120,
-      maxWidth: 140,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: i18n.language === "ar" ? "companyNameAr" : "companyNameEn",
@@ -735,8 +729,8 @@ function Customers() {
       include: isV("companyName"),
       searchable: true,
       minWidth: 150,
-      flex: 2,
-      headerAlign: "center",
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
     {
@@ -745,9 +739,9 @@ function Customers() {
       include: isV("workflowName"),
       searchable: true,
       minWidth: 150,
-      flex: 2,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "companyType",
@@ -755,10 +749,9 @@ function Customers() {
       include: isV("companyType"),
       searchable: true,
       minWidth: 120,
-      maxWidth: 150,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "typeOfBusiness",
@@ -767,8 +760,8 @@ function Customers() {
       searchable: true,
       minWidth: 140,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
     {
       field: "customerStatus",
@@ -776,11 +769,10 @@ function Customers() {
       include: isV("customerStatus"),
       searchable: true,
       minWidth: 100,
-      maxWidth: 180,
       flex: 1,
-      headerAlign: "center",
+      align: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)} style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+        <label className={getStatusClass(params.value)}>{params.value}</label>
       ),
     },
     {
@@ -790,10 +782,9 @@ function Customers() {
       searchable: false,
       sortable: false,
       minWidth: 120,
-      maxWidth: 150,
       flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) => { <span>{params.value}</span> }
     },
   ];
 
@@ -805,9 +796,8 @@ function Customers() {
       include: isV("createdAt"),
       searchable: true,
       minWidth: 120,
-      maxWidth: 150,
       flex: 1,
-      headerAlign: "center",
+      align: isArabic ? 'right' : 'left',
       renderCell: (params) =>
         params?.row?.createdAt
           ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
@@ -822,8 +812,8 @@ function Customers() {
       include: isV("leadName"),
       searchable: true,
       minWidth: 150,
-      flex: 2,
-      headerAlign: "center"
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
     },
     {
       field: "companyEmail",
@@ -832,7 +822,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 1,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left',
     },
     {
       field: "companyPhone",
@@ -841,7 +831,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left',
     },
     {
       field: "companyName",
@@ -850,7 +840,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 2,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left'
     },
     {
       field: "region",
@@ -859,7 +849,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left'
     },
     {
       field: "employeeId",
@@ -868,7 +858,7 @@ function Customers() {
       searchable: true,
       minWidth: 150,
       flex: 1,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left'
     },
     {
       field: "source",
@@ -877,7 +867,7 @@ function Customers() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      headerAlign: "center"
+      align: isArabic ? 'right' : 'left'
     },
     {
       field: "actions",
@@ -1600,6 +1590,9 @@ function Customers() {
                   pagination={false}
                   autoHeight
                   rowHeight={70}
+                  display="flex"
+                  textAlign={i18n.language === "ar" ? "right" : "left"}
+                  justifyContent={i18n.language === "ar" ? "right" : "left"}
                   showToolbar
                   slots={{
                     toolbar: () => (
@@ -1672,6 +1665,9 @@ function Customers() {
             pagination={false}
             autoHeight
             rowHeight={70}
+            display="flex"
+            textAlign={i18n.language === "ar" ? "right" : "left"}
+            justifyContent={i18n.language === "ar" ? "right" : "left"}
             showToolbar
             slots={{
               toolbar: () => (
@@ -1710,10 +1706,10 @@ function Customers() {
                 },
               },
               '.MuiDataGrid-cell': {
-                textAlign: 'center', // Add this line to center all cell content
+                textAlign: isArabic ? 'right' : 'left', // Add this line to center all cell content
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: isArabic ? 'flex-end' : 'flex-start',
+                justifyContent: isArabic ? 'flex-end' : 'flex-start',
               }
             }}
           />
@@ -1745,6 +1741,9 @@ function Customers() {
             pagination={false}
             autoHeight
             rowHeight={70}
+            display="flex"
+            textAlign={i18n.language === "ar" ? "right" : "left"}
+            justifyContent={i18n.language === "ar" ? "right" : "left"}
             showToolbar
             slots={{
               toolbar: () => (
@@ -1786,10 +1785,10 @@ function Customers() {
                 },
               },
               '.MuiDataGrid-cell': {
-                textAlign: 'center', // Add this line to center all cell content
+                textAlign: isArabic ? 'right' : 'left', // Add this line to center all cell content
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: isArabic ? 'flex-end' : 'flex-start',
+                justifyContent: isArabic ? 'flex-end' : 'flex-start',
               }
 
             }}
