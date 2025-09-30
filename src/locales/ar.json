@@ -694,7 +694,7 @@
    "Add Branch": "إضافة فرع",
    "Upload Excel": "تحميل Excel",
    "Uploading Excel...": "جارٍ تحميل Excel...",
-   "Please upload a file with 200 rows or fewer for branch data.": "يرجى تحميل ملف يحتوي على 200 صف أو أقل لبيانات الفرع.",
+   "Please upload a file with 50 rows or fewer for branch data.": "يرجى تحميل ملف يحتوي على 50 صف أو أقل لبيانات الفرع.",
    "No checklist URL configured.": "لا يوجد عنوان URL لقائمة التحقق مُكون.",
    "Customer Branch Approval Checklist": "قائمة التحقق لموافقة فرع العميل",
     "To upload multiple branches at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file.": "لتحميل فروع متعددة دفعة واحدة، يرجى تنزيل قالب Excel أدناه، وملء جميع معلومات الفرع المطلوبة بشكل صحيح، ثم تحميل الملف المكتمل.",
