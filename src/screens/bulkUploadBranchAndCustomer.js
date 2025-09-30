@@ -314,7 +314,7 @@ const handleSend = async () => {
             📤 Upload Products Data
           </button>
         )}
-        {isV("BulkEmail") && (
+        {/* {isV("BulkEmail") && ( */}
           <button
             className="branch-btn"
             style={{
@@ -332,7 +332,7 @@ const handleSend = async () => {
           >
            { emailloading ?  "...seding bulk email" :"Send Bulk Email"}
           </button>
-        )}
+        {/* )} */}
       </div>
 
       {popup && (
