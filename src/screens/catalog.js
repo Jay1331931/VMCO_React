@@ -126,6 +126,7 @@ function Catalog() {
 
   // FIXED: Helper function to reset all infinite scroll states
   const resetInfiniteScrollStates = useCallback(() => {
+    console.log("🔄 Resetting infinite scroll states");
     setProducts([]);
     setCurrentPage(1);
     currentPageRef.current = 1;
@@ -154,6 +155,8 @@ function Catalog() {
     const currentCategoryFilter = categoryFilterRef.current;
     const currentSubCategoryFilter = subCategoryFilterRef.current;
     const currentSearchQuery = searchQueryRef.current;
+
+    console.log(`🚀 fetchProducts called: page=${page}, reset=${reset}, tab=${currentActiveCategory}, category=${currentCategoryFilter}, subCategory=${currentSubCategoryFilter}`);
 
     if (reset) {
       setIsLoading(true);
@@ -205,6 +208,7 @@ function Catalog() {
         params.append("searchFields", "productName,product_name,product_name_lc,productNameLc");
       }
 
+      console.log(`🌐 API call: ${API_BASE_URL}/products?${params.toString()}`);
 
       const response = await fetch(
         `${API_BASE_URL}/products?${params.toString()}`,
@@ -218,12 +222,14 @@ function Catalog() {
       );
 
       const result = await response.json();
+      console.log(`📦 API response for page ${page}:`, result);
 
       // FIXED: Check if any filter changed while request was in flight
       if (currentActiveCategory !== activeCategoryRef.current ||
         currentCategoryFilter !== categoryFilterRef.current ||
         currentSubCategoryFilter !== subCategoryFilterRef.current ||
         currentSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed during fetch, ignoring response`);
         return;
       }
 
@@ -249,6 +255,7 @@ function Catalog() {
         currentCategoryFilter !== categoryFilterRef.current ||
         currentSubCategoryFilter !== subCategoryFilterRef.current ||
         currentSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed before state update, ignoring response`);
         return;
       }
 
@@ -260,6 +267,7 @@ function Catalog() {
       } else {
         setProducts(prev => {
           const newProducts = [...prev, ...pageProducts];
+          console.log(`📄 Added page ${page} products. Total: ${newProducts.length}`);
           return newProducts;
         });
         setCurrentPage(page);
@@ -273,7 +281,16 @@ function Catalog() {
       const hasMoreProducts = currentProductsCount < totalCount && pageProducts.length > 0;
       setHasMore(hasMoreProducts);
 
+      console.log(`📄 Loaded page ${page}:`, {
+        pageProducts: pageProducts.length,
+        totalProductsNow: currentProductsCount,
+        totalAvailable: totalCount,
+        hasMore: hasMoreProducts,
+        emptyPage: pageProducts.length === 0
+      });
+
     } catch (err) {
+      console.error("❌ Error fetching products:", err);
       setHasMore(false);
     } finally {
       setIsLoading(false);
@@ -285,14 +302,17 @@ function Catalog() {
   // FIXED: Load more function with enhanced filter checking
   const loadMoreProducts = useCallback(() => {
     if (isLoadingRef.current) {
+      console.log("🚫 Load more blocked: already loading");
       return;
     }
 
     const currentHasMore = hasMore;
     if (!currentHasMore) {
+      console.log("🚫 Load more blocked: no more products");
       return;
     }
 
+    console.log("⏳ Starting load more with 2s delay...");
     setIsLoadingMore(true);
     isLoadingRef.current = true;
 
@@ -312,12 +332,14 @@ function Catalog() {
         scheduledCategoryFilter !== categoryFilterRef.current ||
         scheduledSubCategoryFilter !== subCategoryFilterRef.current ||
         scheduledSearchQuery !== searchQueryRef.current) {
+        console.log(`🚫 Filters changed during load delay, cancelling`);
         setIsLoadingMore(false);
         isLoadingRef.current = false;
         return;
       }
 
       const nextPage = currentPageRef.current + 1;
+      console.log(`📈 Loading next page: ${nextPage} for current filters`);
       fetchProducts(nextPage, false);
     }, 2000);
   }, [hasMore]);
@@ -326,6 +348,12 @@ function Catalog() {
   useEffect(() => {
     if (loading || !user) return;
 
+    console.log("🔄 Tab/filters changed, resetting products", {
+      activeCategory,
+      categoryFilter,
+      subCategoryFilter,
+      searchQuery
+    });
 
     // Reset all infinite scroll states when changing tabs or filters
     resetInfiniteScrollStates();
@@ -339,20 +367,29 @@ function Catalog() {
 
   // FIXED: Optimized intersection observer setup
   useEffect(() => {
+    console.log("🔧 Setting up observer", { hasMore, productsLength: products.length });
 
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
 
     if (!hasMore || isLoadingRef.current) {
+      console.log("⚠️ Observer not needed", { hasMore, isLoading: isLoadingRef.current });
       return;
     }
 
     const handleIntersection = (entries) => {
       const lastElement = entries[0];
 
+      console.log("👁️ Intersection detected:", {
+        isIntersecting: lastElement.isIntersecting,
+        hasMore,
+        isLoading: isLoadingRef.current,
+        activeTab: activeCategoryRef.current
+      });
 
       if (lastElement.isIntersecting && hasMore && !isLoadingRef.current) {
+        console.log('🔄 Triggering load more for current filters');
         loadMoreProducts();
       }
     };
@@ -361,11 +398,13 @@ function Catalog() {
     const setupObserver = () => {
       const productsGrid = document.querySelector('.products-grid');
       if (!productsGrid || productsGrid.children.length === 0) {
+        console.log("⚠️ Products grid not ready");
         return;
       }
 
       const lastProductElement = productsGrid.children[productsGrid.children.length - 1];
       if (!lastProductElement) {
+        console.log("⚠️ No last product element found");
         return;
       }
 
@@ -376,6 +415,7 @@ function Catalog() {
       });
 
       observerRef.current.observe(lastProductElement);
+      console.log('👁️ Observer setup for element:', lastProductElement);
     };
 
     // Setup observer after products are rendered
@@ -441,6 +481,7 @@ function Catalog() {
           })) || []
         );
       } catch (error) {
+        console.error("Error fetching entity descriptions:", error);
       }
     };
     fetchEntityDescriptions();
@@ -452,6 +493,7 @@ function Catalog() {
       return;
     }
     if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
       logout();
       navigate("/login");
       return;
@@ -476,6 +518,11 @@ function Catalog() {
     currentLanguage,
     entityDescriptions
   ) => {
+    console.log("getLocalizedEntityName called with:", {
+      initialCategories,
+      currentLanguage,
+      entityDescriptions,
+    });
     const match = entityDescriptions?.find(
       (desc) => desc.value.toLowerCase() === initialCategories.toLowerCase()
     );
@@ -520,6 +567,7 @@ function Catalog() {
       user.entity
     ) {
       const customerEntity = user.entity.toLowerCase();
+      console.log("Filtering tabs for interCompany customer with entity:", customerEntity);
 
       tabsToShow = tabsToShow.filter(tab => {
         const category = initialCategories.find(cat => cat.value === tab.value);
@@ -531,11 +579,13 @@ function Catalog() {
         );
 
         if (tabEntityExists && category.entity.toLowerCase() === customerEntity) {
+          console.log("Excluding tab:", tab.label, "for entity:", category.entity);
           return false;
         }
 
         return true;
       });
+      console.log("Filtered tabs for interCompany customer:", tabsToShow);
     }
     setCategoryTabs(tabsToShow);
     setFilteredCategoryTabs(tabsToShow);
@@ -668,7 +718,7 @@ function Catalog() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${API_BASE_URL}/customer-branches/pagination?pageSize=1000`,
+          `${API_BASE_URL}/customer-branches/pagination`,
           {
             method: "GET",
             headers: {
@@ -681,7 +731,8 @@ function Catalog() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to fetch branches: ${errorData.message || response.statusText
+            `Failed to fetch branches: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -693,6 +744,11 @@ function Catalog() {
           branchData = result.data;
         } else if (result && Array.isArray(result.data)) {
           branchData = result.data;
+          console.log("Fetched branch data:", branchData);
+          console.log(
+            "Status of branches:",
+            branchData.map((b) => b.branchStatus)
+          );
         } else {
           branchData = [];
         }
@@ -705,9 +761,9 @@ function Catalog() {
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                branch.branchNameLc ||
-                branch.branch_name_en ||
-                branch.branchNameEn,
+                  branch.branchNameLc ||
+                  branch.branch_name_en ||
+                  branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -717,13 +773,12 @@ function Catalog() {
         });
         setBranches(branchOptions);
       } catch (error) {
-        // Error handling code here
+        console.error("Error fetching branches:", error);
       } finally {
         setIsLoading(false);
       }
     };
     fetchBranches();
-
   }, [API_BASE_URL, i18n.language]);
   // Handler for branch selection with cart check
   const handleBranchSelect = async (e) => {
@@ -812,7 +867,8 @@ function Catalog() {
         if (isConfirmed) {
           try {
             await fetch(
-              `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId
+              `${API_BASE_URL}/cart/delete?customer_id=${
+                selectedCustomerId || customerId
               }&branch_id=${otherBranchId}`,
               {
                 method: "DELETE",
@@ -849,6 +905,7 @@ function Catalog() {
         }
       }
     } catch (error) {
+      console.error("Error during branch change:", error);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -861,6 +918,7 @@ function Catalog() {
   };
   //  Add to cart functionality
   const handleAddToCart = async (productId) => {
+    console.log("Adding product to cart:", productId);
     try {
       // Check if a branch is selected
       if (!selectedLocation) {
@@ -926,6 +984,7 @@ function Catalog() {
         }
       );
       const checkResult = await checkResponse.json();
+      console.log("Check cart response:", checkResult);
       if (checkResult.data.data && checkResult.data.data.length > 0) {
         // Item exists in cart, update the quantity
         const existingItem = checkResult.data.data[0];
@@ -948,7 +1007,8 @@ function Catalog() {
         if (!updateResponse.ok) {
           const errorData = await updateResponse.json().catch(() => ({}));
           throw new Error(
-            `Failed to update cart item: ${errorData.message || updateResponse.statusText
+            `Failed to update cart item: ${
+              errorData.message || updateResponse.statusText
             }`
           );
         }
@@ -984,6 +1044,7 @@ function Catalog() {
             user.companyType === "non trading" ? 0.0 : vatPercentage.toFixed(2),
           images: JSON.stringify(imageUrls),
         };
+        console.log("Adding new item to cart:", cartItem);
         const response = await fetch(`${API_BASE_URL}/cart`, {
           method: "POST",
           headers: {
@@ -995,7 +1056,8 @@ function Catalog() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to add item to cart: ${errorData.message || response.statusText
+            `Failed to add item to cart: ${
+              errorData.message || response.statusText
             }`
           );
         }
@@ -1012,6 +1074,7 @@ function Catalog() {
         [productId]: 0,
       }));
     } catch (error) {
+      console.error("Error handling product cart action:", error);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1089,6 +1152,7 @@ function Catalog() {
         )
       );
     } catch (error) {
+      console.error("Error toggling favorite status:", error);
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -1256,6 +1320,7 @@ function Catalog() {
         setCategoryOptions(options);
       } catch (err) {
         setCategoryOptions([]);
+        console.error("Error fetching categories:", err);
       }
     };
     fetchCategories();
@@ -1295,6 +1360,7 @@ function Catalog() {
         setSubCategoryOptions(options);
       } catch (err) {
         setSubCategoryOptions([]);
+        console.error("Error fetching subcategories:", err);
       }
     };
     fetchSubCategories();
@@ -1345,8 +1411,9 @@ function Catalog() {
             </div>
             {isV("goToCart") && (
               <button
-                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""
-                  }`}
+                className={`go-to-cart-btn ${
+                  !selectedLocation ? "disabled" : ""
+                }`}
                 style={{
                   opacity: !selectedLocation ? 0.6 : 1,
                   cursor: !selectedLocation ? "not-allowed" : "pointer",
@@ -1375,6 +1442,7 @@ function Catalog() {
               tabs={filteredCategoryTabs}
               activeTab={activeCategory}
               onTabChange={(newCategory) => {
+                console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
                 setActiveCategory(newCategory);
                 setSearchQuery("");
                 setCategoryFilter(""); // Reset category filter
@@ -1455,19 +1523,19 @@ function Catalog() {
               />
             ))
             : !isLoading && (
-              <div className="no-products-message">
-                {searchQuery ? (
-                  <p>
-                    {t(
-                      'No products found matching your search term "{{searchTerm}}".',
-                      { searchTerm: searchQuery }
-                    )}
-                  </p>
-                ) : (
-                  <p>{t("No products found matching your criteria.")}</p>
-                )}
-              </div>
-            )}
+                <div className="no-products-message">
+                  {searchQuery ? (
+                    <p>
+                      {t(
+                        'No products found matching your search term "{{searchTerm}}".',
+                        { searchTerm: searchQuery }
+                      )}
+                    </p>
+                  ) : (
+                    <p>{t("No products found matching your criteria.")}</p>
+                  )}
+                </div>
+              )}
           {isLoading && (
             <div className="loading-container">
               <LoadingSpinner size="medium" />

@@ -48,6 +48,7 @@ const PaymentPage = () => {
                     }
                 }
             );
+            console.log('Payment response:', data);
             if (!data || data.status !== 'Success') {
                 Swal.fire({
                     icon: 'error',
@@ -69,6 +70,7 @@ const PaymentPage = () => {
                 setIsLoading(false);
             }
         } catch (error) {
+            console.log('Payment error:', error);
             Swal.fire({
                 icon: 'error',
                 title: t('Payment error'),

@@ -40,6 +40,7 @@ api.interceptors.response.use(
           return api(originalRequest);
         }
       } catch (err) {
+        console.error("Token refresh failed", err);
       }
     }
     return Promise.reject(error);

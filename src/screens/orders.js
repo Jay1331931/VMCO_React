@@ -113,6 +113,8 @@ function Orders() {
         }
         const result = await response.json();
         if (result.status === "Ok") {
+          // Ensure we have the companyNameEn field for each order
+          console.log("API Response:", result);
           const processedOrders = result.data.data.map((order) => ({
             ...order,
             // If companyNameEn is not present in the data, use the company name or erpCustId as fallback
@@ -155,6 +157,7 @@ function Orders() {
         sortOrder: "asc",
         filters: "{}",
       });
+      console.log("Fetching approvals with params:", params.toString());
       const response = await fetch(
         `${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`,
         {
@@ -167,6 +170,7 @@ function Orders() {
         }
       );
       const result = await response.json();
+      console.log("API Response:", result);
       if (result.status === "Ok") {
         // Ensure we have the companyNameEn field for each order in approvals
         const processedOrders = result.data.data.map((order) => ({
@@ -194,6 +198,8 @@ function Orders() {
     if (loading) {
       return; // Wait while loading
     }
+
+    console.log("$$$$$$$$$$$ user in orders page", user);
     if (user) {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery); // <-- Call approval API
@@ -202,6 +208,13 @@ function Orders() {
       }
     }
 
+    if (!user) {
+      console.log("$$$$$$$$$$$ logging out");
+      // Logout instead of showing loading message
+      //logout();
+      //navigate('/login');
+      //return null; // Return null while logout is processing
+    }
   }, [page, searchQuery, user, fetchOrders]);
 
   //For fetching the user again after browser refersh - End
@@ -227,6 +240,7 @@ function Orders() {
   };
 
   const handleRowClick = async (order) => {
+    console.log("Row clicked, navigating to order details with:", order);
     try {
       // Fetch sales order lines for this order
       const params = new URLSearchParams({
@@ -257,6 +271,7 @@ function Orders() {
       ) {
         salesOrderLines = result.data.data;
       }
+      console.log("Fetched sales order :", order);
       navigate("/orderDetails", {
         state: {
           order: { ...order, salesOrderLines },
@@ -269,6 +284,8 @@ function Orders() {
         },
       });
     } catch (err) {
+      console.error("Failed to fetch sales order lines:", err);
+      // Fallback: navigate without salesOrderLines if fetch fails
       navigate("/orderDetails", {
         state: {
           order,
@@ -365,6 +382,7 @@ function Orders() {
         window.open(data.details.url, "_blank");
       }
     } catch (error) {
+      console.error("Error generating payment link:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to generate payment link. Please try again later."),
@@ -548,6 +566,15 @@ function Orders() {
     setBulkUploadPopUp(true);
 
   }
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Handle file upload
+      console.log("Selected file:", file);
+    }
+  };
+
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
     setSelectedBranch(null);
@@ -596,6 +623,7 @@ function Orders() {
           });
         }
       } catch (error) {
+        console.error("Error downloading template:", error);
         await Swal.fire({
           title: t("Error"),
           text: t("Failed to download template."),
@@ -652,6 +680,7 @@ function Orders() {
       }
     } catch (error) {
       setSyncLoading(false);
+      console.error("Error handling FandO fail Sales Order:", error);
       Swal.fire({
         title: "Error",
         text: error.message || "Failed to Sync with FandO.",
@@ -724,6 +753,7 @@ function Orders() {
       const blob = response?.data;
       const text = await blob.text(); // convert blob to text
       const data = JSON.parse(text); // parse text to JSON
+      console.log(response?.status, data?.response?.success);
       if (response?.status === 200 && data?.response?.success) {
         fetchOrders()
 
@@ -746,6 +776,7 @@ function Orders() {
         });
       }
     } catch (error) {
+      console.error("Error uploading file:", error);
       Swal.fire({
         title: t("File Upload Failed"),
         text: t("An error occurred while uploading the file."),
