@@ -14,6 +14,7 @@ function BulkUploadBranchAndCustomer() {
   const [uploadType, setUploadType] = useState(null); // "customer" | "branch"
   const [popup, setPopup] = useState(false);
   const { token, user, logout } = useAuth();
+    const [emailloading, setEmailLoading] = useState(false);
   const fileExcelInputRef = useRef();
   const { t } = useTranslation();
   const rbacMgr = new RbacManager(
@@ -186,7 +187,44 @@ function BulkUploadBranchAndCustomer() {
       fileExcelInputRef.current.value = "";
     }
   };
+const handleSend = async () => {
+  setEmailLoading(true)
+  try {
+    const { data } = await axios.get(`${API_BASE_URL}/auth/getallPrimaryCustomers`);
 
+    if (data.success){
+        Swal.fire({
+          title: t("BulK Email Sent Successfully"),
+          text:
+            t(data.message) || t("email sent to Customer"),
+          icon: "success",
+          confirmButtonText: t("OK"),
+        });
+    }else{
+       Swal.fire({
+           title: "Failed to Send email",
+          text:
+            t(data.message) || "An error occurred while sending email.",
+          icon: "error",
+          confirmButtonText: t("OK"),
+        });
+    }
+
+  } catch (error) {
+    console.error("Error fetching primary customers:", error);
+
+    Swal.fire({
+      title: "Failed to Send email",
+      text:
+        (error.response?.data?.message) || 
+        "An error occurred while sending email.",
+      icon: "error",
+      confirmButtonText: "OK",
+    });
+  }finally{
+     setEmailLoading(false)
+  }
+};
   return (
     <Sidebar title={t("General")}>
       {/* Two separate open buttons */}
@@ -274,6 +312,25 @@ function BulkUploadBranchAndCustomer() {
             }}
           >
             📤 Upload Products Data
+          </button>
+        )}
+        {isV("BulkEmail") && (
+          <button
+            className="branch-btn"
+            style={{
+              padding: "12px 20px",
+              backgroundColor: "var(--orange)",
+              border: "none",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              fontWeight: 500,
+              transition: "background-color 0.3s ease",
+            }}
+            disabled={emailloading}
+            onClick={() => handleSend()}
+          >
+           { emailloading ?  "...seding bulk email" :"Send Bulk Email"}
           </button>
         )}
       </div>

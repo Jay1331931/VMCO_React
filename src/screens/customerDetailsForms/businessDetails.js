@@ -72,6 +72,7 @@ function BusinessDetails({
 
       setBasicMasterLists(listOfBasicsMaster);
       setEmployeeListWithManagers(listOfEmployeesWithManagers);
+      console.log("listOfEmployees",listOfEmployees)
       setEmployeeList(listOfEmployees);
     };
     fetchData();

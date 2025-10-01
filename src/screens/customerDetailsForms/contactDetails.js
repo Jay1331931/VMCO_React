@@ -834,7 +834,7 @@ function ContactDetails({
             }
             required
           />
-          {user?.designation?.toLowerCase() === "operations coordinator" && (
+          {customerData?.customerStatus?.toLowerCase()==='approved'&& isE('emailEdit')&& isV('emailEdit') && (
             <IconButton
               onClick={() => {
                 setcurrentEmail(customerContactsData?.primaryContactEmail);

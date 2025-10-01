@@ -650,6 +650,22 @@ function Customers() {
       renderCell: (params) => { <span>{params.value}</span> }
     },
     {
+      field: "createdAt",
+      headerName: t("Created Date"),
+      include: isV("createdAt"),
+      searchable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) =>
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
+
+      // valueFormatter: (params) =>
+      //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
+    },
+    {
       field: "customerStatus",
       headerName: t("Approval Status"),
       include: isMobile ? false : isV("customerStatus"),
@@ -762,6 +778,22 @@ function Customers() {
       flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
+    },
+      {
+      field: "createdAt",
+      headerName: t("Created Date"),
+      include: isV("createdAt"),
+      searchable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      renderCell: (params) =>
+        params?.row?.createdAt
+          ? formatDate(params?.row?.createdAt, "DD/MM/YYYY")
+          : " ",
+
+      // valueFormatter: (params) =>
+      //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
     },
     {
       field: "customerStatus",

@@ -104,30 +104,41 @@ export const fetchDropdownFromBasicsMaster = async (dropdownFields,token) => {
 
 export const getOptionsFromEmployees = async (token) => {
   const params = new URLSearchParams({
-    filters: { designation: "sales executive" }, // Properly stringify the filter
+    filters: { designation: "sales executive" ,}, // Properly stringify the filter
   });
-  const supportStaffDesignation = "sales executive";
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`,
-      {
-        method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token && { "Authorization": `Bearer ${token}` })
-        },
-        
+  const supportStaffDesignation = ["sales executive","area sales manager"];
+ try {
+    let allOptions = [];
+
+    for (const designation of supportStaffDesignation) {
+      const response = await fetch(
+        `${API_BASE_URL}/employees/pagination?filters={"designation":"${designation}"}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+
+      const result = await response.json();
+
+      const options = result.data.data.map((item) => ({
+        name: item.name,
+        employeeId: item.employeeId,
+      }));
+
+      allOptions = [...allOptions, ...options];
     }
-    const result = await response.json();
-    const options = result.data.data.map((item) => {
-      return { name: item.name, employeeId: item.employeeId };
-    });
-    return options;
+
+    return allOptions;
   } catch (err) {
+    console.error("Error fetching support staff:", err);
     return [];
   }
 };
