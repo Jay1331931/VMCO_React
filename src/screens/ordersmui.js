@@ -704,21 +704,7 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-            (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "Credit") &&
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.NAQI.toLowerCase()))) && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -797,21 +783,7 @@ function Orders() {
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credit") &&
-              (params?.row?.status?.toLowerCase() === "approved" ||
-                (params?.row?.status?.toLowerCase() === "open" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-                (params?.row?.status?.toLowerCase() === "pending" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+              params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
                   onClick={(e) => {

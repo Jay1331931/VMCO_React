@@ -718,7 +718,7 @@ function Catalog() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${API_BASE_URL}/customer-branches/pagination`,
+          `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
           {
             method: "GET",
             headers: {
