@@ -107,8 +107,16 @@ function Cart() {
     const fetchCartItems = React.useCallback(async () => {
         // Don't fetch if we don't have the required user data
         if (!userId || !customerId || !selectedBranchId) {
+            console.log('Missing required user data for cart fetch:', {
+                userId,
+                customerId,
+                selectedBranchId,
+                userObject: user
+            });
             return;
         }
+
+        console.log('Starting cart fetch with data:', { userId, customerId, selectedBranchId });
 
         setIsLoading(true);
         setError(null);
@@ -127,9 +135,13 @@ function Cart() {
                 branch_id: selectedBranchId
             };
 
+            // Log the filters to ensure userId is included
+            console.log('Cart filters:', filters);
 
             // Add filters as a single parameter with stringified JSON
             params.append('filters', JSON.stringify(filters));
+
+            console.log('Fetching cart with params:', params.toString());
 
             const response = await fetch(`${API_BASE_URL}/cart/pagination?${params.toString()}`, {
                 method: 'GET',
@@ -143,10 +155,12 @@ function Cart() {
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('Server error response:', errorText);
                 throw new Error(`Error: ${response.status} ${response.statusText}`);
             }
 
             const result = await response.json();
+            console.log('Fetched cart data:', result);
 
             // Declare category arrays before use
             const vmco = [];
@@ -158,6 +172,8 @@ function Cart() {
             // ...existing code...
             const cartProducts = Array.isArray(result.data.data) ? result.data.data :
                 (result.data && Array.isArray(result.data)) ? result.data : [];
+
+            console.log('Extracted cart products:', cartProducts.length, 'items');
 
             // Map initial quantities from fetched data
             const initialQuantities = {};
@@ -271,7 +287,16 @@ function Cart() {
             // Initialize quantities from fetched data
             setQuantities(initialQuantities);
 
+            console.log('Cart items successfully loaded:', {
+                vmco: vmco.length,
+                shc: shc.length,
+                gmtc: gmtc.length,
+                naqi: naqi.length,
+                dar: dar.length
+            });
+
         } catch (err) {
+            console.error('Error fetching cart items:', err);
             setError('Failed to load cart items. Please try again.');
 
             // Don't clear existing cart items if there's an error
@@ -315,6 +340,7 @@ function Cart() {
 
     const handleRemoveItem = async (item) => {
         if (!item || !item.id) {
+            console.error('Invalid item provided to handleRemoveItem');
             return;
         }
 
@@ -341,6 +367,8 @@ function Cart() {
             if (item.category) deleteUrl.searchParams.append('category', item.category);
             deleteUrl.searchParams.append('product_id', item.productId);
 
+            console.log(`Removing cart item with params: ${deleteUrl}`);
+
             const deleteResponse = await fetch(deleteUrl, {
                 method: 'DELETE',
                 headers: {
@@ -352,6 +380,7 @@ function Cart() {
 
             if (!deleteResponse.ok) {
                 const errorText = await deleteResponse.text();
+                console.error(`Error removing item: ${deleteResponse.status}`, errorText);
                 throw new Error(`Failed to remove item: ${deleteResponse.statusText}`);
             }
 
@@ -377,6 +406,7 @@ function Cart() {
             });
 
         } catch (err) {
+            console.error('Error removing item:', err);
             Swal.fire({
                 icon: 'error',
                 title: t('Error'),
@@ -452,6 +482,7 @@ function Cart() {
                         paymentMethod: 'Cash on Delivery'
                     })
                 });
+                console.log(`Checking existing COD orders with filters: ${orderFilters.toString()}`);
 
                 const existingOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
                     method: 'GET',
@@ -491,10 +522,12 @@ function Cart() {
                 }
 
                 const customerData = await customerResponse.json();
+                console.log('Customer COD limit data:', customerData);
                 const codLimit = Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
 
                 // Compare total with COD limit
                 if (existingCODTotal + currentOrderTotal >= codLimit) {
+                    console.log(`COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + currentOrderTotal}, current=${currentOrderTotal}, limit=${codLimit}`);
                     Swal.fire({
                         icon: 'warning',
                         title: t('COD Limit Reached'),
@@ -504,6 +537,7 @@ function Cart() {
                     return;
                 }
             } catch (error) {
+                console.error('Error checking COD limits:', error);
                 Swal.fire({
                     icon: 'error',
                     title: t('Error'),
@@ -513,6 +547,7 @@ function Cart() {
 
                 return;
             }
+            console.log('COD limit check passed. continuing with order placement.');
         }
 
         // Proceed with order placement if COD limit check passes or if it's not COD
@@ -537,46 +572,67 @@ function Cart() {
             // Separate SHC products into fresh and non-fresh products
             const freshProducts = categoryItems.filter(item => {
                 const isFresh = item.isFresh === true;
+                console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}`);
                 return isFresh;
             });
             const nonFreshProducts = categoryItems.filter(item => {
                 const isFresh = item.isFresh === true;
+                console.log(`Product ${item.name} (${item.product_id}): isFresh=${isFresh}, isNonFresh=${!isFresh}`);
                 return !isFresh;
+            });
+
+            console.log('SHC products separated:', {
+                total: categoryItems.length,
+                fresh: freshProducts.length,
+                nonFresh: nonFreshProducts.length,
+                freshProductIds: freshProducts.map(p => p.product_id),
+                nonFreshProductIds: nonFreshProducts.map(p => p.product_id)
             });
 
             const orderIds = [];
 
             // Place order for fresh products
             if (freshProducts.length > 0) {
+                console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
                 // Use a specific category name for fresh products to ensure separate orders
                 const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false, true);
+                console.log('Fresh order result:', freshOrderId);
                 if (freshOrderId) {
                     orderIds.push(freshOrderId);
+                    console.log('Added fresh order ID to array:', freshOrderId);
                     // Delete fresh products from cart after successful order
                     await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, null, freshProducts);
+                    console.log('Deleted fresh products from cart after order:', freshProducts);
                 } else {
-                    return;
+                    console.error('Fresh order failed - no order ID returned');
                 }
             }
 
             // Place order for non-fresh products
             if (nonFreshProducts.length > 0) {
+                console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
                 // Use a specific category name for non-fresh products to ensure separate orders
                 const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false, false);
+                console.log('Non-fresh order result:', nonFreshOrderId);
                 if (nonFreshOrderId) {
                     orderIds.push(nonFreshOrderId);
+                    console.log('Added non-fresh order ID to array:', nonFreshOrderId);
                     // Delete non-fresh products from cart after successful order
                     await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, null, nonFreshProducts);
+                    console.log('Deleted non-fresh products from cart after order:', nonFreshProducts);
                 } else {
-                    return;
+                    console.error('Non-fresh order failed - no order ID returned');
                 }
             }
 
             // Show combined success message for SHC orders
             if (orderIds.length > 0) {
+                console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
                     ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                     : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
+
+                console.log('Order success message:', orderText);
 
                 Swal.fire({
                     icon: 'success',
@@ -618,20 +674,10 @@ function Cart() {
                         if (data?.details?.url) {
                             window.open(data.details.url, '_blank');
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: t('Payment Link Generation Failed'),
-                                text: t('Failed to generate payment link. Please try again later.'),
-                                confirmButtonText: t('OK')
-                            });
+                            console.error("Payment URL not found in response:", data);
                         }
                     } catch (error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: t('Payment Link Generation Failed'),
-                            text: t('Failed to generate payment link. Please try again later.'),
-                            confirmButtonText: t('OK')
-                        });
+                        console.error("Error generating payment link:", error);
                     }
                 }
             }
@@ -639,6 +685,7 @@ function Cart() {
 
 
         } catch (err) {
+            console.error('Error in SHC order splitting:', err);
             setError(err.message);
             Swal.fire({
                 icon: 'error',
@@ -661,29 +708,47 @@ function Cart() {
             const machineProducts = categoryItems.filter(item => item.isMachine === true);
             const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
 
+            console.log('VMCO order processing separated:', {
+                total: categoryItems.length,
+                machines: machineProducts.length,
+                consumables: nonMachineProducts.length,
+                machineProductIds: machineProducts.map(p => p.product_id),
+                nonMachineProductIds: nonMachineProducts.map(p => p.product_id),
+                selectedPaymentMethod
+            });
+
             const orderIds = [];
 
             // First, place order for machines with Pre Payment
             if (machineProducts.length > 0) {
+                console.log('Placing order for VMCO machines with Pre Payment');
                 const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
+                console.log('Machine order result:', machineOrderId);
                 if (machineOrderId) {
                     orderIds.push(machineOrderId);
+                    console.log('Added machine order ID to array:', machineOrderId);
                 }
             }
 
             // Then, place order for non-machine products with selected payment method
             if (nonMachineProducts.length > 0) {
+                console.log('Placing order for VMCO consumables with selected payment method:', selectedPaymentMethod);
                 const consumableOrderId = await placeOrderForCategory(nonMachineProducts, categoryName + ' - Consumables', selectedPaymentMethod, false);
+                console.log('Consumable order result:', consumableOrderId);
                 if (consumableOrderId) {
                     orderIds.push(consumableOrderId);
+                    console.log('Added consumable order ID to array:', consumableOrderId);
                 }
             }
 
             // Show combined success message for VMCO orders
             if (orderIds.length > 0) {
+                console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
                     ? t(`Your order is successfully placed and is under review for approval.`) + t(` #${orderIds[0]}`)
                     : t(`Your orders is successfully placed and is under review for approval.:`) + ` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
+
+                console.log('Order success message:', orderText);
 
                 Swal.fire({
                     icon: 'success',
@@ -694,11 +759,13 @@ function Cart() {
                     // Delete machine products from cart after successful order
                     if (machineProducts.length > 0) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
+                        console.log('Deleted machine products from cart after order:', machineProducts);
                     }
 
                     // Delete non-machine products from cart after successful order
                     if (nonMachineProducts.length > 0) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
+                        console.log('Deleted non-machine products from cart after order:', nonMachineProducts);
                     }
 
                     // Update cart items state to remove ordered items
@@ -724,6 +791,7 @@ function Cart() {
             }
 
         } catch (err) {
+            console.error('Error in VMCO order processing:', err);
             setError(err.message);
             Swal.fire({
                 icon: 'error',
@@ -810,14 +878,24 @@ function Cart() {
                 const machineProducts = categoryItems.filter(item => item.isMachine === true);
                 const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
 
+                console.log('VMCO products separated:', {
+                    total: categoryItems.length,
+                    machines: machineProducts.length,
+                    consumables: nonMachineProducts.length,
+                    machineProductIds: machineProducts.map(p => p.product_id),
+                    nonMachineProductIds: nonMachineProducts.map(p => p.product_id)
+                });
+
                 // For VMCO, first show payment method popup for consumables, then process both machines and consumables
                 if (nonMachineProducts.length > 0) {
+                    console.log('Showing payment method selection for VMCO consumables first');
                     setPendingOrderCategory(categoryName);
                     setPendingOrderItems(categoryItems); // Pass all items so we can separate later
                     setShowPaymentPopup(true);
                     return; // Exit function to wait for user payment method selection
                 } else if (machineProducts.length > 0) {
                     // If only machines, proceed directly
+                    console.log('Only VMCO machines found, placing order directly with Pre Payment');
                     const machineOrderId = await placeOrderForCategory(machineProducts, categoryName + ' - Machines', 'Pre Payment', false);
                     if (machineOrderId) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
@@ -867,14 +945,17 @@ function Cart() {
 
                 // If payment method determination returned null (insufficient balance), cancel the order
                 if (shcPaymentMethod === null) {
+                    console.log('Payment method determination cancelled due to insufficient balance');
                     return; // Exit the function early
                 }
 
                 // If a specific payment method was determined, use it directly
                 if (shcPaymentMethod && shcPaymentMethod !== 'Cash on Delivery') {
+                    console.log(`Using determined payment method ${shcPaymentMethod} for SHC entity`);
                     await handleSHCOrderSplitting(categoryItems, categoryName, shcPaymentMethod);
                 } else {
                     // For COD or when payment method needs user selection, show popup
+                    console.log(`Showing payment method selection for SHC splitting`);
                     setPendingOrderCategory(categoryName);
                     setPendingOrderItems(categoryItems);
                     setShowPaymentPopup(true);
@@ -896,18 +977,22 @@ function Cart() {
 
                 // If payment method determination returned null (insufficient balance), cancel the order
                 if (paymentMethod === null) {
+                    console.log('Payment method determination cancelled due to insufficient balance');
                     return; // Exit the function early
                 }
 
                 // If a specific payment method was determined, use it directly
                 if (paymentMethod === 'Pre Payment') {
                     // Directly place order with Pre Payment, do not show popup
+                    console.log(`Credit not allowed or COD limit exceeded, placing order directly with Pre Payment for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, 'Pre Payment', true);
                     return;
                 } else if (paymentMethod && paymentMethod !== 'Cash on Delivery') {
+                    console.log(`Using determined payment method ${paymentMethod} for ${entity} entity`);
                     await placeOrderForCategory(categoryItems, categoryName, paymentMethod, true);
                 } else {
                     // For COD or when payment method needs user selection, show popup
+                    console.log(`Showing payment method selection for ${entity} entity`);
                     setPendingOrderCategory(categoryName);
                     setPendingOrderItems(categoryItems);
                     setShowPaymentPopup(true);
@@ -944,6 +1029,7 @@ function Cart() {
         try {
             let initialDeliveryCharges = 0.00;
             const entity = getEntityFromCategory(categoryName);
+            console.log('Entity determination:', { categoryName, entity });
 
             let orderByName = '';
             const userId = user?.userId;
@@ -964,14 +1050,14 @@ function Cart() {
                             if (usernameResult && (usernameResult.userName || usernameResult.username)) {
                                 orderByName = usernameResult.userName || usernameResult.username;
                             } else {
-                                return;
+                                console.warn('Username API did not return userName field:', usernameResult);
                             }
                         }
                     } else {
-                        return;
+                        console.error('Failed to fetch username: HTTP', usernameRes.status);
                     }
                 } catch (error) {
-                    return;
+                    console.error('Failed to fetch userName for orderBy:', error);
                 }
             }
 
@@ -1002,7 +1088,7 @@ function Cart() {
                         assignedTo = assignedToEntityWise[entity.toLowerCase()];
                     }
                 } catch (e) {
-                    return;
+                    console.error('Error parsing assignedToEntityWise:', e);
                 }
             }
 
@@ -1012,6 +1098,14 @@ function Cart() {
 
             // Check if payment method is "Pre Payment" - if so, always create a new order
             const isPrePayment = selectedPaymentMethod === 'Pre Payment';
+
+            console.log(`placeOrderForCategory called with:`, {
+                categoryName,
+                selectedPaymentMethod,
+                isPrePayment,
+                entity,
+                itemCount: categoryItems.length
+            });
 
             if (!isPrePayment) {
                 // Only check for existing orders if NOT using Pre Payment
@@ -1033,6 +1127,7 @@ function Cart() {
                         status: 'Open'
                     };
 
+                console.log('Searching for existing orders with filters:', orderFiltersObj);
 
                 const orderFilters = new URLSearchParams({
                     filters: JSON.stringify(orderFiltersObj)
@@ -1052,12 +1147,20 @@ function Cart() {
                 }
 
                 const existingOrderResult = await existingOrderResponse.json();
+                console.log('Existing order search result:', existingOrderResult);
 
                 if (existingOrderResult.data?.data?.length > 0) {
                     // For VMCO and SHC orders, ensure we match the exact productCategory
                     const matchingOrders = existingOrderResult.data.data.filter(order => {
                         if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
                             entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
+                            console.log('Checking order:', {
+                                orderId: order.id,
+                                orderCategory: order.productCategory,
+                                searchCategory: categoryName,
+                                entity: entity,
+                                match: order.productCategory === categoryName
+                            });
                             return order.productCategory === categoryName;
                         }
                         return true; // For other entities, any matching order is fine
@@ -1066,6 +1169,7 @@ function Cart() {
                     if (matchingOrders.length > 0) {
                         existingOrderData = matchingOrders[0];
                         orderId = existingOrderData.id;
+                        console.log(`Found existing order: ${orderId} for category: ${categoryName}`);
 
                         const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
                             method: 'GET',
@@ -1090,7 +1194,7 @@ function Cart() {
                             });
                         }
                     } else {
-                        return;
+                        console.log(`No existing order found with matching category: ${categoryName}`);
                     }
                 }
             }
@@ -1108,6 +1212,16 @@ function Cart() {
 
                     // Validate values to prevent NaN
                     if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
+                        console.warn('Invalid values detected in order calculation:', {
+                            itemId: item.id,
+                            newQuantity,
+                            unitPrice,
+                            vatPercentage,
+                            available_quantities: quantities[item.id],
+                            item_quantity: item.quantity,
+                            item_moq: item.moq,
+                            item: item
+                        });
                         continue; // Skip this item if values are invalid
                     }
 
@@ -1116,12 +1230,24 @@ function Cart() {
                     const netAmount = baseAmount + vatAmount;
 
                     initialTotalAmount += netAmount;
+
+                    console.log(`Item ${item.id} calculation:`, {
+                        quantity: newQuantity,
+                        unitPrice,
+                        vatPercentage,
+                        baseAmount,
+                        vatAmount,
+                        netAmount
+                    });
                 }
 
                 // Validate initial total
                 if (isNaN(initialTotalAmount) || initialTotalAmount < 0) {
+                    console.error('Invalid initialTotalAmount calculated:', initialTotalAmount);
                     throw new Error(`Invalid initial total amount: ${initialTotalAmount}`);
                 }
+
+                console.log('Initial total amount calculated:', initialTotalAmount);
 
                 // Calculate delivery charges based on business logic
                 let initialDeliveryCharges = 0.00;
@@ -1131,15 +1257,25 @@ function Cart() {
                     // Check if it's NOT VMCO Machines AND total amount <= 150
                     if (!isVmcoMachine && initialTotalAmount <= 150) {
                         initialDeliveryCharges = 20.00;
+                        console.log('Delivery charges applied: 20.00 (not VMCO machine and total <= 150)');
                     } else {
-                        return 0.00;
+                        console.log('No delivery charges:', isVmcoMachine ? 'VMCO machine' : `total amount ${initialTotalAmount} > 150`);
                     }
                 } else {
-                    return 0.00;
+                    console.log('Delivery charges not applicable for customer');
                 }
 
                 // Calculate final total including delivery charges
                 const finalTotalAmount = initialTotalAmount + initialDeliveryCharges;
+
+                console.log('Delivery charges calculation:', {
+                    isDeliveryChargesApplicable,
+                    isVmcoMachine,
+                    initialTotalAmount,
+                    initialDeliveryCharges,
+                    finalTotalAmount
+                });
+
                 // Determine if this is a machine order or fresh order based on category name and entity
                 const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
                 const isFreshOrder = categoryName.toLowerCase().includes('fresh') || categoryName.toLowerCase().includes('طازج');
@@ -1194,7 +1330,20 @@ function Cart() {
                 const isVmcoMachines = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
                 if (isVmcoMachines) {
                     orderPayload.paymentMethod = 'Pre Payment';
+                    console.log('Override payment method to Pre Payment for VMCO machines:', categoryName);
                 }
+
+                console.log('Order payload:', orderPayload);
+                console.log('Key differentiators:', {
+                    productCategory: orderPayload.productCategory,
+                    paymentMethod: orderPayload.paymentMethod,
+                    status: orderPayload.status,
+                    customerId: orderPayload.customerId,
+                    branchId: orderPayload.branchId,
+                    entity: orderPayload.entity,
+                    isMachine: orderPayload.isMachine,
+                    isFresh: orderPayload.isFresh
+                });
 
                 const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                     method: 'POST',
@@ -1213,6 +1362,8 @@ function Cart() {
 
                 const orderResult = await orderResponse.json();
                 orderId = orderResult.data.id;
+                console.log(`Created new order with ID: ${orderId} for category: ${categoryName} with payment method: ${selectedPaymentMethod}`);
+                console.log('Order creation response:', orderResult);
             }
 
             // Create or Update Order Lines
@@ -1220,17 +1371,47 @@ function Cart() {
             for (const item of categoryItems) {
                 // Make sure we properly identify the product ID - check all possible fields in priority order
                 const productId = item.product_id || item.productId || item.id;
+
+                console.log(`Processing item with product ID: ${productId}`, {
+                    item_details: {
+                        id: item.id,
+                        product_id: item.product_id,
+                        productId: item.productId,
+                        name: item.name || item.productName,
+                        all_item_keys: Object.keys(item)
+                    }
+                });
+
                 const newQuantity = parseInt(quantities[item.id] || item.quantity || item.moq || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
 
                 // Validate order line values
                 if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
+                    console.error('Invalid order line values:', {
+                        itemId: item.id,
+                        productId,
+                        newQuantity,
+                        unitPrice,
+                        vatPercentage,
+                        available_quantities: quantities[item.id],
+                        item_quantity: item.quantity,
+                        item_moq: item.moq
+                    });
                     continue; // Skip this item if values are invalid
                 }
 
                 // Check if this product already exists in the order (only if not using Pre Payment)
                 const existingLine = isPrePayment ? null : existingProductMap[productId];
+
+                console.log(`Item ${productId} existing line check:`, existingLine ? 'Found' : 'Not found', {
+                    item_id: item.id,
+                    product_id: productId,
+                    existing_line_id: existingLine?.id,
+                    existing_quantity: existingLine?.quantity,
+                    isPrepayment: isPrePayment
+                });
+
                 const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
                 const baseAmount = unitPrice * totalQuantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
@@ -1244,6 +1425,17 @@ function Cart() {
                         net_amount: netAmount.toFixed(2),
                         line_number: lineNumber
                     };
+
+                    console.log(`Updating existing line for orderId ${orderId} and productId ${productId}:`, {
+                        payload: patchPayload,
+                        existingLine: {
+                            id: existingLine.id,
+                            product_id: productId,
+                            old_quantity: existingLine.quantity,
+                            old_net_amount: existingLine.net_amount
+                        }
+                    });
+
                     try {
                         // Using the new API endpoint that updates by orderId and productId
                         const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
@@ -1258,12 +1450,15 @@ function Cart() {
 
                         if (!patchResponse.ok) {
                             const errorText = await patchResponse.text();
+                            console.error(`Failed to update line for orderId ${orderId} and productId ${productId}: ${errorText}`);
                             throw new Error(errorText);
                         } else {
                             const updatedLine = await patchResponse.json();
+                            console.log(`Successfully updated line for orderId ${orderId} and productId ${productId}:`, updatedLine);
                         }
                     } catch (error) {
-                        continue;
+                        console.error(`Error updating line for orderId ${orderId} and productId ${productId}:`, error);
+                        // Continue with the process - don't let one line failure stop the entire order
                     }
                 } else {
                     // Create a new line for this product
@@ -1305,6 +1500,17 @@ function Cart() {
                         erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
                     };
 
+                    console.log(`Creating new line for product ${productId}:`, {
+                        payload: newLinePayload,
+                        original_item: {
+                            id: item.id,
+                            product_id: item.product_id,
+                            productId: item.productId,
+                            name: item.name || item.productName,
+                            productNameLc: productNameLc
+                        }
+                    });
+
                     try {
                         const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
                             method: 'POST',
@@ -1318,15 +1524,19 @@ function Cart() {
 
                         if (!createResponse.ok) {
                             const errorText = await createResponse.text();
+                            console.error(`Failed to create line for product ${productId}: ${errorText}`);
                             throw new Error(errorText);
                         } else {
                             const newLine = await createResponse.json();
+                            console.log(`Successfully created line for product ${productId}:`, newLine);
                             // Add the newly created line to our existingProductMap
                             if (newLine.data && newLine.data.product_id) {
                                 existingProductMap[newLine.data.product_id] = newLine.data;
                             }
                         }
                     } catch (error) {
+                        console.error(`Error creating line for product ${productId}:`, error);
+                        // Delete the sales order with orderId if line creation fails
                         try {
                             const deleteResponse = await fetch(`${API_BASE_URL}/sales-order/hard-delete/${orderId}`, {
                                 method: 'DELETE',
@@ -1336,7 +1546,13 @@ function Cart() {
                                 },
 
                             });
+                            if (!deleteResponse.ok) {
+                                console.error(`Failed to hard delete sales order ${orderId}:`, await deleteResponse.text());
+                            } else {
+                                console.log(`Successfully hard deleted sales order ${orderId} after line creation failure.`);
+                            }
                         } catch (deleteError) {
+                            console.error(`Error during hard delete of sales order ${orderId}:`, deleteError);
                         }
                         Swal.fire({
                             icon: 'error',
@@ -1376,7 +1592,9 @@ function Cart() {
                 }
 
                 recalcLinesData = await recalcLinesResponse.json();
+                console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
             } catch (error) {
+                console.error('Error fetching order lines with orderId filter:', error);
                 // Fallback: try with order_id filter
                 try {
                     recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ order_id: orderId }))}`, {
@@ -1393,21 +1611,39 @@ function Cart() {
                     }
 
                     recalcLinesData = await recalcLinesResponse.json();
+                    console.log('Fetched order lines data with order_id filter for orderId ' + orderId + ':', recalcLinesData);
                 } catch (secondError) {
+                    console.error('Error fetching order lines with order_id filter:', secondError);
                     throw new Error('Failed to fetch order lines for recalculating total amount');
                 }
             }
 
+            // Verify we have the correct lines for this order
+            // Try multiple field names for orderId comparison
             const allLines = recalcLinesData?.data?.data?.filter(line =>
                 Number(line.orderId) === Number(orderId) ||
                 Number(line.order_id) === Number(orderId) ||
                 Number(line.OrderId) === Number(orderId)
             ) || [];
+            console.log(`All order lines for orderId ${orderId}:`, allLines);
+
             // Additional debugging to understand the filtering issue
             if (allLines.length === 0) {
+                console.log('No lines found for orderId. Debugging info:');
+                console.log('Looking for orderId:', orderId, 'Type:', typeof orderId);
+                console.log('Available order lines:', recalcLinesData?.data?.data?.map(line => ({
+                    id: line.id,
+                    orderId: line.orderId,
+                    order_id: line.order_id,
+                    OrderId: line.OrderId,
+                    orderIdType: typeof line.orderId,
+                    productId: line.productId,
+                    netAmount: line.netAmount || line.net_amount
+                })));
 
                 // Try a direct API call to get lines for this specific order
                 try {
+                    console.log('Attempting direct API call for order lines...');
                     const directResponse = await fetch(`${API_BASE_URL}/sales-order-lines/order/${orderId}`, {
                         method: 'GET',
                         headers: {
@@ -1420,11 +1656,13 @@ function Cart() {
 
                     if (directResponse.ok) {
                         const directData = await directResponse.json();
+                        console.log('Direct API call successful:', directData);
                         if (directData.data && Array.isArray(directData.data)) {
                             allLines.push(...directData.data);
                         }
                     }
                 } catch (directError) {
+                    console.log('Direct API call failed:', directError);
                     // This is expected if the endpoint doesn't exist - not a real error
                 }
             }
@@ -1445,10 +1683,15 @@ function Cart() {
                     // Check for NaN values and handle them appropriately
                     const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
                     const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
+
+                    console.log(`Line for product ${line.productId}: net_amount_raw=${netAmountRaw}, parsed=${validNetAmount}, sales_tax_amount_raw=${salesTaxAmountRaw}, parsed=${validSalesTaxAmount}`);
+                    //add delivery charges also
                     linesTotal += validNetAmount;
                     totalSalesTaxAmount += validSalesTaxAmount;
                 }
             } else {
+                // Fallback: calculate totals based on cart items since we couldn't fetch order lines
+                console.log('Using fallback calculation based on cart items');
                 for (const item of categoryItems) {
                     const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
                     const unitPrice = parseFloat(item.unitPrice || item.price || 0);
@@ -1461,14 +1704,29 @@ function Cart() {
 
                         linesTotal += netAmount;
                         totalSalesTaxAmount += vatAmount;
+
+                        console.log(`Fallback calculation for item ${item.id}:`, {
+                            quantity: newQuantity,
+                            unitPrice,
+                            vatPercentage,
+                            baseAmount,
+                            vatAmount,
+                            netAmount
+                        });
                     }
                 }
             }
+
+            console.log('Recalculated lines total:', linesTotal);
+            console.log('Total sales tax amount:', totalSalesTaxAmount);
+
             // Additional validation to ensure we have valid totals
             if (isNaN(linesTotal) || linesTotal < 0) {
+                console.error('Invalid linesTotal detected:', linesTotal, 'Setting to 0');
                 linesTotal = 0;
             }
             if (isNaN(totalSalesTaxAmount) || totalSalesTaxAmount < 0) {
+                console.error('Invalid totalSalesTaxAmount detected:', totalSalesTaxAmount, 'Setting to 0');
                 totalSalesTaxAmount = 0;
             }
 
@@ -1482,6 +1740,7 @@ function Cart() {
 
             // Additional validation for final total
             if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
+                console.error('Invalid finalTotalAmount detected:', finalTotalAmount, 'Components:', { linesTotal, deliveryCharges });
                 throw new Error(`Invalid total amount calculation: linesTotal=${linesTotal}, deliveryCharges=${deliveryCharges}, finalTotal=${finalTotalAmount}`);
             }
 
@@ -1501,6 +1760,20 @@ function Cart() {
                     orderStatusUpdate = 'Pending';
                 }
             }
+
+            console.log('Final order totals:', {
+                linesTotal,
+                totalSalesTaxAmount,
+                deliveryCharges,
+                finalTotalAmount,
+                details: {
+                    isVmcoMachine,
+                    isDeliveryChargesApplicable,
+                    categoryName
+                }
+            });
+
+            // Update the order with final calculated amounts
             const updateOrderPayload = {
                 id: orderId,
                 paymentMethod: selectedPaymentMethod,
@@ -1512,10 +1785,23 @@ function Cart() {
                 // modifiedBy: userId // Removed to avoid backend 500 error
             };
 
+            console.log('Update order payload:', updateOrderPayload);
+
             // Validate payload before sending
             if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
+                console.error('Invalid totalAmount in update payload:', updateOrderPayload.totalAmount);
+                console.error('Debug info:', {
+                    linesTotal,
+                    totalSalesTaxAmount,
+                    deliveryCharges,
+                    finalTotalAmount,
+                    allLinesCount: allLines.length,
+                    categoryItemsCount: categoryItems.length
+                });
+
                 // Let's try one more time with a longer delay
                 if (categoryItems.length > 0 && allLines.length === 0) {
+                    console.log('Retrying order line fetch after longer delay...');
                     await new Promise(resolve => setTimeout(resolve, 500));
 
                     try {
@@ -1537,6 +1823,8 @@ function Cart() {
                             ) || [];
 
                             if (retryLines.length > 0) {
+                                console.log('Retry successful, found order lines:', retryLines);
+                                // Recalculate with the retry data
                                 let retryLinesTotal = 0;
                                 let retryTotalSalesTaxAmount = 0;
 
@@ -1561,10 +1849,17 @@ function Cart() {
 
                                     updateOrderPayload.totalAmount = retryFinalTotalAmount.toFixed(2);
                                     updateOrderPayload.total_sales_tax_amount = totalSalesTaxAmount.toFixed(2);
+
+                                    console.log('Updated totals after retry:', {
+                                        retryLinesTotal,
+                                        retryTotalSalesTaxAmount,
+                                        retryFinalTotalAmount
+                                    });
                                 }
                             }
                         }
                     } catch (retryError) {
+                        console.error('Retry failed:', retryError);
                     }
                 }
 
@@ -1588,6 +1883,9 @@ function Cart() {
                 throw new Error(`Failed to update order with final amounts`);
             }
             const updatedOrderResponse = await updateOrderResponse.json();
+            console.log('Updated the order:', updatedOrderResponse);
+
+            // Show order confirmation alert with order number (conditionally)
             if (showSuccessMessage) {
                 Swal.fire({
                     icon: 'success',
@@ -1610,6 +1908,10 @@ function Cart() {
                         });
                         return newQuantities;
                     });
+                    console.log("ssssss", updatedOrderResponse)
+
+
+
                 });
 
                 // Delete cart items for non-VMCO and non-SHC categories
@@ -1628,7 +1930,12 @@ function Cart() {
                             },
 
                         });
+
+                        if (!deleteResponse.ok) {
+                            console.error(`Error removing cart items: ${deleteResponse.statusText}`);
+                        }
                     } catch (err) {
+                        console.error('Error during cart cleanup:', err);
                     }
                 }
             }
@@ -1648,9 +1955,13 @@ function Cart() {
                 window.open(data.details.url, '_blank');
 
             }
+
+            // Return the order ID for use in combined success messages
+            console.log(`placeOrderForCategory completed - returning order ID: ${orderId} for category: ${categoryName}`);
             return orderId;
 
         } catch (err) {
+            console.log('Error placing order:', err); // This is line 1845
             setError(err.message);
             Swal.fire({
                 icon: 'error',
@@ -1675,10 +1986,13 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return false;
             }
 
             const result = await response.json();
+            console.log('Payment method details response:', result);
+
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
 
@@ -1686,16 +2000,21 @@ function Cart() {
                 if (entity && methodDetails.credit && methodDetails.credit[entity]) {
                     const entityCreditDetails = methodDetails.credit[entity];
                     const isAllowed = entityCreditDetails.isAllowed === true;
+                    console.log(`Credit payment is ${isAllowed ? 'allowed' : 'not allowed'} for entity ${entity}`);
                     return isAllowed;
                 }
 
                 // Fallback: check if credit is generally allowed (legacy support)
                 if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
+                    console.log('Credit payment is allowed for customer (general)');
                     return true;
                 }
             }
+
+            console.log('Credit payment is not allowed for customer');
             return false;
         } catch (error) {
+            console.error('Error checking credit payment allowance:', error);
             return false;
         }
     };
@@ -1713,10 +2032,13 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return false;
             }
 
             const result = await response.json();
+            console.log('Payment method details response:', result);
+
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
                 const currentBalance = result.data.currentBalance || {};
@@ -1734,7 +2056,11 @@ function Cart() {
                     }
 
                     const orderTotal = Number(totalAmount);
+
+                    console.log(`Checking credit balance: ${creditBalance} vs order total: ${orderTotal} for entity: ${entity || 'general'}`);
+
                     if (orderTotal > creditBalance) {
+                        console.log('Order total exceeds credit balance');
                         Swal.fire({
                             icon: 'warning',
                             title: t('Insufficient Balance'),
@@ -1752,11 +2078,17 @@ function Cart() {
 
             return false;
         } catch (error) {
+            console.error('Error validating credit balance:', error);
             return false;
         }
     };    // Initialize from navigation state if available
     useEffect(() => {
+        console.log('Location state useEffect triggered:', location.state);
         if (location.state) {
+            console.log('Setting branch data from location state:', {
+                selectedBranchId: location.state.selectedBranchId,
+                selectedCustomerId: location.state.selectedCustomerId
+            });
             setSelectedCustomerId(location.state.selectedCustomerId || '');
             setSelectedCustomerStatus(location.state.selectedCustomerStatus || '');
             setSelectedBranchId(location.state.selectedBranchId || '');
@@ -1766,36 +2098,65 @@ function Cart() {
             setSelectedBranchNameLc(location.state.selectedBranchNameLc || '');
             setSelectedBranchCity(location.state.selectedBranchCity || '');
             setSelectedBranchStatus(location.state.selectedBranchStatus || '');
+        } else {
+            console.log('No location state available - user might have navigated directly to cart');
+            // Don't clear existing branch data if no location state is available
+            // This prevents losing branch information when the user refreshes the page
         }
     }, [location.state]);
 
     // Add a new effect to filter cart sections based on interCompany status
     useEffect(() => {
+        // Don't filter if cart items are still loading
+        if (isLoading) {
+            console.log("Skipping filtering - cart is loading");
+            return;
+        }
+
         // If cart items are empty, clear filtered cart items
         if (cartItems?.length === 0) {
+            console.log("Cart items are empty, clearing filtered cart items");
             setFilteredCartItems([]);
             return;
         }
 
         // Default to showing all sections
         let sectionsToShow = cartItems;
+
+        console.log("=== INTER-COMPANY CART SECTION FILTERING DEBUG ===");
+        console.log("User details:", {
+            userType: user?.userType,
+            interCompany: user?.interCompany,
+            entity: user?.entity
+        });
+        console.log("Original cart sections:", cartItems.map(item => ({ category: item.category, itemCount: item.items.length })));
+
         // If user is a customer with interCompany set to true, filter out matching entity sections
         if (user?.userType === "customer" && user?.interCompany === true && user?.entity) {
             const customerEntity = user.entity.toLowerCase();
+            console.log("Customer entity (lowercase):", customerEntity);
+
             sectionsToShow = cartItems.filter(section => {
                 // Get the entity from the category name
                 const sectionEntity = getEntityFromCategory(section.category)?.toLowerCase();
 
                 // If no entity could be determined, include the section
                 if (!sectionEntity) {
+                    console.log(`Section ${section.category}: No matching entity determined - including`);
                     return true;
                 }
 
                 // If entity matches customer's entity, exclude the section
                 const shouldInclude = sectionEntity !== customerEntity;
+                console.log(`Section ${section.category}: Entity = ${sectionEntity}, Include = ${shouldInclude}`);
                 return shouldInclude;
             });
+        } else {
+            console.log("Not applying interCompany filtering - user is not an interCompany customer");
         }
+
+        console.log("Filtered sections:", sectionsToShow.map(item => ({ category: item.category, itemCount: item.items.length })));
+        console.log("=== END DEBUG ===");
 
         setFilteredCartItems(sectionsToShow);
 
@@ -1803,6 +2164,7 @@ function Cart() {
         if (sectionsToShow.length > 0) {
             const allCategories = new Set(sectionsToShow.map(item => item.category));
             setCollapsedCategories(allCategories);
+            console.log("Collapsed all sections by default:", Array.from(allCategories));
         }
     }, [cartItems, user, isLoading]);
 
@@ -1853,6 +2215,7 @@ function Cart() {
                 // Initialize cart items with these descriptions
                 initializeCartItems(descriptionMap);
             } catch (error) {
+                console.error('Error fetching entity descriptions:', error);
             }
         };
 
@@ -1905,10 +2268,13 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return 'Pre Payment'; // Default fallback
             }
 
             const result = await response.json();
+            console.log('Payment method details response:', result);
+
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
                 const currentBalance = result.data.currentBalance || {};
@@ -1920,8 +2286,10 @@ function Cart() {
                         // Check if current balance is sufficient
                         const entityBalance = currentBalance[entity] || 0;
                         if (totalAmount <= Math.abs(entityBalance)) {
+                            console.log(`Credit is allowed for entity ${entity} and balance ${entityBalance} is sufficient for amount ${totalAmount}, using Credit payment method`);
                             return 'Credit';
                         } else {
+                            console.log(`Credit is allowed for entity ${entity} but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
                             Swal.fire({
                                 icon: 'warning',
                                 title: t('Insufficient Balance'),
@@ -1937,6 +2305,8 @@ function Cart() {
                 if (!creditAllowed && methodDetails.COD && methodDetails.COD.isAllowed === true) {
                     const codLimit = methodDetails.COD.limit || 0;
                     if (totalAmount >= codLimit) {
+                        // If totalAmount is greater than or equal to COD limit, force Pre Payment
+                        console.log(`Credit not allowed, COD allowed but totalAmount ${totalAmount} >= codLimit ${codLimit}, using Pre Payment`);
                         return 'Pre Payment';
                     }
                     else {
@@ -1948,6 +2318,7 @@ function Cart() {
 
             return 'Pre Payment'; // Default fallback
         } catch (error) {
+            console.error('Error determining payment method:', error);
             return 'Pre Payment'; // Default fallback
         }
     };
@@ -1965,10 +2336,13 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return 'Pre Payment'; // Default fallback
             }
 
             const result = await response.json();
+            console.log('Payment method details response for SHC:', result);
+
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
                 const currentBalance = result.data.currentBalance || {};
@@ -1978,8 +2352,11 @@ function Cart() {
                     // Check if current balance is sufficient
                     const entityBalance = currentBalance.SHC || 0;
                     if (totalAmount <= Math.abs(entityBalance)) {
+                        console.log(`Credit payment is allowed for SHC entity and balance ${entityBalance} is sufficient for amount ${totalAmount}`);
                         return 'Credit';
                     } else {
+                        console.log(`Credit is allowed for SHC but balance ${entityBalance} is insufficient for amount ${totalAmount}`);
+                        // Show insufficient balance alert
                         Swal.fire({
                             icon: 'warning',
                             title: t('Insufficient Balance'),
@@ -1994,16 +2371,22 @@ function Cart() {
                 if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
                     const codLimit = methodDetails.COD.limit || 0;
                     if (totalAmount <= codLimit) {
+                        console.log(`Cash on Delivery payment is allowed for amount ${totalAmount} (limit: ${codLimit})`);
                         return 'Cash on Delivery';
                     } else {
+                        console.log(`Total amount ${totalAmount} exceeds Cash on Delivery limit ${codLimit}, using Pre Payment`);
                         return 'Pre Payment';
                     }
                 } else {
+                    console.log('Cash on Delivery is not allowed, using Pre Payment');
                     return 'Pre Payment';
                 }
             }
+
+            console.log('Defaulting to Pre Payment for SHC');
             return 'Pre Payment';
         } catch (error) {
+            console.error('Error determining payment method for SHC:', error);
             return 'Pre Payment';
         }
     };
@@ -2026,6 +2409,8 @@ function Cart() {
                 }
                 // deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
                 deleteUrl += `&product_id=${product.product_id || product.productId}`
+                console.log(`Deleting cart item with params: ${deleteUrl}`);
+
                 const deleteResponse = await fetch(deleteUrl, {
                     method: 'DELETE',
                     headers: {
@@ -2036,6 +2421,7 @@ function Cart() {
                 });
 
                 if (!deleteResponse.ok) {
+                    console.error(`Error removing cart item: ${deleteResponse.statusText}`);
                     throw new Error(`Failed to remove cart item: ${deleteResponse.statusText}`);
                 }
 
@@ -2043,7 +2429,9 @@ function Cart() {
             });
 
             await Promise.all(deletePromises);
+            console.log(`Successfully deleted ${products.length} cart items`);
         } catch (err) {
+            console.error('Error during cart cleanup:', err);
             throw err;
         }
     };
@@ -2061,10 +2449,12 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return false;
             }
 
             const result = await response.json();
+            console.log('Payment method details response for credit check:', result);
 
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
@@ -2072,12 +2462,14 @@ function Cart() {
                 // Check if credit is allowed for specific entity
                 if (methodDetails.credit && methodDetails.credit[entity.toUpperCase()]) {
                     const isAllowed = methodDetails.credit[entity.toUpperCase()].isAllowed;
+                    console.log(`Credit isAllowed for ${entity} entity:`, isAllowed);
                     return isAllowed === true;
                 }
             }
 
             return false;
         } catch (error) {
+            console.error('Error checking credit allowance:', error);
             return false;
         }
     };
@@ -2095,10 +2487,12 @@ function Cart() {
             });
 
             if (!response.ok) {
+                console.error('Failed to fetch payment method details');
                 return 0;
             }
 
             const result = await response.json();
+            console.log('Payment method details response for COD limit:', result);
 
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
@@ -2106,16 +2500,19 @@ function Cart() {
                 // Get COD limit
                 if (methodDetails.COD && methodDetails.COD.limit) {
                     const limit = Number(methodDetails.COD.limit);
+                    console.log('COD limit:', limit);
                     return limit;
                 }
             }
 
             return 0;
         } catch (error) {
+            console.error('Error getting COD limit:', error);
             return 0;
         }
     };
     const getLocalizedEntityName = (categoryName, currentLanguage, entityDescriptions) => {
+        console.log("getLocalizedEntityName called with:", { categoryName, currentLanguage, entityDescriptions });
         const match = entityDescriptions?.find(desc => desc.value.toLowerCase() === categoryName.toLowerCase());
         if (!match) return categoryName;
         return currentLanguage === "ar" ? match.descriptionLc || match.description : match.description;
@@ -2370,6 +2767,7 @@ function Cart() {
                             sum += base + vatAmount;
                         });
                     } catch (error) {
+                        console.error('Error calculating totalAmount:', error);
                         return 0;
                     }
                     return sum;
