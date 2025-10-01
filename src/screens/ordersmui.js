@@ -97,6 +97,7 @@ function Orders() {
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -135,6 +136,7 @@ function Orders() {
     });
   };
   const handleSortModelChange = (model) => {
+    console.log("Sort model changed:", model);
     setSortModel(model);
     fetchOrders(1, searchQuery, filters, model);
   };
@@ -253,6 +255,7 @@ function Orders() {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery, filters);
       } else {
+        console.log("ddddd");
         fetchOrders(page, searchQuery, filters);
       }
     }
@@ -317,6 +320,7 @@ function Orders() {
         },
       });
     } catch (err) {
+      console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
         state: {
           order,
@@ -332,7 +336,9 @@ function Orders() {
 
   const handleRowClick = async (params) => {
     const order = params?.row;
-     try {
+    console.log("----order");
+    console.log(order);
+    try {
       const params = new URLSearchParams({
         page: 1,
         pageSize: 100,
@@ -377,6 +383,7 @@ function Orders() {
         });
       }
     } catch (err) {
+      console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
         state: {
           order,
@@ -469,6 +476,7 @@ function Orders() {
         window.open(data.details.url, "_blank");
       }
     } catch (error) {
+      console.error("Error generating payment link:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to generate payment link. Please try again later."),
@@ -673,7 +681,7 @@ function Orders() {
     },
     {
       field: "status", 
-      headerName: t("Status"), 
+      headerName: t("Approval Status"), 
       include: isV("status"), 
       searchable: true, 
       minWidth: 120, 
@@ -696,21 +704,7 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-            (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "Credit") &&
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.NAQI.toLowerCase()))) && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -789,21 +783,7 @@ function Orders() {
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
-              (params?.row?.paymentStatus?.toLowerCase() !== "paid" || params?.row?.paymentStatus?.toLowerCase() !== "credit") &&
-              (params?.row?.status?.toLowerCase() === "approved" ||
-                (params?.row?.status?.toLowerCase() === "open" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-                (params?.row?.status?.toLowerCase() === "pending" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+              params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1084,6 +1064,7 @@ function Orders() {
           });
         }
       } catch (error) {
+        console.error("Error downloading template:", error);
         await Swal.fire({
           title: t("Error"),
           text: t("Failed to download template."),
@@ -1134,6 +1115,7 @@ function Orders() {
         });
       }
     } catch (error) {
+      console.error("Error syncing order:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to sync order. Please try again later."),
@@ -1205,6 +1187,7 @@ function Orders() {
       const blob = response?.data;
       const text = await blob.text();
       const data = JSON.parse(text);
+      console.log(response?.status, data?.response?.success);
       if (response?.status === 200 && data?.response?.success) {
         fetchOrders();
 
@@ -1226,6 +1209,7 @@ function Orders() {
         });
       }
     } catch (error) {
+      console.error("Error uploading file:", error);
       Swal.fire({
         title: t("File Upload Failed"),
         text: t("An error occurred while uploading the file."),
@@ -1307,6 +1291,7 @@ function Orders() {
         throw new Error(response.data.message);
       }
     } catch (error) {
+      console.error("Error uploading file:", error);
       Swal.fire({
         title: t("Error"),
         text: t("Failed to upload file. Please try again later."),
@@ -1413,7 +1398,7 @@ function Orders() {
                           showColumnVisibility={true}
                           showFilters={true}
                           showExport={false}
-                          showUpload={true}
+                          showUpload={isV("uploadButton")}
                           showAdd={isV("addButton")}
                           buttonName={t("add")}
                           showApproval={isV("approvalButton")}
@@ -1500,7 +1485,7 @@ function Orders() {
                       showColumnVisibility={true}
                       showFilters={true}
                       showExport={false}
-                      showUpload={true}
+                      showUpload={isV("uploadButton")}
                       showAdd={isV("addButton")}
                       buttonName={t("add")}
                       showApproval={isV("approvalButton")}

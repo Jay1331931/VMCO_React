@@ -26878,6 +26878,7 @@ class RbacManager {
         throw new Error('Invalid RBAC configuration format received from server');
       }
     } catch (error) {
+      console.error('Error loading RBAC config:', error);
       throw error;
     }
   }
@@ -26912,6 +26913,7 @@ class RbacManager {
   //       throw new Error('Invalid RBAC configuration format received from server');
   //     }
   //   } catch (error) {
+  //     console.error('Error loading RBAC config:', error);
   //     throw error;
   //   }
   // }
@@ -26943,6 +26945,7 @@ class RbacManager {
    * @returns {boolean} True if the field is visible, false otherwise
    */
   isV(field, approvalWF = false, fieldInWF = false) {
+    //console.log(field)
     const access = this.getFieldAccess(field);
     return (
       (access == null ? true : access.visible) &&
@@ -26960,11 +26963,15 @@ class RbacManager {
    * @returns {boolean} True if the field is editable, false otherwise
    */
   // isE(field, approvalWF = false, fieldInWF = false) {
+  //   //console.log(`~~~~~~~~*********Checking access for field: ${field} in form: ${this.currentForm} for role: ${this.currentRole}`);
   //   const access = this.getFieldAccess(field);
-  //    return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
+  //   //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);
+  //   {console.log(access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);}
+  //   return (access == null ? true : access.editable) && (this.itemInWF == null ? true : this.isUserOwner) && ((approvalWF == true && fieldInWF == true) ? true : (approvalWF == true && fieldInWF == false) ? false : true);
   // }
   isE(field, approvalWF = false, fieldInWF = false) {
     const access = this.getFieldAccess(field);
+    //console.log(`~~~~~~~~*********Access for field: ${field} is ${JSON.stringify(access)}`);
     return (
       (access == null ? true : access.editable) &&
       (this.itemInWF == null ? true : this.isUserOwner) &&
@@ -26981,4 +26988,11 @@ class RbacManager {
 // const rbacMgr = new RbacManager('admin', 'orderList');
 // const isV = rbacMgr.isV.bind(rbacMgr);
 // const isE = rbacMgr.isE.bind(rbacMgr);
+// console.log(isV('orderNumber')); // true
+// console.log(isE('orderNumber')); // true
+// console.log(isV('customer')); // false
+// console.log(isE('customer')); // true
+// console.log(isV('date')); // true
+// console.log(isE('date')); // false
+
 export default RbacManager;
