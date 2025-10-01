@@ -53,32 +53,44 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
       const url = `${API_BASE_URL}/customer-branches/pagination?filters=${filters}&page=${pagination.page}&pageSize=${pagination.pageSize}${searchParam}`;
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
-        
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
       });
+
       if (!response.ok) throw new Error('Failed to fetch branches');
       const result = await response.json();
-      // Handle different possible response structures
-      let branchesData = [];
-      let totalRecords = 0;
-      if (Array.isArray(result)) {
-        branchesData = result;
-        totalRecords = result.length;
-      } else if (result.status === 'Ok' && Array.isArray(result.data)) {
-        branchesData = result.data;
-        totalRecords = result.totalRecords || result.data.length;
-      } else if (result && Array.isArray(result.data)) {
-        branchesData = result.data;
-        totalRecords = result.data.length;
+      console.log("API response:", result);
+
+      if (result?.data && Array.isArray(result.data)) {
+        setBranches(result.data);
+        setPagination(prev => ({
+          ...prev,
+          total: result.totalRecords || result.total || 0
+        }));
+      } else if (Array.isArray(result)) {
+        setBranches(result);
+        setPagination(prev => ({
+          ...prev,
+          total: result.length
+        }));
       } else {
-        branchesData = [];
-        totalRecords = 0;
+        setBranches([]);
+        setPagination(prev => ({
+          ...prev,
+          total: 0
+        }));
       }
-      setBranches(branchesData);
-      setPagination(prev => ({ ...prev, total: totalRecords }));
     } catch (err) {
       console.error('Error fetching branches:', err);
       setError(err.message);
+      setBranches([]);
+      setPagination(prev => ({
+        ...prev,
+        total: 0
+      }));
     } finally {
       setLoading(false);
     }
@@ -86,8 +98,8 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
 
   if (!open) return null;
 
-  // Calculate totalPages
-  const totalPages = pagination.total > 0 ? Math.ceil(pagination.total / pagination.pageSize) : 1;
+  const { page, pageSize, total } = pagination;
+  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 1;
 
   return (
     <div>
@@ -155,14 +167,12 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.id}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{branch.erp_branch_id || branch.erpBranchId || '-'}</td>
                         <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                          {isRTL 
+                          {isRTL
                             ? (branch.branch_name_lc || branch.branchNameLc)
                             : (branch.branch_name_en || branch.branchNameEn)
                           }
                         </td>
-                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd', 
-                          // position: 'sticky', right: 0, zIndex: 5, background: 'white', boxShadow: '-1px 0 8px rgba(0, 0, 0, .98)' 
-                          }}>
+                        <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
                           <button
                             className="gb-branch-btn"
                             onClick={() => onSelectBranch(branch)}
@@ -180,16 +190,17 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
             </table>
           )}
         </div>
+
+        {/* Footer with Pagination - Updated to match GetProducts */}
         <div className="gb-footer">
           {totalPages > 0 && (
             <Pagination
-              currentPage={Number(pagination.page)}
+              currentPage={Number(page)}
               totalPages={totalPages}
-              onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))
-              }
-              startIndex={(pagination.page - 1) * pagination.pageSize + 1}
-              endIndex={Math.min(pagination.page * pagination.pageSize, pagination.total)}
-              totalItems={pagination.total}
+              onPageChange={(newPage) => setPagination(prev => ({ ...prev, page: newPage }))}
+              startIndex={(page - 1) * pageSize + 1}
+              endIndex={Math.min(page * pageSize, total)}
+              totalItems={total}
             />
           )}
         </div>
@@ -249,14 +260,20 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
           font-size: 0.9rem;
           transition: background 0.15s;
         }
-        .gb-branch-btn:hover {
+        .gb-branch-btn:hover:not(:disabled) {
           background: #084532;
+        }
+        .gb-branch-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background: #ccc;
         }
         .gb-footer {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 16px 28px 22px 28px;
+          padding: 0px 28px 22px 28px;
+          gap: 12px;
         }
         .gb-close-btn {
           padding: 7px 18px;
@@ -281,4 +298,3 @@ function GetBranches({ open, onClose, onSelectBranch, customerId, API_BASE_URL, 
 }
 
 export default GetBranches;
-
