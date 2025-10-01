@@ -1398,7 +1398,7 @@ function Orders() {
                           showColumnVisibility={true}
                           showFilters={true}
                           showExport={false}
-                          showUpload={true}
+                          showUpload={isV("uploadButton")}
                           showAdd={isV("addButton")}
                           buttonName={t("add")}
                           showApproval={isV("approvalButton")}
@@ -1485,7 +1485,7 @@ function Orders() {
                       showColumnVisibility={true}
                       showFilters={true}
                       showExport={false}
-                      showUpload={true}
+                      showUpload={isV("uploadButton")}
                       showAdd={isV("addButton")}
                       buttonName={t("add")}
                       showApproval={isV("approvalButton")}
