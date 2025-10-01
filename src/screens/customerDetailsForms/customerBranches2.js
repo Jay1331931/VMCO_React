@@ -28,6 +28,8 @@ import BranchDetailsForm from "./branchDetailsForm";
 import { debounce, set } from "lodash";
 import Swal from "sweetalert2";
 import { PiMicrosoftExcelLogoFill } from "react-icons/pi";
+import SyncIcon from "@mui/icons-material/Sync";
+import { Tooltip } from "@mui/material";
 import axios from "axios";
 import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -66,6 +68,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const fileExcelInputRef = useRef(null);
   const [popup, setPopup] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [syncLoadingId, setSyncLoadingId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   let customerFormMode;
   if (mode === "edit") {
@@ -1524,18 +1527,29 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     <td>
                       {!branch?.erpBranchId &&
                         branch.branchStatus.toLowerCase() === "approved" &&
-                        user.designation.toLowerCase() ===
-                          "sales executive" && (
-                          <button
-                            className="action-button pay"
+                        isV("BranchSync")&& isE("BranchSync")&& (
+                          <span
+                            // className="action-button pay"
                             disabled={syncLoading}
                             onClick={(e) => {
                               e.stopPropagation();
+                              setSyncLoadingId( branch?.id)
                               HandleFandOFailBranch(branch.id);
                             }}
                           >
-                            {syncLoading ? t("Syncing...") : t("F&O Sync")}
-                          </button>
+                             <Tooltip
+                                          title={
+                                            syncLoading && syncLoadingId === branch?.id
+                                              ? t("Syncing...")
+                                              : t("Sync")
+                                          }
+                                          arrow
+                                        >
+                                          <SyncIcon />{" "}
+                                        </Tooltip>
+                            {/* {syncLoading ? t("Syncing...") : t("F&O Sync")} */}
+                          </span>
+                          
                         )}
                     </td>
                     <td>
