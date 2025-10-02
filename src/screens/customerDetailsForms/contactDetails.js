@@ -12,12 +12,25 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl from "maplibre-gl";
+import maplibregl, { Padding } from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
 import Constants from "../../constants";
 import PhoneInput from "react-phone-number-input";
+import EditIcon from "@mui/icons-material/Edit";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  IconButton,
+} from "@mui/material";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   Constants.DOCUMENTS_NAME.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -50,9 +63,13 @@ function ContactDetails({
   const [selectedRegion, setSelectedRegion] = useState(customerData?.region);
   const [selectedCity, setSelectedCity] = useState(customerData?.city);
   const [geoData, setGeoData] = useState(null);
-
+  const [currentEmail, setcurrentEmail] = useState(""); // example current email
+  const [newEmail, setNewEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-
+  const [popup, setPopup] = useState(false);
   const rbacMgr = new RbacManager(
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -61,7 +78,7 @@ function ContactDetails({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
-  console.log("RBAC Manager:", rbacMgr);
+  console.log("RBAC Manager:", customerData.id);
 
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
@@ -443,15 +460,14 @@ function ContactDetails({
   const getCityOptions = useCallback(() => {
     if (!selectedRegion || !geoData || !geoData[selectedRegion]?.cities)
       return [];
-    return Object.keys(geoData[selectedRegion].cities)
-      .map((city) => ({
-        value: city,
-        name:
-          i18n.language === "ar"
-            ? geoData[selectedRegion].cities[city].ar
-            : geoData[selectedRegion].cities[city].en,
-      }))
-      // .reverse();
+    return Object.keys(geoData[selectedRegion].cities).map((city) => ({
+      value: city,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[city].ar
+          : geoData[selectedRegion].cities[city].en,
+    }));
+    // .reverse();
   }, [selectedRegion, geoData]);
 
   // Get districts based on selected city
@@ -472,17 +488,16 @@ function ContactDetails({
       return [];
     }
 
-    return Object.keys(geoData[selectedRegion].cities[selectedCity].districts)
-      .map((district) => ({
-        value: district,
-        name:
-          i18n.language === "ar"
-            ? geoData[selectedRegion].cities[selectedCity].districts[district]
-                .ar
-            : geoData[selectedRegion].cities[selectedCity].districts[district]
-                .en,
-      }))
-      // .reverse();
+    return Object.keys(
+      geoData[selectedRegion].cities[selectedCity].districts
+    ).map((district) => ({
+      value: district,
+      name:
+        i18n.language === "ar"
+          ? geoData[selectedRegion].cities[selectedCity].districts[district].ar
+          : geoData[selectedRegion].cities[selectedCity].districts[district].en,
+    }));
+    // .reverse();
   }, [selectedRegion, selectedCity, geoData]);
   // Handle region selection
   const handleRegionChange = (e) => {
@@ -522,7 +537,63 @@ function ContactDetails({
       },
     });
   };
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+  const handleNewEmailChange = (e) => {
+    const value = e.target.value;
+    setNewEmail(value);
 
+    if (value && !validateEmail(value)) {
+      setError("Invalid email format");
+    } else {
+      setError("");
+    }
+  };
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        customerId: customerData?.id,
+        oldEmail: currentEmail,
+        email: newEmail,
+      };
+
+      const { data } = await axios.post(
+        `${API_BASE_URL}/customer-contact-primary-email-update`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("data", data);
+
+      if (data.success) {
+        navigate("/customers");
+        setPopup(false);
+        setSuccess(data.message);
+
+        Swal.fire({
+          icon: "success",
+          title: t("Updated Email "),
+          text: t(data.message),
+          confirmButtonText: t("OK"),
+        });
+        setError("");
+      } else {
+        setError(data.message);
+      }
+    } catch (error) {
+      console.error("Error updating email:", error?.response?.data?.message);
+      setError(
+        error?.response?.data?.message ||
+          "Something went wrong while updating email"
+      );
+    }
+  };
   return (
     <div className="customer-onboarding-form-grid">
       {/* {isV("customerApprovalChecklist") && (
@@ -763,6 +834,17 @@ function ContactDetails({
             }
             required
           />
+          {customerData?.customerStatus?.toLowerCase()==='approved'&& isE('emailEdit')&& isV('emailEdit') && (
+            <IconButton
+              onClick={() => {
+                setcurrentEmail(customerContactsData?.primaryContactEmail);
+                setPopup(true);
+              }}
+              sx={{ padding: "5px" }}
+            >
+              <EditIcon />
+            </IconButton>
+          )}
           {isV("primaryContactEmailVerified") &&
             // (originalCustomerData &&
             //     customerData &&
@@ -2835,6 +2917,45 @@ function ContactDetails({
           </div>
         </div>
       )}
+      <Dialog
+        open={popup}
+        onClose={() => setPopup(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Edit Email</DialogTitle>
+        <DialogContent
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
+          {/* Current Email (disabled) */}
+          <TextField
+            label="Current Email"
+            value={currentEmail}
+            disabled
+            fullWidth
+          />
+
+          <TextField
+            label="New Email"
+            value={newEmail}
+            onChange={handleNewEmailChange}
+            error={!!error}
+            helperText={error}
+            fullWidth
+          />
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setPopup(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={!newEmail}
+          >
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

@@ -73,7 +73,6 @@ function Cart() {
     const [filteredCartItems, setFilteredCartItems] = useState([]);
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const { token, user, logout, loading } = useAuth();
-    console.log('User data:', user);
 
     // Use location.state to initialize userId, customerId, branchId if present
     useEffect(() => {

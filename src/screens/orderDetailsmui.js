@@ -2160,7 +2160,7 @@ function OrderDetails() {
             field: "quantity",
             headerName: t("Quantity"),
             include: isV('quantityCol'),
-            minWidth: 150,
+            minWidth: 180,
             flex: 1,
             renderCell: (params) => {
                 const row = params.row;
@@ -2173,9 +2173,9 @@ function OrderDetails() {
                             quantity={row.quantity}
                             moq={Number(row.moq) || 1}
                             minQuantity={Number(row.moq) || 1}
-                            disabled={!isE('products')}
+                            disabled={!isE('quantityCol')}
                             onQuantityChange={(itemId, delta) => {
-                                if (!isE('products')) return;
+                                if (!isE('quantityCol')) return;
 
                                 if (idx !== -1) {
                                     const currentQty = parseInt(formData.products[idx].quantity) || 0;
@@ -3933,18 +3933,12 @@ function OrderDetails() {
                                     </button>
                                 )}
 
-                                {isV('btnPay') && isE('btnPay') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== "paid" || formData?.paymentStatus?.toLowerCase() !== "credit" ) 
-                                    && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
-                                        && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                                        (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Pay')}
                                         </button>
                                     )}
-                                {isV('btnSendLink') && isE('btnSendLink') && formData?.paymentMethod?.toLowerCase() != "cash on delivery" && (formData?.paymentStatus?.toLowerCase() !== "paid"   || formData?.paymentStatus?.toLowerCase() !== 'credit')
-                                    && (formData?.status?.toLowerCase() === 'approved' || (formData?.status?.toLowerCase() === 'open'
-                                        && (formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) ||
-                                        (formData?.status?.toLowerCase() === 'pending' && (formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() || formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()))) && (
+                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
 
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId, false, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Send Link')}

@@ -185,59 +185,141 @@ function Maintenance() {
 
     // Define columns for the DataGrid
     const maintenanceColumns = [
-        { field: "requestId", headerName: t("Request #"), include: isV('requestIdCol'), searchable: true, maxWidth: 100, flex: 1, headerAlign: "center",
+        { 
+            field: "requestId", 
+            headerName: t("Request #"), 
+            include: isV('requestIdCol'), 
+            searchable: true, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", headerName: t("Customer"), include: isV('customerCol'), searchable: false, sortable: false, minWidth: 100, flex: 1, headerAlign: "center",
+        { 
+            field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", 
+            headerName: t("Customer"), 
+            include: isV('customerCol'), 
+            searchable: false, 
+            sortable: false, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", headerName: t("Branch"), include: isV('branchCol'), searchable: false, sortable: false, minWidth: 100, flex: 1, headerAlign: "center",
+        { 
+            field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", 
+            headerName: t("Branch"), 
+            include: isV('branchCol'), 
+            searchable: false, 
+            sortable: false, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "issueName", headerName: t("Issue Name"), include: isV('issueNameCol'), searchable: true, minWidth: 100, flex: 1, headerAlign: "center",
+        { 
+            field: "issueName", 
+            headerName: t("Issue Name"), 
+            include: isV('issueNameCol'), 
+            searchable: true, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "issueType", headerName: t("Issue Type"), include: isV('issueTypeCol'), searchable: true, minWidth: 120, flex: 1, headerAlign: "center",
+        { 
+            field: "issueType", 
+            headerName: t("Issue Type"), 
+            include: isV('issueTypeCol'), 
+            searchable: true, 
+            minWidth: 120, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "createdAt", headerName: t("Created Date"), include: isV('createdDateCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+        { 
+            field: "createdAt", 
+            headerName: t("Created Date"), 
+            include: isV('createdDateCol'), 
+            searchable: false, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>
+                <span>
                     {params?.row?.createdAt
                         ? formatDate(params?.row?.createdAt, 'DD/MM/YYYY')
                         : convertToTimezone(params?.row?.createdAt, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY')}
-                </label>
+                </span>
             ),
         },
-        { field: "createdByUsername", headerName: t("Created By"), include: isV('createdByCol'), searchable: false, sortable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+        { 
+            field: "createdByUsername", 
+            headerName: t("Created By"), 
+            include: isV('createdByCol'), 
+            searchable: false, 
+            sortable: false, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "urgencyLevel", headerName: t("Urgency Level"), include: isV('urgencyLevelCol'), searchable: true, minWidth: 120, flex: 1, headerAlign: "center",
+        { 
+            field: "urgencyLevel", 
+            headerName: t("Urgency Level"), 
+            include: isV('urgencyLevelCol'), 
+            searchable: true, 
+            minWidth: 120, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "assignedTo", headerName: t("Assigned To"), include: isV('assignedToCol'), searchable: false, minWidth: 100, maxWidth: 120, flex: 1, headerAlign: "center",
+        { 
+            field: "assignedTo", 
+            headerName: t("Assigned To"), 
+            include: isV('assignedToCol'), 
+            searchable: false, 
+            minWidth: 100, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
-                <label style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</label>
+                <span>{params.value}</span>
             )
         },
-        { field: "status", headerName: t("Status"), include: isV('statusCol'), searchable: true, minWidth: 80, maxWidth: 100, flex: 1, headerAlign: "center",
+        { 
+            field: "status", 
+            headerName: t("Status"), 
+            include: isV('statusCol'), 
+            searchable: true, 
+            minWidth: 80, 
+            flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
             cellClassName: (params) => getStatusClass(params.value),
             renderCell: (params) => (
-                <label className={getStatusClass(params.value)} style = {{ textAlign: "center", display: "flex", justifyContent: "center" }}>{t(params.value)}</label>
+                <label className={getStatusClass(params.value)}>{t(params.value)}</label>
             ),
         },
     ];
@@ -452,12 +534,37 @@ const handleShowAllDetailsClick = async (ticket) => {
                                             backgroundColor: 'rgba(0, 0, 0, 0.04)',
                                         },
                                     },
-                                     '.MuiDataGrid-cell': {
-                textAlign: 'center', // Add this line to center all cell content
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }
+                                    // Arabic RTL styling
+                                    ...(isArabic && {
+                                        direction: "rtl",
+                                        "& .MuiDataGrid-cell": {
+                                            textAlign: "right !important",
+                                        },
+                                        "& .MuiDataGrid-columnHeader": {
+                                            textAlign: "right !important",
+                                        },
+                                        "& .MuiDataGrid-columnHeaderTitle": {
+                                            textAlign: "right !important",
+                                        },
+                                        "& .MuiDataGrid-cellContent": {
+                                            textAlign: "right !important",
+                                        }
+                                    }),
+                                    // Default LTR styling (left alignment)
+                                    ...(!isArabic && {
+                                        "& .MuiDataGrid-cell": {
+                                            textAlign: "left",
+                                        },
+                                        "& .MuiDataGrid-columnHeader": {
+                                            textAlign: "left",
+                                        },
+                                        "& .MuiDataGrid-columnHeaderTitle": {
+                                            textAlign: "left",
+                                        },
+                                        "& .MuiDataGrid-cellContent": {
+                                            textAlign: "left",
+                                        }
+                                    })
                                 }}
                             />
                         )}

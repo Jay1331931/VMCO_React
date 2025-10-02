@@ -718,7 +718,7 @@ function Catalog() {
       try {
         setIsLoading(true);
         const response = await fetch(
-          `${API_BASE_URL}/customer-branches/pagination`,
+          `${API_BASE_URL}/customer-branches/pagination?pageSize=10000`,
           {
             method: "GET",
             headers: {
@@ -731,8 +731,7 @@ function Catalog() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to fetch branches: ${
-              errorData.message || response.statusText
+            `Failed to fetch branches: ${errorData.message || response.statusText
             }`
           );
         }
@@ -761,9 +760,9 @@ function Catalog() {
               i18n.language === "en"
                 ? branch.branch_name_en || branch.branchNameEn
                 : branch.branch_name_lc ||
-                  branch.branchNameLc ||
-                  branch.branch_name_en ||
-                  branch.branchNameEn,
+                branch.branchNameLc ||
+                branch.branch_name_en ||
+                branch.branchNameEn,
             erpBranchId: branch.erpBranchId || branch.erp_branch_id,
             branchRegion: branch.region || branch.region,
             branchCity: branch.city || branch.branchCity || branch.branch_city,
@@ -867,8 +866,7 @@ function Catalog() {
         if (isConfirmed) {
           try {
             await fetch(
-              `${API_BASE_URL}/cart/delete?customer_id=${
-                selectedCustomerId || customerId
+              `${API_BASE_URL}/cart/delete?customer_id=${selectedCustomerId || customerId
               }&branch_id=${otherBranchId}`,
               {
                 method: "DELETE",
@@ -1007,8 +1005,7 @@ function Catalog() {
         if (!updateResponse.ok) {
           const errorData = await updateResponse.json().catch(() => ({}));
           throw new Error(
-            `Failed to update cart item: ${
-              errorData.message || updateResponse.statusText
+            `Failed to update cart item: ${errorData.message || updateResponse.statusText
             }`
           );
         }
@@ -1056,8 +1053,7 @@ function Catalog() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            `Failed to add item to cart: ${
-              errorData.message || response.statusText
+            `Failed to add item to cart: ${errorData.message || response.statusText
             }`
           );
         }
@@ -1068,11 +1064,19 @@ function Catalog() {
           timer: 1000,
         });
       }
-      // Reset quantity after successful add/update
-      setQuantities((prev) => ({
-        ...prev,
-        [productId]: 0,
-      }));
+      // Reset quantity only if less than moq after successful add/update
+      if (quantities[productId] < moq) {
+        setQuantities((prev) => ({
+          ...prev,
+          [productId]: 0,
+        }));
+      } else {
+        // Otherwise, keep the current quantity
+        setQuantities((prev) => ({
+          ...prev,
+          [productId]: quantities[productId],
+        }));
+      }
     } catch (error) {
       console.error("Error handling product cart action:", error);
       Swal.fire({
@@ -1411,9 +1415,8 @@ function Catalog() {
             </div>
             {isV("goToCart") && (
               <button
-                className={`go-to-cart-btn ${
-                  !selectedLocation ? "disabled" : ""
-                }`}
+                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""
+                  }`}
                 style={{
                   opacity: !selectedLocation ? 0.6 : 1,
                   cursor: !selectedLocation ? "not-allowed" : "pointer",
@@ -1523,19 +1526,19 @@ function Catalog() {
               />
             ))
             : !isLoading && (
-                <div className="no-products-message">
-                  {searchQuery ? (
-                    <p>
-                      {t(
-                        'No products found matching your search term "{{searchTerm}}".',
-                        { searchTerm: searchQuery }
-                      )}
-                    </p>
-                  ) : (
-                    <p>{t("No products found matching your criteria.")}</p>
-                  )}
-                </div>
-              )}
+              <div className="no-products-message">
+                {searchQuery ? (
+                  <p>
+                    {t(
+                      'No products found matching your search term "{{searchTerm}}".',
+                      { searchTerm: searchQuery }
+                    )}
+                  </p>
+                ) : (
+                  <p>{t("No products found matching your criteria.")}</p>
+                )}
+              </div>
+            )}
           {isLoading && (
             <div className="loading-container">
               <LoadingSpinner size="medium" />
