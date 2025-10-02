@@ -686,12 +686,11 @@ function Customers() {
   renderCell: (params) => {
     const rowdata = params.row;
 
-    const canSync =
-      !rowdata?.erpCustId && rowdata?.status?.toLowerCase() === "approved";
+   
 
     return (
       <Box sx={{ display: "flex", justifyContent: "center" }}>
-        {!params?.row?.erpCustId &&params?.row?.status?.toLowerCase() === "approved"&& (
+        {!params?.row?.erpCustId &&params?.row?.customerStatus?.toLowerCase() === "approved"&& (
           <Box
             component="span"
             onClick={(e) => {
