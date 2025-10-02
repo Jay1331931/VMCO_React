@@ -2029,6 +2029,16 @@ function OrderDetails() {
             assignedToEntityWise: assignedToEntityWise,
             customerRegion: customer.region || ''
         }));
+         setFormData(prev => ({
+            ...prev,
+            branchId:null, // Set branchId (important for API calls)
+            erpBranchId:null,
+            selectedBranchName:null,
+            branchNameEn: null, // Set branchNameEn
+            branchNameLc: null, // Set branchNameLc
+            branchRegion:null, // Set branchRegion
+            branchCity: null// Set branchCity
+        }));
 
         setShowCustomerPopup(false);
     };
