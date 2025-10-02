@@ -776,7 +776,7 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" &&params?.row?.status?.toLowerCase()!=='cancelled' && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -854,7 +854,7 @@ function Orders() {
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            {isV("sendLink") &&
+            {isV("sendLink") &&params?.row?.status?.toLowerCase()!=='cancelled' &&
               params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
