@@ -62,8 +62,6 @@ function formatDatePure(date) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-
-
 const CustomToolbar = ({
   searchQuery,
   onSearch,
@@ -82,13 +80,13 @@ const CustomToolbar = ({
   showAdd = false,
   handleAddClick,
   handleUploadClick,
+  handleExportClick,
   setSearchQuery,
   columnsToDisplay,
   isApprovalMode,
   handleApproval,
   showApproval,
-  buttonName
-
+  buttonName,
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
@@ -107,13 +105,13 @@ const CustomToolbar = ({
   const open = Boolean(filterAnchor);
   const [searchOptions, setSearchOptions] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-        // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-        useEffect(() => {
-          const handleResize = () => setIsMobile(window.innerWidth < 768);
-          console.log("isMobile", isMobile);
-          window.addEventListener("resize", handleResize);
-          return () => window.removeEventListener("resize", handleResize);
-        }, []);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const handleSearchChange = (event) => {
     const value = event.target.value;
     setSearchValue(value);
@@ -272,10 +270,10 @@ const CustomToolbar = ({
         <Box
           sx={{
             width: "500px",
-           gap :"20px",
-             display: "flex",
-    flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
-    alignItems: { xs: "stretch", sm: "center" },
+            gap: "20px",
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
+            alignItems: { xs: "stretch", sm: "center" },
             marginRight: i18n.language === "en" ? "auto" : "none",
             marginLeft: i18n.language === "en" ? "none" : "auto",
           }}
@@ -361,9 +359,9 @@ const CustomToolbar = ({
                       border: "1px solid #3D5654",
                     },
                   },
-                  "& .css-1uhhrmm-MuiAutocomplete-endAdornment":{
-                            display:"none"
-                          }
+                  "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
+                    display: "none",
+                  },
                 }}
               />
             )}
@@ -379,11 +377,13 @@ const CustomToolbar = ({
               "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
             }}
           />
-         {showApproval && (<AnimatedTabs
-                        toggleMode={true}
-                        value={isApprovalMode ? "approval" : "all"}
-                        onChange={(mode) => handleApproval(mode)} 
-                      />)}
+          {showApproval && (
+            <AnimatedTabs
+              toggleMode={true}
+              value={isApprovalMode ? "approval" : "all"}
+              onChange={(mode) => handleApproval(mode)}
+            />
+          )}
         </Box>
 
         {/* Default Grid Toolbar Components */}
@@ -423,7 +423,7 @@ const CustomToolbar = ({
 
         {showExport && (
           <Tooltip title={t("Export")}>
-            <ExportCsv
+            {/* <ExportCsv
               render={(params) => (
                 <ToolbarButton {...params} size="small">
                   <FileDownloadIcon />
@@ -431,7 +431,14 @@ const CustomToolbar = ({
               )}
             >
               {t("Export")}
-            </ExportCsv>
+            </ExportCsv> */}
+            <span>
+              {" "}
+              {/* Wrap for tooltip to work with disabled button */}
+              <IconButton onClick={handleExportClick} size="small">
+                {<FileDownloadIcon />}
+              </IconButton>
+            </span>
           </Tooltip>
         )}
 
@@ -456,7 +463,10 @@ const CustomToolbar = ({
         open={open}
         onClose={() => setFilterAnchor(null)}
         // anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        sx={{ mt: isMobile ? 15 : 15, ml: isMobile ? 0 : i18n.language === "en" ? 110 : 0 }}
+        sx={{
+          mt: isMobile ? 15 : 15,
+          ml: isMobile ? 0 : i18n.language === "en" ? 110 : 0,
+        }}
       >
         <Grid
           item
@@ -489,8 +499,7 @@ const CustomToolbar = ({
               {columns
                 ?.filter(
                   (col) =>
-                    col.field !== "updatedAt" &&
-                    col.field !== "createdAt"
+                    col.field !== "updatedAt" && col.field !== "createdAt"
                 )
                 .map((col) => (
                   <MenuItem key={col.field} value={col.field}>
@@ -565,7 +574,7 @@ const CustomToolbar = ({
         sx={{ ml: isMobile ? 0 : i18n.language === "en" ? -20 : 6 }}
       >
         {/* <Grid item container sx={{ padding: 1, columnGap: 1 }}> */}
-          {/* <Grid item sx={{ flex: 1 }}>
+        {/* <Grid item sx={{ flex: 1 }}>
             <Select
               variant="standard"
               value={dateCategory}
@@ -593,7 +602,7 @@ const CustomToolbar = ({
               })}
             </Select>
           </Grid> */}
-          {/* <Grid item sx={{ flex: 1 }}>
+        {/* <Grid item sx={{ flex: 1 }}>
               <Button
                 onClick={(e) => setDateFilterAnchor(e.currentTarget)}
                 size="small"
@@ -604,7 +613,7 @@ const CustomToolbar = ({
                 {`${dateFilter[0].startDate.toLocaleDateString()} - ${dateFilter[0].endDate.toLocaleDateString()}`}
               </Button>
             </Grid> */}
-          {/* <Grid item>
+        {/* <Grid item>
             <Button
               sx={{ minWidth: 40 }}
               onClick={() => {
@@ -621,47 +630,49 @@ const CustomToolbar = ({
             </Button>
           </Grid> */}
         {/* </Grid> */}
-       <Box
-  sx={{
-    padding: 2,
-    width: { xs: "100%", sm: 350 }, // full width on mobile, 350px from small screens up
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-  }}
->
-  <DateRange
-    onChange={(item) => setDateFilter([item.selection])}
-    editableDateInputs={true}
-    style={{ width: "100%" }}
-    ranges={dateFilter}
-    months={1}
-    direction="horizontal"
-    preventSnapRefocus={true}
-  />
-  <Grid item sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-    <Button
-      sx={{ minWidth: 40 }}
-      onClick={() => {
-        const startDate = formatDatePure(dateFilter[0].startDate);
-        const endDate = formatDatePure(dateFilter[0].endDate);
+        <Box
+          sx={{
+            padding: 2,
+            width: { xs: "100%", sm: 350 }, // full width on mobile, 350px from small screens up
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
+          <DateRange
+            onChange={(item) => setDateFilter([item.selection])}
+            editableDateInputs={true}
+            style={{ width: "100%" }}
+            ranges={dateFilter}
+            months={1}
+            direction="horizontal"
+            preventSnapRefocus={true}
+          />
+          <Grid
+            item
+            sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
+          >
+            <Button
+              sx={{ minWidth: 40 }}
+              onClick={() => {
+                const startDate = formatDatePure(dateFilter[0].startDate);
+                const endDate = formatDatePure(dateFilter[0].endDate);
 
-        console.log("Selected Dates:", { startDate, endDate });
+                console.log("Selected Dates:", { startDate, endDate });
 
-        handleFilterChange({
-          ...filters,
-          [dateCategory]: {
-            startDate,
-            endDate,
-          },
-        });
-      }}
-    >
-      Apply
-    </Button>
-  </Grid>
-</Box>
-
+                handleFilterChange({
+                  ...filters,
+                  [dateCategory]: {
+                    startDate,
+                    endDate,
+                  },
+                });
+              }}
+            >
+              Apply
+            </Button>
+          </Grid>
+        </Box>
       </Menu>
     </>
   );

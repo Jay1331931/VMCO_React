@@ -279,6 +279,78 @@ function Orders() {
     navigate("/orderDetails", { state: { mode: "add" } });
   };
 
+  const handleExportAll = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page,
+        pageSize,
+        search: searchQuery,
+        sortBy: "id",
+        sortOrder: "asc",
+        filters: JSON.stringify(filters),
+      });
+
+      const response = await fetch(
+        `${API_BASE_URL}/sales-orders/export-combined?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+//       const blob = new Blob([response], {
+//           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//         });
+// const url = window.URL.createObjectURL(blob);
+//           const a = document.createElement("a");
+//           a.href = url;
+//           a.download = "Orders.xlsx";
+//            document.body.appendChild(a);
+//           a.click();
+//           a.remove();
+//           window.URL.revokeObjectURL(url);
+ if (!response.ok) {
+        throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+      }
+
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Check if blob is valid
+      if (!blob || blob.size === 0) {
+        throw new Error('Empty file received');
+      }
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      
+      // Get filename from Content-Disposition header or use default
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = "Orders.xlsx";
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) filename = filenameMatch[1];
+      }
+      
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+          return;
+    } catch (err) {
+      setError(err.message);
+      setFilteredOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }
   const handleShowAllDetailsClick = async (order) => {
     try {
       const params = new URLSearchParams({
@@ -704,7 +776,7 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" &&params?.row?.status?.toLowerCase()!=='cancelled' && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -782,7 +854,7 @@ function Orders() {
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            {isV("sendLink") &&
+            {isV("sendLink") &&params?.row?.status?.toLowerCase()!=='cancelled' &&
               params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
@@ -1484,7 +1556,7 @@ function Orders() {
                       searchPlaceholder="Search orders..."
                       showColumnVisibility={true}
                       showFilters={true}
-                      showExport={false}
+                      showExport={!isApprovalMode}
                       showUpload={isV("uploadButton")}
                       showAdd={isV("addButton")}
                       buttonName={t("add")}
@@ -1494,6 +1566,7 @@ function Orders() {
                       columnsToDisplay={columnsToDisplay}
                       handleApproval={handleApproval}
                       isApprovalMode={isApprovalMode}
+                      handleExportClick={handleExportAll}
                     />
                   ),
                 }}

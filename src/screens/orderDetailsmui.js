@@ -3933,12 +3933,12 @@ function OrderDetails() {
                                     </button>
                                 )}
 
-                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' &&formData?.status?.toLowerCase()!=='cancelled' &&(
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Pay')}
                                         </button>
                                     )}
-                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && formData?.status?.toLowerCase()!=='cancelled' &&(
 
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId, false, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Send Link')}

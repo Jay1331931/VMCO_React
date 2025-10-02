@@ -280,7 +280,7 @@ function CustomersOnboarding() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\+?[1-9]\d{7,14}$/;
     const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/;
 
     // Check all required fields are filled
     fields.forEach((field) => {
@@ -343,6 +343,7 @@ function CustomersOnboarding() {
       if (formData.password.length < 8) {
         newErrors.password = t("Password must be at least 8 characters");
       } else if (!passwordRegex.test(formData.password)) {
+        console.log(passwordRegex.test(formData.password))
         newErrors.password = t(
           "Password must contain at least one uppercase, one lowercase, one number and one special character"
         );
