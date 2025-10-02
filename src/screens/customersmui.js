@@ -675,46 +675,65 @@ function Customers() {
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
-    {
-      field: "FandOSync",
-      headerName: t("Action"),
-      include: isMobile ? false : isV("FandOSync"),
-      searchable: false,
-      flex: 1,
-      headerAlign: "center",
-      renderCell: (params) => {
-        !params?.row?.erpCustId &&
-          params?.row?.status?.toLowerCase() === "approved" && (
-            <Box
-              component="span"
-              disabled={syncLoading}
-              onClick={(e) => {
-                e.stopPropagation();
-                HandleFandOFailCustomer(params.row.id);
-              }}
-              sx={{
-                color: "primary.main",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
-              }}
+   {
+  field: "FandOSync",
+  headerName: t("Action"),
+  include:true ,//isMobile ? false : isV("FandOSync"),
+  searchable: false,
+  flex: 1,
+  headerAlign: "center",
+  align: "center",
+  renderCell: (params) => {
+    const rowdata = params.row;
+
+    const canSync =
+      !rowdata?.erpCustId && rowdata?.status?.toLowerCase() === "approved";
+
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        {!params?.row?.erpCustId &&params?.row?.status?.toLowerCase() === "approved"&& (
+          <Box
+            component="span"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!(syncLoading && syncLoadingId === rowdata.id)) {
+                HandleFandOFailCustomer(rowdata.id);
+              }
+            }}
+            sx={{
+              color:
+                syncLoading && syncLoadingId === rowdata.id
+                  ? "text.disabled"
+                  : "primary.main",
+              cursor:
+                syncLoading && syncLoadingId === rowdata.id
+                  ? "default"
+                  : "pointer",
+              fontSize: "0.875rem",
+            }}
+          >
+            <Tooltip
+              title={
+                syncLoading && syncLoadingId === rowdata.id
+                  ? t("Syncing...")
+                  : t("Sync")
+              }
+              arrow
             >
-              <Tooltip
-                title={
-                  syncLoading && syncLoadingId === params.row.id
-                    ? t("Syncing...")
-                    : t("Sync")
-                }
-                arrow
-              >
-                <SyncIcon />{" "}
-              </Tooltip>
-            </Box>
-          );
-      },
-    },
+              <SyncIcon
+                sx={{
+                  opacity:
+                    syncLoading && syncLoadingId === rowdata.id ? 0.6 : 1,
+                }}
+              />
+            </Tooltip>
+          </Box>
+        )}
+      </Box>
+    );
+  },
+}
+
   ];
 
   // Approval Columns
