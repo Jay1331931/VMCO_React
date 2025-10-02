@@ -19,7 +19,7 @@ import {
     GridPagination,
     useGridApiRef,
 } from "@mui/x-data-grid";
-
+import TableMobile from "../components/TableMobile";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Status class helper function
@@ -57,7 +57,17 @@ function Maintenance() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [sortModel, setSortModel] = useState([]);
     const [filterAnchor, setFilterAnchor] = useState(null);
-
+ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+ const [selectedRow, setSelectedRow] = useState(null);
+   const [showRowPopup, setShowRowPopup] = useState(false);
+   
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
     // Grid API reference
     const gridApiRef = useGridApiRef();
 
@@ -237,12 +247,19 @@ function Maintenance() {
 
     // Searchable fields for the toolbar
     const searchableFields = visibleColumns.filter(item => item.searchable).map(item => item.field);
-
+const handleShowAllDetailsClick = async (ticket) => {
+    navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+  };
     // Handle row click to navigate to Maintenance details page with ticket details
     const handleRowClick = (params) => {
         const ticket = params.row;
-        navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
-    };
+        if(isMobile) {
+            setSelectedRow(ticket);
+            setShowRowPopup(true);
+        }else {
+            navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+        }
+        };
 
     // Handle adding a new ticket
     const handleAdd = () => {
@@ -288,7 +305,93 @@ function Maintenance() {
         <Sidebar title={t("Maintenance")}>
             {isV('maintenanceContent') && (
                 <div className='maintenance-content'>
-                    <div className="table-container">
+                    {isMobile ? (
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <TableMobile
+                columns={visibleColumns}
+                allColumns={maintenanceColumns}
+                data={initialTickets}
+                showAllDetails={true}
+                handleAllDetailsClick={handleShowAllDetailsClick}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                showRowPopup={showRowPopup}
+                setShowRowPopup={setShowRowPopup}
+                // getPaymentStatusClass={getPaymentStatusClass}
+                dataGridComponent={
+                  <DataGrid
+                                apiRef={gridApiRef}
+                                rows={initialTickets}
+                                columns={visibleColumns}
+                                pageSize={pageSize}
+                                rowCount={total}
+                                onRowClick={handleRowClick}
+                                columnVisibilityModel={columnVisibilityModel}
+                                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                sortModel={sortModel}
+                                onSortModelChange={handleSortModelChange}
+                                disableSelectionOnClick
+                                disableColumnMenu
+                                hideFooter={true}
+                                hideFooterPagination={true}
+                                disableExtendRowFullWidth={true}
+                                pagination={false}
+                                autoHeight
+                                rowHeight={70}
+                                showToolbar
+                                slots={{
+                                    toolbar: () => (
+                                        <CustomToolbar
+                                            searchQuery={searchQuery}
+                                            filterAnchor={filterAnchor}
+                                            onSearch={handleSearch}
+                                            setSearchQuery={setSearchQuery}
+                                            setFilterAnchor={setFilterAnchor}
+                                            handleFilterChange={handleFilterChange}
+                                            onColumnVisibilityChange={setColumnVisibilityModel}
+                                            columns={filteredData}
+                                            filters={filters}
+                                            columnVisibilityModel={columnVisibilityModel}
+                                            searchPlaceholder="Search maintenance tickets..."
+                                            showColumnVisibility={true}
+                                            showFilters={true}
+                                            showExport={false}
+                                            showUpload={false}
+                                            showAdd={isV("btnAdd") && isE("btnAdd")}
+                                            buttonName={t("Add")}
+                                            showApproval={isV('toggleButton') && user?.designation === "maintenance head"}
+                                            handleAddClick={handleAdd}
+                                            columnsToDisplay={columnsToDisplay}
+                                            handleApproval={handleApproval}
+                                            isApprovalMode={isMyTicketsMode}
+                                        />
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiDataGrid-row': {
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                        },
+                                    },
+                                     '.MuiDataGrid-cell': {
+                textAlign: 'center', // Add this line to center all cell content
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }
+                                }}
+                            />
+                }
+              />
+            )}
+          </div>
+        ) : (<div className="table-container">
                         {loading ? (
                             <LoadingSpinner />
                         ) : error ? (
@@ -367,7 +470,7 @@ function Maintenance() {
                                 onPageChange={setPage}
                             />
                         )}
-                    </div>
+                    </div>)}
                 </div>
             )}
         </Sidebar>

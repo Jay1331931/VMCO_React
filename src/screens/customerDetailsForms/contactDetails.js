@@ -2722,7 +2722,7 @@ function ContactDetails({
       <div className="form-group">
         <label htmlFor="geolocation">
           {t("Geolocation")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.geolocation != customerData?.geolocation &&
