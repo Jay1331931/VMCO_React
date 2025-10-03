@@ -1076,6 +1076,8 @@ function Cart() {
             const isDeliveryChargesApplicable = customerData?.data?.isDeliveryChargesApplicable;
             const companyNameEn = customerData?.data?.companyNameEn;
             const companyNameAr = customerData?.data?.companyNameAr;
+            const brandNameEn = customerData?.data?.brandNameEn;
+            const brandNameAr = customerData?.data?.brandNameAr;
             const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
@@ -1302,6 +1304,8 @@ function Cart() {
                     erpCustId: erpCustId,
                     companyNameEn: companyNameEn,
                     companyNameAr: companyNameAr,
+                    brandNameEn: brandNameEn,
+                    brandNameAr: brandNameAr,
                     branchId: selectedBranchId,
                     branchNameEn: selectedBranchName,
                     branchNameLc: selectedBranchNameLc,
