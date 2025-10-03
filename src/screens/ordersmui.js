@@ -138,8 +138,14 @@ function Orders() {
   const handleSortModelChange = (model) => {
     console.log("Sort model changed:", model);
     setSortModel(model);
-    fetchOrders(1, searchQuery, filters, model);
+
+    if (isApprovalMode) {
+      fetchApprovals(1, searchQuery, filters, model);
+    } else {
+      fetchOrders(1, searchQuery, filters, model);
+    }
   };
+
   // Fetch orders from API
   const fetchOrders = useCallback(
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
@@ -181,7 +187,12 @@ function Orders() {
               order.selectedCustomerName ||
               order.erpCustId ||
               "",
+            branchNameEn:
+              order.branchNameEn + " (" + order.branchSequenceId + ")",
+            branchNameLc:
+              order.branchNameLc + " (" + order.branchSequenceId + ")",
           }));
+
           setFilteredOrders(processedOrders);
           setTotal(result.data.totalRecords);
         } else {
@@ -198,11 +209,7 @@ function Orders() {
   );
 
   // Fetch approvals for orders
-  const fetchApprovals = async (
-    page = 1,
-    searchTerm = "",
-    customFilters = {}
-  ) => {
+  const fetchApprovals = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
     try {
@@ -210,29 +217,29 @@ function Orders() {
         page,
         pageSize,
         search: searchTerm,
-        sortBy: "id",
-        sortOrder: "asc",
+        sortBy: sortedModel?.[0]?.field || "id",
+        sortOrder: sortedModel?.[0]?.sort || "asc",
         filters: JSON.stringify(customFilters),
       });
 
-      const response = await fetch(
-        `${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const result = await response.json();
       if (result.status === "Ok") {
-        const processedOrders = result.data.data.map((order) => ({
+        const processedOrders = result.data.data.map(order => ({
           ...order,
-          companyNameEn: order.companyNameEn || order.company_name_en || "",
+          companyNameEn: order.companyNameEn || order.companynameen,
+          branchNameEn: order.branchNameEn || order.branchSequenceId,
+          branchNameLc: order.branchNameLc || order.branchSequenceId,
           workflowName: order.workflowName,
           workflowInstanceId: order.workflowInstanceId,
         }));
+
         setFilteredOrders(processedOrders);
         setTotal(result.data.totalRecords);
       } else {
@@ -527,10 +534,10 @@ function Orders() {
 
   const orderColumns = [
     {
-      field: "id", 
-      headerName: t("Order #"), 
-      include: isV("orderNumber"), 
-      searchable: true, 
+      field: "id",
+      headerName: t("Order #"),
+      include: isV("orderNumber"),
+      searchable: true,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -539,11 +546,11 @@ function Orders() {
       ),
     },
     {
-      field: "erpOrderId", 
-      headerName: t("Sales Order ID"), 
-      include: isV("erpOrderId"), 
-      searchable: true, 
-      minWidth: 120, 
+      field: "erpOrderId",
+      headerName: t("Sales Order ID"),
+      include: isV("erpOrderId"),
+      searchable: true,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -552,10 +559,46 @@ function Orders() {
       ),
     },
     {
-      field: isArabic ? "companyNameAr" : "companyNameEn", 
-      headerName: t("Company Name"), 
-      include: isV("companyName"), 
-      searchable: true, 
+      field: isArabic ? "companyNameAr" : "companyNameEn",
+      headerName: t("Company Name"),
+      include: isV("companyName"),
+      searchable: true,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "brandNameAr" : "brandNameEn",
+      headerName: t("Brand Name"),
+      include: isV("brandName"),
+      searchable: true,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: isArabic ? "branchNameLc" : "branchNameEn",
+      headerName: t("Branch Name"),
+      include: isV("branchName"),
+      searchable: true,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "branchRegion",
+      headerName: t("Branch Region"),
+      include: isV("branchRegion"),
+      searchable: true,
       flex: 2,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -564,11 +607,11 @@ function Orders() {
       ),
     },
     {
-      field: isArabic ? "branchNameLc" : "branchNameEn", 
-      headerName: t("Branch Name"), 
-      include: isV("branchName"), 
-      searchable: true, 
-      flex: 2,
+      field: "branchCity",
+      headerName: t("Branch City"),
+      include: isV("branchCity"),
+      searchable: true,
+      flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -576,10 +619,10 @@ function Orders() {
       ),
     },
     {
-      field: "entity", 
-      headerName: t("Entity"), 
-      include: isV("entity"), 
-      searchable: true, 
+      field: "entity",
+      headerName: t("Entity"),
+      include: isV("entity"),
+      searchable: true,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => {
@@ -615,11 +658,11 @@ function Orders() {
       },
     },
     {
-      field: "paymentMethod", 
-      headerName: t("Payment Method"), 
-      include: isV("paymentMethod"), 
-      searchable: true, 
-      minWidth: 130, 
+      field: "paymentMethod",
+      headerName: t("Payment Method"),
+      include: isV("paymentMethod"),
+      searchable: true,
+      minWidth: 130,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -628,12 +671,12 @@ function Orders() {
       ),
     },
     {
-      field: "createdByUsername", 
-      headerName: t("Created By"), 
-      include: isV("createdBy"), 
-      searchable: false, 
-      sortable: false, 
-      minWidth: 100, 
+      field: "createdByUsername",
+      headerName: t("Created By"),
+      include: isV("createdBy"),
+      searchable: false,
+      sortable: false,
+      minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -642,24 +685,60 @@ function Orders() {
       )
     },
     {
-      field: "createdAt", 
-      headerName: t("Order Placement Date"), 
-      include: isV("createdAt"), 
-      searchable: false, 
-      minWidth: 100, 
+      field: "createdAt",
+      headerName: t("Order Placement Date"),
+      include: isV("createdAt"),
+      searchable: false,
+      minWidth: 150,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{params?.row?.createdAt ? formatDate(params?.row?.createdAt, "DD/MM/YYYY") : " "}</span>
-      ),
+      renderCell: (params) => {
+        if (!params?.row?.createdAt) return <span> </span>;
+
+        const date = new Date(params.row.createdAt);
+
+        // Convert to Riyadh timezone (UTC+3)
+        const riyadhDate = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Riyadh',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(date);
+
+        const riyadhTime = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Riyadh',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).format(date);
+
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',  
+            alignItems: 'center',    
+            height: '100%',
+            lineHeight: '1.2'
+          }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+              {riyadhDate}
+            </span>
+            <span style={{ fontSize: '0.8rem', color: '#666' }}>
+              {riyadhTime}
+            </span>
+          </div>
+        );
+      },
     },
     {
-      field: "totalAmount", 
-      headerName: t("Total Amount"), 
-      include: isV("totalAmount"), 
-      searchable: false, 
-      minWidth: 100, 
+      field: "totalAmount",
+      headerName: t("Total Amount"),
+      include: isV("totalAmount"),
+      searchable: false,
+      minWidth: 100,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -667,11 +746,66 @@ function Orders() {
       ),
     },
     {
-      field: "paymentStatus", 
-      headerName: t("Payment Status"), 
-      include: isV("paymentStatus"), 
-      searchable: true, 
-      minWidth: 120, 
+      field: "totalItemQuantity",
+      headerName: t("Total Quantity"),
+      include: isV("totalItemQuantity"),
+      searchable: false,
+      sortable: false,
+      minWidth: 100,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{params?.row?.totalItemQuantity || 0}</span>
+      ),
+    },
+    {
+      field: "salesExecutiveId",
+      headerName: t("Sales Executive ID"),
+      include: isV("salesExecutiveId"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutive || '')}</span>
+      ),
+    },
+    {
+      field: "salesExecutiveName",
+      headerName: t("Sales Executive Name"),
+      include: isV("salesExecutiveName"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutiveName || '')}</span>
+      ),
+    },
+    {
+      field: "currentApprover",
+      headerName: t("Current Approver"),
+      include: isV("currentApprover"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.currentApprover || '')}</span>
+      ),
+    },
+    {
+      field: "paymentStatus",
+      headerName: t("Payment Status"),
+      include: isV("paymentStatus"),
+      searchable: true,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -680,11 +814,11 @@ function Orders() {
       ),
     },
     {
-      field: "status", 
-      headerName: t("Approval Status"), 
-      include: isV("status"), 
-      searchable: true, 
-      minWidth: 120, 
+      field: "status",
+      headerName: t("Approval Status"),
+      include: isV("status"),
+      searchable: true,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -693,12 +827,12 @@ function Orders() {
       ),
     },
     {
-      field: "pay", 
-      headerName: t("Action"), 
-      include: isV("action"), 
-      searchable: false, 
-      flex: 2, 
-      minWidth: 70, 
+      field: "pay",
+      headerName: t("Action"),
+      include: isV("action"),
+      searchable: false,
+      flex: 2,
+      minWidth: 70,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -729,12 +863,12 @@ function Orders() {
       ),
     },
     {
-      field: "sendLink", 
-      headerName: t("Action"), 
-      include: isV("sendLink") || isV("FandOSyncSO"), 
-      searchable: false, 
-      flex: 2, 
-      minWidth: 70, 
+      field: "sendLink",
+      headerName: t("Action"),
+      include: isV("sendLink") || isV("FandOSyncSO"),
+      searchable: false,
+      flex: 2,
+      minWidth: 70,
       headerAlign: "center",
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => {
@@ -847,10 +981,10 @@ function Orders() {
 
   const approvalColumns = [
     {
-      field: "id", 
-      headerName: t("Order #"), 
-      include: isV("orderNumber"), 
-      searchable: true, 
+      field: "id",
+      headerName: t("Order #"),
+      include: isV("orderNumber"),
+      searchable: true,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -859,10 +993,10 @@ function Orders() {
       ),
     },
     {
-      field: "erpOrderId", 
-      include: isV("erpOrderId"), 
-      searchable: true, 
-      minWidth: 120, 
+      field: "erpOrderId",
+      include: isV("erpOrderId"),
+      searchable: true,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -871,10 +1005,10 @@ function Orders() {
       ),
     },
     {
-      field: isArabic ? "companyNameAr" : "companyNameEn", 
-      headerName: t("Customer"), 
-      include: isV("companyName"), 
-      searchable: true, 
+      field: isArabic ? "companyNameAr" : "companyNameEn",
+      headerName: t("Customer"),
+      include: isV("companyName"),
+      searchable: true,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -883,11 +1017,11 @@ function Orders() {
       ),
     },
     {
-      field: isArabic ? "branchNameLc" : "branchNameEn", 
-      headerName: t("Branch"), 
-      include: isV("branchName"), 
-      searchable: true, 
-      minWidth: 80, 
+      field: isArabic ? "branchNameLc" : "branchNameEn",
+      headerName: t("Branch"),
+      include: isV("branchName"),
+      searchable: true,
+      minWidth: 80,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -896,11 +1030,23 @@ function Orders() {
       ),
     },
     {
-      field: "workflowName", 
-      headerName: t("Workflow Name"), 
-      include: isV("workflowName"), 
-      searchable: true, 
-      minWidth: 100, 
+      field: "branchRegion",
+      headerName: t("Branch Region"),
+      include: isV("branchRegion"),
+      searchable: true,
+      flex: 2,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.value)}</span>
+      ),
+
+    },
+    {
+      field: "branchCity",
+      headerName: t("Branch City"),
+      include: isV("branchCity"),
+      searchable: true,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -909,10 +1055,23 @@ function Orders() {
       ),
     },
     {
-      field: "entity", 
-      headerName: t("Entity"), 
-      include: isV("entity"), 
-      searchable: true, 
+      field: "workflowName",
+      headerName: t("Workflow Name"),
+      include: isV("workflowName"),
+      searchable: true,
+      minWidth: 100,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.value)}</span>
+      ),
+    },
+    {
+      field: "entity",
+      headerName: t("Entity"),
+      include: isV("entity"),
+      searchable: true,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -949,11 +1108,11 @@ function Orders() {
       },
     },
     {
-      field: "paymentMethod", 
-      headerName: t("Payment Method"), 
-      include: isV("paymentMethod"), 
-      searchable: true, 
-      minWidth: 130, 
+      field: "paymentMethod",
+      headerName: t("Payment Method"),
+      include: isV("paymentMethod"),
+      searchable: true,
+      minWidth: 130,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -961,36 +1120,72 @@ function Orders() {
         <span>{t(params.value)}</span>
       ),
     },
-    { 
-      field: "createdByUsername", 
-      headerName: t("Created By"), 
-      include: isV("createdBy"), 
-      searchable: false, 
-      sortable: false, 
-      minWidth: 100, 
+    {
+      field: "createdByUsername",
+      headerName: t("Created By"),
+      include: isV("createdBy"),
+      searchable: false,
+      sortable: false,
+      minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
     },
     {
-      field: "createdAt", 
-      headerName: t("Order Placement Date"), 
-      include: isV("createdAt"), 
-      searchable: false, 
-      minWidth: 100, 
+      field: "createdAt",
+      headerName: t("Order Placement Date"),
+      include: isV("createdAt"),
+      searchable: false,
+      minWidth: 150,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{params.value ? formatDate(params.value, "DD/MM/YYYY") : " "}</span>
-      ),
+      renderCell: (params) => {
+        if (!params?.row?.createdAt) return <span> </span>;
+
+        const date = new Date(params.row.createdAt);
+
+        // Convert to Riyadh timezone (UTC+3)
+        const riyadhDate = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Riyadh',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(date);
+
+        const riyadhTime = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Riyadh',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).format(date);
+
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',  
+            alignItems: 'center',
+            height: '100%',
+            lineHeight: '1.2'
+          }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+              {riyadhDate}
+            </span>
+            <span style={{ fontSize: '0.8rem', color: '#666' }}>
+              {riyadhTime}
+            </span>
+          </div>
+        );
+      },
     },
     {
-      field: "totalAmount", 
-      headerName: t("Total Amount"), 
-      include: isV("totalAmount"), 
-      searchable: false, 
-      minWidth: 100, 
+      field: "totalAmount",
+      headerName: t("Total Amount"),
+      include: isV("totalAmount"),
+      searchable: false,
+      minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -999,11 +1194,62 @@ function Orders() {
       ),
     },
     {
-      field: "status", 
-      headerName: t("Approval Status"), 
-      include: isV("status"), 
-      searchable: true, 
-      minWidth: 120, 
+      field: "totalItemQuantity",
+      headerName: t("Total Quantity"),
+      include: isV("totalItemQuantity"),
+      searchable: false,
+      minWidth: 100,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{params?.row?.totalItemQuantity || 0}</span>
+      ),
+    },
+    {
+      field: "salesExecutiveId",
+      headerName: t("Sales Executive ID"),
+      include: isV("salesExecutiveId"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutive || '')}</span>
+      ),
+    },
+    {
+      field: "salesExecutiveName",
+      headerName: t("Sales Executive Name"),
+      include: isV("salesExecutiveName"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutiveName || '')}</span>
+      ),
+    },
+    {
+      field: "currentApprover",
+      headerName: t("Current Approver"),
+      include: isV("currentApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.currentApproverType || '')}</span>
+      ),
+    },
+    {
+      field: "status",
+      headerName: t("Approval Status"),
+      include: isV("status"),
+      searchable: true,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1020,11 +1266,6 @@ function Orders() {
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
     setShowCustomerPopup(false);
-  };
-
-  const handleSelectBranch = (branch) => {
-    setSelectedBranch(branch);
-    setShowBranchPopup(false);
   };
 
   const handleTemplateDownload = async () => {
@@ -1080,7 +1321,6 @@ function Orders() {
     setBulkUploadPopUp(false);
     setSelectedCustomer(null);
     setSelectedFile(null);
-    setSelectedBranch(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -1130,12 +1370,12 @@ function Orders() {
 
   const handleSubmitFile = async (file) => {
     if (!file) return;
+
     setExcelLoading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("customerId", selectedCustomer.id);
-      formData.append("branchId", selectedBranch.id);
 
       const response = await axios.post(
         `${API_BASE_URL}/bulk-order/upload-excel`,
@@ -1150,25 +1390,20 @@ function Orders() {
         }
       );
 
-      if (
-        response?.status === 400 &&
-        response.headers["content-type"] !== "application/json"
-      ) {
+      if (response?.status === 400 && response.headers["content-type"] !== "application/json") {
         const blob = new Blob([response.data], {
           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
 
         Swal.fire({
           title: t("Validation Failed"),
-          html: `
-    ${t("Some rows contain validation errors.")}<br>
-    ${t("The Excel file has been updated with a new column named")} <b>${t(
-            "Errors"
-          )}</b>.<br>
-    ${t("Please open the file, review the")} <b>${t("Errors")}</b> ${t(
+          html: `${t("Some rows contain validation errors.")}<br />${t(
+            "The Excel file has been updated with a new column named"
+          )} <b>${t("Errors")}</b>.<br />${t(
+            "Please open the file, review the"
+          )} <b>${t("Errors")}</b> ${t(
             "column, fix the issues, and re-upload the file."
-          )}.
-  `,
+          )}.`,
           icon: "warning",
           confirmButtonText: t("Download Error File"),
         }).then(() => {
@@ -1181,29 +1416,24 @@ function Orders() {
           a.remove();
           window.URL.revokeObjectURL(url);
         });
-
         return;
       }
       const blob = response?.data;
       const text = await blob.text();
       const data = JSON.parse(text);
-      console.log(response?.status, data?.response?.success);
-      if (response?.status === 200 && data?.response?.success) {
-        fetchOrders();
 
+      if (response?.status === 200 && data?.status === "Ok") {
+        fetchOrders();
         Swal.fire({
           title: t("File Uploaded Successfully"),
-          text:
-            t(data.message) ||
-            t("Sales have been updated from the Excel file."),
+          text: data.message || t("Bulk orders processed successfully for all branches"),
           icon: "success",
           confirmButtonText: t("OK"),
         });
       } else {
         Swal.fire({
           title: t("File Upload Failed"),
-          text:
-            t(data.message) || t("An error occurred while uploading the file."),
+          text: data.message || t("An error occurred while uploading the file."),
           icon: "error",
           confirmButtonText: t("OK"),
         });
@@ -1589,49 +1819,6 @@ function Orders() {
                           </div>
                         </div>
                       )}
-                      {isV("branchName") && (
-                        <div className="order-details-field">
-                          <label>{t("Branch")}</label>
-                          <div
-                            className="customer-input-container"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "8px",
-                            }}
-                          >
-                            <input
-                              style={{ width: "310px" }}
-                              id="branchField"
-                              name="selectedBranchName"
-                              onClick={() => {
-                                if (!selectedCustomer) {
-                                  Swal.fire({
-                                    icon: "warning",
-                                    title: t("No Customer Selected"),
-                                    text: t("Please select a customer first"),
-                                    confirmButtonText: t("OK"),
-                                  });
-                                  return;
-                                }
-                                if (isE("branchName")) setShowBranchPopup(true);
-                              }}
-                              className="customer-input"
-                              placeholder={t("Click to select branch")}
-                              value={
-                                selectedBranch
-                                  ? isArabic
-                                    ? selectedBranch.branchNameAr
-                                    : selectedBranch.branchNameEn
-                                  : ""
-                              }
-                              readOnly
-                              disabled={!isE("branchName")}
-                              autoComplete="off"
-                            />
-                          </div>
-                        </div>
-                      )}
                     </div>
                     <p style={{ marginTop: 20, marginBottom: 20 }}>
                       {t(
@@ -1643,14 +1830,14 @@ function Orders() {
                       <button
                         className="download-btn"
                         onClick={() => handleTemplateDownload()}
-                        disabled={!selectedCustomer || !selectedBranch}
+                        disabled={!selectedCustomer}
                       >
                         📥 {t("Download Excel Template")}
                       </button>
                       <button
                         className="upload-btn"
                         onClick={() => fileInputRef.current.click()}
-                        disabled={!selectedCustomer || !selectedBranch}
+                        disabled={!selectedCustomer}
                       >
                         📤 {t("Upload Completed Excel File")}
                       </button>
@@ -1704,17 +1891,6 @@ function Orders() {
                     }}
                   />
                 )}
-
-                {showBranchPopup && (
-                  <GetBranches
-                    open={showBranchPopup}
-                    onClose={() => setShowBranchPopup(false)}
-                    onSelectBranch={handleSelectBranch}
-                    customerId={selectedCustomer?.id}
-                    API_BASE_URL={API_BASE_URL}
-                    t={t}
-                  />
-                )}
               </div>
             )}
           </div>
@@ -1729,18 +1905,7 @@ function Orders() {
             }}
           />
         )}
-
-        {showBranchPopup && (
-          <GetBranches
-            customerId={selectedCustomer?.id}
-            onClose={() => setShowBranchPopup(false)}
-            onSelect={(branch) => {
-              setSelectedBranch(branch);
-              setShowBranchPopup(false);
-            }}
-          />
-        )}
-
+        
         {isV("ordersPagination") && paginatedOrders.length > 0 && (
           <Pagination
             currentPage={page}
