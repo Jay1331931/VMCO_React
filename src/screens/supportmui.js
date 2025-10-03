@@ -19,6 +19,7 @@ import {
     GridPagination,
     useGridApiRef,
 } from "@mui/x-data-grid";
+import TableMobile from "../components/TableMobile";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
@@ -58,10 +59,19 @@ function Support() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [sortModel, setSortModel] = useState([]);
     const [filterAnchor, setFilterAnchor] = useState(null);
-
+const [selectedRow, setSelectedRow] = useState(null);
+  const [showRowPopup, setShowRowPopup] = useState(false);
+  
     // Grid API reference
     const gridApiRef = useGridApiRef();
-
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
     //RBAC
     const rbacMgr = new RbacManager(
         user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -293,10 +303,17 @@ function Support() {
 
     // Searchable fields for the toolbar
     const searchableFields = visibleColumns.filter(item => item.searchable).map(item => item.field);
-
+const handleShowAllDetailsClick = async (ticket) => {
+    navigate("/supportDetails", { state: { ticket: ticket, mode: "edit" } });
+  };
     // Handle row click to navigate to supportDetails page with ticket details
     const handleRowClick = (ticket) => {
+        if (isMobile) {
+        setSelectedRow(ticket);
+        setShowRowPopup(true);
+      } else  {
         navigate("/supportDetails", { state: { ticket: ticket, mode: "edit" } });
+    }
     };
 
     // Handle view ticket
@@ -346,7 +363,91 @@ function Support() {
         <Sidebar title={t("Support")}>
             {isV('supportContent') && (
                 <div className='support-content'>
-                    <div className="table-container">
+                    {isMobile ? (
+                              <div className="table-container">
+                                {loading ? (
+                                  <LoadingSpinner />
+                                ) : error ? (
+                                  <div className="error-message">{error}</div>
+                                ) : (
+                                  <TableMobile
+                                    columns={visibleColumns}
+                                    allColumns={supportColumns}
+                                    data={initialTickets}
+                                    showAllDetails={true}
+                                    handleAllDetailsClick={handleShowAllDetailsClick}
+                                    selectedRow={selectedRow}
+                                    setSelectedRow={setSelectedRow}
+                                    showRowPopup={showRowPopup}
+                                    setShowRowPopup={setShowRowPopup}
+                                    // getPaymentStatusClass={getPaymentStatusClass}
+                                    dataGridComponent={
+                                       <DataGrid
+                                apiRef={gridApiRef}
+                                rows={initialTickets}
+                                columns={visibleColumns}
+                                pageSize={pageSize}
+                                rowCount={total}
+                                onRowClick={(params) => handleRowClick(params.row)}
+                                columnVisibilityModel={columnVisibilityModel}
+                                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                sortModel={sortModel}
+                                onSortModelChange={handleSortModelChange}
+                                disableSelectionOnClick
+                                disableColumnMenu
+                                hideFooter={true}
+                                hideFooterPagination={true}
+                                disableExtendRowFullWidth={true}
+                                pagination={false}
+                                autoHeight
+                                rowHeight={70}
+                                showToolbar
+                                slots={{
+                                    toolbar: () => (
+                                        <CustomToolbar
+                                            searchQuery={searchQuery}
+                                            filterAnchor={filterAnchor}
+                                            onSearch={handleSearch}
+                                            setSearchQuery={setSearchQuery}
+                                            setFilterAnchor={setFilterAnchor}
+                                            handleFilterChange={handleFilterChange}
+                                            onColumnVisibilityChange={setColumnVisibilityModel}
+                                            columns={filteredData}
+                                            filters={filters}
+                                            columnVisibilityModel={columnVisibilityModel}
+                                            searchPlaceholder="Search tickets..."
+                                            showColumnVisibility={true}
+                                            showFilters={true}
+                                            showExport={false}
+                                            showUpload={false}
+                                            showAdd={isV("btnAdd")}
+                                            buttonName={t("Add Ticket")}
+                                            showApproval={false}
+                                            handleAddClick={handleAddTicket}
+                                            columnsToDisplay={columnsToDisplay}
+                                        />
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiDataGrid-row': {
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                        },
+                                    },
+                                    '.MuiDataGrid-cell': {
+                                        textAlign: 'center', // Add this line to center all cell content
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }
+                                }}
+                            />
+                                    }
+                                  />
+                                )}
+                              </div>
+                            ) : (<div className="table-container">
                         {loading ? (
                             <LoadingSpinner />
                         ) : error ? (
@@ -448,7 +549,7 @@ function Support() {
                                 onPageChange={setPage}
                             />
                         )}
-                    </div>
+                    </div>)}
                 </div>
             )}
         </Sidebar>

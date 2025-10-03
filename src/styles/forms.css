@@ -358,12 +358,12 @@
   gap: 10px;
   margin-top: 10px;
 }
-.document-upload label {
-  margin-right: 120px;
-}
+/* .document-upload label { */
+  /* margin-right: 120px; */
+/* } */
 [dir="rtl"] .document-upload label {
   margin-right: 0;
-  margin-left: 120px;
+  /* margin-left: 120px; */
 }
 .document-upload.full-width input[type="file"] {
   position: absolute;
@@ -1926,7 +1926,7 @@ td.label-cell {
   /* display: flex; */
   align-items: center;
   justify-content: center;
-  color: #0a5640;
+  color: blue;
   transition: all 0.2s ease;
 }
 

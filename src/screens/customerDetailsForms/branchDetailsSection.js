@@ -761,7 +761,7 @@ const BranchDetailsForm = ({
         name: "geolocation",
         placeholder: "Geolocation",
         isLocation: true,
-        required: true,
+        required: false,
       },
       {
         type: "dropdown",

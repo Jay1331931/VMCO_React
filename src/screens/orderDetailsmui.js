@@ -2033,6 +2033,16 @@ function OrderDetails() {
             assignedToEntityWise: assignedToEntityWise,
             customerRegion: customer.region || ''
         }));
+         setFormData(prev => ({
+            ...prev,
+            branchId:null, // Set branchId (important for API calls)
+            erpBranchId:null,
+            selectedBranchName:null,
+            branchNameEn: null, // Set branchNameEn
+            branchNameLc: null, // Set branchNameLc
+            branchRegion:null, // Set branchRegion
+            branchCity: null// Set branchCity
+        }));
 
         setShowCustomerPopup(false);
     };
@@ -3937,12 +3947,12 @@ function OrderDetails() {
                                     </button>
                                 )}
 
-                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' &&formData?.status?.toLowerCase()!=='cancelled' &&(
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Pay')}
                                         </button>
                                     )}
-                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && formData?.status?.toLowerCase()!=='cancelled' &&(
 
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId, false, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Send Link')}

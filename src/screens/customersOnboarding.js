@@ -280,7 +280,7 @@ function CustomersOnboarding() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\+?[1-9]\d{7,14}$/;
     const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/;
 
     // Check all required fields are filled
     fields.forEach((field) => {
@@ -343,6 +343,7 @@ function CustomersOnboarding() {
       if (formData.password.length < 8) {
         newErrors.password = t("Password must be at least 8 characters");
       } else if (!passwordRegex.test(formData.password)) {
+        console.log(passwordRegex.test(formData.password))
         newErrors.password = t(
           "Password must contain at least one uppercase, one lowercase, one number and one special character"
         );
@@ -389,18 +390,20 @@ function CustomersOnboarding() {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isOtpVerify) {
-      // Swal.fire({
-      //   title: t("Please verify the Email"),
-      //     text: t("Please verify the email by clicking on the Verify Otp button."),
-      //     icon: "warning",
-      //     confirmButtonText: t("OK"),
-      // });
-      setErrors(
-        t("Please verify the email by clicking on the Verify Otp button.")
-      );
-      return;
-    }
+
+    //with out otp email verified
+    // if (!isOtpVerify) {
+    //   // Swal.fire({
+    //   //   title: t("Please verify the Email"),
+    //   //     text: t("Please verify the email by clicking on the Verify Otp button."),
+    //   //     icon: "warning",
+    //   //     confirmButtonText: t("OK"),
+    //   // });
+    //   setErrors(
+    //     t("Please verify the email by clicking on the Verify Otp button.")
+    //   );
+    //   return;
+    // }
     // Validate form only on submit
     let isValid = await validateForm();
     if (isValid) {
@@ -515,6 +518,8 @@ function CustomersOnboarding() {
             });
           });
 
+        
+         
           contactTypes.forEach(async (type) => {
             const res = await fetch(`${API_BASE_URL}/auth/customer-contacts`, {
               method: "POST",
@@ -525,6 +530,10 @@ function CustomersOnboarding() {
               }),
             });
           });
+            // with out otp email verifing
+  const Reqbody={ contact_info:formData.companyEmail,contact_type:'email'}
+
+      const { data } = await axios.post(`${API_BASE_URL}/auth/registration/send-with-out-otp`, Reqbody);
 
           const res = await fetch(`${API_BASE_URL}/auth/payment-method`, {
             method: "POST",
@@ -670,6 +679,7 @@ function CustomersOnboarding() {
       } else if (otpType === "resendotp") {
         path = `${API_BASE_URL}/auth/registration/resend-otp`;
       }
+      path=`${API_BASE_URL}/auth/registration/send-with-out-otp`
 
       const { data } = await axios.post(path, Reqbody);
 
@@ -850,7 +860,7 @@ function CustomersOnboarding() {
                                     isOtpVerify) // Only disable if verified and has ID
                                 }
                               />
-                              {field.name === "companyEmail" &&
+                              {/* {field.name === "companyEmail" &&
                                 formData?.companyEmail &&
                                 !isOtpVerify && (
                                   <button
@@ -885,7 +895,7 @@ function CustomersOnboarding() {
                                       ? t("Send Otp")
                                       : t("Resend Otp")}
                                   </button>
-                                )}
+                                )} */}
                               {field.name === "otp" && !isOtpVerify && (
                                 <button
                                   type="button"
@@ -1082,11 +1092,13 @@ function CustomersOnboarding() {
               <button
                 type="submit"
                 className="login-button"
-                disabled={isSubmitting}
+                disabled={isSubmitting} // with out otp email verified
                 onClick={handleSubmit}
                 style={{
                   background: isSubmitting ? "#ccc" : "#01594C",
                   cursor: isSubmitting ? "not-allowed" : "pointer",
+                  // background: "#01594C",
+                  // cursor: "pointer",
                 }}
               >
                 {isSubmitting ? t("Submitting...") : t("Submit")}
