@@ -455,6 +455,16 @@ const fetchSaleOrder = useCallback(async () => {
 };
   const handlePayment = async (paymentType) => {
  
+//    if (paymentType) {
+//   Swal.fire({
+//     title: 'Card Payment Coming Soon',
+//     text: 'Please contact your sales executive for more details.',
+//     icon: 'info',
+//     confirmButtonText: 'OK',
+//     confirmButtonColor: '#1976d2', // optional: match your theme
+//   });
+//   return;
+// }
 
     console.log("paymentType",amount)
     if (amount <= 0) {

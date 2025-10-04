@@ -1164,8 +1164,10 @@ function OrderDetails() {
             // Prepare payload for backend - only include defined fields, default to '' for missing optional fields
             const payload = {
                 customerId: formData.customerId || '',
-                companyNameEn: formData.companyNameEn || '', // Always use value from formData
-                companyNameAr: formData.companyNameAr || '', // Always use value from formData
+                companyNameEn: formData.companyNameEn || '', 
+                companyNameAr: formData.companyNameAr || '', 
+                brandNameEn: formData.brandNameEn || '',
+                brandNameAr: formData.brandNameAr || '',
                 erpCustId: formData.erpCustId,
                 branchId: formData.branchId || '',
                 erpBranchId: formData.erpBranchId || '',
@@ -2023,11 +2025,23 @@ function OrderDetails() {
             customerId: customer.id, // Use the database ID for the customer
             selectedCustomerName: i18n.language === 'ar' ? (customer.company_name_ar || customer.companyNameAr) : (customer.company_name_en || customer.companyNameEn),
             pricingPolicy: customer.pricingPolicy,
-            companyNameEn: customer.company_name_en || customer.companyNameEn || '', // Set companyNameEn
-            companyNameAr: customer.company_name_ar || customer.companyNameAr || '', // Set companyNameAr
+            companyNameEn: customer.company_name_en || customer.companyNameEn || '',
+            companyNameAr: customer.company_name_ar || customer.companyNameAr || '',
+            brandNameEn: customer.brand_name_en || customer.brandNameEn || '',
+            brandNameAr: customer.brand_name_ar || customer.brandNameAr || '',
             salesExecutive: customer.assignedToEntityWise,
             assignedToEntityWise: assignedToEntityWise,
             customerRegion: customer.region || ''
+        }));
+         setFormData(prev => ({
+            ...prev,
+            branchId:null, // Set branchId (important for API calls)
+            erpBranchId:null,
+            selectedBranchName:null,
+            branchNameEn: null, // Set branchNameEn
+            branchNameLc: null, // Set branchNameLc
+            branchRegion:null, // Set branchRegion
+            branchCity: null// Set branchCity
         }));
 
         setShowCustomerPopup(false);
@@ -3933,12 +3947,12 @@ function OrderDetails() {
                                     </button>
                                 )}
 
-                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnPay') && isE('btnPay') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' &&formData?.status?.toLowerCase()!=='cancelled' &&(
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Pay')}
                                         </button>
                                     )}
-                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && (
+                                {isV('btnSendLink') && isE('btnSendLink') && formData.paymentMethod.toLowerCase() === "pre payment" && formData.paymentStatus.toLowerCase() === 'pending' && formData?.status?.toLowerCase()!=='cancelled' &&(
 
                                         <button className="order-action-btn" onClick={() => handleCheckout(orderId, false, true)} style={{ width: '160px', backgroundColor: '#005932', color: 'white' }}>
                                             {t('Send Link')}
