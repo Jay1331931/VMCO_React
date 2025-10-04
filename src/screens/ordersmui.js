@@ -293,8 +293,8 @@ function Orders() {
         page,
         pageSize,
         search: searchQuery,
-        sortBy: "id",
-        sortOrder: "asc",
+        sortBy: sortModel[0]?.field || "id",
+          sortOrder: sortModel[0]?.sort || "asc",
         filters: JSON.stringify(filters),
       });
 
