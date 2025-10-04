@@ -257,7 +257,6 @@ function Orders() {
     if (loading) {
       return;
     }
-
     if (user) {
       if (isApprovalMode) {
         fetchApprovals(page, searchQuery, filters);
@@ -309,24 +308,14 @@ function Orders() {
           },
         }
       );
-//       const blob = new Blob([response], {
-//           type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//         });
-// const url = window.URL.createObjectURL(blob);
-//           const a = document.createElement("a");
-//           a.href = url;
-//           a.download = "Orders.xlsx";
-//            document.body.appendChild(a);
-//           a.click();
-//           a.remove();
-//           window.URL.revokeObjectURL(url);
- if (!response.ok) {
+
+      if (!response.ok) {
         throw new Error(`Export failed: ${response.status} ${response.statusText}`);
       }
 
       // Get the blob from the response
       const blob = await response.blob();
-      
+
       // Check if blob is valid
       if (!blob || blob.size === 0) {
         throw new Error('Empty file received');
@@ -336,7 +325,7 @@ function Orders() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      
+
       // Get filename from Content-Disposition header or use default
       const contentDisposition = response.headers.get('Content-Disposition');
       let filename = "Orders.xlsx";
@@ -344,13 +333,13 @@ function Orders() {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
         if (filenameMatch) filename = filenameMatch[1];
       }
-      
+
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-          return;
+      return;
     } catch (err) {
       setError(err.message);
       setFilteredOrders([]);
@@ -413,9 +402,9 @@ function Orders() {
     }
   };
 
-  const handleRowClick = async (params) => {
-    const order = params?.row;
-    console.log("----order");
+  // Modified function to handle order number click specifically
+  const handleOrderNumberClick = async (order) => {
+    console.log("----order number clicked");
     console.log(order);
     try {
       const params = new URLSearchParams({
@@ -445,22 +434,17 @@ function Orders() {
       ) {
         salesOrderLines = result.data.data;
       }
-      if (isMobile) {
-        setSelectedRow(order);
-        setShowRowPopup(true);
-      } else {
-        navigate("/orderDetails", {
-          state: {
-            order: { ...order, salesOrderLines },
-            mode: "edit",
-            fromApproval: isApprovalMode,
-            wfid: isApprovalMode ? order.workflowInstanceId : undefined,
-            workflowName: isApprovalMode ? order.workflowName : undefined,
-            workflowData: isApprovalMode ? order.workflowData : undefined,
-            approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
-          },
-        });
-      }
+      navigate("/orderDetails", {
+        state: {
+          order: { ...order, salesOrderLines },
+          mode: "edit",
+          fromApproval: isApprovalMode,
+          wfid: isApprovalMode ? order.workflowInstanceId : undefined,
+          workflowName: isApprovalMode ? order.workflowName : undefined,
+          workflowData: isApprovalMode ? order.workflowData : undefined,
+          approvalHistory: isApprovalMode ? order.approvalHistory : undefined,
+        },
+      });
     } catch (err) {
       console.error("Failed to fetch sales order lines:", err);
       navigate("/orderDetails", {
@@ -474,6 +458,17 @@ function Orders() {
         },
       });
     }
+  };
+
+  // Modified handleRowClick - removed navigation logic as it's now handled by order number click
+  const handleRowClick = async (params) => {
+    // Only handle mobile popup functionality here
+    const order = params?.row;
+    if (isMobile) {
+      setSelectedRow(order);
+      setShowRowPopup(true);
+    }
+    // Row click no longer navigates - only order number click does
   };
 
   const handlePay = async (order, email = false, copyUrl = false) => {
@@ -611,10 +606,29 @@ function Orders() {
       include: isV("orderNumber"),
       searchable: true,
       flex: 1,
+      minWidth: 100,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span>{t(params.value)}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleOrderNumberClick(params.row);
+          }}
+          style={{
+            color: 'var(--navy-blue)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = 'underline';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = 'none';
+          }}
+        >
+          {t(params.value)}
+        </span>
       ),
     },
     {
@@ -627,7 +641,25 @@ function Orders() {
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span>{t(params.value)}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleOrderNumberClick(params.row);
+          }}
+          style={{
+            color: 'var(--navy-blue)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = 'underline';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = 'none';
+          }}
+        >
+          {t(params.value)}
+        </span>
       ),
     },
     {
@@ -636,6 +668,7 @@ function Orders() {
       include: isV("companyName"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -648,6 +681,7 @@ function Orders() {
       include: isV("brandName"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -660,6 +694,7 @@ function Orders() {
       include: isV("branchName"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -672,6 +707,7 @@ function Orders() {
       include: isV("branchRegion"),
       searchable: true,
       flex: 2,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -684,6 +720,7 @@ function Orders() {
       include: isV("branchCity"),
       searchable: true,
       flex: 1,
+      minWidth: 120,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -790,8 +827,8 @@ function Orders() {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',  
-            alignItems: 'center',    
+            justifyContent: 'center',
+            alignItems: 'center',
             height: '100%',
             lineHeight: '1.2'
           }}>
@@ -910,7 +947,7 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" &&params?.row?.status?.toLowerCase()!=='cancelled' && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && params?.row?.status?.toLowerCase() !== 'cancelled' && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -988,7 +1025,7 @@ function Orders() {
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            {isV("sendLink") &&params?.row?.status?.toLowerCase()!=='cancelled' &&
+            {isV("sendLink") && params?.row?.status?.toLowerCase() !== 'cancelled' &&
               params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
@@ -1058,10 +1095,29 @@ function Orders() {
       include: isV("orderNumber"),
       searchable: true,
       flex: 1,
+      minWidth: 100,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span>{t(params.value)}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleOrderNumberClick(params.row);
+          }}
+          style={{
+            color: 'var(--navy-blue)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = 'underline';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = 'none';
+          }}
+        >
+          {t(params.value)}
+        </span>
       ),
     },
     {
@@ -1073,7 +1129,25 @@ function Orders() {
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
-        <span>{t(params.value)}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleOrderNumberClick(params.row);
+          }}
+          style={{
+            color: 'var(--navy-blue)',
+            cursor: 'pointer',
+            textDecoration: 'none',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = 'underline';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = 'none';
+          }}
+        >
+          {t(params.value)}
+        </span>
       ),
     },
     {
@@ -1082,6 +1156,7 @@ function Orders() {
       include: isV("companyName"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -1093,7 +1168,7 @@ function Orders() {
       headerName: t("Branch"),
       include: isV("branchName"),
       searchable: true,
-      minWidth: 80,
+      minWidth: 140,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1107,6 +1182,7 @@ function Orders() {
       include: isV("branchRegion"),
       searchable: true,
       flex: 2,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -1120,6 +1196,7 @@ function Orders() {
       include: isV("branchCity"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -1131,7 +1208,7 @@ function Orders() {
       headerName: t("Workflow Name"),
       include: isV("workflowName"),
       searchable: true,
-      minWidth: 100,
+      minWidth: 140,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1145,6 +1222,7 @@ function Orders() {
       include: isV("entity"),
       searchable: true,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => {
@@ -1184,7 +1262,7 @@ function Orders() {
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
       searchable: true,
-      minWidth: 130,
+      minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1208,7 +1286,7 @@ function Orders() {
       headerName: t("Order Placement Date"),
       include: isV("createdAt"),
       searchable: false,
-      minWidth: 150,
+      minWidth: 140,
       flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1237,7 +1315,7 @@ function Orders() {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',  
+            justifyContent: 'center',
             alignItems: 'center',
             height: '100%',
             lineHeight: '1.2'
@@ -1337,7 +1415,7 @@ function Orders() {
 
   const handleSelectCustomer = (customer) => {
     setSelectedCustomer(customer);
-       setSelectedBranch(null);
+    setSelectedBranch(null);
     setShowCustomerPopup(false);
   };
 
@@ -1715,7 +1793,7 @@ function Orders() {
                     }}
                     sx={{
                       "& .MuiDataGrid-row": {
-                        cursor: "pointer",
+                        cursor: "default", // Changed from pointer to default since row click no longer navigates
                         "&:hover": {
                           backgroundColor: "rgba(0, 0, 0, 0.04)",
                         },
@@ -1803,7 +1881,7 @@ function Orders() {
                 }}
                 sx={{
                   "& .MuiDataGrid-row": {
-                    cursor: "pointer",
+                    cursor: "default", // Changed from pointer to default since row click no longer navigates
                     "&:hover": {
                       backgroundColor: "rgba(0, 0, 0, 0.04)",
                     },
@@ -1979,7 +2057,7 @@ function Orders() {
             }}
           />
         )}
-        
+
         {isV("ordersPagination") && paginatedOrders.length > 0 && (
           <Pagination
             currentPage={page}
