@@ -62,7 +62,6 @@ function GetPaymentMethods({
 
 
   if (!open) return null;
-
   return (
     <div>
       <div className="gp-backdrop" onClick={onClose} />
@@ -90,27 +89,38 @@ function GetPaymentMethods({
                   <th style={{ padding: '10px', borderBottom: '1px solid #ddd' }}></th>
                 </tr>
               </thead>
-              <tbody>
-                {methods.length === 0 ? (
-                  <tr>
-                    <td colSpan={2} style={{ padding: '10px', textAlign: 'center' }}>{t('No payment methods found')}</td>
-                  </tr>
-                ) : (
-                  methods.map((method, idx) => (
-                    <tr key={idx}>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{method}</td>
-                      <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                        <button
-                          className="gp-product-btn"
-                          onClick={() => onSelectPaymentMethod(method)}
-                        >
-                          {t('Select')}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
+             <tbody>
+  {methods.length === 0 ? (
+    <tr>
+      <td colSpan={2} style={{ padding: '10px', textAlign: 'center' }}>
+        {t('No payment methods found')}
+      </td>
+    </tr>
+  ) : (
+    methods.map((method, idx) => {
+      console.log("method",method)
+      const displayName =
+        method?.toLowerCase() === 'pre payment' ? 'Card Payment' : method;
+
+      return (
+        <tr key={idx}>
+          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+            {displayName}
+          </td>
+          <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+            <button
+              className="gp-product-btn"
+              onClick={() => onSelectPaymentMethod(method)} // sends actual backend value
+            >
+              {t('Select')}
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
+
             </table>
           )}
         </div>
