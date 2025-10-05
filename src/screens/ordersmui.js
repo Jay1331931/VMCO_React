@@ -302,6 +302,13 @@ function Orders() {
   const handleExportAll = async () => {
     setLoading(true);
     setError(null);
+          const filtersCopy = { ...filters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
     try {
       const params = new URLSearchParams({
         page,
@@ -309,7 +316,7 @@ function Orders() {
         search: searchQuery,
         sortBy: sortModel[0]?.field || "id",
           sortOrder: sortModel[0]?.sort || "asc",
-        filters: JSON.stringify(filters),
+        filters: JSON.stringify(filtersCopy),
       });
 
       const response = await fetch(
