@@ -152,6 +152,13 @@ function Orders() {
       setLoading(true);
       setError(null);
 
+        const filtersCopy = { ...customFilters };
+      if (
+        filtersCopy.paymentMethod &&
+        filtersCopy.paymentMethod.toLowerCase() === "card payment"
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
       try {
         const params = new URLSearchParams({
           page,
@@ -159,7 +166,7 @@ function Orders() {
           search: searchTerm,
           sortBy: sortedModel[0]?.field || "createdAt",
           sortOrder: sortedModel[0]?.sort || "desc",
-          filters: JSON.stringify(customFilters),
+          filters: JSON.stringify(filtersCopy),
         });
 
         const response = await fetch(
@@ -767,18 +774,21 @@ function Orders() {
       },
     },
     {
-      field: "paymentMethod",
-      headerName: t("Payment Method"),
-      include: isV("paymentMethod"),
-      searchable: true,
-      minWidth: 130,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
-    },
+  field: "paymentMethod",
+  headerName: t("Payment Method"),
+  include: isV("paymentMethod"),
+  searchable: true,
+  minWidth: 130,
+  flex: 1,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+  renderCell: (params) => {
+    const value =
+      params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+    return <span>{t(value)}</span>;
+  },
+}
+,
     {
       field: "createdByUsername",
       headerName: t("Created By"),
@@ -1257,19 +1267,22 @@ function Orders() {
         );
       },
     },
-    {
-      field: "paymentMethod",
-      headerName: t("Payment Method"),
-      include: isV("paymentMethod"),
-      searchable: true,
-      minWidth: 120,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
-    },
+      {
+  field: "paymentMethod",
+  headerName: t("Payment Method"),
+  include: isV("paymentMethod"),
+  searchable: true,
+  minWidth: 130,
+  flex: 1,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+  renderCell: (params) => {
+    const value =
+      params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+    return <span>{t(value)}</span>;
+  },
+}
+,
     {
       field: "createdByUsername",
       headerName: t("Created By"),
