@@ -155,7 +155,7 @@ function Orders() {
         const filtersCopy = { ...customFilters };
       if (
         filtersCopy.paymentMethod &&
-        filtersCopy.paymentMethod.toLowerCase() === "card payment"
+           (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
       ) {
         filtersCopy.paymentMethod = "Pre payment";
       }
@@ -219,6 +219,13 @@ function Orders() {
   const fetchApprovals = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
+         const filtersCopy = { ...customFilters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
     try {
       const params = new URLSearchParams({
         page,
@@ -226,7 +233,7 @@ function Orders() {
         search: searchTerm,
         sortBy: sortedModel?.[0]?.field || "id",
         sortOrder: sortedModel?.[0]?.sort || "asc",
-        filters: JSON.stringify(customFilters),
+        filters: JSON.stringify(filtersCopy),
       });
 
       const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
