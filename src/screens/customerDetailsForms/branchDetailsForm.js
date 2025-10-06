@@ -497,6 +497,7 @@ const BranchDetailsForm = ({
     "secondaryContactEmail",
     "secondaryContactMobile",
     "branch",
+    "zone",
     // "supervisorContactName",
     // "supervisorContactDesignation",
     // "supervisorContactEmail",
@@ -1124,8 +1125,23 @@ const BranchDetailsForm = ({
         }
       );
 
-      setIsApprovalDialogOpen(false);
-      navigate("/customers");
+      Swal.fire({
+                icon: "success",
+                title: t("Success"),
+                text:
+                  approvalAction === "approve"
+                    ? t("Branch has been approved successfully")
+                    : t("Branch has been rejected successfully"),
+                confirmButtonText: t("OK"),
+              }).then(() => {
+                setIsApprovalDialogOpen(false);
+                setIsApproving(false);
+                setIsRejecting(false);
+                navigate("/customers");
+              });
+
+      // setIsApprovalDialogOpen(false);
+      // navigate("/customers");
     } catch (error) {
       console.error("Error approving/rejecting branch:", error.message);
     } finally {
@@ -1248,7 +1264,7 @@ const BranchDetailsForm = ({
                     {isSavingChanges ? t("Saving...") : t("Save Changes")}
                   </button>
 
-                  {isV("btnBranchBlock") &&
+                  {isV("btnBranchBlock") && 
                   branch?.branchStatus !== "blocked" ? (
                     <button
                       className="block"
@@ -1267,7 +1283,7 @@ const BranchDetailsForm = ({
                     >
                       {isBlocking ? t("Blocking...") : t("Block")}
                     </button>
-                  ) : (
+                  ) : (isV("btnBranchUnblock") &&
                     <button
                       className="block"
                       disabled={

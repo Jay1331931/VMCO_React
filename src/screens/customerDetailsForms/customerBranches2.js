@@ -1466,6 +1466,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                 <th className="desktop-only">{t("City")}</th>
                 <th className="desktop-only">{t("Location Type")}</th>
                 <th className="desktop-only">{t("Region")}</th>
+                <th className="desktop-only">{t("Current Approver")}</th>
                 <th>{t("Status")}</th>
                 {/* <th>{t("Actions")}</th> */}
                 <th></th>
@@ -1515,6 +1516,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                     <td className="desktop-only">{branch.city}</td>
                     <td className="desktop-only">{branch.locationType}</td>
                     <td className="desktop-only">{branch.region}</td>
+                    <td className="desktop-only">{branch.currentApprover}</td>
                     <td className="desktop-only">
                       <span
                         className={`branches-status-badge ${getStatusClass(

@@ -759,7 +759,9 @@
     "In Progress": "قيد التنفيذ",
     "Closed": "مغلق",
     "Approval Status": "حالة الموافقة",
-    "Card Payment":"دفع بالبطاقه"
-
+    "Card Payment":"دفع بالبطاقه",
+"Sales Executive ID": "معرف مدير المبيعات",
+"Sales Executive Name": "الاسم التنفيذي للمبيعات",
+"Current Approver": "المعتمد الحالي"
 
 }

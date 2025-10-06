@@ -666,6 +666,48 @@ function Customers() {
       //   params.value ? formatDate(params.value, "DD/MM/YYYY") : " ",
     },
     {
+      field: "assignedTo",
+      headerName: t("Sales Executive ID"),
+      include: isV("assignedTo"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.assignedTo || '')}</span>
+      ),
+    },
+    {
+      field: "salesExecutiveName",
+      headerName: t("Sales Executive Name"),
+      include: isV("salesExecutiveName"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutiveName || '')}</span>
+      ),
+    },
+    {
+      field: "currentApprover",
+      headerName: t("Current Approver"),
+      include: isV("currentApprover"),
+      searchable: true,
+      sortable: false,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? 'right' : 'left',
+      headerAlign: isArabic ? 'right' : 'left',
+      renderCell: (params) => (
+        <span>{t(params.row.currentApprover || '')}</span>
+      ),
+    },
+    {
       field: "customerStatus",
       headerName: t("Approval Status"),
       include: isMobile ? false : isV("customerStatus"),
@@ -673,7 +715,9 @@ function Customers() {
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+      ),
     },
    {
   field: "FandOSync",
