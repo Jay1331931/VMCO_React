@@ -60,6 +60,11 @@ function Sidebar({ children, title }) {
   let transformedCustomer;
   const [formData, setFormData] = useState();
   const [approvedCustomer, setApprovedCustomer] = useState();
+  const [showPopup, setShowPopup] = useState(false);
+
+  const handlePopupToggle = () => {
+    setShowPopup(!showPopup);
+  };
   function transformCustomerData(customer, customerContacts) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
@@ -426,6 +431,16 @@ function Sidebar({ children, title }) {
       console.error("Failed to refresh customer:", err);
     }
   };
+
+  const formatKey = (key) => {
+  // Add space before capital letters and capitalize the first letter
+  return key
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // insert space before capital letter
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2') // handle consecutive caps like ERP
+    .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+};
+
+
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
@@ -491,7 +506,7 @@ function Sidebar({ children, title }) {
         <div className="sidebar-footer">
           <div className="user-card">
             <div className="user-info">
-              <div className="user-details">
+              <div className="user-details" onClick={handlePopupToggle} style={{ cursor: 'pointer' }}>
                 <div className="user-avatar">
                   <FontAwesomeIcon icon={faUser} />
                 </div>
@@ -506,6 +521,27 @@ function Sidebar({ children, title }) {
             </div>
           </div>
         </div>
+        {showPopup && (
+        <div className="user-popup-overlay" onClick={handlePopupToggle}>
+          <div className="user-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="user-popup-header"><h2>User Details</h2></div>
+            <div className="user-popup-content">
+  {Object.entries(user).map(([key, value]) =>
+  value ? (
+    <div className="row-detail-row" key={key}>
+      <span className="row-detail-label">{formatKey(key)}:</span>
+      <span className="row-detail-value">{value}</span>
+    </div>
+  ) : null
+)}
+</div>
+            {/* Add more fields as needed */}
+            <div className="user-popup-footer">
+            <button onClick={handlePopupToggle} className="close-dialog">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       <div

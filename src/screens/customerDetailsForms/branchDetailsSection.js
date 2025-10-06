@@ -106,6 +106,7 @@ const BranchDetailsForm = ({
         "region",
         "branch",
         "district",
+        "zone"
       ];
       console.log("dropdownFields", dropdownFields);
       for (const field of dropdownFields) {
@@ -770,6 +771,17 @@ const BranchDetailsForm = ({
         placeholder: "Branch",
         required: true,
         options: (dropdownOptions?.branch || []).map((item) => ({
+          value: item.value,
+          name: i18n.language === "ar" ? item.valueLc : item.value,
+        })),
+      },
+      {
+        type: "dropdown",
+        label: "Zone",
+        name: "zone",
+        placeholder: "Zone",
+        required: true,
+        options: (dropdownOptions?.zone || []).map((item) => ({
           value: item.value,
           name: i18n.language === "ar" ? item.valueLc : item.value,
         })),
