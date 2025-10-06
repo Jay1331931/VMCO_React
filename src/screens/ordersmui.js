@@ -1147,7 +1147,7 @@ function Orders() {
     {
       field: "erpOrderId",
       include: isV("erpOrderId"),
-      searchable: true,
+      searchable: false,
       minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -1362,6 +1362,7 @@ function Orders() {
       headerName: t("Total Amount"),
       include: isV("totalAmount"),
       searchable: false,
+         sortable: false,
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -1375,6 +1376,7 @@ function Orders() {
       headerName: t("Total Quantity"),
       include: isV("totalItemQuantity"),
       searchable: false,
+         sortable: false,
       minWidth: 100,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1384,6 +1386,7 @@ function Orders() {
     },
     {
       field: "salesExecutiveId",
+         sortable: false,
       headerName: t("Sales Executive ID"),
       include: isV("salesExecutiveId"),
       searchable: true,
@@ -1397,6 +1400,7 @@ function Orders() {
     },
     {
       field: "salesExecutiveName",
+         sortable: false,
       headerName: t("Sales Executive Name"),
       include: isV("salesExecutiveName"),
       searchable: true,
@@ -1410,6 +1414,7 @@ function Orders() {
     },
     {
       field: "currentApprover",
+         sortable: false,
       headerName: t("Current Approver"),
       include: isV("currentApprover"),
       searchable: true,
