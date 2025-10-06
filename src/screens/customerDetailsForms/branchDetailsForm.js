@@ -1306,7 +1306,7 @@ const BranchDetailsForm = ({
               )
             )}
 
-            {mode === "edit" && isApprovalMode && (
+            {mode === "edit" && isV("btnBranchApprove") && isE("btnBranchApprove") &&(
               <button
                 className="approve"
                 onClick={() => handleApprovalClick("approve")}
@@ -1323,7 +1323,7 @@ const BranchDetailsForm = ({
                 {isApproving ? t("Approving...") : t("Approve")}
               </button>
             )}
-            {mode === "edit" && isApprovalMode && (
+            {mode === "edit" &&  isV("btnBranchReject") && isE("btnBranchReject")  && (
               <button
                 className="reject"
                 onClick={() => handleApprovalClick("reject")}
