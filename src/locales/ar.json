@@ -758,7 +758,8 @@
     "Under Review": "قيد المراجعة",
     "In Progress": "قيد التنفيذ",
     "Closed": "مغلق",
-    "Approval Status": "حالة الموافقة"
+    "Approval Status": "حالة الموافقة",
+    "Card Payment":"دفع بالبطاقه"
 
 
 }
