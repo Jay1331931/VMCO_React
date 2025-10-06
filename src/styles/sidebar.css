@@ -246,7 +246,7 @@
 .toggle-btn-container {
     position: fixed;
     top: 5px;
-    z-index: 1000;
+    z-index: 500;
     transition: all 0.3s ease;
 }
 .rtl .toggle-btn-container {

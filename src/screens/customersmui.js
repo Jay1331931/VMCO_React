@@ -715,7 +715,9 @@ function Customers() {
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+      ),
     },
    {
   field: "FandOSync",
