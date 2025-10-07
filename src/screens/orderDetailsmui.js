@@ -3234,16 +3234,21 @@ function OrderDetails() {
                                             </div>
                                         )}
 
-                                        {isV('paymentMethod') && (
-                                            <div className="order-details-field">
-                                                <label>{t('Payment Method')}</label>
-                                                <input
-                                                    name="paymentMethod"
-                                                    value={t(formData.paymentMethod)}
-                                                    disabled
-                                                />
-                                            </div>
-                                        )}
+                                      {isV("paymentMethod") && (
+                      <div className="order-details-field">
+                        <label>{t("Payment Method")}</label>
+                        <input
+                          name="paymentMethod"
+                          value={t(
+                            formData.paymentMethod?.toLowerCase() ===
+                              "pre payment"
+                              ? "Card Payment"
+                              : formData.paymentMethod
+                          )}
+                          disabled
+                        />
+                      </div>
+                    )}
 
                                         {isV('totalAmount') && (
                                             <div className="order-details-field">

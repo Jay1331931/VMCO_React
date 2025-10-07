@@ -152,6 +152,13 @@ function Orders() {
       setLoading(true);
       setError(null);
 
+        const filtersCopy = { ...customFilters };
+      if (
+        filtersCopy.paymentMethod &&
+           (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
       try {
         const params = new URLSearchParams({
           page,
@@ -159,7 +166,7 @@ function Orders() {
           search: searchTerm,
           sortBy: sortedModel[0]?.field || "createdAt",
           sortOrder: sortedModel[0]?.sort || "desc",
-          filters: JSON.stringify(customFilters),
+          filters: JSON.stringify(filtersCopy),
         });
 
         const response = await fetch(
@@ -212,6 +219,13 @@ function Orders() {
   const fetchApprovals = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
     setLoading(true);
     setError(null);
+         const filtersCopy = { ...customFilters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
     try {
       const params = new URLSearchParams({
         page,
@@ -219,7 +233,7 @@ function Orders() {
         search: searchTerm,
         sortBy: sortedModel?.[0]?.field || "id",
         sortOrder: sortedModel?.[0]?.sort || "asc",
-        filters: JSON.stringify(customFilters),
+        filters: JSON.stringify(filtersCopy),
       });
 
       const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
@@ -288,6 +302,13 @@ function Orders() {
   const handleExportAll = async () => {
     setLoading(true);
     setError(null);
+          const filtersCopy = { ...filters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||  filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
     try {
       const params = new URLSearchParams({
         page,
@@ -295,7 +316,7 @@ function Orders() {
         search: searchQuery,
         sortBy: sortModel[0]?.field || "id",
           sortOrder: sortModel[0]?.sort || "asc",
-        filters: JSON.stringify(filters),
+        filters: JSON.stringify(filtersCopy),
       });
 
       const response = await fetch(
@@ -767,18 +788,21 @@ function Orders() {
       },
     },
     {
-      field: "paymentMethod",
-      headerName: t("Payment Method"),
-      include: isV("paymentMethod"),
-      searchable: true,
-      minWidth: 130,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
-    },
+  field: "paymentMethod",
+  headerName: t("Payment Method"),
+  include: isV("paymentMethod"),
+  searchable: true,
+  minWidth: 130,
+  flex: 1,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+  renderCell: (params) => {
+    const value =
+      params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+    return <span>{t(value)}</span>;
+  },
+}
+,
     {
       field: "createdByUsername",
       headerName: t("Created By"),
@@ -1123,7 +1147,7 @@ function Orders() {
     {
       field: "erpOrderId",
       include: isV("erpOrderId"),
-      searchable: true,
+      searchable: false,
       minWidth: 120,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -1257,19 +1281,22 @@ function Orders() {
         );
       },
     },
-    {
-      field: "paymentMethod",
-      headerName: t("Payment Method"),
-      include: isV("paymentMethod"),
-      searchable: true,
-      minWidth: 120,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
-    },
+      {
+  field: "paymentMethod",
+  headerName: t("Payment Method"),
+  include: isV("paymentMethod"),
+  searchable: true,
+  minWidth: 130,
+  flex: 1,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+  renderCell: (params) => {
+    const value =
+      params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+    return <span>{t(value)}</span>;
+  },
+}
+,
     {
       field: "createdByUsername",
       headerName: t("Created By"),
@@ -1335,6 +1362,7 @@ function Orders() {
       headerName: t("Total Amount"),
       include: isV("totalAmount"),
       searchable: false,
+         sortable: false,
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -1348,6 +1376,7 @@ function Orders() {
       headerName: t("Total Quantity"),
       include: isV("totalItemQuantity"),
       searchable: false,
+         sortable: false,
       minWidth: 100,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
@@ -1357,6 +1386,7 @@ function Orders() {
     },
     {
       field: "salesExecutiveId",
+         sortable: false,
       headerName: t("Sales Executive ID"),
       include: isV("salesExecutiveId"),
       searchable: true,
@@ -1370,6 +1400,7 @@ function Orders() {
     },
     {
       field: "salesExecutiveName",
+         sortable: false,
       headerName: t("Sales Executive Name"),
       include: isV("salesExecutiveName"),
       searchable: true,
@@ -1383,6 +1414,7 @@ function Orders() {
     },
     {
       field: "currentApprover",
+         sortable: false,
       headerName: t("Current Approver"),
       include: isV("currentApprover"),
       searchable: true,

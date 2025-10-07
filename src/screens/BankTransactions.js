@@ -123,6 +123,10 @@ const BankTransactions = () => {
     navigate(`/bankTransactions/edit/${transaction.id}`);
   };
 
+
+  const handleAddClick = () => {
+    navigate(`/bankTransactions/add`);
+  };
   // Columns
   const transactionColumns = [
     { field: "id", headerName: t("Transaction Id"), include: isV("TransactionIdCol"),      searchable: true,flex: 1 },
@@ -203,7 +207,9 @@ const BankTransactions = () => {
                       showFilters={true}
                       showExport={false}
                       showUpload={false}
-                      showAdd={false}
+                       showAdd={isV('btnAdd')}
+                       handleAddClick={handleAddClick}
+                      buttonName={t("add")}
                       columnsToDisplay={columnsToDisplay}
                     />
                   ),
