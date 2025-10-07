@@ -439,7 +439,24 @@ function Sidebar({ children, title }) {
     .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2') // handle consecutive caps like ERP
     .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
 };
-
+const formatValue = (value) => {
+  if (Array.isArray(value)) {
+    // Handle array of objects with name property
+    if (value.length > 0 && typeof value[0] === 'object' && value[0].name) {
+      return value.map(item => item.name).join(', ');
+    }
+    // Handle array of strings or numbers
+    return value.join(', ');
+  }
+  
+  return value
+};
+const popupValidKey = (key) => {
+if(key.toLowerCase() === "test" || user[key]===null || user[key]?.length === 0)
+  return false
+else
+  return true
+};
 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
@@ -527,12 +544,16 @@ function Sidebar({ children, title }) {
             <div className="user-popup-header"><h2>User Details</h2></div>
             <div className="user-popup-content">
   {Object.entries(user).map(([key, value]) =>
-  value ? (
+  value ? 
+    popupValidKey(key) && (<>
     <div className="row-detail-row" key={key}>
+      
       <span className="row-detail-label">{formatKey(key)}:</span>
-      <span className="row-detail-value">{value}</span>
+      <span className="row-detail-value">{formatValue(value)}</span>
+      
     </div>
-  ) : null
+    </>)
+   : null
 )}
 </div>
             {/* Add more fields as needed */}
