@@ -759,9 +759,10 @@
     "In Progress": "قيد التنفيذ",
     "Closed": "مغلق",
     "Approval Status": "حالة الموافقة",
-    "Card Payment":"دفع بالبطاقه",
-"Sales Executive ID": "معرف مدير المبيعات",
-"Sales Executive Name": "الاسم التنفيذي للمبيعات",
-"Current Approver": "المعتمد الحالي"
-
+    "Branch City": "مدينة الفرع",
+    "Total Quantity": "إجمالي كمية العناصر",
+    "Sales Executive Id": "رقم مدير المبيعات",
+    "Sales Executive Name": "اسم مدير المبيعات",
+    "Current Approver": "المعتمد الحالي",
+    "Remaining Credit": "الرصيد الباقي"
 }
