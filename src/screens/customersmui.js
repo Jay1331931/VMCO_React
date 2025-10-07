@@ -590,6 +590,7 @@ function Customers() {
     "companyType",
     "customerStatus",
     "typeOfBusiness",
+    "customerId"
   ];
   const searchableFieldsInvites = [
     "leadName",
@@ -782,10 +783,11 @@ function Customers() {
   // Approval Columns
   const approvalColumns = [
     {
-      field: "id",
+      field: "customerId",
       headerName: t("Registration ID"),
       include: isV("id"),
       searchable: true,
+      sortable:false,
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -1292,8 +1294,11 @@ function Customers() {
   useEffect(() => {
     if (activeTab === "customers") {
       if (isApprovalMode) {
+        setFilteredCustomers([])
+       
         fetchApprovals(page, searchQuery, filters);
       } else {
+          setFilteredApprovals([]);
         fetchCustomers(page, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
@@ -1347,7 +1352,7 @@ function Customers() {
   const handleRowClick = async (params) => {
     let customer = params.row;
     let transformedCustomer = await fetchCustomerContacts(
-      customer.id,
+      customer.customerId,
       customer
     );
     if (isMobile) {
@@ -1355,14 +1360,15 @@ function Customers() {
       setSelectedRow(params?.row);
       setShowRowPopup(true);
     } else {
-      navigate(`/customerDetails`, {
+       navigate(`/customerDetails`, {
         state: {
-          customerId: customer.id,
+          customerId: customer.customerId,
           workflowId: transformedCustomer?.workflowData?.id,
-          workflowInstanceId: transformedCustomer?.workflowInstanceId,
+          workflowInstanceId: transformedCustomer?.id,
           mode: isApprovalMode ? "edit" : "add",
         },
       });
+
     }
 
     // console.log('Customer ID:', customer.id);
@@ -1671,6 +1677,7 @@ function Customers() {
                   columns={customerColumnsToUse}
                   pageSize={pageSize}
                   rowCount={total}
+                         getRowId={(row) => row?.workflowInstanceId || row?.id  }
                   onRowClick={handleRowClick}
                   columnVisibilityModel={columnVisibilityModel}
                   onColumnVisibilityModelChange={setColumnVisibilityModel}
