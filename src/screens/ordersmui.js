@@ -569,6 +569,7 @@ function Orders() {
       } else {
         console.log("ddddd");
         if (user?.userType === "employee") {
+          setFilters({ entity: initialCategories[0].entity, ...filters });
           fetchOrders(page, searchQuery, {
             entity: initialCategories[0].entity,
             ...filters,
@@ -615,78 +616,78 @@ function Orders() {
       confirmButtonText: t("Yes, download"),
       cancelButtonText: t("No, cancel"),
     });
-if(result.isConfirmed) {
-setLoading(true);
-    setError(null);
-    const filtersCopy = { ...filters };
-    if (
-      filtersCopy.paymentMethod &&
-      (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
-        filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-    ) {
-      filtersCopy.paymentMethod = "Pre payment";
-    }
-    try {
-      const params = new URLSearchParams({
-        page,
-        pageSize,
-        search: searchQuery,
-        sortBy: sortModel[0]?.field || "id",
-        sortOrder: sortModel[0]?.sort || "asc",
-        filters: JSON.stringify(filtersCopy),
-      });
+    if (result.isConfirmed) {
+      setLoading(true);
+      setError(null);
+      const filtersCopy = { ...filters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
+      try {
+        const params = new URLSearchParams({
+          page,
+          pageSize,
+          search: searchQuery,
+          sortBy: sortModel[0]?.field || "id",
+          sortOrder: sortModel[0]?.sort || "asc",
+          filters: JSON.stringify(filtersCopy),
+        });
 
-      const response = await fetch(
-        `${API_BASE_URL}/sales-orders/export-combined?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          `Export failed: ${response.status} ${response.statusText}`
+        const response = await fetch(
+          `${API_BASE_URL}/sales-orders/export-combined?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
+        if (!response.ok) {
+          throw new Error(
+            `Export failed: ${response.status} ${response.statusText}`
+          );
+        }
+
+        // Get the blob from the response
+        const blob = await response.blob();
+
+        // Check if blob is valid
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get("Content-Disposition");
+        let filename = "Orders.xlsx";
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) filename = filenameMatch[1];
+        }
+
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        return;
+      } catch (err) {
+        setError(err.message);
+        setFilteredOrders([]);
+      } finally {
+        setLoading(false);
       }
-
-      // Get the blob from the response
-      const blob = await response.blob();
-
-      // Check if blob is valid
-      if (!blob || blob.size === 0) {
-        throw new Error("Empty file received");
-      }
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      // Get filename from Content-Disposition header or use default
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "Orders.xlsx";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch) filename = filenameMatch[1];
-      }
-
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      return;
-    } catch (err) {
-      setError(err.message);
-      setFilteredOrders([]);
-    } finally {
-      setLoading(false);
     }
-}
   };
   const handleShowAllDetailsClick = async (order) => {
     try {
@@ -2088,7 +2089,7 @@ setLoading(true);
   );
 
   const handleApproval = (mode) => {
-    setFilters({});
+    // setFilters({});
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
       fetchApprovals();
@@ -2124,6 +2125,7 @@ setLoading(true);
                   );
                   setActiveCategory(newCategory);
                   setFilters({ entity: newCategory });
+                  setApprovalMode(false);
                   fetchOrders(1, searchQuery, { entity: newCategory });
                   setSearchQuery("");
                   setCategoryFilter(""); // Reset category filter
@@ -2290,8 +2292,8 @@ setLoading(true);
                       buttonName={t("add")}
                       showApproval={
                         isV("approvalButton") &&
-                        filters.entity?.toLowerCase() ===
-                          Constants.ENTITY.VMCO?.toLowerCase()
+                        (filters.entity?.toLowerCase() ===
+                          Constants.ENTITY.VMCO?.toLowerCase())
                       }
                       handleAddClick={handleAddOrder}
                       handleUploadClick={HandleBulkOrderUpload}
