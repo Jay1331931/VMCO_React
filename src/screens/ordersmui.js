@@ -2007,6 +2007,7 @@ function Orders() {
           confirmButtonText: t('OK'),
           width: '500px',
         });
+        window.location.reload();
       } else {
         Swal.fire({
           title: t('File Upload Failed'),
@@ -2014,6 +2015,7 @@ function Orders() {
           icon: 'error',
           confirmButtonText: t('OK'),
         });
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -2023,6 +2025,7 @@ function Orders() {
         icon: 'error',
         confirmButtonText: t('OK'),
       });
+      window.location.reload();
     } finally {
       setExcelLoading(false);
       setBulkUploadPopUp(false);
