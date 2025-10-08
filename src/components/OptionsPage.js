@@ -23,8 +23,11 @@ const getCookie = (name) => {
 };
 const OptionsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
-  const { orderId } = useParams();
+   const [TempOrderDetails, setTempOrderDetails] = useState([]);
+  const { orderId ,orderType} = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
+  const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
+  const  [orderTpe,setOrderType]=useState(null)
   const [amount, setAmount] = useState(0);
 
   const { token ,user} = useAuth();
@@ -47,11 +50,17 @@ const OptionsPage = () => {
   try {
     const token = localStorage.getItem("token"); // always use latest
     const { data } = await api.get(
-      `/decode-ids?encryptedorderIds=${orderId}`,
+      `/decode-ids?encryptedorderIds=${orderId}&salesOrderType=${orderType}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
+    if(data?.details?.orderType?.toLowerCase()==="cart"){
+      setOrderType(data?.details?.orderType)
+      setTempDecodedOrderID(data?.details?.orderIds)
+    }else{
+ setDecodedOrderID(data?.details?.orderIds);
+    }
 
-    setDecodedOrderID(data?.details?.orderIds);
+   
   } catch (error) {
     console.error("Failed to fetch decoded data", error);
 
@@ -120,6 +129,52 @@ const fetchSaleOrder = useCallback(async () => {
     // }
   }
 }, [decodedOrderID]);
+const fetchtempSaleOrder = useCallback(async () => {
+  try {
+    if (!tempdecodedOrderID) return;
+
+    const token = localStorage.getItem("token"); // always use latest
+    const ids = tempdecodedOrderID.toString().split(",");
+    console.log("Decoded Order ID(s):", ids);
+
+    const results = await Promise.all(
+      ids.map((id) =>
+        api.get(`/temp-sales-order/id/${tempdecodedOrderID}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+    );
+
+    const allOrders = results.map((res) => res.data.data);
+    setTempOrderDetails(allOrders);
+    console.log("Sale Order Data:", allOrders);
+  } catch (error) {
+    console.error("Failed to fetch sale order", error);
+
+    // if (error.response?.status === 401) {
+    //   console.warn("Token invalid in sale order. Generating a new one...");
+
+    //   const newToken = await generateToken();
+    //   if (newToken) {
+    //     try {
+    //       const ids = decodedOrderID.toString().split(",");
+    //       const results = await Promise.all(
+    //         ids.map((id) =>
+    //           axios.get(`/sales-order/id/${parseInt(id)}`, {
+    //             headers: { Authorization: `Bearer ${newToken}` },
+    //           })
+    //         )
+    //       );
+
+    //       const allOrders = results.map((res) => res.data.data);
+    //       setOrderDetails(allOrders);
+    //     } catch (retryError) {
+    //       console.error("Retry after new token failed:", retryError);
+    //     }
+    //   }
+    // }
+  }
+}, [tempdecodedOrderID]);
 
 //  const generateToken = async () => {
 //       try {
@@ -172,13 +227,17 @@ const fetchSaleOrder = useCallback(async () => {
   //   }
   // }, [decodedOrderID]);
 
-
-
   useEffect(() => {
     if (decodedOrderID) {
       fetchSaleOrder();
     }
   }, [decodedOrderID, fetchSaleOrder]);
+
+  useEffect(() => {
+    if (tempdecodedOrderID) {
+      fetchtempSaleOrder();
+    }
+  }, [tempdecodedOrderID, fetchtempSaleOrder]);
   //   useEffect(() => {
   //     console.log("OrderDetails:", OrderDetails);
   //   if (!OrderDetails || OrderDetails.length === 0) return;
@@ -305,6 +364,86 @@ const fetchSaleOrder = useCallback(async () => {
       setAmount((30 / 100) * totalAmount);
     } else if (somePaid30) {
       setAmount(totalAmount - paidAmount);
+    } else {
+      Swal.fire({
+        title: "Payment Amount Error",
+        text: "Could not process the payment amount for all orders.",
+        icon: "error",
+        confirmButtonText: "OK",
+      }).then(() => window.close());
+      return;
+    }
+  }, [OrderDetails]);
+
+    useEffect(() => {
+    console.log("OrderDetails:", TempOrderDetails);
+    if (!TempOrderDetails || TempOrderDetails.length === 0) return;
+
+    // Sum all order totals and paid amounts
+    const totalAmount = TempOrderDetails.reduce(
+      (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
+      0
+    );
+
+    // Check if all orders are fully paid
+    // const allPaid = OrderDetails.every(
+    //   (order) =>
+    //     order.paymentStatus?.toLowerCase() === "paid" &&
+    //     parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
+    // );
+
+    // Check if all orders have 100% payment config and none are paid yet
+    const allZeroPaidAndFullPayment = OrderDetails.every(
+      (order) =>
+        parseFloat(order.paidPercentage || 0) === 0 &&
+        parseFloat(order.paymentPercentage || 0) === 100 &&
+        order.paymentStatus?.toLowerCase() !== "paid"
+    );
+
+    // Check if entity is VMCO and all orders are unpaid and paymentPercentage = 30
+    const allUnpaidVMCO = OrderDetails.every(
+      (order) =>
+        (parseFloat(order.paidAmount) == 0.0 || order.paidAmount == null) &&
+        parseFloat(order.paymentPercentage || 0) == 30.0 &&
+        order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
+    );
+    console.log("Amount match:", 0 == null);
+    // Mixed condition: paid partially and paymentPercentage is 30 and 70% amount is not paid
+    const somePaid30 = OrderDetails.every(
+      (order) =>
+        (parseFloat(order.paidAmount || 0)  > 0.0 || order.paidAmount == null) &&
+        parseFloat(order.paymentPercentage || 0) === 30.0
+    );
+    const paidOrders = OrderDetails.filter(
+      (order) =>
+        order.paymentStatus?.toLowerCase() === "paid" &&
+        parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
+    );
+
+    if (paidOrders.length > 0) {
+      const paidIds = paidOrders.map((order) => order.id).join(", ");
+      Swal.fire({
+        title: "Payment Already Done",
+        text: `The following sales order(s) are already paid: ${paidIds}`,
+        icon: "info",
+        confirmButtonText: "OK",
+      }).then(() => window.close());
+      return;
+    // } else if (allPaid) {
+    //   Swal.fire({
+    //     title: "Payment Already Done",
+    //     text: "All selected orders have already been paid.",
+    //     icon: "info",
+    //     confirmButtonText: "OK",
+    //   }).then(() => window.close());
+    //   return;
+    // } else if (allZeroPaidAndFullPayment) {
+    //   setAmount(totalAmount);
+    // } else if (allUnpaidVMCO) {
+    //   setAmount((30 / 100) * totalAmount);
+    // } else if (somePaid30) {
+    //   setAmount(totalAmount - paidAmount);
+    
     } else {
       Swal.fire({
         title: "Payment Amount Error",

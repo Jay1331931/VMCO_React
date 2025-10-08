@@ -1321,18 +1321,19 @@ function Cart() {
                 try {
                     const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                         id: tempOrderId,
-                        endPoint: 'payment-options/order',
-                        IsEmail: false
+                        endPoint: 'payment-opations/order',
+                        IsEmail: false,
+                        salesOrderType:"cart"
                     }, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
-
                     // Navigate to payment URL
                     if (paymentLinkResponse?.data?.details?.url) {
                         console.log('Payment link generated, redirecting to:', paymentLinkResponse.data.details.url);
                         window.location.href = paymentLinkResponse.data.details.url;
+                      
                         return tempOrderId; // Return temp order ID
                     } else {
                         throw new Error('Payment URL not found in response');
