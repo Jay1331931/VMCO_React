@@ -1605,7 +1605,7 @@ function Orders() {
           html: t('Some rows contain validation errors.<br />') +
             t(' The Excel file has been updated with a new column named <b>Errors</b>.<br />') +
             t(' Please open the file, review the <b>Errors</b>') +
-            t(' column, fix the issues, and re-upload the file. .'),
+            t(' column, fix the issues, and re-upload the file.'),
           icon: 'warning',
           confirmButtonText: t('Download Error File'),
         }).then(() => {
@@ -1629,6 +1629,45 @@ function Orders() {
         // Set completion flag only after successful response
         setUploadComplete(true);
         fetchOrders();
+
+        // Extract order counts from response
+        const ordersCreated = data.ordersCreated || 0;
+        const ordersUpdated = data.ordersUpdated || 0;
+        const branchesProcessed = data.branchesProcessed || 0;
+
+        // Build detailed success message
+        let successMessageDetails = '';
+        const orderCountDetails = [];
+
+        if (ordersCreated > 0) {
+          orderCountDetails.push(`${ordersCreated} order${ordersCreated > 1 ? 's' : ''} created`);
+        }
+
+        if (ordersUpdated > 0) {
+          orderCountDetails.push(`${ordersUpdated} order${ordersUpdated > 1 ? 's' : ''} updated`);
+        }
+
+        if (orderCountDetails.length > 0) {
+          successMessageDetails = orderCountDetails.join(' and ');
+        }
+
+        // Show detailed success message
+        Swal.fire({
+          title: t('File Uploaded Successfully'),
+          html: `
+          <div style="text-align: center; margin: 20px 0;">
+            <p><strong>${t('Processing Summary')}</strong></p>
+            <ul>
+              ${branchesProcessed > 0 ? `<span>${branchesProcessed} branch${branchesProcessed > 1 ? 'es' : ''} processed</span>` : ''}
+              <break />
+            </ul>
+            ${successMessageDetails ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>` : ''}
+          </div>
+        `,
+          icon: 'success',
+          confirmButtonText: t('OK'),
+          width: '500px',
+        });
       } else {
         Swal.fire({
           title: t('File Upload Failed'),
