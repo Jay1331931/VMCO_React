@@ -1026,13 +1026,15 @@ function Cart() {
             });
             return;
         }
+
         try {
             let initialDeliveryCharges = 0.00;
             const entity = getEntityFromCategory(categoryName);
-            console.log('Entity determination:', { categoryName, entity });
+            console.log('Entity determination:', categoryName, entity);
 
-            let orderByName = '';
+            let orderByName;
             const userId = user?.userId;
+
             if (userId) {
                 try {
                     const usernameRes = await fetch(`${API_BASE_URL}/user/get-username-by-id/${userId}`, {
@@ -1040,38 +1042,38 @@ function Cart() {
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
-                        },
-
+                        }
                     });
+
                     if (usernameRes.ok) {
                         const contentType = usernameRes.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
                             const usernameResult = await usernameRes.json();
                             if (usernameResult && (usernameResult.userName || usernameResult.username)) {
                                 orderByName = usernameResult.userName || usernameResult.username;
-                            } else {
-                                console.warn('Username API did not return userName field:', usernameResult);
                             }
                         }
                     } else {
-                        console.error('Failed to fetch username: HTTP', usernameRes.status);
+                        console.error('Failed to fetch username HTTP:', usernameRes.status);
                     }
                 } catch (error) {
                     console.error('Failed to fetch userName for orderBy:', error);
                 }
             }
 
+            // Fetch customer data
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                },
-
+                }
             });
+
             if (!customerResponse.ok) {
                 throw new Error('Failed to fetch customer data for delivery charge evaluation');
             }
+
             const customerData = await customerResponse.json();
             const isDeliveryChargesApplicable = customerData?.data?.isDeliveryChargesApplicable;
             const companyNameEn = customerData?.data?.companyNameEn;
@@ -1081,11 +1083,14 @@ function Cart() {
             const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
             const customerRegion = customerData.data?.region;
             const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
-            let assignedTo = customerData?.data?.assignedTo;
 
+            let assignedTo = customerData?.data?.assignedTo;
             if (assignedToEntityWiseRaw) {
                 try {
-                    const assignedToEntityWise = typeof assignedToEntityWiseRaw === 'string' ? JSON.parse(assignedToEntityWiseRaw) : assignedToEntityWiseRaw;
+                    const assignedToEntityWise = typeof assignedToEntityWiseRaw === 'string'
+                        ? JSON.parse(assignedToEntityWiseRaw)
+                        : assignedToEntityWiseRaw;
+
                     if (entity && assignedToEntityWise[entity.toLowerCase()]) {
                         assignedTo = assignedToEntityWise[entity.toLowerCase()];
                     }
@@ -1094,784 +1099,369 @@ function Cart() {
                 }
             }
 
-            let orderId;
-            let existingProductMap = {};
-            let existingOrderData = null;
+            // Calculate initial totalAmount from cart items
+            let initialTotalAmount = 0;
+            for (const item of categoryItems) {
+                const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
+                const unitPrice = parseFloat(item.unitPrice || item.price || 0);
+                const vatPercentage = parseFloat(item.vatPercentage || 0);
 
-            // Check if payment method is "Pre Payment" - if so, always create a new order
-            const isPrePayment = selectedPaymentMethod === 'Pre Payment';
-
-            console.log(`placeOrderForCategory called with:`, {
-                categoryName,
-                selectedPaymentMethod,
-                isPrePayment,
-                entity,
-                itemCount: categoryItems.length
-            });
-
-            if (!isPrePayment) {
-                // Only check for existing orders if NOT using Pre Payment
-                const orderFiltersObj = (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) ||
-                    (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())
-                    ? {
-                        customerId: selectedCustomerId,
-                        branchId: selectedBranchId,
-                        entity,
-                        selectedPaymentMethod: selectedPaymentMethod,
-                        status: 'Open',
-                        productCategory: categoryName,  // This ensures we only find orders with the exact same category
-                        paymentMethod: selectedPaymentMethod
-                    }
-                    : {
-                        customerId: selectedCustomerId,
-                        branchId: selectedBranchId,
-                        entity,
-                        status: 'Open'
-                    };
-
-                console.log('Searching for existing orders with filters:', orderFiltersObj);
-
-                const orderFilters = new URLSearchParams({
-                    filters: JSON.stringify(orderFiltersObj)
-                });
-
-                const existingOrderResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${orderFilters}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-
-                });
-
-                if (!existingOrderResponse.ok) {
-                    throw new Error(`Failed to check existing orders: ${existingOrderResponse.statusText}`);
-                }
-
-                const existingOrderResult = await existingOrderResponse.json();
-                console.log('Existing order search result:', existingOrderResult);
-
-                if (existingOrderResult.data?.data?.length > 0) {
-                    // For VMCO and SHC orders, ensure we match the exact productCategory
-                    const matchingOrders = existingOrderResult.data.data.filter(order => {
-                        if (entity && (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() ||
-                            entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase())) {
-                            console.log('Checking order:', {
-                                orderId: order.id,
-                                orderCategory: order.productCategory,
-                                searchCategory: categoryName,
-                                entity: entity,
-                                match: order.productCategory === categoryName
-                            });
-                            return order.productCategory === categoryName;
-                        }
-                        return true; // For other entities, any matching order is fine
-                    });
-
-                    if (matchingOrders.length > 0) {
-                        existingOrderData = matchingOrders[0];
-                        orderId = existingOrderData.id;
-                        console.log(`Found existing order: ${orderId} for category: ${categoryName}`);
-
-                        const linesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId }))}`, {
-                            method: 'GET',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-
-                        });
-
-                        if (!linesResponse.ok) {
-                            throw new Error(`Failed to fetch order lines: ${linesResponse.statusText}`);
-                        }
-
-                        const existingLines = await linesResponse.json();
-                        if (existingLines.data?.data) {
-                            const orderLines = existingLines.data.data.filter(line => line.orderId === orderId);
-                            orderLines.forEach(line => {
-                                if (line.productId) {
-                                    existingProductMap[line.productId] = line;
-                                }
-                            });
-                        }
-                    } else {
-                        console.log(`No existing order found with matching category: ${categoryName}`);
-                    }
-                }
-            }
-
-            // If we don't have an existing order ID (either because we're using Pre Payment or no existing order was found)
-            // we need to create a new order
-            if (!orderId) {
-                // First calculate the initial totalAmount from cart items
-                // First calculate the initial totalAmount from cart items
-                let initialTotalAmount = 0;
-                for (const item of categoryItems) {
-                    const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
-                    const unitPrice = parseFloat(item.unitPrice || item.price || 0);
-                    const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                    // Validate values to prevent NaN
-                    if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
-                        console.warn('Invalid values detected in order calculation:', {
-                            itemId: item.id,
-                            newQuantity,
-                            unitPrice,
-                            vatPercentage,
-                            available_quantities: quantities[item.id],
-                            item_quantity: item.quantity,
-                            item_moq: item.moq,
-                            item: item
-                        });
-                        continue; // Skip this item if values are invalid
-                    }
-
-                    const baseAmount = unitPrice * newQuantity;
-                    const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const netAmount = baseAmount + vatAmount;
-
-                    initialTotalAmount += netAmount;
-
-                    console.log(`Item ${item.id} calculation:`, {
-                        quantity: newQuantity,
+                if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice <= 0) {
+                    console.warn('Invalid values detected in order calculation:', {
+                        itemId: item.id,
+                        newQuantity,
                         unitPrice,
                         vatPercentage,
-                        baseAmount,
-                        vatAmount,
-                        netAmount
+                        availablequantities: quantities[item.id],
+                        itemquantity: item.quantity,
+                        itemmoq: item.moq,
+                        item
                     });
+                    continue;
                 }
 
-                // Validate initial total
-                if (isNaN(initialTotalAmount) || initialTotalAmount < 0) {
-                    console.error('Invalid initialTotalAmount calculated:', initialTotalAmount);
-                    throw new Error(`Invalid initial total amount: ${initialTotalAmount}`);
-                }
+                const baseAmount = unitPrice * newQuantity;
+                const vatAmount = (baseAmount * vatPercentage) / 100;
+                const netAmount = baseAmount + vatAmount;
+                initialTotalAmount += netAmount;
 
-                console.log('Initial total amount calculated:', initialTotalAmount);
-
-                // Calculate delivery charges based on business logic
-                let initialDeliveryCharges = 0.00;
-                const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-
-                if (isDeliveryChargesApplicable === true) {
-                    // Check if it's NOT VMCO Machines AND total amount <= 150
-                    if (!isVmcoMachine && initialTotalAmount <= 150) {
-                        initialDeliveryCharges = 20.00;
-                        console.log('Delivery charges applied: 20.00 (not VMCO machine and total <= 150)');
-                    } else {
-                        console.log('No delivery charges:', isVmcoMachine ? 'VMCO machine' : `total amount ${initialTotalAmount} > 150`);
-                    }
-                } else {
-                    console.log('Delivery charges not applicable for customer');
-                }
-
-                // Calculate final total including delivery charges
-                const finalTotalAmount = initialTotalAmount + initialDeliveryCharges;
-
-                console.log('Delivery charges calculation:', {
-                    isDeliveryChargesApplicable,
-                    isVmcoMachine,
-                    initialTotalAmount,
-                    initialDeliveryCharges,
-                    finalTotalAmount
+                console.log(`Item ${item.id} calculation:`, {
+                    quantity: newQuantity,
+                    unitPrice,
+                    vatPercentage,
+                    baseAmount,
+                    vatAmount,
+                    netAmount
                 });
-
-                // Determine if this is a machine order or fresh order based on category name and entity
-                const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-                const isFreshOrder = categoryName.toLowerCase().includes('fresh') || categoryName.toLowerCase().includes('طازج');
-
-                // Determine status based on entity and payment method (case-insensitive)
-                let orderStatus = 'Open'; // Default status
-                if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                    orderStatus = 'Pending';
-                } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                    orderStatus = 'Open';
-                } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                    orderStatus = 'Open';
-                } else {
-                    const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
-                    if (pm === 'credit' || pm === 'cash on delivery') {
-                        orderStatus = 'Approved';
-                    } else if (pm === 'pre payment') {
-                        orderStatus = 'Pending';
-                    }
-                }
-
-                const orderPayload = {
-                    customerId: selectedCustomerId,
-                    erpCustId: erpCustId,
-                    companyNameEn: companyNameEn,
-                    companyNameAr: companyNameAr,
-                    brandNameEn: brandNameEn,
-                    brandNameAr: brandNameAr,
-                    branchId: selectedBranchId,
-                    branchNameEn: selectedBranchName,
-                    branchNameLc: selectedBranchNameLc,
-                    branchCity: selectedBranchCity,
-                    erpBranchId: selectedBranchErpId,
-                    branchSequenceId: selectedBranchSequenceId,
-                    branchRegion: selectedBranchRegion,
-                    orderBy: orderByName,
-                    entity,
-                    paymentMethod: selectedPaymentMethod,
-                    totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
-                    paidAmount: '0.00',
-                    deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
-                    status: orderStatus,
-                    pricingPolicy: pricingPolicy,
-                    salesExecutive: assignedTo,
-                    customerRegion: customerRegion,
-                    productCategory: categoryName,
-                    paymentPercentage: '100.00',
-                    isMachine: isMachineOrder,
-                    isFresh: isFresh
-                };
-
-                // For VMCO Machines, set payment method to Pre Payment
-                const isVmcoMachines = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-                if (isVmcoMachines) {
-                    orderPayload.paymentMethod = 'Pre Payment';
-                    console.log('Override payment method to Pre Payment for VMCO machines:', categoryName);
-                }
-
-                console.log('Order payload:', orderPayload);
-                console.log('Key differentiators:', {
-                    productCategory: orderPayload.productCategory,
-                    paymentMethod: orderPayload.paymentMethod,
-                    status: orderPayload.status,
-                    customerId: orderPayload.customerId,
-                    branchId: orderPayload.branchId,
-                    entity: orderPayload.entity,
-                    isMachine: orderPayload.isMachine,
-                    isFresh: orderPayload.isFresh
-                });
-
-                const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(orderPayload),
-
-                });
-
-                if (!orderResponse.ok) {
-                    const errorText = await orderResponse.text();
-                    throw new Error(JSON.parse(errorText)?.message || 'Failed to create order');
-                }
-
-                const orderResult = await orderResponse.json();
-                orderId = orderResult.data.id;
-                console.log(`Created new order with ID: ${orderId} for category: ${categoryName} with payment method: ${selectedPaymentMethod}`);
-                console.log('Order creation response:', orderResult);
             }
 
-            // Create or Update Order Lines
-            let lineNumber = 1; // Initialize line number counter
+            if (isNaN(initialTotalAmount) || initialTotalAmount <= 0) {
+                console.error('Invalid initialTotalAmount calculated:', initialTotalAmount);
+                throw new Error(`Invalid initial total amount: ${initialTotalAmount}`);
+            }
+
+            console.log('Initial total amount calculated:', initialTotalAmount);
+
+            // Calculate delivery charges
+            const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('machine');
+
+            if (isDeliveryChargesApplicable === true) {
+                if (!isVmcoMachine && initialTotalAmount < 150) {
+                    initialDeliveryCharges = 20.00;
+                    console.log('Delivery charges applied: 20.00 (not VMCO machine and total < 150)');
+                } else {
+                    console.log('No delivery charges:', isVmcoMachine ? 'VMCO machine' : `total amount ${initialTotalAmount} >= 150`);
+                }
+            } else {
+                console.log('Delivery charges not applicable for customer');
+            }
+
+            const finalTotalAmount = initialTotalAmount + initialDeliveryCharges;
+            console.log('Delivery charges calculation:', {
+                isDeliveryChargesApplicable,
+                isVmcoMachine,
+                initialTotalAmount,
+                initialDeliveryCharges,
+                finalTotalAmount
+            });
+
+            // Create order and order lines payloads
+            const isMachineOrder = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('machine');
+            const isFreshOrder = categoryName.toLowerCase().includes('fresh') || categoryName.toLowerCase().includes('fresh');
+
+            let orderStatus = 'Open'; // Default status
+            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                orderStatus = 'Pending';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                orderStatus = 'Open';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
+                orderStatus = 'Open';
+            } else {
+                const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
+                if (pm === 'credit' || pm === 'cash on delivery') {
+                    orderStatus = 'Approved';
+                } else if (pm === 'pre payment') {
+                    orderStatus = 'Pending';
+                }
+            }
+
+            const orderPayload = {
+                customerId: selectedCustomerId,
+                erpCustId: erpCustId,
+                companyNameEn: companyNameEn,
+                companyNameAr: companyNameAr,
+                brandNameEn: brandNameEn,
+                brandNameAr: brandNameAr,
+                branchId: selectedBranchId,
+                branchNameEn: selectedBranchName,
+                branchNameLc: selectedBranchNameLc,
+                branchCity: selectedBranchCity,
+                erpBranchId: selectedBranchErpId,
+                branchSequenceId: selectedBranchSequenceId,
+                branchRegion: selectedBranchRegion,
+                orderBy: orderByName,
+                entity,
+                paymentMethod: selectedPaymentMethod,
+                totalAmount: finalTotalAmount.toFixed(2),
+                paidAmount: '0.00',
+                deliveryCharges: initialDeliveryCharges.toFixed(2),
+                paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
+                status: orderStatus,
+                pricingPolicy: pricingPolicy,
+                salesExecutive: assignedTo,
+                customerRegion: customerRegion,
+                productCategory: categoryName,
+                paymentPercentage: '100.00',
+                isMachine: isMachineOrder,
+                isFresh: isFresh
+            };
+
+            // Create order lines payload
+            const orderLinesPayload = [];
+            let lineNumber = 1;
+
             for (const item of categoryItems) {
-                // Make sure we properly identify the product ID - check all possible fields in priority order
-                const productId = item.product_id || item.productId || item.id;
-
-                console.log(`Processing item with product ID: ${productId}`, {
-                    item_details: {
-                        id: item.id,
-                        product_id: item.product_id,
-                        productId: item.productId,
-                        name: item.name || item.productName,
-                        all_item_keys: Object.keys(item)
-                    }
-                });
-
+                const productId = item.productId || item.productId || item.id;
                 const newQuantity = parseInt(quantities[item.id] || item.quantity || item.moq || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
 
-                // Validate order line values
-                if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice < 0) {
+                if (isNaN(newQuantity) || isNaN(unitPrice) || isNaN(vatPercentage) || newQuantity <= 0 || unitPrice <= 0) {
                     console.error('Invalid order line values:', {
                         itemId: item.id,
                         productId,
                         newQuantity,
                         unitPrice,
                         vatPercentage,
-                        available_quantities: quantities[item.id],
-                        item_quantity: item.quantity,
-                        item_moq: item.moq
+                        availablequantities: quantities[item.id],
+                        itemquantity: item.quantity,
+                        itemmoq: item.moq
                     });
-                    continue; // Skip this item if values are invalid
+                    continue;
                 }
 
-                // Check if this product already exists in the order (only if not using Pre Payment)
-                const existingLine = isPrePayment ? null : existingProductMap[productId];
-
-                console.log(`Item ${productId} existing line check:`, existingLine ? 'Found' : 'Not found', {
-                    item_id: item.id,
-                    product_id: productId,
-                    existing_line_id: existingLine?.id,
-                    existing_quantity: existingLine?.quantity,
-                    isPrepayment: isPrePayment
-                });
-
-                const totalQuantity = existingLine ? parseInt(existingLine.quantity || 0) + newQuantity : newQuantity;
-                const baseAmount = unitPrice * totalQuantity;
+                const baseAmount = unitPrice * newQuantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
                 const netAmount = baseAmount + vatAmount;
 
-                if (existingLine && !isPrePayment) {
-                    // Update existing line with new quantity and recalculated net amount
-                    const patchPayload = {
-                        quantity: totalQuantity,
-                        sales_tax_amount: vatAmount.toFixed(2),
-                        net_amount: netAmount.toFixed(2),
-                        line_number: lineNumber
-                    };
+                const productName = item.productName || item.name || 'Product';
+                const productNameLc = item.productNameLc || item.nameLc || productName;
 
-                    console.log(`Updating existing line for orderId ${orderId} and productId ${productId}:`, {
-                        payload: patchPayload,
-                        existingLine: {
-                            id: existingLine.id,
-                            product_id: productId,
-                            old_quantity: existingLine.quantity,
-                            old_net_amount: existingLine.net_amount
-                        }
-                    });
+                let lineMachine = false;
+                let lineFresh = false;
 
-                    try {
-                        // Using the new API endpoint that updates by orderId and productId
-                        const patchResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${productId}`, {
-                            method: 'PATCH',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(patchPayload),
-
-                        });
-
-                        if (!patchResponse.ok) {
-                            const errorText = await patchResponse.text();
-                            console.error(`Failed to update line for orderId ${orderId} and productId ${productId}: ${errorText}`);
-                            throw new Error(errorText);
-                        } else {
-                            const updatedLine = await patchResponse.json();
-                            console.log(`Successfully updated line for orderId ${orderId} and productId ${productId}:`, updatedLine);
-                        }
-                    } catch (error) {
-                        console.error(`Error updating line for orderId ${orderId} and productId ${productId}:`, error);
-                        // Continue with the process - don't let one line failure stop the entire order
-                    }
+                if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                    lineMachine = item.isMachine === true;
+                    lineFresh = false;
+                } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                    lineMachine = false;
+                    lineFresh = item.isFresh === true;
                 } else {
-                    // Create a new line for this product
-                    const productName = item.productName || item.name || 'Product';
-                    const productNameLc = item.productNameLc || item.nameLc || productName;
-
-                    // Determine isMachine and isFresh for this line based on the category and item
-                    let lineMachine = false;
-                    let lineFresh = false;
-
-                    if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                        lineMachine = item.isMachine === true;
-                        lineFresh = false; // VMCO products don't have fresh flag
-                    } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                        lineMachine = false; // SHC products are never machines
-                        lineFresh = item.isFresh === true; // Use the item's isFresh flag
-                    } else {
-                        // For other entities, use the item's flags as-is
-                        lineMachine = item.isMachine === true;
-                        lineFresh = item.isFresh === true;
-                    }
-
-                    const newLinePayload = {
-                        order_id: orderId,
-                        product_id: productId,
-                        productName: productName,
-                        productNameLc: productNameLc,
-                        is_machine: lineMachine,
-                        isMachine: lineMachine, // for backend compatibility
-                        isFresh: lineFresh, // set based on entity and item
-                        quantity: newQuantity,
-                        unit: item.unit || 'EA',
-                        unit_price: unitPrice,
-                        vat_percentage: vatPercentage || 0,
-                        sales_tax_amount: vatAmount.toFixed(2),
-                        net_amount: netAmount.toFixed(2),
-                        line_number: lineNumber,
-                        erp_line_number: item.erp_line_number || lineNumber,
-                        erp_prod_id: item.erpProdId || item.erp_prod_id || item.productCode || productId
-                    };
-
-                    console.log(`Creating new line for product ${productId}:`, {
-                        payload: newLinePayload,
-                        original_item: {
-                            id: item.id,
-                            product_id: item.product_id,
-                            productId: item.productId,
-                            name: item.name || item.productName,
-                            productNameLc: productNameLc
-                        }
-                    });
-
-                    try {
-                        const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-                            body: JSON.stringify(newLinePayload),
-
-                        });
-
-                        if (!createResponse.ok) {
-                            const errorText = await createResponse.text();
-                            console.error(`Failed to create line for product ${productId}: ${errorText}`);
-                            throw new Error(errorText);
-                        } else {
-                            const newLine = await createResponse.json();
-                            console.log(`Successfully created line for product ${productId}:`, newLine);
-                            // Add the newly created line to our existingProductMap
-                            if (newLine.data && newLine.data.product_id) {
-                                existingProductMap[newLine.data.product_id] = newLine.data;
-                            }
-                        }
-                    } catch (error) {
-                        console.error(`Error creating line for product ${productId}:`, error);
-                        // Delete the sales order with orderId if line creation fails
-                        try {
-                            const deleteResponse = await fetch(`${API_BASE_URL}/sales-order/hard-delete/${orderId}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
-                                },
-
-                            });
-                            if (!deleteResponse.ok) {
-                                console.error(`Failed to hard delete sales order ${orderId}:`, await deleteResponse.text());
-                            } else {
-                                console.log(`Successfully hard deleted sales order ${orderId} after line creation failure.`);
-                            }
-                        } catch (deleteError) {
-                            console.error(`Error during hard delete of sales order ${orderId}:`, deleteError);
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: t('Order Failed'),
-                            text: t('Creation of sales order failed.'),
-                            confirmButtonText: t('OK')
-                        });
-                        return;
-                    }
+                    lineMachine = item.isMachine === true;
+                    lineFresh = item.isFresh === true;
                 }
 
-                // Increment line number for next iteration
+                const linePayload = {
+                    productId: productId,
+                    productName: productName,
+                    productNameLc: productNameLc,
+                    isMachine: lineMachine,
+                    isFresh: lineFresh,
+                    quantity: newQuantity,
+                    unit: item.unit || 'EA',
+                    unitPrice: unitPrice,
+                    vatPercentage: vatPercentage || 0,
+                    salesTaxAmount: vatAmount.toFixed(2),
+                    netAmount: netAmount.toFixed(2),
+                    lineNumber: lineNumber,
+                    erpLineNumber: item.erplineNumber || lineNumber,
+                    erpProdId: item.erpProdId || item.erpprodid || item.productCode || productId
+                };
+
+                orderLinesPayload.push(linePayload);
                 lineNumber++;
             }
 
-            // Small delay to ensure order lines are committed to the database
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Check if we need to use temp table (entity !== 'vmco' && paymentMethod === 'pre payment')
+            if (entity?.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
+                selectedPaymentMethod?.toLowerCase() === 'pre payment') {
 
-            // Recalculate totalAmount after line inserts/updates
-            // Try multiple approaches to fetch the correct order lines
-            let recalcLinesResponse;
-            let recalcLinesData;
+                console.log('Using temp table flow for entity:', entity, 'with payment method:', selectedPaymentMethod);
 
-            // First try with orderId filter
-            try {
-                recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
-                    method: 'GET',
+                // Insert into temp_sales_orders table
+                const tempOrderPayload = {
+                    userId: userId,
+                    entity: entity,
+                    paymentMethod: selectedPaymentMethod,
+                    totalAmount: finalTotalAmount.toFixed(2),
+                    orderDetails: orderPayload,
+                    orderLinesDetails: orderLinesPayload
+                };
+
+                const tempOrderResponse = await fetch(`${API_BASE_URL}/temp-sales-order`, {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-
+                    body: JSON.stringify(tempOrderPayload)
                 });
 
-                if (!recalcLinesResponse.ok) {
-                    throw new Error('Failed to fetch order lines for recalculating total amount');
+                if (!tempOrderResponse.ok) {
+                    const errorText = await tempOrderResponse.text();
+                    throw new Error(JSON.parse(errorText)?.message || 'Failed to create temp order');
                 }
 
-                recalcLinesData = await recalcLinesResponse.json();
-                console.log('Fetched order lines data for orderId ' + orderId + ':', recalcLinesData);
-            } catch (error) {
-                console.error('Error fetching order lines with orderId filter:', error);
-                // Fallback: try with order_id filter
+                const tempOrderResult = await tempOrderResponse.json();
+                const tempOrderId = tempOrderResult.data.id;
+
+                console.log('Created temp order with ID:', tempOrderId);
+
+                // Generate payment link using temp order ID
                 try {
-                    recalcLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ order_id: orderId }))}`, {
-                        method: 'GET',
+                    const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
+                        id: tempOrderId,
+                        endPoint: 'payment-options/order',
+                        IsEmail: false
+                    }, {
                         headers: {
-                            'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
-                        },
-
-                    });
-
-                    if (!recalcLinesResponse.ok) {
-                        throw new Error('Failed to fetch order lines for recalculating total amount');
-                    }
-
-                    recalcLinesData = await recalcLinesResponse.json();
-                    console.log('Fetched order lines data with order_id filter for orderId ' + orderId + ':', recalcLinesData);
-                } catch (secondError) {
-                    console.error('Error fetching order lines with order_id filter:', secondError);
-                    throw new Error('Failed to fetch order lines for recalculating total amount');
-                }
-            }
-
-            // Verify we have the correct lines for this order
-            // Try multiple field names for orderId comparison
-            const allLines = recalcLinesData?.data?.data?.filter(line =>
-                Number(line.orderId) === Number(orderId) ||
-                Number(line.order_id) === Number(orderId) ||
-                Number(line.OrderId) === Number(orderId)
-            ) || [];
-            console.log(`All order lines for orderId ${orderId}:`, allLines);
-
-            // Additional debugging to understand the filtering issue
-            if (allLines.length === 0) {
-                console.log('No lines found for orderId. Debugging info:');
-                console.log('Looking for orderId:', orderId, 'Type:', typeof orderId);
-                console.log('Available order lines:', recalcLinesData?.data?.data?.map(line => ({
-                    id: line.id,
-                    orderId: line.orderId,
-                    order_id: line.order_id,
-                    OrderId: line.OrderId,
-                    orderIdType: typeof line.orderId,
-                    productId: line.productId,
-                    netAmount: line.netAmount || line.net_amount
-                })));
-
-                // Try a direct API call to get lines for this specific order
-                try {
-                    console.log('Attempting direct API call for order lines...');
-                    const directResponse = await fetch(`${API_BASE_URL}/sales-order-lines/order/${orderId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-
-                            'Authorization': `Bearer ${token}`
-                        },
-
-                    });
-
-                    if (directResponse.ok) {
-                        const directData = await directResponse.json();
-                        console.log('Direct API call successful:', directData);
-                        if (directData.data && Array.isArray(directData.data)) {
-                            allLines.push(...directData.data);
                         }
+                    });
+
+                    // Navigate to payment URL
+                    if (paymentLinkResponse?.data?.details?.url) {
+                        console.log('Payment link generated, redirecting to:', paymentLinkResponse.data.details.url);
+                        window.location.href = paymentLinkResponse.data.details.url;
+                        return tempOrderId; // Return temp order ID
+                    } else {
+                        throw new Error('Payment URL not found in response');
                     }
-                } catch (directError) {
-                    console.log('Direct API call failed:', directError);
-                    // This is expected if the endpoint doesn't exist - not a real error
-                }
-            }
 
-            // Calculate the sum of all order line net amounts and sales tax amounts - ensure we parse all values correctly
-            let linesTotal = 0;
-            let totalSalesTaxAmount = 0;
+                } catch (error) {
+                    console.error('Error generating payment link:', error);
 
-            if (allLines.length > 0) {
-                for (const line of allLines) {
-                    // Handle multiple possible field names and ensure we get valid numbers
-                    const netAmountRaw = line.netAmount || line.net_amount || 0;
-                    const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
-
-                    const netAmount = parseFloat(netAmountRaw);
-                    const salesTaxAmount = parseFloat(salesTaxAmountRaw);
-
-                    // Check for NaN values and handle them appropriately
-                    const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
-                    const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
-
-                    console.log(`Line for product ${line.productId}: net_amount_raw=${netAmountRaw}, parsed=${validNetAmount}, sales_tax_amount_raw=${salesTaxAmountRaw}, parsed=${validSalesTaxAmount}`);
-                    //add delivery charges also
-                    linesTotal += validNetAmount;
-                    totalSalesTaxAmount += validSalesTaxAmount;
-                }
-            } else {
-                // Fallback: calculate totals based on cart items since we couldn't fetch order lines
-                console.log('Using fallback calculation based on cart items');
-                for (const item of categoryItems) {
-                    const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
-                    const unitPrice = parseFloat(item.unitPrice || item.price || 0);
-                    const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                    if (!isNaN(newQuantity) && !isNaN(unitPrice) && !isNaN(vatPercentage) && newQuantity > 0 && unitPrice >= 0) {
-                        const baseAmount = unitPrice * newQuantity;
-                        const vatAmount = (baseAmount * vatPercentage) / 100;
-                        const netAmount = baseAmount + vatAmount;
-
-                        linesTotal += netAmount;
-                        totalSalesTaxAmount += vatAmount;
-
-                        console.log(`Fallback calculation for item ${item.id}:`, {
-                            quantity: newQuantity,
-                            unitPrice,
-                            vatPercentage,
-                            baseAmount,
-                            vatAmount,
-                            netAmount
-                        });
-                    }
-                }
-            }
-
-            console.log('Recalculated lines total:', linesTotal);
-            console.log('Total sales tax amount:', totalSalesTaxAmount);
-
-            // Additional validation to ensure we have valid totals
-            if (isNaN(linesTotal) || linesTotal < 0) {
-                console.error('Invalid linesTotal detected:', linesTotal, 'Setting to 0');
-                linesTotal = 0;
-            }
-            if (isNaN(totalSalesTaxAmount) || totalSalesTaxAmount < 0) {
-                console.error('Invalid totalSalesTaxAmount detected:', totalSalesTaxAmount, 'Setting to 0');
-                totalSalesTaxAmount = 0;
-            }
-
-            // Get existing delivery charges if updating an order
-            let currentDeliveryCharges = linesTotal > 150.00 ? 0.00 : 20.00;
-
-            // Reuse the initial delivery charges calculation
-            let deliveryCharges = currentDeliveryCharges;
-            const finalTotalAmount = linesTotal + deliveryCharges;
-            const isVmcoMachine = categoryName.toLowerCase().includes('machines') || categoryName.toLowerCase().includes('آلات');
-
-            // Additional validation for final total
-            if (isNaN(finalTotalAmount) || finalTotalAmount < 0) {
-                console.error('Invalid finalTotalAmount detected:', finalTotalAmount, 'Components:', { linesTotal, deliveryCharges });
-                throw new Error(`Invalid total amount calculation: linesTotal=${linesTotal}, deliveryCharges=${deliveryCharges}, finalTotal=${finalTotalAmount}`);
-            }
-
-            // Ensure orderStatus is defined in this scope
-            let orderStatusUpdate = 'Open';
-            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
-                orderStatusUpdate = 'Pending';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                orderStatusUpdate = 'Open';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
-                orderStatusUpdate = 'Open';
-            } else {
-                const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
-                if (pm === 'credit' || pm === 'cash on delivery') {
-                    orderStatusUpdate = 'Approved';
-                } else if (pm === 'pre payment') {
-                    orderStatusUpdate = 'Pending';
-                }
-            }
-
-            console.log('Final order totals:', {
-                linesTotal,
-                totalSalesTaxAmount,
-                deliveryCharges,
-                finalTotalAmount,
-                details: {
-                    isVmcoMachine,
-                    isDeliveryChargesApplicable,
-                    categoryName
-                }
-            });
-
-            // Update the order with final calculated amounts
-            const updateOrderPayload = {
-                id: orderId,
-                paymentMethod: selectedPaymentMethod,
-                totalAmount: finalTotalAmount.toFixed(2),
-                total_sales_tax_amount: totalSalesTaxAmount.toFixed(2),
-                status: orderStatusUpdate, // Always send the current orderStatus
-                deliveryCharges: deliveryCharges.toFixed(2),
-                paymentPercentage: '100.00',
-                // modifiedBy: userId // Removed to avoid backend 500 error
-            };
-
-            console.log('Update order payload:', updateOrderPayload);
-
-            // Validate payload before sending
-            if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
-                console.error('Invalid totalAmount in update payload:', updateOrderPayload.totalAmount);
-                console.error('Debug info:', {
-                    linesTotal,
-                    totalSalesTaxAmount,
-                    deliveryCharges,
-                    finalTotalAmount,
-                    allLinesCount: allLines.length,
-                    categoryItemsCount: categoryItems.length
-                });
-
-                // Let's try one more time with a longer delay
-                if (categoryItems.length > 0 && allLines.length === 0) {
-                    console.log('Retrying order line fetch after longer delay...');
-                    await new Promise(resolve => setTimeout(resolve, 500));
-
+                    // Delete temp order on error
                     try {
-                        const retryResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(JSON.stringify({ orderId: orderId }))}`, {
-                            method: 'GET',
+                        await fetch(`${API_BASE_URL}/temp-sales-order/flush/${tempOrderId}`, {
+                            method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
-                            },
-
-                        });
-
-                        if (retryResponse.ok) {
-                            const retryData = await retryResponse.json();
-                            const retryLines = retryData?.data?.data?.filter(line =>
-                                Number(line.orderId) === Number(orderId) ||
-                                Number(line.order_id) === Number(orderId) ||
-                                Number(line.OrderId) === Number(orderId)
-                            ) || [];
-
-                            if (retryLines.length > 0) {
-                                console.log('Retry successful, found order lines:', retryLines);
-                                // Recalculate with the retry data
-                                let retryLinesTotal = 0;
-                                let retryTotalSalesTaxAmount = 0;
-
-                                for (const line of retryLines) {
-                                    const netAmountRaw = line.netAmount || line.net_amount || 0;
-                                    const salesTaxAmountRaw = line.salesTaxAmount || line.sales_tax_amount || 0;
-
-                                    const netAmount = parseFloat(netAmountRaw);
-                                    const salesTaxAmount = parseFloat(salesTaxAmountRaw);
-
-                                    const validNetAmount = isNaN(netAmount) ? 0 : netAmount;
-                                    const validSalesTaxAmount = isNaN(salesTaxAmount) ? 0 : salesTaxAmount;
-
-                                    retryLinesTotal += validNetAmount;
-                                    retryTotalSalesTaxAmount += validSalesTaxAmount;
-                                }
-
-                                if (retryLinesTotal > 0) {
-                                    linesTotal = retryLinesTotal;
-                                    totalSalesTaxAmount = retryTotalSalesTaxAmount;
-                                    const retryFinalTotalAmount = linesTotal + deliveryCharges;
-
-                                    updateOrderPayload.totalAmount = retryFinalTotalAmount.toFixed(2);
-                                    updateOrderPayload.total_sales_tax_amount = totalSalesTaxAmount.toFixed(2);
-
-                                    console.log('Updated totals after retry:', {
-                                        retryLinesTotal,
-                                        retryTotalSalesTaxAmount,
-                                        retryFinalTotalAmount
-                                    });
-                                }
                             }
-                        }
-                    } catch (retryError) {
-                        console.error('Retry failed:', retryError);
+                        });
+                        console.log('Deleted temp order after error:', tempOrderId);
+                    } catch (deleteError) {
+                        console.error('Error deleting temp order:', deleteError);
                     }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: t('Payment Link Error'),
+                        text: t('Failed to generate payment link. Please try again.'),
+                        confirmButtonText: t('OK')
+                    });
+                    return null;
                 }
 
-                // Final check - if still zero, something is wrong
-                if (parseFloat(updateOrderPayload.totalAmount) <= 0) {
-                    throw new Error(`Cannot update order with totalAmount of ${updateOrderPayload.totalAmount}. This indicates a problem with order line creation or fetching.`);
+            } else {
+                // Original flow for other cases (entity === 'vmco' or paymentMethod !== 'pre payment')
+                console.log('Using original flow for entity:', entity, 'with payment method:', selectedPaymentMethod);
+
+                // Call existing order creation logic
+                return await createNormalOrder(orderPayload, orderLinesPayload, categoryItems, showSuccessMessage, categoryName, entity, selectedPaymentMethod);
+            }
+
+        } catch (err) {
+            console.log('Error placing order:', err);
+            setError(err.message);
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Failed'),
+                text: t(`Failed to place order: ${err.message}`),
+                confirmButtonText: t('OK')
+            });
+            return null;
+        }
+    };
+
+    const createNormalOrder = async (orderPayload, orderLinesPayload, categoryItems, showSuccessMessage, categoryName, entity, selectedPaymentMethod) => {
+        try {
+            // Create the sales order
+            const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(orderPayload)
+            });
+
+            if (!orderResponse.ok) {
+                const errorText = await orderResponse.text();
+                throw new Error(JSON.parse(errorText)?.message || 'Failed to create order');
+            }
+
+            const orderResult = await orderResponse.json();
+            const orderId = orderResult.data.id;
+
+            console.log('Created sales order with ID:', orderId);
+
+            // Create order lines
+            let lineNumber = 1;
+            for (const linePayload of orderLinesPayload) {
+                const lineWithOrderId = {
+                    ...linePayload,
+                    orderId: orderId,
+                    lineNumber: lineNumber
+                };
+
+                const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(lineWithOrderId)
+                });
+
+                if (!createResponse.ok) {
+                    const errorText = await createResponse.text();
+                    console.error(`Failed to create line for product ${linePayload.productId}:`, errorText);
+                    throw new Error(errorText);
+                }
+
+                const newLine = await createResponse.json();
+                console.log(`Successfully created line for product ${linePayload.productId}:`, newLine);
+                lineNumber++;
+            }
+
+            // Calculate totals for order update
+            let linesTotal = 0;
+            let totalSalesTaxAmount = 0;
+
+            for (const line of orderLinesPayload) {
+                const netAmount = parseFloat(line.netAmount || 0);
+                const salesTaxAmount = parseFloat(line.salesTaxAmount || 0);
+
+                if (!isNaN(netAmount)) {
+                    linesTotal += netAmount;
+                }
+                if (!isNaN(salesTaxAmount)) {
+                    totalSalesTaxAmount += salesTaxAmount;
                 }
             }
+
+            // Add delivery charges
+            const deliveryCharges = parseFloat(orderPayload.deliveryCharges || 0);
+            const finalTotalAmount = linesTotal + deliveryCharges;
+
+            // Update order with correct totals
+            const updateOrderPayload = {
+                totalAmount: finalTotalAmount.toFixed(2),
+                totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
+                deliveryCharges: deliveryCharges.toFixed(2)
+            };
 
             const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
                 method: 'PATCH',
@@ -1879,30 +1469,81 @@ function Cart() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(updateOrderPayload),
-
+                body: JSON.stringify(updateOrderPayload)
             });
 
             if (!updateOrderResponse.ok) {
-                throw new Error(`Failed to update order with final amounts`);
+                console.error('Failed to update order totals, but order was created successfully');
             }
-            const updatedOrderResponse = await updateOrderResponse.json();
-            console.log('Updated the order:', updatedOrderResponse);
 
-            // Show order confirmation alert with order number (conditionally)
+            // Delete from cart
+            try {
+                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+                deleteUrl.searchParams.append('customer_id', selectedCustomerId);
+                deleteUrl.searchParams.append('branch_id', selectedBranchId);
+                deleteUrl.searchParams.append('entity', entity);
+
+                const deleteResponse = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!deleteResponse.ok) {
+                    console.error('Error removing cart items:', deleteResponse.statusText);
+                }
+            } catch (err) {
+                console.error('Error during cart cleanup:', err);
+            }
+
+            // Generate payment link for Pre Payment orders (non-VMCO entities)
+            if (selectedPaymentMethod && selectedPaymentMethod.toLowerCase() === 'pre payment' &&
+                entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()) {
+
+                try {
+                    const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
+                        id: orderId,
+                        endPoint: 'payment-options/order',
+                        IsEmail: false
+                    }, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (paymentLinkResponse?.data?.details?.url) {
+                        window.open(paymentLinkResponse.data.details.url, '_blank');
+                    }
+                } catch (error) {
+                    console.error('Error generating payment link:', error);
+                }
+            }
+
+            // Show success message and update UI
             if (showSuccessMessage) {
+                const orderStatusMessage = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+                    ? t('Your request has been sent for approval!')
+                    : t('Your order has been placed successfully!');
+
                 Swal.fire({
                     icon: 'success',
-                    title: t('Order Placed'),
-                    text: t(`Your order has been placed successfully! Order #${orderId}. Payment Method: ${selectedPaymentMethod}`),
+                    title: entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+                        ? t('Request Sent')
+                        : t('Order Placed'),
+                    text: `${orderStatusMessage} Order: ${orderId}. Payment Method: ${selectedPaymentMethod}`,
                     confirmButtonText: t('OK')
                 }).then(() => {
+                    // Update cart items state to remove ordered items
                     setCartItems(prevCartItems =>
                         prevCartItems.map(category => ({
                             ...category,
-                            items: category.items.filter(
-                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                        })));
+                            items: category.items.filter(cartItem =>
+                                !categoryItems.some(ci => ci.id === cartItem.id)
+                            )
+                        }))
+                    );
 
                     // Clean up quantities state for removed items
                     setQuantities(prevQuantities => {
@@ -1912,72 +1553,19 @@ function Cart() {
                         });
                         return newQuantities;
                     });
-                    console.log("ssssss", updatedOrderResponse)
-
-
-
                 });
-
-                // Delete cart items for non-VMCO and non-SHC categories
-                if (entity && entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
-                    entity.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase()) {
-                    try {
-                        const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                        deleteUrl.searchParams.append('customer_id', selectedCustomerId);
-                        deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                        deleteUrl.searchParams.append('entity', entity);
-                        const deleteResponse = await fetch(deleteUrl, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`
-                            },
-
-                        });
-
-                        if (!deleteResponse.ok) {
-                            console.error(`Error removing cart items: ${deleteResponse.statusText}`);
-                        }
-                    } catch (err) {
-                        console.error('Error during cart cleanup:', err);
-                    }
-                }
-            }
-            if (updatedOrderResponse && updatedOrderResponse.status && updatedOrderResponse.status.toLowerCase() === 'ok' &&
-                updatedOrderResponse?.salesOrder?.paymentMethod?.toLowerCase() === "pre payment" &&
-                (
-                    updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.DAR?.toLowerCase()
-                    || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.NAQI?.toLowerCase()
-                    || updatedOrderResponse?.salesOrder?.entity?.toLowerCase() === Constants?.ENTITY?.GMTC?.toLowerCase())) {
-                const { data } = await axios.post(`${API_BASE_URL}/generatePayment-link`, { id: updatedOrderResponse?.salesOrder.id, endPoint: "payment-opations/order", IsEmail: false }, {
-
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                window.open(data.details.url, '_blank');
-
             }
 
-            // Return the order ID for use in combined success messages
-            console.log(`placeOrderForCategory completed - returning order ID: ${orderId} for category: ${categoryName}`);
+            console.log('createNormalOrder completed - returning order ID:', orderId, 'for category:', categoryName);
             return orderId;
 
-        } catch (err) {
-            console.log('Error placing order:', err); // This is line 1845
-            setError(err.message);
-            Swal.fire({
-                icon: 'error',
-                title: t('Order Failed'),
-                text: t(`Failed to place order: ${err.message}`),
-                confirmButtonText: t('OK')
-            });
-            return null;
-        } finally {
-            setIsPlacingOrder(false);
+        } catch (error) {
+            console.error('Error in createNormalOrder:', error);
+            throw error; // Re-throw so the calling function can handle it
         }
-    };    // Function to check if credit payment is allowed for the customer (entity-specific)
+    };
+
+
     const isCreditPaymentAllowed = async (customerId, entity = null) => {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
