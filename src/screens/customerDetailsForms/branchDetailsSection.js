@@ -285,303 +285,486 @@ const BranchDetailsForm = ({
       "isDeliveryChargesApplicable"
     );
   }, []);
-  const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
-    const mapContainer = useRef(null);
-    const markerRef = useRef(null);
-    const [map, setMap] = useState(null);
-    const { t, i18n } = useTranslation();
-    const [coords, setCoords] = useState("Detecting your location...");
-    const [coordsArabic, setCoordsArabic] = useState(
-      t("Detecting your location...")
-    );
-    const [defaultCenter] = useState([77.5946, 12.9716]); // [lng, lat]
-    const [zoom] = useState(14);
-    const [confirmedLocation, setConfirmedLocation] = useState(null);
-
-    // Add search states
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState([]);
-    const [isSearching, setIsSearching] = useState(false);
-
-    console.log("Initial Lat:", initialLat);
-    console.log("Initial Lng:", initialLng);
-
-    // Validate and sanitize coordinates
-    const isValidCoordinate = (lat, lng) => {
-      return (
-        typeof lat === "number" &&
-        typeof lng === "number" &&
-        lat >= -90 &&
-        lat <= 90 &&
-        lng >= -180 &&
-        lng <= 180 &&
-        !isNaN(lat) &&
-        !isNaN(lng)
+   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
+      const mapContainer = useRef(null);
+      const markerRef = useRef(null);
+      const [map, setMap] = useState(null);
+      const { t, i18n } = useTranslation();
+      const [coords, setCoords] = useState("Detecting your location...");
+      const [coordsArabic, setCoordsArabic] = useState(
+        t("Detecting your location...")
       );
-    };
-
-    const getInitialCenter = () => {
-      // Parse coordinates if they're strings
-      const lat =
-        typeof initialLat === "string" ? parseFloat(initialLat) : initialLat;
-      const lng =
-        typeof initialLng === "string" ? parseFloat(initialLng) : initialLng;
-
-      if (isValidCoordinate(lat, lng)) {
-        return [lng, lat]; // MapLibre expects [lng, lat]
-      }
-      return defaultCenter;
-    };
-
-    const updateMarker = (map, lng, lat) => {
-      // Validate coordinates before updating marker
-      if (!isValidCoordinate(lat, lng)) {
-        console.error("Invalid coordinates:", lat, lng);
-        return;
-      }
-
-      // Remove existing marker if it exists
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
-      }
-
-      // Create new marker
-      const newMarker = new maplibregl.Marker()
-        .setLngLat([lng, lat])
-        .addTo(map);
-
-      markerRef.current = newMarker;
-      setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-      setCoordsArabic(
-        `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
-      );
-
-      map.setCenter([lng, lat]);
-    };
-
-    // Add search function
-    const searchLocation = async (query) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        // Using MapTiler Geocoding API
-        const response = await fetch(
-          `https://api.maptiler.com/geocoding/${encodeURIComponent(
-            query
-          )}.json?key=NxvpwMoXuYLINUijkWEc&limit=5`
+      const [defaultCenter] = useState([77.5946, 12.9716]); // [lng, lat]
+      const [zoom] = useState(14);
+      const [confirmedLocation, setConfirmedLocation] = useState(null);
+  
+      // Add search states
+      const [searchQuery, setSearchQuery] = useState("");
+      const [searchResults, setSearchResults] = useState([]);
+      const [isSearching, setIsSearching] = useState(false);
+      // Validate and sanitize coordinates
+      const isValidCoordinate = (lat, lng) => {
+        return (
+          typeof lat === "number" &&
+          typeof lng === "number" &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180 &&
+          !isNaN(lat) &&
+          !isNaN(lng)
         );
-        const data = await response.json();
-
-        if (data.features) {
-          setSearchResults(
-            data.features.map((feature) => ({
-              id: feature.id,
-              name: feature.place_name,
-              coordinates: feature.center,
-            }))
-          );
+      };
+  
+      const getInitialCenter = () => {
+        // Parse coordinates if they're strings
+        const lat =
+          typeof initialLat === "string" ? parseFloat(initialLat) : initialLat;
+        const lng =
+          typeof initialLng === "string" ? parseFloat(initialLng) : initialLng;
+  
+        if (isValidCoordinate(lat, lng)) {
+          return [lng, lat]; // MapLibre expects [lng, lat]
         }
-      } catch (error) {
-        console.error("Search error:", error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    // Handle search input change with debounce
-    useEffect(() => {
-      const timeoutId = setTimeout(() => {
-        searchLocation(searchQuery);
-      }, 500); // 500ms debounce
-
-      return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
-
-    // Handle search result selection
-    const handleSearchResultClick = (result) => {
-      const [lng, lat] = result.coordinates;
-      if (isValidCoordinate(lat, lng) && map) {
-        updateMarker(map, lng, lat);
-        setSearchQuery(result.name);
-        setSearchResults([]);
-      }
-    };
-
-    useEffect(() => {
-      let mapInstance;
-
-      const initializeMap = async () => {
+        return defaultCenter;
+      };
+  
+      // Add search function
+      const searchLocation = async (query) => {
+        if (!query.trim()) {
+          setSearchResults([]);
+          return;
+        }
+  
+        setIsSearching(true);
         try {
-          mapInstance = new maplibregl.Map({
-            container: mapContainer.current,
-            style:
-              "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
-            center: getInitialCenter(), // Use the validated center
-            zoom: zoom,
-          });
-
-          mapInstance.on("load", async () => {
-            setMap(mapInstance);
-            try {
-              let position;
-              const lat =
-                typeof initialLat === "string"
-                  ? parseFloat(initialLat)
-                  : initialLat;
-              const lng =
-                typeof initialLng === "string"
-                  ? parseFloat(initialLng)
-                  : initialLng;
-
-              if (isValidCoordinate(lat, lng)) {
-                position = { coords: { latitude: lat, longitude: lng } };
-              } else {
-                position = await getCurrentPosition();
-              }
-
-              const { latitude, longitude } = position.coords;
-              if (isValidCoordinate(latitude, longitude)) {
-                updateMarker(mapInstance, longitude, latitude);
-              }
-            } catch (error) {
-              console.log("Geolocation error:", error);
-              setCoords("Click on the map to select a location");
-              setCoordsArabic(t("Click on the map to select a location"));
-            }
-          });
-
-          mapInstance.on("click", (e) => {
-            if (!confirmedLocation) {
-              const { lng, lat } = e.lngLat;
-              if (isValidCoordinate(lat, lng)) {
-                updateMarker(mapInstance, lng, lat);
-              }
-            }
-          });
+          // Using MapTiler Geocoding API
+          const response = await fetch(
+            `https://api.maptiler.com/geocoding/${encodeURIComponent(
+              query
+            )}.json?key=NxvpwMoXuYLINUijkWEc&limit=5`
+          );
+          const data = await response.json();
+  
+          if (data.features) {
+            setSearchResults(
+              data.features.map((feature) => ({
+                id: feature.id,
+                name: feature.place_name,
+                coordinates: feature.center,
+              }))
+            );
+          }
         } catch (error) {
-          console.error("Map initialization error:", error);
+          console.error("Search error:", error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
         }
       };
-
-      const getCurrentPosition = () => {
-        return new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-          });
-        });
+      // Enhanced utility function to extract coordinates from all Google Maps URLs
+  const parseGoogleMapsUrl = (url) => {
+    if (!url) return null;
+  
+    try {
+      const cleanedUrl = url.trim();
+      
+      // Case 1: Short URL (maps.app.goo.gl) - we need to extract from query parameters
+      if (cleanedUrl.includes('maps.app.goo.gl')) {
+        const urlObj = new URL(cleanedUrl);
+        const queryParams = new URLSearchParams(urlObj.search);
+        
+        // Try to get coordinates from the 'q' parameter
+        const qParam = queryParams.get('q');
+        if (qParam) {
+          const coordMatch = qParam.match(/^(-?\d+\.\d+),(-?\d+\.\d+)$/);
+          if (coordMatch) {
+            return {
+              lat: parseFloat(coordMatch[1]),
+              lng: parseFloat(coordMatch[2]),
+              source: 'short_url_coordinates'
+            };
+          }
+          // If it's a place name, return as query
+          return {
+            query: qParam,
+            source: 'short_url_place'
+          };
+        }
+        
+        // Try to get data from the 'link' parameter (common in short URLs)
+        const linkParam = queryParams.get('link');
+        if (linkParam) {
+          const decodedLink = decodeURIComponent(linkParam);
+          return parseGoogleMapsUrl(decodedLink); // Recursively parse the decoded link
+        }
+      }
+  
+      // Case 2: Regular Google Maps URL with coordinates
+      const coordMatch = cleanedUrl.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch) {
+        return {
+          lat: parseFloat(coordMatch[1]),
+          lng: parseFloat(coordMatch[2]),
+          source: 'google_maps_url'
+        };
+      }
+  
+      // Case 3: Place ID or place name in regular URL
+      const placeMatch = cleanedUrl.match(/[?&]q=([^&]+)/);
+      if (placeMatch) {
+        const placeQuery = decodeURIComponent(placeMatch[1]);
+        
+        // Check if it's coordinates in text form
+        const coordTextMatch = placeQuery.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
+        if (coordTextMatch) {
+          return {
+            lat: parseFloat(coordTextMatch[1]),
+            lng: parseFloat(coordTextMatch[2]),
+            source: 'coordinates_text'
+          };
+        }
+        
+        return {
+          query: placeQuery,
+          source: 'place_query'
+        };
+      }
+  
+      // Case 4: Maps App deep link (comgooglemaps://)
+      const deepLinkMatch = cleanedUrl.match(/comgooglemaps:\/\/\?.*center=(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (deepLinkMatch) {
+        return {
+          lat: parseFloat(deepLinkMatch[1]),
+          lng: parseFloat(deepLinkMatch[2]),
+          source: 'google_maps_app'
+        };
+      }
+  
+      // Case 5: New Google Maps format with @ coordinates
+      const atCoordMatch = cleanedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (atCoordMatch) {
+        return {
+          lat: parseFloat(atCoordMatch[1]),
+          lng: parseFloat(atCoordMatch[2]),
+          source: 'google_maps_at_format'
+        };
+      }
+  
+      // Case 6: Place details with coordinates (!3d and !4d)
+      const placeCoordMatch = cleanedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      if (placeCoordMatch) {
+        return {
+          lat: parseFloat(placeCoordMatch[1]),
+          lng: parseFloat(placeCoordMatch[2]),
+          source: 'google_maps_3d_format'
+        };
+      }
+  
+      // Case 7: Direct coordinates pattern (lat,lng)
+      const directCoordMatch = cleanedUrl.match(/^(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)$/);
+      if (directCoordMatch) {
+        return {
+          lat: parseFloat(directCoordMatch[1]),
+          lng: parseFloat(directCoordMatch[2]),
+          source: 'direct_coordinates'
+        };
+      }
+  
+      return null;
+    } catch (error) {
+      console.error('Error parsing Google Maps URL:', error);
+      return null;
+    }
+  };
+  
+  const searchByCoordinates = async (lat, lng) => {
+      // try {
+      //   const response = await fetch(
+      //     `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=NxvpwMoXuYLINUijkWEc&limit=1`
+      //   );
+  
+      //   if (!response.ok) throw new Error('Reverse geocoding failed');
+  
+      //   const data = await response.json();
+        
+      //   if (data.features?.[0]) {
+      //     const feature = data.features[0];
+      //     return [{
+      //       id: feature.id,
+      //       name: feature.place_name,
+      //       coordinates: [lng, lat],
+      //       type: feature.place_type?.[0],
+      //       relevance: 1,
+      //       isFromCoordinates: true
+      //     }];
+      //   }
+      //   return [];
+      // } catch (error) {
+      //   console.error('Reverse geocoding error:', error);
+      //   throw error;
+      // }
+        if (isValidCoordinate(lat, lng)) {
+          updateMarker(map, lng, lat);
+          setSearchResults([]);
+        }
+  
+    };
+  
+      // Handle search input change with debounce
+      // useEffect(() => {
+      //   const timeoutId = setTimeout(() => {
+      //     const urlData = parseGoogleMapsUrl(searchQuery);
+      //     if (urlData.lat && urlData.lng) {
+      //         // We have direct coordinates from URL
+      //         const results = await searchByCoordinates(urlData.lat, urlData.lng);
+      //         setSearchResults(results);
+              
+      //         if (results.length === 0) {
+      //           setSearchError('Location not found for these coordinates');
+      //         }
+      //         return;
+      //       } else {
+      //     searchLocation(searchQuery);
+      //       }
+      //   }, 500); // 500ms debounce
+  
+      //   return () => clearTimeout(timeoutId);
+      // }, [searchQuery]);
+  // Handle search input change with debounce
+  useEffect(() => {
+    const handleSearch = async () => {
+      const urlData = parseGoogleMapsUrl(searchQuery);
+      if (urlData?.lat && urlData?.lng) {
+        // We have direct coordinates from URL
+        try {
+          const results = await searchByCoordinates(urlData.lat, urlData.lng);
+          setSearchResults(results);
+          // if (results.length === 0) {
+          //   setSearchError('Location not found for these coordinates');
+          // }
+        } catch (error) {
+          // setSearchError('Failed to get location from coordinates');
+          setSearchResults([]);
+        }
+      } else {
+        searchLocation(searchQuery);
+      }
+    };
+  
+    const timeoutId = setTimeout(() => {
+      handleSearch();
+    }, 500); // 500ms debounce
+  
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+  
+      // Handle search result selection
+      const handleSearchResultClick = (result) => {
+        const [lng, lat] = result.coordinates;
+        if (isValidCoordinate(lat, lng) && map) {
+          updateMarker(map, lng, lat);
+          setSearchQuery(result.name);
+          setSearchResults([]);
+        }
       };
-
-      initializeMap();
-
-      return () => {
-        if (mapInstance) {
+  
+      const updateMarker = (map, lng, lat) => {
+        // Validate coordinates before updating marker
+        if (!isValidCoordinate(lat, lng)) {
+          console.error("Invalid coordinates:", lat, lng);
+          return;
+        }
+  
+        // Remove existing marker if it exists
+        if (markerRef.current) {
+          markerRef.current.remove();
+          markerRef.current = null;
+        }
+  
+        // Create new marker
+        const newMarker = new maplibregl.Marker()
+          .setLngLat([lng, lat])
+          .addTo(map);
+  
+        markerRef.current = newMarker;
+        setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
+        setCoordsArabic(
+          `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
+        );
+  
+        map.setCenter([lng, lat]);
+      };
+  
+      useEffect(() => {
+        let mapInstance;
+  
+        const initializeMap = async () => {
           try {
-            if (markerRef.current) markerRef.current.remove();
-            mapInstance.remove();
+            mapInstance = new maplibregl.Map({
+              container: mapContainer.current,
+              style:
+                "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
+              center: getInitialCenter(), // Use the validated center
+              zoom: zoom,
+            });
+  
+            mapInstance.on("load", async () => {
+              setMap(mapInstance);
+              try {
+                let position;
+                const lat =
+                  typeof initialLat === "string"
+                    ? parseFloat(initialLat)
+                    : initialLat;
+                const lng =
+                  typeof initialLng === "string"
+                    ? parseFloat(initialLng)
+                    : initialLng;
+  
+                if (isValidCoordinate(lat, lng)) {
+                  position = { coords: { latitude: lat, longitude: lng } };
+                } else {
+                  position = await getCurrentPosition();
+                }
+  
+                const { latitude, longitude } = position.coords;
+                if (isValidCoordinate(latitude, longitude)) {
+                  updateMarker(mapInstance, longitude, latitude);
+                }
+              } catch (error) {
+                console.log("Geolocation error:", error);
+                setCoords("Click on the map to select a location");
+                setCoordsArabic(t("Click on the map to select a location"));
+              }
+            });
+  
+            mapInstance.on("click", (e) => {
+              if (!confirmedLocation) {
+                const { lng, lat } = e.lngLat;
+                if (isValidCoordinate(lat, lng)) {
+                  updateMarker(mapInstance, lng, lat);
+                }
+              }
+            });
           } catch (error) {
-            console.error("Error cleaning up map:", error);
+            console.error("Map initialization error:", error);
+          }
+        };
+  
+        const getCurrentPosition = () => {
+          return new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 5000,
+            });
+          });
+        };
+  
+        initializeMap();
+  
+        return () => {
+          if (mapInstance) {
+            try {
+              if (markerRef.current) markerRef.current.remove();
+              mapInstance.remove();
+            } catch (error) {
+              console.error("Error cleaning up map:", error);
+            }
+          }
+        };
+      }, [confirmedLocation, initialLat, initialLng]);
+  
+      const handleConfirm = () => {
+        if (markerRef.current) {
+          const lngLat = markerRef.current.getLngLat();
+          const lat = lngLat.lat;
+          const lng = lngLat.lng;
+  
+          if (isValidCoordinate(lat, lng)) {
+            onLocationSelect(lat, lng);
+            setConfirmedLocation(lngLat);
+            handleLocationSelect(lat, lng);
+            setGeoLocation({
+              x: lat.toFixed(6),
+              y: lng.toFixed(6),
+            });
           }
         }
       };
-    }, [confirmedLocation, initialLat, initialLng]);
-
-    const handleConfirm = () => {
-      if (markerRef.current) {
-        const lngLat = markerRef.current.getLngLat();
-        const lat = lngLat.lat;
-        const lng = lngLat.lng;
-
-        if (isValidCoordinate(lat, lng)) {
-          onLocationSelect(lat, lng);
-          setConfirmedLocation(lngLat);
-          handleLocationSelect(lat, lng);
-          setGeoLocation({
-            x: lat.toFixed(6),
-            y: lng.toFixed(6),
-          });
+  
+      const handleReset = () => {
+        if (markerRef.current) {
+          markerRef.current.remove();
+          markerRef.current = null;
         }
-      }
-    };
-
-    const handleReset = () => {
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
-      }
-      setConfirmedLocation(null);
-      setCoords("Click on the map to select a location");
-      setCoordsArabic(t("Click on the map to select a location"));
-    };
-
-    return (
-      <div className="location-picker-container">
-        {/* Add search input */}
-        <div className="location-search">
-          <input
-            type="text"
-            placeholder={t("Search for a location...")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="location-search-input"
-          />
-          {isSearching && (
-            <div className="search-loading">{t("Searching...")}</div>
-          )}
-
-          {/* Search results dropdown */}
-          {searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((result) => (
-                <div
-                  key={result.id}
-                  className="search-result-item"
-                  onClick={() => handleSearchResultClick(result)}
-                >
-                  {result.name}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div
-          ref={mapContainer}
-          className="map-container"
-          style={{ width: "100%", height: "300px" }}
-        />
-        <div className="location-coords">
-          {i18n.language === "ar" ? coordsArabic : coords}
-        </div>
-        <div className="location-actions">
-          {!confirmedLocation ? (
-            <button
-              className="confirm-location-button"
-              onClick={handleConfirm}
-              disabled={!markerRef.current}
-            >
-              {t("Confirm Location")}
-            </button>
-          ) : (
-            <>
-              <div className="location-confirmed">
-                {t("Location confirmed!")}
+        setConfirmedLocation(null);
+        setCoords("Click on the map to select a location");
+        setCoordsArabic(t("Click on the map to select a location"));
+      };
+  
+      return (
+        <div className="location-picker-container">
+          {/* Add search input */}
+          <div className="location-search">
+            <input
+              type="text"
+              placeholder={t("Search for a location...")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="location-search-input"
+            />
+            {isSearching && (
+              <div className="search-loading">{t("Searching...")}</div>
+            )}
+  
+            {/* Search results dropdown */}
+            {searchResults?.length > 0 && (
+              <div className="search-results">
+                {searchResults.map((result) => (
+                  <div
+                    key={result.id}
+                    className="search-result-item"
+                    onClick={() => handleSearchResultClick(result)}
+                  >
+                    {result.name}
+                  </div>
+                ))}
               </div>
-              <button className="reset-location-button" onClick={handleReset}>
-                {t("Change Location")}
+            )}
+          </div>
+  
+          <div
+            ref={mapContainer}
+            className="map-container"
+            style={{ width: "100%", height: "300px" }}
+          />
+          <div className="location-coords">
+            {i18n.language === "ar" ? coordsArabic : coords}
+          </div>
+          <div className="location-actions">
+            {!confirmedLocation ? (
+              <button
+                className="confirm-location-button"
+                onClick={handleConfirm}
+                disabled={!markerRef.current}
+              >
+                {t("Confirm Location")}
               </button>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="location-confirmed">
+                  {t("Location confirmed!")}
+                </div>
+                <button className="reset-location-button" onClick={handleReset}>
+                  {t("Change Location")}
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    );
-  };
+      );
+    };
   // Get current values from branchChanges or fall back to branch data
   // const getFieldValue = (fieldName) => {
   //     // return branchChanges?.[branch.id]?.[fieldName] ?? branch[fieldName] ?? '';
