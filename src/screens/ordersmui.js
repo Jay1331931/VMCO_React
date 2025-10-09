@@ -34,7 +34,7 @@ import { Height } from "@mui/icons-material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import SyncIcon from "@mui/icons-material/Sync";
-import FileUploadProgress from '../components/FileUploadProgress';
+import FileUploadProgress from "../components/FileUploadProgress";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const getStatusClass = (status) => {
@@ -235,9 +235,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-            name: cat.category || cat.name || cat,
-            value: cat.category || cat.name || cat,
-          }))
+              name: cat.category || cat.name || cat,
+              value: cat.category || cat.name || cat,
+            }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -278,9 +278,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-            name: sub.subCategory || sub.subcategory || sub.name || sub,
-            value: sub.subCategory || sub.subcategory || sub.name || sub,
-          }))
+              name: sub.subCategory || sub.subcategory || sub.name || sub,
+              value: sub.subCategory || sub.subcategory || sub.name || sub,
+            }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -433,7 +433,8 @@ function Orders() {
       const filtersCopy = { ...customFilters };
       if (
         filtersCopy.paymentMethod &&
-        (filtersCopy.paymentMethod.toLowerCase() === "card payment" || filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
       ) {
         filtersCopy.paymentMethod = "Pre payment";
       }
@@ -512,7 +513,8 @@ function Orders() {
     const filtersCopy = { ...customFilters };
     if (
       filtersCopy.paymentMethod &&
-      (filtersCopy.paymentMethod.toLowerCase() === "card payment" || filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+        filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
     ) {
       filtersCopy.paymentMethod = "Pre payment";
     }
@@ -1047,11 +1049,7 @@ function Orders() {
       flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => (
-        <span>
-          {t(params.value)}
-        </span>
-      ),
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "branchRegion",
@@ -1125,11 +1123,12 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         const value =
-          params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+          params?.value?.toLowerCase() === "pre payment"
+            ? "Card Payment"
+            : params.value;
         return <span>{t(value)}</span>;
       },
-    }
-    ,
+    },
     {
       field: "createdByUsername",
       headerName: t("Created By"),
@@ -1300,9 +1299,22 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() === "pre payment" &&
-            params?.row?.paymentStatus?.toLowerCase() === "pending" &&
-            params?.row?.status?.toLowerCase() !== "cancelled" && (
+            params?.row?.status?.toLowerCase() !== "cancelled" &&
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
+            (params?.row?.status?.toLowerCase() === "approved" ||
+              (params?.row?.status?.toLowerCase() === "open" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.SHC.toLowerCase())) ||
+              (params?.row?.status?.toLowerCase() === "pending" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1341,29 +1353,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                {
-                  paymentMethod: "Pre Payment",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-              ]
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ]
               : [
-                {
-                  paymentMethod: "Pre Payment",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Credit",
-                  paymentStatus: "Credit",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Cash on Delivery",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-              ],
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Credit",
+                    paymentStatus: "Credit",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Cash on Delivery",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1373,17 +1385,30 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-            rowdata.paymentMethod?.toLowerCase() &&
+              rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-            rowdata.paymentStatus?.toLowerCase() &&
+              rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.status?.toLowerCase() !== "cancelled" &&
-              params?.row?.paymentMethod?.toLowerCase() === "pre payment" &&
-              params?.row?.paymentStatus?.toLowerCase() === "pending" && (
+            params?.row?.status?.toLowerCase() !== "cancelled" &&
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
+            (params?.row?.status?.toLowerCase() === "approved" ||
+              (params?.row?.status?.toLowerCase() === "open" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.SHC.toLowerCase())) ||
+              (params?.row?.status?.toLowerCase() === "pending" &&
+                (params?.row?.entity.toLowerCase() ===
+                  Constants.ENTITY.DAR.toLowerCase() ||
+                  params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) &&(
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1616,11 +1641,12 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         const value =
-          params?.value?.toLowerCase() === "pre payment" ? "Card Payment" : params.value;
+          params?.value?.toLowerCase() === "pre payment"
+            ? "Card Payment"
+            : params.value;
         return <span>{t(value)}</span>;
       },
-    }
-    ,
+    },
     {
       field: "createdByUsername",
       headerName: t("Created By"),
@@ -1886,8 +1912,8 @@ function Orders() {
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('customerId', selectedCustomer.id);
+      formData.append("file", file);
+      formData.append("customerId", selectedCustomer.id);
 
       // Simulate progress updates
       const progressInterval = setInterval(() => {
@@ -1905,10 +1931,10 @@ function Orders() {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-          responseType: 'blob',
+          responseType: "blob",
           validateStatus: () => true,
         }
       );
@@ -1918,24 +1944,30 @@ function Orders() {
       setUploadProgress(100);
 
       // Handle validation errors (400 status)
-      if (response?.status === 400 && response.headers['content-type'] !== 'application/json') {
+      if (
+        response?.status === 400 &&
+        response.headers["content-type"] !== "application/json"
+      ) {
         const blob = new Blob([response.data], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         });
 
         Swal.fire({
-          title: t('Validation Failed'),
-          html: t('Some rows contain validation errors.<br />') +
-            t(' The Excel file has been updated with a new column named <b>Errors</b>.<br />') +
-            t(' Please open the file, review the <b>Errors</b>') +
-            t(' column, fix the issues, and re-upload the file.'),
-          icon: 'warning',
-          confirmButtonText: t('Download Error File'),
+          title: t("Validation Failed"),
+          html:
+            t("Some rows contain validation errors.<br />") +
+            t(
+              " The Excel file has been updated with a new column named <b>Errors</b>.<br />"
+            ) +
+            t(" Please open the file, review the <b>Errors</b>") +
+            t(" column, fix the issues, and re-upload the file."),
+          icon: "warning",
+          confirmButtonText: t("Download Error File"),
         }).then(() => {
           const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
+          const a = document.createElement("a");
           a.href = url;
-          a.download = 'salesorder_upload_errors.xlsx';
+          a.download = "salesorder_upload_errors.xlsx";
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -1948,7 +1980,7 @@ function Orders() {
       const text = await blob.text();
       const data = JSON.parse(text);
 
-      if (response?.status === 200 && data?.status === 'Ok') {
+      if (response?.status === 200 && data?.status === "Ok") {
         // Set completion flag only after successful response
         setUploadComplete(true);
         fetchOrders();
@@ -1959,55 +1991,70 @@ function Orders() {
         const branchesProcessed = data.branchesProcessed || 0;
 
         // Build detailed success message
-        let successMessageDetails = '';
+        let successMessageDetails = "";
         const orderCountDetails = [];
 
         if (ordersCreated > 0) {
-          orderCountDetails.push(`${ordersCreated} order${ordersCreated > 1 ? 's' : ''} created`);
+          orderCountDetails.push(
+            `${ordersCreated} order${ordersCreated > 1 ? "s" : ""} created`
+          );
         }
 
         if (ordersUpdated > 0) {
-          orderCountDetails.push(`${ordersUpdated} order${ordersUpdated > 1 ? 's' : ''} updated`);
+          orderCountDetails.push(
+            `${ordersUpdated} order${ordersUpdated > 1 ? "s" : ""} updated`
+          );
         }
 
         if (orderCountDetails.length > 0) {
-          successMessageDetails = orderCountDetails.join(' and ');
+          successMessageDetails = orderCountDetails.join(" and ");
         }
 
         // Show detailed success message
         Swal.fire({
-          title: t('File Uploaded Successfully'),
+          title: t("File Uploaded Successfully"),
           html: `
           <div style="text-align: center; margin: 20px 0;">
-            <p><strong>${t('Processing Summary')}</strong></p>
+            <p><strong>${t("Processing Summary")}</strong></p>
             <ul>
-              ${branchesProcessed > 0 ? `<span>${branchesProcessed} branch${branchesProcessed > 1 ? 'es' : ''} processed</span>` : ''}
+              ${
+                branchesProcessed > 0
+                  ? `<span>${branchesProcessed} branch${
+                      branchesProcessed > 1 ? "es" : ""
+                    } processed</span>`
+                  : ""
+              }
               <break />
             </ul>
-            ${successMessageDetails ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>` : ''}
+            ${
+              successMessageDetails
+                ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>`
+                : ""
+            }
           </div>
         `,
-          icon: 'success',
-          confirmButtonText: t('OK'),
-          width: '500px',
+          icon: "success",
+          confirmButtonText: t("OK"),
+          width: "500px",
         });
         window.location.reload();
       } else {
         Swal.fire({
-          title: t('File Upload Failed'),
-          text: data.message || t('An error occurred while uploading the file.'),
-          icon: 'error',
-          confirmButtonText: t('OK'),
+          title: t("File Upload Failed"),
+          text:
+            data.message || t("An error occurred while uploading the file."),
+          icon: "error",
+          confirmButtonText: t("OK"),
         });
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error("Error uploading file:", error);
       Swal.fire({
-        title: t('File Upload Failed'),
-        text: t('An error occurred while uploading the file.'),
-        icon: 'error',
-        confirmButtonText: t('OK'),
+        title: t("File Upload Failed"),
+        text: t("An error occurred while uploading the file."),
+        icon: "error",
+        confirmButtonText: t("OK"),
       });
       window.location.reload();
     } finally {
@@ -2023,9 +2070,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-      Number.isFinite(pageSize) &&
-      total > 0 &&
-      pageSize > 0
+    Number.isFinite(pageSize) &&
+    total > 0 &&
+    pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2208,7 +2255,7 @@ function Orders() {
                     disableExtendRowFullWidth={true}
                     pagination={false}
                     autoHeight
-                     rowHeight={55}
+                    rowHeight={55}
                     display="flex"
                     textAlign={i18n.language === "ar" ? "right" : "left"}
                     justifyContent={i18n.language === "ar" ? "right" : "left"}
@@ -2236,7 +2283,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                            Constants.ENTITY.VMCO?.toLowerCase()
+                              Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
@@ -2326,8 +2373,8 @@ function Orders() {
                       buttonName={t("add")}
                       showApproval={
                         isV("approvalButton") &&
-                        (filters.entity?.toLowerCase() ===
-                          Constants.ENTITY.VMCO?.toLowerCase())
+                        filters.entity?.toLowerCase() ===
+                          Constants.ENTITY.VMCO?.toLowerCase()
                       }
                       handleAddClick={handleAddOrder}
                       handleUploadClick={HandleBulkOrderUpload}
@@ -2371,23 +2418,25 @@ function Orders() {
           <div>
             <div className="gp-backdrop" onClick={onClose} />
             {excelLoading ? (
-              <div style={{ padding: '24px 28px' }}>
+              <div style={{ padding: "24px 28px" }}>
                 <FileUploadProgress
                   progress={uploadProgress}
                   isComplete={uploadComplete}
                   onComplete={() => {
                     Swal.fire({
-                      title: t('File Uploaded Successfully'),
-                      text: t('Bulk orders processed successfully for all branches'),
-                      icon: 'success',
-                      confirmButtonText: t('OK'),
+                      title: t("File Uploaded Successfully"),
+                      text: t(
+                        "Bulk orders processed successfully for all branches"
+                      ),
+                      icon: "success",
+                      confirmButtonText: t("OK"),
                     });
                   }}
                   onRowErrors={() => {
-                    console.log('Row validation in progress...');
+                    console.log("Row validation in progress...");
                   }}
                   onOtherErrors={() => {
-                    console.log('Final validation in progress...');
+                    console.log("Final validation in progress...");
                   }}
                 />
               </div>
