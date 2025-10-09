@@ -33,6 +33,19 @@ import { Tooltip } from "@mui/material";
 import axios from "axios";
 import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import {
+  Box,
+  TextField,
+  IconButton,
+  Chip,
+  Button,
+  Typography,
+} from "@mui/material";
+import {
+  KeyboardDoubleArrowRight,
+  Add,
+} from "@mui/icons-material";
+import { Autocomplete, Grid, Menu, MenuItem, Select } from "@mui/material";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -50,6 +63,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [total, setTotal] = useState(0);
   const [branches, setBranches] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
+  const [searchOptions, setSearchOptions] = useState([]);
   const [transformedBranches, setTransformedBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -70,6 +84,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncLoadingId, setSyncLoadingId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [filters, setFilters] = useState({});
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -126,10 +141,70 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     setBranches((prev) => [newBranch, ...prev]);
     setExpandedRows([tempId]); // Expand the new branch row
   };
-  const handleSearchChange = debounce((e) => {
-    setSearch(e.target.value)
-    setCurrentPage(1);
-  }, 400);
+  // const handleSearchChange = debounce((e) => {
+  //   setSearch(e.target.value)
+  //   setCurrentPage(1);
+  // }, 400);
+  const columns = [
+{
+  field: i18n.language === "en" ? "branchNameEn" : "branchNameLc",
+  headerName: t("Branch Name"),
+  searchable: true,
+},
+{
+  field: "city",
+  headerName: t("City"),
+  searchable: true,
+},
+{
+  field: "erpBranchId",
+  headerName: t("ERP ID"),
+  searchable: true,
+},
+{
+  field: "locationType",
+  headerName: t("Location Type"),
+  searchable: true,
+},
+{
+  field: "region",
+  headerName: t("Region"),
+  searchable: true,
+},
+{
+  field: "currentApprover",
+  headerName: t("Current Approver"),
+  searchable: true,
+},
+  ]
+  const handleSearchChange = useCallback(
+      (event, newValue) => {
+        setSearch(newValue);
+  
+        if (!newValue?.trim()) {
+          setSearchOptions([]);
+          return;
+        }
+  
+        // Generate options from columns that can be searched
+        const newOptions = columns
+          .filter(
+            (col) =>
+              col.field !== "updatedAt" &&
+              col.field !== "createdAt" &&
+              col?.searchable
+          )
+          .map((col) => ({
+            column: col.field,
+            searchString: newValue.trim(),
+            source: "search",
+            operator: "contains",
+          }));
+  
+        setSearchOptions(newOptions);
+      },
+      [columns]
+    );
   // Transform branch data with contacts
   const transformBranchData = (branches, branchContacts) => {
     const branchesArray = Array.isArray(branches) ? branches : [branches];
@@ -260,17 +335,25 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     console.log("~~~~~Fetching branches for customer:", customer);
     setError(null);
     console.log(customer);
-    const filters = {
-      customer_id: customer?.id,
-      id: customer?.workflowId,
-    };
+    // const filters = {
+    //   customer_id: customer?.id,
+    //   id: customer?.workflowId,
+    // };
+    // setFilters({
+    //   ...filters,
+    //      customer_id: customer?.id,
+    //     id: customer?.workflowId,
+    // })
     const query = new URLSearchParams({
       page: currentPage,
       pageSize: pageSize,
       sortBy: "id",
       sortOrder: "asc",
-      search: search,
-      filters: JSON.stringify(filters),
+      // search: search,
+      filters: JSON.stringify({...filters,
+customer_id: customer?.id,
+        id: customer?.workflowId,
+      }),
     });
     try {
       const response = await fetch(
@@ -296,7 +379,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     } finally {
       setLoading(false);
     }
-  }, [customer, currentPage, search]);
+  }, [customer, currentPage, filters]);
   // Toggle row expansion and fetch contacts if expanding
   const toggleRow = async (branchId) => {
     if (!expandedRows.includes(branchId)) {
@@ -317,20 +400,20 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       rowHeightTotal +
       (expandedRows.length > 0 ? expandedExtraHeight : collapsedExtraHeight);
     setTabsHeight(`${contentHeight}px`);
-  }, [expandedRows.length, branches.length]);
+  }, [expandedRows?.length, branches?.length]);
   // Fetch branches on mount
   useEffect(() => {
     if (customer?.id) {
       fetchBranches();
     }
-  }, [customer?.id, search, currentPage]);
+  }, [customer?.id, filters, currentPage]);
   // Pagination variables
   const itemsPerPage = pageSize;
   const totalPages = Math.ceil(total / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   // const currentItems = branches.slice(startIndex, endIndex);
-  const currentItems = [...branches].slice(startIndex, endIndex);
+  const currentItems = [...branches]?.slice(startIndex, endIndex);
   const isExpanded = (branchId) => expandedRows.includes(branchId);
   const getStatusClass = (status) => {
     switch (status) {
@@ -1294,12 +1377,119 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
       )} */}
       <div className="branches-page-header">
         <div className="branches-header-controls">
-          <input
+          {/* <input
             type="text"
             placeholder={t("Search...")}
             onChange={handleSearchChange}
             className="branches-search-input"
-          />
+          /> */}
+          <Box
+                    sx={{
+                      width: "500px",
+                      gap: "20px",
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
+                      alignItems: { xs: "stretch", sm: "center" },
+                      marginRight: i18n.language === "en" ? "auto" : "none",
+                      marginLeft: i18n.language === "en" ? "none" : "auto",
+                    }}
+                  >
+                    <Autocomplete
+                      multiple
+                      freeSolo
+                      fullWidth
+                      size="small"
+                      value={Object.entries(filters)
+                        .map(([key, value]) => ({
+                          column: value?.column || key,
+                          searchString: value?.searchString || value,
+                        }))
+                        .filter((item) => item.searchString && columns.find(col => col.field === item.column)?.searchable)} // Filter out empty entries
+                      inputValue={search || ""}
+                      onInputChange={(event, newValue) =>
+                        handleSearchChange(event, newValue)
+                      }
+                      onChange={(event, newValue, details, reason) => {
+                        if (details === "removeOption") {
+                         const newFilterObj = {};
+                Object.entries(filters).forEach(([key, value]) => {
+                  if (key !== reason.option.column) {
+                    newFilterObj[key] = value;
+                  }
+                });
+                setFilters(newFilterObj);
+                        } else {
+                          const newFilterObj = { ...filters };
+                newValue.forEach((item) => {
+                  if (item.column && item.searchString) {
+                    newFilterObj[item.column] = item.searchString;
+                  }
+                });
+                setFilters(newFilterObj);
+                        }
+                      }}
+                      options={searchOptions}
+                      renderOption={(props, option) => {
+                        console.log("columns", columns, option);
+                        const columnName = columns.find(
+                          (col) => col.field === option.column
+                        )?.headerName;
+                        return (
+                          <Box component="li" {...props}>
+                            <Typography sx={{ fontSize: "14px" }}>
+                              {columnName} <KeyboardDoubleArrowRight fontSize="smaller" />{" "}
+                              {option.searchString}
+                            </Typography>
+                          </Box>
+                        );
+                      }}
+                      getOptionLabel={(option) => {
+                        if (typeof option === "string") return option;
+          
+                        const columnName =
+                          columns.find((col) => col.field === option.column)
+                            ?.headerName || option.column;
+                        return `${columnName}: ${
+                          typeof option.searchString === "string"
+                            ? option.searchString
+                            : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${
+                                option.searchString?.endDate?.split("T")[0] ?? ""
+                              }`
+                        }`;
+                      }}
+                      filterOptions={(options) => options} // Don't filter options, show all
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          placeholder={t("Search...")}
+                          variant="outlined"
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: "20px",
+                              fontSize: "12px",
+                              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                                border: "1px solid #3D5654",
+                              },
+                            },
+                            "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
+                              display: "none",
+                            },
+                          }}
+                        />
+                      )}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "10px",
+                          fontSize: "15px",
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            border: "1px solid #3D5654",
+                          },
+                        },
+                        "& .MuiAutocomplete-popupIndicator": { borderRadius: "20px" },
+                        "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
+                      }}
+                    />
+                    </Box>
           {/* <div className="branches-action-buttons">
                <button className="branches-upload-button" onClick={handleButtonClick}>
         <span> {loading ? t("Uploading Excel") : t("Upload Excel")}</span>
