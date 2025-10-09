@@ -764,5 +764,10 @@
     "Sales Executive Id": "رقم مدير المبيعات",
     "Sales Executive Name": "اسم مدير المبيعات",
     "Current Approver": "المعتمد الحالي",
-    "Remaining Credit": "الرصيد الباقي"
+    "Remaining Credit": "الرصيد الباقي",
+    "Enter Coordinates Manually": "أدخل الإحداثيات يدويًا",
+    "Hide Manual Input": "إخفاء الإدخال اليدوي",
+    "Latitude": "خط العرض",
+    "Longitude": "خط الطول",
+    "Apply Coordinates": "تطبيق الإحداثيات"
 }
