@@ -534,6 +534,7 @@ function CustomerDetails() {
         setOriginalCustomerContactsData(customerContacts);
         const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
         setWfCustomerData(wfData);
+        console.log("wfData", wfData)
         // setWorkflowHistory(wfHistory);
         if (wfData?.customer?.nonTradingDocuments) {
           wfData.customer.nonTradingDocuments = JSON.parse(
@@ -543,7 +544,9 @@ function CustomerDetails() {
 
         temp = wfData;
       } else if (workflowInstanceId) {
-        await fetchWorkflowDataOfCustomer(workflowInstanceId);
+        const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
+        setWfCustomerData(wfData);
+        console.log("wfData", wfData)
       }
       setInApproval(isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false));
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
@@ -2483,6 +2486,7 @@ if (uniqueFieldsList.includes(field)) {
                       isBlocking ||
                       isUnblocking
                     }
+                    hidden={user?.userType==="employee" && user?.employeeId !== originalCustomerData?.assignedTo}
                   >
                     {isSaving ? t("Saving...") : t("Save")}
                   </button>

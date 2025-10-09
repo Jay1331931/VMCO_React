@@ -60,7 +60,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [isApprovalMode, setIsApprovalMode] = useState(false);
   const [nextTempId, setNextTempId] = useState(-1);
   const [isFirstBranch, setIsFirstBranch] = useState(false);
-  let search = "";
+  const [search, setSearch] = useState("");
   const isMobile = false;
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
@@ -127,7 +127,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     setExpandedRows([tempId]); // Expand the new branch row
   };
   const handleSearchChange = debounce((e) => {
-    search = e.target.value;
+    setSearch(e.target.value)
     setCurrentPage(1);
   }, 400);
   // Transform branch data with contacts
@@ -296,7 +296,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
     } finally {
       setLoading(false);
     }
-  }, [customer, currentPage]);
+  }, [customer, currentPage, search]);
   // Toggle row expansion and fetch contacts if expanding
   const toggleRow = async (branchId) => {
     if (!expandedRows.includes(branchId)) {
