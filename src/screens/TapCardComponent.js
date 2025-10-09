@@ -12,7 +12,7 @@ const TapCardPayment = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const { orderId, amount, customerId } = useParams();
+  const { orderId, amount, customerId ,orderType} = useParams();
   const [CustomerDetails, setCustomerDetails] = useState(null);
   const [CardDetails, setCardDetails] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
@@ -24,6 +24,7 @@ const TapCardPayment = () => {
   const orderIdDecoded = atob(decodeURIComponent(orderId));
   const amountDecoded = atob(decodeURIComponent(amount));
   const customerIdDecoded = atob(decodeURIComponent(customerId));
+    const orderTypeDecoded = atob(decodeURIComponent(orderType));
   const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -87,6 +88,7 @@ const TapCardPayment = () => {
       console.error("Failed to load Tap Card SDK");
     };
 
+    
     document.head.appendChild(script);
 
     return () => {
@@ -163,9 +165,9 @@ const TapCardPayment = () => {
 
         // Initialize the SDK
         renderTapCard("card-sdk-id", {
-          publicKey: TAP_PUIBLIC_KEY, // Replace with your actual key
+          publicKey: TAP_PUIBLIC_KEY,
           merchant: {
-            id: process.env.REACT_APP_TAP_MERCHANT_ID,
+            id: 599424//process.env.REACT_APP_TAP_MERCHANT_ID,
           },
           transaction: {
             amount: parseFloat(amountDecoded),
@@ -271,6 +273,7 @@ const TapCardPayment = () => {
         amount: amountDecoded,
         customerName: CustomerDetails?.company_name_en,
         tokenData: tokenDATA,
+        orderType:orderTypeDecoded
       };
 
       const { data } = await api.post(`/payment/generate-link`, payload, {

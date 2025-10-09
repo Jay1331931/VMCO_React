@@ -551,23 +551,23 @@ setAmount(parseFloat(totalAmount));
       return;
     }
 
-    let payload;
-    if(DecodedorderTpe?.toLowerCase()==="cart"){
- payload = {
-      salesOrderId: tempdecodedOrderID,
-      amount,
-      customerName: TempOrderDetails[0]?.orderDetails?.companyNameEn,
-      paymentType,
-      orderType:DecodedorderTpe
-    };
-    }else{
- payload = {
-      salesOrderId: decodedOrderID,
-      amount,
-      customerName: OrderDetails[0].companyNameEn,
-      paymentType,
-    };
-    }
+//     let payload;
+//     if(DecodedorderTpe?.toLowerCase()==="cart"){
+//  payload = {
+//       salesOrderId: tempdecodedOrderID,
+//       amount,
+//       customerName: TempOrderDetails[0]?.orderDetails?.companyNameEn,
+//       paymentType,
+//       orderType:DecodedorderTpe
+//     };
+//     }else{
+//  payload = {
+//       salesOrderId: decodedOrderID,
+//       amount,
+//       customerName: OrderDetails[0].companyNameEn,
+//       paymentType,
+//     };
+//     }
     
     console.log("OrderDetails", OrderDetails,user);
     // const { data } = await axios.post(
@@ -577,16 +577,16 @@ setAmount(parseFloat(totalAmount));
     //    
     //   }
     // );
-     const makeRequest = async () => {
-    const { data } = await api.post(
-      `/payment/generate-link`,
-      payload,
-      {
-        headers: { "Authorization": `Bearer ${token}` },
-      }
-    );
-    return data;
-  };
+  //    const makeRequest = async () => {
+  //   const { data } = await api.post(
+  //     `/payment/generate-link`,
+  //     payload,
+  //     {
+  //       headers: { "Authorization": `Bearer ${token}` },
+  //     }
+  //   );
+  //   return data;
+  // };
 
 try {
   const orderIdEncoded =DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
@@ -594,10 +594,10 @@ const amountEncoded = encodeURIComponent(btoa(amount.toString()));
 // const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
 // const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
 const customerIdEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
-
+const orderTypeEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
     // const response = await makeRequest();
 
-  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}`;
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
    window.location.replace(URL)
     // window.close();
     // navigate(URL)

@@ -121,7 +121,7 @@ function App() {
         <Route path="/payment-opations/order/:orderId/:orderType" element={<OptionsPage/>} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
-        <Route path="/tapcard/:orderId/:amount/:customerId" element={<TapCardComponent/>} />
+        <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent/>} />
       </Routes>
     </Router>
   );
