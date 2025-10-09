@@ -442,11 +442,11 @@ function Sidebar({ children, title }) {
 const formatValue = (value) => {
   if (Array.isArray(value)) {
     // Handle array of objects with name property
-    if (value.length > 0 && typeof value[0] === 'object' && value[0].name) {
-      return value.map(item => item.name).join(', ');
+    if (value?.length > 0 && typeof value[0] === 'object' && value[0]?.name) {
+      return value?.map(item => item?.name).join(', ');
     }
     // Handle array of strings or numbers
-    return value.join(', ');
+    return value?.join(', ');
   }
   
   return value
