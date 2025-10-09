@@ -27,7 +27,7 @@ const OptionsPage = () => {
   const { orderId ,orderType} = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
   const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
-  const  [orderTpe,setOrderType]=useState(null)
+  const  [DecodedorderTpe,setDecodedOrderType]=useState(null)
   const [amount, setAmount] = useState(0);
 
   const { token ,user} = useAuth();
@@ -54,7 +54,7 @@ const OptionsPage = () => {
       { headers: { Authorization: `Bearer ${token}` } }
     );
     if(data?.details?.orderType?.toLowerCase()==="cart"){
-      setOrderType(data?.details?.orderType)
+      setDecodedOrderType(data?.details?.orderType)
       setTempDecodedOrderID(data?.details?.orderIds)
     }else{
  setDecodedOrderID(data?.details?.orderIds);
@@ -384,76 +384,9 @@ const fetchtempSaleOrder = useCallback(async () => {
       (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
       0
     );
-
-    // Check if all orders are fully paid
-    // const allPaid = OrderDetails.every(
-    //   (order) =>
-    //     order.paymentStatus?.toLowerCase() === "paid" &&
-    //     parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
-    // );
-
-    // Check if all orders have 100% payment config and none are paid yet
-    const allZeroPaidAndFullPayment = OrderDetails.every(
-      (order) =>
-        parseFloat(order.paidPercentage || 0) === 0 &&
-        parseFloat(order.paymentPercentage || 0) === 100 &&
-        order.paymentStatus?.toLowerCase() !== "paid"
-    );
-
-    // Check if entity is VMCO and all orders are unpaid and paymentPercentage = 30
-    const allUnpaidVMCO = OrderDetails.every(
-      (order) =>
-        (parseFloat(order.paidAmount) == 0.0 || order.paidAmount == null) &&
-        parseFloat(order.paymentPercentage || 0) == 30.0 &&
-        order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
-    );
+setAmount(parseFloat(totalAmount));
     console.log("Amount match:", 0 == null);
-    // Mixed condition: paid partially and paymentPercentage is 30 and 70% amount is not paid
-    const somePaid30 = OrderDetails.every(
-      (order) =>
-        (parseFloat(order.paidAmount || 0)  > 0.0 || order.paidAmount == null) &&
-        parseFloat(order.paymentPercentage || 0) === 30.0
-    );
-    const paidOrders = OrderDetails.filter(
-      (order) =>
-        order.paymentStatus?.toLowerCase() === "paid" &&
-        parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
-    );
-
-    if (paidOrders.length > 0) {
-      const paidIds = paidOrders.map((order) => order.id).join(", ");
-      Swal.fire({
-        title: "Payment Already Done",
-        text: `The following sales order(s) are already paid: ${paidIds}`,
-        icon: "info",
-        confirmButtonText: "OK",
-      }).then(() => window.close());
-      return;
-    // } else if (allPaid) {
-    //   Swal.fire({
-    //     title: "Payment Already Done",
-    //     text: "All selected orders have already been paid.",
-    //     icon: "info",
-    //     confirmButtonText: "OK",
-    //   }).then(() => window.close());
-    //   return;
-    // } else if (allZeroPaidAndFullPayment) {
-    //   setAmount(totalAmount);
-    // } else if (allUnpaidVMCO) {
-    //   setAmount((30 / 100) * totalAmount);
-    // } else if (somePaid30) {
-    //   setAmount(totalAmount - paidAmount);
-    
-    } else {
-      Swal.fire({
-        title: "Payment Amount Error",
-        text: "Could not process the payment amount for all orders.",
-        icon: "error",
-        confirmButtonText: "OK",
-      }).then(() => window.close());
-      return;
-    }
-  }, [OrderDetails]);
+  }, [TempOrderDetails]);
 
   //  useEffect(() => {
   //   if (!OrderDetails || Object.keys(OrderDetails).length === 0) return;
@@ -617,12 +550,25 @@ const fetchtempSaleOrder = useCallback(async () => {
       });
       return;
     }
-    const payload = {
+
+    let payload;
+    if(DecodedorderTpe?.toLowerCase()==="cart"){
+ payload = {
+      salesOrderId: tempdecodedOrderID,
+      amount,
+      customerName: TempOrderDetails[0]?.orderDetails?.companyNameEn,
+      paymentType,
+      orderType:DecodedorderTpe
+    };
+    }else{
+ payload = {
       salesOrderId: decodedOrderID,
       amount,
       customerName: OrderDetails[0].companyNameEn,
       paymentType,
     };
+    }
+    
     console.log("OrderDetails", OrderDetails,user);
     // const { data } = await axios.post(
     //   `/payment/generate-link`,
@@ -643,11 +589,11 @@ const fetchtempSaleOrder = useCallback(async () => {
   };
 
 try {
-  const orderIdEncoded = encodeURIComponent(btoa(decodedOrderID));
+  const orderIdEncoded =DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
 const amountEncoded = encodeURIComponent(btoa(amount.toString()));
 // const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
 // const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
-const customerIdEncoded=encodeURIComponent(btoa(OrderDetails[0]?.customerId))
+const customerIdEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
 
     // const response = await makeRequest();
 
