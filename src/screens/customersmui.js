@@ -1689,8 +1689,8 @@ function Customers() {
                   hideFooterPagination={true}
                   disableExtendRowFullWidth={true}
                   pagination={false}
-                  autoHeight
-                  rowHeight={70}
+                  autoHeight  
+                  rowHeight={55}
                   display="flex"
                   textAlign={i18n.language === "ar" ? "right" : "left"}
                   justifyContent={i18n.language === "ar" ? "right" : "left"}
@@ -1765,7 +1765,7 @@ function Customers() {
             disableExtendRowFullWidth={true}
             pagination={false}
             autoHeight
-            rowHeight={70}
+             rowHeight={55}
             display="flex"
             textAlign={i18n.language === "ar" ? "right" : "left"}
             justifyContent={i18n.language === "ar" ? "right" : "left"}
@@ -1841,7 +1841,7 @@ function Customers() {
             disableExtendRowFullWidth={true}
             pagination={false}
             autoHeight
-            rowHeight={70}
+             rowHeight={55}
             display="flex"
             textAlign={i18n.language === "ar" ? "right" : "left"}
             justifyContent={i18n.language === "ar" ? "right" : "left"}

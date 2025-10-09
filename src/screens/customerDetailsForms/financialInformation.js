@@ -1672,14 +1672,16 @@ function FinancialInformation({
         )
       }
       {isCreditBalanceData && (
-        <>
-          <div className="gi-backdrop" />
+        <div className="gi-backdrop">
           <dialog className="credit-balance-dialog" open>
             <div className="dialog-header">
               <h2>{t("Credit Balance")}</h2>
-              {/* <button className="close-dialog" onClick={() => setIsCreditBalanceData(false)}>
-                  &times;
-                </button> */}
+              <button
+                className="close-dialog"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
+                &times;
+              </button>
             </div>
             <div className="dialog-content">
               <div className="balance-table-container">
@@ -1687,33 +1689,65 @@ function FinancialInformation({
                   <thead>
                     <tr>
                       <th>{t("Entity")}</th>
+                      <th className="due-to-pay">{t("Due to Pay")}</th>
                       <th className="balance-amount">{t("Remaining Credit")}</th>
-                      <th className="Credit-limit">{t("Credit Limit")}</th>
+                      <th className="credit-limit">{t("Credit Limit")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {basicMasterLists?.entity?.map((item) => {
+                      // Calculate due to pay (credit limit - remaining credit)
+                      const creditLimit = creditLimitData?.[item.value]?.limit || 0;
+                      const remainingCredit = creditBalanceData?.[item.value] || 0;
+                      const dueToPay = parseFloat(creditLimit) - parseFloat(remainingCredit);
+
                       return (
                         <tr key={item.value}>
-                          <td>{i18n.language === "en" ? item.description : item.descriptionLc}</td>
-                          <td className={`balance-amount ${creditBalanceData?.[item.value] === 0 ? "zero" :
-                              creditBalanceData?.[item.value] > 0 ? "positive" : "negative"
+                          <td>
+                            {i18n.language === "en"
+                              ? item.description
+                              : item.descriptionLc}
+                          </td>
+                          <td className={`due-to-pay ${dueToPay === 0
+                            ? "zero"
+                            : dueToPay > 0
+                              ? "positive"
+                              : "negative"
+                            }`}>
+                            {dueToPay !== 0
+                              ? dueToPay.toLocaleString("en-US", {
+                                style: "currency",
+                                currency: "SAR",
+                                minimumFractionDigits: 2,
+                              })
+                              : "SAR 0.00"}
+                          </td>
+                          <td className={`balance-amount ${creditBalanceData?.[item.value] === 0
+                            ? "zero"
+                            : creditBalanceData?.[item.value] > 0
+                              ? "positive"
+                              : "negative"
                             }`}>
                             {creditBalanceData?.[item.value]?.toLocaleString("en-US", {
                               style: "currency",
                               currency: "SAR",
-                              minimumFractionDigits: 2
+                              minimumFractionDigits: 2,
                             }) || "SAR 0.00"}
                           </td>
-                          <td className={`balance-amount ${!creditLimitData?.[item.value]?.limit || creditLimitData[item.value].limit === "0" ? "zero" :
-                              parseFloat(creditLimitData[item.value].limit) > 0 ? "positive" : "negative"
+                          <td className={`balance-amount ${!creditLimitData?.[item.value]?.limit ||
+                            creditLimitData[item.value].limit === 0
+                            ? "zero"
+                            : parseFloat(creditLimitData[item.value].limit) > 0
+                              ? "positive"
+                              : "negative"
                             }`}>
-                            {creditLimitData?.[item.value]?.limit ?
-                              parseFloat(creditLimitData[item.value].limit).toLocaleString("en-US", {
+                            {creditLimitData?.[item.value]?.limit
+                              ? parseFloat(creditLimitData[item.value].limit).toLocaleString("en-US", {
                                 style: "currency",
                                 currency: "SAR",
-                                minimumFractionDigits: 2
-                              }) : "SAR 0.00"}
+                                minimumFractionDigits: 2,
+                              })
+                              : "SAR 0.00"}
                           </td>
                         </tr>
                       );
@@ -1726,101 +1760,102 @@ function FinancialInformation({
               )}
             </div>
             <div className="gi-footer">
-              <button className="gi-close-btn" onClick={() => setIsCreditBalanceData(false)}>
+              <button
+                className="gi-close-btn"
+                onClick={() => setIsCreditBalanceData(false)}
+              >
                 {t("Close")}
               </button>
             </div>
           </dialog>
-
-        </>
-      )}
-
-      <style>{`
-          .gi-backdrop {
+          <style>
+            {`
+        .gi-backdrop {
           position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           background: rgba(0,0,0,0.15);
           z-index: 1000;
         }
-  .credit-balance-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100vw;
-    max-width: 800px;
-    border: 1px solid #ccc;
-    background: #fff;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
-    border-radius: 12px;
-    padding: 0;
-    background: #fff;
-    z-index: 1001;
-    overflow: hidden;
-    animation: gi-fadein 0.2s;
-  }
-    @keyframes gi-fadein {
-          from { opacity: 0; transform: translate(-50%, -60%);}
-          to { opacity: 1; transform: translate(-50%, -50%);}
+        .credit-balance-dialog {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 100vw;
+          max-width: 900px;
+          border: 1px solid #ccc;
+          background: #fff;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+          border-radius: 12px;
+          padding: 0;
+          background: #fff;
+          z-index: 1001;
+          overflow: hidden;
+          animation: gi-fadein 0.2s;
         }
- 
-  .dialog-header {
-    color: #666;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
- 
-  .dialog-header h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
- 
-  .close-dialog {
-    background: none;
-    border: none;
-    color: #666;
-    font-size: 1.5rem;
-    cursor: pointer;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-  }
- 
-  .close-dialog:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
- 
-  .dialog-content {
-    padding: 20px;
-    max-height: 70vh;
-    overflow-y: auto;
-  }
- 
-  .customer-info {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e9ecef;
-  }
- 
-  .customer-info p {
-    margin: 5px 0;
-    color: #6c757d;
-  }
-    .balance-table-container {
+        @keyframes gi-fadein {
+          from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+          }
+          to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+          }
+        }
+        .dialog-header {
+          color: #666;
+          padding: 15px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .dialog-header h2 {
+          font-size: 1.3rem;
+          font-weight: 600;
+          margin: 0;
+        }
+        .close-dialog {
+          background: none;
+          border: none;
+          color: #666;
+          font-size: 1.5rem;
+          cursor: pointer;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+        }
+        .close-dialog:hover {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+        .dialog-content {
+          padding: 20px;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+        .customer-info {
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 1px solid #e9ecef;
+        }
+        .customer-info p {
+          margin: 5px 0;
+          color: #6c757d;
+        }
+        .balance-table-container {
           margin: 10px 28px;
           padding: 6px;
           border: 1.9px solid #eee;
-            border-radius: 10px;
+          border-radius: 10px;
         }
-
-  .balance-table {
+        .balance-table {
           width: 100%;
           border-collapse: collapse;
         }
@@ -1839,37 +1874,40 @@ function FinancialInformation({
         .balance-table tr:not(:last-child) {
           border-bottom: 1px solid #eee;
         }
- 
-  
-  .balance-amount {
-    text-align: right;
-    font-weight: 500;
-  }
- 
-  .balance-amount.zero {
-    color: #6c757d;
-  }
- 
-  .balance-amount.positive {
-    color: #6c757d;
-  }
- 
-  .balance-amount.negative {
-    color: #dc3545;
-  }
- 
-  .no-data {
-    text-align: center;
-    padding: 20px;
-    color: #6c757d;
-    font-style: italic;
-  }
-    .gi-footer {
+        .balance-amount, .due-to-pay, .credit-limit {
+          text-align: right;
+          font-weight: 500;
+        }
+        .balance-amount.zero, .credit-limit.zero {
+          color: #6c757d;
+        }
+        .balance-amount.positive, .credit-limit.positive {
+          color: #6c757d;
+        }
+        .balance-amount.negative, .credit-limit.negative {
+          color: #6c757d;
+        }
+        .due-to-pay.zero {
+          color: #6c757d;
+        }
+        .due-to-pay.positive {
+          color: #dc3545;
+        }
+        .due-to-pay.negative {
+          color: #dc3545;
+        }
+        .no-data {
+          text-align: center;
+          padding: 20px;
+          color: #6c757d;
+          font-style: italic;
+        }
+        .gi-footer {
           display: flex;
           justify-content: flex-end;
           padding: 16px 28px 22px 28px;
         }
- .gi-close-btn {
+        .gi-close-btn {
           padding: 7px 28px;
           border-radius: 6px;
           border: 1px solid #bbb;
@@ -1882,24 +1920,23 @@ function FinancialInformation({
         .gi-close-btn:hover {
           background: #f2f2f2;
         }
-  @media (max-width: 600px) {
-    .credit-balance-dialog {
-      width: 95vw;
-      max-width: none;
-    }
-   
-    .dialog-content {
-      padding: 15px;
-    }
-   
-    .balance-table th,
-    .balance-table td {
-      padding: 8px 10px;
-    }
-  }
-          `}</style>
+        @media (max-width: 600px) {
+          .credit-balance-dialog {
+            width: 95vw;
+            max-width: none;
+          }
+          .dialog-content {
+            padding: 15px;
+          }
+          .balance-table th, .balance-table td {
+            padding: 8px 10px;
+          }
+        }
+      `}
+          </style>
+        </div>
+      )}
     </div>
-
   );
 }
 
