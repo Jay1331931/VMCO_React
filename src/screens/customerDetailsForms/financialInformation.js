@@ -1691,7 +1691,7 @@ function FinancialInformation({
                       <th>{t("Entity")}</th>
                       <th className="due-to-pay">{t("Due to Pay")}</th>
                       <th className="balance-amount">{t("Remaining Credit")}</th>
-                      <th className="credit-limit">{t("Credit Balance")}</th>
+                      <th className="credit-limit">{t("Credit Limit")}</th>
                     </tr>
                   </thead>
                   <tbody>
