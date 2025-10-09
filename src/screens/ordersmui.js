@@ -2208,7 +2208,7 @@ function Orders() {
                     disableExtendRowFullWidth={true}
                     pagination={false}
                     autoHeight
-                    rowHeight={70}
+                     rowHeight={55}
                     display="flex"
                     textAlign={i18n.language === "ar" ? "right" : "left"}
                     justifyContent={i18n.language === "ar" ? "right" : "left"}
@@ -2299,7 +2299,7 @@ function Orders() {
                 disableExtendRowFullWidth={true}
                 pagination={false}
                 autoHeight
-                rowHeight={70}
+                rowHeight={55}
                 display="flex"
                 textAlign={i18n.language === "ar" ? "right" : "left"}
                 justifyContent={i18n.language === "ar" ? "right" : "left"}

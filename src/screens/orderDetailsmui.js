@@ -3624,7 +3624,7 @@ function OrderDetails() {
                                                     disableExtendRowFullWidth={true}
                                                     pagination={false}
                                                     autoHeight
-                                                    rowHeight={70}
+                                                    rowHeight={55}
                                                     getRowId={(row) => row.id || row.productId}
                                                     sx={{
                                                         '& .MuiDataGrid-cell': {
