@@ -235,9 +235,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat,
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -278,9 +278,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.subcategory || sub.name || sub,
-              value: sub.subCategory || sub.subcategory || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -1048,23 +1048,7 @@ function Orders() {
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent row click
-            handleOrderNumberClick(params.row);
-          }}
-          style={{
-            color: "var(--navy-blue)",
-            cursor: "pointer",
-            textDecoration: "none",
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.textDecoration = "underline";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.textDecoration = "none";
-          }}
-        >
+        <span>
           {t(params.value)}
         </span>
       ),
@@ -1357,29 +1341,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ]
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1389,9 +1373,9 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-              rowdata.paymentMethod?.toLowerCase() &&
+            rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-              rowdata.paymentStatus?.toLowerCase() &&
+            rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
@@ -2039,9 +2023,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2252,7 +2236,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
+                            Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
