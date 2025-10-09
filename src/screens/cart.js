@@ -873,7 +873,7 @@ function Cart() {
         try {
             // Check if this is a VMCO category and handle special logic
             const entity = getEntityFromCategory(categoryName);
-            if (entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+            if (entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                 // Separate VMCO products into machines and consumables
                 const machineProducts = categoryItems.filter(item => item.isMachine === true);
                 const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
@@ -886,13 +886,48 @@ function Cart() {
                     nonMachineProductIds: nonMachineProducts.map(p => p.product_id)
                 });
 
-                // For VMCO, first show payment method popup for consumables, then process both machines and consumables
+                // For VMCO, handle consumables with credit check, then process both machines and consumables
                 if (nonMachineProducts.length > 0) {
-                    console.log('Showing payment method selection for VMCO consumables first');
-                    setPendingOrderCategory(categoryName);
-                    setPendingOrderItems(categoryItems); // Pass all items so we can separate later
-                    setShowPaymentPopup(true);
-                    return; // Exit function to wait for user payment method selection
+                    console.log('Checking if user is credit user for VMCO consumables');
+
+                    // Check if credit payment is allowed for VMCO entity
+                    const isCreditAllowed = await isCreditPaymentAllowed(selectedCustomerId, entity);
+
+                    if (isCreditAllowed) {
+                        // Calculate total amount for consumables to validate balance
+                        let consumablesTotalAmount = 0;
+                        nonMachineProducts.forEach(item => {
+                            const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
+                            const vatPercentage = Number(item.vatPercentage) || 0;
+                            const vatAmount = (baseAmount * vatPercentage) / 100;
+                            const itemTotal = baseAmount + vatAmount;
+                            consumablesTotalAmount += itemTotal;
+                        });
+
+                        // Validate credit balance
+                        const isBalanceValid = await validateCreditBalance(selectedCustomerId, consumablesTotalAmount, entity);
+
+                        if (isBalanceValid) {
+                            // Credit user with sufficient balance - place order directly with Credit
+                            console.log('VMCO user is credit user with sufficient balance, placing consumables order directly with Credit');
+                            await handleVMCOOrderProcessing(categoryItems, categoryName, 'Credit');
+                            return;
+                        } else {
+                            // Credit user but insufficient balance - show payment popup
+                            console.log('VMCO user is credit user but has insufficient balance, showing payment popup');
+                            setPendingOrderCategory(categoryName);
+                            setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+                            setShowPaymentPopup(true);
+                            return; // Exit function to wait for user payment method selection
+                        }
+                    } else {
+                        // Non-credit user - show payment popup
+                        console.log('VMCO user is non-credit user, showing payment method selection for consumables');
+                        setPendingOrderCategory(categoryName);
+                        setPendingOrderItems(categoryItems); // Pass all items so we can separate later
+                        setShowPaymentPopup(true);
+                        return; // Exit function to wait for user payment method selection
+                    }
                 } else if (machineProducts.length > 0) {
                     // If only machines, proceed directly
                     console.log('Only VMCO machines found, placing order directly with Pre Payment');

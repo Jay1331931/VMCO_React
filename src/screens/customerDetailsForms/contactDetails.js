@@ -143,7 +143,6 @@ function ContactDetails({
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-
     // Validate and sanitize coordinates
     const isValidCoordinate = (lat, lng) => {
       return (
@@ -204,15 +203,202 @@ function ContactDetails({
         setIsSearching(false);
       }
     };
+    // Enhanced utility function to extract coordinates from all Google Maps URLs
+const parseGoogleMapsUrl = (url) => {
+  if (!url) return null;
+
+  try {
+    const cleanedUrl = url.trim();
+    
+    // Case 1: Short URL (maps.app.goo.gl) - we need to extract from query parameters
+    if (cleanedUrl.includes('maps.app.goo.gl')) {
+      const urlObj = new URL(cleanedUrl);
+      const queryParams = new URLSearchParams(urlObj.search);
+      
+      // Try to get coordinates from the 'q' parameter
+      const qParam = queryParams.get('q');
+      if (qParam) {
+        const coordMatch = qParam.match(/^(-?\d+\.\d+),(-?\d+\.\d+)$/);
+        if (coordMatch) {
+          return {
+            lat: parseFloat(coordMatch[1]),
+            lng: parseFloat(coordMatch[2]),
+            source: 'short_url_coordinates'
+          };
+        }
+        // If it's a place name, return as query
+        return {
+          query: qParam,
+          source: 'short_url_place'
+        };
+      }
+      
+      // Try to get data from the 'link' parameter (common in short URLs)
+      const linkParam = queryParams.get('link');
+      if (linkParam) {
+        const decodedLink = decodeURIComponent(linkParam);
+        return parseGoogleMapsUrl(decodedLink); // Recursively parse the decoded link
+      }
+    }
+
+    // Case 2: Regular Google Maps URL with coordinates
+    const coordMatch = cleanedUrl.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (coordMatch) {
+      return {
+        lat: parseFloat(coordMatch[1]),
+        lng: parseFloat(coordMatch[2]),
+        source: 'google_maps_url'
+      };
+    }
+
+    // Case 3: Place ID or place name in regular URL
+    const placeMatch = cleanedUrl.match(/[?&]q=([^&]+)/);
+    if (placeMatch) {
+      const placeQuery = decodeURIComponent(placeMatch[1]);
+      
+      // Check if it's coordinates in text form
+      const coordTextMatch = placeQuery.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
+      if (coordTextMatch) {
+        return {
+          lat: parseFloat(coordTextMatch[1]),
+          lng: parseFloat(coordTextMatch[2]),
+          source: 'coordinates_text'
+        };
+      }
+      
+      return {
+        query: placeQuery,
+        source: 'place_query'
+      };
+    }
+
+    // Case 4: Maps App deep link (comgooglemaps://)
+    const deepLinkMatch = cleanedUrl.match(/comgooglemaps:\/\/\?.*center=(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (deepLinkMatch) {
+      return {
+        lat: parseFloat(deepLinkMatch[1]),
+        lng: parseFloat(deepLinkMatch[2]),
+        source: 'google_maps_app'
+      };
+    }
+
+    // Case 5: New Google Maps format with @ coordinates
+    const atCoordMatch = cleanedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+    if (atCoordMatch) {
+      return {
+        lat: parseFloat(atCoordMatch[1]),
+        lng: parseFloat(atCoordMatch[2]),
+        source: 'google_maps_at_format'
+      };
+    }
+
+    // Case 6: Place details with coordinates (!3d and !4d)
+    const placeCoordMatch = cleanedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+    if (placeCoordMatch) {
+      return {
+        lat: parseFloat(placeCoordMatch[1]),
+        lng: parseFloat(placeCoordMatch[2]),
+        source: 'google_maps_3d_format'
+      };
+    }
+
+    // Case 7: Direct coordinates pattern (lat,lng)
+    const directCoordMatch = cleanedUrl.match(/^(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)$/);
+    if (directCoordMatch) {
+      return {
+        lat: parseFloat(directCoordMatch[1]),
+        lng: parseFloat(directCoordMatch[2]),
+        source: 'direct_coordinates'
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error parsing Google Maps URL:', error);
+    return null;
+  }
+};
+
+const searchByCoordinates = async (lat, lng) => {
+    // try {
+    //   const response = await fetch(
+    //     `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=NxvpwMoXuYLINUijkWEc&limit=1`
+    //   );
+
+    //   if (!response.ok) throw new Error('Reverse geocoding failed');
+
+    //   const data = await response.json();
+      
+    //   if (data.features?.[0]) {
+    //     const feature = data.features[0];
+    //     return [{
+    //       id: feature.id,
+    //       name: feature.place_name,
+    //       coordinates: [lng, lat],
+    //       type: feature.place_type?.[0],
+    //       relevance: 1,
+    //       isFromCoordinates: true
+    //     }];
+    //   }
+    //   return [];
+    // } catch (error) {
+    //   console.error('Reverse geocoding error:', error);
+    //   throw error;
+    // }
+      if (isValidCoordinate(lat, lng)) {
+        updateMarker(map, lng, lat);
+        setSearchResults([]);
+      }
+
+  };
 
     // Handle search input change with debounce
-    useEffect(() => {
-      const timeoutId = setTimeout(() => {
-        searchLocation(searchQuery);
-      }, 500); // 500ms debounce
+    // useEffect(() => {
+    //   const timeoutId = setTimeout(() => {
+    //     const urlData = parseGoogleMapsUrl(searchQuery);
+    //     if (urlData.lat && urlData.lng) {
+    //         // We have direct coordinates from URL
+    //         const results = await searchByCoordinates(urlData.lat, urlData.lng);
+    //         setSearchResults(results);
+            
+    //         if (results.length === 0) {
+    //           setSearchError('Location not found for these coordinates');
+    //         }
+    //         return;
+    //       } else {
+    //     searchLocation(searchQuery);
+    //       }
+    //   }, 500); // 500ms debounce
 
-      return () => clearTimeout(timeoutId);
-    }, [searchQuery]);
+    //   return () => clearTimeout(timeoutId);
+    // }, [searchQuery]);
+// Handle search input change with debounce
+useEffect(() => {
+  const handleSearch = async () => {
+    const urlData = parseGoogleMapsUrl(searchQuery);
+    if (urlData?.lat && urlData?.lng) {
+      // We have direct coordinates from URL
+      try {
+        const results = await searchByCoordinates(urlData.lat, urlData.lng);
+        setSearchResults(results);
+        // if (results.length === 0) {
+        //   setSearchError('Location not found for these coordinates');
+        // }
+      } catch (error) {
+        // setSearchError('Failed to get location from coordinates');
+        setSearchResults([]);
+      }
+    } else {
+      searchLocation(searchQuery);
+    }
+  };
+
+  const timeoutId = setTimeout(() => {
+    handleSearch();
+  }, 500); // 500ms debounce
+
+  return () => clearTimeout(timeoutId);
+}, [searchQuery]);
 
     // Handle search result selection
     const handleSearchResultClick = (result) => {
@@ -374,7 +560,7 @@ function ContactDetails({
           )}
 
           {/* Search results dropdown */}
-          {searchResults.length > 0 && (
+          {searchResults?.length > 0 && (
             <div className="search-results">
               {searchResults.map((result) => (
                 <div
