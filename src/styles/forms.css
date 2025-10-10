@@ -704,6 +704,15 @@
 .branches-data-table tr:hover {
   background-color: white;
 }
+.first-row-highlight {
+  background-color: #fff9e6 !important; /* Light yellow background */
+  border-left: 5px solid #ffc107 !important; /* Yellow accent border */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+.first-row-highlight:hover {
+  background-color: #fff4d1 !important; /* Slightly darker on hover */
+}
 .branches-content {
   /* transform: scale(0.8);
     width: 90%; */

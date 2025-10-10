@@ -690,12 +690,8 @@ function Catalog() {
         selectedCustomerStatus: user?.customerStatus,
         selectedBranchId: selectedLocation,
         selectedBranchName: selectedBranch?.label || "",
-        selectedBranchNameLc:
-          selectedBranch?.branch_name_lc ||
-          selectedBranch?.raw?.branchNameLc ||
-          "",
-        selectedBranchNameEn:
-          selectedBranch?.raw?.branchNameEn || selectedBranch?.label || "",
+        selectedBranchNameLc: selectedBranch?.raw?.branchNameLc || selectedBranch?.branch_name_lc || "",
+        selectedBranchNameEn: selectedBranch?.raw?.branchNameEn || selectedBranch?.branch_name_en || "",
         selectedBranchErpId: selectedBranch?.erpBranchId || "",
         selectedBranchRegion,
         selectedBranchCity,
@@ -768,6 +764,8 @@ function Catalog() {
             branchCity: branch.city || branch.branchCity || branch.branch_city,
             raw: branch,
             disabled: !isApproved || !branch.erpBranchId,
+            branch_name_en: branch.branch_name_en || branch.branchNameEn,
+            branch_name_lc: branch.branch_name_lc || branch.branchNameLc,
           };
         });
         setBranches(branchOptions);
