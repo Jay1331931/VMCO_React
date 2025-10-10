@@ -57,7 +57,7 @@ function Customers() {
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteData, setInviteData] = useState({

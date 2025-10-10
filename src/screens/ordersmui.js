@@ -754,7 +754,7 @@ function Orders() {
     try {
       const params = new URLSearchParams({
         page: 1,
-        pageSize: 100,
+        pageSize: 10000,
         search: "",
         sortBy: "id",
         sortOrder: "asc",

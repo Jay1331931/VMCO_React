@@ -16,7 +16,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 5,
+    pageSize: 10,
     total: 0
   });
     const [customerOrders, setCustomerOrders] = useState([]);
