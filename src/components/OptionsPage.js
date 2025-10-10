@@ -23,8 +23,11 @@ const getCookie = (name) => {
 };
 const OptionsPage = () => {
   const [OrderDetails, setOrderDetails] = useState([]);
-  const { orderId } = useParams();
+   const [TempOrderDetails, setTempOrderDetails] = useState([]);
+  const { orderId ,orderType} = useParams();
   const [decodedOrderID, setDecodedOrderID] = useState(null);
+  const [tempdecodedOrderID, setTempDecodedOrderID] = useState(null);
+  const  [DecodedorderTpe,setDecodedOrderType]=useState(null)
   const [amount, setAmount] = useState(0);
 
   const { token ,user} = useAuth();
@@ -47,11 +50,17 @@ const OptionsPage = () => {
   try {
     const token = localStorage.getItem("token"); // always use latest
     const { data } = await api.get(
-      `/decode-ids?encryptedorderIds=${orderId}`,
+      `/decode-ids?encryptedorderIds=${orderId}&salesOrderType=${orderType}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
+    if(data?.details?.orderType?.toLowerCase()==="cart"){
+      setDecodedOrderType(data?.details?.orderType)
+      setTempDecodedOrderID(data?.details?.orderIds)
+    }else{
+ setDecodedOrderID(data?.details?.orderIds);
+    }
 
-    setDecodedOrderID(data?.details?.orderIds);
+   
   } catch (error) {
     console.error("Failed to fetch decoded data", error);
 
@@ -120,6 +129,52 @@ const fetchSaleOrder = useCallback(async () => {
     // }
   }
 }, [decodedOrderID]);
+const fetchtempSaleOrder = useCallback(async () => {
+  try {
+    if (!tempdecodedOrderID) return;
+
+    const token = localStorage.getItem("token"); // always use latest
+    const ids = tempdecodedOrderID.toString().split(",");
+    console.log("Decoded Order ID(s):", ids);
+
+    const results = await Promise.all(
+      ids.map((id) =>
+        api.get(`/temp-sales-order/id/${tempdecodedOrderID}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      )
+    );
+
+    const allOrders = results.map((res) => res.data.data);
+    setTempOrderDetails(allOrders);
+    console.log("Sale Order Data:", allOrders);
+  } catch (error) {
+    console.error("Failed to fetch sale order", error);
+
+    // if (error.response?.status === 401) {
+    //   console.warn("Token invalid in sale order. Generating a new one...");
+
+    //   const newToken = await generateToken();
+    //   if (newToken) {
+    //     try {
+    //       const ids = decodedOrderID.toString().split(",");
+    //       const results = await Promise.all(
+    //         ids.map((id) =>
+    //           axios.get(`/sales-order/id/${parseInt(id)}`, {
+    //             headers: { Authorization: `Bearer ${newToken}` },
+    //           })
+    //         )
+    //       );
+
+    //       const allOrders = results.map((res) => res.data.data);
+    //       setOrderDetails(allOrders);
+    //     } catch (retryError) {
+    //       console.error("Retry after new token failed:", retryError);
+    //     }
+    //   }
+    // }
+  }
+}, [tempdecodedOrderID]);
 
 //  const generateToken = async () => {
 //       try {
@@ -172,13 +227,17 @@ const fetchSaleOrder = useCallback(async () => {
   //   }
   // }, [decodedOrderID]);
 
-
-
   useEffect(() => {
     if (decodedOrderID) {
       fetchSaleOrder();
     }
   }, [decodedOrderID, fetchSaleOrder]);
+
+  useEffect(() => {
+    if (tempdecodedOrderID) {
+      fetchtempSaleOrder();
+    }
+  }, [tempdecodedOrderID, fetchtempSaleOrder]);
   //   useEffect(() => {
   //     console.log("OrderDetails:", OrderDetails);
   //   if (!OrderDetails || OrderDetails.length === 0) return;
@@ -315,6 +374,19 @@ const fetchSaleOrder = useCallback(async () => {
       return;
     }
   }, [OrderDetails]);
+
+    useEffect(() => {
+    console.log("OrderDetails:", TempOrderDetails);
+    if (!TempOrderDetails || TempOrderDetails.length === 0) return;
+
+    // Sum all order totals and paid amounts
+    const totalAmount = TempOrderDetails.reduce(
+      (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
+      0
+    );
+setAmount(parseFloat(totalAmount));
+    console.log("Amount match:", 0 == null);
+  }, [TempOrderDetails]);
 
   //  useEffect(() => {
   //   if (!OrderDetails || Object.keys(OrderDetails).length === 0) return;
@@ -478,12 +550,25 @@ const fetchSaleOrder = useCallback(async () => {
       });
       return;
     }
-    const payload = {
-      salesOrderId: decodedOrderID,
-      amount,
-      customerName: OrderDetails[0].companyNameEn,
-      paymentType,
-    };
+
+//     let payload;
+//     if(DecodedorderTpe?.toLowerCase()==="cart"){
+//  payload = {
+//       salesOrderId: tempdecodedOrderID,
+//       amount,
+//       customerName: TempOrderDetails[0]?.orderDetails?.companyNameEn,
+//       paymentType,
+//       orderType:DecodedorderTpe
+//     };
+//     }else{
+//  payload = {
+//       salesOrderId: decodedOrderID,
+//       amount,
+//       customerName: OrderDetails[0].companyNameEn,
+//       paymentType,
+//     };
+//     }
+    
     console.log("OrderDetails", OrderDetails,user);
     // const { data } = await axios.post(
     //   `/payment/generate-link`,
@@ -492,27 +577,27 @@ const fetchSaleOrder = useCallback(async () => {
     //    
     //   }
     // );
-     const makeRequest = async () => {
-    const { data } = await api.post(
-      `/payment/generate-link`,
-      payload,
-      {
-        headers: { "Authorization": `Bearer ${token}` },
-      }
-    );
-    return data;
-  };
+  //    const makeRequest = async () => {
+  //   const { data } = await api.post(
+  //     `/payment/generate-link`,
+  //     payload,
+  //     {
+  //       headers: { "Authorization": `Bearer ${token}` },
+  //     }
+  //   );
+  //   return data;
+  // };
 
 try {
-  const orderIdEncoded = encodeURIComponent(btoa(decodedOrderID));
+  const orderIdEncoded =DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
 const amountEncoded = encodeURIComponent(btoa(amount.toString()));
 // const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
 // const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
-const customerIdEncoded=encodeURIComponent(btoa(OrderDetails[0]?.customerId))
-
+const customerIdEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
+const orderTypeEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
     // const response = await makeRequest();
 
-  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}`;
+  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
    window.location.replace(URL)
     // window.close();
     // navigate(URL)

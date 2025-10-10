@@ -17,6 +17,7 @@ import { formatDate } from "../utilities/dateFormatter";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import GetCustomers from "../components/GetCustomers";
+import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
@@ -62,7 +63,33 @@ const getPaymentStatusClass = (paymentStatus) => {
       return "status-pending";
   }
 };
-
+const initialCategories = [
+  {
+    value: Constants.ENTITY.VMCO,
+    entity: Constants.ENTITY.VMCO,
+    label: Constants.ENTITY.VMCO,
+  },
+  {
+    value: Constants.ENTITY.SHC,
+    entity: Constants.ENTITY.SHC,
+    label: Constants.ENTITY.SHC,
+  },
+  {
+    value: Constants.ENTITY.GMTC,
+    entity: Constants.ENTITY.GMTC,
+    label: Constants.ENTITY.GMTC,
+  },
+  {
+    value: Constants.ENTITY.NAQI,
+    entity: Constants.ENTITY.NAQI,
+    label: Constants.ENTITY.NAQI,
+  },
+  {
+    value: Constants.ENTITY.DAR,
+    entity: Constants.ENTITY.DAR,
+    label: Constants.ENTITY.DAR,
+  },
+];
 function Orders() {
   const [isApprovalMode, setApprovalMode] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -97,6 +124,37 @@ function Orders() {
   const [showRowPopup, setShowRowPopup] = useState(false);
   const gridApiRef = useGridApiRef();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [entityDescriptions, setEntityDescriptions] = useState([]);
+  const [categoryTabs, setCategoryTabs] = useState([]);
+  const [filteredCategoryTabs, setFilteredCategoryTabs] =
+    useState(categoryTabs);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+
+  const [categories] = useState(initialCategories);
+  const [activeCategory, setActiveCategory] = useState(
+    initialCategories[0].value
+  );
+  const getLocalizedEntityName = (
+    initialCategories,
+    currentLanguage,
+    entityDescriptions
+  ) => {
+    console.log("getLocalizedEntityName called with:", {
+      initialCategories,
+      currentLanguage,
+      entityDescriptions,
+    });
+    const match = entityDescriptions?.find(
+      (desc) => desc.value.toLowerCase() === initialCategories.toLowerCase()
+    );
+    if (!match) return initialCategories;
+    return currentLanguage === "ar"
+      ? match.descriptionLc || match.description
+      : match.description;
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -104,6 +162,222 @@ function Orders() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  useEffect(() => {
+    const fetchEntityDescriptions = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/basics-masters?filters={"masterName": "entity"}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch entity descriptions");
+        }
+        const result = await response.json();
+        setEntityDescriptions(
+          result.data?.map((entity) => ({
+            descriptionLc: entity.descriptionLc,
+            description: entity.description,
+            value: entity.value,
+          })) || []
+        );
+      } catch (error) {
+        console.error("Error fetching entity descriptions:", error);
+      }
+    };
+    fetchEntityDescriptions();
+  }, [i18n.language, API_BASE_URL, token]);
+
+  // Fetch categories from API when active tab/entity changes
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const selectedCategory = categories.find(
+        (cat) => cat.value === activeCategory
+      );
+      const entity = selectedCategory?.entity;
+      if (!entity) {
+        setCategoryOptions([]);
+        return;
+      }
+      try {
+        // Build query parameters
+        const params = new URLSearchParams({
+          entity: entity,
+        });
+        // Add isMachine parameter for VMCO entity tabs
+        if (entity === Constants.ENTITY.VMCO) {
+          if (activeCategory === Constants.CATEGORY.VMCO_MACHINES) {
+            const isMachine = true;
+            params.append("isMachine", isMachine);
+          } else {
+            const isMachine = false;
+            params.append("isMachine", isMachine);
+          }
+        }
+        const response = await fetch(
+          `${API_BASE_URL}/product-categories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch categories");
+        const result = await response.json();
+
+        const options = Array.isArray(result.data)
+          ? result.data.map((cat) => ({
+              name: cat.category || cat.name || cat,
+              value: cat.category || cat.name || cat,
+            }))
+          : [];
+        setCategoryOptions(options);
+      } catch (err) {
+        setCategoryOptions([]);
+        console.error("Error fetching categories:", err);
+      }
+    };
+    fetchCategories();
+  }, [activeCategory, categories, API_BASE_URL]);
+  // Fetch subcategories from API when category or active tab/entity changes
+  useEffect(() => {
+    const fetchSubCategories = async () => {
+      const selectedCategoryObj = categories.find(
+        (cat) => cat.value === activeCategory
+      );
+      const entity = selectedCategoryObj?.entity;
+      if (!entity || !categoryFilter) {
+        setSubCategoryOptions([]);
+        return;
+      }
+      try {
+        const params = new URLSearchParams({
+          entity: entity,
+          category: categoryFilter,
+        });
+        const response = await fetch(
+          `${API_BASE_URL}/product-subcategories?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch subcategories");
+        const result = await response.json();
+
+        const options = Array.isArray(result.data)
+          ? result.data.map((sub) => ({
+              name: sub.subCategory || sub.subcategory || sub.name || sub,
+              value: sub.subCategory || sub.subcategory || sub.name || sub,
+            }))
+          : [];
+        setSubCategoryOptions(options);
+      } catch (err) {
+        setSubCategoryOptions([]);
+        console.error("Error fetching subcategories:", err);
+      }
+    };
+    fetchSubCategories();
+  }, [activeCategory, categoryFilter, categories, API_BASE_URL, token]); // ✅ Added token
+
+  // Reset subcategory filter when category filter changes or is cleared
+  useEffect(() => {
+    if (!categoryFilter) {
+      setSubCategoryFilter("");
+      setSubCategoryOptions([]);
+    }
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    if (!entityDescriptions || entityDescriptions?.length === 0) {
+      return;
+    }
+    if (!user) return;
+    const allLocalizedTabs = initialCategories.map((category) => {
+      const response = getLocalizedEntityName(
+        category.label,
+        i18n.language,
+        entityDescriptions
+      );
+      return {
+        value: category.value,
+        label: category.entity,
+      };
+    });
+    // Filter tabs based on user type and interCompany status
+    let tabsToShow = allLocalizedTabs.filter((tab) => {
+      const category = initialCategories.find((cat) => cat.value === tab.value);
+
+      if (
+        category &&
+        (category.value === "FAVORITES" ||
+          category.value === "SPECIAL_PRODUCTS")
+      ) {
+        return user.userType.toLowerCase() === "customer";
+      }
+      return true;
+    });
+    // If user is a customer with interCompany set to true, filter out matching entity tabs
+    if (
+      user.userType === "customer" &&
+      user.interCompany === true &&
+      user.entity
+    ) {
+      const customerEntity = user.entity.toLowerCase();
+      console.log(
+        "Filtering tabs for interCompany customer with entity:",
+        customerEntity
+      );
+
+      tabsToShow = tabsToShow.filter((tab) => {
+        const category = initialCategories.find(
+          (cat) => cat.value === tab.value
+        );
+
+        if (!category || !category.entity) return true;
+
+        const tabEntityExists = entityDescriptions.some(
+          (desc) => desc.value.toLowerCase() === category.entity.toLowerCase()
+        );
+
+        if (
+          tabEntityExists &&
+          category.entity.toLowerCase() === customerEntity
+        ) {
+          console.log(
+            "Excluding tab:",
+            tab.label,
+            "for entity:",
+            category.entity
+          );
+          return false;
+        }
+
+        return true;
+      });
+      console.log("Filtered tabs for interCompany customer:", tabsToShow);
+    }
+    setCategoryTabs(tabsToShow);
+    setFilteredCategoryTabs(tabsToShow);
+    // If current active category is not in filtered tabs, set to first available
+    if (
+      tabsToShow.length > 0 &&
+      !tabsToShow.some((tab) => tab?.value === activeCategory)
+    ) {
+      setActiveCategory(tabsToShow[0]?.value);
+    }
+  }, [entityDescriptions, i18n.language, initialCategories, user]);
   const columnsToDisplay = {
     id: "OrderId",
     erpOrderId: "Sales Order ID",
@@ -125,6 +399,7 @@ function Orders() {
     "paymentMethod",
     "paymentStatus",
     "status",
+    "erpBranchId",
   ];
 
   const toggleApprovalMode = () => {
@@ -162,6 +437,11 @@ function Orders() {
       ) {
         filtersCopy.paymentMethod = "Pre payment";
       }
+      if (user?.userType === "employee") {
+        console.log("Active Category", activeCategory);
+        // filtersCopy.entity = activeCategory;
+        console.log("Filters Copy", filtersCopy);
+      }
       try {
         const params = new URLSearchParams({
           page,
@@ -198,9 +478,11 @@ function Orders() {
               order.erpCustId ||
               "",
             branchNameEn:
-              order.branchNameEn + " (" + order.branchSequenceId + ")",
+              // order.branchNameEn + " (" + order.branchSequenceId + ")",
+              order.branchNameEn,
             branchNameLc:
-              order.branchNameLc + " (" + order.branchSequenceId + ")",
+              // order.branchNameLc + " (" + order.branchSequenceId + ")",
+              order.branchNameLc,
           }));
 
           setFilteredOrders(processedOrders);
@@ -219,7 +501,12 @@ function Orders() {
   );
 
   // Fetch approvals for orders
-  const fetchApprovals = async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
+  const fetchApprovals = async (
+    page = 1,
+    searchTerm = "",
+    customFilters = {},
+    sortedModel = []
+  ) => {
     setLoading(true);
     setError(null);
     const filtersCopy = { ...customFilters };
@@ -239,16 +526,19 @@ function Orders() {
         filters: JSON.stringify(filtersCopy),
       });
 
-      const response = await fetch(`${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/pending-orders-approval?${params.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const result = await response.json();
       if (result.status === "Ok") {
-        const processedOrders = result.data.data.map(order => ({
+        const processedOrders = result.data.data.map((order) => ({
           ...order,
           companyNameEn: order.companyNameEn || order.companynameen,
           branchNameEn: order.branchNameEn || order.branchSequenceId,
@@ -279,10 +569,26 @@ function Orders() {
         fetchApprovals(page, searchQuery, filters);
       } else {
         console.log("ddddd");
-        fetchOrders(page, searchQuery, filters);
+        if (user?.userType === "employee") {
+          setFilters({ entity: initialCategories[0].entity, ...filters });
+          fetchOrders(page, searchQuery, {
+            entity: initialCategories[0].entity,
+            ...filters,
+          });
+        } else {
+          fetchOrders(page, searchQuery, filters);
+        }
       }
     }
-  }, [page, searchQuery, user, fetchOrders, filters, isApprovalMode]);
+  }, [
+    page,
+    searchQuery,
+    user,
+    fetchOrders,
+    filters,
+    isApprovalMode,
+    activeCategory,
+  ]);
 
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -303,74 +609,87 @@ function Orders() {
   };
 
   const handleExportAll = async () => {
-    setLoading(true);
-    setError(null);
-    const filtersCopy = { ...filters };
-    if (
-      filtersCopy.paymentMethod &&
-      (filtersCopy.paymentMethod.toLowerCase() === "card payment" || filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-    ) {
-      filtersCopy.paymentMethod = "Pre payment";
-    }
-    try {
-      const params = new URLSearchParams({
-        page,
-        pageSize,
-        search: searchQuery,
-        sortBy: sortModel[0]?.field || "id",
-        sortOrder: sortModel[0]?.sort || "asc",
-        filters: JSON.stringify(filtersCopy),
-      });
+    const result = await Swal.fire({
+      title: t("Confirm Download?"),
+      text: t("Are you sure you want to download orders?"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("Yes, download"),
+      cancelButtonText: t("No, cancel"),
+    });
+    if (result.isConfirmed) {
+      setLoading(true);
+      setError(null);
+      const filtersCopy = { ...filters };
+      if (
+        filtersCopy.paymentMethod &&
+        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
+          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
+      ) {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
+      try {
+        const params = new URLSearchParams({
+          page,
+          pageSize,
+          search: searchQuery,
+          sortBy: sortModel[0]?.field || "id",
+          sortOrder: sortModel[0]?.sort || "asc",
+          filters: JSON.stringify(filtersCopy),
+        });
 
-      const response = await fetch(
-        `${API_BASE_URL}/sales-orders/export-combined?${params.toString()}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await fetch(
+          `${API_BASE_URL}/sales-orders/export-combined?${params.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Export failed: ${response.status} ${response.statusText}`
+          );
         }
-      );
 
-      if (!response.ok) {
-        throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+        // Get the blob from the response
+        const blob = await response.blob();
+
+        // Check if blob is valid
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+
+        // Get filename from Content-Disposition header or use default
+        const contentDisposition = response.headers.get("Content-Disposition");
+        let filename = "Orders.xlsx";
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+          if (filenameMatch) filename = filenameMatch[1];
+        }
+
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        return;
+      } catch (err) {
+        setError(err.message);
+        setFilteredOrders([]);
+      } finally {
+        setLoading(false);
       }
-
-      // Get the blob from the response
-      const blob = await response.blob();
-
-      // Check if blob is valid
-      if (!blob || blob.size === 0) {
-        throw new Error('Empty file received');
-      }
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      // Get filename from Content-Disposition header or use default
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = "Orders.xlsx";
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch) filename = filenameMatch[1];
-      }
-
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      return;
-    } catch (err) {
-      setError(err.message);
-      setFilteredOrders([]);
-    } finally {
-      setLoading(false);
     }
-  }
+  };
   const handleShowAllDetailsClick = async (order) => {
     try {
       const params = new URLSearchParams({
@@ -631,8 +950,8 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 100,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span
           onClick={(e) => {
@@ -640,15 +959,15 @@ function Orders() {
             handleOrderNumberClick(params.row);
           }}
           style={{
-            color: 'var(--navy-blue)',
-            cursor: 'pointer',
-            textDecoration: 'none',
+            color: "var(--navy-blue)",
+            cursor: "pointer",
+            textDecoration: "none",
           }}
           onMouseEnter={(e) => {
-            e.target.style.textDecoration = 'underline';
+            e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => {
-            e.target.style.textDecoration = 'none';
+            e.target.style.textDecoration = "none";
           }}
         >
           {t(params.value)}
@@ -662,8 +981,8 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span
           onClick={(e) => {
@@ -671,15 +990,15 @@ function Orders() {
             handleOrderNumberClick(params.row);
           }}
           style={{
-            color: 'var(--navy-blue)',
-            cursor: 'pointer',
-            textDecoration: 'none',
+            color: "var(--navy-blue)",
+            cursor: "pointer",
+            textDecoration: "none",
           }}
           onMouseEnter={(e) => {
-            e.target.style.textDecoration = 'underline';
+            e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => {
-            e.target.style.textDecoration = 'none';
+            e.target.style.textDecoration = "none";
           }}
         >
           {t(params.value)}
@@ -693,11 +1012,9 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: isArabic ? "brandNameAr" : "brandNameEn",
@@ -706,11 +1023,9 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: isArabic ? "branchNameLc" : "branchNameEn",
@@ -719,10 +1034,39 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
+    },
+    {
+      field: "erpBranchId",
+      headerName: t("Branch ID"),
+      include: isV("erpBranchId"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span>{t(params.value)}</span>
+        <span
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent row click
+            handleOrderNumberClick(params.row);
+          }}
+          style={{
+            color: "var(--navy-blue)",
+            cursor: "pointer",
+            textDecoration: "none",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.textDecoration = "underline";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.textDecoration = "none";
+          }}
+        >
+          {t(params.value)}
+        </span>
       ),
     },
     {
@@ -732,11 +1076,9 @@ function Orders() {
       searchable: true,
       flex: 2,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "branchCity",
@@ -745,19 +1087,17 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 120,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "entity",
       headerName: t("Entity"),
       include: isV("entity"),
       searchable: true,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
@@ -814,11 +1154,9 @@ function Orders() {
       sortable: false,
       minWidth: 100,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      )
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "createdAt",
@@ -827,42 +1165,44 @@ function Orders() {
       searchable: false,
       minWidth: 150,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         if (!params?.row?.createdAt) return <span> </span>;
 
         const date = new Date(params.row.createdAt);
 
         // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Asia/Riyadh',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
+        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Riyadh",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         }).format(date);
 
-        const riyadhTime = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Asia/Riyadh',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
+        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Riyadh",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
         }).format(date);
 
         return (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            lineHeight: '1.2'
-          }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+              lineHeight: "1.2",
+            }}
+          >
+            <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
               {riyadhDate}
             </span>
-            <span style={{ fontSize: '0.8rem', color: '#666' }}>
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>
               {riyadhTime}
             </span>
           </div>
@@ -875,8 +1215,8 @@ function Orders() {
       include: isV("totalAmount"),
       searchable: false,
       minWidth: 100,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span>{parseFloat(params?.row?.totalAmount || 0).toFixed(2)}</span>
       ),
@@ -888,8 +1228,8 @@ function Orders() {
       searchable: false,
       sortable: false,
       minWidth: 100,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span>{params?.row?.totalItemQuantity || 0}</span>
       ),
@@ -902,11 +1242,9 @@ function Orders() {
       sortable: false,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.row.salesExecutive || '')}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.row.salesExecutive || "")}</span>,
     },
     {
       field: "salesExecutiveName",
@@ -916,10 +1254,10 @@ function Orders() {
       sortable: false,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span>{t(params.row.salesExecutiveName || '')}</span>
+        <span>{t(params.row.salesExecutiveName || "")}</span>
       ),
     },
     {
@@ -930,10 +1268,10 @@ function Orders() {
       sortable: false,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span>{t(params.row.currentApprover || '')}</span>
+        <span>{t(params.row.currentApprover || "")}</span>
       ),
     },
     {
@@ -943,10 +1281,12 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <label className={getPaymentStatusClass(params.value)}>{t(params.value)}</label>
+        <label className={getPaymentStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
       ),
     },
     {
@@ -956,10 +1296,12 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
       ),
     },
     {
@@ -969,12 +1311,14 @@ function Orders() {
       searchable: false,
       flex: 2,
       minWidth: 70,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && params?.row?.status?.toLowerCase() !== 'cancelled' && (
+            params?.row?.paymentMethod?.toLowerCase() === "pre payment" &&
+            params?.row?.paymentStatus?.toLowerCase() === "pending" &&
+            params?.row?.status?.toLowerCase() !== "cancelled" && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1006,36 +1350,36 @@ function Orders() {
       flex: 2,
       minWidth: 70,
       headerAlign: "center",
-      align: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
       renderCell: (params) => {
         const rowdata = params.row;
         const SYNC_RULES = {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                {
-                  paymentMethod: "Pre Payment",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-              ]
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ]
               : [
-                {
-                  paymentMethod: "Pre Payment",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Credit",
-                  paymentStatus: "Credit",
-                  status: "approved",
-                },
-                {
-                  paymentMethod: "Cash on Delivery",
-                  paymentStatus: "Pending",
-                  status: "approved",
-                },
-              ],
+                  {
+                    paymentMethod: "Pre Payment",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Credit",
+                    paymentStatus: "Credit",
+                    status: "approved",
+                  },
+                  {
+                    paymentMethod: "Cash on Delivery",
+                    paymentStatus: "Pending",
+                    status: "approved",
+                  },
+                ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1045,15 +1389,17 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-            rowdata.paymentMethod?.toLowerCase() &&
+              rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-            rowdata.paymentStatus?.toLowerCase() &&
+              rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
-            {isV("sendLink") && params?.row?.status?.toLowerCase() !== 'cancelled' &&
-              params?.row?.paymentMethod?.toLowerCase() === "pre payment" && params?.row?.paymentStatus?.toLowerCase() === "pending" && (
+            {isV("sendLink") &&
+              params?.row?.status?.toLowerCase() !== "cancelled" &&
+              params?.row?.paymentMethod?.toLowerCase() === "pre payment" &&
+              params?.row?.paymentStatus?.toLowerCase() === "pending" && (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1112,7 +1458,7 @@ function Orders() {
           </Box>
         );
       },
-    }
+    },
   ];
 
   const approvalColumns = [
@@ -1123,8 +1469,8 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 100,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span
           onClick={(e) => {
@@ -1132,15 +1478,15 @@ function Orders() {
             handleOrderNumberClick(params.row);
           }}
           style={{
-            color: 'var(--navy-blue)',
-            cursor: 'pointer',
-            textDecoration: 'none',
+            color: "var(--navy-blue)",
+            cursor: "pointer",
+            textDecoration: "none",
           }}
           onMouseEnter={(e) => {
-            e.target.style.textDecoration = 'underline';
+            e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => {
-            e.target.style.textDecoration = 'none';
+            e.target.style.textDecoration = "none";
           }}
         >
           {t(params.value)}
@@ -1153,8 +1499,8 @@ function Orders() {
       searchable: false,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span
           onClick={(e) => {
@@ -1162,15 +1508,15 @@ function Orders() {
             handleOrderNumberClick(params.row);
           }}
           style={{
-            color: 'var(--navy-blue)',
-            cursor: 'pointer',
-            textDecoration: 'none',
+            color: "var(--navy-blue)",
+            cursor: "pointer",
+            textDecoration: "none",
           }}
           onMouseEnter={(e) => {
-            e.target.style.textDecoration = 'underline';
+            e.target.style.textDecoration = "underline";
           }}
           onMouseLeave={(e) => {
-            e.target.style.textDecoration = 'none';
+            e.target.style.textDecoration = "none";
           }}
         >
           {t(params.value)}
@@ -1184,11 +1530,9 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: isArabic ? "branchNameLc" : "branchNameEn",
@@ -1197,11 +1541,9 @@ function Orders() {
       searchable: true,
       minWidth: 140,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "branchRegion",
@@ -1210,12 +1552,9 @@ function Orders() {
       searchable: true,
       flex: 2,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
-
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "branchCity",
@@ -1224,11 +1563,9 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "workflowName",
@@ -1237,11 +1574,9 @@ function Orders() {
       searchable: true,
       minWidth: 140,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.value)}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "entity",
@@ -1250,8 +1585,8 @@ function Orders() {
       searchable: true,
       flex: 1,
       minWidth: 140,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         let badge = null;
         if (params.value === "VMCO") {
@@ -1279,7 +1614,9 @@ function Orders() {
             <Typography align={isArabic ? "right" : "center"}>
               {params.value?.toUpperCase()}
             </Typography>
-            <Typography align={isArabic ? "right" : "center"}>{badge}</Typography>
+            <Typography align={isArabic ? "right" : "center"}>
+              {badge}
+            </Typography>
           </Box>
         );
       },
@@ -1308,8 +1645,8 @@ function Orders() {
       sortable: false,
       minWidth: 100,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
     },
     {
       field: "createdAt",
@@ -1318,42 +1655,44 @@ function Orders() {
       searchable: false,
       minWidth: 140,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         if (!params?.row?.createdAt) return <span> </span>;
 
         const date = new Date(params.row.createdAt);
 
         // Convert to Riyadh timezone (UTC+3)
-        const riyadhDate = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Asia/Riyadh',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
+        const riyadhDate = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Riyadh",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         }).format(date);
 
-        const riyadhTime = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Asia/Riyadh',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false
+        const riyadhTime = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Riyadh",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
         }).format(date);
 
         return (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100%',
-            lineHeight: '1.2'
-          }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+              lineHeight: "1.2",
+            }}
+          >
+            <span style={{ fontSize: "0.875rem", fontWeight: "500" }}>
               {riyadhDate}
             </span>
-            <span style={{ fontSize: '0.8rem', color: '#666' }}>
+            <span style={{ fontSize: "0.8rem", color: "#666" }}>
               {riyadhTime}
             </span>
           </div>
@@ -1368,8 +1707,8 @@ function Orders() {
       sortable: false,
       minWidth: 100,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
       ),
@@ -1381,8 +1720,8 @@ function Orders() {
       searchable: false,
       sortable: false,
       minWidth: 100,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span>{params?.row?.totalItemQuantity || 0}</span>
       ),
@@ -1395,11 +1734,9 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
-      renderCell: (params) => (
-        <span>{t(params.row.salesExecutive || '')}</span>
-      ),
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.row.salesExecutive || "")}</span>,
     },
     {
       field: "salesExecutiveName",
@@ -1409,10 +1746,10 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span>{t(params.row.salesExecutiveName || '')}</span>
+        <span>{t(params.row.salesExecutiveName || "")}</span>
       ),
     },
     {
@@ -1423,10 +1760,10 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <span>{t(params.row.currentApproverType || '')}</span>
+        <span>{t(params.row.currentApproverType || "")}</span>
       ),
     },
     {
@@ -1436,10 +1773,12 @@ function Orders() {
       searchable: true,
       minWidth: 120,
       flex: 1,
-      align: isArabic ? 'right' : 'left',
-      headerAlign: isArabic ? 'right' : 'left',
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>{t(params.value)}</label>
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
       ),
     },
   ];
@@ -1668,6 +2007,7 @@ function Orders() {
           confirmButtonText: t('OK'),
           width: '500px',
         });
+        window.location.reload();
       } else {
         Swal.fire({
           title: t('File Upload Failed'),
@@ -1675,6 +2015,7 @@ function Orders() {
           icon: 'error',
           confirmButtonText: t('OK'),
         });
+        window.location.reload();
       }
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -1684,6 +2025,7 @@ function Orders() {
         icon: 'error',
         confirmButtonText: t('OK'),
       });
+      window.location.reload();
     } finally {
       setExcelLoading(false);
       setBulkUploadPopUp(false);
@@ -1697,9 +2039,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-      Number.isFinite(pageSize) &&
-      total > 0 &&
-      pageSize > 0
+    Number.isFinite(pageSize) &&
+    total > 0 &&
+    pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -1797,7 +2139,7 @@ function Orders() {
   );
 
   const handleApproval = (mode) => {
-    setFilters({});
+    // setFilters({});
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
       fetchApprovals();
@@ -1809,6 +2151,42 @@ function Orders() {
   return (
     <Sidebar title={t("Orders")}>
       <div className="orders-content">
+        {user?.userType.toLowerCase() === "employee" && (
+          <div className="filter-section">
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 12,
+                overflowX: "auto",
+                scrollbarWidth: "none",
+              }}
+            >
+              <Tabs
+                tabs={filteredCategoryTabs}
+                activeTab={activeCategory}
+                onTabChange={(newCategory) => {
+                  console.log(
+                    "🔄 Tab changing from",
+                    activeCategory,
+                    "to",
+                    newCategory
+                  );
+                  setActiveCategory(newCategory);
+                  setFilters({ entity: newCategory });
+                  setApprovalMode(false);
+                  fetchOrders(1, searchQuery, { entity: newCategory });
+                  setSearchQuery("");
+                  setCategoryFilter(""); // Reset category filter
+                  setSubCategoryFilter(""); // Reset subcategory filter
+                  setSubCategoryOptions([]); // Clear subcategory options immediately
+                }}
+                variant="category"
+              />
+            </div>
+          </div>
+        )}
         {isMobile ? (
           <div className="table-container">
             {loading ? (
@@ -1871,7 +2249,11 @@ function Orders() {
                           showUpload={isV("uploadButton")}
                           showAdd={isV("addButton")}
                           buttonName={t("add")}
-                          showApproval={isV("approvalButton")}
+                          showApproval={
+                            isV("approvalButton") &&
+                            filters.entity?.toLowerCase() ===
+                              Constants.ENTITY.VMCO?.toLowerCase()
+                          }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
                           columnsToDisplay={columnsToDisplay}
@@ -1901,8 +2283,8 @@ function Orders() {
                         },
                         "& .MuiDataGrid-cellContent": {
                           textAlign: "right !important",
-                        }
-                      })
+                        },
+                      }),
                     }}
                   />
                 }
@@ -1958,7 +2340,11 @@ function Orders() {
                       showUpload={isV("uploadButton")}
                       showAdd={isV("addButton")}
                       buttonName={t("add")}
-                      showApproval={isV("approvalButton")}
+                      showApproval={
+                        isV("approvalButton") &&
+                        (filters.entity?.toLowerCase() ===
+                          Constants.ENTITY.VMCO?.toLowerCase())
+                      }
                       handleAddClick={handleAddOrder}
                       handleUploadClick={HandleBulkOrderUpload}
                       columnsToDisplay={columnsToDisplay}
@@ -1989,8 +2375,8 @@ function Orders() {
                     },
                     "& .MuiDataGrid-cellContent": {
                       textAlign: "right !important",
-                    }
-                  })
+                    },
+                  }),
                 }}
               />
             )}
