@@ -235,9 +235,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat,
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -278,9 +278,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.subcategory || sub.name || sub,
-              value: sub.subCategory || sub.subcategory || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -1300,21 +1300,21 @@ function Orders() {
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
             (params?.row?.status?.toLowerCase() === "approved" ||
               (params?.row?.status?.toLowerCase() === "open" &&
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  Constants.ENTITY.GMTC.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
+                  Constants.ENTITY.SHC.toLowerCase())) ||
               (params?.row?.status?.toLowerCase() === "pending" &&
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+                  Constants.ENTITY.NAQI.toLowerCase()))) && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1353,29 +1353,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ]
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1385,30 +1385,30 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-              rowdata.paymentMethod?.toLowerCase() &&
+            rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-              rowdata.paymentStatus?.toLowerCase() &&
+            rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
+              params?.row?.status?.toLowerCase() !== "cancelled" &&
+              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+              params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
+              (params?.row?.status?.toLowerCase() === "approved" ||
+                (params?.row?.status?.toLowerCase() === "open" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
+                    params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) &&(
+                (params?.row?.status?.toLowerCase() === "pending" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -2012,51 +2012,45 @@ function Orders() {
 
         // Show detailed success message
         Swal.fire({
-          title: t("File Uploaded Successfully"),
+          title: t('File Uploaded Successfully'),
           html: `
           <div style="text-align: center; margin: 20px 0;">
-            <p><strong>${t("Processing Summary")}</strong></p>
-            <ul>
-              ${
-                branchesProcessed > 0
-                  ? `<span>${branchesProcessed} branch${
-                      branchesProcessed > 1 ? "es" : ""
-                    } processed</span>`
-                  : ""
-              }
-              <break />
-            </ul>
-            ${
-              successMessageDetails
-                ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>`
-                : ""
-            }
-          </div>
-        `,
-          icon: "success",
-          confirmButtonText: t("OK"),
-          width: "500px",
+          <p><strong>${t('Processing Summary')}</strong></p>
+          ${branchesProcessed > 0 ? `<span>${branchesProcessed} branch${branchesProcessed !== 1 ? 'es' : ''} processed</span><br/>` : ''}
+          ${successMessageDetails ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>` : ''}
+          </div>`,
+          icon: 'success',
+          confirmButtonText: t('OK'),
+          width: '500px',
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       } else {
         Swal.fire({
-          title: t("File Upload Failed"),
-          text:
-            data.message || t("An error occurred while uploading the file."),
-          icon: "error",
-          confirmButtonText: t("OK"),
+          title: t('File Upload Failed'),
+          text: data.message || t('An error occurred while uploading the file.'),
+          icon: 'error',
+          confirmButtonText: t('OK'),
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       }
     } catch (error) {
       console.error("Error uploading file:", error);
       Swal.fire({
-        title: t("File Upload Failed"),
-        text: t("An error occurred while uploading the file."),
-        icon: "error",
-        confirmButtonText: t("OK"),
+        title: t('File Upload Failed'),
+        text: t('An error occurred while uploading the file.'),
+        icon: 'error',
+        confirmButtonText: t('OK'),
+      }).then((result) => {
+        if (result.isConfirmed || result.isDismissed) {
+          window.location.reload();
+        }
       });
-      window.location.reload();
     } finally {
       setExcelLoading(false);
       setBulkUploadPopUp(false);
@@ -2070,9 +2064,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2283,7 +2277,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
+                            Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
@@ -2374,7 +2368,7 @@ function Orders() {
                       showApproval={
                         isV("approvalButton") &&
                         filters.entity?.toLowerCase() ===
-                          Constants.ENTITY.VMCO?.toLowerCase()
+                        Constants.ENTITY.VMCO?.toLowerCase()
                       }
                       handleAddClick={handleAddOrder}
                       handleUploadClick={HandleBulkOrderUpload}
