@@ -57,6 +57,7 @@ function Cart() {
     const [selectedCustomerStatus, setSelectedCustomerStatus] = useState('');
     const [selectederpCustId, setSelectederpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
+    const [selectedBranchNameEn, setSelectedBranchNameEn] = useState('');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
@@ -84,10 +85,12 @@ function Cart() {
             if (location.state.selectedBranchId) setSelectedBranchId(location.state.selectedBranchId);
             if (location.state.selectedBranchName) setSelectedBranchName(location.state.selectedBranchName);
             if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
+            if (location.state.selectedBranchNameEn) setSelectedBranchNameEn(location.state.selectedBranchNameEn);
             if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
             if (location.state.selectedBranchSequenceId) setSelectedBranchSequenceId(location.state.selectedBranchSequenceId);
             if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
             if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
+            if (location.state.selectedBranchStatus) setSelectedBranchStatus(location.state.selectedBranchStatus);
         } else {
             if (user?.userId) setSelectedUserId(user.userId);
             if (user?.customerId) setSelectedCustomerId(user.customerId);
@@ -448,7 +451,7 @@ function Cart() {
         navigate('/catalog', {
             state: {
                 selectedBranchId,
-                selectedBranchName,
+                selectedBranchNameEn,
                 selectedBranchNameLc,
                 selectedBranchErpId,
                 selectedBranchRegion,
@@ -1342,7 +1345,7 @@ function Cart() {
                     brandNameEn: brandNameEn,
                     brandNameAr: brandNameAr,
                     branchId: selectedBranchId,
-                    branchNameEn: selectedBranchName,
+                    branchNameEn: selectedBranchNameEn,
                     branchNameLc: selectedBranchNameLc,
                     branchCity: selectedBranchCity,
                     erpBranchId: selectedBranchErpId,
@@ -2561,10 +2564,15 @@ function Cart() {
             <div className="cart-header">
                 <div className="delivery-info">
                     <span className="delivery-link">
-                        {t('Delivering to')}{' '}
-                        {selectedBranchName && selectedBranchName !== 'No location selected'
-                            ? <strong>{selectedBranchName}</strong>
-                            : <em>(No location selected)</em>}
+                        {t("Delivering to")} {selectedBranchName !== "No location selected" ?
+                            <strong>
+                                {i18n.language === "en" ?
+                                    (selectedBranchNameEn || selectedBranchName) :
+                                    (selectedBranchNameLc || selectedBranchName)
+                                }
+                            </strong> :
+                            <em>No location selected</em>
+                        }
                     </span>
                 </div>
             </div>
