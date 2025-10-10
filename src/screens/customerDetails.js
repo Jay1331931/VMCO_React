@@ -460,7 +460,8 @@ function CustomerDetails() {
     setOriginalCustomerPaymentMethodsData,
   ] = useState(null); //WF
   // var wfCustomerData = null; //WF
-  const [wfCustomerData, setWfCustomerData] = useState(null); //WF
+  const [wfCustomerData, setWfCustomerData] = useState(null); //
+  const [completeWorkflowData, setCompleteWorkflowData] = useState({});
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
@@ -487,6 +488,7 @@ function CustomerDetails() {
       const workflowDataJson = await response.json();
       console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
       setWorkflowHistory(workflowDataJson?.data?.approvalHistory);
+      setCompleteWorkflowData(workflowDataJson?.data?.workflowData);
       return workflowDataJson?.data?.workflowData?.updates;
     } catch (error) {
       console.error("Error fetching workflow data:", error);
@@ -2418,6 +2420,7 @@ if (uniqueFieldsList.includes(field)) {
                     ...customerContactsData,
                     workflowId: workflowId,
                     workflowInstanceId: workflowInstanceId,
+                    completeWorkflowData: completeWorkflowData,
                   }}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
