@@ -187,7 +187,7 @@ const BankTransactions = () => {
                 disableColumnMenu
                 hideFooter={true}
                 autoHeight
-                rowHeight={60}
+                  rowHeight={55}
                 showToolbar
                 slots={{
                   toolbar: () => (

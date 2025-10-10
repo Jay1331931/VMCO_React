@@ -33,6 +33,7 @@ const BranchDetailsForm = ({
   const [hoursDetails, setHoursDetails] = useState({});
   const [originalHoursData, setOriginalHoursData] = useState({});
   const [workflowData, setWorkflowData] = useState({});
+  const [completeWorkflowData, setCompleteWorkflowData] = useState({});
   // const [isApprovalMode, setIsApprovalMode] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
@@ -130,6 +131,7 @@ const BranchDetailsForm = ({
       );
       const workflowDataJson = await response.json();
       console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
+      setCompleteWorkflowData(workflowDataJson?.data?.workflowData);
       return workflowDataJson?.data?.workflowData?.updates;
     } catch (error) {
       console.error("Error fetching workflow data:", error);
@@ -395,7 +397,7 @@ const BranchDetailsForm = ({
       }
 
       setBranchDetails(
-        isAppMode && temp && Object.keys(temp?.branch).length > 0
+        isAppMode && temp?.branch && Object.keys(temp?.branch).length > 0
           ? { ...branchData, ...temp?.branch }
           : branchData
       );
@@ -1319,6 +1321,9 @@ const BranchDetailsForm = ({
                   isBlocking ||
                   isUnblocking
                 }
+                hidden={
+                  branch?.id !== completeWorkflowData?.id
+                }
               >
                 {isApproving ? t("Approving...") : t("Approve")}
               </button>
@@ -1335,6 +1340,9 @@ const BranchDetailsForm = ({
                   isRejecting ||
                   isBlocking ||
                   isUnblocking
+                }
+                hidden={
+                  branch?.id !== completeWorkflowData?.id
                 }
               >
                 {isRejecting ? t("Rejecting...") : t("Reject")}

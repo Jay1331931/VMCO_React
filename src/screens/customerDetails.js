@@ -460,7 +460,8 @@ function CustomerDetails() {
     setOriginalCustomerPaymentMethodsData,
   ] = useState(null); //WF
   // var wfCustomerData = null; //WF
-  const [wfCustomerData, setWfCustomerData] = useState(null); //WF
+  const [wfCustomerData, setWfCustomerData] = useState(null); //
+  const [completeWorkflowData, setCompleteWorkflowData] = useState({});
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [approvalAction, setApprovalAction] = useState(null);
   const navigate = useNavigate();
@@ -487,6 +488,7 @@ function CustomerDetails() {
       const workflowDataJson = await response.json();
       console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
       setWorkflowHistory(workflowDataJson?.data?.approvalHistory);
+      setCompleteWorkflowData(workflowDataJson?.data?.workflowData);
       return workflowDataJson?.data?.workflowData?.updates;
     } catch (error) {
       console.error("Error fetching workflow data:", error);
@@ -534,6 +536,7 @@ function CustomerDetails() {
         setOriginalCustomerContactsData(customerContacts);
         const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
         setWfCustomerData(wfData);
+        console.log("wfData", wfData)
         // setWorkflowHistory(wfHistory);
         if (wfData?.customer?.nonTradingDocuments) {
           wfData.customer.nonTradingDocuments = JSON.parse(
@@ -543,7 +546,9 @@ function CustomerDetails() {
 
         temp = wfData;
       } else if (workflowInstanceId) {
-        await fetchWorkflowDataOfCustomer(workflowInstanceId);
+        const wfData = await fetchWorkflowDataOfCustomer(workflowInstanceId);
+        setWfCustomerData(wfData);
+        console.log("wfData", wfData)
       }
       setInApproval(isUnderApproval && !(temp?.branch ? Object.keys(temp?.branch).length > 0 : false));
       setCustomerData(isUnderApproval ? { ...resp, ...temp?.customer } : resp);
@@ -2415,6 +2420,7 @@ if (uniqueFieldsList.includes(field)) {
                     ...customerContactsData,
                     workflowId: workflowId,
                     workflowInstanceId: workflowInstanceId,
+                    completeWorkflowData: completeWorkflowData,
                   }}
                   setTabsHeight={setTabsHeight}
                   mode={mode}
@@ -2483,6 +2489,7 @@ if (uniqueFieldsList.includes(field)) {
                       isBlocking ||
                       isUnblocking
                     }
+                    hidden={user?.userType==="employee" && user?.employeeId !== originalCustomerData?.assignedTo}
                   >
                     {isSaving ? t("Saving...") : t("Save")}
                   </button>

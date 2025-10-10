@@ -266,7 +266,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.companyType === customerData?.companyType &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           className={
             originalCustomerData &&
@@ -396,7 +396,7 @@ function BusinessDetails({
         originalCustomerData?.companyNameEn ===
           customerData?.companyNameEn &&
         mode === "edit" &&
-        customerData?.customerStatus !== "pending"
+        customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
       }
       required
     />
@@ -466,7 +466,7 @@ function BusinessDetails({
             originalCustomerData?.companyNameAr ===
               customerData?.companyNameAr &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           required
         />
@@ -536,7 +536,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.crNumber === customerData?.crNumber &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           required
         />
@@ -606,7 +606,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.vatNumber === customerData?.vatNumber &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           required
         />
@@ -676,7 +676,7 @@ function BusinessDetails({
             originalCustomerData?.governmentRegistrationNumber ===
               customerData?.governmentRegistrationNumber &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           required
         />
@@ -751,7 +751,7 @@ function BusinessDetails({
             originalCustomerData?.baladeahLicenseNumber ===
               customerData?.baladeahLicenseNumber &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           required
         />
@@ -821,7 +821,7 @@ function BusinessDetails({
             originalCustomerData?.deliveryLocations ===
               customerData?.deliveryLocations &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           className={
             originalCustomerData &&
@@ -896,7 +896,7 @@ function BusinessDetails({
             originalCustomerData?.typeOfBusiness ===
               customerData?.typeOfBusiness &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           className={
             originalCustomerData &&
@@ -976,7 +976,7 @@ function BusinessDetails({
               originalCustomerData?.typeOfBusinessOther ===
                 customerData?.typeOfBusinessOther &&
               mode === "edit" &&
-              customerData?.customerStatus !== "pending"
+              customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
             }
           />
           {isV("typeOfBusinessOtherVerified") &&  (
@@ -1047,7 +1047,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.brandNameEn === customerData?.brandNameEn &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
         />
         { isV("brandNameEnVerified") && (
@@ -1110,7 +1110,7 @@ function BusinessDetails({
             customerData &&
             originalCustomerData?.brandNameAr === customerData?.brandNameAr &&
             mode === "edit" &&
-            customerData?.customerStatus !== "pending"
+            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
         />
         {isV("brandNameArVerified") &&  (
@@ -1160,7 +1160,7 @@ function BusinessDetails({
           ref={companyLogoInputRef}
           onChange={(e) => handleLogoChange(e, "companyLogo")}
           disabled={
-            mode === "edit" && customerData?.customerStatus !== "pending"
+            mode === "edit" && customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
         />
         <button
@@ -1168,7 +1168,7 @@ function BusinessDetails({
           className="custom-file-button"
           onClick={() => companyLogoInputRef.current?.click()}
           disabled={
-            mode === "edit" && customerData?.customerStatus === "pending"
+            mode === "edit" && customerData?.customerStatus === "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           style={{ width: "100px" }}
         >
@@ -1282,7 +1282,7 @@ function BusinessDetails({
           ref={brandLogoInputRef}
           onChange={(e) => handleLogoChange(e, "brandLogo")}
           disabled={
-            mode === "edit" && customerData?.customerStatus !== "pending"
+            mode === "edit" && customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
         />
         <button
@@ -1290,7 +1290,7 @@ function BusinessDetails({
           className="custom-file-button"
           onClick={() => brandLogoInputRef.current?.click()}
           disabled={
-            mode === "edit" && customerData?.customerStatus === "pending"
+            mode === "edit" && customerData?.customerStatus === "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
           }
           style={{ width: "100px" }}
         >
@@ -1421,7 +1421,7 @@ function BusinessDetails({
                 originalCustomerData?.customerSource ===
                   customerData?.customerSource &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending") ||
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR) ||
               true
             }
           />
@@ -1476,7 +1476,7 @@ function BusinessDetails({
                     originalCustomerData?.interCompany ===
                       customerData?.interCompany &&
                     mode === "edit" &&
-                    customerData?.customerStatus !== "pending"
+                    customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
                   }
                 />
                 {`\t ${t("Inter Company")}`}
@@ -1533,7 +1533,7 @@ function BusinessDetails({
                   customerData &&
                   originalCustomerData?.entity === customerData?.entity &&
                   mode === "edit" &&
-                  customerData?.customerStatus !== "pending"
+                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
                 }
                 required
               >
@@ -1612,7 +1612,7 @@ function BusinessDetails({
                   originalCustomerData?.primaryBusinessUnit ===
                     customerData?.primaryBusinessUnit &&
                   mode === "edit" &&
-                  customerData?.customerStatus !== "pending"
+                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
                 }
                 required
               >
@@ -1692,7 +1692,7 @@ function BusinessDetails({
                   customerData &&
                   originalCustomerData?.branch === customerData?.branch &&
                   mode === "edit" &&
-                  customerData?.customerStatus !== "pending"
+                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
                 }
                 className={
                   originalCustomerData &&
@@ -1773,7 +1773,7 @@ function BusinessDetails({
                   originalCustomerData?.assignedTo ===
                     customerData?.assignedTo &&
                   mode === "edit" &&
-                  customerData?.customerStatus !== "pending"
+                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
                 }
                 className={
                   originalCustomerData &&
@@ -1855,7 +1855,7 @@ function BusinessDetails({
                 ] ===
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending"
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
               }
               className={
                 originalCustomerData &&
@@ -1927,7 +1927,7 @@ function BusinessDetails({
                 ] ===
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending"
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
               }
               className={
                 originalCustomerData &&
@@ -1998,7 +1998,7 @@ function BusinessDetails({
                 ] ===
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending"
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
               }
               className={
                 originalCustomerData &&
@@ -2069,7 +2069,7 @@ function BusinessDetails({
                 ] ===
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending"
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
               }
               className={
                 originalCustomerData &&
@@ -2141,7 +2141,7 @@ function BusinessDetails({
                 ] ===
                   customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
                 mode === "edit" &&
-                customerData?.customerStatus !== "pending"
+                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
               }
               className={
                 originalCustomerData &&

@@ -424,7 +424,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 disableExtendRowFullWidth={true}
                                 pagination={false}
                                 autoHeight
-                                rowHeight={70}
+                                 rowHeight={55}
                                 showToolbar
                                 slots={{
                                     toolbar: () => (
@@ -497,7 +497,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 disableExtendRowFullWidth={true}
                                 pagination={false}
                                 autoHeight
-                                rowHeight={70}
+                                rowHeight={55}
                                 showToolbar
                                 slots={{
                                     toolbar: () => (
