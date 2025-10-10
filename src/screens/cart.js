@@ -564,6 +564,7 @@ function Cart() {
     };
 
     // Handle SHC order splitting into fresh and non-fresh products
+    // Handle SHC order splitting into fresh and non-fresh products
     const handleSHCOrderSplitting = async (categoryItems, categoryName, selectedPaymentMethod) => {
         try {
             setIsPlacingOrder(true);
@@ -591,41 +592,86 @@ function Cart() {
 
             const orderIds = [];
 
-            // Place order for fresh products
-            if (freshProducts.length > 0) {
-                console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
-                // Use a specific category name for fresh products to ensure separate orders
-                const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false, true);
-                console.log('Fresh order result:', freshOrderId);
-                if (freshOrderId) {
-                    orderIds.push(freshOrderId);
-                    console.log('Added fresh order ID to array:', freshOrderId);
-                    // Delete fresh products from cart after successful order
-                    await deleteCartItems(selectedCustomerId, selectedBranchId, entity, true, null, freshProducts);
-                    console.log('Deleted fresh products from cart after order:', freshProducts);
-                } else {
-                    console.error('Fresh order failed - no order ID returned');
+            // Check if using Pre Payment method for temp table approach
+            if (selectedPaymentMethod?.toLowerCase() === 'pre payment') {
+                console.log('Using temp table approach for SHC Pre Payment orders');
+
+                if (freshProducts.length > 0) {
+                    const freshTempOrderId = await createTempOrder(
+                        freshProducts,
+                        `${categoryName} - Fresh`,
+                        selectedPaymentMethod,
+                        true
+                    );
+                    if (freshTempOrderId) {
+                        orderIds.push(freshTempOrderId);
+                        console.log('Created fresh temp order ID:', freshTempOrderId);
+                    }
+                }
+
+                if (nonFreshProducts.length > 0) {
+                    const nonFreshTempOrderId = await createTempOrder(
+                        nonFreshProducts,
+                        `${categoryName} - Non-Fresh`,
+                        selectedPaymentMethod,
+                        false
+                    );
+                    if (nonFreshTempOrderId) {
+                        orderIds.push(nonFreshTempOrderId);
+                        console.log('Created non-fresh temp order ID:', nonFreshTempOrderId);
+                    }
+                }
+
+                if (orderIds.length > 0) {
+                    try {
+                        console.log('Generating payment link for temp order IDs:', orderIds);
+                        const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
+                            id: orderIds, 
+                            endPoint: 'payment-options/order',
+                            IsEmail: false
+                        }, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (paymentLinkResponse?.data?.details?.url) {
+                            console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
+                            window.open(paymentLinkResponse.data.details.url, '_blank');
+                        } else {
+                            console.error('Payment URL not found in response:', paymentLinkResponse.data);
+                        }
+                    } catch (error) {
+                        console.error('Error generating payment link for temp orders:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: t('Payment Link Error'),
+                            text: t('Failed to generate payment link. Please try again.'),
+                            confirmButtonText: t('OK')
+                        });
+                    }
+                }
+            } else {
+                if (freshProducts.length > 0) {
+                    console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
+                    const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false, true);
+                    console.log('Fresh order result:', freshOrderId);
+                    if (freshOrderId) {
+                        orderIds.push(freshOrderId);
+                        console.log('Added fresh order ID to array:', freshOrderId);
+                    }
+                }
+                if (nonFreshProducts.length > 0) {
+                    console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
+                    const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false, false);
+                    console.log('Non-fresh order result:', nonFreshOrderId);
+                    if (nonFreshOrderId) {
+                        orderIds.push(nonFreshOrderId);
+                        console.log('Added non-fresh order ID to array:', nonFreshOrderId);
+                    }
                 }
             }
 
-            // Place order for non-fresh products
-            if (nonFreshProducts.length > 0) {
-                console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
-                // Use a specific category name for non-fresh products to ensure separate orders
-                const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false, false);
-                console.log('Non-fresh order result:', nonFreshOrderId);
-                if (nonFreshOrderId) {
-                    orderIds.push(nonFreshOrderId);
-                    console.log('Added non-fresh order ID to array:', nonFreshOrderId);
-                    // Delete non-fresh products from cart after successful order
-                    await deleteCartItems(selectedCustomerId, selectedBranchId, entity, false, null, nonFreshProducts);
-                    console.log('Deleted non-fresh products from cart after order:', nonFreshProducts);
-                } else {
-                    console.error('Non-fresh order failed - no order ID returned');
-                }
-            }
-
-            // Show combined success message for SHC orders
             if (orderIds.length > 0) {
                 console.log('Order IDs collected:', orderIds);
                 const orderText = orderIds.length === 1
@@ -640,6 +686,7 @@ function Cart() {
                     text: orderText,
                     confirmButtonText: t('OK')
                 }).then(() => {
+                    // Update cart items state to remove ordered items
                     setCartItems(prevCartItems =>
                         prevCartItems.map(category => ({
                             ...category,
@@ -656,33 +703,7 @@ function Cart() {
                         return newQuantities;
                     });
                 });
-                if (entity.toLowerCase() === Constants.ENTITY?.SHC?.toLowerCase() && selectedPaymentMethod?.toLowerCase() === "pre payment") {
-                    try {
-                        const { data } = await axios.post(
-                            `${API_BASE_URL}/generatePayment-link`,
-                            {
-                                id: orderIds?.map(String).join(','),
-                                endPoint: "payment-opations/order",
-                                IsEmail: false,
-                            },
-                            {
-                                headers: { "Authorization": `Bearer ${token}` },
-
-                            }
-                        );
-
-                        if (data?.details?.url) {
-                            window.open(data.details.url, '_blank');
-                        } else {
-                            console.error("Payment URL not found in response:", data);
-                        }
-                    } catch (error) {
-                        console.error("Error generating payment link:", error);
-                    }
-                }
             }
-
-
 
         } catch (err) {
             console.error('Error in SHC order splitting:', err);
@@ -697,6 +718,131 @@ function Cart() {
             setIsPlacingOrder(false);
         }
     };
+
+    // Helper function to create temp orders for SHC products
+    const createTempOrder = async (categoryItems, categoryName, selectedPaymentMethod, isFresh) => {
+        try {
+            const entity = getEntityFromCategory(categoryName);
+            const userId = user?.userId;
+
+            // Calculate order total
+            let totalAmount = 0;
+            categoryItems.forEach(item => {
+                const quantity = Number(quantities[item.id] || item.quantity || 1);
+                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+                const vatPercentage = parseFloat(item.vatPercentage || 0);
+                const baseAmount = unitPrice * quantity;
+                const vatAmount = (baseAmount * vatPercentage) / 100;
+                totalAmount += baseAmount + vatAmount;
+            });
+
+            // Get customer data for order payload
+            const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!customerResponse.ok) {
+                throw new Error('Failed to fetch customer data');
+            }
+
+            const customerData = await customerResponse.json();
+
+            // Create order payload
+            const orderPayload = {
+                customerId: selectedCustomerId,
+                erpCustId: user?.erpCustomerId,
+                companyNameEn: customerData?.data?.companyNameEn,
+                companyNameAr: customerData?.data?.companyNameAr,
+                brandNameEn: customerData?.data?.brandNameEn,
+                brandNameAr: customerData?.data?.brandNameAr,
+                branchId: selectedBranchId,
+                branchNameEn: selectedBranchName,
+                branchNameLc: selectedBranchNameLc,
+                branchCity: selectedBranchCity,
+                erpBranchId: selectedBranchErpId,
+                branchSequenceId: selectedBranchSequenceId,
+                branchRegion: selectedBranchRegion,
+                entity: entity,
+                paymentMethod: selectedPaymentMethod,
+                totalAmount: totalAmount.toFixed(2),
+                paidAmount: '0.00',
+                deliveryCharges: '0.00',
+                paymentStatus: 'Pending',
+                status: 'Pending',
+                productCategory: categoryName,
+                isFresh: isFresh
+            };
+
+            // Create order lines payload
+            const orderLinesPayload = [];
+            let lineNumber = 1;
+
+            for (const item of categoryItems) {
+                const quantity = Number(quantities[item.id] || item.quantity || 1);
+                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+                const vatPercentage = parseFloat(item.vatPercentage || 0);
+                const baseAmount = unitPrice * quantity;
+                const vatAmount = (baseAmount * vatPercentage) / 100;
+                const netAmount = baseAmount + vatAmount;
+
+                const linePayload = {
+                    productId: item.productId || item.product_id,
+                    productName: item.name || item.productName,
+                    productNameLc: item.nameLc || item.productNameLc,
+                    isFresh: isFresh,
+                    quantity: quantity,
+                    unit: item.unit || 'EA',
+                    unitPrice: unitPrice,
+                    vatPercentage: vatPercentage,
+                    salesTaxAmount: vatAmount.toFixed(2),
+                    netAmount: netAmount.toFixed(2),
+                    lineNumber: lineNumber,
+                    erpProdId: item.erpProdId || item.productCode
+                };
+
+                orderLinesPayload.push(linePayload);
+                lineNumber++;
+            }
+
+            // Create temp order payload
+            const tempOrderPayload = {
+                userId: userId,
+                entity: entity,
+                paymentMethod: selectedPaymentMethod,
+                totalAmount: totalAmount.toFixed(2),
+                orderDetails: orderPayload,
+                orderLinesDetails: orderLinesPayload
+            };
+
+            // Insert into temp table
+            const tempOrderResponse = await fetch(`${API_BASE_URL}/temp-sales-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(tempOrderPayload)
+            });
+
+            if (!tempOrderResponse.ok) {
+                const errorText = await tempOrderResponse.text();
+                throw new Error(JSON.parse(errorText)?.message || 'Failed to create temp order');
+            }
+
+            const tempOrderResult = await tempOrderResponse.json();
+            console.log('Created temp order successfully:', tempOrderResult.data.id);
+            return tempOrderResult.data.id;
+
+        } catch (error) {
+            console.error('Error creating temp order:', error);
+            throw error;
+        }
+    };
+
 
     // Handle VMCO order processing with machines and consumables
     const handleVMCOOrderProcessing = async (categoryItems, categoryName, selectedPaymentMethod) => {
