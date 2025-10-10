@@ -694,13 +694,11 @@ function Cart() {
         }
     };
 
-    // Helper function to create temp orders for SHC products
     const createTempOrder = async (categoryItems, categoryName, selectedPaymentMethod, isFresh) => {
         try {
             const entity = getEntityFromCategory(categoryName);
             const userId = user?.userId;
 
-            // Calculate order total
             let totalAmount = 0;
             categoryItems.forEach(item => {
                 const quantity = Number(quantities[item.id] || item.quantity || 1);
@@ -711,7 +709,6 @@ function Cart() {
                 totalAmount += baseAmount + vatAmount;
             });
 
-            // Get customer data for order payload
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
                 method: 'GET',
                 headers: {
@@ -726,7 +723,6 @@ function Cart() {
 
             const customerData = await customerResponse.json();
 
-            // Create order payload
             const orderPayload = {
                 customerId: selectedCustomerId,
                 erpCustId: user?.erpCustomerId,
@@ -752,7 +748,6 @@ function Cart() {
                 isFresh: isFresh
             };
 
-            // Create order lines payload
             const orderLinesPayload = [];
             let lineNumber = 1;
 
@@ -783,7 +778,6 @@ function Cart() {
                 lineNumber++;
             }
 
-            // Create temp order payload
             const tempOrderPayload = {
                 userId: userId,
                 entity: entity,
@@ -793,7 +787,6 @@ function Cart() {
                 orderLinesDetails: orderLinesPayload
             };
 
-            // Insert into temp table
             const tempOrderResponse = await fetch(`${API_BASE_URL}/temp-sales-order`, {
                 method: 'POST',
                 headers: {
@@ -818,8 +811,6 @@ function Cart() {
         }
     };
 
-
-    // Handle VMCO order processing with machines and consumables
     const handleVMCOOrderProcessing = async (categoryItems, categoryName, selectedPaymentMethod) => {
         try {
             setIsPlacingOrder(true);
@@ -925,7 +916,6 @@ function Cart() {
         }
     };
 
-    // Handle place order button click
     const handlePlaceOrder = async (categoryItems, categoryName, selectedPaymentMethod) => {
         if (categoryItems.length === 0) {
             Swal.fire({
@@ -1220,7 +1210,6 @@ function Cart() {
                 }
             }
 
-            // Calculate initial totalAmount from cart items
             let initialTotalAmount = 0;
             for (const item of categoryItems) {
                 const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
@@ -1404,12 +1393,7 @@ function Cart() {
             }
 
             // Check if we need to use temp table (entity !== 'vmco' && paymentMethod === 'pre payment')
-            if (entity?.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
-                selectedPaymentMethod?.toLowerCase() === 'pre payment') {
-
-                console.log('Using temp table flow for entity:', entity, 'with payment method:', selectedPaymentMethod);
-
-                // Insert into temp_sales_orders table
+            if (entity?.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() && selectedPaymentMethod?.toLowerCase() === 'pre payment') {
                 const tempOrderPayload = {
                     userId: userId,
                     entity: entity,
@@ -1436,9 +1420,6 @@ function Cart() {
                 const tempOrderResult = await tempOrderResponse.json();
                 const tempOrderId = tempOrderResult.data.id;
 
-                console.log('Created temp order with ID:', tempOrderId);
-
-                // Generate payment link using temp order ID
                 try {
                     const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                         id: tempOrderId,
@@ -1667,7 +1648,6 @@ function Cart() {
                         }))
                     );
 
-                    // Clean up quantities state for removed items
                     setQuantities(prevQuantities => {
                         const newQuantities = { ...prevQuantities };
                         categoryItems.forEach(item => {
@@ -1683,7 +1663,7 @@ function Cart() {
 
         } catch (error) {
             console.error('Error in createNormalOrder:', error);
-            throw error; // Re-throw so the calling function can handle it
+            throw error;
         }
     };
 
@@ -1710,7 +1690,6 @@ function Cart() {
             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
                 const methodDetails = result.data.methodDetails;
 
-                // If entity is provided, check entity-specific credit allowance
                 if (entity && methodDetails.credit && methodDetails.credit[entity]) {
                     const entityCreditDetails = methodDetails.credit[entity];
                     const isAllowed = entityCreditDetails.isAllowed === true;
@@ -1718,7 +1697,6 @@ function Cart() {
                     return isAllowed;
                 }
 
-                // Fallback: check if credit is generally allowed (legacy support)
                 if (methodDetails.credit && methodDetails.credit.isAllowed === true) {
                     console.log('Credit payment is allowed for customer (general)');
                     return true;
@@ -1733,7 +1711,6 @@ function Cart() {
         }
     };
 
-    // Function to validate credit balance and show warning if insufficient (entity-specific)
     const validateCreditBalance = async (customerId, totalAmount, entity = null) => {
         try {
             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
