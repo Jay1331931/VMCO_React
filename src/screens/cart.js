@@ -627,8 +627,9 @@ function Cart() {
                         console.log('Generating payment link for temp order IDs:', orderIds);
                         const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                             id: orderIds?.map(String).join(','),
-                                endPoint: 'payment-opations/order',
-                            IsEmail: false
+                                endPoint: 'payment-options/order',
+                            IsEmail: false,
+                             salesOrderType: "cart"
                         }, {
                             headers: {
                                 'Authorization': `Bearer ${token}`
@@ -1423,7 +1424,7 @@ function Cart() {
                 try {
                     const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                         id: tempOrderId,
-                        endPoint: 'payment-opations/order',
+                        endPoint: 'payment-options/order',
                         IsEmail: false,
                         salesOrderType: "cart"
                     }, {
@@ -1608,8 +1609,9 @@ function Cart() {
                 try {
                     const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                         id: orderId?.map(String).join(','),
-                        endPoint: 'payment-opations/order',
-                        IsEmail: false
+                        endPoint: 'payment-options/order',
+                        IsEmail: false,
+                         salesOrderType: "cart"
                     }, {
                         headers: {
                             'Authorization': `Bearer ${token}`

@@ -46,6 +46,7 @@ const OptionsPage = () => {
   //   }
 
   // }
+  console.log("orderType",orderType)
   const fetchDecodeddata = useCallback(async () => {
   try {
     const token = localStorage.getItem("token"); // always use latest
@@ -139,7 +140,7 @@ const fetchtempSaleOrder = useCallback(async () => {
 
     const results = await Promise.all(
       ids.map((id) =>
-        api.get(`/temp-sales-order/id/${tempdecodedOrderID}`, {
+        api.get(`/temp-sales-order/id/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         })
       )
@@ -292,6 +293,18 @@ const fetchtempSaleOrder = useCallback(async () => {
   //     return;
   //   }
   // }, [OrderDetails]);
+      useEffect(() => {
+    console.log("OrderDetails:", TempOrderDetails);
+    if (!TempOrderDetails || TempOrderDetails.length === 0) return;
+
+    // Sum all order totals and paid amounts
+    const totalAmount = TempOrderDetails.reduce(
+      (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
+      0
+    );
+setAmount(parseFloat(totalAmount));
+    console.log("Amount match:", 0 == null,totalAmount);
+  }, [TempOrderDetails]);
   useEffect(() => {
     console.log("OrderDetails:", OrderDetails);
     if (!OrderDetails || OrderDetails.length === 0) return;
@@ -375,18 +388,7 @@ const fetchtempSaleOrder = useCallback(async () => {
     }
   }, [OrderDetails]);
 
-    useEffect(() => {
-    console.log("OrderDetails:", TempOrderDetails);
-    if (!TempOrderDetails || TempOrderDetails.length === 0) return;
 
-    // Sum all order totals and paid amounts
-    const totalAmount = TempOrderDetails.reduce(
-      (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
-      0
-    );
-setAmount(parseFloat(totalAmount));
-    console.log("Amount match:", 0 == null);
-  }, [TempOrderDetails]);
 
   //  useEffect(() => {
   //   if (!OrderDetails || Object.keys(OrderDetails).length === 0) return;
