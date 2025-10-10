@@ -626,7 +626,7 @@ function Cart() {
                     try {
                         console.log('Generating payment link for temp order IDs:', orderIds);
                         const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
-                            id: orderIds, 
+                            id: orderIds,
                             endPoint: 'payment-options/order',
                             IsEmail: false
                         }, {
@@ -678,31 +678,6 @@ function Cart() {
                     ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                     : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
 
-                console.log('Order success message:', orderText);
-
-                Swal.fire({
-                    icon: 'success',
-                    title: t('Order Placed'),
-                    text: orderText,
-                    confirmButtonText: t('OK')
-                }).then(() => {
-                    // Update cart items state to remove ordered items
-                    setCartItems(prevCartItems =>
-                        prevCartItems.map(category => ({
-                            ...category,
-                            items: category.items.filter(
-                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                        })));
-
-                    // Clean up quantities state for removed items
-                    setQuantities(prevQuantities => {
-                        const newQuantities = { ...prevQuantities };
-                        categoryItems.forEach(item => {
-                            delete newQuantities[item.id];
-                        });
-                        return newQuantities;
-                    });
-                });
             }
 
         } catch (err) {
@@ -1469,7 +1444,7 @@ function Cart() {
                         id: tempOrderId,
                         endPoint: 'payment-opations/order',
                         IsEmail: false,
-                        salesOrderType:"cart"
+                        salesOrderType: "cart"
                     }, {
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -1479,7 +1454,7 @@ function Cart() {
                     if (paymentLinkResponse?.data?.details?.url) {
                         console.log('Payment link generated, redirecting to:', paymentLinkResponse.data.details.url);
                         window.location.href = paymentLinkResponse.data.details.url;
-                      
+
                         return tempOrderId; // Return temp order ID
                     } else {
                         throw new Error('Payment URL not found in response');
