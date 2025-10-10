@@ -626,8 +626,8 @@ function Cart() {
                     try {
                         console.log('Generating payment link for temp order IDs:', orderIds);
                         const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
-                            id: orderIds,
-                            endPoint: 'payment-options/order',
+                            id: orderIds?.map(String).join(','),
+                                endPoint: 'payment-opations/order',
                             IsEmail: false
                         }, {
                             headers: {
@@ -637,7 +637,7 @@ function Cart() {
 
                         if (paymentLinkResponse?.data?.details?.url) {
                             console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
-                            window.open(paymentLinkResponse.data.details.url, '_blank');
+                            window.open(paymentLinkResponse.data.details.url);
                         } else {
                             console.error('Payment URL not found in response:', paymentLinkResponse.data);
                         }
@@ -1626,8 +1626,8 @@ function Cart() {
 
                 try {
                     const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
-                        id: orderId,
-                        endPoint: 'payment-options/order',
+                        id: orderId?.map(String).join(','),
+                        endPoint: 'payment-opations/order',
                         IsEmail: false
                     }, {
                         headers: {
@@ -1636,7 +1636,7 @@ function Cart() {
                     });
 
                     if (paymentLinkResponse?.data?.details?.url) {
-                        window.open(paymentLinkResponse.data.details.url, '_blank');
+                        window.open(paymentLinkResponse.data.details.url);
                     }
                 } catch (error) {
                     console.error('Error generating payment link:', error);
