@@ -12,7 +12,7 @@ import formatDate from "../utilities/dateFormatter";
 import Swal from "sweetalert2";
 import "../styles/addBankTransaction.css";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
-import api from "../utilities/api"
+import api from "../utilities/api";
 const getCookie = (name) => {
   // const cookies = document.cookie
   //   .split(";")
@@ -59,7 +59,7 @@ const AddBankTransaction = () => {
       : user?.roles[0],
     "BankTransactions"
   );
-   const cookieToken = getCookie("token");
+  const cookieToken = getCookie("token");
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
   // const generateToken = async () => {
@@ -79,7 +79,7 @@ const AddBankTransaction = () => {
   //     const newToken = data?.details?.token;
   //   if (newToken) {
   //     localStorage.setItem("token", newToken);
-     
+
   //     return newToken;
   //   }
   //   } catch (error) {
@@ -110,16 +110,12 @@ const AddBankTransaction = () => {
       formDataUpload.append("containerType", "transactions");
 
       try {
-        const { data } = await api.post(
-          `/upload-files`,
-          formDataUpload,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${cookieToken}`,
-            },
-          }
-        );
+        const { data } = await api.post(`/upload-files`, formDataUpload, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${cookieToken}`,
+          },
+        });
 
         if (data.success) {
           setImageUrls((prev) => [...prev, data.files]);
@@ -162,13 +158,9 @@ const AddBankTransaction = () => {
       };
       delete payload.entity;
 
-      const response = await api.post(
-        `/bank-transactions`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${cookieToken}` },
-        }
-      );
+      const response = await api.post(`/bank-transactions`, payload, {
+        headers: { Authorization: `Bearer ${cookieToken}` },
+      });
 
       if (orderIds && response.data.status === "success") {
         Swal.fire({
@@ -234,16 +226,12 @@ const AddBankTransaction = () => {
     try {
       const payload = { status };
 
-      const { data } = await api.patch(
-        `/bank-transactions/id/${id}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${cookieToken}`,
-          },
-        }
-      );
+      const { data } = await api.patch(`/bank-transactions/id/${id}`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${cookieToken}`,
+        },
+      });
       if (data.status === "success") {
         Swal.fire({
           title: t("Success"),
@@ -267,12 +255,9 @@ const AddBankTransaction = () => {
   const fetchTransaction = useCallback(async () => {
     try {
       if (!id) return;
-      const { data } = await api.get(
-        `/bank-transactions/id/${id}`,
-        {
-          headers: { Authorization: `Bearer ${cookieToken}` },
-        }
-      );
+      const { data } = await api.get(`/bank-transactions/id/${id}`, {
+        headers: { Authorization: `Bearer ${cookieToken}` },
+      });
       setImageUrls(data.data.bankDocuments ? data.data.bankDocuments : []);
       setUpdateTransaction({
         ...data.data,
@@ -302,18 +287,16 @@ const AddBankTransaction = () => {
     }
   }, [orderId]);
   useEffect(() => {
+    setAmount(null);
     if (!orderId) return;
     fetchDecodeddata();
   }, [fetchDecodeddata]);
   const fetchSaleOrder = useCallback(async () => {
     try {
       if (!orderIds) return;
-      const { data } = await api.get(
-        `/sales-order/id/${orderIds}`,
-        {
-          headers: { Authorization: `Bearer ${cookieToken}` },
-        }
-      );
+      const { data } = await api.get(`/sales-order/id/${orderIds}`, {
+        headers: { Authorization: `Bearer ${cookieToken}` },
+      });
       console.log("Sale Order Data:", amount);
       setFormData((prev) => ({
         ...prev,
@@ -321,7 +304,7 @@ const AddBankTransaction = () => {
         erpCustId: data.data.erpCustId,
         companyNameEn: data.data.companyNameEn,
         companyNameAr: data.data.companyNameAr,
-        amountTransferred: totalamount,
+        amountTransferred: parseFloat(totalamount),
         branchVmcoRegion: data?.data?.branchRegion || null,
         erpOrderId: data.data.erpOrderId ? [data.data.erpOrderId] : [],
         orderId: [data.data.id] || [],
@@ -419,6 +402,7 @@ const AddBankTransaction = () => {
   // };
   const dir = i18n.dir();
   const isRTL = dir === "rtl";
+
   const renderTemplate = () => {
     return (
       <div className="bank-add-container">
@@ -498,13 +482,19 @@ const AddBankTransaction = () => {
                 placeholder={t("Amount")}
                 min={0}
                 value={
-                  formData?.amountTransferred ||
-                  updateTransaction?.amountTransferred ||
+                  formData?.amountTransferred ??
+                  updateTransaction?.amountTransferred ??
                   ""
                 }
-                disabled={!formData.orderId || !updateTransaction?.orderId }
+                disabled={
+                  !!(
+                    formData?.orderId?.length ||
+                    updateTransaction?.orderId?.length
+                  )
+                }
                 onChange={handleChange}
               />
+
               {fieldErrors.amountTransferred && (
                 <div className="error-message" style={{ color: "red" }}>
                   {t(fieldErrors.amountTransferred)}
@@ -552,6 +542,9 @@ const AddBankTransaction = () => {
                   <option value="">{t("Select Entity")}</option>
                   <option value="VMCO">VMCO</option>
                   <option value="NAQI">NAQI</option>
+                  <option value="SHC">SHC</option>
+                  <option value="DAR">DAR</option>
+                  <option value="GMTC">GMTC</option>
                 </select>
                 {fieldErrors.entity && (
                   <div className="error-message" style={{ color: "red" }}>
