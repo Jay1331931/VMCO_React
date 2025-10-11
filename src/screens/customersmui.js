@@ -101,6 +101,9 @@ function Customers() {
       : user?.roles[0],
     "custDetailsAdd"
   );
+  const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") :"invites";
+
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
@@ -1761,7 +1764,7 @@ function Customers() {
                     getRowId={(row) => row?.workflowInstanceId || row?.id}
                     onRowClick={handleRowClick}
                     columnVisibilityModel={columnVisibilityModel}
-                    onColumnVisibilityModelChange={setColumnVisibilityModel}
+                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
                     sortModel={sortModel}
                     onSortModelChange={handleSortModelChange}
                     disableSelectionOnClick
@@ -1922,7 +1925,7 @@ function Customers() {
                           setSearchQuery={setSearchQuery}
                           setFilterAnchor={setFilterAnchor}
                           handleFilterChange={handleFilterChange}
-                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          onColumnVisibilityChange={handleColumnVisibilityChange}
                           columns={filertInvites}
                           filters={filters}
                           columnVisibilityModel={columnVisibilityModel}
@@ -2097,6 +2100,17 @@ function Customers() {
   useEffect(() => {
     setFilters({});
   }, [activeTab]);
+     const storageKey = `${pageName}_${role}_columns`;
+    useEffect(() => {
+      const savedModel = localStorage.getItem(storageKey);
+      if (savedModel) {
+        setColumnVisibilityModel(JSON.parse(savedModel));
+      }
+    }, [storageKey]);
+       const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };  
   return (
     <Sidebar title={t("Customers")}>
       <div className="page-content">

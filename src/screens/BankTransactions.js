@@ -49,6 +49,16 @@ const BankTransactions = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
 
+   const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName= "BankTransactions"
+      const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
+
   // Fetch API
   const fetchTransactions = useCallback(
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
@@ -161,7 +171,10 @@ const BankTransactions = () => {
     createdAt: "Created At",
     status: "Status",
   };
-
+   const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
   return (
     <Sidebar title={t("Bank Transactions")}>
       {isV("BankContent") && (
@@ -180,7 +193,7 @@ const BankTransactions = () => {
                 rowCount={total}
                 onRowClick={(params) => handleRowClick(params.row)}
                 columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                onColumnVisibilityModelChange={handleColumnVisibilityChange}
                 sortModel={sortModel}
                 onSortModelChange={handleSortModelChange}
                 disableSelectionOnClick
@@ -199,7 +212,7 @@ const BankTransactions = () => {
                       setSearchQuery={setSearchQuery}
                       setFilterAnchor={setFilterAnchor}
                       handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
+                      onColumnVisibilityChange={handleColumnVisibilityChange}
                       columns={visibleColumns}
                       filters={filters}
                       columnVisibilityModel={columnVisibilityModel}
