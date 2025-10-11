@@ -1,3 +1,5 @@
+import Constants from "../constants";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export const getOptionsFromBasicsMaster = async (fieldName, token) => {
   const params = new URLSearchParams({
@@ -180,5 +182,27 @@ export const getOptionsFromEmployeesWithManager = async (region, token) => {
     return [];
   }
 };
+
+export const checkFieldForUpdate = async (fieldType, workflowName) => {
+  if(fieldType.toLowerCase() === "customer") {
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.CUSTOMER_DETAILS.toLowerCase() || workflowName.toLowerCase() === Constants.WORKFLOW_NAME.CUSTOMER_POST_APPROVAL.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if (fieldType.toLowerCase() === "pricingpolicy"){
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.PRICING_POLICY.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if(fieldType.toLowerCase() === "payments"){
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.PAYMENT_METHODS.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
 
 

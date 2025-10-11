@@ -65,6 +65,21 @@ const Constants = {
         PRODUCTS_UPLOAD_FORMAT: "product_mapping_upload_format.xlsx",
         CUSTOMERS_BULK_UPLOAD_FORMAT: "customers_bulk_upload_format.xlsx",
         BRANCH_BULK_UPLOAD_FORMAT: "branches_bulk_upload_format.xlsx"
+    },
+    WORKFLOW_NAME: {
+        ONBOARDING: 'onboarding',
+        NEW_BRANCH: 'new branch',
+        CUSTOMER_DETAILS: 'customer details',
+        BRANCH_DETAILS: 'branch details',
+        CUSTOMER_POST_APPROVAL: 'customer post approval',
+        BRANCH_POST_APPROVAL: 'branch post approval',
+        PAYMENT_METHODS: 'payment methods',
+        PRICING_POLICY: 'pricing policy',
+        CUSTOMER_BLOCK_UNBLOCK: 'customer block/unblock',
+        VMCO_MACHINES: 'vmco machines',
+        VMCO_MACHINES_DISCOUNT: 'vmco machines discount',
+        VMCO_CONSUMABLES: 'vmco consumables',
+        OTHER_ENTITIES: 'other entities'
     }
 
 };
