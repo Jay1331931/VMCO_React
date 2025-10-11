@@ -1669,7 +1669,7 @@ customer_id: customer?.id,
                     onClick={() => toggleRow(branch.id)}
                     className={`
               ${isExpanded(branch.id) ? "branches-expanded-row" : ""}
-              ${mode === "edit" && index === 0 && branch?.id === customer?.completeWorkflowData?.workflowData?.id ? "first-row-highlight" : ""}
+              ${mode === "edit" && index === 0 && String(branch?.id) === String(customer?.completeWorkflowData?.workflowData?.id) ? "first-row-highlight" : ""}
             `}
                   >
                     <td
