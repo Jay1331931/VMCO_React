@@ -81,7 +81,15 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
-
+ const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName= "support"
+      const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
     // Fetch tickets from API
     const fetchTickets = useCallback(async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
         setLoading(true);
@@ -358,7 +366,10 @@ const handleShowAllDetailsClick = async (ticket) => {
     const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
         ? Math.ceil(total / pageSize)
         : 1;
-
+   const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
     return (
         <Sidebar title={t("Support")}>
             {isV('supportContent') && (
@@ -461,7 +472,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 rowCount={total}
                                 onRowClick={(params) => handleRowClick(params.row)}
                                 columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
                                 sortModel={sortModel}
                                 onSortModelChange={handleSortModelChange}
                                 disableSelectionOnClick

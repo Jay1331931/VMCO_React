@@ -132,6 +132,8 @@ function Orders() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+ const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName=isApprovalMode ? "ordersApproval" : "orders"
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
@@ -155,7 +157,13 @@ function Orders() {
       ? match.descriptionLc || match.description
       : match.description;
   };
-
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -588,7 +596,7 @@ function Orders() {
     user,
     fetchOrders,
     filters,
-    isApprovalMode,
+    // isApprovalMode,
     activeCategory,
   ]);
 
@@ -1873,7 +1881,7 @@ function Orders() {
           },
         }
       );
-      if (data?.success) {
+      if (data?.success && data?.details?.details?.erpOrderId) {
         fetchOrders(page, searchQuery, filters);
         Swal.fire({
           title: t("Success"),
@@ -2146,8 +2154,9 @@ function Orders() {
     setFilterAnchor(null);
   };
 
-  const handleColumnVisibilityChange = (newModel) => {
+   const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
 
   function CustomFooter() {
@@ -2165,13 +2174,17 @@ function Orders() {
 
   const handleApproval = (mode) => {
     // setFilters({});
+     console.log("modemodssssssse",mode)
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
-      fetchApprovals();
+      fetchApprovals(1,"",{entity:"VMCO"});
     } else {
-      fetchOrders();
+      console.log("modemode",mode)
+      fetchOrders(1,"",{entity:"VMCO"});
     }
   };
+  
+
 
   return (
     <Sidebar title={t("Orders")}>
@@ -2330,7 +2343,8 @@ function Orders() {
                 rowCount={total}
                 onRowClick={handleRowClick}
                 columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                // onColumnVisibilityModelChange={setColumnVisibilityModel}
+                   onColumnVisibilityModelChange={handleColumnVisibilityChange}
                 sortModel={sortModel}
                 onSortModelChange={handleSortModelChange}
                 disableSelectionOnClick
@@ -2354,7 +2368,7 @@ function Orders() {
                       setSearchQuery={setSearchQuery}
                       setFilterAnchor={setFilterAnchor}
                       handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
+                      onColumnVisibilityChange={handleColumnVisibilityChange}
                       columns={filteredData}
                       filters={filters}
                       columnVisibilityModel={columnVisibilityModel}

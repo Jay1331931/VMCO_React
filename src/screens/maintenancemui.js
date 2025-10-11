@@ -68,6 +68,15 @@ function Maintenance() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+   const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+  const pageName= "Maintenance"
+        const storageKey = `${pageName}_${role}_columns`;
+    useEffect(() => {
+      const savedModel = localStorage.getItem(storageKey);
+      if (savedModel) {
+        setColumnVisibilityModel(JSON.parse(savedModel));
+      }
+    }, [storageKey]);
     // Grid API reference
     const gridApiRef = useGridApiRef();
 
@@ -382,7 +391,10 @@ const handleShowAllDetailsClick = async (ticket) => {
     const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
         ? Math.ceil(total / pageSize) 
         : 1;
-
+   const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
     return (
         <Sidebar title={t("Maintenance")}>
             {isV('maintenanceContent') && (
@@ -487,7 +499,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 rowCount={total}
                                 onRowClick={handleRowClick}
                                 columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
                                 sortModel={sortModel}
                                 onSortModelChange={handleSortModelChange}
                                 disableSelectionOnClick
