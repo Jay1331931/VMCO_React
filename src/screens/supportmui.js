@@ -480,7 +480,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                             rowCount={total}
                                             onRowClick={(params) => handleRowClick(params.row)}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
                                             sortModel={sortModel}
                                             onSortModelChange={handleSortModelChange}
                                             disableSelectionOnClick
@@ -501,7 +501,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                         setSearchQuery={setSearchQuery}
                                                         setFilterAnchor={setFilterAnchor}
                                                         handleFilterChange={handleFilterChange}
-                                                        onColumnVisibilityChange={setColumnVisibilityModel}
+                                                        onColumnVisibilityChange={handleColumnVisibilityChange}
                                                         columns={filteredData}
                                                         filters={filters}
                                                         columnVisibilityModel={columnVisibilityModel}
