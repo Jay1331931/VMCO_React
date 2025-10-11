@@ -20,6 +20,7 @@ import {
     useGridApiRef,
 } from "@mui/x-data-grid";
 import TableMobile from "../components/TableMobile";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 // Status class helper function
@@ -57,17 +58,18 @@ function Maintenance() {
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [sortModel, setSortModel] = useState([]);
     const [filterAnchor, setFilterAnchor] = useState(null);
- const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
- const [selectedRow, setSelectedRow] = useState(null);
-   const [showRowPopup, setShowRowPopup] = useState(false);
-   
-  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    console.log("isMobile", isMobile);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [selectedRow, setSelectedRow] = useState(null);
+    const [showRowPopup, setShowRowPopup] = useState(false);
+    const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
    const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
   const pageName= "Maintenance"
         const storageKey = `${pageName}_${role}_columns`;
@@ -80,8 +82,13 @@ function Maintenance() {
     // Grid API reference
     const gridApiRef = useGridApiRef();
 
-    //RBAC
-    const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "maintList");
+    // RBAC
+    const rbacMgr = new RbacManager(
+        user?.userType === "employee" && user?.roles[0] !== "admin"
+            ? user?.designation
+            : user?.roles[0],
+        "maintList"
+    );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
 
@@ -100,22 +107,22 @@ function Maintenance() {
             });
 
             let apiUrl;
-            
             // Only include access parameter if user is maintenance head
             if (user?.designation?.toLowerCase() === Constants.DESIGNATIONS?.MAINTENANCE_HEAD?.toLowerCase()) {
-                const accessParam = isMyTicketsMode ? 'region' : 'all';
+                const accessParam = isMyTicketsMode ? "region" : "all";
                 apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}&access=${accessParam}`;
             } else {
                 // For other designations, don't include access parameter
                 apiUrl = `${API_BASE_URL}/maintenance/pagination?${params.toString()}`;
             }
-            
+
             console.log("Fetching maintenance tickets from:", apiUrl);
+
             const response = await fetch(apiUrl, {
                 method: "GET",
-                headers: { 
+                headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
             });
 
@@ -135,7 +142,7 @@ function Maintenance() {
 
             const resp = await response.json();
             console.log("Fetched maintenance tickets:", resp);
-            
+
             if (resp.status === 'Ok' || resp.data) {
                 const processedTickets = (resp.data?.data || resp.data || []).map(ticket => ({
                     ...ticket,
@@ -155,7 +162,7 @@ function Maintenance() {
         }
     }, [navigate, logout, user?.userType, user?.designation, isMyTicketsMode, token, pageSize]);
 
-    //NOTE: For fetching the user again after browser refresh - start
+    // NOTE: For fetching the user again after browser refresh - start
     useEffect(() => {
         if (loading) {
             return; // Wait while loading
@@ -170,7 +177,6 @@ function Maintenance() {
             console.log("$$$$$$$$$$$ logging out");
         }
     }, [page, searchQuery, user, fetchMaintenanceTickets, filters, sortModel, isMyTicketsMode]);
-    //For fetching the user again after browser refresh - End
 
     // Handle search functionality
     const handleSearch = (searchTerm) => {
@@ -194,7 +200,7 @@ function Maintenance() {
 
     // Define columns for the DataGrid
     const maintenanceColumns = [
-        { 
+        {
             field: "requestId", 
             headerName: t("Request #"), 
             include: isV('requestIdCol'), 
@@ -206,7 +212,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: currentLanguage === "en" ? "companyNameEn" : "companyNameAr", 
             headerName: t("Customer"), 
             include: isV('customerCol'), 
@@ -220,7 +226,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: currentLanguage === "en" ? "branchNameEn" : "branchNameLc", 
             headerName: t("Branch"), 
             include: isV('branchCol'), 
@@ -234,7 +240,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "issueName", 
             headerName: t("Issue Name"), 
             include: isV('issueNameCol'), 
@@ -247,7 +253,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "issueType", 
             headerName: t("Issue Type"), 
             include: isV('issueTypeCol'), 
@@ -260,7 +266,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "createdAt", 
             headerName: t("Created Date"), 
             include: isV('createdDateCol'), 
@@ -275,9 +281,9 @@ function Maintenance() {
                         ? formatDate(params?.row?.createdAt, 'DD/MM/YYYY')
                         : convertToTimezone(params?.row?.createdAt, TIMEZONES.SAUDI_ARABIA, 'DD/MM/YYYY')}
                 </span>
-            ),
+            )
         },
-        { 
+        {
             field: "createdByUsername", 
             headerName: t("Created By"), 
             include: isV('createdByCol'), 
@@ -291,7 +297,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "urgencyLevel", 
             headerName: t("Urgency Level"), 
             include: isV('urgencyLevelCol'), 
@@ -304,7 +310,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "assignedTo", 
             headerName: t("Assigned To"), 
             include: isV('assignedToCol'), 
@@ -317,7 +323,7 @@ function Maintenance() {
                 <span>{params.value}</span>
             )
         },
-        { 
+        {
             field: "status", 
             headerName: t("Status"), 
             include: isV('statusCol'), 
@@ -338,19 +344,21 @@ function Maintenance() {
 
     // Searchable fields for the toolbar
     const searchableFields = visibleColumns.filter(item => item.searchable).map(item => item.field);
-const handleShowAllDetailsClick = async (ticket) => {
-    navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
-  };
+
+    const handleShowAllDetailsClick = async (ticket) => {
+        navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
+    };
+
     // Handle row click to navigate to Maintenance details page with ticket details
     const handleRowClick = (params) => {
         const ticket = params.row;
-        if(isMobile) {
+        if (isMobile) {
             setSelectedRow(ticket);
             setShowRowPopup(true);
-        }else {
+        } else {
             navigate("/maintenanceDetails", { state: { ticket: ticket, mode: "edit" } });
         }
-        };
+    };
 
     // Handle adding a new ticket
     const handleAdd = () => {
@@ -388,8 +396,8 @@ const handleShowAllDetailsClick = async (ticket) => {
     };
 
     // Pagination calculation - same as Orders and Support pages
-    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0 
-        ? Math.ceil(total / pageSize) 
+    const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
+        ? Math.ceil(total / pageSize)
         : 1;
    const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
@@ -400,201 +408,246 @@ const handleShowAllDetailsClick = async (ticket) => {
             {isV('maintenanceContent') && (
                 <div className='maintenance-content'>
                     {isMobile ? (
-          <div className="table-container">
-            {loading ? (
-              <LoadingSpinner />
-            ) : error ? (
-              <div className="error-message">{error}</div>
-            ) : (
-              <TableMobile
-                columns={visibleColumns}
-                allColumns={maintenanceColumns}
-                data={initialTickets}
-                showAllDetails={true}
-                handleAllDetailsClick={handleShowAllDetailsClick}
-                selectedRow={selectedRow}
-                setSelectedRow={setSelectedRow}
-                showRowPopup={showRowPopup}
-                setShowRowPopup={setShowRowPopup}
-                // getPaymentStatusClass={getPaymentStatusClass}
-                dataGridComponent={
-                  <DataGrid
-                                apiRef={gridApiRef}
-                                rows={initialTickets}
-                                columns={visibleColumns}
-                                pageSize={pageSize}
-                                rowCount={total}
-                                onRowClick={handleRowClick}
-                                columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={setColumnVisibilityModel}
-                                sortModel={sortModel}
-                                onSortModelChange={handleSortModelChange}
-                                disableSelectionOnClick
-                                disableColumnMenu
-                                hideFooter={true}
-                                hideFooterPagination={true}
-                                disableExtendRowFullWidth={true}
-                                pagination={false}
-                                autoHeight
-                                 rowHeight={55}
-                                showToolbar
-                                slots={{
-                                    toolbar: () => (
-                                        <CustomToolbar
-                                            searchQuery={searchQuery}
-                                            filterAnchor={filterAnchor}
-                                            onSearch={handleSearch}
-                                            setSearchQuery={setSearchQuery}
-                                            setFilterAnchor={setFilterAnchor}
-                                            handleFilterChange={handleFilterChange}
-                                            onColumnVisibilityChange={setColumnVisibilityModel}
-                                            columns={filteredData}
-                                            filters={filters}
+                        <div className="table-container">
+                            {loading ? (
+                                <LoadingSpinner />
+                            ) : error ? (
+                                <div className="error-message">{error}</div>
+                            ) : (
+                                <TableMobile
+                                    columns={visibleColumns}
+                                    allColumns={maintenanceColumns}
+                                    data={initialTickets}
+                                    showAllDetails={true}
+                                    handleAllDetailsClick={handleShowAllDetailsClick}
+                                    selectedRow={selectedRow}
+                                    setSelectedRow={setSelectedRow}
+                                    showRowPopup={showRowPopup}
+                                    setShowRowPopup={setShowRowPopup}
+                                    getPaymentStatusClass={getStatusClass}
+                                    dataGridComponent={
+                                        <DataGrid
+                                            apiRef={gridApiRef}
+                                            rows={initialTickets}
+                                            columns={visibleColumns}
+                                            pageSize={pageSize}
+                                            rowCount={total}
+                                            onRowClick={handleRowClick}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            searchPlaceholder="Search maintenance tickets..."
-                                            showColumnVisibility={true}
-                                            showFilters={true}
-                                            showExport={false}
-                                            showUpload={false}
-                                            showAdd={isV("btnAdd") && isE("btnAdd")}
-                                            buttonName={t("Add")}
-                                            showApproval={isV('toggleButton') && user?.designation === "maintenance head"}
-                                            handleAddClick={handleAdd}
-                                            columnsToDisplay={columnsToDisplay}
-                                            handleApproval={handleApproval}
-                                            isApprovalMode={isMyTicketsMode}
+                                            onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                            sortModel={sortModel}
+                                            onSortModelChange={handleSortModelChange}
+                                            disableSelectionOnClick
+                                            disableColumnMenu
+                                            hideFooter={true}
+                                            hideFooterPagination={true}
+                                            disableExtendRowFullWidth={true}
+                                            pagination={false}
+                                            autoHeight
+                                            rowHeight={55}
+                                            showToolbar
+                                            slots={{
+                                                toolbar: () => (
+                                                    <CustomToolbar
+                                                        searchQuery={searchQuery}
+                                                        filterAnchor={filterAnchor}
+                                                        onSearch={handleSearch}
+                                                        setSearchQuery={setSearchQuery}
+                                                        setFilterAnchor={setFilterAnchor}
+                                                        handleFilterChange={handleFilterChange}
+                                                        onColumnVisibilityChange={setColumnVisibilityModel}
+                                                        columns={filteredData}
+                                                        filters={filters}
+                                                        columnVisibilityModel={columnVisibilityModel}
+                                                        searchPlaceholder="Search maintenance tickets..."
+                                                        showColumnVisibility={true}
+                                                        showFilters={true}
+                                                        showExport={false}
+                                                        showUpload={false}
+                                                        showAdd={isV("btnAdd") && isE("btnAdd")}
+                                                        buttonName={t("Add")}
+                                                        showApproval={isV("toggleButton") && user?.designation === "maintenance head"}
+                                                        handleAddClick={handleAdd}
+                                                        columnsToDisplay={columnsToDisplay}
+                                                        handleApproval={handleApproval}
+                                                        isApprovalMode={isMyTicketsMode}
+                                                    />
+                                                ),
+                                            }}
+                                            sx={{
+                                                '& .MuiDataGrid-row': {
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    },
+                                                },
+                                                '.MuiDataGrid-cell': {
+                                                    textAlign: 'center',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }
+                                            }}
                                         />
-                                    ),
-                                }}
-                                sx={{
-                                    '& .MuiDataGrid-row': {
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                        },
-                                    },
-                                     '.MuiDataGrid-cell': {
-                textAlign: 'center', // Add this line to center all cell content
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }
-                                }}
-                            />
-                }
-              />
-            )}
-          </div>
-        ) : (<div className="table-container">
-                        {loading ? (
-                            <LoadingSpinner />
-                        ) : error ? (
-                            <div className="error-message">{error}</div>
-                        ) : (
-                            <DataGrid
-                                apiRef={gridApiRef}
-                                rows={initialTickets}
-                                columns={visibleColumns}
-                                pageSize={pageSize}
-                                rowCount={total}
-                                onRowClick={handleRowClick}
-                                columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
-                                sortModel={sortModel}
-                                onSortModelChange={handleSortModelChange}
-                                disableSelectionOnClick
-                                disableColumnMenu
-                                hideFooter={true}
-                                hideFooterPagination={true}
-                                disableExtendRowFullWidth={true}
-                                pagination={false}
-                                autoHeight
-                                rowHeight={55}
-                                showToolbar
-                                slots={{
-                                    toolbar: () => (
-                                        <CustomToolbar
-                                            searchQuery={searchQuery}
-                                            filterAnchor={filterAnchor}
-                                            onSearch={handleSearch}
-                                            setSearchQuery={setSearchQuery}
-                                            setFilterAnchor={setFilterAnchor}
-                                            handleFilterChange={handleFilterChange}
-                                            onColumnVisibilityChange={setColumnVisibilityModel}
-                                            columns={filteredData}
-                                            filters={filters}
+                                    }
+                                />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="table-container">
+                            {loading ? (
+                                <LoadingSpinner />
+                            ) : error ? (
+                                <div className="error-message">{error}</div>
+                            ) : (
+                                <>
+                                    {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                                    <div style={{ 
+                                        height: '500px', 
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        <DataGrid
+                                            apiRef={gridApiRef}
+                                            rows={initialTickets}
+                                            columns={visibleColumns}
+                                            pageSize={pageSize}
+                                            rowCount={total}
+                                            onRowClick={handleRowClick}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            searchPlaceholder="Search maintenance tickets..."
-                                            showColumnVisibility={true}
-                                            showFilters={true}
-                                            showExport={false}
-                                            showUpload={false}
-                                            showAdd={isV("btnAdd") && isE("btnAdd")}
-                                            buttonName={t("Add")}
-                                            showApproval={isV('toggleButton') && user?.designation === "maintenance head"}
-                                            handleAddClick={handleAdd}
-                                            columnsToDisplay={columnsToDisplay}
-                                            handleApproval={handleApproval}
-                                            isApprovalMode={isMyTicketsMode}
+                                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                                            sortModel={sortModel}
+                                            onSortModelChange={handleSortModelChange}
+                                            disableSelectionOnClick
+                                            disableColumnMenu
+                                            hideFooter={true}
+                                            hideFooterPagination={true}
+                                            pagination={false}
+                                            rowHeight={55}
+                                            showToolbar
+                                            slots={{
+                                                toolbar: () => (
+                                                    <CustomToolbar
+                                                        searchQuery={searchQuery}
+                                                        filterAnchor={filterAnchor}
+                                                        onSearch={handleSearch}
+                                                        setSearchQuery={setSearchQuery}
+                                                        setFilterAnchor={setFilterAnchor}
+                                                        handleFilterChange={handleFilterChange}
+                                                        onColumnVisibilityChange={setColumnVisibilityModel}
+                                                        columns={filteredData}
+                                                        filters={filters}
+                                                        columnVisibilityModel={columnVisibilityModel}
+                                                        searchPlaceholder="Search maintenance tickets..."
+                                                        showColumnVisibility={true}
+                                                        showFilters={true}
+                                                        showExport={false}
+                                                        showUpload={false}
+                                                        showAdd={isV("btnAdd") && isE("btnAdd")}
+                                                        buttonName={t("Add")}
+                                                        showApproval={isV("toggleButton") && user?.designation === "maintenance head"}
+                                                        handleAddClick={handleAdd}
+                                                        columnsToDisplay={columnsToDisplay}
+                                                        handleApproval={handleApproval}
+                                                        isApprovalMode={isMyTicketsMode}
+                                                    />
+                                                ),
+                                            }}
+                                            sx={{
+                                                // Flex grow to fill available space
+                                                flex: 1,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                
+                                                '& .MuiDataGrid-toolbar': {
+                                                    padding: '16px !important',
+                                                    minHeight: '76px !important',
+                                                    flexShrink: 0,
+                                                },
+                                                
+                                                '& .MuiDataGrid-main': {
+                                                    flex: 1,
+                                                    overflow: 'hidden',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                },
+                                                
+                                                // Ensure only the virtual scroller (rows) is scrollable
+                                                '& .MuiDataGrid-virtualScroller': {
+                                                    overflow: 'auto !important',
+                                                    flex: 1,
+                                                },
+                                                
+                                                // Keep headers sticky and non-scrollable
+                                                '& .MuiDataGrid-columnHeaders': {
+                                                    position: 'sticky',
+                                                    top: 0,
+                                                    zIndex: 1,
+                                                    backgroundColor: 'white',
+                                                    borderBottom: '1px solid #e0e0e0',
+                                                    flexShrink: 0, // Prevent header from shrinking
+                                                },
+                                                
+                                                '& .MuiDataGrid-row': {
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    },
+                                                },
+                                                
+                                                // Arabic RTL styling
+                                                ...(isArabic && {
+                                                    direction: "rtl",
+                                                    "& .MuiDataGrid-cell": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeader": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-cellContent": {
+                                                        textAlign: "right !important",
+                                                    }
+                                                }),
+                                                
+                                                // Default LTR styling (left alignment)
+                                                ...(!isArabic && {
+                                                    "& .MuiDataGrid-cell": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeader": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-cellContent": {
+                                                        textAlign: "left",
+                                                    }
+                                                })
+                                            }}
                                         />
-                                    ),
-                                }}
-                                sx={{
-                                    '& .MuiDataGrid-row': {
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                        },
-                                    },
-                                    // Arabic RTL styling
-                                    ...(isArabic && {
-                                        direction: "rtl",
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "right !important",
-                                        }
-                                    }),
-                                    // Default LTR styling (left alignment)
-                                    ...(!isArabic && {
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "left",
-                                        }
-                                    })
-                                }}
-                            />
-                        )}
+                                    </div>
 
-                        {/* Pagination component - added from Orders and Support pages */}
-                        {isV('maintenancePagination') && initialTickets.length > 0 && (
-                            <Pagination
-                                currentPage={page}
-                                totalPages={String(totalPages)}
-                                onPageChange={setPage}
-                            />
-                        )}
-                    </div>)}
+                                    {/* External Pagination component */}
+                                    {isV('maintenancePagination') && initialTickets.length > 0 && (
+                                        <Pagination
+                                            currentPage={page}
+                                            totalPages={String(totalPages)}
+                                            onPageChange={setPage}
+                                        />
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </Sidebar>
     );
 }
-
 
 export default Maintenance;
