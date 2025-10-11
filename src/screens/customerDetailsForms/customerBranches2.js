@@ -64,7 +64,6 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [branches, setBranches] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
   const [searchOptions, setSearchOptions] = useState([]);
-  const [completeWorkflowData, setCompleteWorkflowData] = useState({});
   const [transformedBranches, setTransformedBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -1670,7 +1669,7 @@ customer_id: customer?.id,
                     onClick={() => toggleRow(branch.id)}
                     className={`
               ${isExpanded(branch.id) ? "branches-expanded-row" : ""}
-              ${mode === "edit" && index === 0 && branch?.id === customer?.completeWorkflowData?.id ? "first-row-highlight" : ""}
+              ${mode === "edit" && index === 0 && String(branch?.id) === String(customer?.completeWorkflowData?.workflowData?.id) ? "first-row-highlight" : ""}
             `}
                   >
                     <td

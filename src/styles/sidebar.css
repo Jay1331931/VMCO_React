@@ -214,6 +214,13 @@
     text-overflow: ellipsis;
     overflow: hidden;
 }
+.user-details-footer {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
 .logout-icon {
     font-size: 0.9rem;
     color: var(--text-secondary);

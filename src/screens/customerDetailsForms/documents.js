@@ -496,7 +496,9 @@ const [customDocName, setCustomDocName] = useState("");
               handleTradingDocumentChange(e, "acknowledgementSignature")
             }
             required
-            disabled={mode === "edit"}
+            disabled={mode === "edit"
+              && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            }
           />
           <label
             htmlFor="acknowledgementSignature"
@@ -657,7 +659,9 @@ const [customDocName, setCustomDocName] = useState("");
                 ref={fileInputRefs.bankLetter}
                 onChange={(e) => handleTradingDocumentChange(e, "bankLetter")}
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="bankLetter"
@@ -814,7 +818,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "nationalAddress")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="nationalAddress"
@@ -973,7 +979,9 @@ const [customDocName, setCustomDocName] = useState("");
                 ref={fileInputRefs.nationalId}
                 onChange={(e) => handleTradingDocumentChange(e, "nationalId")}
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="nationalId"
@@ -1132,7 +1140,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "crCertificate")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="crCertificate"
@@ -1294,7 +1304,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "vatCertificate")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="vatCertificate"
@@ -1460,7 +1472,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementShc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementShc"
@@ -1621,7 +1635,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementNaqi")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementNaqi"
@@ -1782,7 +1798,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementGmtc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementGmtc"
@@ -1943,7 +1961,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementDar")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementDar"
@@ -2104,7 +2124,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementVmco")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementVmco"
@@ -2265,7 +2287,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationShc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationShc"
@@ -2426,7 +2450,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationNaqi")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationNaqi"
@@ -2587,7 +2613,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationGmtc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationGmtc"
@@ -2748,7 +2776,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationDar")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationDar"
@@ -2909,7 +2939,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationVmco")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationVmco"
@@ -3079,7 +3111,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementShc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementShc"
@@ -3240,7 +3274,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementNaqi")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementNaqi"
@@ -3401,7 +3437,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementGmtc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementGmtc"
@@ -3562,7 +3600,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementDar")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementDar"
@@ -3723,7 +3763,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "contractAgreementVmco")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="contractAgreementVmco"
@@ -3884,7 +3926,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationShc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationShc"
@@ -4045,7 +4089,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationNaqi")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationNaqi"
@@ -4206,7 +4252,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationGmtc")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationGmtc"
@@ -4367,7 +4415,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationDar")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationDar"
@@ -4528,7 +4578,9 @@ const [customDocName, setCustomDocName] = useState("");
                   handleTradingDocumentChange(e, "creditApplicationVmco")
                 }
                 required
-                disabled={mode === "edit"}
+                disabled={mode === "edit"
+                  && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+                }
               />
               <label
                 htmlFor="creditApplicationVmco"
@@ -4709,7 +4761,7 @@ const [customDocName, setCustomDocName] = useState("");
                 accept=".pdf,.doc,.docx,.jpg,.png"
                 ref={fileInputRefs.nonTradingDocuments}
                 onChange={handleNonTradingDocumentsChange}
-                disabled={mode === "edit" || !selectedDocType || (selectedDocType === "Others (Specify)" && !customDocName)}
+                disabled={user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR && mode === "edit" || !selectedDocType || (selectedDocType === "Others (Specify)" && !customDocName)}
               />
               <label
                 htmlFor={"nonTradingDocuments"}

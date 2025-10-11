@@ -31,6 +31,7 @@ import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import TableMobile from "../components/TableMobile";
+import Constants from "../constants";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -827,27 +828,27 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
-    {
-      field: "companyType",
-      headerName: t("Company Type"),
-      include: isV("companyType"),
-      searchable: true,
-      minWidth: 120,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
-    },
-    {
-      field: "typeOfBusiness",
-      headerName: t("Type Of Business"),
-      include: isV("typeOfBusiness"),
-      searchable: true,
-      minWidth: 140,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
-    },
-    {
+    // {
+    //   field: "companyType",
+    //   headerName: t("Company Type"),
+    //   include: isV("companyType"),
+    //   searchable: true,
+    //   minWidth: 120,
+    //   flex: 1,
+    //   align: isArabic ? 'right' : 'left',
+    //   renderCell: (params) => { <span>{params.value}</span> }
+    // },
+    // {
+    //   field: "typeOfBusiness",
+    //   headerName: t("Type Of Business"),
+    //   include: isV("typeOfBusiness"),
+    //   searchable: true,
+    //   minWidth: 140,
+    //   flex: 1,
+    //   align: isArabic ? 'right' : 'left',
+    //   renderCell: (params) => { <span>{params.value}</span> }
+    // },
+      {
       field: "createdAt",
       headerName: t("Created Date"),
       include: isV("createdAt"),
@@ -886,6 +887,68 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
+    {
+      field: "salesExecutiveName",
+      sortable: false,
+      headerName: t("Sales Executive Name"),
+      include: isV("salesExecutiveName"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutiveName || "")}</span>
+      ),
+    },
+    {
+  field: "ocApprover",
+  sortable: false,
+  headerName: t("OC Approver"),
+  include: isV("ocApprover"),
+  searchable: true,
+  minWidth: 120,
+  flex: 1,
+  align: isArabic ? "right" : "left",
+  headerAlign: isArabic ? "right" : "left",
+  renderCell: (params) => (
+    <span>
+      {t(
+        params.row.currentApprover?.[Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase()]?.join(", ") || ""
+      )}
+    </span>
+  ),
+},
+    {
+      field: "approvalStatus",
+      headerName: t("Approval Status"),
+      include: isV("approvalStatus"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
+      ),
+    },
+    {
+      field: "currentApprover",
+      sortable: false,
+      headerName: t("Current Approver"),
+      include: isV("currentApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>{t(params.row.currentApproverType || "")}</span>
+      ),
+    },
+    
   ];
 
   // Invite Columns
@@ -953,8 +1016,17 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
     },
     {
       field: "employeeId",
-      headerName: t("Assigned To"),
+      headerName: t("Employee ID"),
       include: isV("employeeId"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+      align: isArabic ? 'right' : 'left'
+    },
+    {
+      field: "employeeName",
+      headerName: t("Employee Name"),
+      include: isV("employeeName"),
       searchable: true,
       minWidth: 150,
       flex: 1,
