@@ -2205,15 +2205,16 @@ function Orders() {
                   setApprovalMode(false);
                   fetchOrders(1, searchQuery, { entity: newCategory });
                   setSearchQuery("");
-                  setCategoryFilter(""); // Reset category filter
-                  setSubCategoryFilter(""); // Reset subcategory filter
-                  setSubCategoryOptions([]); // Clear subcategory options immediately
+                  setCategoryFilter("");
+                  setSubCategoryFilter("");
+                  setSubCategoryOptions([]);
                 }}
                 variant="category"
               />
             </div>
           </div>
         )}
+
         {isMobile ? (
           <div className="table-container">
             {loading ? (
@@ -2252,9 +2253,6 @@ function Orders() {
                     pagination={false}
                     autoHeight
                     rowHeight={55}
-                    display="flex"
-                    textAlign={i18n.language === "ar" ? "right" : "left"}
-                    justifyContent={i18n.language === "ar" ? "right" : "left"}
                     showToolbar
                     slots={{
                       toolbar: () => (
@@ -2291,27 +2289,17 @@ function Orders() {
                     }}
                     sx={{
                       "& .MuiDataGrid-row": {
-                        cursor: "default", // Changed from pointer to default since row click no longer navigates
+                        cursor: "default",
                         "&:hover": {
                           backgroundColor: "rgba(0, 0, 0, 0.04)",
                         },
                       },
-                      // Arabic RTL styling for mobile
-                      ...(i18n.language === "ar" && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }),
+                      '.MuiDataGrid-cell': {
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }
                     }}
                   />
                 }
@@ -2325,246 +2313,144 @@ function Orders() {
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <DataGrid
-                rows={filteredOrders}
-                columns={visibleColumns}
-                pageSize={pageSize}
-                rowCount={total}
-                onRowClick={handleRowClick}
-                columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
-                sortModel={sortModel}
-                onSortModelChange={handleSortModelChange}
-                disableSelectionOnClick
-                disableColumnMenu
-                hideFooter={true}
-                hideFooterPagination={true}
-                disableExtendRowFullWidth={true}
-                pagination={false}
-                autoHeight
-                rowHeight={55}
-                display="flex"
-                textAlign={i18n.language === "ar" ? "right" : "left"}
-                justifyContent={i18n.language === "ar" ? "right" : "left"}
-                showToolbar
-                slots={{
-                  toolbar: () => (
-                    <CustomToolbar
-                      searchQuery={searchQuery}
-                      filterAnchor={filterAnchor}
-                      onSearch={handleSearch}
-                      setSearchQuery={setSearchQuery}
-                      setFilterAnchor={setFilterAnchor}
-                      handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
-                      columns={filteredData}
-                      filters={filters}
-                      columnVisibilityModel={columnVisibilityModel}
-                      searchPlaceholder="Search orders..."
-                      showColumnVisibility={true}
-                      showFilters={true}
-                      showExport={!isApprovalMode}
-                      showUpload={isV("uploadButton")}
-                      showAdd={isV("addButton")}
-                      buttonName={t("add")}
-                      showApproval={
-                        isV("approvalButton") &&
-                        filters.entity?.toLowerCase() ===
-                        Constants.ENTITY.VMCO?.toLowerCase()
-                      }
-                      handleAddClick={handleAddOrder}
-                      handleUploadClick={HandleBulkOrderUpload}
-                      columnsToDisplay={columnsToDisplay}
-                      handleApproval={handleApproval}
-                      isApprovalMode={isApprovalMode}
-                      handleExportClick={handleExportAll}
-                    />
-                  ),
-                }}
-                sx={{
-                  "& .MuiDataGrid-row": {
-                    cursor: "default", // Changed from pointer to default since row click no longer navigates
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    },
-                  },
-                  // Arabic RTL styling for desktop
-                  ...(i18n.language === "ar" && {
-                    direction: "rtl",
-                    "& .MuiDataGrid-cell": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeader": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-cellContent": {
-                      textAlign: "right !important",
-                    },
-                  }),
-                }}
-              />
-            )}
-          </div>
-        )}
-
-        {bulkUploadPopUp && (
-          <div>
-            <div className="gp-backdrop" onClick={onClose} />
-            {excelLoading ? (
-              <div style={{ padding: "24px 28px" }}>
-                <FileUploadProgress
-                  progress={uploadProgress}
-                  isComplete={uploadComplete}
-                  onComplete={() => {
-                    Swal.fire({
-                      title: t("File Uploaded Successfully"),
-                      text: t(
-                        "Bulk orders processed successfully for all branches"
+              <>
+                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                <div style={{
+                  height: '500px',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={filteredOrders}
+                    columns={visibleColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    onRowClick={handleRowClick}
+                    columnVisibilityModel={columnVisibilityModel}
+                    onColumnVisibilityModelChange={setColumnVisibilityModel}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search orders..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={!isApprovalMode}
+                          showUpload={isV("uploadButton")}
+                          showAdd={isV("addButton")}
+                          buttonName={t("add")}
+                          showApproval={
+                            isV("approvalButton") &&
+                            filters.entity?.toLowerCase() ===
+                            Constants.ENTITY.VMCO?.toLowerCase()
+                          }
+                          handleAddClick={handleAddOrder}
+                          handleUploadClick={HandleBulkOrderUpload}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                          handleExportClick={handleExportAll}
+                        />
                       ),
-                      icon: "success",
-                      confirmButtonText: t("OK"),
-                    });
-                  }}
-                  onRowErrors={() => {
-                    console.log("Row validation in progress...");
-                  }}
-                  onOtherErrors={() => {
-                    console.log("Final validation in progress...");
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="gp-modal">
-                <div className="gp-header">
-                  <span className="gp-title">{t("Upload Orders Data")}</span>
-                  <button className="gp-close-btn" onClick={onClose}>
-                    {t("Close")}
-                  </button>
-                </div>
+                    }}
+                    sx={{
+                      // Flex grow to fill available space
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
 
-                {loading ? (
-                  <div style={{ padding: 24 }}>
-                    <LoadingSpinner />
-                  </div>
-                ) : (
-                  <div style={{ padding: "0 28px 20px 28px" }}>
-                    <div
-                      className="customer-branch-names"
-                      style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      {isV("customerName") && (
-                        <div className="order-details-field">
-                          <label htmlFor="customerField">
-                            {t("Company Name")}
-                          </label>
-                          <div
-                            className="customer-input-container"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "8px",
-                            }}
-                          >
-                            <input
-                              style={{ width: "310px" }}
-                              id="customerField"
-                              name="selectedCustomer"
-                              onClick={() => setShowCustomerPopup(true)}
-                              className="customer-input"
-                              placeholder={t("Click to select company")}
-                              value={
-                                selectedCustomer
-                                  ? isArabic
-                                    ? selectedCustomer.companyNameAr
-                                    : selectedCustomer.companyNameEn
-                                  : ""
-                              }
-                              disabled={!isE("customerName")}
-                              autoComplete="off"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    <p style={{ marginTop: 20, marginBottom: 20 }}>
-                      {t(
-                        "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
-                      )}
-                    </p>
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '16px !important',
+                        minHeight: '76px !important',
+                        flexShrink: 0,
+                      },
 
-                    <div className="popup-buttons-row">
-                      <button
-                        className="download-btn"
-                        onClick={() => handleTemplateDownload()}
-                        disabled={!selectedCustomer}
-                      >
-                        📥 {t("Download Excel Template")}
-                      </button>
-                      <button
-                        className="upload-btn"
-                        onClick={() => fileInputRef.current.click()}
-                        disabled={!selectedCustomer}
-                      >
-                        📤 {t("Upload Completed Excel File")}
-                      </button>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".xlsx, .xls"
-                        style={{ display: "none" }}
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) setSelectedFile(file);
-                        }}
-                      />
-                    </div>
-                    {selectedFile && (
-                      <div
-                        style={{
-                          marginTop: 16,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <p style={{ margin: 0 }}>
-                          {t("Selected File")}: <b>{selectedFile.name}</b>
-                        </p>
-                        <button
-                          className="submit-btn"
-                          onClick={() => handleSubmitFile(selectedFile)}
-                        >
-                          ✅ {t("Submit File")}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {showCustomerPopup && (
-                  <GetCustomers
-                    open={showCustomerPopup}
-                    onClose={() => setShowCustomerPopup(false)}
-                    onSelectCustomer={handleSelectCustomer}
-                    API_BASE_URL={API_BASE_URL}
-                    t={t}
-                    apiEndpoint="/customers/pagination"
-                    apiParams={{
-                      page: 1,
-                      pageSize: 10,
-                      sortBy: "id",
-                      sortOrder: "asc",
-                      purpose: "order creation",
+                      '& .MuiDataGrid-main': {
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      },
+
+                      // Ensure only the virtual scroller (rows) is scrollable
+                      '& .MuiDataGrid-virtualScroller': {
+                        overflow: 'auto !important',
+                        flex: 1,
+                      },
+
+                      // Keep headers sticky and non-scrollable
+                      '& .MuiDataGrid-columnHeaders': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid #e0e0e0',
+                        flexShrink: 0, // Prevent header from shrinking
+                      },
+
+                      '& .MuiDataGrid-row': {
+                        cursor: "default",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+
+                      // Arabic RTL styling
+                      ...(i18n.language === "ar" && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      }),
+
+                      // Default LTR styling (left alignment)
+                      ...(!i18n.language === "ar" && {
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        }
+                      })
                     }}
                   />
-                )}
-              </div>
+                </div>
+              </>
             )}
           </div>
         )}
