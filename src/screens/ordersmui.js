@@ -45,6 +45,8 @@ const getStatusClass = (status) => {
       return "status-open";
     case "rejected":
       return "status-rejected";
+    case "cancelled":
+      return "status-cancelled";
     default:
       return "status-pending";
   }
@@ -132,6 +134,8 @@ function Orders() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+ const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName=isApprovalMode ? "ordersApproval" : "orders"
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
@@ -155,7 +159,13 @@ function Orders() {
       ? match.descriptionLc || match.description
       : match.description;
   };
-
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -235,9 +245,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat,
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -278,9 +288,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.subcategory || sub.name || sub,
-              value: sub.subCategory || sub.subcategory || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -588,7 +598,7 @@ function Orders() {
     user,
     fetchOrders,
     filters,
-    isApprovalMode,
+    // isApprovalMode,
     activeCategory,
   ]);
 
@@ -754,7 +764,7 @@ function Orders() {
     try {
       const params = new URLSearchParams({
         page: 1,
-        pageSize: 100,
+        pageSize: 10000,
         search: "",
         sortBy: "id",
         sortOrder: "asc",
@@ -1300,21 +1310,21 @@ function Orders() {
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
             params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
+            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+            params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
             (params?.row?.status?.toLowerCase() === "approved" ||
               (params?.row?.status?.toLowerCase() === "open" &&
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  Constants.ENTITY.GMTC.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
+                  Constants.ENTITY.SHC.toLowerCase())) ||
               (params?.row?.status?.toLowerCase() === "pending" &&
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+                  Constants.ENTITY.NAQI.toLowerCase()))) && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1353,29 +1363,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ]
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1385,30 +1395,30 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-              rowdata.paymentMethod?.toLowerCase() &&
+            rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-              rowdata.paymentStatus?.toLowerCase() &&
+            rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
+              params?.row?.status?.toLowerCase() !== "cancelled" &&
+              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
+              params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
+              (params?.row?.status?.toLowerCase() === "approved" ||
+                (params?.row?.status?.toLowerCase() === "open" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
+                    params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) &&(
+                (params?.row?.status?.toLowerCase() === "pending" &&
+                  (params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.DAR.toLowerCase() ||
+                    params?.row?.entity.toLowerCase() ===
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1935,7 +1945,7 @@ function Orders() {
           },
         }
       );
-      if (data?.success) {
+      if (data?.success && data?.details?.details?.erpOrderId) {
         fetchOrders(page, searchQuery, filters);
         Swal.fire({
           title: t("Success"),
@@ -2074,51 +2084,45 @@ function Orders() {
 
         // Show detailed success message
         Swal.fire({
-          title: t("File Uploaded Successfully"),
+          title: t('File Uploaded Successfully'),
           html: `
           <div style="text-align: center; margin: 20px 0;">
-            <p><strong>${t("Processing Summary")}</strong></p>
-            <ul>
-              ${
-                branchesProcessed > 0
-                  ? `<span>${branchesProcessed} branch${
-                      branchesProcessed > 1 ? "es" : ""
-                    } processed</span>`
-                  : ""
-              }
-              <break />
-            </ul>
-            ${
-              successMessageDetails
-                ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>`
-                : ""
-            }
-          </div>
-        `,
-          icon: "success",
-          confirmButtonText: t("OK"),
-          width: "500px",
+          <p><strong>${t('Processing Summary')}</strong></p>
+          ${branchesProcessed > 0 ? `<span>${branchesProcessed} branch${branchesProcessed !== 1 ? 'es' : ''} processed</span><br/>` : ''}
+          ${successMessageDetails ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>` : ''}
+          </div>`,
+          icon: 'success',
+          confirmButtonText: t('OK'),
+          width: '500px',
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       } else {
         Swal.fire({
-          title: t("File Upload Failed"),
-          text:
-            data.message || t("An error occurred while uploading the file."),
-          icon: "error",
-          confirmButtonText: t("OK"),
+          title: t('File Upload Failed'),
+          text: data.message || t('An error occurred while uploading the file.'),
+          icon: 'error',
+          confirmButtonText: t('OK'),
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       }
     } catch (error) {
       console.error("Error uploading file:", error);
       Swal.fire({
-        title: t("File Upload Failed"),
-        text: t("An error occurred while uploading the file."),
-        icon: "error",
-        confirmButtonText: t("OK"),
+        title: t('File Upload Failed'),
+        text: t('An error occurred while uploading the file.'),
+        icon: 'error',
+        confirmButtonText: t('OK'),
+      }).then((result) => {
+        if (result.isConfirmed || result.isDismissed) {
+          window.location.reload();
+        }
       });
-      window.location.reload();
     } finally {
       setExcelLoading(false);
       setBulkUploadPopUp(false);
@@ -2132,9 +2136,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2214,8 +2218,9 @@ function Orders() {
     setFilterAnchor(null);
   };
 
-  const handleColumnVisibilityChange = (newModel) => {
+   const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
 
   function CustomFooter() {
@@ -2233,13 +2238,17 @@ function Orders() {
 
   const handleApproval = (mode) => {
     // setFilters({});
+     console.log("modemodssssssse",mode)
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
-      fetchApprovals();
+      fetchApprovals(1,"",{entity:"VMCO"});
     } else {
-      fetchOrders();
+      console.log("modemode",mode)
+      fetchOrders(1,"",{entity:"VMCO"});
     }
   };
+  
+
 
   return (
     <Sidebar title={t("Orders")}>
@@ -2271,15 +2280,16 @@ function Orders() {
                   setApprovalMode(false);
                   fetchOrders(1, searchQuery, { entity: newCategory });
                   setSearchQuery("");
-                  setCategoryFilter(""); // Reset category filter
-                  setSubCategoryFilter(""); // Reset subcategory filter
-                  setSubCategoryOptions([]); // Clear subcategory options immediately
+                  setCategoryFilter("");
+                  setSubCategoryFilter("");
+                  setSubCategoryOptions([]);
                 }}
                 variant="category"
               />
             </div>
           </div>
         )}
+
         {isMobile ? (
           <div className="table-container">
             {loading ? (
@@ -2318,9 +2328,6 @@ function Orders() {
                     pagination={false}
                     autoHeight
                     rowHeight={55}
-                    display="flex"
-                    textAlign={i18n.language === "ar" ? "right" : "left"}
-                    justifyContent={i18n.language === "ar" ? "right" : "left"}
                     showToolbar
                     slots={{
                       toolbar: () => (
@@ -2345,7 +2352,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
+                            Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
@@ -2357,27 +2364,17 @@ function Orders() {
                     }}
                     sx={{
                       "& .MuiDataGrid-row": {
-                        cursor: "default", // Changed from pointer to default since row click no longer navigates
+                        cursor: "default",
                         "&:hover": {
                           backgroundColor: "rgba(0, 0, 0, 0.04)",
                         },
                       },
-                      // Arabic RTL styling for mobile
-                      ...(i18n.language === "ar" && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }),
+                      '.MuiDataGrid-cell': {
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }
                     }}
                   />
                 }
@@ -2391,91 +2388,147 @@ function Orders() {
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <DataGrid
-                rows={filteredOrders}
-                columns={visibleColumns}
-                pageSize={pageSize}
-                rowCount={total}
-                onRowClick={handleRowClick}
-                columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
-                sortModel={sortModel}
-                onSortModelChange={handleSortModelChange}
-                disableSelectionOnClick
-                disableColumnMenu
-                hideFooter={true}
-                hideFooterPagination={true}
-                disableExtendRowFullWidth={true}
-                pagination={false}
-                autoHeight
-                rowHeight={55}
-                display="flex"
-                textAlign={i18n.language === "ar" ? "right" : "left"}
-                justifyContent={i18n.language === "ar" ? "right" : "left"}
-                showToolbar
-                slots={{
-                  toolbar: () => (
-                    <CustomToolbar
-                      searchQuery={searchQuery}
-                      filterAnchor={filterAnchor}
-                      onSearch={handleSearch}
-                      setSearchQuery={setSearchQuery}
-                      setFilterAnchor={setFilterAnchor}
-                      handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
-                      columns={filteredData}
-                      filters={filters}
-                      columnVisibilityModel={columnVisibilityModel}
-                      searchPlaceholder="Search orders..."
-                      showColumnVisibility={true}
-                      showFilters={true}
-                      showExport={!isApprovalMode}
-                      showUpload={isV("uploadButton")}
-                      showAdd={isV("addButton")}
-                      buttonName={t("add")}
-                      showApproval={
-                        isV("approvalButton") &&
-                        filters.entity?.toLowerCase() ===
-                          Constants.ENTITY.VMCO?.toLowerCase()
-                      }
-                      handleAddClick={handleAddOrder}
-                      handleUploadClick={HandleBulkOrderUpload}
-                      columnsToDisplay={columnsToDisplay}
-                      handleApproval={handleApproval}
-                      isApprovalMode={isApprovalMode}
-                      handleExportClick={handleExportAll}
-                    />
-                  ),
-                }}
-                sx={{
-                  "& .MuiDataGrid-row": {
-                    cursor: "default", // Changed from pointer to default since row click no longer navigates
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    },
-                  },
-                  // Arabic RTL styling for desktop
-                  ...(i18n.language === "ar" && {
-                    direction: "rtl",
-                    "& .MuiDataGrid-cell": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeader": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-cellContent": {
-                      textAlign: "right !important",
-                    },
-                  }),
-                }}
-              />
+              <>
+                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                <div style={{
+                  height: '500px',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={filteredOrders}
+                    columns={visibleColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    onRowClick={handleRowClick}
+                    columnVisibilityModel={columnVisibilityModel}
+                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search orders..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={!isApprovalMode}
+                          showUpload={isV("uploadButton")}
+                          showAdd={isV("addButton")}
+                          buttonName={t("add")}
+                          showApproval={
+                            isV("approvalButton") &&
+                            filters.entity?.toLowerCase() ===
+                            Constants.ENTITY.VMCO?.toLowerCase()
+                          }
+                          handleAddClick={handleAddOrder}
+                          handleUploadClick={HandleBulkOrderUpload}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                          handleExportClick={handleExportAll}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      // Flex grow to fill available space
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '16px !important',
+                        minHeight: '76px !important',
+                        flexShrink: 0,
+                      },
+
+                      '& .MuiDataGrid-main': {
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      },
+
+                      // Ensure only the virtual scroller (rows) is scrollable
+                      '& .MuiDataGrid-virtualScroller': {
+                        overflow: 'auto !important',
+                        flex: 1,
+                      },
+
+                      // Keep headers sticky and non-scrollable
+                      '& .MuiDataGrid-columnHeaders': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid #e0e0e0',
+                        flexShrink: 0, // Prevent header from shrinking
+                      },
+
+                      '& .MuiDataGrid-row': {
+                        cursor: "default",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+
+                      // Arabic RTL styling
+                      ...(i18n.language === "ar" && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      }),
+
+                      // Default LTR styling (left alignment)
+                      ...(!i18n.language === "ar" && {
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        }
+                      })
+                    }}
+                  />
+                </div>
+              </>
             )}
           </div>
         )}
-
         {bulkUploadPopUp && (
           <div>
             <div className="gp-backdrop" onClick={onClose} />
@@ -2510,7 +2563,7 @@ function Orders() {
                     {t("Close")}
                   </button>
                 </div>
-
+ 
                 {loading ? (
                   <div style={{ padding: 24 }}>
                     <LoadingSpinner />
@@ -2564,7 +2617,7 @@ function Orders() {
                         "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
                       )}
                     </p>
-
+ 
                     <div className="popup-buttons-row">
                       <button
                         className="download-btn"
@@ -2634,7 +2687,6 @@ function Orders() {
             )}
           </div>
         )}
-
         {showCustomerPopup && (
           <GetCustomers
             onClose={() => setShowCustomerPopup(false)}

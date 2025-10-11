@@ -59,7 +59,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [branches, setBranches] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});

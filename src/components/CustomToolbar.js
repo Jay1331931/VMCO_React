@@ -10,6 +10,7 @@ import {
   QuickFilterControl,
   QuickFilterClear,
   useGridApiContext,
+  GridToolbarContainer
 } from "@mui/x-data-grid";
 import {
   Box,
@@ -387,7 +388,7 @@ const CustomToolbar = ({
         </Box>
 
         {/* Default Grid Toolbar Components */}
-        {showColumnVisibility && (
+        {/* {showColumnVisibility && (
           <Tooltip title={t("Columns")}>
             <ColumnsPanelTrigger
               render={(params) => (
@@ -399,8 +400,23 @@ const CustomToolbar = ({
               {t("Columns")}
             </ColumnsPanelTrigger>
           </Tooltip>
-        )}
+        )} */}
 
+ <GridToolbarContainer>
+      {showColumnVisibility && (
+        <Tooltip title={t("Columns")}>
+          <ColumnsPanelTrigger
+            render={(params) => (
+              <ToolbarButton {...params} size="small">
+                <ViewColumnIcon />
+              </ToolbarButton>
+            )}
+          >
+            {t("Columns")}
+          </ColumnsPanelTrigger>
+        </Tooltip>
+      )}
+    </GridToolbarContainer>
         <Tooltip title={t("Date-Range")}>
           <IconButton
             component="span"

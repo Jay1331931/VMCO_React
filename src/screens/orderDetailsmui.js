@@ -216,7 +216,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 100,
+          pageSize: 10000,
           search: "",
           sortBy: "id",
           sortOrder: "asc",
@@ -2811,7 +2811,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 100, // Fetch a reasonable number of customers
+          pageSize: 10, // Fetch a reasonable number of customers
           sortBy:
             i18n.language === "ar" ? "company_name_ar" : "company_name_en",
           sortOrder: "asc",
@@ -2993,7 +2993,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 100,
+          pageSize: 10,
           search: "",
           sortBy: "id",
           sortOrder: "asc",
