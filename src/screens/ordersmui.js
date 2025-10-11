@@ -2454,7 +2454,164 @@ function Orders() {
             )}
           </div>
         )}
-
+        {bulkUploadPopUp && (
+          <div>
+            <div className="gp-backdrop" onClick={onClose} />
+            {excelLoading ? (
+              <div style={{ padding: "24px 28px" }}>
+                <FileUploadProgress
+                  progress={uploadProgress}
+                  isComplete={uploadComplete}
+                  onComplete={() => {
+                    Swal.fire({
+                      title: t("File Uploaded Successfully"),
+                      text: t(
+                        "Bulk orders processed successfully for all branches"
+                      ),
+                      icon: "success",
+                      confirmButtonText: t("OK"),
+                    });
+                  }}
+                  onRowErrors={() => {
+                    console.log("Row validation in progress...");
+                  }}
+                  onOtherErrors={() => {
+                    console.log("Final validation in progress...");
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="gp-modal">
+                <div className="gp-header">
+                  <span className="gp-title">{t("Upload Orders Data")}</span>
+                  <button className="gp-close-btn" onClick={onClose}>
+                    {t("Close")}
+                  </button>
+                </div>
+ 
+                {loading ? (
+                  <div style={{ padding: 24 }}>
+                    <LoadingSpinner />
+                  </div>
+                ) : (
+                  <div style={{ padding: "0 28px 20px 28px" }}>
+                    <div
+                      className="customer-branch-names"
+                      style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      {isV("customerName") && (
+                        <div className="order-details-field">
+                          <label htmlFor="customerField">
+                            {t("Company Name")}
+                          </label>
+                          <div
+                            className="customer-input-container"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "8px",
+                            }}
+                          >
+                            <input
+                              style={{ width: "310px" }}
+                              id="customerField"
+                              name="selectedCustomer"
+                              onClick={() => setShowCustomerPopup(true)}
+                              className="customer-input"
+                              placeholder={t("Click to select company")}
+                              value={
+                                selectedCustomer
+                                  ? isArabic
+                                    ? selectedCustomer.companyNameAr
+                                    : selectedCustomer.companyNameEn
+                                  : ""
+                              }
+                              disabled={!isE("customerName")}
+                              autoComplete="off"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p style={{ marginTop: 20, marginBottom: 20 }}>
+                      {t(
+                        "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
+                      )}
+                    </p>
+ 
+                    <div className="popup-buttons-row">
+                      <button
+                        className="download-btn"
+                        onClick={() => handleTemplateDownload()}
+                        disabled={!selectedCustomer}
+                      >
+                        📥 {t("Download Excel Template")}
+                      </button>
+                      <button
+                        className="upload-btn"
+                        onClick={() => fileInputRef.current.click()}
+                        disabled={!selectedCustomer}
+                      >
+                        📤 {t("Upload Completed Excel File")}
+                      </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".xlsx, .xls"
+                        style={{ display: "none" }}
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) setSelectedFile(file);
+                        }}
+                      />
+                    </div>
+                    {selectedFile && (
+                      <div
+                        style={{
+                          marginTop: 16,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <p style={{ margin: 0 }}>
+                          {t("Selected File")}: <b>{selectedFile.name}</b>
+                        </p>
+                        <button
+                          className="submit-btn"
+                          onClick={() => handleSubmitFile(selectedFile)}
+                        >
+                          ✅ {t("Submit File")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {showCustomerPopup && (
+                  <GetCustomers
+                    open={showCustomerPopup}
+                    onClose={() => setShowCustomerPopup(false)}
+                    onSelectCustomer={handleSelectCustomer}
+                    API_BASE_URL={API_BASE_URL}
+                    t={t}
+                    apiEndpoint="/customers/pagination"
+                    apiParams={{
+                      page: 1,
+                      pageSize: 10,
+                      sortBy: "id",
+                      sortOrder: "asc",
+                      purpose: "order creation",
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {showCustomerPopup && (
           <GetCustomers
             onClose={() => setShowCustomerPopup(false)}
