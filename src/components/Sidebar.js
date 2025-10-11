@@ -15,6 +15,7 @@ import {
   faBookOpen,
   faShoppingCart,
   faUsers,
+  faCodeBranch,
   faHeadset,
   faTools,
   faBuilding,
@@ -27,6 +28,7 @@ import {
   faUpload
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
+import { icon } from "@fortawesome/fontawesome-svg-core";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -372,13 +374,33 @@ function Sidebar({ children, title }) {
               customerId: customerData?.id,
               workflowId: customerData?.workflowInstanceId,
               mode: "add",
+              // activeTabRequired: "Branches",
             },
           });
         } catch (err) {
           console.error("Failed to fetch customer:", err);
         }
         break;
-
+case "Branches":
+        try {
+          const customerData = await fetchApprovedCustomer(user);
+          // navigate('/customersDetails', {
+          //   state: {
+          //     transformedCustomer: JSON.parse(JSON.stringify(customerData))
+          //   }
+          // });
+          navigate("/customerDetails", {
+            state: {
+              customerId: customerData?.id,
+              workflowId: customerData?.workflowInstanceId,
+              mode: "add",
+              activeTabRequired: "Branches",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to fetch customer:", err);
+        }
+        break;
         case "Reports":
           navigate("/reports");
           break;
@@ -406,6 +428,7 @@ function Sidebar({ children, title }) {
     { icon: faHouse, label: "Dashboard", default: true },
     { icon: faBookOpen, label: "Catalog" },
     { icon: faShoppingCart, label: "Orders" },
+    { icon: faCodeBranch, label: "Branches"},
     { icon: faUsers, label: "Customers" },
     { icon: faHeadset, label: "Support" },
     { icon: faTools, label: "Maintenance" },
@@ -521,8 +544,21 @@ else
         </div>
 
         <div className="sidebar-footer">
+          {user?.userType?.toLowerCase() === "employee" && (<div className="user-text">
+                  <div className="user-details-footer">ERP: {user?.employeeId}</div>
+                  <div className="user-details-footer">Designation:</div>
+                  <div className="user-details-footer">{user?.designation}</div>
+                  <div className="user-details-footer">Role: {user?.roles}</div>
+                </div>)}
+          {/* {user?.userType?.toLowerCase() === "customer" && (<div className="user-text">
+                  <div className="user-details-footer">ERP: {user?.erpCustId}</div>
+                  <div className="user-details-footer">Company:</div>
+                  <div className="user-details-footer">{user?.companyNameEn}</div>
+                  <div className="user-details-footer">Branches: {user?.Branches}</div>
+                </div>)} */}
           <div className="user-card">
             <div className="user-info">
+            
               <div className="user-details" onClick={handlePopupToggle} style={{ cursor: 'pointer' }}>
                 <div className="user-avatar">
                   <FontAwesomeIcon icon={faUser} />
