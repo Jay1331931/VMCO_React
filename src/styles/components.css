@@ -1644,8 +1644,8 @@
     border-radius: var(--border-radius);
 }
 .status-rejected {
-  background: var(--logo-red);
-  color: var(--bg-transparent);
+  color: var(--logo-red);
+  background-color: var(--bg-transparent);
 }
 
 .status-cancelled {
