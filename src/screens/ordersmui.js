@@ -45,6 +45,8 @@ const getStatusClass = (status) => {
       return "status-open";
     case "rejected":
       return "status-rejected";
+    case "cancelled":
+      return "status-cancelled";
     default:
       return "status-pending";
   }
