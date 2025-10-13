@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
+import { fetchDropdownFromBasicsMaster, checkFieldForUpdate, } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import "react-phone-number-input/style.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -51,6 +51,7 @@ function ContactDetails({
   mode,
   setTabsHeight,
   formErrors = {},
+  completeWorkflowData = {},
 }) {
   // Now you can access both objects
   const { t, i18n } = useTranslation();
@@ -78,6 +79,39 @@ function ContactDetails({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
+  const [fieldsForUpdate, setFieldsForUpdate] = useState({});
+  const [contactFieldsForUpdate, setContactFieldsForUpdate] = useState({});
+    const fieldList = [
+      {field: "buildingName", fieldType: "customer"},
+      {field: "street", fieldType: "customer"},
+      {field: "region", fieldType: "customer"},
+      {field: "city", fieldType: "customer"},
+      {field: "cityOther", fieldType: "customer"},
+      {field: "district", fieldType: "customer"},
+      {field: "districtOther", fieldType: "customer"},
+      {field: "zone", fieldType: "customer"},
+      {field: "pincode", fieldType: "customer"},
+      {field: "geolocation", fieldType: "customer"},
+    ]
+
+    const contactFieldList = [
+{field: "primaryContactName", fieldType: "customer"},
+      {field: "primaryContactDesignation", fieldType: "customer"},
+      {field: "primaryContactEmail", fieldType: "customer"},
+      {field: "primaryContactMobile", fieldType: "customer"},
+      {field: "businessHeadName", fieldType: "customer"},
+      {field: "businessHeadDesignation", fieldType: "customer"},
+      {field: "businessHeadEmail", fieldType: "customer"},
+      {field: "businessHeadMobile", fieldType: "customer"},
+      {field: "financeHeadName", fieldType: "customer"},
+      {field: "financeHeadDesignation", fieldType: "customer"},
+      {field: "financeHeadEmail", fieldType: "customer"},
+      {field: "financeHeadMobile", fieldType: "customer"},
+      {field: "purchasingHeadName", fieldType: "customer"},
+      {field: "purchasingHeadDesignation", fieldType: "customer"},
+      {field: "purchasingHeadEmail", fieldType: "customer"},
+      {field: "purchasingHeadMobile", fieldType: "customer"},
+    ]
   console.log("RBAC Manager:", customerData.id);
 
   const isV = rbacMgr.isV.bind(rbacMgr);
@@ -122,6 +156,47 @@ function ContactDetails({
     }
     return "";
   };
+  useEffect(() => {
+      const checkFieldUpdates = async () => {
+        
+        try {
+          const fieldStatus = {};
+          const contactFieldStatus = {};
+          // Use for...of loop instead of forEach for async operations
+          for (const fieldItem of fieldList) {
+            const canUpdate = await checkFieldForUpdate(
+              fieldItem.fieldType, 
+              completeWorkflowData?.workflowName
+            );
+            fieldStatus[fieldItem.field] = canUpdate;
+          }
+          
+          for (const fieldItem of contactFieldList) {
+            const canUpdate = await checkFieldForUpdate(
+              fieldItem.fieldType, 
+              completeWorkflowData?.workflowName
+            );
+            contactFieldStatus[fieldItem.field] = canUpdate;
+          }
+          console.log("field status", fieldStatus)
+          setFieldsForUpdate(fieldStatus);
+          setContactFieldsForUpdate(contactFieldStatus);
+        } catch (error) {
+          console.error('Error checking field updates:', error);
+          // Set all fields to false in case of error
+          const errorStatus = {};
+          fieldList.forEach(fieldItem => {
+            errorStatus[fieldItem.field] = false;
+          });
+          setFieldsForUpdate(errorStatus);
+        } 
+      };
+  
+      // if (completeWorkflowData?.workflowName) {
+        checkFieldUpdates();
+      // }
+    }, []); // Add other dependencies if needed
+  
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -723,6 +798,84 @@ useEffect(() => {
       },
     });
   };
+
+const checkDisabledStatus = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    console.log('Input object:', obj);
+    console.log('Input path:', path);
+    
+    const result = path?.reduce((current, key) => {
+      console.log('Current:', current, 'Key:', key);
+      const next = current?.[key];
+      console.log('Next value:', next);
+      return next;
+    }, obj);
+    
+    console.log('Final result:', result);
+    return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerData, fieldParts);
+  const currentValue = getNestedValue(customerData, fieldParts);
+  
+  const commonConditions = originalCustomerData &&
+                          customerData &&
+                          originalValue === currentValue &&
+                          mode === "edit" &&
+                          customerData?.customerStatus !== "pending";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !fieldsForUpdate?.[fieldPath];
+  }
+  
+  return commonConditions;
+};
+
+const checkDisabledStatusContact = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    console.log('Input object:', obj);
+    console.log('Input path:', path);
+    
+    const result = path?.reduce((current, key) => {
+      console.log('Current:', current, 'Key:', key);
+      const next = current?.[key];
+      console.log('Next value:', next);
+      return next;
+    }, obj);
+    
+    console.log('Final result:', result);
+    return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerContactsData, fieldParts);
+  const currentValue = getNestedValue(customerContactsData, fieldParts);
+  
+  const commonConditions = originalCustomerContactsData &&
+                          customerContactsData &&
+                          originalValue === currentValue &&
+                          mode === "edit" &&
+                          customerData?.customerStatus !== "pending";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !contactFieldsForUpdate?.[fieldPath];
+  }
+  
+  return commonConditions;
+};
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
@@ -857,13 +1010,8 @@ useEffect(() => {
             value={customerContactsData?.primaryContactName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.primaryContactName ===
-                customerContactsData?.primaryContactName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("primaryContactName")
+          }
             required
           />
           {isV("primaryContactNameVerified") &&
@@ -930,13 +1078,8 @@ useEffect(() => {
             value={customerContactsData?.primaryContactDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.primaryContactDesignation ===
-                customerContactsData?.primaryContactDesignation &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("primaryContactDesignation")
+          }
             required
           />
           {isV("primaryContactDesignationVerified") &&
@@ -1010,14 +1153,8 @@ useEffect(() => {
             value={customerContactsData?.primaryContactEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              (originalCustomerContactsData &&
-                customerContactsData &&
-                originalCustomerContactsData?.primaryContactEmail ===
-                  customerContactsData?.primaryContactEmail &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending") ||
-              true
-            }
+            checkDisabledStatusContact("primaryContactEmail") || true
+          }
             required
           />
           {customerData?.customerStatus?.toLowerCase()==='approved'&& isE('emailEdit')&& isV('emailEdit') && (
@@ -1157,13 +1294,8 @@ useEffect(() => {
               });
             }}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.primaryContactMobile ===
-                customerContactsData?.primaryContactMobile &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("primaryContactMobile")
+          }
             required
           />
           {isV("primaryContactMobileVerified") &&
@@ -1256,13 +1388,8 @@ useEffect(() => {
             value={customerContactsData?.businessHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.businessHeadName ===
-                customerContactsData?.businessHeadName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("businessHeadName")
+          }
             required
           />
           {isV("businessHeadNameVerified") &&
@@ -1331,13 +1458,8 @@ useEffect(() => {
             value={customerContactsData?.businessHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.businessHeadDesignation ===
-                customerContactsData?.businessHeadDesignation &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("businessHeadDesignation")
+          }
             required
           />
           {isV("businessHeadDesignationVerified") &&
@@ -1411,13 +1533,8 @@ useEffect(() => {
             value={customerContactsData?.businessHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.businessHeadEmail ===
-                customerContactsData?.businessHeadEmail &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("businessHeadEmail")
+          }
             required
           />
           {isV("businessHeadEmailVerified") &&
@@ -1548,13 +1665,8 @@ useEffect(() => {
               });
             }}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.businessHeadMobile ===
-                customerContactsData?.businessHeadMobile &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("businessHeadMobile")
+          }
             required
           />
           {isV("businessHeadMobileVerified") &&
@@ -1626,13 +1738,8 @@ useEffect(() => {
             value={customerContactsData?.financeHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.financeHeadName ===
-                customerContactsData?.financeHeadName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("financeHeadName")
+          }
             required
           />
           {isV("financeHeadNameVerified") &&
@@ -1701,13 +1808,8 @@ useEffect(() => {
             value={customerContactsData?.financeHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.financeHeadDesignation ===
-                customerContactsData?.financeHeadDesignation &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("financeHeadDesignation")
+          }
             required
           />
           {isV("financeHeadDesignationVerified") &&
@@ -1779,13 +1881,8 @@ useEffect(() => {
             value={customerContactsData?.financeHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.financeHeadEmail ===
-                customerContactsData?.financeHeadEmail &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("financeHeadEmail")
+          }
             required
           />
           {isV("financeHeadEmailVerified") &&
@@ -1916,13 +2013,8 @@ useEffect(() => {
               });
             }}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.financeHeadMobile ===
-                customerContactsData?.financeHeadMobile &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("financeHeadMobile")
+          }
             required
           />
           {isV("financeHeadMobileVerified") &&
@@ -1993,13 +2085,8 @@ useEffect(() => {
             value={customerContactsData?.purchasingHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.purchasingHeadName ===
-                customerContactsData?.purchasingHeadName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("purchasingHeadName")
+          }
             required
           />
           {isV("purchasingHeadNameVerified") &&
@@ -2068,13 +2155,8 @@ useEffect(() => {
             value={customerContactsData?.purchasingHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.purchasingHeadDesignation ===
-                customerContactsData?.purchasingHeadDesignation &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("purchasingHeadDesignation")
+          }
             required
           />
           {isV("purchasingHeadDesignationVerified") &&
@@ -2148,13 +2230,8 @@ useEffect(() => {
             value={customerContactsData?.purchasingHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.purchasingHeadEmail ===
-                customerContactsData?.purchasingHeadEmail &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("purchasingHeadEmail")
+          }
             required
           />
           {isV("purchasingHeadEmailVerified") &&
@@ -2285,13 +2362,8 @@ useEffect(() => {
               });
             }}
             disabled={
-              originalCustomerContactsData &&
-              customerContactsData &&
-              originalCustomerContactsData?.purchasingHeadMobile ===
-                customerContactsData?.purchasingHeadMobile &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatusContact("purchasingHeadMobile")
+          }
             required
           />
           {isV("purchasingHeadMobileVerified") &&
@@ -2335,7 +2407,7 @@ useEffect(() => {
       <div className="form-group">
         <label htmlFor="buildingName">
           {t("Building Name")}
-          {/* <span className="required-field">*</span> */}
+          <span className="required-field">*</span>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.buildingName != customerData?.buildingName &&
@@ -2361,13 +2433,8 @@ useEffect(() => {
             value={customerData?.buildingName || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.buildingName ===
-                customerData?.buildingName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("buildingName")
+          }
             required
           />
           {isV("buildingNameVerified") &&
@@ -2432,12 +2499,8 @@ useEffect(() => {
             value={customerData?.street || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.street === customerData?.street &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("street")
+          }
             required
           />
           {isV("streetVerified") &&
@@ -2503,12 +2566,8 @@ useEffect(() => {
             value={customerData?.region || ""}
             onChange={handleRegionChange}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.region === customerData?.region &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("region")
+          }
             className={
               originalCustomerData &&
               customerData &&
@@ -2573,13 +2632,8 @@ useEffect(() => {
             value={customerData?.city || ""}
             onChange={handleCityChange}
             disabled={
-              (originalCustomerData &&
-                customerData &&
-                originalCustomerData?.city === customerData?.city &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending") ||
-              !selectedRegion
-            }
+            checkDisabledStatus("city") || !selectedRegion
+          }
             className={
               originalCustomerData &&
               customerData &&
@@ -2653,12 +2707,8 @@ useEffect(() => {
               value={customerData?.cityOther || ""}
               onChange={onChangeCustomerData}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.cityOther === customerData?.cityOther &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
+            checkDisabledStatus("cityOther")
+          }
             />
             {isV("cityOtherVerified") &&
               // (originalCustomerData &&
@@ -2714,13 +2764,8 @@ useEffect(() => {
             value={customerData?.district || ""}
             onChange={handleDistrictChange}
             disabled={
-              (originalCustomerData &&
-                customerData &&
-                originalCustomerData?.district === customerData?.district &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending") ||
-              !selectedCity
-            }
+            checkDisabledStatus("district") || !selectedCity
+          }
             className={
               originalCustomerData &&
               customerData &&
@@ -2797,13 +2842,8 @@ useEffect(() => {
               value={customerData?.districtOther || ""}
               onChange={onChangeCustomerData}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.districtOther ===
-                  customerData?.districtOther &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
+            checkDisabledStatus("districtOther")
+          }
             />
             {isV("districtOtherVerified") &&
               // (originalCustomerData &&
@@ -2868,12 +2908,8 @@ useEffect(() => {
                 });
               }}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.zone === customerData?.zone &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
+            checkDisabledStatus("zone")
+          }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -2945,12 +2981,8 @@ useEffect(() => {
             value={customerData?.pincode || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.pincode === customerData?.pincode &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("pincode")
+          }
             required
           />
           {isV("pincodeVerified") &&
@@ -3015,13 +3047,8 @@ useEffect(() => {
               placeholder={t("Select Location")}
               onChange={onChangeCustomerData}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.geolocation ===
-                  customerData?.geolocation &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
+            checkDisabledStatus("geolocation")
+          }
               className={`text-field small ${
                 originalCustomerData &&
                 customerData &&
