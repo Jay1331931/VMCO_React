@@ -4799,27 +4799,29 @@ function OrderDetails() {
 
                 {(isV("btnPay") &&
                   isE("btnPay") &&
-                  formData?.status?.toLowerCase() !== "cancelled" &&
-                  formData?.paymentMethod?.toLowerCase() !=
-                    "cash on delivery" &&
-                  formData?.paymentMethod?.toLowerCase() != "credit" &&
-                  formData?.paymentStatus?.toLowerCase() !== "paid" &&
-                  formData?.entity.toLowerCase() ===
-                    Constants.ENTITY.VMCO.toLowerCase() &&
-                  formData?.status?.toLowerCase() === "approved") ||
-                  ((formData?.status?.toLowerCase() === "approved" ||
-                    (formData?.status?.toLowerCase() === "open" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === "pending" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.NAQI.toLowerCase()))) && (
+                   formData?.status?.toLowerCase() !== "cancelled" &&formData?.status?.toLowerCase() !== "rejected"&&
+                 formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+                 formData?.paymentMethod?.toLowerCase() !== "credit" &&
+                 formData?.paymentStatus?.toLowerCase() !== "paid" &&
+                 (
+                   (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+                    formData?.status?.toLowerCase() === "approved") ||
+                   (
+                   formData?.status?.toLowerCase() === "open" &&
+                     (
+                       formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                     )
+                   ) ||
+                   (formData?.status?.toLowerCase() === "pending" &&
+                     (
+                       formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                     )
+                   )
+                 ) && (
                     <button
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId)}
@@ -4834,27 +4836,29 @@ function OrderDetails() {
                   ))}
                 {(isV("btnSendLink") &&
                   isE("btnSendLink") &&
-                  formData?.status?.toLowerCase() !== "cancelled" &&
-                  formData?.paymentMethod?.toLowerCase() !=
-                    "cash on delivery" &&
-                  formData?.paymentMethod?.toLowerCase() != "credit" &&
-                  formData?.paymentStatus?.toLowerCase() !== "paid" &&
-                  formData?.entity.toLowerCase() ===
-                    Constants.ENTITY.VMCO.toLowerCase() &&
-                  formData?.status?.toLowerCase() === "approved") ||
-                  ((formData?.status?.toLowerCase() === "approved" ||
-                    (formData?.status?.toLowerCase() === "open" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.SHC.toLowerCase())) ||
-                    (formData?.status?.toLowerCase() === "pending" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.NAQI.toLowerCase()))) && (
+                formData?.status?.toLowerCase() !== "cancelled" &&formData?.status?.toLowerCase() !== "rejected"&&
+                 formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+                 formData?.paymentMethod?.toLowerCase() !== "credit" &&
+                 formData?.paymentStatus?.toLowerCase() !== "paid" &&
+                 (
+                   (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+                    formData?.status?.toLowerCase() === "approved") ||
+                   (
+                   formData?.status?.toLowerCase() === "open" &&
+                     (
+                       formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                     )
+                   ) ||
+                   (formData?.status?.toLowerCase() === "pending" &&
+                     (
+                       formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                       formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                     )
+                   )
+                 )&& (
                     <button
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId, false, true)}

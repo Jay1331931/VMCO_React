@@ -1309,22 +1309,31 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.NAQI.toLowerCase()))) && (
+            
+  params?.row?.status?.toLowerCase() !== "cancelled" &&params?.row?.status?.toLowerCase() !== "rejected"&&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1400,25 +1409,34 @@ function Orders() {
             rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
-        return (
+      return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.status?.toLowerCase() !== "cancelled" &&
-              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-              params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-              (params?.row?.status?.toLowerCase() === "approved" ||
-                (params?.row?.status?.toLowerCase() === "open" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-                (params?.row?.status?.toLowerCase() === "pending" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+  params?.row?.status?.toLowerCase() !== "cancelled" &&
+    params?.row?.status?.toLowerCase() !== "rejected" &&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1431,7 +1449,8 @@ function Orders() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link")} arrow>
+                  <Tooltip title={t("Send Link1")} arrow>
+                    
                     <IosShareIcon />
                   </Tooltip>
                 </Box>
