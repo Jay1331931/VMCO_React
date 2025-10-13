@@ -1822,7 +1822,7 @@ function Customers() {
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '400px',
+                  height: '380px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
