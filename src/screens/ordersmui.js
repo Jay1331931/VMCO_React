@@ -21,7 +21,7 @@ import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
-import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import { Chip, Box, Button, Typography, Tooltip, Grid } from "@mui/material";
 import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
@@ -29,6 +29,7 @@ import {
   GridPagination,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import { useMediaQuery } from "@mui/material";
 import { max, min, set } from "date-fns";
 import { Height } from "@mui/icons-material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -141,6 +142,9 @@ function Orders() {
   const [activeCategory, setActiveCategory] = useState(
     initialCategories[0].value
   );
+   const isXL = useMediaQuery("(min-width:1280px)"); // XL breakpoint (MUI default)
+  const isLG = useMediaQuery("(min-width:1024px) and (max-width:1279px)");
+const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
   const getLocalizedEntityName = (
     initialCategories,
     currentLanguage,
@@ -2417,12 +2421,23 @@ function Orders() {
             ) : (
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <div style={{
-                  height: '380px',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
+             <Grid
+  item
+  xs={12}
+  sx={{
+    height: {
+      xs: "250px !important", // extra small
+      sm: "300px !important", // small
+      md: "386px !important", // medium
+      lg: "489px !important", // large
+      xl: "800px !important", // extra large
+    },
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  }}
+>
+
                   <DataGrid
                     apiRef={gridApiRef}
                     rows={filteredOrders}
@@ -2551,7 +2566,7 @@ function Orders() {
                       })
                     }}
                   />
-                </div>
+                </Grid>
               </>
             )}
           </div>
