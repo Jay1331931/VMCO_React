@@ -134,8 +134,8 @@ function Orders() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
- const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
-const pageName=isApprovalMode ? "ordersApproval" : "orders"
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = isApprovalMode ? "ordersApproval" : "orders"
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
@@ -2218,7 +2218,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
     setFilterAnchor(null);
   };
 
-   const handleColumnVisibilityChange = (newModel) => {
+  const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
@@ -2238,16 +2238,16 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
 
   const handleApproval = (mode) => {
     // setFilters({});
-     console.log("modemodssssssse",mode)
+    console.log("modemodssssssse", mode)
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
-      fetchApprovals(1,"",{entity:"VMCO"});
+      fetchApprovals(1, "", { entity: "VMCO" });
     } else {
-      console.log("modemode",mode)
-      fetchOrders(1,"",{entity:"VMCO"});
+      console.log("modemode", mode)
+      fetchOrders(1, "", { entity: "VMCO" });
     }
   };
-  
+
 
 
   return (
@@ -2455,8 +2455,8 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                       flexDirection: 'column',
 
                       '& .MuiDataGrid-toolbar': {
-                        padding: '16px !important',
-                        minHeight: '76px !important',
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
                         flexShrink: 0,
                       },
 
@@ -2563,7 +2563,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                     {t("Close")}
                   </button>
                 </div>
- 
+
                 {loading ? (
                   <div style={{ padding: 24 }}>
                     <LoadingSpinner />
@@ -2617,7 +2617,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                         "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
                       )}
                     </p>
- 
+
                     <div className="popup-buttons-row">
                       <button
                         className="download-btn"
