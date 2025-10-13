@@ -467,7 +467,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 <>
                                     {/* Fixed height container for DataGrid with scrollable rows only */}
                                     <div style={{
-                                        height: '500px',
+                                        height: '400px',
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -480,7 +480,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                             rowCount={total}
                                             onRowClick={(params) => handleRowClick(params.row)}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
                                             sortModel={sortModel}
                                             onSortModelChange={handleSortModelChange}
                                             disableSelectionOnClick
@@ -501,7 +501,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                         setSearchQuery={setSearchQuery}
                                                         setFilterAnchor={setFilterAnchor}
                                                         handleFilterChange={handleFilterChange}
-                                                        onColumnVisibilityChange={setColumnVisibilityModel}
+                                                        onColumnVisibilityChange={handleColumnVisibilityChange}
                                                         columns={filteredData}
                                                         filters={filters}
                                                         columnVisibilityModel={columnVisibilityModel}
@@ -525,11 +525,12 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 flexDirection: 'column',
                                                 '& .MuiDataGrid-main': {
                                                     flex: 1,
-                                                    overflow: 'hidden'
+                                                    overflowX: 'scroll',
+                                                    overflowY: 'hidden',
                                                 },
                                                 '& .MuiDataGrid-toolbar': {
-                                                    padding: '16px  !important',
-                                                    minHeight: '76px !important', // Ensure minimum height for toolbar
+                                                    padding: '0px 8px  !important',
+                                                    minHeight: '56px !important', // Ensure minimum height for toolbar
                                                     flexShrink: 0, // Prevent toolbar from shrinking
                                                 },
                                                 // Ensure only the virtual scroller (rows) is scrollable

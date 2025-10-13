@@ -102,8 +102,8 @@ function Customers() {
       : user?.roles[0],
     "custDetailsAdd"
   );
-  const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
-const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") :"invites";
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") : "invites";
 
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -848,7 +848,7 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
     //   align: isArabic ? 'right' : 'left',
     //   renderCell: (params) => { <span>{params.value}</span> }
     // },
-      {
+    {
       field: "createdAt",
       headerName: t("Created Date"),
       include: isV("createdAt"),
@@ -902,23 +902,23 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
       ),
     },
     {
-  field: "ocApprover",
-  sortable: false,
-  headerName: t("OC Approver"),
-  include: isV("ocApprover"),
-  searchable: true,
-  minWidth: 120,
-  flex: 1,
-  align: isArabic ? "right" : "left",
-  headerAlign: isArabic ? "right" : "left",
-  renderCell: (params) => (
-    <span>
-      {t(
-        params.row.currentApprover?.[Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase()]?.join(", ") || ""
-      )}
-    </span>
-  ),
-},
+      field: "ocApprover",
+      sortable: false,
+      headerName: t("OC Approver"),
+      include: isV("ocApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>
+          {t(
+            params.row.currentApprover?.[Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase()]?.join(", ") || ""
+          )}
+        </span>
+      ),
+    },
     {
       field: "approvalStatus",
       headerName: t("Approval Status"),
@@ -948,7 +948,7 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
         <span>{t(params.row.currentApproverType || "")}</span>
       ),
     },
-    
+
   ];
 
   // Invite Columns
@@ -1822,7 +1822,7 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '380px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
@@ -1877,10 +1877,9 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
                       display: 'flex',
                       flexDirection: 'column',
 
-                      // Fix toolbar spacing issues
                       '& .MuiDataGrid-toolbar': {
-                        padding: '16px !important',
-                        minHeight: '76px !important',
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
                         flexShrink: 0,
                       },
 
@@ -1965,7 +1964,7 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '400px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
@@ -2022,14 +2021,10 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
                       display: 'flex',
                       flexDirection: 'column',
 
-                      // Fix toolbar spacing issues
-                      '& .MuiDataGrid-toolbarContainer': {
-                        padding: '8px',
-                        marginBottom: '8px',
-                        borderBottom: '1px solid #e0e0e0',
-                        backgroundColor: '#fafafa',
-                        minHeight: '56px', // Ensure minimum height for toolbar
-                        flexShrink: 0, // Prevent toolbar from shrinking
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
+                        flexShrink: 0,
                       },
 
                       '& .MuiDataGrid-main': {
@@ -2172,118 +2167,88 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
   useEffect(() => {
     setFilters({});
   }, [activeTab]);
-     const storageKey = `${pageName}_${role}_columns`;
-    useEffect(() => {
-      const savedModel = localStorage.getItem(storageKey);
-      if (savedModel) {
-        setColumnVisibilityModel(JSON.parse(savedModel));
-      }
-    }, [storageKey]);
-       const handleColumnVisibilityChange = (newModel) => {
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
+  const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
-  };  
+  };
   return (
     <Sidebar title={t("Customers")}>
-      <div className="page-content">
-        <div className="customer-content">
-          <Tabs
-            tabs={customerTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+      <div className="customer-content">
+        <Tabs
+          tabs={customerTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-          <div className="page-header">
-            {/* {activeTab === t("customers") && (
-              <div className="header-controls" style={{ width: "100%" }}>
-                <SearchInput onSearch={handleSearch} />
-                <div className="header-actions">
-                  <ToggleButton
-                    isToggled={isApprovalMode}
-                    onToggle={toggleApprovalMode}
-                    leftLabel={t("All")}
-                    rightLabel={t("My Approval")}
-                  />
-                  <button
-                    className="add-button"
-                    style={{ visibility: "hidden" }}
-                  ></button>
-                  <ActionButton menuItems={customerMenuItems} />
-                </div>
+        <div className="page-header">
+
+        </div>
+        {renderContent()}
+
+        {isInviteModalOpen && (
+          <dialog className="invite-dialog" open>
+            <h2>{t("Invite")}</h2>
+
+            <div className="form-row-1">
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Customer Name")}
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={inviteData.name}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
-            )} */}
 
-            {/* {activeTab === t("invites") && isV("btnAddInvite") && (
-              <>
-                <SearchInput onSearch={handleSearch} />
-                {
-                  <button className="add-button" onClick={handleInvite}>
-                    {t("+ Invite")}
-                  </button>
-                }
-                <ActionButton menuItems={customerMenuItems} />
-              </>
-            )} */}
-          </div>
-          {renderContent()}
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Email")}
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={inviteData.email}
+                  onChange={handleInputChange}
+                  required
+                  style={inviteErrors.email ? { borderColor: "red" } : {}}
+                />
+                {inviteErrors.email && (
+                  <div style={{ color: "red", fontSize: "0.8em" }}>
+                    {inviteErrors.email}
+                  </div>
+                )}
+              </div>
 
-          {isInviteModalOpen && (
-            <dialog className="invite-dialog" open>
-              <h2>{t("Invite")}</h2>
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Company Name")}
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  value={inviteData.company}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <div className="form-row-1">
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Customer Name")}
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={inviteData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Email")}
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={inviteData.email}
-                    onChange={handleInputChange}
-                    required
-                    style={inviteErrors.email ? { borderColor: "red" } : {}}
-                  />
-                  {inviteErrors.email && (
-                    <div style={{ color: "red", fontSize: "0.8em" }}>
-                      {inviteErrors.email}
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Company Name")}
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={inviteData.company}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                {/* <div className="form-group-1">
+              {/* <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
                     >
@@ -2304,163 +2269,162 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
                     )}
                   </div> */}
 
-                <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Phone Number")}
-                  </label>
-                  <PhoneInput
-                    international
-                    defaultCountry="SA" // Set your preferred default country
-                    withCountryCallingCode={true}
-                    countryCallingCodeEditable={false}
-                    name="mobile"
-                    value={inviteData.mobile}
-                    onChange={(value) => {
-                      handleInputChange({
-                        target: {
-                          name: "mobile",
-                          value: value,
-                        },
-                      });
-                    }}
-                    required
-                    style={
-                      inviteErrors.mobile
-                        ? {
-                          borderColor: "red",
-                          "--PhoneInput-color--error": "red", // Custom CSS variable for error state
-                        }
-                        : {}
-                    }
-                    className={
-                      inviteErrors.mobile
-                        ? "phone-input-error"
-                        : "custom-phone-input"
-                    }
-                  />
-                  {inviteErrors.mobile && (
-                    <div style={{ color: "red", fontSize: "0.8em" }}>
-                      {inviteErrors.mobile}
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Region")}
-                  </label>
-                  <SearchableDropdown
-                    name="region"
-                    // options={basicMasterLists?.region || []}
-                    options={
-                      geoData
-                        ? Object.keys(geoData).map((region) => ({
-                          value: region,
-                          name: region,
-                        }))
-                        : []
-                    }
-                    value={inviteData.region}
-                    onChange={handleInputChange}
-                    placeholder={t("Enter Region")}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Primary Business Unit")}
-                  </label>
-                  <SearchableDropdown
-                    name="primaryBusinessUnit"
-                    // options={basicMasterLists?.region || []}
-                    options={entityOptions}
-                    value={inviteData.primaryBusinessUnit}
-                    onChange={handleInputChange}
-                    placeholder={t("Enter Primary Business Unit")}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Source")}
-                  </label>
-                  <select
-                    name="source"
-                    value={inviteData.source}
-                    onChange={handleInputChange}
-                    disabled
-                    required
-                  >
-                    <option value="">{t("Select a source")}</option>
-                    <option value="portal">{t("Portal")}</option>
-                    <option value="crm">{t("CRM")}</option>
-                    <option value="salesexecutive">
-                      {t("Sales Executive")}
-                    </option>
-                  </select>
-                </div>
-
-                <div className="form-group-1 full-width">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Comments")}
-                  </label>
-                  <textarea
-                    name="comments"
-                    value={inviteData.comments}
-                    onChange={handleInputChange}
-                    placeholder={t("Comments...")}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  className="cancel-button"
-                  onClick={() => {
-                    setIsInviteModalOpen(false);
-                    clearInviteFields();
+              <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Phone Number")}
+                </label>
+                <PhoneInput
+                  international
+                  defaultCountry="SA" // Set your preferred default country
+                  withCountryCallingCode={true}
+                  countryCallingCodeEditable={false}
+                  name="mobile"
+                  value={inviteData.mobile}
+                  onChange={(value) => {
+                    handleInputChange({
+                      target: {
+                        name: "mobile",
+                        value: value,
+                      },
+                    });
                   }}
-                  disabled={isInviteLoading}
-                >
-                  {isInviteLoading ? t("Please wait...") : t("Cancel")}
-                </button>
-                <button
-                  className="invite-button"
-                  onClick={handleInviteSubmit}
-                  disabled={isInviteLoading}
-                >
-                  {isInviteLoading ? t("Sending...") : t("Send Invite")}
-                </button>
+                  required
+                  style={
+                    inviteErrors.mobile
+                      ? {
+                        borderColor: "red",
+                        "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                      }
+                      : {}
+                  }
+                  className={
+                    inviteErrors.mobile
+                      ? "phone-input-error"
+                      : "custom-phone-input"
+                  }
+                />
+                {inviteErrors.mobile && (
+                  <div style={{ color: "red", fontSize: "0.8em" }}>
+                    {inviteErrors.mobile}
+                  </div>
+                )}
               </div>
-            </dialog>
-          )}
-        </div>
-        {((activeTab === "customers" &&
-          paginatedCustomers.length > 0 &&
-          !isApprovalMode) ||
-          (activeTab === "invites" && paginatedInvites.length > 0) ||
-          (activeTab === "customers" &&
-            isApprovalMode &&
-            paginatedApprovals.length > 0)) && (
-            <Pagination
-              currentPage={page}
-              totalPages={Math.ceil(total / pageSize)}
-              onPageChange={setPage}
-            />
-          )}
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Region")}
+                </label>
+                <SearchableDropdown
+                  name="region"
+                  // options={basicMasterLists?.region || []}
+                  options={
+                    geoData
+                      ? Object.keys(geoData).map((region) => ({
+                        value: region,
+                        name: region,
+                      }))
+                      : []
+                  }
+                  value={inviteData.region}
+                  onChange={handleInputChange}
+                  placeholder={t("Enter Region")}
+                  required
+                />
+              </div>
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Primary Business Unit")}
+                </label>
+                <SearchableDropdown
+                  name="primaryBusinessUnit"
+                  // options={basicMasterLists?.region || []}
+                  options={entityOptions}
+                  value={inviteData.primaryBusinessUnit}
+                  onChange={handleInputChange}
+                  placeholder={t("Enter Primary Business Unit")}
+                  required
+                />
+              </div>
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Source")}
+                </label>
+                <select
+                  name="source"
+                  value={inviteData.source}
+                  onChange={handleInputChange}
+                  disabled
+                  required
+                >
+                  <option value="">{t("Select a source")}</option>
+                  <option value="portal">{t("Portal")}</option>
+                  <option value="crm">{t("CRM")}</option>
+                  <option value="salesexecutive">
+                    {t("Sales Executive")}
+                  </option>
+                </select>
+              </div>
+
+              <div className="form-group-1 full-width">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Comments")}
+                </label>
+                <textarea
+                  name="comments"
+                  value={inviteData.comments}
+                  onChange={handleInputChange}
+                  placeholder={t("Comments...")}
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setIsInviteModalOpen(false);
+                  clearInviteFields();
+                }}
+                disabled={isInviteLoading}
+              >
+                {isInviteLoading ? t("Please wait...") : t("Cancel")}
+              </button>
+              <button
+                className="invite-button"
+                onClick={handleInviteSubmit}
+                disabled={isInviteLoading}
+              >
+                {isInviteLoading ? t("Sending...") : t("Send Invite")}
+              </button>
+            </div>
+          </dialog>
+        )}
       </div>
+      {((activeTab === "customers" &&
+        paginatedCustomers.length > 0 &&
+        !isApprovalMode) ||
+        (activeTab === "invites" && paginatedInvites.length > 0) ||
+        (activeTab === "customers" &&
+          isApprovalMode &&
+          paginatedApprovals.length > 0)) && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / pageSize)}
+            onPageChange={setPage}
+          />
+        )}
       <style>{`
       .invite-dialog {
         position: fixed;             

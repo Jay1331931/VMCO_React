@@ -503,7 +503,7 @@ function Maintenance() {
                                 <>
                                     {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                                     <div style={{ 
-                                        height: '500px', 
+                                        height: '400px', 
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -561,8 +561,8 @@ function Maintenance() {
                                                 flexDirection: 'column',
                                                 
                                                 '& .MuiDataGrid-toolbar': {
-                                                    padding: '16px !important',
-                                                    minHeight: '76px !important',
+                                                    padding: '0px 8px  !important',
+                                                    minHeight: '56px !important',
                                                     flexShrink: 0,
                                                 },
                                                 

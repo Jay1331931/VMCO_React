@@ -134,8 +134,8 @@ function Orders() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
- const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
-const pageName=isApprovalMode ? "ordersApproval" : "orders"
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = isApprovalMode ? "ordersApproval" : "orders"
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
@@ -1309,22 +1309,31 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.NAQI.toLowerCase()))) && (
+            
+  params?.row?.status?.toLowerCase() !== "cancelled" &&params?.row?.status?.toLowerCase() !== "rejected"&&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1400,25 +1409,34 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
             rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
-        return (
+      return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.status?.toLowerCase() !== "cancelled" &&
-              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-              params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-              (params?.row?.status?.toLowerCase() === "approved" ||
-                (params?.row?.status?.toLowerCase() === "open" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-                (params?.row?.status?.toLowerCase() === "pending" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+  params?.row?.status?.toLowerCase() !== "cancelled" &&
+    params?.row?.status?.toLowerCase() !== "rejected" &&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1431,7 +1449,8 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link")} arrow>
+                  <Tooltip title={t("Send Link1")} arrow>
+                    
                     <IosShareIcon />
                   </Tooltip>
                 </Box>
@@ -2218,7 +2237,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
     setFilterAnchor(null);
   };
 
-   const handleColumnVisibilityChange = (newModel) => {
+  const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
@@ -2238,16 +2257,16 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
 
   const handleApproval = (mode) => {
     // setFilters({});
-     console.log("modemodssssssse",mode)
+    console.log("modemodssssssse", mode)
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
-      fetchApprovals(1,"",{entity:"VMCO"});
+      fetchApprovals(1, "", { entity: "VMCO" });
     } else {
-      console.log("modemode",mode)
-      fetchOrders(1,"",{entity:"VMCO"});
+      console.log("modemode", mode)
+      fetchOrders(1, "", { entity: "VMCO" });
     }
   };
-  
+
 
 
   return (
@@ -2391,7 +2410,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '380px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
@@ -2455,8 +2474,8 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                       flexDirection: 'column',
 
                       '& .MuiDataGrid-toolbar': {
-                        padding: '16px !important',
-                        minHeight: '76px !important',
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
                         flexShrink: 0,
                       },
 
@@ -2563,7 +2582,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                     {t("Close")}
                   </button>
                 </div>
- 
+
                 {loading ? (
                   <div style={{ padding: 24 }}>
                     <LoadingSpinner />
@@ -2617,7 +2636,7 @@ const pageName=isApprovalMode ? "ordersApproval" : "orders"
                         "To upload multiple orders at once, please download the Excel template below, fill in all required branch information correctly, and upload the completed file."
                       )}
                     </p>
- 
+
                     <div className="popup-buttons-row">
                       <button
                         className="download-btn"
