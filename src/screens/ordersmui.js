@@ -1164,7 +1164,11 @@ function Orders() {
         if (!params?.row?.createdAt) return <span> </span>;
 
         const date = new Date(params.row.createdAt);
-
+        console.log("As UTC date:", new Date(params.row.createdAt + 'Z').toISOString());
+        console.log("Original Date:", params.row.createdAt);
+        console.log(date);
+        console.log("Timezone Offset (minutes):", date.getTimezoneOffset());
+        console.log("UTC Time:", date.toISOString());
         // Convert to Riyadh timezone (UTC+3)
         const riyadhDate = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
@@ -1173,6 +1177,8 @@ function Orders() {
           day: "2-digit",
         }).format(date);
 
+        console.log("Riyadh Date:", riyadhDate);
+
         const riyadhTime = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
           hour: "2-digit",
@@ -1180,6 +1186,8 @@ function Orders() {
           second: "2-digit",
           hour12: false,
         }).format(date);
+
+        console.log("Riyadh Time:", riyadhTime);
 
         return (
           <div
