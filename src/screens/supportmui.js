@@ -467,7 +467,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 <>
                                     {/* Fixed height container for DataGrid with scrollable rows only */}
                                     <div style={{
-                                        height: '500px',
+                                        height: '400px',
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'

@@ -1822,7 +1822,7 @@ function Customers() {
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '400px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
@@ -1964,7 +1964,7 @@ function Customers() {
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '400px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'
@@ -2189,36 +2189,7 @@ function Customers() {
           />
 
           <div className="page-header">
-            {/* {activeTab === t("customers") && (
-              <div className="header-controls" style={{ width: "100%" }}>
-                <SearchInput onSearch={handleSearch} />
-                <div className="header-actions">
-                  <ToggleButton
-                    isToggled={isApprovalMode}
-                    onToggle={toggleApprovalMode}
-                    leftLabel={t("All")}
-                    rightLabel={t("My Approval")}
-                  />
-                  <button
-                    className="add-button"
-                    style={{ visibility: "hidden" }}
-                  ></button>
-                  <ActionButton menuItems={customerMenuItems} />
-                </div>
-              </div>
-            )} */}
-
-            {/* {activeTab === t("invites") && isV("btnAddInvite") && (
-              <>
-                <SearchInput onSearch={handleSearch} />
-                {
-                  <button className="add-button" onClick={handleInvite}>
-                    {t("+ Invite")}
-                  </button>
-                }
-                <ActionButton menuItems={customerMenuItems} />
-              </>
-            )} */}
+            
           </div>
           {renderContent()}
 

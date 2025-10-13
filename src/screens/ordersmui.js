@@ -2391,7 +2391,7 @@ function Orders() {
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                 <div style={{
-                  height: '500px',
+                  height: '400px',
                   width: '100%',
                   display: 'flex',
                   flexDirection: 'column'

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import CustomToolbar from "../components/CustomToolbar";
+import Pagination from "../components/Pagination";
+import Tabs from "../components/Tabs";
+import LoadingSpinner from "../components/LoadingSpinner";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -7,12 +11,13 @@ import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import axios from "axios";
 import SearchableDropdown from "../components/SearchableDropdown";
-import Tabs from "../components/Tabs";
+import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 
 function DeliveryScheduleEditor() {
     const [deliverySchedules, setDeliverySchedules] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filters, setFilters] = useState({});
     const [showAddForm, setShowAddForm] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editData, setEditData] = useState({
@@ -29,26 +34,27 @@ function DeliveryScheduleEditor() {
         pickupDay: "",
         deliveryDay: ""
     });
-    const [currentPage, setCurrentPage] = useState(1);
+    const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [pageSize] = useState(1000);
-    const [activeTab, setActiveTab] = useState("SHC"); // Initialize with SHC as default
+    const [total, setTotal] = useState(0);
+    const [pageSize] = useState(10);
+    const [activeCategory, setActiveCategory] = useState("SHC");
+    const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
+    const [filterAnchor, setFilterAnchor] = useState(null);
 
     // Geographic data states
     const [geoData, setGeoData] = useState(null);
     const [selectedRegion, setSelectedRegion] = useState("");
     const [selectedCity, setSelectedCity] = useState("");
-    const [editSelectedRegion, setEditSelectedRegion] = useState("");
-    const [editSelectedCity, setEditSelectedCity] = useState("");
-
     const { t, i18n } = useTranslation();
     const { user, token } = useAuth();
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+    const gridApiRef = useGridApiRef();
 
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-    // Define tabs array
-    const tabs = [
+    // Define tabs array - same structure as orders page
+    const categoryTabs = [
         { value: "VMCO", label: "VMCO", disabled: true },
         { value: "SHC", label: "SHC", disabled: false },
         { value: "GMTC", label: "GMTC", disabled: true },
@@ -56,20 +62,115 @@ function DeliveryScheduleEditor() {
         { value: "DAR", label: "DAR", disabled: true }
     ];
 
+    // RBAC
+    const rbacMgr = new RbacManager(
+        user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0],
+        "deliveryScheduleEditor"
+    );
+    const isV = rbacMgr.isV.bind(rbacMgr);
+
     // Fetch geo data on component mount
     useEffect(() => {
         fetchGeoData();
     }, []);
 
-
-    //RBAC
-    const rbacMgr = new RbacManager(user?.userType === "employee" && user?.roles[0] !== "admin" ? user?.designation : user?.roles[0], "deliveryScheduleEditor");
-
     useEffect(() => {
-        if (activeTab) { // Only fetch when there's an active tab
+        if (activeCategory) {
             fetchDeliverySchedules();
         }
-    }, [currentPage, searchTerm, activeTab]);
+    }, [page, searchQuery, activeCategory]);
+
+    // Define columns for DataGrid
+    const columns = [
+        {
+            field: "region",
+            headerName: t("Region"),
+            flex: 1,
+            minWidth: 120,
+            align: i18n.language === "ar" ? "right" : "left",
+            headerAlign: i18n.language === "ar" ? "right" : "left",
+        },
+        {
+            field: "city",
+            headerName: t("City"),
+            flex: 1,
+            minWidth: 120,
+            align: i18n.language === "ar" ? "right" : "left",
+            headerAlign: i18n.language === "ar" ? "right" : "left",
+        },
+        {
+            field: "cutoffDay",
+            headerName: t("Cut-off Day"),
+            flex: 1,
+            minWidth: 120,
+            align: i18n.language === "ar" ? "right" : "left",
+            headerAlign: i18n.language === "ar" ? "right" : "left",
+        },
+        {
+            field: "pickupDay",
+            headerName: t("Pickup Day"),
+            flex: 1,
+            minWidth: 120,
+            align: i18n.language === "ar" ? "right" : "left",
+            headerAlign: i18n.language === "ar" ? "right" : "left",
+        },
+        {
+            field: "deliveryDay",
+            headerName: t("Delivery Day"),
+            flex: 1,
+            minWidth: 120,
+            align: i18n.language === "ar" ? "right" : "left",
+            headerAlign: i18n.language === "ar" ? "right" : "left",
+        },
+        {
+            field: "actions",
+            headerName: t("Actions"),
+            sortable: false,
+            width: 150,
+            align: "center",
+            headerAlign: "center",
+            renderCell: (params) => (
+                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClick(params.row);
+                        }}
+                        style={{
+                            padding: "4px 8px",
+                            backgroundColor: "#ffffff",
+                            color: "#000",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "12px"
+                        }}
+                        title={t("Edit")}
+                    >
+                        ✏️
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteClick(params.row);
+                        }}
+                        style={{
+                            padding: "4px 8px",
+                            backgroundColor: "#ffffff",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            fontSize: "12px"
+                        }}
+                        title={t("Delete")}
+                    >
+                        🗑️
+                    </button>
+                </div>
+            ),
+        },
+    ];
 
     const fetchGeoData = async () => {
         try {
@@ -93,18 +194,16 @@ function DeliveryScheduleEditor() {
         setLoading(true);
         try {
             const apiUrl = `${API_BASE_URL}/delivery-schedule/pagination`;
-
-            // Remove entity from filters since we're passing it as a separate parameter
             const filters = {};
 
             const params = new URLSearchParams({
-                page: currentPage,
+                page: page,
                 pageSize: pageSize,
-                search: searchTerm,
+                search: searchQuery,
                 sortBy: "id",
                 sortOrder: "asc",
                 filters: JSON.stringify(filters),
-                entity: activeTab // Add entity as separate parameter
+                entity: activeCategory
             });
 
             const response = await axios.get(`${apiUrl}?${params}`, {
@@ -115,8 +214,13 @@ function DeliveryScheduleEditor() {
             });
 
             if (response.data?.status?.toLowerCase() === "ok") {
-                setDeliverySchedules(response.data.data.data || []);
+                const schedules = (response.data.data.data || []).map((schedule, index) => ({
+                    id: index + 1, // Add ID for DataGrid
+                    ...schedule
+                }));
+                setDeliverySchedules(schedules);
                 setTotalPages(response.data.data.totalPages || 1);
+                setTotal(response.data.data.totalRecords || 0);
             }
         } catch (err) {
             console.error("Error fetching delivery schedules:", err);
@@ -133,10 +237,9 @@ function DeliveryScheduleEditor() {
 
     // Handle tab change
     const handleTabChange = (tabValue) => {
-        // Only allow SHC tab to be selected
         if (tabValue === "SHC") {
-            setActiveTab(tabValue);
-            setCurrentPage(1); // Reset to first page when tab changes
+            setActiveCategory(tabValue);
+            setPage(1);
         }
     };
 
@@ -182,8 +285,12 @@ function DeliveryScheduleEditor() {
         });
     };
 
+    const handleSearch = (searchTerm) => {
+        setSearchQuery(searchTerm);
+        setPage(1);
+    };
+
     const handleAddSchedule = async () => {
-        // Validate required fields
         const requiredFields = ["region", "city", "cutoffDay", "pickupDay", "deliveryDay"];
         const missingFields = requiredFields.filter(field => !newSchedule[field]);
 
@@ -200,10 +307,8 @@ function DeliveryScheduleEditor() {
         setLoading(true);
         try {
             const apiUrl = `${API_BASE_URL}/delivery-schedule`;
-
-            // Create the payload with entity from active tab
             const payload = {
-                entity: activeTab, // Add entity from active tab
+                entity: activeCategory,
                 region: newSchedule.region,
                 city: newSchedule.city,
                 cutoffDay: newSchedule.cutoffDay,
@@ -212,8 +317,6 @@ function DeliveryScheduleEditor() {
                 createdBy: user?.id || 1,
                 modifiedBy: user?.id || 1
             };
-
-            console.log("Sending payload:", payload); // Debug log
 
             const response = await axios.post(apiUrl, payload, {
                 headers: {
@@ -246,7 +349,6 @@ function DeliveryScheduleEditor() {
             }
         } catch (err) {
             console.error("Error creating delivery schedule:", err);
-            console.error("Response data:", err.response?.data);
             Swal.fire({
                 title: "Error",
                 text: err.response?.data?.message || "Failed to create delivery schedule",
@@ -282,15 +384,12 @@ function DeliveryScheduleEditor() {
 
         setLoading(true);
         try {
-            const apiUrl = `${API_BASE_URL}/delivery-schedule/${activeTab}/${editData.region}/${editData.city}/${editData.cutoffDay}`;
-
+            const apiUrl = `${API_BASE_URL}/delivery-schedule/${activeCategory}/${editData.region}/${editData.city}/${editData.cutoffDay}`;
             const payload = {
                 pickupDay: editData.pickupDay,
                 deliveryDay: editData.deliveryDay,
                 modifiedBy: user?.id || 1
             };
-
-            console.log("Updating with payload:", payload);
 
             const response = await axios.patch(apiUrl, payload, {
                 headers: {
@@ -337,7 +436,7 @@ function DeliveryScheduleEditor() {
         if (result.isConfirmed) {
             setLoading(true);
             try {
-                const apiUrl = `${API_BASE_URL}/delivery-schedule/delete/${activeTab}/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
+                const apiUrl = `${API_BASE_URL}/delivery-schedule/delete/${activeCategory}/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
 
                 const response = await axios.delete(apiUrl, {
                     headers: {
@@ -367,60 +466,30 @@ function DeliveryScheduleEditor() {
         }
     };
 
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
+    const handleColumnVisibilityChange = (newModel) => {
+        setColumnVisibilityModel(newModel);
     };
+
+    const handleFilterChange = (newFilters) => {
+        setFilters(newFilters);
+        setPage(1);
+        setFilterAnchor(null);
+    };
+
+    const handleAddClick = () => {
+        setShowAddForm(!showAddForm);
+    };
+
+    // Filtered data for CustomToolbar
+    const filteredData = columns.filter(col => col.field !== 'actions');
 
     return (
         <Sidebar title={t("Delivery Schedule Editor")}>
-            <div className="rbac-editor-content">
-                {/* Header with Search and Add Button */}
-                <div className="logs-header">
-                    <div className="logs-header-controls">
-                        <div className="search-container" style={{ display: "flex", gap: "15px", alignItems: "center" }}>
-                            <input
-                                type="text"
-                                placeholder="Search delivery schedules..."
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                className="form-control"
-                                style={{
-                                    fontSize: "12px",
-                                    padding: "8px 12px",
-                                    height: "40px",
-                                    border: "1px solid #ccc",
-                                    borderRadius: "8px",
-                                    width: "300px",
-                                }}
-                            />
-                            <button
-                                className="clear-filters-btn"
-                                onClick={() => setShowAddForm(!showAddForm)}
-                                disabled={!activeTab} // Disable when no tab is active
-                                style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: !activeTab ? '#ccc' : '#28a745', // Gray out when disabled
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: '4px',
-                                    cursor: !activeTab ? 'not-allowed' : 'pointer', // Show not-allowed cursor when disabled
-                                    fontWeight: 'bold',
-                                    opacity: !activeTab ? 0.6 : 1, // Reduce opacity when disabled
-                                }}
-                                title={!activeTab ? "Please select an entity tab first" : ""}
-                            >
-                                {showAddForm ? 'Cancel' : 'Add Schedule'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Tabs Section */}
-                <div className="tabs-section" style={{ marginTop: "20px" }}>
+            <div className="orders-content">
+                {/* Entity Tabs Section - Same as orders page */}
+                <div className="filter-section">
                     <div style={{
                         display: "flex",
-                        width: "60%",
                         flexWrap: "wrap",
                         alignItems: "center",
                         gap: 12,
@@ -428,31 +497,18 @@ function DeliveryScheduleEditor() {
                         scrollbarWidth: "none"
                     }}>
                         <Tabs
-                            tabs={tabs}
-                            activeTab={activeTab}
+                            tabs={categoryTabs}
+                            activeTab={activeCategory}
                             onTabChange={handleTabChange}
                             variant="category"
                         />
                     </div>
                 </div>
 
-                {/* Show current entity info */}
-                {activeTab && (
-                    <div style={{
-                        marginTop: "10px",
-                        padding: "8px 12px",
-                        backgroundColor: "#e3f2fd",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        color: "#1976d2",
-                        border: "1px solid #bbdefb"
-                    }}>
-                        <strong>Current Entity:</strong> {activeTab}
-                    </div>
-                )}
+                {/* Loading Spinner */}
+                {loading && <LoadingSpinner />}
 
-                {/* Add Form - Only show when activeTab exists */}
-                {showAddForm && activeTab && (
+                {showAddForm && activeCategory && (
                     <div style={{
                         marginTop: "20px",
                         padding: "20px",
@@ -460,7 +516,7 @@ function DeliveryScheduleEditor() {
                         borderRadius: "8px",
                         border: "1px solid #dee2e6"
                     }}>
-                        <h4>Add New Delivery Schedule for {activeTab}</h4>
+                        <h4>Add New Delivery Schedule for {activeCategory}</h4>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "15px" }}>
                             <div>
                                 <label>Region</label>
@@ -505,7 +561,6 @@ function DeliveryScheduleEditor() {
                                     name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
-                                        console.log("Cutoff Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, cutoffDay: e.target.value });
                                     }}
                                     placeholder="Select Day"
@@ -520,14 +575,12 @@ function DeliveryScheduleEditor() {
                                     }}
                                 />
                             </div>
-
                             <div>
                                 <label>Pickup Day</label>
                                 <SearchableDropdown
                                     name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
-                                        console.log("Pickup Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, pickupDay: e.target.value });
                                     }}
                                     placeholder="Select Day"
@@ -542,14 +595,12 @@ function DeliveryScheduleEditor() {
                                     }}
                                 />
                             </div>
-
                             <div>
                                 <label>Delivery Day</label>
                                 <SearchableDropdown
                                     name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
-                                        console.log("Delivery Day selected:", e.target.value);
                                         setNewSchedule({ ...newSchedule, deliveryDay: e.target.value });
                                     }}
                                     placeholder="Select Day"
@@ -567,7 +618,6 @@ function DeliveryScheduleEditor() {
                         </div>
                         <div style={{ marginTop: "15px" }}>
                             <button
-                                className="clear-filters-btn"
                                 onClick={handleAddSchedule}
                                 disabled={loading}
                                 style={{
@@ -586,119 +636,137 @@ function DeliveryScheduleEditor() {
                     </div>
                 )}
 
-                {/* Loading Indicator */}
-                {loading && (
-                    <div className="loading-indicator" style={{ textAlign: "center", padding: "20px" }}>
-                        Loading...
+                {/* Main Table Container */}
+                <div className="table-container">
+                    {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                    <div style={{
+                        height: "400px",
+                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column"
+                    }}>
+                        <DataGrid
+                            apiRef={gridApiRef}
+                            rows={deliverySchedules}
+                            columns={columns}
+                            pageSize={pageSize}
+                            rowCount={total}
+                            disableSelectionOnClick
+                            disableColumnMenu
+                            hideFooter={true}
+                            hideFooterPagination={true}
+                            paginationMode="server"
+                            rowHeight={55}
+                            showToolbar={true}
+                            columnVisibilityModel={columnVisibilityModel}
+                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                            slots={{
+                                toolbar: CustomToolbar,
+                            }}
+                            slotProps={{
+                                toolbar: {
+                                    searchQuery: searchQuery,
+                                    filterAnchor: filterAnchor,
+                                    onSearch: handleSearch,
+                                    setSearchQuery: setSearchQuery,
+                                    setFilterAnchor: setFilterAnchor,
+                                    handleFilterChange: handleFilterChange,
+                                    onColumnVisibilityChange: setColumnVisibilityModel,
+                                    columns: filteredData,
+                                    filters: filters,
+                                    showCalendar: false,
+                                    columnVisibilityModel: columnVisibilityModel,
+                                    searchPlaceholder: "Search delivery schedules...",
+                                    showColumnVisibility: false,
+                                    showFilters: false,
+                                    showExport: false,
+                                    showUpload: false,
+                                    showAdd: isV("addButton"),
+                                    buttonName: t("Add Schedule"),
+                                    handleAddClick: handleAddClick,
+
+                                },
+                            }}
+                            sx={{
+                                // Flex grow to fill available space
+                                flex: 1,
+                                display: "flex",
+                                flexDirection: "column",
+                                "& .MuiDataGrid-toolbar": {
+                                    padding: "0px 8px !important",
+                                    minHeight: "56px !important",
+                                    flexShrink: 0,
+                                },
+                                "& .MuiDataGrid-main": {
+                                    flex: 1,
+                                    overflow: "hidden",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                },
+                                // Ensure only the virtual scroller (rows) is scrollable
+                                "& .MuiDataGrid-virtualScroller": {
+                                    overflow: "auto !important",
+                                    flex: 1,
+                                },
+                                // Keep headers sticky and non-scrollable
+                                "& .MuiDataGrid-columnHeaders": {
+                                    position: "sticky",
+                                    top: 0,
+                                    zIndex: 1,
+                                    backgroundColor: "white",
+                                    borderBottom: "1px solid #e0e0e0",
+                                    flexShrink: 0, // Prevent header from shrinking
+                                },
+                                "& .MuiDataGrid-row": {
+                                    cursor: "default",
+                                    "&:hover": {
+                                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                                    },
+                                },
+                                // Arabic RTL styling
+                                ...(i18n.language === "ar" && {
+                                    direction: "rtl",
+                                    "& .MuiDataGrid-cell": {
+                                        textAlign: "right !important",
+                                    },
+                                    "& .MuiDataGrid-columnHeader": {
+                                        textAlign: "right !important",
+                                    },
+                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                        textAlign: "right !important",
+                                    },
+                                    "& .MuiDataGrid-cellContent": {
+                                        textAlign: "right !important",
+                                    },
+                                }),
+                                // Default LTR styling (left alignment)
+                                ...(!i18n.language === "ar" && {
+                                    "& .MuiDataGrid-cell": {
+                                        textAlign: "left",
+                                    },
+                                    "& .MuiDataGrid-columnHeader": {
+                                        textAlign: "left",
+                                    },
+                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                        textAlign: "left",
+                                    },
+                                    "& .MuiDataGrid-cellContent": {
+                                        textAlign: "left",
+                                    },
+                                }),
+                            }}
+                        />
                     </div>
-                )}
-
-                {/* Data Table */}
-                <div className="table-container" style={{ marginTop: "20px" }}>
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Region</th>
-                                <th>City</th>
-                                <th>Cut-off Day</th>
-                                <th>Pickup Day</th>
-                                <th>Delivery Day</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {deliverySchedules.map((schedule, index) => (
-                                <tr key={index}>
-                                    <td>{schedule.region}</td>
-                                    <td>{schedule.city}</td>
-                                    <td>{schedule.cutoffDay}</td>
-                                    <td>{schedule.pickupDay}</td>
-                                    <td>{schedule.deliveryDay}</td>
-                                    <td>
-                                        <div style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
-                                            <button
-                                                onClick={() => handleEditClick(schedule)}
-                                                style={{
-                                                    padding: "4px 8px",
-                                                    backgroundColor: "#ffffff",
-                                                    color: "#000",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    fontSize: "12px"
-                                                }}
-                                                title="Edit"
-                                            >
-                                                ✏️
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteClick(schedule)}
-                                                style={{
-                                                    padding: "4px 8px",
-                                                    backgroundColor: "#ffffff",
-                                                    color: "#fff",
-                                                    border: "none",
-                                                    borderRadius: "4px",
-                                                    cursor: "pointer",
-                                                    fontSize: "12px"
-                                                }}
-                                                title="Delete"
-                                            >
-                                                🗑️
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-
-                    {deliverySchedules.length === 0 && !loading && (
-                        <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
-                            {!activeTab ? "Select an Entity Tab" : "No delivery schedules found"}
-                        </div>
-                    )}
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div style={{ marginTop: "20px", textAlign: "center" }}>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            style={{
-                                padding: "8px 12px",
-                                marginRight: "5px",
-                                backgroundColor: currentPage === 1 ? "#ccc" : "#007bff",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: currentPage === 1 ? "not-allowed" : "pointer"
-                            }}
-                        >
-                            Previous
-                        </button>
-                        <span style={{ margin: "0 15px" }}>
-                            Page {currentPage} of {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            style={{
-                                padding: "8px 12px",
-                                marginLeft: "5px",
-                                backgroundColor: currentPage === totalPages ? "#ccc" : "#007bff",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: currentPage === totalPages ? "not-allowed" : "pointer"
-                            }}
-                        >
-                            Next
-                        </button>
-                    </div>
+                {/* Pagination Component - Same as orders page */}
+                {isV("ordersPagination") && deliverySchedules.length > 0 && (
+                    <Pagination
+                        currentPage={page}
+                        totalPages={String(totalPages)}
+                        onPageChange={setPage}
+                    />
                 )}
-
                 {/* Edit Modal */}
                 {showEditModal && (
                     <div style={{
