@@ -25,6 +25,7 @@ const TapCardPayment = () => {
   const amountDecoded = atob(decodeURIComponent(amount));
   const customerIdDecoded = atob(decodeURIComponent(customerId));
   const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
+  const  TAP_MERCHANT_ID=process.env.REACT_APP_TAP_MERCHANT_ID
   useEffect(() => {
     const fetchCustomerDetails = async () => {
       try {
@@ -69,6 +70,8 @@ const TapCardPayment = () => {
        initializeTapCard();
     }
   }, [CustomerDetails]);
+
+  console.log("TAP_MERCHANT_ID",TAP_MERCHANT_ID,TAP_PUIBLIC_KEY)
   useEffect(() => {
     // Check if script is already loaded
     if (window.CardSDK) {
@@ -165,7 +168,7 @@ const TapCardPayment = () => {
         renderTapCard("card-sdk-id", {
           publicKey: TAP_PUIBLIC_KEY, // Replace with your actual key
           merchant: {
-            id: process.env.REACT_APP_TAP_MERCHANT_ID,
+            id: TAP_MERCHANT_ID,
           },
           transaction: {
             amount: parseFloat(amountDecoded),
