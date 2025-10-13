@@ -525,11 +525,11 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 flexDirection: 'column',
                                                 '& .MuiDataGrid-main': {
                                                     flex: 1,
-                                                    overflow: 'hidden'
+                                                    overflow: 'scroll'
                                                 },
                                                 '& .MuiDataGrid-toolbar': {
-                                                    padding: '16px  !important',
-                                                    minHeight: '76px !important', // Ensure minimum height for toolbar
+                                                    padding: '0px 8px  !important',
+                                                    minHeight: '56px !important', // Ensure minimum height for toolbar
                                                     flexShrink: 0, // Prevent toolbar from shrinking
                                                 },
                                                 // Ensure only the virtual scroller (rows) is scrollable

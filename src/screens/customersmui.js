@@ -101,8 +101,8 @@ function Customers() {
       : user?.roles[0],
     "custDetailsAdd"
   );
-  const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
-const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") :"invites";
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") : "invites";
 
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -1805,10 +1805,9 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
                       display: 'flex',
                       flexDirection: 'column',
 
-                      // Fix toolbar spacing issues
                       '& .MuiDataGrid-toolbar': {
-                        padding: '16px !important',
-                        minHeight: '76px !important',
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
                         flexShrink: 0,
                       },
 
@@ -1950,14 +1949,10 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
                       display: 'flex',
                       flexDirection: 'column',
 
-                      // Fix toolbar spacing issues
-                      '& .MuiDataGrid-toolbarContainer': {
-                        padding: '8px',
-                        marginBottom: '8px',
-                        borderBottom: '1px solid #e0e0e0',
-                        backgroundColor: '#fafafa',
-                        minHeight: '56px', // Ensure minimum height for toolbar
-                        flexShrink: 0, // Prevent toolbar from shrinking
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
+                        flexShrink: 0,
                       },
 
                       '& .MuiDataGrid-main': {
@@ -2100,17 +2095,17 @@ const pageName= activeTab === "customers" ? (isApprovalMode ? "customersApproval
   useEffect(() => {
     setFilters({});
   }, [activeTab]);
-     const storageKey = `${pageName}_${role}_columns`;
-    useEffect(() => {
-      const savedModel = localStorage.getItem(storageKey);
-      if (savedModel) {
-        setColumnVisibilityModel(JSON.parse(savedModel));
-      }
-    }, [storageKey]);
-       const handleColumnVisibilityChange = (newModel) => {
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
+  const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
-  };  
+  };
   return (
     <Sidebar title={t("Customers")}>
       <div className="page-content">

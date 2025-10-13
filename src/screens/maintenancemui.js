@@ -561,8 +561,8 @@ function Maintenance() {
                                                 flexDirection: 'column',
                                                 
                                                 '& .MuiDataGrid-toolbar': {
-                                                    padding: '16px !important',
-                                                    minHeight: '76px !important',
+                                                    padding: '0px 8px  !important',
+                                                    minHeight: '56px !important',
                                                     flexShrink: 0,
                                                 },
                                                 

@@ -49,9 +49,9 @@ const BankTransactions = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
 
-   const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
-const pageName= "BankTransactions"
-      const storageKey = `${pageName}_${role}_columns`;
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = "BankTransactions"
+  const storageKey = `${pageName}_${role}_columns`;
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
     if (savedModel) {
@@ -171,7 +171,7 @@ const pageName= "BankTransactions"
     createdAt: "Created At",
     status: "Status",
   };
-   const handleColumnVisibilityChange = (newModel) => {
+  const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
@@ -237,10 +237,11 @@ const pageName= "BankTransactions"
                     overflow: 'hidden'
                   },
                   '& .MuiDataGrid-toolbar': {
-                    padding: '16px !important',
-                    minHeight: '76px !important', // Ensure minimum height for toolbar
-                    flexShrink: 0, // Prevent toolbar from shrinking
+                    padding: '0px 8px  !important',
+                    minHeight: '56px !important',
+                    flexShrink: 0,
                   },
+                  
                   // Ensure only the virtual scroller (rows) is scrollable
                   '& .MuiDataGrid-virtualScroller': {
                     overflow: 'auto !important',
