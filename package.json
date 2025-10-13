@@ -1,6 +1,6 @@
 {
   "name": "talabpoint",
-  "homepage": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net/",
+  "homepage": "https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
