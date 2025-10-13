@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
+import { fetchDropdownFromBasicsMaster, checkFieldForUpdate, } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import Constants from "../../constants";
 import RbacManager from "../../utilities/rbac";
@@ -26,6 +26,7 @@ function FinancialInformation({
   mode,
   setTabsHeight,
   formErrors = {},
+  completeWorkflowData = {},
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -74,7 +75,56 @@ function FinancialInformation({
   // Dropdown state for pricingPolicy
   const dropdownFields = ["pricingPolicy", "bankName", "entity"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
-
+const [fieldsForUpdate, setFieldsForUpdate] = useState({});
+const [paymentFieldsForUpdate, setPaymentFieldsForUpdate] = useState({});
+    const fieldList = [
+      {field: "bankName", fieldType: "customer"},
+      {field: "bankNameOther", fieldType: "customer"},
+      {field: "bankAccountNumber", fieldType: "customer"},
+      {field: "iban", fieldType: "customer"},
+      {field: "pricingPolicy?." + [Constants.ENTITY.DAR], fieldType: "pricingpolicy"},
+      {field: "pricingPolicy?." + [Constants.ENTITY.VMCO], fieldType: "pricingpolicy"},
+      {field: "pricingPolicy?." + [Constants.ENTITY.SHC], fieldType: "pricingpolicy"},
+      {field: "pricingPolicy?." + [Constants.ENTITY.NAQI], fieldType: "pricingpolicy"},
+      {field: "pricingPolicy?." + [Constants.ENTITY.GMTC], fieldType: "pricingpolicy"},
+      {field: "isDeliveryChargesApplicable", fieldType: "customer"},
+      {field: "financeHeadEmail", fieldType: "customer"},
+      {field: "financeHeadMobile", fieldType: "customer"},
+      {field: "purchasingHeadName", fieldType: "customer"},
+      {field: "purchasingHeadDesignation", fieldType: "customer"},
+      {field: "purchasingHeadEmail", fieldType: "customer"},
+      {field: "purchasingHeadMobile", fieldType: "customer"},
+      {field: "buildingName", fieldType: "customer"},
+      {field: "street", fieldType: "customer"},
+      {field: "region", fieldType: "customer"},
+      {field: "city", fieldType: "customer"},
+      {field: "cityOther", fieldType: "customer"},
+      {field: "district", fieldType: "customer"},
+      {field: "districtOther", fieldType: "customer"},
+      {field: "zone", fieldType: "customer"},
+      {field: "pincode", fieldType: "customer"},
+      {field: "geolocation", fieldType: "customer"},
+    ]
+    const paymentFieldsList = [
+      {field: "prePayment?.isAllowed", fieldType: "payments"},
+      {field: "COD?.isAllowed", fieldType: "payments"},
+      {field: "COD?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.DAR] + "?.isAllowed", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.DAR] + "?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.DAR] + "?.period", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.VMCO] + "?.period", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.SHC] + "?.isAllowed", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.SHC] + "?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.SHC] + "?.period", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.NAQI] + "?.period", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.limit", fieldType: "payments"},
+      {field: "credit?." + [Constants.ENTITY.GMTC] + "?.period", fieldType: "payments"},
+    ]
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -85,6 +135,46 @@ function FinancialInformation({
     fetchData();
     setTabsHeight("auto");
   }, []);
+useEffect(() => {
+      const checkFieldUpdates = async () => {
+        
+        try {
+          const fieldStatus = {};
+          const paymentFieldStatus = {};
+          // Use for...of loop instead of forEach for async operations
+          for (const fieldItem of fieldList) {
+            const canUpdate = await checkFieldForUpdate(
+              fieldItem.fieldType, 
+              completeWorkflowData?.workflowName
+            );
+            fieldStatus[fieldItem.field] = canUpdate;
+          }
+
+          for (const fieldItem of paymentFieldsList) {
+            const canUpdate = await checkFieldForUpdate(
+              fieldItem.fieldType, 
+              completeWorkflowData?.workflowName
+            );
+            paymentFieldStatus[fieldItem.field] = canUpdate;
+          }
+          setFieldsForUpdate(fieldStatus);
+          setPaymentFieldsForUpdate(paymentFieldStatus);
+        } catch (error) {
+          console.error('Error checking field updates:', error);
+          // Set all fields to false in case of error
+          const errorStatus = {};
+          fieldList.forEach(fieldItem => {
+            errorStatus[fieldItem.field] = false;
+          });
+          setFieldsForUpdate(errorStatus);
+        } 
+      };
+  
+      // if (completeWorkflowData?.workflowName) {
+        checkFieldUpdates();
+      // }
+    }, []); // Add other dependencies if needed
+  
 
   const handleGetCreditBalance = async () => {
     setIsLoading(true);
@@ -115,6 +205,84 @@ function FinancialInformation({
       });
     }
   };
+  
+const checkDisabledStatus = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    console.log('Input object:', obj);
+    console.log('Input path:', path);
+    
+    const result = path?.reduce((current, key) => {
+      console.log('Current:', current, 'Key:', key);
+      const next = current?.[key];
+      console.log('Next value:', next);
+      return next;
+    }, obj);
+    
+    console.log('Final result:', result);
+    return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerData, fieldParts);
+  const currentValue = getNestedValue(customerData, fieldParts);
+  
+  const commonConditions = originalCustomerData &&
+                          customerData &&
+                          originalValue === currentValue &&
+                          mode === "edit" &&
+                          customerData?.customerStatus !== "pending";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !fieldsForUpdate?.[fieldPath];
+  }
+  
+  return commonConditions;
+};
+    const checkDisabledStatusPayment = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    // console.log(path.reduce((current, key) => current?.[key], obj))
+    // return path.reduce((current, key) => current?.[key], obj);
+    console.log('Input object:', obj);
+  console.log('Input path:', path);
+  
+  const result = path?.reduce((current, key) => {
+    console.log('Current:', current, 'Key:', key);
+    const next = current?.[key];
+    console.log('Next value:', next);
+    return next;
+  }, obj);
+  
+  console.log('Final result:', result);
+  return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerPaymentMethodsData?.methodDetails, fieldParts);
+  const currentValue = getNestedValue(paymentMethods, fieldParts);
+  
+  const commonConditions = originalCustomerPaymentMethodsData &&
+                          paymentMethods &&
+                          originalValue === currentValue &&
+                          mode === "edit";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !paymentFieldsForUpdate?.[fieldPath];
+  }
+  
+  return commonConditions;
+};
 
 
   return (
@@ -244,13 +412,8 @@ function FinancialInformation({
               });
             }}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.bankName ===
-              customerData?.bankName &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("bankName")
+          }
             className={
               originalCustomerData &&
                 customerData &&
@@ -323,13 +486,8 @@ function FinancialInformation({
               value={customerData?.bankNameOther || ""}
               onChange={onChangeCustomerData}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.bankNameOther ===
-                customerData?.bankNameOther &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending"
-              }
+            checkDisabledStatus("bankNameOther")
+          }
             />
             {isV("bankNameOtherVerified") && (
               // (originalCustomerData &&
@@ -396,13 +554,8 @@ function FinancialInformation({
             value={customerData?.bankAccountNumber || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.bankAccountNumber ===
-              customerData?.bankAccountNumber &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("bankAccountNumber")
+          }
             required
           />
           {isV("bankAccountNumberVerified") && (
@@ -464,12 +617,8 @@ function FinancialInformation({
             value={customerData?.iban || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.iban === customerData?.iban &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending"
-            }
+            checkDisabledStatus("iban")
+          }
             required
           />
           {isV("ibanVerified") && (
@@ -532,12 +681,8 @@ function FinancialInformation({
               value={customerData?.pricingPolicy?.[Constants.ENTITY.DAR] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.DAR] ===
-                customerData?.pricingPolicy?.[Constants.ENTITY.DAR] &&
-                mode === "edit"
-              }
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.DAR])
+          }
             >
               <option value="" disabled>
                 {t("Select")}
@@ -587,12 +732,8 @@ function FinancialInformation({
               value={customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.VMCO] ===
-                customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] &&
-                mode === "edit"
-              }
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.VMCO])
+          }
             >
               <option value="" disabled>
                 {t("Select")}
@@ -642,12 +783,8 @@ function FinancialInformation({
               value={customerData?.pricingPolicy?.[Constants.ENTITY.SHC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.SHC] ===
-                customerData?.pricingPolicy?.[Constants.ENTITY.SHC] &&
-                mode === "edit"
-              }
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.SHC])
+          }
             >
               <option value="" disabled>
                 {t("Select")}
@@ -698,12 +835,8 @@ function FinancialInformation({
               value={customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.NAQI] ===
-                customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] &&
-                mode === "edit"
-              }
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.NAQI])
+          }
             >
               <option value="" disabled>
                 {t("Select")}
@@ -754,12 +887,8 @@ function FinancialInformation({
               value={customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.pricingPolicy?.[Constants.ENTITY.GMTC] ===
-                customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] &&
-                mode === "edit"
-              }
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.GMTC])
+          }
             >
               <option value="" disabled>
                 {t("Select")}
@@ -796,12 +925,8 @@ function FinancialInformation({
                 checked={customerData?.isDeliveryChargesApplicable}
                 onChange={setIsDeliveryChargesApplicable}
                 disabled={
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.isDeliveryChargesApplicable ===
-                  customerData?.isDeliveryChargesApplicable &&
-                  mode === "edit"
-                }
+            checkDisabledStatus("isDeliveryChargesApplicable")
+          }
               />
               {`\t ${t("Is delivery charges applicable")}`}
               {customerData?.isDeliveryChargesApplicable !==
@@ -828,11 +953,7 @@ function FinancialInformation({
                 checked={paymentMethods?.prePayment?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.prePayment
-                    ?.isAllowed === paymentMethods?.prePayment?.isAllowed &&
-                  mode === "edit"
+                  checkDisabledStatusPayment("prePayment?.isAllowed")
                 }
               />
               {`\t ${t("Pre-Payment")}`}
@@ -872,11 +993,7 @@ function FinancialInformation({
                 checked={paymentMethods?.COD?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.COD
-                    ?.isAllowed === paymentMethods?.COD?.isAllowed &&
-                  mode === "edit"
+                  checkDisabledStatusPayment("COD?.isAllowed")
                 }
               />
               {`\t ${t("Cash on Delivery (COD) per Branch")}`}
@@ -910,12 +1027,8 @@ function FinancialInformation({
                   }
                   onChange={onChangeCustomerPaymentMethodsData}
                   disabled={
-                    originalCustomerPaymentMethodsData &&
-                    paymentMethods &&
-                    originalCustomerPaymentMethodsData?.methodDetails?.COD
-                      ?.limit === paymentMethods?.COD?.limit &&
-                    mode === "edit"
-                  }
+                  checkDisabledStatusPayment("COD?.limit")
+                }
                 />
               </>
             )}
@@ -935,13 +1048,7 @@ function FinancialInformation({
                 }
                 onChange={setCustomerCreditChange}
                 disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.DAR
-                  ]?.isAllowed ===
-                  paymentMethods?.credit?.[Constants.ENTITY.DAR]?.isAllowed &&
-                  mode === "edit"
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed")
                 }
               />
               {`\t ${t(Constants.ENTITY.DAR)}`}
@@ -982,14 +1089,8 @@ function FinancialInformation({
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.limit ===
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.limit &&
-                      mode === "edit"
-                    }
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit")
+                }
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1040,14 +1141,8 @@ function FinancialInformation({
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.DAR
-                      ]?.period ===
-                      paymentMethods?.credit?.[Constants.ENTITY.DAR]?.period &&
-                      mode === "edit"
-                    }
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period")
+                }
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1079,16 +1174,7 @@ function FinancialInformation({
                   paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.VMCO
-                  ]?.isAllowed ===
-                  paymentMethods?.credit?.[Constants.ENTITY.VMCO]
-                    ?.isAllowed &&
-                  mode === "edit"
-                }
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed")}
               />
               {`\t ${t(Constants.ENTITY.VMCO)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.VMCO].isAllowed !==
@@ -1127,15 +1213,7 @@ function FinancialInformation({
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.limit ===
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.limit &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1185,15 +1263,7 @@ function FinancialInformation({
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.VMCO
-                      ]?.period ===
-                      paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.period &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1225,15 +1295,7 @@ function FinancialInformation({
                   paymentMethods?.credit?.[Constants.ENTITY.SHC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.SHC
-                  ]?.isAllowed ===
-                  paymentMethods?.credit?.[Constants.ENTITY.SHC]?.isAllowed &&
-                  mode === "edit"
-                }
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed")}
               />
               {`\t ${t(Constants.ENTITY.SHC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.SHC].isAllowed !==
@@ -1272,15 +1334,7 @@ function FinancialInformation({
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.limit ===
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.limit &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1330,15 +1384,7 @@ function FinancialInformation({
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.SHC
-                      ]?.period ===
-                      paymentMethods?.credit?.[Constants.ENTITY.SHC]?.period &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1370,16 +1416,7 @@ function FinancialInformation({
                   paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.NAQI
-                  ]?.isAllowed ===
-                  paymentMethods?.credit?.[Constants.ENTITY.NAQI]
-                    ?.isAllowed &&
-                  mode === "edit"
-                }
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed")}
               />
               {`\t ${t(Constants.ENTITY.NAQI)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.NAQI].isAllowed !==
@@ -1418,15 +1455,7 @@ function FinancialInformation({
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.limit ===
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.limit &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1476,15 +1505,7 @@ function FinancialInformation({
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.NAQI
-                      ]?.period ===
-                      paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.period &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1516,16 +1537,7 @@ function FinancialInformation({
                   paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={
-                  originalCustomerPaymentMethodsData &&
-                  paymentMethods &&
-                  originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                    Constants.ENTITY.GMTC
-                  ]?.isAllowed ===
-                  paymentMethods?.credit?.[Constants.ENTITY.GMTC]
-                    ?.isAllowed &&
-                  mode === "edit"
-                }
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed")}
               />
               {`\t ${t(Constants.ENTITY.GMTC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.GMTC].isAllowed !==
@@ -1564,15 +1576,7 @@ function FinancialInformation({
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.GMTC
-                      ]?.limit ===
-                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.limit &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1622,15 +1626,7 @@ function FinancialInformation({
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={
-                      originalCustomerPaymentMethodsData &&
-                      paymentMethods &&
-                      originalCustomerPaymentMethodsData?.methodDetails?.credit?.[
-                        Constants.ENTITY.GMTC
-                      ]?.period ===
-                      paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.period &&
-                      mode === "edit"
-                    }
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period")}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&

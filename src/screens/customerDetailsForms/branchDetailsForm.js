@@ -403,7 +403,7 @@ const BranchDetailsForm = ({
       );
       setOriginalBranchDetails(branchData);
       setBranchContacts(
-        isAppMode && temp && Object.keys(temp?.contacts).length > 0
+        isAppMode && temp?.contacts && Object.keys(temp?.contacts)?.length > 0
           ? { ...contactsData, ...temp?.contacts }
           : contactsData
       );
