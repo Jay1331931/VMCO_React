@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Sidebar from "../components/Sidebar";
 import CustomToolbar from "../components/CustomToolbar";
 import Pagination from "../components/Pagination";
@@ -12,6 +12,8 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import SearchableDropdown from "../components/SearchableDropdown";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
+import EditCalendarIcon from '@mui/icons-material/EditCalendar';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function DeliveryScheduleEditor() {
     const [deliverySchedules, setDeliverySchedules] = useState([]);
@@ -46,6 +48,7 @@ function DeliveryScheduleEditor() {
     const [geoData, setGeoData] = useState(null);
     const [selectedRegion, setSelectedRegion] = useState("");
     const [selectedCity, setSelectedCity] = useState("");
+
     const { t, i18n } = useTranslation();
     const { user, token } = useAuth();
     const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -69,24 +72,15 @@ function DeliveryScheduleEditor() {
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
 
-    // Fetch geo data on component mount
-    useEffect(() => {
-        fetchGeoData();
-    }, []);
-
-    useEffect(() => {
-        if (activeCategory) {
-            fetchDeliverySchedules();
-        }
-    }, [page, searchQuery, activeCategory]);
-
-    // Define columns for DataGrid
+    // Define columns for DataGrid with searchable fields
     const columns = [
         {
             field: "region",
             headerName: t("Region"),
             flex: 1,
             minWidth: 120,
+            searchable: true,
+            include: true,
             align: i18n.language === "ar" ? "right" : "left",
             headerAlign: i18n.language === "ar" ? "right" : "left",
         },
@@ -95,6 +89,8 @@ function DeliveryScheduleEditor() {
             headerName: t("City"),
             flex: 1,
             minWidth: 120,
+            searchable: true,
+            include: true,
             align: i18n.language === "ar" ? "right" : "left",
             headerAlign: i18n.language === "ar" ? "right" : "left",
         },
@@ -103,6 +99,8 @@ function DeliveryScheduleEditor() {
             headerName: t("Cut-off Day"),
             flex: 1,
             minWidth: 120,
+            searchable: true,
+            include: true,
             align: i18n.language === "ar" ? "right" : "left",
             headerAlign: i18n.language === "ar" ? "right" : "left",
         },
@@ -111,6 +109,8 @@ function DeliveryScheduleEditor() {
             headerName: t("Pickup Day"),
             flex: 1,
             minWidth: 120,
+            searchable: true,
+            include: true,
             align: i18n.language === "ar" ? "right" : "left",
             headerAlign: i18n.language === "ar" ? "right" : "left",
         },
@@ -119,6 +119,8 @@ function DeliveryScheduleEditor() {
             headerName: t("Delivery Day"),
             flex: 1,
             minWidth: 120,
+            searchable: true,
+            include: true,
             align: i18n.language === "ar" ? "right" : "left",
             headerAlign: i18n.language === "ar" ? "right" : "left",
         },
@@ -126,11 +128,13 @@ function DeliveryScheduleEditor() {
             field: "actions",
             headerName: t("Actions"),
             sortable: false,
+            searchable: false,
+            include: true,
             width: 150,
             align: "center",
             headerAlign: "center",
             renderCell: (params) => (
-                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+                <div style={{ display: "flex", gap: "8px", alignContent: "center", justifyContent: "center" }}>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -138,16 +142,17 @@ function DeliveryScheduleEditor() {
                         }}
                         style={{
                             padding: "4px 8px",
-                            backgroundColor: "#ffffff",
-                            color: "#000",
-                            border: "none",
-                            borderRadius: "4px",
+                            backgroundColor: "transparent",
+                            color: "#3D5654",
                             cursor: "pointer",
-                            fontSize: "12px"
+                            display: "flex",
+                            border: "none",
+                            alignItems: "center",
+                            justifyContent: "center"
                         }}
                         title={t("Edit")}
                     >
-                        ✏️
+                        <EditCalendarIcon fontSize="small" />
                     </button>
                     <button
                         onClick={(e) => {
@@ -156,53 +161,42 @@ function DeliveryScheduleEditor() {
                         }}
                         style={{
                             padding: "4px 8px",
-                            backgroundColor: "#ffffff",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: "4px",
+                            backgroundColor: "transparent",
+                            color: "#3D5654",
                             cursor: "pointer",
-                            fontSize: "12px"
+                            display: "flex",
+                            border: "none",
+                            alignItems: "center",
+                            justifyContent: "center"
                         }}
                         title={t("Delete")}
                     >
-                        🗑️
+                        <DeleteIcon fontSize="small" />
                     </button>
                 </div>
             ),
         },
     ];
 
-    const fetchGeoData = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/geoLocation`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setGeoData(data.data);
-            }
-        } catch (error) {
-            console.error("Error fetching geo data:", error);
-        }
-    };
+    // Fetch geo data on component mount
+    useEffect(() => {
+        fetchGeoData();
+    }, []);
 
-    const fetchDeliverySchedules = async () => {
+    // Fetch delivery schedules - using useCallback like support page
+    const fetchDeliverySchedules = useCallback(async (page = 1, searchTerm = "", customFilters = {}) => {
         setLoading(true);
         try {
             const apiUrl = `${API_BASE_URL}/delivery-schedule/pagination`;
-            const filters = {};
+            const filtersCopy = { ...customFilters };
 
             const params = new URLSearchParams({
-                page: page,
+                page,
                 pageSize: pageSize,
-                search: searchQuery,
+                search: searchTerm,
                 sortBy: "id",
                 sortOrder: "asc",
-                filters: JSON.stringify(filters),
+                filters: JSON.stringify(filtersCopy),
                 entity: activeCategory
             });
 
@@ -215,7 +209,7 @@ function DeliveryScheduleEditor() {
 
             if (response.data?.status?.toLowerCase() === "ok") {
                 const schedules = (response.data.data.data || []).map((schedule, index) => ({
-                    id: index + 1, // Add ID for DataGrid
+                    id: index + 1,
                     ...schedule
                 }));
                 setDeliverySchedules(schedules);
@@ -232,6 +226,37 @@ function DeliveryScheduleEditor() {
             });
         } finally {
             setLoading(false);
+        }
+    }, [pageSize, token, API_BASE_URL, activeCategory]);
+
+    // useEffect to call fetchDeliverySchedules - exactly like support page
+    useEffect(() => {
+        if (loading) return;
+
+        if (user && activeCategory) {
+            fetchDeliverySchedules(page, searchQuery, filters);
+        }
+
+        if (!user) {
+            console.log("logging out");
+        }
+    }, [page, searchQuery, user, fetchDeliverySchedules, filters, activeCategory]);
+
+    const fetchGeoData = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/geoLocation`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setGeoData(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching geo data:", error);
         }
     };
 
@@ -285,6 +310,7 @@ function DeliveryScheduleEditor() {
         });
     };
 
+    // Handle search functionality - exactly like support page
     const handleSearch = (searchTerm) => {
         setSearchQuery(searchTerm);
         setPage(1);
@@ -345,7 +371,7 @@ function DeliveryScheduleEditor() {
                 setSelectedRegion("");
                 setSelectedCity("");
                 setShowAddForm(false);
-                fetchDeliverySchedules();
+                fetchDeliverySchedules(page, searchQuery, filters);
             }
         } catch (err) {
             console.error("Error creating delivery schedule:", err);
@@ -407,7 +433,7 @@ function DeliveryScheduleEditor() {
                 });
 
                 setShowEditModal(false);
-                fetchDeliverySchedules();
+                fetchDeliverySchedules(page, searchQuery, filters);
             }
         } catch (err) {
             console.error("Error updating delivery schedule:", err);
@@ -450,7 +476,7 @@ function DeliveryScheduleEditor() {
                         text: "Delivery schedule has been deleted.",
                         icon: "success",
                     });
-                    fetchDeliverySchedules();
+                    fetchDeliverySchedules(page, searchQuery, filters);
                 }
             } catch (err) {
                 console.error("Error deleting delivery schedule:", err);
@@ -480,8 +506,19 @@ function DeliveryScheduleEditor() {
         setShowAddForm(!showAddForm);
     };
 
-    // Filtered data for CustomToolbar
-    const filteredData = columns.filter(col => col.field !== 'actions');
+    // Filter visible columns and get searchable fields like support page
+    const visibleColumns = columns.filter(col => col.include !== false);
+    const searchableFields = visibleColumns.filter(item => item.searchable).map(item => item.field);
+    const filteredData = visibleColumns.filter(item => searchableFields.includes(item.field));
+
+    // Columns to display mapping like support page
+    const columnsToDisplay = {
+        region: "Region",
+        city: "City",
+        cutoffDay: "Cut-off Day",
+        pickupDay: "Pickup Day",
+        deliveryDay: "Delivery Day"
+    };
 
     return (
         <Sidebar title={t("Delivery Schedule Editor")}>
@@ -508,16 +545,18 @@ function DeliveryScheduleEditor() {
                 {/* Loading Spinner */}
                 {loading && <LoadingSpinner />}
 
+                {/* Add Form */}
                 {showAddForm && activeCategory && (
                     <div style={{
-                        marginTop: "20px",
+                        marginTop: "10px",
+                        marginBottom: "10px",
                         padding: "20px",
                         backgroundColor: "#f8f9fa",
                         borderRadius: "8px",
                         border: "1px solid #dee2e6"
                     }}>
                         <h4>Add New Delivery Schedule for {activeCategory}</h4>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "15px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "10px", marginBottom: "10px" }}>
                             <div>
                                 <label>Region</label>
                                 <SearchableDropdown
@@ -638,7 +677,6 @@ function DeliveryScheduleEditor() {
 
                 {/* Main Table Container */}
                 <div className="table-container">
-                    {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                     <div style={{
                         height: "400px",
                         width: "100%",
@@ -648,7 +686,7 @@ function DeliveryScheduleEditor() {
                         <DataGrid
                             apiRef={gridApiRef}
                             rows={deliverySchedules}
-                            columns={columns}
+                            columns={visibleColumns}
                             pageSize={pageSize}
                             rowCount={total}
                             disableSelectionOnClick
@@ -657,7 +695,7 @@ function DeliveryScheduleEditor() {
                             hideFooterPagination={true}
                             paginationMode="server"
                             rowHeight={55}
-                            showToolbar={true}
+                            showToolbar
                             columnVisibilityModel={columnVisibilityModel}
                             onColumnVisibilityModelChange={handleColumnVisibilityChange}
                             slots={{
@@ -671,24 +709,24 @@ function DeliveryScheduleEditor() {
                                     setSearchQuery: setSearchQuery,
                                     setFilterAnchor: setFilterAnchor,
                                     handleFilterChange: handleFilterChange,
-                                    onColumnVisibilityChange: setColumnVisibilityModel,
+                                    onColumnVisibilityChange: handleColumnVisibilityChange,
                                     columns: filteredData,
                                     filters: filters,
-                                    showCalendar: false,
                                     columnVisibilityModel: columnVisibilityModel,
                                     searchPlaceholder: "Search delivery schedules...",
                                     showColumnVisibility: false,
                                     showFilters: false,
                                     showExport: false,
                                     showUpload: false,
+                                    showCalendar: false,
                                     showAdd: isV("addButton"),
                                     buttonName: t("Add Schedule"),
+                                    showApproval: false,
                                     handleAddClick: handleAddClick,
-
+                                    columnsToDisplay: columnsToDisplay
                                 },
                             }}
                             sx={{
-                                // Flex grow to fill available space
                                 flex: 1,
                                 display: "flex",
                                 flexDirection: "column",
@@ -703,19 +741,17 @@ function DeliveryScheduleEditor() {
                                     display: "flex",
                                     flexDirection: "column",
                                 },
-                                // Ensure only the virtual scroller (rows) is scrollable
                                 "& .MuiDataGrid-virtualScroller": {
                                     overflow: "auto !important",
                                     flex: 1,
                                 },
-                                // Keep headers sticky and non-scrollable
                                 "& .MuiDataGrid-columnHeaders": {
                                     position: "sticky",
                                     top: 0,
                                     zIndex: 1,
                                     backgroundColor: "white",
                                     borderBottom: "1px solid #e0e0e0",
-                                    flexShrink: 0, // Prevent header from shrinking
+                                    flexShrink: 0,
                                 },
                                 "& .MuiDataGrid-row": {
                                     cursor: "default",
@@ -723,7 +759,6 @@ function DeliveryScheduleEditor() {
                                         backgroundColor: "rgba(0, 0, 0, 0.04)",
                                     },
                                 },
-                                // Arabic RTL styling
                                 ...(i18n.language === "ar" && {
                                     direction: "rtl",
                                     "& .MuiDataGrid-cell": {
@@ -739,8 +774,7 @@ function DeliveryScheduleEditor() {
                                         textAlign: "right !important",
                                     },
                                 }),
-                                // Default LTR styling (left alignment)
-                                ...(!i18n.language === "ar" && {
+                                ...(i18n.language !== "ar" && {
                                     "& .MuiDataGrid-cell": {
                                         textAlign: "left",
                                     },
@@ -759,7 +793,7 @@ function DeliveryScheduleEditor() {
                     </div>
                 </div>
 
-                {/* Pagination Component - Same as orders page */}
+                {/* Pagination Component */}
                 {isV("ordersPagination") && deliverySchedules.length > 0 && (
                     <Pagination
                         currentPage={page}

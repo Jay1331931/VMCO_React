@@ -525,7 +525,8 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 flexDirection: 'column',
                                                 '& .MuiDataGrid-main': {
                                                     flex: 1,
-                                                    overflow: 'scroll'
+                                                    overflowX: 'scroll',
+                                                    overflowY: 'hidden',
                                                 },
                                                 '& .MuiDataGrid-toolbar': {
                                                     padding: '0px 8px  !important',
