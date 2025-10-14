@@ -649,7 +649,7 @@ const orderTypeEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURICompone
         {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.VMCO?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.NAQI?.toLowerCase()) && (
+            Constants.ENTITY?.NAQI?.toLowerCase()) &&DecodedorderTpe?.toLowerCase()!=="cart" && (
           <button
             onClick={() => handleBankTransaction(amount, decodedOrderID)}
             className="option-button blue"
