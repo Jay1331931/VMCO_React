@@ -476,7 +476,6 @@ function Cart() {
                     currentOrderTotal += baseAmount + vatAmount;
                 });
 
-                // Check for existing open COD orders for that entity
                 const orderFilters = new URLSearchParams({
                     filters: JSON.stringify({
                         customerId: selectedCustomerId,
@@ -641,7 +640,6 @@ function Cart() {
 
                         if (paymentLinkResponse?.data?.details?.url) {
                             console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
-                            // window.open(paymentLinkResponse.data.details.url);
                             window.location.replace(paymentLinkResponse?.data?.details?.url)
                         } else {
                             console.error('Payment URL not found in response:', paymentLinkResponse.data);
@@ -748,7 +746,7 @@ function Cart() {
                 paidAmount: '0.00',
                 deliveryCharges: '0.00',
                 paymentStatus: 'Pending',
-                status: 'Pending',
+                status: 'Open',
                 productCategory: categoryName,
                 isFresh: isFresh
             };
@@ -1325,7 +1323,7 @@ function Cart() {
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 orderStatus = 'Open';
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                orderStatus = 'Open';
+                orderStatus = 'Pending';
             } else {
                 const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                 if (pm === 'credit' || pm === 'cash on delivery') {
@@ -1658,7 +1656,6 @@ function Cart() {
                     });
 
                     if (paymentLinkResponse?.data?.details?.url) {
-                        // window.open(paymentLinkResponse.data.details.url);
                            window.location.replace(paymentLinkResponse?.data?.details?.urlL)
                     }
                 } catch (error) {
