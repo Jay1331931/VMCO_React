@@ -208,24 +208,45 @@ function BusinessDetails({
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  const checkDisabledStatus = (field) => {
-  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR) {
-    return originalCustomerData &&
-           customerData &&
-           originalCustomerData?.[field] === customerData?.[field] &&
-           mode === "edit" &&
-           customerData?.customerStatus !== "pending" && 
-           (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR && !fieldsForUpdate?.[field]);
-  } else {
-    return originalCustomerData &&
-           customerData &&
-           originalCustomerData?.[field] === customerData?.[field] &&
-           mode === "edit" &&
-           customerData?.customerStatus !== "pending";
+const checkDisabledStatus = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    console.log('Input object:', obj);
+    console.log('Input path:', path);
+    
+    const result = path?.reduce((current, key) => {
+      console.log('Current:', current, 'Key:', key);
+      const next = current?.[key];
+      console.log('Next value:', next);
+      return next;
+    }, obj);
+    
+    console.log('Final result:', result);
+    return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerData, fieldParts);
+  const currentValue = getNestedValue(customerData, fieldParts);
+  
+  const commonConditions = originalCustomerData &&
+                          customerData &&
+                          originalValue === currentValue &&
+                          mode === "edit" &&
+                          customerData?.customerStatus !== "pending";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !fieldsForUpdate?.[fieldPath];
   }
   
-};
-  // View logo (same as handleViewFile in documents.js)
+  return commonConditions;
+};  
+// View logo (same as handleViewFile in documents.js)
   const handleViewLogo = async (customerId, fileName, fileType) => {
     let fileURL = "";
     try {

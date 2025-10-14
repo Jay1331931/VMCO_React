@@ -306,7 +306,7 @@ function Orders() {
         `${API_BASE_URL}/generatePayment-link`,
         {
           id: order.id,
-          endPoint: "payment-opations/order",
+          endPoint: "payment-options/order",
           IsEmail: email,
         },
         {

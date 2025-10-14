@@ -467,7 +467,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 <>
                                     {/* Fixed height container for DataGrid with scrollable rows only */}
                                     <div style={{
-                                        height: '500px',
+                                        height: '400px',
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -525,7 +525,8 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 flexDirection: 'column',
                                                 '& .MuiDataGrid-main': {
                                                     flex: 1,
-                                                    overflow: 'scroll'
+                                                    overflowX: 'scroll',
+                                                    overflowY: 'hidden',
                                                 },
                                                 '& .MuiDataGrid-toolbar': {
                                                     padding: '0px 8px  !important',

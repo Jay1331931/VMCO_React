@@ -1019,9 +1019,9 @@ const BranchDetailsForm = ({
                 name="isDeliveryChargesApplicable"
                 checked={branch?.isDeliveryChargesApplicable}
                 onChange={handleDeliveryChargesChange}
-                disabled={
-                  customerFormMode === "custDetailsEdit" && !hasCheckboxUpdate
-                }
+                // disabled={
+                //   customerFormMode === "custDetailsEdit" && !hasCheckboxUpdate
+                // }
                 // hidden={!isV('isDeliveryChargesApplicable')}
               />
               {"\t" + t("Is Delivery Charges Applicable")}
@@ -1085,7 +1085,7 @@ const BranchDetailsForm = ({
                     // value={getLocationDisplay(branch[field.name])}
                     placeholder={t(field.placeholder)}
                     disabled={
-                      (customerFormMode === "custDetailsEdit" && !hasUpdate) ||
+                      // (customerFormMode === "custDetailsEdit" && !hasUpdate) ||
                       (customerFormMode === "custDetailsAdd" && inApproval)
                     }
                     style={
@@ -1104,9 +1104,9 @@ const BranchDetailsForm = ({
                     //   disabled={!isE(field.name, transformedCustomer?.isApprovalMode, hasUpdate && customer?.workflowData?.updates
                     //     ? field.name in customer.workflowData.updates
                     //     : false)}
-                    disabled={
-                      customerFormMode === "custDetailsEdit" && !hasUpdate
-                    }
+                    // disabled={
+                    //   customerFormMode === "custDetailsEdit" && !hasUpdate
+                    // }
                     onClick={() => setShowMap(true)}
                   >
                     <FontAwesomeIcon icon={faLocationDot} />
@@ -1154,8 +1154,9 @@ const BranchDetailsForm = ({
                                   }
                             }
                             disabled={
-                              (customerFormMode === "custDetailsEdit" &&
-                                !hasUpdate) ||
+                              // (customerFormMode === "custDetailsEdit" &&
+                              //   !hasUpdate) 
+                              //   ||
                               (customerFormMode === "custDetailsAdd" &&
                                 inApproval)
                             }
@@ -1181,8 +1182,8 @@ const BranchDetailsForm = ({
                                     : {}),
                                 }}
                                 disabled={
-                                  (customerFormMode === "custDetailsEdit" &&
-                                    !hasUpdate) ||
+                                  // (customerFormMode === "custDetailsEdit" &&
+                                  //   !hasUpdate) ||
                                   (customerFormMode === "custDetailsAdd" &&
                                     inApproval) ||
                                   field.disabled

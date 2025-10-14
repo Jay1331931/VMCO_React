@@ -83,6 +83,7 @@
     "Primary Contact": "جهة الاتصال الرئيسية",
     "Primary Contact Name": "اسم جهة الاتصال الرئيسية",
     "Designation": "المسمى الوظيفي",
+    "Role": "الدور",
     "Business Head": "رئيس العمل",
     "Finance Head": "رئيس المالية",
     "Purchasing Head": "رئيس المشتريات",
@@ -421,6 +422,7 @@
     "Bank Transactions": "المعاملات البنكية",
     "Transaction Id": "معرف المعاملة",
     "ERP Customer Id": "معرف العميل ERP",
+    "Employee ID": "معرف الموظف",
     "ERP Branch ID": "معرف فرع ERP",
     "Amount Transferred": "المبلغ المحول",
     "Transaction Date": "تاريخ المعاملة",
@@ -770,5 +772,6 @@
     "Hide Manual Input": "إخفاء الإدخال اليدوي",
     "Latitude": "خط العرض",
     "Longitude": "خط الطول",
-    "Apply Coordinates": "تطبيق الإحداثيات"
+    "Apply Coordinates": "تطبيق الإحداثيات",
+    "ERP": "رقم ERP"
 }

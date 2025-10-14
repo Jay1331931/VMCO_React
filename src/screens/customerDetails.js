@@ -2421,6 +2421,7 @@ if (uniqueFieldsList.includes(field)) {
                   mode={mode}
                   setTabsHeight={setTabsHeight}
                   formErrors={formErrors}
+                  completeWorkflowData={completeWorkflowData}
                 />
               )}
               {activeTab === "Financial Information" &&
@@ -2446,6 +2447,7 @@ if (uniqueFieldsList.includes(field)) {
                     mode={mode}
                     setTabsHeight={setTabsHeight}
                     formErrors={formErrors}
+                    completeWorkflowData={completeWorkflowData}
                   />
                 )}
               {activeTab === "Documents" && isV("documentsTab") && (

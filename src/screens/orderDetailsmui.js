@@ -24,6 +24,7 @@ import axios from "axios";
 import Constants from "../constants";
 import PdfPopupViewer from "../components/PdfPopupViewer";
 import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
+import SearchableDropdown from "../components/SearchableDropdown";
 import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
 import {
   DataGrid,
@@ -52,6 +53,9 @@ const defaultOrder = {
   status: "",
   driver: "",
   vehicleNumber: "",
+  erpWarehouseId: "",
+  warehouseNameEn: "",
+  warehouseNameAr: "",
   images: [],
   products: [],
 };
@@ -104,8 +108,8 @@ function OrderDetails() {
   const orderFromNav = location.state?.order || {};
   const salesOrderLinesFromNav =
     orderFromNav &&
-    orderFromNav.salesOrderLines &&
-    Array.isArray(orderFromNav.salesOrderLines)
+      orderFromNav.salesOrderLines &&
+      Array.isArray(orderFromNav.salesOrderLines)
       ? orderFromNav.salesOrderLines
       : [];
   const fromApproval = location.state?.fromApproval;
@@ -156,6 +160,10 @@ function OrderDetails() {
   const [pdfFiles, setPdfFiles] = useState([]);
   const [deliveryImages, setDeliveryImages] = useState([]);
   const [loadingProductId, setLoadingProductId] = useState(null);
+  const [warehouseOptions, setWarehouseOptions] = useState([]);
+  const [warehousesLoading, setWarehousesLoading] = useState(false);
+  const [selectedWarehouse, setSelectedWarehouse] = useState(i18n.language === 'ar' ? formData.warehouseNameAr : formData.warehouseNameEn);
+
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
     Constants.CATEGORY.VMCO_MACHINES,
@@ -166,6 +174,90 @@ function OrderDetails() {
     { label: "30%", value: "30%" },
   ];
   const pricingPolicyOptions = ["Price A", "Price B", "Price C", "Price D"];
+
+  useEffect(() => {
+    const fetchWarehouseOptions = async () => {
+      if (!fromApproval) return;
+
+      setWarehousesLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/warehouses?page=1&pageSize=100`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch warehouses');
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'Ok' && result.data && Array.isArray(result.data)) {
+          const formattedOptions = result?.data?.map(warehouse => ({
+            name: i18n.language === 'ar' ? warehouse.warehouseNameAr : warehouse.warehouseNameEn,
+            erpWarehouseId: warehouse.erpWarehouseId,
+            warehouseNameEn: warehouse.warehouseNameEn,
+            warehouseNameAr: warehouse.warehouseNameAr
+          }));
+          setWarehouseOptions(formattedOptions);
+        } else {
+          console.warn('Unexpected warehouse response format:', result);
+          setWarehouseOptions([]);
+        }
+      } catch (error) {
+        console.error('Error fetching warehouse options:', error);
+        setWarehouseOptions([]);
+      } finally {
+        setWarehousesLoading(false);
+      }
+    };
+
+    fetchWarehouseOptions();
+  }, [fromApproval, token, i18n.language]);
+
+  const handleWarehouseChange = (e) => {
+    const selectedWarehouseName = e.target.value;
+    if (!selectedWarehouseName) {
+      setFormData(prev => ({
+        ...prev,
+        warehouse: null,
+        erpWarehouseId: null,
+        warehouseNameEn: null,
+        warehouseNameAr: null,
+      }));
+      setSelectedWarehouse('');
+      return;
+    }
+
+    // Find the selected warehouse object using the name
+    const selectedWarehouse = warehouseOptions.find(
+      warehouse => warehouse.name === selectedWarehouseName
+    );
+
+    console.log('Found warehouse:', selectedWarehouse);
+
+    if (selectedWarehouse) {
+      setFormData(prev => ({
+        ...prev,
+        warehouse: selectedWarehouse.erpWarehouseId,
+        erpWarehouseId: selectedWarehouse.erpWarehouseId,
+        warehouseNameEn: selectedWarehouse.warehouseNameEn,
+        warehouseNameAr: selectedWarehouse.warehouseNameAr,
+      }));
+
+      // Update the selected warehouse display value
+      setSelectedWarehouse(selectedWarehouse.name);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.warehouseNameEn || formData.warehouseNameAr) {
+      setSelectedWarehouse(i18n.language === 'ar' ? formData.warehouseNameAr : formData.warehouseNameEn);
+    }
+  }, [i18n.language, formData.warehouseNameEn, formData.warehouseNameAr]);
 
   useEffect(() => {
     if (formMode === "add") return;
@@ -654,8 +746,7 @@ function OrderDetails() {
         // Compare total with COD limit
         if (existingCODTotal + Number(currentOrderTotal) >= codLimit) {
           console.log(
-            `COD limit reached: existing=${existingCODTotal}, Sum=${
-              existingCODTotal + Number(currentOrderTotal)
+            `COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + Number(currentOrderTotal)
             }, current=${currentOrderTotal}, limit=${codLimit}`
           );
           Swal.fire({
@@ -785,7 +876,7 @@ function OrderDetails() {
       if (
         formData.category &&
         formData.category.toLowerCase() ===
-          Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
+        Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
       ) {
         selectedMethod = "Pre Payment";
       } else if (formData.paymentMethod) {
@@ -838,13 +929,16 @@ function OrderDetails() {
         "vehicleNumber",
         "branchRegion",
         "branchCity",
+        "erpWarehouseId",
+        "warehouseNameEn",
+        "warehouseNameAr"
       ];
 
       const payload = {}; // Check if category is VMCO Machines
       const isVmcoMachinesCategory =
         formData.category &&
         formData.category.toLowerCase() ===
-          Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+        Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
       fieldsToUpdate.forEach((field) => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === "paymentPercentage") {
@@ -852,8 +946,8 @@ function OrderDetails() {
               ? formData[field] === "100%"
                 ? "100.00"
                 : formData[field] === "30%"
-                ? "30.00"
-                : "0.00"
+                  ? "30.00"
+                  : "0.00"
               : "0.00";
           } else if (field === "paymentMethod" && isVmcoMachinesCategory) {
             // Always set payment method to 'Pre Payment' for VMCO Machines category
@@ -862,7 +956,7 @@ function OrderDetails() {
             field === "status" &&
             formData.entity &&
             formData.entity.toLowerCase() ===
-              Constants.ENTITY.VMCO.toLowerCase()
+            Constants.ENTITY.VMCO.toLowerCase()
           ) {
             // Set status to 'Pending' for vmco entity
             payload[field] = "Pending";
@@ -872,6 +966,7 @@ function OrderDetails() {
           } else {
             payload[field] = formData[field];
           }
+
         }
       });
 
@@ -1209,7 +1304,7 @@ function OrderDetails() {
       // Determine the status to check for existing orders based on entity
       const statusToCheck =
         formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+          formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
           ? "Pending" // VMCO orders use Pending status
           : "Open"; // Other entities use Open status
 
@@ -1220,24 +1315,24 @@ function OrderDetails() {
 
       const orderFiltersObj =
         formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+          formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
           ? {
-              customerId: formData.customerId,
-              branchId: branchIdForFilter,
-              entity: formData.entity,
-              status: statusToCheck,
-              productCategory: formData.category,
-            }
+            customerId: formData.customerId,
+            branchId: branchIdForFilter,
+            entity: formData.entity,
+            status: statusToCheck,
+            productCategory: formData.category,
+          }
           : formData.entity &&
             formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
-          ? {
+            ? {
               customerId: formData.customerId,
               branchId: branchIdForFilter,
               entity: formData.entity,
               status: statusToCheck,
               isFresh: freshOrder, // or set this based on your logic if needed
             }
-          : {
+            : {
               customerId: formData.customerId,
               branchId: branchIdForFilter,
               entity: formData.entity,
@@ -1351,7 +1446,7 @@ function OrderDetails() {
 
       const finalPaymentMethod =
         formData.category &&
-        formData.category.toLowerCase() ===
+          formData.category.toLowerCase() ===
           Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
           ? "Pre Payment"
           : selectedMethod || formData.paymentMethod || "";
@@ -1420,7 +1515,7 @@ function OrderDetails() {
         orderBy: orderByName, // <-- Use fetched employee name here
         isMachine:
           formData.category.toLowerCase() ===
-          Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
+            Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
             ? true
             : false,
         paymentMethod: finalPaymentMethod,
@@ -1434,11 +1529,14 @@ function OrderDetails() {
         paidAmount: sampleMode
           ? 0.0
           : finalPaymentMethod.toLowerCase() === "credit"
-          ? formData.totalAmount
-          : 0.0,
+            ? formData.totalAmount
+            : 0.0,
         pricingPolicy: formData.pricingPolicy?.[formData.entity],
         customerRegion: formData.customerRegion || "",
         productCategory: formData.category || "",
+        erpWarehouseId: formData.erpWarehouseId || "",
+        warehouseNameEn: formData.warehouseNameEn || "",
+        warehouseNameAr: formData.warehouseNameAr || "",
         sampleOrder: sampleMode,
       };
       try {
@@ -1570,14 +1668,14 @@ function OrderDetails() {
             title: t("Order Created"),
             html: `<div style="text-align: center;">
                     <p style="font-size: 16px; margin-bottom: 10px;">${t(
-                      "Order created successfully, but no products were added."
-                    )}</p>
+              "Order created successfully, but no products were added."
+            )}</p>
                     <p style="font-size: 18px; font-weight: bold; color: #17a2b8; margin: 10px 0;">
                         ${t("Order Number")}: #${result.data.id}
                     </p>
                     <p style="font-size: 14px; color: #666;">${t(
-                      "Order placed using"
-                    )} ${payload.paymentMethod}</p>
+              "Order placed using"
+            )} ${payload.paymentMethod}</p>
                   </div>`,
             confirmButtonText: t("OK"),
           });
@@ -1636,20 +1734,20 @@ function OrderDetails() {
           // Check if any product is a machine (is_machine = true)
           const hasAnyMachine = Array.isArray(productsPayload)
             ? productsPayload.some(
-                (product) =>
-                  product.is_machine === true || product.isMachine === true
-              )
+              (product) =>
+                product.is_machine === true || product.isMachine === true
+            )
             : productsPayload.is_machine === true ||
-              productsPayload.isMachine === true;
+            productsPayload.isMachine === true;
 
           // Check if any product is fresh (is_fresh = true)
           const hasAnyFresh = Array.isArray(productsPayload)
             ? productsPayload.some(
-                (product) =>
-                  product.is_fresh === true || product.isFresh === true
-              )
+              (product) =>
+                product.is_fresh === true || product.isFresh === true
+            )
             : productsPayload.is_fresh === true ||
-              productsPayload.isFresh === true;
+            productsPayload.isFresh === true;
 
           // Update formData with isMachine flag for future use
           setFormData((prev) => ({
@@ -1707,10 +1805,10 @@ function OrderDetails() {
           if (
             formData.entity &&
             formData.entity.toLowerCase() ===
-              Constants.ENTITY.VMCO.toLowerCase() &&
+            Constants.ENTITY.VMCO.toLowerCase() &&
             formData.productCategory &&
             formData.productCategory.toLowerCase() ===
-              Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
+            Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
             formData.customerId
           ) {
             // Directly trigger the discount workflow without checking if it already exists
@@ -1729,17 +1827,15 @@ function OrderDetails() {
               "Skipping discount workflow creation in order creation because conditions failed:"
             );
             console.log(
-              `- entity is vmco (case insensitive): ${
-                formData.entity &&
-                formData.entity.toLowerCase() ===
-                  Constants.ENTITY.VMCO.toLowerCase()
+              `- entity is vmco (case insensitive): ${formData.entity &&
+              formData.entity.toLowerCase() ===
+              Constants.ENTITY.VMCO.toLowerCase()
               }`
             );
             console.log(
-              `- productCategory is vmco machines (case insensitive): ${
-                formData.productCategory &&
-                formData.productCategory.toLowerCase() ===
-                  Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
+              `- productCategory is vmco machines (case insensitive): ${formData.productCategory &&
+              formData.productCategory.toLowerCase() ===
+              Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
               }`
             );
             console.log(`- has customerID: ${Boolean(formData.customerId)}`);
@@ -1749,14 +1845,14 @@ function OrderDetails() {
             title: t("Order Created Successfully!"),
             html: `<div style="text-align: center;">
                     <p style="font-size: 16px; margin-bottom: 10px;">${t(
-                      "Order and products created successfully!"
-                    )}</p>
+              "Order and products created successfully!"
+            )}</p>
                     <p style="font-size: 18px; font-weight: bold; color: #28a745; margin: 10px 0;">
                         ${t("Order Number")}: #${result.data.id}
                     </p>
                     <p style="font-size: 14px; color: #666;">${t(
-                      "Please save this order number for your records."
-                    )}</p>
+              "Please save this order number for your records."
+            )}</p>
                   </div>`,
             confirmButtonText: t("OK"),
             confirmButtonColor: "#28a745",
@@ -1772,17 +1868,16 @@ function OrderDetails() {
             icon: "warning",
             title: t("Order Created with Issues"),
             html: `<div style="text-align: center;">
-                    <p style="font-size: 16px; margin-bottom: 10px;">${
-                      t(
-                        "Order created successfully, but there was an issue adding products: "
-                      ) + err.message
-                    }</p>
+                    <p style="font-size: 16px; margin-bottom: 10px;">${t(
+              "Order created successfully, but there was an issue adding products: "
+            ) + err.message
+              }</p>
                     <p style="font-size: 18px; font-weight: bold; color: #ff9500; margin: 10px 0;">
                         ${t("Order Number")}: #${result.data.id}
                     </p>
                     <p style="font-size: 14px; color: #666;">${t(
-                      "Please save this order number for your records."
-                    )}</p>
+                "Please save this order number for your records."
+              )}</p>
                   </div>`,
             confirmButtonText: t("OK"),
           });
@@ -1873,21 +1968,21 @@ function OrderDetails() {
     }
   };
 
-  const handleCheckout = async (orderId, email = false, copyUrl = false) => {
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/generatePayment-link`,
-        {
-          id: orderId,
-          endPoint: "payment-opations/order",
-          IsEmail: email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const handleCheckout = async (orderId, email = false, copyUrl = false) => {
+        try {
+            const { data } = await axios.post(
+                `${API_BASE_URL}/generatePayment-link`,
+                {
+                    id: orderId,
+                    endPoint: "payment-options/order",
+                    IsEmail: email,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
       if (email) {
         Swal.fire({
@@ -2315,11 +2410,11 @@ function OrderDetails() {
             const newNetAmount = sampleMode
               ? "0.00"
               : (
-                  unitPrice * newQuantity +
-                  (vatPercentage
-                    ? (vatPercentage / 100) * (unitPrice * newQuantity)
-                    : 0)
-                ).toFixed(2);
+                unitPrice * newQuantity +
+                (vatPercentage
+                  ? (vatPercentage / 100) * (unitPrice * newQuantity)
+                  : 0)
+              ).toFixed(2);
 
             updatedProducts[existingIdx] = {
               ...existingProduct,
@@ -2341,11 +2436,11 @@ function OrderDetails() {
             const netAmount = sampleMode
               ? "0.00"
               : (
-                  unitPrice * moq +
-                  (vatPercentage
-                    ? (vatPercentage / 100) * (unitPrice * moq)
-                    : 0)
-                ).toFixed(2);
+                unitPrice * moq +
+                (vatPercentage
+                  ? (vatPercentage / 100) * (unitPrice * moq)
+                  : 0)
+              ).toFixed(2);
 
             const newProduct = {
               id: product.id,
@@ -2633,7 +2728,7 @@ function OrderDetails() {
             {isV("stock") &&
               formData.entity &&
               formData.entity.toLowerCase() ===
-                Constants.ENTITY.VMCO.toLowerCase() && (
+              Constants.ENTITY.VMCO.toLowerCase() && (
                 <span>
                   <button
                     type="button"
@@ -2654,11 +2749,11 @@ function OrderDetails() {
                         row.id,
                         i18n.language === "ar"
                           ? row.productNameLc ||
-                              row.productnamelc ||
-                              row.productName
+                          row.productnamelc ||
+                          row.productName
                           : row.productName ||
-                              row.productnameen ||
-                              row.productNameLc
+                          row.productnameen ||
+                          row.productNameLc
                       )
                     }
                   >
@@ -2713,44 +2808,44 @@ function OrderDetails() {
     },
     ...(isE("deleteCol")
       ? [
-          {
-            field: "actions",
-            headerName: t("Actions"),
-            include: isV("deleteButton"),
-            minWidth: 100,
-            flex: 1,
-            sortable: false,
-            disableColumnMenu: true,
-            renderCell: (params) => {
-              const row = params.row;
-              const idx = formData.products.findIndex(
-                (p) => (p.id || p.productid) === (row.id || row.productid)
-              );
+        {
+          field: "actions",
+          headerName: t("Actions"),
+          include: isV("deleteButton"),
+          minWidth: 100,
+          flex: 1,
+          sortable: false,
+          disableColumnMenu: true,
+          renderCell: (params) => {
+            const row = params.row;
+            const idx = formData.products.findIndex(
+              (p) => (p.id || p.productid) === (row.id || row.productid)
+            );
 
-              return (
-                isV("deleteButton") &&
-                isE("deleteCol") && (
-                  <button
-                    className="order-action-btn reject"
-                    style={{ padding: "4px 10px", fontSize: 14 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteProductRow(idx);
-                    }}
-                    type="button"
-                    disabled={
-                      !isE("deleteButton") ||
-                      (formData.status &&
-                        !["open"].includes(formData.status.toLowerCase()))
-                    }
-                  >
-                    {t("Delete")}
-                  </button>
-                )
-              );
-            },
+            return (
+              isV("deleteButton") &&
+              isE("deleteCol") && (
+                <button
+                  className="order-action-btn reject"
+                  style={{ padding: "4px 10px", fontSize: 14 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProductRow(idx);
+                  }}
+                  type="button"
+                  disabled={
+                    !isE("deleteButton") ||
+                    (formData.status &&
+                      !["open"].includes(formData.status.toLowerCase()))
+                  }
+                >
+                  {t("Delete")}
+                </button>
+              )
+            );
           },
-        ]
+        },
+      ]
       : []),
   ];
 
@@ -3213,11 +3308,20 @@ function OrderDetails() {
   //discount approval code block end -----------------------------------------------------------------------------------------------------
 
   const handleApprovalSubmit = (action) => {
+    if (fromApproval && !formData.erpWarehouseId) {
+      Swal.fire({
+        icon: 'warning',
+        title: t('Warehouse Required'),
+        text: t('Please select a warehouse before approving.'),
+        confirmButtonText: t('OK'),
+      });
+      return;
+    }
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
-  }; // Handle dialog submit for order approval/rejection just like in customersDetails.js
+  }; 
   const handleDialogSubmit = async (comment) => {
-    // Build workflowData payload (add updates if needed, similar to customersDetails)
+
     let updates = {
       ...((location.state?.workflowData &&
         location.state.workflowData.updates) ||
@@ -3320,24 +3424,27 @@ function OrderDetails() {
             }
           }
 
-          // 2. Update the sales order's totalAmount and payment percentage
-          // Prepare the payload for PATCH
           const patchPayload = {
             totalAmount: formData.totalAmount,
             paymentPercentage: formData.paymentPercentage
-              ? formData.paymentPercentage === "100%"
-                ? "100.00"
-                : formData.paymentPercentage === "30%"
-                ? "30.00"
-                : "0.00"
-              : "0.00",
+              ? formData.paymentPercentage === "100%" ? "100.00" : formData.paymentPercentage === "30%"
+                ? "30.00" : "0.00" : "0.00",
           };
-          // If pricingPolicy is present, include it in the update
+
+          if (formData.erpWarehouseId) {
+            patchPayload.erpWarehouseId = formData.erpWarehouseId;
+          }
+          if (formData.warehouseNameEn) {
+            patchPayload.warehouseNameEn = formData.warehouseNameEn;
+          }
+          if (formData.warehouseNameAr) {
+            patchPayload.warehouseNameAr = formData.warehouseNameAr;
+          }
+
           if (formData.pricingPolicy) {
             patchPayload.pricingPolicy = formData.pricingPolicy;
           }
 
-          console.log("Updating sales order with payload:", patchPayload);
           const orderUpdateResponse = await fetch(
             `${API_BASE_URL}/sales-order/id/${formData.id}`,
             {
@@ -3385,8 +3492,7 @@ function OrderDetails() {
         `- formData.id type: ${typeof formData.id}, value: ${formData.id}`
       );
       console.log(
-        `- formData.customerId type: ${typeof formData.customerId}, value: ${
-          formData.customerId
+        `- formData.customerId type: ${typeof formData.customerId}, value: ${formData.customerId
         }`
       ); // Use case-insensitive comparison for entity
       if (
@@ -3422,8 +3528,7 @@ function OrderDetails() {
             `- orderId: ${formData.id} (type: ${typeof formData.id})`
           );
           console.error(
-            `- customerId: ${
-              formData.customerId
+            `- customerId: ${formData.customerId
             } (type: ${typeof formData.customerId})`
           );
         }
@@ -3433,10 +3538,9 @@ function OrderDetails() {
         );
         console.log(`- entity: ${formData.entity}`);
         console.log(
-          `- entity.toLowerCase() === 'vmco': ${
-            formData.entity &&
-            formData.entity.toLowerCase() ===
-              Constants.ENTITY.VMCO.toLowerCase()
+          `- entity.toLowerCase() === 'vmco': ${formData.entity &&
+          formData.entity.toLowerCase() ===
+          Constants.ENTITY.VMCO.toLowerCase()
           }`
         );
         console.log(`- isMachine is: ${formData.isMachine}`);
@@ -3656,9 +3760,8 @@ function OrderDetails() {
         <div>
           <div className="order-details-container">
             <div
-              className={`order-details-content ${
-                isCommentPanelOpen ? "collapsed" : ""
-              }`}
+              className={`order-details-content ${isCommentPanelOpen ? "collapsed" : ""
+                }`}
             >
               <div className="order-details-body">
                 <h2 className="order-details-title">
@@ -3692,11 +3795,11 @@ function OrderDetails() {
                               defaultValue={
                                 i18n.language === "ar"
                                   ? formData.companyNameAr ||
-                                    formData.selectedCustomerName ||
-                                    ""
+                                  formData.selectedCustomerName ||
+                                  ""
                                   : formData.companyNameEn ||
-                                    formData.selectedCustomerName ||
-                                    ""
+                                  formData.selectedCustomerName ||
+                                  ""
                               }
                               onClick={() => setShowCustomerPopup(true)}
                               className="customer-input"
@@ -3712,11 +3815,11 @@ function OrderDetails() {
                             value={
                               i18n.language === "ar"
                                 ? formData.companyNameAr ||
-                                  formData.selectedCustomerName ||
-                                  ""
+                                formData.selectedCustomerName ||
+                                ""
                                 : formData.companyNameEn ||
-                                  formData.selectedCustomerName ||
-                                  ""
+                                formData.selectedCustomerName ||
+                                ""
                             }
                             disabled={isE("customerName")}
                             readOnly
@@ -3741,7 +3844,7 @@ function OrderDetails() {
                               name="selectedBranchName"
                               value={
                                 formData.selectedBranchName !== undefined &&
-                                formData.selectedBranchName !== null
+                                  formData.selectedBranchName !== null
                                   ? formData.selectedBranchName
                                   : ""
                               }
@@ -3771,11 +3874,11 @@ function OrderDetails() {
                             value={
                               i18n.language === "ar"
                                 ? formData.branchNameLc ||
-                                  formData.selectedBranchName ||
-                                  ""
+                                formData.selectedBranchName ||
+                                ""
                                 : formData.branchNameEn ||
-                                  formData.selectedBranchName ||
-                                  ""
+                                formData.selectedBranchName ||
+                                ""
                             }
                             disabled
                             readOnly
@@ -3790,7 +3893,7 @@ function OrderDetails() {
                           name="orderBy"
                           value={
                             formData.orderBy !== undefined &&
-                            formData.orderBy !== null
+                              formData.orderBy !== null
                               ? formData.orderBy
                               : ""
                           }
@@ -3806,7 +3909,7 @@ function OrderDetails() {
                           name="erpOrderId"
                           value={
                             formData.erpOrderId !== undefined &&
-                            formData.erpOrderId !== null
+                              formData.erpOrderId !== null
                               ? formData.erpOrderId
                               : ""
                           }
@@ -3851,9 +3954,9 @@ function OrderDetails() {
                                   style={
                                     !isEntityAllowed
                                       ? {
-                                          color: "#aaa",
-                                          backgroundColor: "#f5f5f5",
-                                        }
+                                        color: "#aaa",
+                                        backgroundColor: "#f5f5f5",
+                                      }
                                       : {}
                                   }
                                 >
@@ -3881,12 +3984,12 @@ function OrderDetails() {
                             onChange={handleInputChange}
                             options={
                               formData.entity &&
-                              formData.entity.toLowerCase() ===
+                                formData.entity.toLowerCase() ===
                                 Constants.ENTITY.VMCO.toLowerCase()
                                 ? VMCO_CATEGORIES.map((category) => ({
-                                    value: category,
-                                    label: category,
-                                  }))
+                                  value: category,
+                                  label: category,
+                                }))
                                 : []
                             }
                             className="category-dropdown"
@@ -3897,7 +4000,7 @@ function OrderDetails() {
                                 formData.products.length > 0) ||
                               !formData.entity ||
                               formData.entity.toLowerCase() !==
-                                Constants.ENTITY.VMCO.toLowerCase()
+                              Constants.ENTITY.VMCO.toLowerCase()
                             }
                           />
                         ) : (
@@ -3948,7 +4051,7 @@ function OrderDetails() {
                                 fromApproval
                                   ? false
                                   : formData.category !==
-                                    Constants.CATEGORY.VMCO_MACHINES
+                                  Constants.CATEGORY.VMCO_MACHINES
                               }
                             >
                               <option value="">
@@ -4028,10 +4131,10 @@ function OrderDetails() {
                             value={
                               formData.expectedDeliveryDate
                                 ? convertToTimezone(
-                                    formData.expectedDeliveryDate,
-                                    TIMEZONES.SAUDI_ARABIA,
-                                    "DD/MM/YYYY"
-                                  )
+                                  formData.expectedDeliveryDate,
+                                  TIMEZONES.SAUDI_ARABIA,
+                                  "DD/MM/YYYY"
+                                )
                                 : "Delivery date will be updated soon"
                             }
                             disabled
@@ -4092,12 +4195,29 @@ function OrderDetails() {
                           </select>
                         </div>
                       )}
+                    {isV("warehouse", fromApproval, true) &&
+                      fromApproval && (
+                        <div className="order-details-field">
+                          <label>{t("Warehouse")} *</label>
+                          <SearchableDropdown
+                            options={warehouseOptions}
+                            value={selectedWarehouse || ""} // Use selectedWarehouse state
+                            onChange={handleWarehouseChange}
+                            disabled={!isE("warehouse") || warehousesLoading}
+                            placeholder={warehousesLoading ? t("Loading warehouses...") : t("Select Warehouse")}
+                            className="entity-dropdown"
+                          />
+                          {warehousesLoading && <div className="loading-indicator">Loading...</div>}
+                        </div>
+                      )
+                    }
+
                     {/* Reservation Status field - visible only in edit mode for VMCO entity with machines */}
                     {isV("reservationStatus") &&
                       isEditMode &&
                       formData.entity &&
                       formData.entity.toLowerCase() ===
-                        Constants.ENTITY.VMCO.toLowerCase() &&
+                      Constants.ENTITY.VMCO.toLowerCase() &&
                       (formData.isMachine === true ||
                         (formData.products &&
                           formData.products.length > 0 &&
@@ -4108,7 +4228,7 @@ function OrderDetails() {
                         user?.roles?.[0] === Constants.ROLES.BRANCH_PRIMARY ||
                         (user?.userType === "employee" &&
                           user?.designation ===
-                            Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
+                          Constants.DESIGNATIONS.SALES_EXECUTIVE) ||
                         user?.roles?.[0] === Constants.ROLES.SUPER_ADMIN) && (
                         <div className="order-details-field">
                           <label>{t("Reservation Status")}</label>
@@ -4123,10 +4243,10 @@ function OrderDetails() {
                             style={
                               !isE("reservationStatus")
                                 ? {
-                                    background: "#f9f9f9",
-                                    color: "#999",
-                                    cursor: "not-allowed",
-                                  }
+                                  background: "#f9f9f9",
+                                  color: "#999",
+                                  cursor: "not-allowed",
+                                }
                                 : {}
                             }
                             readOnly
@@ -4141,10 +4261,10 @@ function OrderDetails() {
                           value={
                             formData.createdAt
                               ? convertToTimezone(
-                                  formData.createdAt,
-                                  TIMEZONES.SAUDI_ARABIA,
-                                  "DD/MM/YYYY HH:MM"
-                                )
+                                formData.createdAt,
+                                TIMEZONES.SAUDI_ARABIA,
+                                "DD/MM/YYYY HH:MM"
+                              )
                               : ""
                           }
                           disabled
@@ -4159,10 +4279,10 @@ function OrderDetails() {
                           value={
                             formData.updatedAt
                               ? convertToTimezone(
-                                  formData.updatedAt,
-                                  TIMEZONES.SAUDI_ARABIA,
-                                  "DD/MM/YYYY HH:MM"
-                                )
+                                formData.updatedAt,
+                                TIMEZONES.SAUDI_ARABIA,
+                                "DD/MM/YYYY HH:MM"
+                              )
                               : ""
                           }
                           disabled
@@ -4245,10 +4365,10 @@ function OrderDetails() {
                               style={
                                 isImage && fileUrl
                                   ? {
-                                      backgroundImage: `url(${fileUrl})`,
-                                      backgroundSize: "cover",
-                                      backgroundPosition: "center",
-                                    }
+                                    backgroundImage: `url(${fileUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                  }
                                   : {}
                               }
                               onClick={() =>
@@ -4266,8 +4386,8 @@ function OrderDetails() {
                                   {isPdf
                                     ? "📄 View PDF"
                                     : isExcel
-                                    ? "📊 Open Excel"
-                                    : "📁 Download File"}
+                                      ? "📊 Open Excel"
+                                      : "📁 Download File"}
                                 </a>
                               )}
                             </div>
@@ -4284,137 +4404,137 @@ function OrderDetails() {
                     <h3 className="order-details-subtitle">{t("Products")}</h3>
                     {(formMode === "add" ||
                       (formMode === "edit" && isE("products"))) && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: "10px",
-                          marginBottom: 8,
-                        }}
-                      >
-                        {isV("addProducts") && (
-                          <button
-                            type="button"
-                            className="order-action-btn approve"
-                            onClick={() => {
-                              // In add mode, require customer, branch, and entity selection
-                              if (formMode === "add") {
-                                if (!formData.selectedCustomerName) {
-                                  Swal.fire({
-                                    title: t("Select Customer"),
-                                    text: t("Please select a customer first"),
-                                    icon: "warning",
-                                    confirmButtonText: t("OK"),
-                                  });
-                                  return;
-                                } else if (!formData.selectedBranchName) {
-                                  Swal.fire({
-                                    title: t("Select Branch"),
-                                    text: t("Please select a branch first"),
-                                    icon: "warning",
-                                    confirmButtonText: t("OK"),
-                                  });
-                                  return;
-                                } else if (!formData.entity) {
-                                  Swal.fire({
-                                    title: t("Select Entity"),
-                                    text: t("Please select an entity first"),
-                                    icon: "warning",
-                                    confirmButtonText: t("OK"),
-                                  });
-                                  return;
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "10px",
+                            marginBottom: 8,
+                          }}
+                        >
+                          {isV("addProducts") && (
+                            <button
+                              type="button"
+                              className="order-action-btn approve"
+                              onClick={() => {
+                                // In add mode, require customer, branch, and entity selection
+                                if (formMode === "add") {
+                                  if (!formData.selectedCustomerName) {
+                                    Swal.fire({
+                                      title: t("Select Customer"),
+                                      text: t("Please select a customer first"),
+                                      icon: "warning",
+                                      confirmButtonText: t("OK"),
+                                    });
+                                    return;
+                                  } else if (!formData.selectedBranchName) {
+                                    Swal.fire({
+                                      title: t("Select Branch"),
+                                      text: t("Please select a branch first"),
+                                      icon: "warning",
+                                      confirmButtonText: t("OK"),
+                                    });
+                                    return;
+                                  } else if (!formData.entity) {
+                                    Swal.fire({
+                                      title: t("Select Entity"),
+                                      text: t("Please select an entity first"),
+                                      icon: "warning",
+                                      confirmButtonText: t("OK"),
+                                    });
+                                    return;
+                                  }
                                 }
-                              }
-                              // In edit mode, always use values from formData (order state)
-                              setShowProductPopup(true);
-                            }}
-                            disabled={!isE("addProducts")}
-                            style={{
-                              cursor: !isE("addProducts")
-                                ? "not-allowed"
-                                : "pointer",
-                            }}
-                          >
-                            {t("Add products")}
-                          </button>
-                        )}
-                        {isV("sampleOrder") && (
-                          <button
-                            type="button"
-                            className="order-action-btn"
-                            onClick={() => setSampleMode(!sampleMode)}
-                            disabled={
-                              !isE("sampleOrder") ||
-                              (formData.products &&
-                                formData.products.length > 0)
-                            }
-                            style={{
-                              backgroundColor: sampleMode ? "#ffeb3b" : "white",
-                              color: sampleMode ? "black" : "#333",
-                              border: "1px solid #ccc",
-                              cursor:
+                                // In edit mode, always use values from formData (order state)
+                                setShowProductPopup(true);
+                              }}
+                              disabled={!isE("addProducts")}
+                              style={{
+                                cursor: !isE("addProducts")
+                                  ? "not-allowed"
+                                  : "pointer",
+                              }}
+                            >
+                              {t("Add products")}
+                            </button>
+                          )}
+                          {isV("sampleOrder") && (
+                            <button
+                              type="button"
+                              className="order-action-btn"
+                              onClick={() => setSampleMode(!sampleMode)}
+                              disabled={
                                 !isE("sampleOrder") ||
                                 (formData.products &&
                                   formData.products.length > 0)
-                                  ? "not-allowed"
-                                  : "pointer",
-                            }}
-                          >
-                            {t("Sample Order")}
-                          </button>
-                        )}
-                      </div>
-                    )}
+                              }
+                              style={{
+                                backgroundColor: sampleMode ? "#ffeb3b" : "white",
+                                color: sampleMode ? "black" : "#333",
+                                border: "1px solid #ccc",
+                                cursor:
+                                  !isE("sampleOrder") ||
+                                    (formData.products &&
+                                      formData.products.length > 0)
+                                    ? "not-allowed"
+                                    : "pointer",
+                              }}
+                            >
+                              {t("Sample Order")}
+                            </button>
+                          )}
+                        </div>
+                      )}
 
                     {/* Products DataGrid */}
                     {(formMode !== "add" ||
                       (formData.products || []).length > 0) && (
-                      <div
-                        className="order-products-section"
-                        style={{
-                          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-                          padding: "16px",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <DataGrid
-                          apiRef={gridApiRef}
-                          rows={(formData.products || []).filter(
-                            (p) =>
-                              p.id ||
-                              p.erp_prodd ||
-                              p.quantity ||
-                              p.unit ||
-                              p.unitPrice ||
-                              p.netAmount ||
-                              p.vatPercentage
-                          )}
-                          columns={visibleProductColumns}
-                          disableSelectionOnClick
-                          disableColumnMenu
-                          disableColumnSorting
-                          hideFooter={true}
-                          hideFooterPagination={true}
-                          disableExtendRowFullWidth={true}
-                          pagination={false}
-                          autoHeight
-                          rowHeight={55}
-                          getRowId={(row) => row.id || row.productId}
-                          sx={{
-                            "& .MuiDataGrid-cell": {
-                              display: "flex",
-                              alignItems: "center",
-                            },
-                            "& .MuiDataGrid-columnHeaders": {
-                              backgroundColor: "#f5f5f5",
-                              fontWeight: "bold",
-                            },
-                            "& .MuiDataGrid-row:hover": {
-                              backgroundColor: "rgba(0, 0, 0, 0.04)",
-                            },
+                        <div
+                          className="order-products-section"
+                          style={{
+                            boxShadow: "0 0 10px rgba(0,0,0,0.1)",
+                            padding: "16px",
+                            borderRadius: "8px",
                           }}
-                        />
-                      </div>
-                    )}
+                        >
+                          <DataGrid
+                            apiRef={gridApiRef}
+                            rows={(formData.products || []).filter(
+                              (p) =>
+                                p.id ||
+                                p.erp_prodd ||
+                                p.quantity ||
+                                p.unit ||
+                                p.unitPrice ||
+                                p.netAmount ||
+                                p.vatPercentage
+                            )}
+                            columns={visibleProductColumns}
+                            disableSelectionOnClick
+                            disableColumnMenu
+                            disableColumnSorting
+                            hideFooter={true}
+                            hideFooterPagination={true}
+                            disableExtendRowFullWidth={true}
+                            pagination={false}
+                            autoHeight
+                            rowHeight={55}
+                            getRowId={(row) => row.id || row.productId}
+                            sx={{
+                              "& .MuiDataGrid-cell": {
+                                display: "flex",
+                                alignItems: "center",
+                              },
+                              "& .MuiDataGrid-columnHeaders": {
+                                backgroundColor: "#f5f5f5",
+                                fontWeight: "bold",
+                              },
+                              "& .MuiDataGrid-row:hover": {
+                                backgroundColor: "rgba(0, 0, 0, 0.04)",
+                              },
+                            }}
+                          />
+                        </div>
+                      )}
                   </>
                 )}
               </div>
@@ -4457,8 +4577,8 @@ function OrderDetails() {
                           action: "Feedback",
                           date: formatDate(
                             feedbackObj.createdAt ||
-                              formData.updatedAt ||
-                              new Date(),
+                            formData.updatedAt ||
+                            new Date(),
                             "YYYY-MM-DD HH:MM"
                           ),
                           message: feedbackObj.comment,
@@ -4732,9 +4852,8 @@ function OrderDetails() {
                 <div className="order-status">
                   <span className="status-label">{t("Status")}:</span>
                   <span
-                    className={`status-badge status-${
-                      formData.status?.toLowerCase() || "open"
-                    }`}
+                    className={`status-badge status-${formData.status?.toLowerCase() || "open"
+                      }`}
                   >
                     {t(formData.status) || t("Open")}
                   </span>
@@ -4799,27 +4918,29 @@ function OrderDetails() {
 
                 {(isV("btnPay") &&
                   isE("btnPay") &&
-                  formData?.status?.toLowerCase() !== "cancelled" &&
-                  formData?.paymentMethod?.toLowerCase() !=
-                    "cash on delivery" &&
-                  formData?.paymentMethod?.toLowerCase() != "credit" &&
+                  formData?.status?.toLowerCase() !== "cancelled" && formData?.status?.toLowerCase() !== "rejected" &&
+                  formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+                  formData?.paymentMethod?.toLowerCase() !== "credit" &&
                   formData?.paymentStatus?.toLowerCase() !== "paid" &&
-                  formData?.entity.toLowerCase() ===
-                    Constants.ENTITY.VMCO.toLowerCase() &&
-                  formData?.status?.toLowerCase() === "approved") ||
-                  ((formData?.status?.toLowerCase() === "approved" ||
-                    (formData?.status?.toLowerCase() === "open" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.SHC.toLowerCase())) ||
+                  (
+                    (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+                      formData?.status?.toLowerCase() === "approved") ||
+                    (
+                      formData?.status?.toLowerCase() === "open" &&
+                      (
+                        formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                      )
+                    ) ||
                     (formData?.status?.toLowerCase() === "pending" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.NAQI.toLowerCase()))) && (
+                      (
+                        formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                      )
+                    )
+                  ) && (
                     <button
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId)}
@@ -4834,27 +4955,29 @@ function OrderDetails() {
                   ))}
                 {(isV("btnSendLink") &&
                   isE("btnSendLink") &&
-                  formData?.status?.toLowerCase() !== "cancelled" &&
-                  formData?.paymentMethod?.toLowerCase() !=
-                    "cash on delivery" &&
-                  formData?.paymentMethod?.toLowerCase() != "credit" &&
+                  formData?.status?.toLowerCase() !== "cancelled" && formData?.status?.toLowerCase() !== "rejected" &&
+                  formData?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+                  formData?.paymentMethod?.toLowerCase() !== "credit" &&
                   formData?.paymentStatus?.toLowerCase() !== "paid" &&
-                  formData?.entity.toLowerCase() ===
-                    Constants.ENTITY.VMCO.toLowerCase() &&
-                  formData?.status?.toLowerCase() === "approved") ||
-                  ((formData?.status?.toLowerCase() === "approved" ||
-                    (formData?.status?.toLowerCase() === "open" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.SHC.toLowerCase())) ||
+                  (
+                    (formData?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+                      formData?.status?.toLowerCase() === "approved") ||
+                    (
+                      formData?.status?.toLowerCase() === "open" &&
+                      (
+                        formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                      )
+                    ) ||
                     (formData?.status?.toLowerCase() === "pending" &&
-                      (formData?.entity.toLowerCase() ===
-                        Constants.ENTITY.DAR.toLowerCase() ||
-                        formData?.entity.toLowerCase() ===
-                          Constants.ENTITY.NAQI.toLowerCase()))) && (
+                      (
+                        formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                      )
+                    )
+                  ) && (
                     <button
                       className="order-action-btn"
                       onClick={() => handleCheckout(orderId, false, true)}
@@ -4901,8 +5024,9 @@ function OrderDetails() {
             t={t}
           />
         </div>
-      )}
-    </Sidebar>
+      )
+      }
+    </Sidebar >
   );
 }
 export default OrderDetails;

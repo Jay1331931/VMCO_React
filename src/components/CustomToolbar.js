@@ -75,6 +75,7 @@ const CustomToolbar = ({
   showColumnVisibility = true,
   showFilters = true,
   filters = {},
+  showCalendar = true,
   columnVisibilityModel = {},
   showExport = true,
   showUpload = false,
@@ -88,6 +89,7 @@ const CustomToolbar = ({
   handleApproval,
   showApproval,
   buttonName,
+  showAddForm = false,
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
@@ -205,7 +207,7 @@ const CustomToolbar = ({
       <Chip
         key={key}
         label={`${option.column}: ${option.searchString}`}
-        // onDelete={() => handleDeleteChip(option?.column)}
+      // onDelete={() => handleDeleteChip(option?.column)}
       />
     );
   };
@@ -338,13 +340,11 @@ const CustomToolbar = ({
               const columnName =
                 columns.find((col) => col.field === option.column)
                   ?.headerName || option.column;
-              return `${columnName}: ${
-                typeof option.searchString === "string"
-                  ? option.searchString
-                  : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${
-                      option.searchString?.endDate?.split("T")[0] ?? ""
-                    }`
-              }`;
+              return `${columnName}: ${typeof option.searchString === "string"
+                ? option.searchString
+                : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${option.searchString?.endDate?.split("T")[0] ?? ""
+                }`
+                }`;
             }}
             filterOptions={(options) => options} // Don't filter options, show all
             renderInput={(params) => (
@@ -402,30 +402,32 @@ const CustomToolbar = ({
           </Tooltip>
         )} */}
 
- <GridToolbarContainer>
-      {showColumnVisibility && (
-        <Tooltip title={t("Columns")}>
-          <ColumnsPanelTrigger
-            render={(params) => (
-              <ToolbarButton {...params} size="small">
-                <ViewColumnIcon />
-              </ToolbarButton>
-            )}
-          >
-            {t("Columns")}
-          </ColumnsPanelTrigger>
-        </Tooltip>
-      )}
-    </GridToolbarContainer>
-        <Tooltip title={t("Date-Range")}>
-          <IconButton
-            component="span"
-            onClick={(e) => setDateFilterAnchor(e.currentTarget)}
-          >
-            <CalendarMonthIcon />
-          </IconButton>
-        </Tooltip>
-
+        <GridToolbarContainer>
+          {showColumnVisibility && (
+            <Tooltip title={t("Columns")}>
+              <ColumnsPanelTrigger
+                render={(params) => (
+                  <ToolbarButton {...params} size="small">
+                    <ViewColumnIcon />
+                  </ToolbarButton>
+                )}
+              >
+                {t("Columns")}
+              </ColumnsPanelTrigger>
+            </Tooltip>
+          )}
+        </GridToolbarContainer>
+        {
+          showCalendar && (
+            <Tooltip title={t("Date-Range")}>
+              <IconButton
+                component="span"
+                onClick={(e) => setDateFilterAnchor(e.currentTarget)}
+              >
+                <CalendarMonthIcon />
+              </IconButton>
+            </Tooltip>
+          )}
         {showFilters && (
           <Tooltip title={t("Filters")}>
             <ToolbarButton
@@ -466,9 +468,14 @@ const CustomToolbar = ({
           </Tooltip>
         )}
         {showAdd && (
-          <Tooltip title={buttonName}>
+          <Tooltip title={showAddForm ? "Close" : buttonName}>
             <ToolbarButton onClick={handleAddClick} size="small">
-              <AddIcon />
+              <AddIcon
+                sx={{
+                  transform: showAddForm ? 'rotate(45deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.7s ease-in-out',
+                }}
+              />
             </ToolbarButton>
           </Tooltip>
         )}

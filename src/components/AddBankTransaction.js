@@ -52,6 +52,7 @@ const AddBankTransaction = () => {
   const [fileData, setFileData] = useState([]);
   const [popupImage, setPopupImage] = useState(null);
   const [orderIds, setOrderIds] = useState();
+  const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -174,7 +175,11 @@ const AddBankTransaction = () => {
       }
 
       if (response.data.status === "success" && !orderIds) {
-        navigate("/banktransactions");
+        if (TemporderIds.length > 0) {
+          navigate("/orders");
+        } else {
+          navigate("/banktransactions");
+        }
       }
     } catch (error) {
       // if (error?.response?.status === 401 && orderIds) {
@@ -280,7 +285,17 @@ const AddBankTransaction = () => {
           headers: { Authorization: `Bearer ${cookieToken}` },
         }
       );
-      setOrderIds(parseInt(data?.details?.orderIds));
+      data?.details?.orderIds?.split(",")?.forEach((id) => {
+        const trimmed = id.trim();
+        if (trimmed.startsWith("TEMP")) {
+          setTempOrderIds(trimmed);
+        } else if (trimmed) {
+          const parsed = parseInt(trimmed);
+
+          if (!isNaN(parsed)) setOrderIds(parsed);
+        }
+      });
+      // setOrderIds(parseInt(data?.details?.orderIds));
       setAmount(parseFloat(data?.details?.amount));
     } catch (error) {
       console.error("Failed to fetch decoded data", error);
@@ -314,6 +329,46 @@ const AddBankTransaction = () => {
       console.error("Failed to fetch sales order", error);
     }
   }, [orderIds]);
+
+  const fetchtempSaleOrder = useCallback(async () => {
+    try {
+      if (!TemporderIds) return;
+
+      const token = localStorage.getItem("token"); // always use latest
+      const ids = TemporderIds.toString().split(",");
+      console.log("Decoded Order ID(s):", ids);
+
+      const results = await Promise.all(
+        ids.map((id) =>
+          api.get(`/temp-sales-order/id/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
+
+      const allOrders = results.map((res) => res.data.data);
+      console.log("allOrders", allOrders);
+      setFormData((prev) => ({
+        ...prev,
+        entity: allOrders[0].entity,
+        erpCustId: allOrders[0]?.orderDetails?.erpCustId,
+        companyNameEn: allOrders[0]?.orderDetails?.companyNameEn,
+        companyNameAr: allOrders[0]?.orderDetails?.companyNameAr,
+        amountTransferred: parseFloat(totalamount),
+        branchVmcoRegion: allOrders[0]?.orderDetails?.branchRegion || null,
+        erpOrderId: [],
+        orderId: [allOrders[0]?.id] || [],
+      }));
+      console.log("Sale Order Data:", allOrders);
+    } catch (error) {
+      console.error("Failed to fetch sale order", error);
+    }
+  }, [TemporderIds]);
+  useEffect(() => {
+    if (TemporderIds) {
+      fetchtempSaleOrder();
+    }
+  }, [fetchtempSaleOrder]);
   useEffect(() => {
     if (orderIds) {
       fetchSaleOrder();
@@ -392,7 +447,11 @@ const AddBankTransaction = () => {
         window.close();
       });
     }
-    navigate("/banktransactions");
+    if (TemporderIds.length > 0) {
+      navigate("/orders");
+    } else {
+      navigate("/banktransactions");
+    }
   };
   const fileInputRef = useRef(null);
 

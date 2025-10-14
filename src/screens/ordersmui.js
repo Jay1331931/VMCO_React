@@ -21,7 +21,7 @@ import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
-import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import { Chip, Box, Button, Typography, Tooltip, Grid } from "@mui/material";
 import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
@@ -29,6 +29,7 @@ import {
   GridPagination,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import { useMediaQuery } from "@mui/material";
 import { max, min, set } from "date-fns";
 import { Height } from "@mui/icons-material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -141,6 +142,9 @@ function Orders() {
   const [activeCategory, setActiveCategory] = useState(
     initialCategories[0].value
   );
+   const isXL = useMediaQuery("(min-width:1280px)"); // XL breakpoint (MUI default)
+  const isLG = useMediaQuery("(min-width:1024px) and (max-width:1279px)");
+const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
   const getLocalizedEntityName = (
     initialCategories,
     currentLanguage,
@@ -832,7 +836,7 @@ function Orders() {
         `${API_BASE_URL}/generatePayment-link`,
         {
           id: order.id,
-          endPoint: "payment-opations/order",
+          endPoint: "payment-options/order",
           IsEmail: email,
         },
         {
@@ -1164,7 +1168,11 @@ function Orders() {
         if (!params?.row?.createdAt) return <span> </span>;
 
         const date = new Date(params.row.createdAt);
-
+        console.log("As UTC date:", new Date(params.row.createdAt + 'Z').toISOString());
+        console.log("Original Date:", params.row.createdAt);
+        console.log(date);
+        console.log("Timezone Offset (minutes):", date.getTimezoneOffset());
+        console.log("UTC Time:", date.toISOString());
         // Convert to Riyadh timezone (UTC+3)
         const riyadhDate = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
@@ -1173,6 +1181,8 @@ function Orders() {
           day: "2-digit",
         }).format(date);
 
+        console.log("Riyadh Date:", riyadhDate);
+
         const riyadhTime = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
           hour: "2-digit",
@@ -1180,6 +1190,8 @@ function Orders() {
           second: "2-digit",
           hour12: false,
         }).format(date);
+
+        console.log("Riyadh Time:", riyadhTime);
 
         return (
           <div
@@ -1309,22 +1321,31 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.NAQI.toLowerCase()))) && (
+            
+  params?.row?.status?.toLowerCase() !== "cancelled" &&params?.row?.status?.toLowerCase() !== "rejected"&&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1400,25 +1421,34 @@ function Orders() {
             rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
-        return (
+      return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-              params?.row?.status?.toLowerCase() !== "cancelled" &&
-              params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" && params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-              params?.row?.paymentStatus?.toLowerCase() !== "paid" && (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved") ||
-              (params?.row?.status?.toLowerCase() === "approved" ||
-                (params?.row?.status?.toLowerCase() === "open" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-                (params?.row?.status?.toLowerCase() === "pending" &&
-                  (params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.DAR.toLowerCase() ||
-                    params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+  params?.row?.status?.toLowerCase() !== "cancelled" &&
+    params?.row?.status?.toLowerCase() !== "rejected" &&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1431,7 +1461,8 @@ function Orders() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link")} arrow>
+                  <Tooltip title={t("Send Link1")} arrow>
+                    
                     <IosShareIcon />
                   </Tooltip>
                 </Box>
@@ -2390,12 +2421,23 @@ function Orders() {
             ) : (
               <>
                 {/* Fixed height container with proper toolbar spacing and scrollable rows */}
-                <div style={{
-                  height: '500px',
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'column'
-                }}>
+             <Grid
+  item
+  xs={12}
+  sx={{
+    height: {
+      xs: "250px !important", // extra small
+      sm: "300px !important", // small
+      md: "386px !important", // medium
+      lg: "489px !important", // large
+      xl: "800px !important", // extra large
+    },
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  }}
+>
+
                   <DataGrid
                     apiRef={gridApiRef}
                     rows={filteredOrders}
@@ -2524,7 +2566,7 @@ function Orders() {
                       })
                     }}
                   />
-                </div>
+                </Grid>
               </>
             )}
           </div>
