@@ -468,7 +468,7 @@ const CustomToolbar = ({
           </Tooltip>
         )}
         {showAdd && (
-          <Tooltip title={showAddForm ? "Close" : buttonName }>
+          <Tooltip title={showAddForm ? "Close" : buttonName}>
             <ToolbarButton onClick={handleAddClick} size="small">
               <AddIcon
                 sx={{
