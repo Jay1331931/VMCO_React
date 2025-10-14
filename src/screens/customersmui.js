@@ -104,6 +104,8 @@ function Customers() {
   );
   const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
   const pageName = activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") : "invites";
+const columnWidthsKey = `${pageName}_${role}_columnWidths`;
+  const [columnDimensions, setColumnDimensions] = useState({});
 
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -606,22 +608,22 @@ function Customers() {
   ];
   const customerColumns = [
     {
-      field: "id",
-      headerName: isMobile ? t("ID") : t("Registration ID"),
-      include: isV("id"),
-      searchable: true,
-      minWidth: isMobile ? 50 : 100,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
-    },
+  field: "id",
+  headerName: isMobile ? t("ID") : t("Registration ID"),
+  include: isV("id"),
+  searchable: true,
+  width: isMobile ? 50 : (columnDimensions["id"]?.width || 100),
+  // flex: isMobile ? undefined : 1, // Remove flex when using fixed width on mobile
+  align: isArabic ? 'right' : 'left',
+  renderCell: (params) => <span>{params.value}</span>
+},
     {
       field: "erpCustId",
       headerName: t("ERP ID"),
       include: isV("erpCustId"),
       searchable: true,
-      minWidth: isMobile ? 70 : 120,
-      flex: 1,
+      width: isMobile ? 70 : columnDimensions["erpCustId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -630,8 +632,8 @@ function Customers() {
       headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
-      minWidth: isMobile ? 100 : 150,
-      flex: 1,
+      width: isMobile ? 100 : i18n.language === "ar" ? columnDimensions["companyNameAr"]?.width || 100 : columnDimensions["companyNameEn"]?.width || 100,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -640,8 +642,8 @@ function Customers() {
       headerName: isMobile ? t("Type") : t("Company Type"),
       include: isV("companyType"),
       searchable: true,
-      minWidth: isMobile ? 80 : 120,
-      flex: 1,
+      width: isMobile ? 80 : columnDimensions["companyType"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -650,8 +652,8 @@ function Customers() {
       headerName: t("Type Of Business"),
       include: isMobile ? false : isV("typeOfBusiness"),
       searchable: true,
-      minWidth: 140,
-      flex: 1,
+      width: columnDimensions["typeOfBusiness"]?.width || 140,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -660,8 +662,8 @@ function Customers() {
       headerName: t("Created Date"),
       include: isV("createdAt"),
       searchable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["createdAt"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) =>
         params?.row?.createdAt
@@ -677,8 +679,8 @@ function Customers() {
       include: isV("assignedTo"),
       searchable: true,
       sortable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["assignedTo"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -691,8 +693,8 @@ function Customers() {
       include: isV("salesExecutiveName"),
       searchable: true,
       sortable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["salesExecutiveName"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -705,8 +707,8 @@ function Customers() {
       include: isV("currentApprover"),
       searchable: true,
       sortable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["currentApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       headerAlign: isArabic ? 'right' : 'left',
       renderCell: (params) => (
@@ -718,8 +720,8 @@ function Customers() {
       headerName: t("Approval Status"),
       include: isMobile ? false : isV("customerStatus"),
       searchable: true,
-      minWidth: 100,
-      flex: 1,
+      width: columnDimensions["customerStatus"]?.width || 100,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{t(params.value)}</label>
@@ -793,8 +795,8 @@ function Customers() {
       include: isV("id"),
       searchable: true,
       sortable: false,
-      minWidth: 100,
-      flex: 1,
+      width: columnDimensions["customerId"]?.width || 100,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -803,8 +805,8 @@ function Customers() {
       headerName: t("ERP ID"),
       include: isV("erpCustId"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["erpCustId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -813,8 +815,8 @@ function Customers() {
       headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["companyName"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
     },
@@ -823,8 +825,8 @@ function Customers() {
       headerName: t("Workflow Name"),
       include: isV("workflowName"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["workflowName"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -853,8 +855,8 @@ function Customers() {
       headerName: t("Created Date"),
       include: isV("createdAt"),
       searchable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["createdAt"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) =>
         params?.row?.createdAt
@@ -869,8 +871,8 @@ function Customers() {
       headerName: t("Approval Status"),
       include: isV("customerStatus"),
       searchable: true,
-      minWidth: 100,
-      flex: 1,
+      width: columnDimensions["customerStatus"]?.width || 100,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => (
         <label className={getStatusClass(params.value)}>{params.value}</label>
@@ -882,8 +884,8 @@ function Customers() {
       include: isV("createdBy"),
       searchable: false,
       sortable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["createdBy"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
@@ -893,8 +895,8 @@ function Customers() {
       headerName: t("Sales Executive Name"),
       include: isV("salesExecutiveName"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["salesExecutiveName"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -907,8 +909,8 @@ function Customers() {
       headerName: t("OC Approver"),
       include: isV("ocApprover"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["ocApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -924,8 +926,8 @@ function Customers() {
       headerName: t("Approval Status"),
       include: isV("approvalStatus"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["approvalStatus"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -940,8 +942,8 @@ function Customers() {
       headerName: t("Current Approver"),
       include: isV("currentApprover"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["currentApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -958,8 +960,8 @@ function Customers() {
       headerName: t("Date"),
       include: isV("createdAt"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["createdAt"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) =>
         params?.row?.createdAt
@@ -974,8 +976,8 @@ function Customers() {
       headerName: t("Customer Name"),
       include: isV("leadName"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["leadName"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
     },
     {
@@ -983,8 +985,8 @@ function Customers() {
       headerName: t("Email"),
       include: isV("companyEmail"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["companyEmail"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
     },
     {
@@ -992,8 +994,8 @@ function Customers() {
       headerName: t("Phone"),
       include: isV("companyPhone"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["companyPhone"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left',
     },
     {
@@ -1001,8 +1003,8 @@ function Customers() {
       headerName: t("Company Name"),
       include: isV("companyName"),
       searchable: true,
-      minWidth: 150,
-      flex: 2,
+      width: columnDimensions["companyName"]?.width || 150,
+      // flex: 2,
       align: isArabic ? 'right' : 'left'
     },
     {
@@ -1010,8 +1012,8 @@ function Customers() {
       headerName: t("Region"),
       include: isV("region"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["region"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left'
     },
     {
@@ -1019,8 +1021,8 @@ function Customers() {
       headerName: t("Employee ID"),
       include: isV("employeeId"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["employeeId"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left'
     },
     {
@@ -1028,8 +1030,8 @@ function Customers() {
       headerName: t("Employee Name"),
       include: isV("employeeName"),
       searchable: true,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["employeeName"]?.width || 150,
+      // flex: 1,
       align: isArabic ? 'right' : 'left'
     },
     {
@@ -1037,8 +1039,8 @@ function Customers() {
       headerName: t("Source"),
       include: isV("source"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["source"]?.width || 120,
+      // flex: 1,
       align: isArabic ? 'right' : 'left'
     },
     {
@@ -1837,6 +1839,8 @@ function Customers() {
                     onRowClick={handleRowClick}
                     columnVisibilityModel={columnVisibilityModel}
                     onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                    columnDimensions={columnDimensions}
+                    onColumnResize={handleColumnResize}
                     sortModel={sortModel}
                     onSortModelChange={handleSortModelChange}
                     disableSelectionOnClick
@@ -1977,6 +1981,8 @@ function Customers() {
                     rowCount={total}
                     columnVisibilityModel={invitecolumnVisibilityModel}
                     onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                    columnDimensions={columnDimensions}
+                    onColumnResize={handleColumnResize}
                     sortModel={inviteSortModel}
                     onSortModelChange={handleInviteSortModelChange}
                     disableSelectionOnClick
@@ -2178,6 +2184,24 @@ function Customers() {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
+  
+useEffect(() => {
+  const savedDimensions = localStorage.getItem(columnWidthsKey);
+  if (savedDimensions) {
+    setColumnDimensions(JSON.parse(savedDimensions));
+  }
+}, [columnWidthsKey]);
+const handleColumnResize = (params) => {
+  const { colDef } = params;
+  setColumnDimensions(prev => {
+    const newDimensions = {
+      ...prev,
+      [colDef.field]: { width: colDef.width }
+    };
+    localStorage.setItem(columnWidthsKey, JSON.stringify(newDimensions));
+    return newDimensions;
+  });
+};
   return (
     <Sidebar title={t("Customers")}>
       <div className="customer-content">

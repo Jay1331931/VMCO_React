@@ -4937,7 +4937,8 @@ function OrderDetails() {
                       (
                         formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
+                           formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
                       )
                     )
                   ) && (
@@ -4974,7 +4975,8 @@ function OrderDetails() {
                       (
                         formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                        formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
+                           formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
                       )
                     )
                   ) && (

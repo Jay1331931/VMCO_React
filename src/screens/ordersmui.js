@@ -137,6 +137,8 @@ function Orders() {
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
   const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
   const pageName = isApprovalMode ? "ordersApproval" : "orders"
+const columnWidthsKey = `${pageName}_${role}_columnWidths`;
+  const [columnDimensions, setColumnDimensions] = useState({});
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
@@ -964,8 +966,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Order #"),
       include: isV("orderNumber"),
       searchable: true,
-      flex: 1,
-      minWidth: 100,
+      // flex: 1,
+      width: columnDimensions["id"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -995,8 +997,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Sales Order ID"),
       include: isV("erpOrderId"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["erpOrderId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1026,8 +1028,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Company Name"),
       include: isV("companyName"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["companyNameAr"]?.width || 100 : columnDimensions["companyNameEn"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1037,8 +1039,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Brand Name"),
       include: isV("brandName"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["brandNameAr"]?.width || 100 : columnDimensions["brandNameEn"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1048,8 +1050,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branch Name"),
       include: isV("branchName"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["branchNameLc"]?.width || 100 : columnDimensions["branchNameEn"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1059,8 +1061,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branch ID"),
       include: isV("erpBranchId"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["erpBranchId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1070,8 +1072,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branch Region"),
       include: isV("branchRegion"),
       searchable: true,
-      flex: 2,
-      minWidth: 140,
+      // flex: 2,
+      width: columnDimensions["branchRegion"]?.width || 140,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1081,8 +1083,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branch City"),
       include: isV("branchCity"),
       searchable: true,
-      flex: 1,
-      minWidth: 120,
+      // flex: 1,
+      width: columnDimensions["branchCity"]?.width || 120,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1131,8 +1133,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
       searchable: true,
-      minWidth: 130,
-      flex: 1,
+      width: columnDimensions["paymentMethod"]?.width || 130,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
@@ -1149,8 +1151,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       include: isV("createdBy"),
       searchable: false,
       sortable: false,
-      minWidth: 100,
-      flex: 1,
+      width: columnDimensions["createdByUsername"]?.width || 100,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1160,8 +1162,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Order Placement Date"),
       include: isV("createdAt"),
       searchable: false,
-      minWidth: 150,
-      flex: 1,
+      width: columnDimensions["createdAt"]?.width || 150,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
@@ -1341,7 +1343,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       (
         params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
         params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || 
+           params?.row?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
       )
     )
   )
@@ -1444,7 +1447,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       (
         params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
         params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
+         params?.row?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
       )
     )
   )
@@ -1461,7 +1465,7 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link1")} arrow>
+                  <Tooltip title={t("Send Link")} arrow>
                     
                     <IosShareIcon />
                   </Tooltip>
@@ -1517,8 +1521,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Order #"),
       include: isV("orderNumber"),
       searchable: true,
-      flex: 1,
-      minWidth: 100,
+      // flex: 1,
+      width: columnDimensions["id"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1548,8 +1552,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("ERP ID"),
       include: isV("erpOrderId"),
       searchable: false,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["erpOrderId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1579,8 +1583,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["companyNameAr"]?.width || 100 : columnDimensions["companyNameEn"]?.width || 100,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1590,8 +1594,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Brand Name"),
       include: isV("brandName"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["brandNameAr"]?.width || 140 : columnDimensions["brandNameEn"]?.width || 140,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1601,8 +1605,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branches"),
       include: isV("branchCount"),
       searchable: true,
-      flex: 1,
-      minWidth: 140,
+      // flex: 1,
+      width: columnDimensions["branchCount"]?.width || 140,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1626,8 +1630,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Branch Region"),
       include: isV("branchRegion"),
       searchable: true,
-      flex: 2,
-      minWidth: 140,
+      // flex: 2,
+      width: columnDimensions["branchRegion"]?.width || 140,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
@@ -1730,8 +1734,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Created Date"),
       include: isV("createdAt"),
       searchable: false,
-      minWidth: 140,
-      flex: 1,
+      width: columnDimensions["createdAt"]?.width || 140,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
@@ -1809,8 +1813,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Sales Executive ID"),
       include: isV("salesExecutiveId"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["salesExecutiveId"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.row.salesExecutive || "")}</span>,
@@ -1821,8 +1825,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Sales Executive Name"),
       include: isV("salesExecutiveName"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["salesExecutiveName"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1835,8 +1839,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Sales Executive"),
       include: isV("seApprover"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["seApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1853,8 +1857,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("OC Approver"),
       include: isV("ocApprover"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["ocApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1870,8 +1874,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Approval Status"),
       include: isV("approvalStatus"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["approvalStatus"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -1886,8 +1890,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerName: t("Current Approver"),
       include: isV("currentApprover"),
       searchable: true,
-      minWidth: 120,
-      flex: 1,
+      width: columnDimensions["currentApprover"]?.width || 120,
+      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -2279,7 +2283,23 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
     }
   };
 
-
+useEffect(() => {
+  const savedDimensions = localStorage.getItem(columnWidthsKey);
+  if (savedDimensions) {
+    setColumnDimensions(JSON.parse(savedDimensions));
+  }
+}, [columnWidthsKey]);
+const handleColumnResize = (params) => {
+  const { colDef } = params;
+  setColumnDimensions(prev => {
+    const newDimensions = {
+      ...prev,
+      [colDef.field]: { width: colDef.width }
+    };
+    localStorage.setItem(columnWidthsKey, JSON.stringify(newDimensions));
+    return newDimensions;
+  });
+};
 
   return (
     <Sidebar title={t("Orders")}>
@@ -2447,6 +2467,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
                     onRowClick={handleRowClick}
                     columnVisibilityModel={columnVisibilityModel}
                     onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                    columnDimensions={columnDimensions}
+                    onColumnResize={handleColumnResize}
                     sortModel={sortModel}
                     onSortModelChange={handleSortModelChange}
                     disableSelectionOnClick
