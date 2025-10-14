@@ -723,7 +723,8 @@ function DeliveryScheduleEditor() {
                                     buttonName: t("Add Schedule"),
                                     showApproval: false,
                                     handleAddClick: handleAddClick,
-                                    columnsToDisplay: columnsToDisplay
+                                    columnsToDisplay: columnsToDisplay,
+                                    showAddForm: showAddForm,
                                 },
                             }}
                             sx={{

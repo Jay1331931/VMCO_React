@@ -1578,17 +1578,17 @@ function Catalog() {
       <style jsx="true">{`
         .no-products-message {
           width: 100%;
-          height: 200px;
+          height: auto;
           display: flex;
           flex-direction: column;
           justify-content: center;
           align-items: center;
           text-align: center;
-          padding: 40px 0;
+          padding: 20px 20px;
           color: #666;
           font-size: 1.1rem;
           grid-column: 1 / -1;
-          margin: 40px auto;
+          margin: 20px auto;
           background-color: #f9f9f9;
           border-radius: 8px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
