@@ -629,9 +629,9 @@ function Cart() {
                         console.log('Generating payment link for temp order IDs:', orderIds);
                         const paymentLinkResponse = await axios.post(`${API_BASE_URL}/generatePayment-link`, {
                             id: orderIds?.map(String).join(','),
-                                endPoint: 'payment-options/order',
+                            endPoint: 'payment-options/order',
                             IsEmail: false,
-                             salesOrderType: "cart"
+                            salesOrderType: "cart"
                         }, {
                             headers: {
                                 'Authorization': `Bearer ${token}`
@@ -1333,36 +1333,36 @@ function Cart() {
                 }
             }
 
-                const orderPayload = {
-                    customerId: selectedCustomerId,
-                    erpCustId: erpCustId,
-                    companyNameEn: companyNameEn,
-                    companyNameAr: companyNameAr,
-                    brandNameEn: brandNameEn,
-                    brandNameAr: brandNameAr,
-                    branchId: selectedBranchId,
-                    branchNameEn: selectedBranchNameEn,
-                    branchNameLc: selectedBranchNameLc,
-                    branchCity: selectedBranchCity,
-                    erpBranchId: selectedBranchErpId,
-                    branchSequenceId: selectedBranchSequenceId,
-                    branchRegion: selectedBranchRegion,
-                    orderBy: orderByName,
-                    entity,
-                    paymentMethod: selectedPaymentMethod,
-                    totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
-                    paidAmount: '0.00',
-                    deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
-                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
-                    status: orderStatus,
-                    pricingPolicy: pricingPolicy,
-                    salesExecutive: assignedTo,
-                    customerRegion: customerRegion,
-                    productCategory: categoryName,
-                    paymentPercentage: '100.00',
-                    isMachine: isMachineOrder,
-                    isFresh: isFresh
-                };
+            const orderPayload = {
+                customerId: selectedCustomerId,
+                erpCustId: erpCustId,
+                companyNameEn: companyNameEn,
+                companyNameAr: companyNameAr,
+                brandNameEn: brandNameEn,
+                brandNameAr: brandNameAr,
+                branchId: selectedBranchId,
+                branchNameEn: selectedBranchNameEn,
+                branchNameLc: selectedBranchNameLc,
+                branchCity: selectedBranchCity,
+                erpBranchId: selectedBranchErpId,
+                branchSequenceId: selectedBranchSequenceId,
+                branchRegion: selectedBranchRegion,
+                orderBy: orderByName,
+                entity,
+                paymentMethod: selectedPaymentMethod,
+                totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
+                paidAmount: '0.00',
+                deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
+                paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
+                status: orderStatus,
+                pricingPolicy: pricingPolicy,
+                salesExecutive: assignedTo,
+                customerRegion: customerRegion,
+                productCategory: categoryName,
+                paymentPercentage: '100.00',
+                isMachine: isMachineOrder,
+                isFresh: isFresh
+            };
 
             // Create order lines payload
             const orderLinesPayload = [];
@@ -1619,25 +1619,62 @@ function Cart() {
 
             // Delete from cart
             try {
-                const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                deleteUrl.searchParams.append('customer_id', selectedCustomerId);
-                deleteUrl.searchParams.append('branch_id', selectedBranchId);
-                deleteUrl.searchParams.append('entity', entity);
+                const cartCheckParams = new URLSearchParams({
+                    pageSize: '10000'
+                });
 
-                const deleteResponse = await fetch(deleteUrl, {
-                    method: 'DELETE',
+                const filters = {
+                    userid: userId,
+                    customerid: selectedCustomerId,
+                    branchid: selectedBranchId,
+                    entity: entity
+                };
+
+                cartCheckParams.append('filters', JSON.stringify(filters));
+
+                const cartCheckResponse = await fetch(`${API_BASE_URL}/cart/pagination?${cartCheckParams.toString()}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (!deleteResponse.ok) {
-                    console.error('Error removing cart items:', deleteResponse.statusText);
+                if (cartCheckResponse.ok) {
+                    const cartCheckResult = await cartCheckResponse.json();
+                    const cartProducts = Array.isArray(cartCheckResult.data?.data) ? cartCheckResult.data.data : (Array.isArray(cartCheckResult.data) ? cartCheckResult.data : []);
+                    if (cartProducts.length > 0) {
+                        console.log(`Found ${cartProducts.length} items in cart, proceeding with deletion`);
+
+                        const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
+                        deleteUrl.searchParams.append('customerid', selectedCustomerId);
+                        deleteUrl.searchParams.append('branchid', selectedBranchId);
+                        deleteUrl.searchParams.append('entity', entity);
+
+                        const deleteResponse = await fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (!deleteResponse.ok) {
+                            console.error('Error removing cart items:', deleteResponse.statusText);
+                        } else {
+                            console.log('Successfully deleted cart items after order placement');
+                        }
+                    } else {
+                        console.log('No items found in cart, skipping deletion');
+                    }
+                } else {
+                    console.error('Error checking cart items:', cartCheckResponse.statusText);
                 }
             } catch (err) {
-                console.error('Error during cart cleanup:', err);
+                console.error('Error during cart check and cleanup:', err);
             }
+
 
             // Generate payment link for Pre Payment orders (non-VMCO entities)
             if (selectedPaymentMethod && selectedPaymentMethod.toLowerCase() === 'pre payment' &&
@@ -1648,7 +1685,7 @@ function Cart() {
                         id: orderId?.map(String).join(','),
                         endPoint: 'payment-options/order',
                         IsEmail: false,
-                         salesOrderType: "cart"
+                        salesOrderType: "cart"
                     }, {
                         headers: {
                             'Authorization': `Bearer ${token}`
@@ -1656,7 +1693,7 @@ function Cart() {
                     });
 
                     if (paymentLinkResponse?.data?.details?.url) {
-                           window.location.replace(paymentLinkResponse?.data?.details?.urlL)
+                        window.location.replace(paymentLinkResponse?.data?.details?.urlL)
                     }
                 } catch (error) {
                     console.error('Error generating payment link:', error);
