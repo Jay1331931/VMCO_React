@@ -89,6 +89,7 @@ const CustomToolbar = ({
   handleApproval,
   showApproval,
   buttonName,
+  showAddForm = false,
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
@@ -467,9 +468,14 @@ const CustomToolbar = ({
           </Tooltip>
         )}
         {showAdd && (
-          <Tooltip title={buttonName}>
+          <Tooltip title={showAddForm ? "Close" : buttonName}>
             <ToolbarButton onClick={handleAddClick} size="small">
-              <AddIcon />
+              <AddIcon
+                sx={{
+                  transform: showAddForm ? 'rotate(45deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.7s ease-in-out',
+                }}
+              />
             </ToolbarButton>
           </Tooltip>
         )}
