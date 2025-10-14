@@ -1341,7 +1341,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       (
         params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
         params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || 
+           params?.row?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
       )
     )
   )
@@ -1444,7 +1445,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       (
         params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
         params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
-        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
+         params?.row?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
       )
     )
   )
@@ -1461,7 +1463,7 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link1")} arrow>
+                  <Tooltip title={t("Send Link")} arrow>
                     
                     <IosShareIcon />
                   </Tooltip>
