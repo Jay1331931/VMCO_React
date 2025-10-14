@@ -377,8 +377,8 @@ const token = localStorage.getItem("token");
                           : {}
                       }
                       disabled={
-                        (customerFormMode === "custDetailsEdit" &&
-                          !hasUpdate) ||
+                        // (customerFormMode === "custDetailsEdit" &&
+                        //   !hasUpdate) ||
                         (branchDetails?.branchStatus !== "new" &&
                           field === "primaryContactEmail")
                       }
@@ -406,8 +406,8 @@ const token = localStorage.getItem("token");
                       }
           required={isRequired}
           disabled={
-                        (customerFormMode === "custDetailsEdit" &&
-                          !hasUpdate) ||
+                        // (customerFormMode === "custDetailsEdit" &&
+                        //   !hasUpdate) ||
                         (branchDetails?.branchStatus !== "new" &&
                           field === "primaryContactEmail")
                       }

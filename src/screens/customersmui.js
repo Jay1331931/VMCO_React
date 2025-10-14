@@ -31,6 +31,7 @@ import CustomToolbar from "../components/CustomToolbar";
 import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import TableMobile from "../components/TableMobile";
+import Constants from "../constants";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -44,6 +45,7 @@ const getStatusClass = (status) => {
 
 function Customers() {
   const { t, i18n } = useTranslation();
+  const gridApiRef = useGridApiRef();
   const [activeTab, setActiveTab] = useState("customers");
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [filteredApprovals, setFilteredApprovals] = useState([]);
@@ -57,7 +59,7 @@ function Customers() {
   const navigate = useNavigate();
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteData, setInviteData] = useState({
@@ -100,6 +102,9 @@ function Customers() {
       : user?.roles[0],
     "custDetailsAdd"
   );
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = activeTab === "customers" ? (isApprovalMode ? "customersApproval" : "customers") : "invites";
+
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
@@ -720,63 +725,63 @@ function Customers() {
         <label className={getStatusClass(params.value)}>{t(params.value)}</label>
       ),
     },
-   {
-  field: "FandOSync",
-  headerName: t("Action"),
-  include:true ,//isMobile ? false : isV("FandOSync"),
-  searchable: false,
-  flex: 1,
-  headerAlign: "center",
-  align: "center",
-  renderCell: (params) => {
-    const rowdata = params.row;
+    {
+      field: "FandOSync",
+      headerName: t("Action"),
+      include: true,//isMobile ? false : isV("FandOSync"),
+      searchable: false,
+      flex: 1,
+      headerAlign: "center",
+      align: "center",
+      renderCell: (params) => {
+        const rowdata = params.row;
 
-   
 
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center" }}>
-        {!params?.row?.erpCustId &&params?.row?.customerStatus?.toLowerCase() === "approved"&& (
-          <Box
-            component="span"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!(syncLoading && syncLoadingId === rowdata.id)) {
-                HandleFandOFailCustomer(rowdata.id);
-              }
-            }}
-            sx={{
-              color:
-                syncLoading && syncLoadingId === rowdata.id
-                  ? "text.disabled"
-                  : "primary.main",
-              cursor:
-                syncLoading && syncLoadingId === rowdata.id
-                  ? "default"
-                  : "pointer",
-              fontSize: "0.875rem",
-            }}
-          >
-            <Tooltip
-              title={
-                syncLoading && syncLoadingId === rowdata.id
-                  ? t("Syncing...")
-                  : t("Sync")
-              }
-              arrow
-            >
-              <SyncIcon
-                sx={{
-                  opacity:
-                    syncLoading && syncLoadingId === rowdata.id ? 0.6 : 1,
+
+        return (
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            {!params?.row?.erpCustId && params?.row?.customerStatus?.toLowerCase() === "approved" && (
+              <Box
+                component="span"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!(syncLoading && syncLoadingId === rowdata.id)) {
+                    HandleFandOFailCustomer(rowdata.id);
+                  }
                 }}
-              />
-            </Tooltip>
+                sx={{
+                  color:
+                    syncLoading && syncLoadingId === rowdata.id
+                      ? "text.disabled"
+                      : "primary.main",
+                  cursor:
+                    syncLoading && syncLoadingId === rowdata.id
+                      ? "default"
+                      : "pointer",
+                  fontSize: "0.875rem",
+                }}
+              >
+                <Tooltip
+                  title={
+                    syncLoading && syncLoadingId === rowdata.id
+                      ? t("Syncing...")
+                      : t("Sync")
+                  }
+                  arrow
+                >
+                  <SyncIcon
+                    sx={{
+                      opacity:
+                        syncLoading && syncLoadingId === rowdata.id ? 0.6 : 1,
+                    }}
+                  />
+                </Tooltip>
+              </Box>
+            )}
           </Box>
-        )}
-      </Box>
-    );
-  },
-}
+        );
+      },
+    }
 
   ];
 
@@ -787,7 +792,7 @@ function Customers() {
       headerName: t("Registration ID"),
       include: isV("id"),
       searchable: true,
-      sortable:false,
+      sortable: false,
       minWidth: 100,
       flex: 1,
       align: isArabic ? 'right' : 'left',
@@ -823,27 +828,27 @@ function Customers() {
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
+    // {
+    //   field: "companyType",
+    //   headerName: t("Company Type"),
+    //   include: isV("companyType"),
+    //   searchable: true,
+    //   minWidth: 120,
+    //   flex: 1,
+    //   align: isArabic ? 'right' : 'left',
+    //   renderCell: (params) => { <span>{params.value}</span> }
+    // },
+    // {
+    //   field: "typeOfBusiness",
+    //   headerName: t("Type Of Business"),
+    //   include: isV("typeOfBusiness"),
+    //   searchable: true,
+    //   minWidth: 140,
+    //   flex: 1,
+    //   align: isArabic ? 'right' : 'left',
+    //   renderCell: (params) => { <span>{params.value}</span> }
+    // },
     {
-      field: "companyType",
-      headerName: t("Company Type"),
-      include: isV("companyType"),
-      searchable: true,
-      minWidth: 120,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
-    },
-    {
-      field: "typeOfBusiness",
-      headerName: t("Type Of Business"),
-      include: isV("typeOfBusiness"),
-      searchable: true,
-      minWidth: 140,
-      flex: 1,
-      align: isArabic ? 'right' : 'left',
-      renderCell: (params) => { <span>{params.value}</span> }
-    },
-      {
       field: "createdAt",
       headerName: t("Created Date"),
       include: isV("createdAt"),
@@ -882,6 +887,68 @@ function Customers() {
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span>{params.value}</span> }
     },
+    {
+      field: "salesExecutiveName",
+      sortable: false,
+      headerName: t("Sales Executive Name"),
+      include: isV("salesExecutiveName"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>{t(params.row.salesExecutiveName || "")}</span>
+      ),
+    },
+    {
+      field: "ocApprover",
+      sortable: false,
+      headerName: t("OC Approver"),
+      include: isV("ocApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>
+          {t(
+            params.row.currentApprover?.[Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase()]?.join(", ") || ""
+          )}
+        </span>
+      ),
+    },
+    {
+      field: "approvalStatus",
+      headerName: t("Approval Status"),
+      include: isV("approvalStatus"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
+      ),
+    },
+    {
+      field: "currentApprover",
+      sortable: false,
+      headerName: t("Current Approver"),
+      include: isV("currentApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>{t(params.row.currentApproverType || "")}</span>
+      ),
+    },
+
   ];
 
   // Invite Columns
@@ -949,8 +1016,17 @@ function Customers() {
     },
     {
       field: "employeeId",
-      headerName: t("Assigned To"),
+      headerName: t("Employee ID"),
       include: isV("employeeId"),
+      searchable: true,
+      minWidth: 150,
+      flex: 1,
+      align: isArabic ? 'right' : 'left'
+    },
+    {
+      field: "employeeName",
+      headerName: t("Employee Name"),
+      include: isV("employeeName"),
       searchable: true,
       minWidth: 150,
       flex: 1,
@@ -1295,10 +1371,10 @@ function Customers() {
     if (activeTab === "customers") {
       if (isApprovalMode) {
         setFilteredCustomers([])
-       
+
         fetchApprovals(page, searchQuery, filters);
       } else {
-          setFilteredApprovals([]);
+        setFilteredApprovals([]);
         fetchCustomers(page, searchQuery, filters);
       }
     } else if (activeTab === "invites") {
@@ -1360,7 +1436,7 @@ function Customers() {
       setSelectedRow(params?.row);
       setShowRowPopup(true);
     } else {
-       navigate(`/customerDetails`, {
+      navigate(`/customerDetails`, {
         state: {
           customerId: customer.customerId,
           workflowId: transformedCustomer?.workflowData?.id,
@@ -1371,11 +1447,6 @@ function Customers() {
 
     }
 
-    // console.log('Customer ID:', customer.id);
-    // console.log('Customer Contacts:', customerContacts);
-    // const transformedCustomer = transformCustomerData(customer, customerContacts);
-    // console.log('Transformed Customer:', transformedCustomer);
-    //  navigate(`/customersDetails`, { state: { transformedCustomer } });
   };
 
   const customCellRenderer = {
@@ -1637,6 +1708,9 @@ function Customers() {
   const filertInvites = inviteColumns
     .filter((col) => col.include)
     ?.filter((item) => searchableFieldsInvites?.includes(item?.field));
+  const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
+    ? Math.ceil(total / pageSize)
+    : 1;
   const renderContent = () => {
     const handleSortModelChange = (model) => {
       setSortModel(model);
@@ -1646,262 +1720,388 @@ function Customers() {
         fetchCustomers(page, searchQuery, filters, model);
       }
     };
-    const handleInviteSortModelChange = (model) => {
-      console.log("Sort model changed:", model);
 
+    const handleInviteSortModelChange = (model) => {
       setInviteSortModel(model);
       fetchInvites(page, searchQuery, filters, model);
     };
+
     switch (activeTab) {
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
         return isMobile ? (
-          <>
-            <TableMobile
-              columns={customerColumnsToUse}
-              allColumns={isApprovalMode ? approvalColumns : customerColumns}
-              data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-              showAllDetails={true}
-              handleAllDetailsClick={handleShowAllDetailsClick}
-              selectedRow={selectedRow}
-              setSelectedRow={setSelectedRow}
-              showRowPopup={showRowPopup}
-              setShowRowPopup={setShowRowPopup}
-              dataGridComponent={
-                <DataGrid
-                  //   apiRef={gridApiRef}
-                  rows={
-                    isApprovalMode ? paginatedApprovals : paginatedCustomers
-                  }
-                  columns={customerColumnsToUse}
-                  pageSize={pageSize}
-                  rowCount={total}
-                         getRowId={(row) => row?.workflowInstanceId || row?.id  }
-                  onRowClick={handleRowClick}
-                  columnVisibilityModel={columnVisibilityModel}
-                  onColumnVisibilityModelChange={setColumnVisibilityModel}
-                  sortModel={sortModel}
-                  onSortModelChange={handleSortModelChange}
-                  disableSelectionOnClick
-                  disableColumnMenu
-                  hideFooter={true}
-                  hideFooterPagination={true}
-                  disableExtendRowFullWidth={true}
-                  pagination={false}
-                  autoHeight  
-                  rowHeight={55}
-                  display="flex"
-                  textAlign={i18n.language === "ar" ? "right" : "left"}
-                  justifyContent={i18n.language === "ar" ? "right" : "left"}
-                  showToolbar
-                  slots={{
-                    toolbar: () => (
-                      <CustomToolbar
-                        searchQuery={searchQuery}
-                        filterAnchor={filterAnchor}
-                        onSearch={handleSearch}
-                        setSearchQuery={setSearchQuery}
-                        setFilterAnchor={setFilterAnchor}
-                        handleFilterChange={handleFilterChange}
-                        onColumnVisibilityChange={setColumnVisibilityModel}
-                        columns={filteredData}
-                        filters={filters}
-                        columnVisibilityModel={columnVisibilityModel}
-                        searchPlaceholder="Search orders..."
-                        showColumnVisibility={true}
-                        showFilters={true}
-                        showExport={false}
-                        showUpload={false}
-                        showApproval={true}
-                        // showAdd={isV("addButton")}
-                        // showAdd={true}
-                        // handleAddClick={handleAddOrder}
-                        // handleUploadClick={HandleBulkOrderUpload}
-                        columnsToDisplay={columnsToDisplay}
-                        handleApproval={handleApproval}
-                        isApprovalMode={isApprovalMode}
-                      />
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiDataGrid-row": {
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <TableMobile
+                columns={customerColumnsToUse}
+                allColumns={isApprovalMode ? approvalColumns : customerColumns}
+                data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                showAllDetails={true}
+                handleAllDetailsClick={handleShowAllDetailsClick}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                showRowPopup={showRowPopup}
+                setShowRowPopup={setShowRowPopup}
+                dataGridComponent={
+                  <DataGrid
+                    rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                    columns={customerColumnsToUse}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    getRowId={(row) => row?.workflowInstanceId || row?.id}
+                    onRowClick={handleRowClick}
+                    columnVisibilityModel={columnVisibilityModel}
+                    onColumnVisibilityModelChange={setColumnVisibilityModel}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    disableExtendRowFullWidth={true}
+                    pagination={false}
+                    autoHeight
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search customers..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={false}
+                          showUpload={false}
+                          showApproval={true}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      "& .MuiDataGrid-row": {
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
                       },
-                    },
-                  }}
-                />
-              }
-            />
-          </>
+                      '.MuiDataGrid-cell': {
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }
+                    }}
+                  />
+                }
+              />
+            )}
+          </div>
         ) : (
-          //   <Table
-          //     columns={customerColumnsToUse}
-          //     data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-          //     getStatusClass={getStatusClass}
-          //     customCellRenderer={customCellRenderer}
-          //     onRowClick={handleRowClick}
-          //     onPay={HandleFandOFailCustomer}
-          //     syncLoading={syncLoading}
-          //   />
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <>
+                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                <div style={{
+                  height: '380px',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+                    columns={customerColumnsToUse}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    getRowId={(row) => row?.workflowInstanceId || row?.id}
+                    onRowClick={handleRowClick}
+                    columnVisibilityModel={columnVisibilityModel}
+                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search customers..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={false}
+                          showUpload={false}
+                          showApproval={true}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      // Flex grow to fill available space
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
 
-          <DataGrid
-            //   apiRef={gridApiRef}
-            rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-            columns={customerColumnsToUse}
-            pageSize={pageSize}
-            rowCount={total}
-            onRowClick={handleRowClick}
-            columnVisibilityModel={columnVisibilityModel}
-            onColumnVisibilityModelChange={setColumnVisibilityModel}
-            sortModel={sortModel}
-            onSortModelChange={handleSortModelChange}
-            disableSelectionOnClick
-            disableColumnMenu
-            hideFooter={true}
-            hideFooterPagination={true}
-            disableExtendRowFullWidth={true}
-            pagination={false}
-            autoHeight
-             rowHeight={55}
-            display="flex"
-            textAlign={i18n.language === "ar" ? "right" : "left"}
-            justifyContent={i18n.language === "ar" ? "right" : "left"}
-            showToolbar
-            slots={{
-              toolbar: () => (
-                <CustomToolbar
-                  searchQuery={searchQuery}
-                  filterAnchor={filterAnchor}
-                  onSearch={handleSearch}
-                  setSearchQuery={setSearchQuery}
-                  setFilterAnchor={setFilterAnchor}
-                  handleFilterChange={handleFilterChange}
-                  onColumnVisibilityChange={setColumnVisibilityModel}
-                  columns={filteredData}
-                  filters={filters}
-                  columnVisibilityModel={columnVisibilityModel}
-                  searchPlaceholder="Search orders..."
-                  showColumnVisibility={true}
-                  showFilters={true}
-                  showExport={false}
-                  showUpload={false}
-                  showApproval={true}
-                  // showAdd={isV("addButton")}
-                  // showAdd={true}
-                  // handleAddClick={handleAddOrder}
-                  // handleUploadClick={HandleBulkOrderUpload}
-                  columnsToDisplay={columnsToDisplay}
-                  handleApproval={handleApproval}
-                  isApprovalMode={isApprovalMode}
-                />
-              ),
-            }}
-            sx={{
-              "& .MuiDataGrid-row": {
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.04)",
-                },
-              },
-              '.MuiDataGrid-cell': {
-                textAlign: isArabic ? 'right' : 'left', // Add this line to center all cell content
-                display: 'flex',
-                alignItems: isArabic ? 'flex-end' : 'flex-start',
-                justifyContent: isArabic ? 'flex-end' : 'flex-start',
-              }
-            }}
-          />
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
+                        flexShrink: 0,
+                      },
+
+                      '& .MuiDataGrid-main': {
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      },
+
+                      // Ensure only the virtual scroller (rows) is scrollable
+                      '& .MuiDataGrid-virtualScroller': {
+                        overflow: 'auto !important',
+                        flex: 1,
+                      },
+
+                      // Keep headers sticky and non-scrollable
+                      '& .MuiDataGrid-columnHeaders': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid #e0e0e0',
+                        flexShrink: 0, // Prevent header from shrinking
+                      },
+
+                      '& .MuiDataGrid-row': {
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+
+                      // Arabic RTL styling
+                      ...(isArabic && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      }),
+
+                      // Default LTR styling (left alignment)
+                      ...(!isArabic && {
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        }
+                      })
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </div>
         );
+
       case t("invites"):
         return (
-          // <Table
-          //   columns={inviteColumns}
-          //   data={paginatedInvites}
-          //   getStatusClass={getStatusClass}
-          //   actionButtons={renderActionButtons}
-          // />
-          <DataGrid
-            //   apiRef={gridApiRef}
-            rows={paginatedInvites}
-            columns={inviteColumns}
-            pageSize={pageSize}
-            // rowCount={total}
-            // onRowClick={handleRowClick}
-            columnVisibilityModel={invitecolumnVisibilityModel}
-            onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
-            sortModel={inviteSortModel}
-            onSortModelChange={handleInviteSortModelChange}
-            disableSelectionOnClick
-            disableColumnMenu
-            hideFooter={true}
-            hideFooterPagination={true}
-            disableExtendRowFullWidth={true}
-            pagination={false}
-            autoHeight
-             rowHeight={55}
-            display="flex"
-            textAlign={i18n.language === "ar" ? "right" : "left"}
-            justifyContent={i18n.language === "ar" ? "right" : "left"}
-            showToolbar
-            slots={{
-              toolbar: () => (
-                <CustomToolbar
-                  searchQuery={searchQuery}
-                  filterAnchor={filterAnchor}
-                  onSearch={handleSearch}
-                  setSearchQuery={setSearchQuery}
-                  setFilterAnchor={setFilterAnchor}
-                  handleFilterChange={handleFilterChange}
-                  onColumnVisibilityChange={setColumnVisibilityModel}
-                  columns={filertInvites}
-                  filters={filters}
-                  columnVisibilityModel={columnVisibilityModel}
-                  searchPlaceholder="Search orders..."
-                  showColumnVisibility={true}
-                  showFilters={true}
-                  showExport={false}
-                  showUpload={false}
-                  showApproval={false}
-                  showAdd={isV("btnAddInvite")}
-                  buttonName={t("invite")}
-                  // showAdd={isV("addButton")}
-                  // showAdd={true}
+          <div className="table-container">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <>
+                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+                <div style={{
+                  height: '400px',
+                  width: '100%',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={paginatedInvites}
+                    columns={inviteColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    columnVisibilityModel={invitecolumnVisibilityModel}
+                    onColumnVisibilityModelChange={setInviteColumnVisibilityModel}
+                    sortModel={inviteSortModel}
+                    onSortModelChange={handleInviteSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    disableExtendRowFullWidth={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={handleColumnVisibilityChange}
+                          columns={filertInvites}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search invites..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={false}
+                          showUpload={false}
+                          showApproval={false}
+                          showAdd={isV("btnAddInvite")}
+                          buttonName={t("invite")}
+                          handleAddClick={handleInvite}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={false}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      // Flex grow to fill available space
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
 
-                  handleAddClick={handleInvite}
-                  // handleUploadClick={HandleBulkOrderUpload}
-                  columnsToDisplay={columnsToDisplay}
-                  handleApproval={handleApproval}
-                  isApprovalMode={false}
-                />
-              ),
-            }}
-            sx={{
-              "& .MuiDataGrid-row": {
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "rgba(0, 0, 0, 0.04)",
-                },
-              },
-              '.MuiDataGrid-cell': {
-                textAlign: isArabic ? 'right' : 'left', // Add this line to center all cell content
-                display: 'flex',
-                alignItems: isArabic ? 'flex-end' : 'flex-start',
-                justifyContent: isArabic ? 'flex-end' : 'flex-start',
-              }
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
+                        flexShrink: 0,
+                      },
 
-            }}
-          />
+                      '& .MuiDataGrid-main': {
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      },
+
+                      // Ensure only the virtual scroller (rows) is scrollable
+                      '& .MuiDataGrid-virtualScroller': {
+                        overflow: 'auto !important',
+                        flex: 1,
+                      },
+
+                      // Keep headers sticky and non-scrollable
+                      '& .MuiDataGrid-columnHeaders': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid #e0e0e0',
+                        flexShrink: 0, // Prevent header from shrinking
+                      },
+
+                      '& .MuiDataGrid-row': {
+                        cursor: "pointer",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+
+                      // Arabic RTL styling
+                      ...(isArabic && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      }),
+
+                      // Default LTR styling (left alignment)
+                      ...(!isArabic && {
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        }
+                      })
+                    }}
+                  />
+                </div>
+
+              </>
+            )}
+          </div>
         );
       default:
         return null;
     }
   };
-  // Paginate the filtered orders
-  // const paginatedCustomers = filteredCustomers.slice((page - 1) * pageSize, page * pageSize);
-  // const paginatedApprovals = filteredApprovals.slice((page - 1) * pageSize, page * pageSize);
+
   const paginatedCustomers = filteredCustomers;
   const paginatedApprovals = filteredApprovals;
   const paginatedInvites = filteredInvites;
@@ -1967,107 +2167,88 @@ function Customers() {
   useEffect(() => {
     setFilters({});
   }, [activeTab]);
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
+  const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
   return (
     <Sidebar title={t("Customers")}>
-      <div className="page-content">
-        <div className="customer-content">
-          <Tabs
-            tabs={customerTabs}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          />
+      <div className="customer-content">
+        <Tabs
+          tabs={customerTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-          <div className="page-header">
-            {/* {activeTab === t("customers") && (
-              <div className="header-controls" style={{ width: "100%" }}>
-                <SearchInput onSearch={handleSearch} />
-                <div className="header-actions">
-                  <ToggleButton
-                    isToggled={isApprovalMode}
-                    onToggle={toggleApprovalMode}
-                    leftLabel={t("All")}
-                    rightLabel={t("My Approval")}
-                  />
-                  <button
-                    className="add-button"
-                    style={{ visibility: "hidden" }}
-                  ></button>
-                  <ActionButton menuItems={customerMenuItems} />
-                </div>
+        <div className="page-header">
+
+        </div>
+        {renderContent()}
+
+        {isInviteModalOpen && (
+          <dialog className="invite-dialog" open>
+            <h2>{t("Invite")}</h2>
+
+            <div className="form-row-1">
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Customer Name")}
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={inviteData.name}
+                  onChange={handleInputChange}
+                  required
+                />
               </div>
-            )} */}
 
-            {/* {activeTab === t("invites") && isV("btnAddInvite") && (
-              <>
-                <SearchInput onSearch={handleSearch} />
-                {
-                  <button className="add-button" onClick={handleInvite}>
-                    {t("+ Invite")}
-                  </button>
-                }
-                <ActionButton menuItems={customerMenuItems} />
-              </>
-            )} */}
-          </div>
-          {renderContent()}
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Email")}
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={inviteData.email}
+                  onChange={handleInputChange}
+                  required
+                  style={inviteErrors.email ? { borderColor: "red" } : {}}
+                />
+                {inviteErrors.email && (
+                  <div style={{ color: "red", fontSize: "0.8em" }}>
+                    {inviteErrors.email}
+                  </div>
+                )}
+              </div>
 
-          {isInviteModalOpen && (
-            <dialog className="invite-dialog" open>
-              <h2>{t("Invite")}</h2>
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Company Name")}
+                </label>
+                <input
+                  type="text"
+                  name="company"
+                  value={inviteData.company}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-              <div className="form-row-1">
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Customer Name")}
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={inviteData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Email")}
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={inviteData.email}
-                    onChange={handleInputChange}
-                    required
-                    style={inviteErrors.email ? { borderColor: "red" } : {}}
-                  />
-                  {inviteErrors.email && (
-                    <div style={{ color: "red", fontSize: "0.8em" }}>
-                      {inviteErrors.email}
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Company Name")}
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={inviteData.company}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-
-                {/* <div className="form-group-1">
+              {/* <div className="form-group-1">
                     <label
                       style={{ marginBottom: "6px", display: "inline-block" }}
                     >
@@ -2088,168 +2269,162 @@ function Customers() {
                     )}
                   </div> */}
 
-                <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Phone Number")}
-                  </label>
-                  <PhoneInput
-                    international
-                    defaultCountry="SA" // Set your preferred default country
-                    withCountryCallingCode={true}
-                    countryCallingCodeEditable={false}
-                    name="mobile"
-                    value={inviteData.mobile}
-                    onChange={(value) => {
-                      handleInputChange({
-                        target: {
-                          name: "mobile",
-                          value: value,
-                        },
-                      });
-                    }}
-                    required
-                    style={
-                      inviteErrors.mobile
-                        ? {
-                          borderColor: "red",
-                          "--PhoneInput-color--error": "red", // Custom CSS variable for error state
-                        }
-                        : {}
-                    }
-                    className={
-                      inviteErrors.mobile
-                        ? "phone-input-error"
-                        : "custom-phone-input"
-                    }
-                  />
-                  {inviteErrors.mobile && (
-                    <div style={{ color: "red", fontSize: "0.8em" }}>
-                      {inviteErrors.mobile}
-                    </div>
-                  )}
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Region")}
-                  </label>
-                  <SearchableDropdown
-                    name="region"
-                    // options={basicMasterLists?.region || []}
-                    options={
-                      geoData
-                        ? Object.keys(geoData).map((region) => ({
-                          value: region,
-                          name: region,
-                        }))
-                        : []
-                    }
-                    value={inviteData.region}
-                    onChange={handleInputChange}
-                    placeholder={t("Enter Region")}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Primary Business Unit")}
-                  </label>
-                  <SearchableDropdown
-                    name="primaryBusinessUnit"
-                    // options={basicMasterLists?.region || []}
-                    options={entityOptions}
-                    value={inviteData.primaryBusinessUnit}
-                    onChange={handleInputChange}
-                    placeholder={t("Enter Primary Business Unit")}
-                    required
-                  />
-                </div>
-
-                <div className="form-group-1">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Source")}
-                  </label>
-                  <select
-                    name="source"
-                    value={inviteData.source}
-                    onChange={handleInputChange}
-                    disabled
-                    required
-                  >
-                    <option value="">{t("Select a source")}</option>
-                    <option value="portal">{t("Portal")}</option>
-                    <option value="crm">{t("CRM")}</option>
-                    <option value="salesexecutive">
-                      {t("Sales Executive")}
-                    </option>
-                  </select>
-                </div>
-
-                <div className="form-group-1 full-width">
-                  <label
-                    style={{ marginBottom: "6px", display: "inline-block" }}
-                  >
-                    {t("Comments")}
-                  </label>
-                  <textarea
-                    name="comments"
-                    value={inviteData.comments}
-                    onChange={handleInputChange}
-                    placeholder={t("Comments...")}
-                  />
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  className="cancel-button"
-                  onClick={() => {
-                    setIsInviteModalOpen(false);
-                    clearInviteFields();
+              <div style={{ flex: "1 1 calc(50% - 0.5rem)" }}>
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Phone Number")}
+                </label>
+                <PhoneInput
+                  international
+                  defaultCountry="SA" // Set your preferred default country
+                  withCountryCallingCode={true}
+                  countryCallingCodeEditable={false}
+                  name="mobile"
+                  value={inviteData.mobile}
+                  onChange={(value) => {
+                    handleInputChange({
+                      target: {
+                        name: "mobile",
+                        value: value,
+                      },
+                    });
                   }}
-                  disabled={isInviteLoading}
-                >
-                  {isInviteLoading ? t("Please wait...") : t("Cancel")}
-                </button>
-                <button
-                  className="invite-button"
-                  onClick={handleInviteSubmit}
-                  disabled={isInviteLoading}
-                >
-                  {isInviteLoading ? t("Sending...") : t("Send Invite")}
-                </button>
+                  required
+                  style={
+                    inviteErrors.mobile
+                      ? {
+                        borderColor: "red",
+                        "--PhoneInput-color--error": "red", // Custom CSS variable for error state
+                      }
+                      : {}
+                  }
+                  className={
+                    inviteErrors.mobile
+                      ? "phone-input-error"
+                      : "custom-phone-input"
+                  }
+                />
+                {inviteErrors.mobile && (
+                  <div style={{ color: "red", fontSize: "0.8em" }}>
+                    {inviteErrors.mobile}
+                  </div>
+                )}
               </div>
-            </dialog>
-          )}
-        </div>
-        {((activeTab === "customers" &&
-          paginatedCustomers.length > 0 &&
-          !isApprovalMode) ||
-          (activeTab === "invites" && paginatedInvites.length > 0) ||
-          (activeTab === "customers" &&
-            isApprovalMode &&
-            paginatedApprovals.length > 0)) && (
-            <Pagination
-              currentPage={page}
-              totalPages={Math.ceil(total / pageSize)}
-              onPageChange={setPage}
-            />
-          )}
-        {loading && (
-          <div className="loading-container">
-            <LoadingSpinner size="medium" />
-          </div>
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Region")}
+                </label>
+                <SearchableDropdown
+                  name="region"
+                  // options={basicMasterLists?.region || []}
+                  options={
+                    geoData
+                      ? Object.keys(geoData).map((region) => ({
+                        value: region,
+                        name: region,
+                      }))
+                      : []
+                  }
+                  value={inviteData.region}
+                  onChange={handleInputChange}
+                  placeholder={t("Enter Region")}
+                  required
+                />
+              </div>
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Primary Business Unit")}
+                </label>
+                <SearchableDropdown
+                  name="primaryBusinessUnit"
+                  // options={basicMasterLists?.region || []}
+                  options={entityOptions}
+                  value={inviteData.primaryBusinessUnit}
+                  onChange={handleInputChange}
+                  placeholder={t("Enter Primary Business Unit")}
+                  required
+                />
+              </div>
+
+              <div className="form-group-1">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Source")}
+                </label>
+                <select
+                  name="source"
+                  value={inviteData.source}
+                  onChange={handleInputChange}
+                  disabled
+                  required
+                >
+                  <option value="">{t("Select a source")}</option>
+                  <option value="portal">{t("Portal")}</option>
+                  <option value="crm">{t("CRM")}</option>
+                  <option value="salesexecutive">
+                    {t("Sales Executive")}
+                  </option>
+                </select>
+              </div>
+
+              <div className="form-group-1 full-width">
+                <label
+                  style={{ marginBottom: "6px", display: "inline-block" }}
+                >
+                  {t("Comments")}
+                </label>
+                <textarea
+                  name="comments"
+                  value={inviteData.comments}
+                  onChange={handleInputChange}
+                  placeholder={t("Comments...")}
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button
+                className="cancel-button"
+                onClick={() => {
+                  setIsInviteModalOpen(false);
+                  clearInviteFields();
+                }}
+                disabled={isInviteLoading}
+              >
+                {isInviteLoading ? t("Please wait...") : t("Cancel")}
+              </button>
+              <button
+                className="invite-button"
+                onClick={handleInviteSubmit}
+                disabled={isInviteLoading}
+              >
+                {isInviteLoading ? t("Sending...") : t("Send Invite")}
+              </button>
+            </div>
+          </dialog>
         )}
       </div>
+      {((activeTab === "customers" &&
+        paginatedCustomers.length > 0 &&
+        !isApprovalMode) ||
+        (activeTab === "invites" && paginatedInvites.length > 0) ||
+        (activeTab === "customers" &&
+          isApprovalMode &&
+          paginatedApprovals.length > 0)) && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / pageSize)}
+            onPageChange={setPage}
+          />
+        )}
       <style>{`
       .invite-dialog {
         position: fixed;             

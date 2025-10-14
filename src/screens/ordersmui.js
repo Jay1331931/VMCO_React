@@ -21,7 +21,7 @@ import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
 import { or } from "ajv/dist/compile/codegen";
-import { Chip, Box, Button, Typography, Tooltip } from "@mui/material";
+import { Chip, Box, Button, Typography, Tooltip, Grid } from "@mui/material";
 import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
@@ -29,6 +29,7 @@ import {
   GridPagination,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import { useMediaQuery } from "@mui/material";
 import { max, min, set } from "date-fns";
 import { Height } from "@mui/icons-material";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -45,6 +46,8 @@ const getStatusClass = (status) => {
       return "status-open";
     case "rejected":
       return "status-rejected";
+    case "cancelled":
+      return "status-cancelled";
     default:
       return "status-pending";
   }
@@ -132,11 +135,16 @@ function Orders() {
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = isApprovalMode ? "ordersApproval" : "orders"
 
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(
     initialCategories[0].value
   );
+   const isXL = useMediaQuery("(min-width:1280px)"); // XL breakpoint (MUI default)
+  const isLG = useMediaQuery("(min-width:1024px) and (max-width:1279px)");
+const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
   const getLocalizedEntityName = (
     initialCategories,
     currentLanguage,
@@ -155,7 +163,13 @@ function Orders() {
       ? match.descriptionLc || match.description
       : match.description;
   };
-
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -235,9 +249,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat,
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -278,9 +292,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.subcategory || sub.name || sub,
-              value: sub.subCategory || sub.subcategory || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -588,7 +602,7 @@ function Orders() {
     user,
     fetchOrders,
     filters,
-    isApprovalMode,
+    // isApprovalMode,
     activeCategory,
   ]);
 
@@ -754,7 +768,7 @@ function Orders() {
     try {
       const params = new URLSearchParams({
         page: 1,
-        pageSize: 100,
+        pageSize: 10000,
         search: "",
         sortBy: "id",
         sortOrder: "asc",
@@ -1154,7 +1168,11 @@ function Orders() {
         if (!params?.row?.createdAt) return <span> </span>;
 
         const date = new Date(params.row.createdAt);
-
+        console.log("As UTC date:", new Date(params.row.createdAt + 'Z').toISOString());
+        console.log("Original Date:", params.row.createdAt);
+        console.log(date);
+        console.log("Timezone Offset (minutes):", date.getTimezoneOffset());
+        console.log("UTC Time:", date.toISOString());
         // Convert to Riyadh timezone (UTC+3)
         const riyadhDate = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
@@ -1163,6 +1181,8 @@ function Orders() {
           day: "2-digit",
         }).format(date);
 
+        console.log("Riyadh Date:", riyadhDate);
+
         const riyadhTime = new Intl.DateTimeFormat("en-GB", {
           timeZone: "Asia/Riyadh",
           hour: "2-digit",
@@ -1170,6 +1190,8 @@ function Orders() {
           second: "2-digit",
           hour12: false,
         }).format(date);
+
+        console.log("Riyadh Time:", riyadhTime);
 
         return (
           <div
@@ -1299,22 +1321,31 @@ function Orders() {
       renderCell: (params) => (
         <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
           {isV("action") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+            
+  params?.row?.status?.toLowerCase() !== "cancelled" &&params?.row?.status?.toLowerCase() !== "rejected"&&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1353,29 +1384,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ]
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1385,30 +1416,39 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-              rowdata.paymentMethod?.toLowerCase() &&
+            rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-              rowdata.paymentStatus?.toLowerCase() &&
+            rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
-        return (
+      return (
           <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
             {isV("sendLink") &&
-            params?.row?.status?.toLowerCase() !== "cancelled" &&
-            params?.row?.paymentMethod?.toLowerCase() != "cash on delivery"&&   params?.row?.paymentMethod?.toLowerCase() != "credit" &&
-            params?.row?.paymentStatus?.toLowerCase() !== "paid" &&  (params?.row?.entity.toLowerCase()===Constants.ENTITY.VMCO.toLowerCase() && params?.row?.status?.toLowerCase() === "approved" )||
-            (params?.row?.status?.toLowerCase() === "approved" ||
-              (params?.row?.status?.toLowerCase() === "open" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
-              (params?.row?.status?.toLowerCase() === "pending" &&
-                (params?.row?.entity.toLowerCase() ===
-                  Constants.ENTITY.DAR.toLowerCase() ||
-                  params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) &&(
+  params?.row?.status?.toLowerCase() !== "cancelled" &&
+    params?.row?.status?.toLowerCase() !== "rejected" &&
+  params?.row?.paymentMethod?.toLowerCase() != "cash on delivery" &&
+  params?.row?.paymentMethod?.toLowerCase() !== "credit" &&
+  params?.row?.paymentStatus?.toLowerCase() !== "paid" &&
+  (
+    (params?.row?.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+     params?.row?.status?.toLowerCase() === "approved") ||
+    (
+    params?.row?.status?.toLowerCase() === "open" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    ) ||
+    (params?.row?.status?.toLowerCase() === "pending" &&
+      (
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
+        params?.row?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+      )
+    )
+  )
+&& (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1421,7 +1461,8 @@ function Orders() {
                     fontSize: "0.875rem",
                   }}
                 >
-                  <Tooltip title={t("Send Link")} arrow>
+                  <Tooltip title={t("Send Link1")} arrow>
+                    
                     <IosShareIcon />
                   </Tooltip>
                 </Box>
@@ -1504,6 +1545,7 @@ function Orders() {
     },
     {
       field: "erpOrderId",
+      headerName: t("ERP ID"),
       include: isV("erpOrderId"),
       searchable: false,
       minWidth: 120,
@@ -1534,7 +1576,7 @@ function Orders() {
     },
     {
       field: isArabic ? "companyNameAr" : "companyNameEn",
-      headerName: t("Customer"),
+      headerName: t("Company"),
       include: isV("companyName"),
       searchable: true,
       flex: 1,
@@ -1544,16 +1586,41 @@ function Orders() {
       renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
-      field: isArabic ? "branchNameLc" : "branchNameEn",
-      headerName: t("Branch"),
-      include: isV("branchName"),
+      field: isArabic ? "brandNameAr" : "brandNameEn",
+      headerName: t("Brand Name"),
+      include: isV("brandName"),
       searchable: true,
-      minWidth: 140,
       flex: 1,
+      minWidth: 140,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
     },
+    {
+      field: "branchCount",
+      headerName: t("Branches"),
+      include: isV("branchCount"),
+      searchable: true,
+      flex: 1,
+      minWidth: 140,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
+    },
+    // Brand Name
+    // Branches
+
+    // {
+    //   field: isArabic ? "branchNameLc" : "branchNameEn",
+    //   headerName: t("Branch"),
+    //   include: isV("branchName"),
+    //   searchable: true,
+    //   minWidth: 140,
+    //   flex: 1,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => <span>{t(params.value)}</span>,
+    // },
     {
       field: "branchRegion",
       headerName: t("Branch Region"),
@@ -1565,102 +1632,102 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{t(params.value)}</span>,
     },
-    {
-      field: "branchCity",
-      headerName: t("Branch City"),
-      include: isV("branchCity"),
-      searchable: true,
-      flex: 1,
-      minWidth: 140,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{t(params.value)}</span>,
-    },
-    {
-      field: "workflowName",
-      headerName: t("Workflow Name"),
-      include: isV("workflowName"),
-      searchable: true,
-      minWidth: 140,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => <span>{t(params.value)}</span>,
-    },
-    {
-      field: "entity",
-      headerName: t("Entity"),
-      include: isV("entity"),
-      searchable: true,
-      flex: 1,
-      minWidth: 140,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => {
-        let badge = null;
-        if (params.value === "VMCO") {
-          badge = params.row.isMachine ? (
-            <span className="badge badge-blue">{t("Machines")}</span>
-          ) : (
-            <span className="badge badge-blue">{t("Consumables")}</span>
-          );
-        } else if (params.value === "SHC") {
-          badge = params.row.isFresh ? (
-            <span className="badge badge-blue">{t("Fresh")}</span>
-          ) : (
-            <span className="badge badge-blue">{t("Frozen")}</span>
-          );
-        }
-        return (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              height: "100%",
-            }}
-          >
-            <Typography align={isArabic ? "right" : "center"}>
-              {params.value?.toUpperCase()}
-            </Typography>
-            <Typography align={isArabic ? "right" : "center"}>
-              {badge}
-            </Typography>
-          </Box>
-        );
-      },
-    },
-    {
-      field: "paymentMethod",
-      headerName: t("Payment Method"),
-      include: isV("paymentMethod"),
-      searchable: true,
-      minWidth: 130,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => {
-        const value =
-          params?.value?.toLowerCase() === "pre payment"
-            ? "Card Payment"
-            : params.value;
-        return <span>{t(value)}</span>;
-      },
-    },
-    {
-      field: "createdByUsername",
-      headerName: t("Created By"),
-      include: isV("createdBy"),
-      searchable: false,
-      sortable: false,
-      minWidth: 100,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-    },
+    // {
+    //   field: "branchCity",
+    //   headerName: t("Branch City"),
+    //   include: isV("branchCity"),
+    //   searchable: true,
+    //   flex: 1,
+    //   minWidth: 140,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => <span>{t(params.value)}</span>,
+    // },
+    // {
+    //   field: "workflowName",
+    //   headerName: t("Workflow Name"),
+    //   include: isV("workflowName"),
+    //   searchable: true,
+    //   minWidth: 140,
+    //   flex: 1,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => <span>{t(params.value)}</span>,
+    // },
+    // {
+    //   field: "entity",
+    //   headerName: t("Entity"),
+    //   include: isV("entity"),
+    //   searchable: true,
+    //   flex: 1,
+    //   minWidth: 140,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => {
+    //     let badge = null;
+    //     if (params.value === "VMCO") {
+    //       badge = params.row.isMachine ? (
+    //         <span className="badge badge-blue">{t("Machines")}</span>
+    //       ) : (
+    //         <span className="badge badge-blue">{t("Consumables")}</span>
+    //       );
+    //     } else if (params.value === "SHC") {
+    //       badge = params.row.isFresh ? (
+    //         <span className="badge badge-blue">{t("Fresh")}</span>
+    //       ) : (
+    //         <span className="badge badge-blue">{t("Frozen")}</span>
+    //       );
+    //     }
+    //     return (
+    //       <Box
+    //         sx={{
+    //           display: "flex",
+    //           flexDirection: "column",
+    //           justifyContent: "center",
+    //           height: "100%",
+    //         }}
+    //       >
+    //         <Typography align={isArabic ? "right" : "center"}>
+    //           {params.value?.toUpperCase()}
+    //         </Typography>
+    //         <Typography align={isArabic ? "right" : "center"}>
+    //           {badge}
+    //         </Typography>
+    //       </Box>
+    //     );
+    //   },
+    // },
+    // {
+    //   field: "paymentMethod",
+    //   headerName: t("Payment Method"),
+    //   include: isV("paymentMethod"),
+    //   searchable: true,
+    //   minWidth: 130,
+    //   flex: 1,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => {
+    //     const value =
+    //       params?.value?.toLowerCase() === "pre payment"
+    //         ? "Card Payment"
+    //         : params.value;
+    //     return <span>{t(value)}</span>;
+    //   },
+    // },
+    // {
+    //   field: "createdByUsername",
+    //   headerName: t("Created By"),
+    //   include: isV("createdBy"),
+    //   searchable: false,
+    //   sortable: false,
+    //   minWidth: 100,
+    //   flex: 1,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    // },
     {
       field: "createdAt",
-      headerName: t("Order Placement Date"),
+      headerName: t("Created Date"),
       include: isV("createdAt"),
       searchable: false,
       minWidth: 140,
@@ -1709,33 +1776,33 @@ function Orders() {
         );
       },
     },
-    {
-      field: "totalAmount",
-      headerName: t("Total Amount"),
-      include: isV("totalAmount"),
-      searchable: false,
-      sortable: false,
-      minWidth: 100,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => (
-        <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
-      ),
-    },
-    {
-      field: "totalItemQuantity",
-      headerName: t("Total Quantity"),
-      include: isV("totalItemQuantity"),
-      searchable: false,
-      sortable: false,
-      minWidth: 100,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => (
-        <span>{params?.row?.totalItemQuantity || 0}</span>
-      ),
-    },
+    // {
+    //   field: "totalAmount",
+    //   headerName: t("Total Amount"),
+    //   include: isV("totalAmount"),
+    //   searchable: false,
+    //   sortable: false,
+    //   minWidth: 100,
+    //   flex: 1,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => (
+    //     <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
+    //   ),
+    // },
+    // {
+    //   field: "totalItemQuantity",
+    //   headerName: t("Total Quantity"),
+    //   include: isV("totalItemQuantity"),
+    //   searchable: false,
+    //   sortable: false,
+    //   minWidth: 100,
+    //   align: isArabic ? "right" : "left",
+    //   headerAlign: isArabic ? "right" : "left",
+    //   renderCell: (params) => (
+    //     <span>{params?.row?.totalItemQuantity || 0}</span>
+    //   ),
+    // },
     {
       field: "salesExecutiveId",
       sortable: false,
@@ -1763,6 +1830,57 @@ function Orders() {
       ),
     },
     {
+      field: "seApprover",
+      sortable: false,
+      headerName: t("Sales Executive"),
+      include: isV("seApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>
+          {t(
+            params.row.currentApprover?.[Constants.DESIGNATIONS?.SALES_EXECUTIVE?.toLowerCase()]?.join(", ") || ""
+          )}
+        </span>
+      ),
+    },
+    {
+      field: "ocApprover",
+      sortable: false,
+      headerName: t("OC Approver"),
+      include: isV("ocApprover"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>
+          {t(
+            params.row.currentApprover?.[Constants.DESIGNATIONS.OPS_COORDINATOR.toLowerCase()]?.join(", ") || ""
+          )}
+        </span>
+      ),
+    },
+    {
+      field: "approvalStatus",
+      headerName: t("Approval Status"),
+      include: isV("approvalStatus"),
+      searchable: true,
+      minWidth: 120,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <label className={getStatusClass(params.value)}>
+          {t(params.value)}
+        </label>
+      ),
+    },
+    {
       field: "currentApprover",
       sortable: false,
       headerName: t("Current Approver"),
@@ -1774,21 +1892,6 @@ function Orders() {
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
         <span>{t(params.row.currentApproverType || "")}</span>
-      ),
-    },
-    {
-      field: "status",
-      headerName: t("Approval Status"),
-      include: isV("status"),
-      searchable: true,
-      minWidth: 120,
-      flex: 1,
-      align: isArabic ? "right" : "left",
-      headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => (
-        <label className={getStatusClass(params.value)}>
-          {t(params.value)}
-        </label>
       ),
     },
   ];
@@ -1873,7 +1976,7 @@ function Orders() {
           },
         }
       );
-      if (data?.success) {
+      if (data?.success && data?.details?.details?.erpOrderId) {
         fetchOrders(page, searchQuery, filters);
         Swal.fire({
           title: t("Success"),
@@ -2012,51 +2115,45 @@ function Orders() {
 
         // Show detailed success message
         Swal.fire({
-          title: t("File Uploaded Successfully"),
+          title: t('File Uploaded Successfully'),
           html: `
           <div style="text-align: center; margin: 20px 0;">
-            <p><strong>${t("Processing Summary")}</strong></p>
-            <ul>
-              ${
-                branchesProcessed > 0
-                  ? `<span>${branchesProcessed} branch${
-                      branchesProcessed > 1 ? "es" : ""
-                    } processed</span>`
-                  : ""
-              }
-              <break />
-            </ul>
-            ${
-              successMessageDetails
-                ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>`
-                : ""
-            }
-          </div>
-        `,
-          icon: "success",
-          confirmButtonText: t("OK"),
-          width: "500px",
+          <p><strong>${t('Processing Summary')}</strong></p>
+          ${branchesProcessed > 0 ? `<span>${branchesProcessed} branch${branchesProcessed !== 1 ? 'es' : ''} processed</span><br/>` : ''}
+          ${successMessageDetails ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>` : ''}
+          </div>`,
+          icon: 'success',
+          confirmButtonText: t('OK'),
+          width: '500px',
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       } else {
         Swal.fire({
-          title: t("File Upload Failed"),
-          text:
-            data.message || t("An error occurred while uploading the file."),
-          icon: "error",
-          confirmButtonText: t("OK"),
+          title: t('File Upload Failed'),
+          text: data.message || t('An error occurred while uploading the file.'),
+          icon: 'error',
+          confirmButtonText: t('OK'),
+        }).then((result) => {
+          if (result.isConfirmed || result.isDismissed) {
+            window.location.reload();
+          }
         });
-        window.location.reload();
       }
     } catch (error) {
       console.error("Error uploading file:", error);
       Swal.fire({
-        title: t("File Upload Failed"),
-        text: t("An error occurred while uploading the file."),
-        icon: "error",
-        confirmButtonText: t("OK"),
+        title: t('File Upload Failed'),
+        text: t('An error occurred while uploading the file.'),
+        icon: 'error',
+        confirmButtonText: t('OK'),
+      }).then((result) => {
+        if (result.isConfirmed || result.isDismissed) {
+          window.location.reload();
+        }
       });
-      window.location.reload();
     } finally {
       setExcelLoading(false);
       setBulkUploadPopUp(false);
@@ -2070,9 +2167,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2154,6 +2251,7 @@ function Orders() {
 
   const handleColumnVisibilityChange = (newModel) => {
     setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
 
   function CustomFooter() {
@@ -2171,13 +2269,17 @@ function Orders() {
 
   const handleApproval = (mode) => {
     // setFilters({});
+    console.log("modemodssssssse", mode)
     setApprovalMode(mode === "approval");
     if (mode === "approval") {
-      fetchApprovals();
+      fetchApprovals(1, "", { entity: "VMCO" });
     } else {
-      fetchOrders();
+      console.log("modemode", mode)
+      fetchOrders(1, "", { entity: "VMCO" });
     }
   };
+
+
 
   return (
     <Sidebar title={t("Orders")}>
@@ -2209,15 +2311,16 @@ function Orders() {
                   setApprovalMode(false);
                   fetchOrders(1, searchQuery, { entity: newCategory });
                   setSearchQuery("");
-                  setCategoryFilter(""); // Reset category filter
-                  setSubCategoryFilter(""); // Reset subcategory filter
-                  setSubCategoryOptions([]); // Clear subcategory options immediately
+                  setCategoryFilter("");
+                  setSubCategoryFilter("");
+                  setSubCategoryOptions([]);
                 }}
                 variant="category"
               />
             </div>
           </div>
         )}
+
         {isMobile ? (
           <div className="table-container">
             {loading ? (
@@ -2256,9 +2359,6 @@ function Orders() {
                     pagination={false}
                     autoHeight
                     rowHeight={55}
-                    display="flex"
-                    textAlign={i18n.language === "ar" ? "right" : "left"}
-                    justifyContent={i18n.language === "ar" ? "right" : "left"}
                     showToolbar
                     slots={{
                       toolbar: () => (
@@ -2283,7 +2383,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
+                            Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
@@ -2295,27 +2395,17 @@ function Orders() {
                     }}
                     sx={{
                       "& .MuiDataGrid-row": {
-                        cursor: "default", // Changed from pointer to default since row click no longer navigates
+                        cursor: "default",
                         "&:hover": {
                           backgroundColor: "rgba(0, 0, 0, 0.04)",
                         },
                       },
-                      // Arabic RTL styling for mobile
-                      ...(i18n.language === "ar" && {
-                        direction: "rtl",
-                        "& .MuiDataGrid-cell": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeader": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-columnHeaderTitle": {
-                          textAlign: "right !important",
-                        },
-                        "& .MuiDataGrid-cellContent": {
-                          textAlign: "right !important",
-                        },
-                      }),
+                      '.MuiDataGrid-cell': {
+                        textAlign: 'center',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }
                     }}
                   />
                 }
@@ -2329,91 +2419,158 @@ function Orders() {
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <DataGrid
-                rows={filteredOrders}
-                columns={visibleColumns}
-                pageSize={pageSize}
-                rowCount={total}
-                onRowClick={handleRowClick}
-                columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
-                sortModel={sortModel}
-                onSortModelChange={handleSortModelChange}
-                disableSelectionOnClick
-                disableColumnMenu
-                hideFooter={true}
-                hideFooterPagination={true}
-                disableExtendRowFullWidth={true}
-                pagination={false}
-                autoHeight
-                rowHeight={55}
-                display="flex"
-                textAlign={i18n.language === "ar" ? "right" : "left"}
-                justifyContent={i18n.language === "ar" ? "right" : "left"}
-                showToolbar
-                slots={{
-                  toolbar: () => (
-                    <CustomToolbar
-                      searchQuery={searchQuery}
-                      filterAnchor={filterAnchor}
-                      onSearch={handleSearch}
-                      setSearchQuery={setSearchQuery}
-                      setFilterAnchor={setFilterAnchor}
-                      handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
-                      columns={filteredData}
-                      filters={filters}
-                      columnVisibilityModel={columnVisibilityModel}
-                      searchPlaceholder="Search orders..."
-                      showColumnVisibility={true}
-                      showFilters={true}
-                      showExport={!isApprovalMode}
-                      showUpload={isV("uploadButton")}
-                      showAdd={isV("addButton")}
-                      buttonName={t("add")}
-                      showApproval={
-                        isV("approvalButton") &&
-                        filters.entity?.toLowerCase() ===
-                          Constants.ENTITY.VMCO?.toLowerCase()
-                      }
-                      handleAddClick={handleAddOrder}
-                      handleUploadClick={HandleBulkOrderUpload}
-                      columnsToDisplay={columnsToDisplay}
-                      handleApproval={handleApproval}
-                      isApprovalMode={isApprovalMode}
-                      handleExportClick={handleExportAll}
-                    />
-                  ),
-                }}
-                sx={{
-                  "& .MuiDataGrid-row": {
-                    cursor: "default", // Changed from pointer to default since row click no longer navigates
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.04)",
-                    },
-                  },
-                  // Arabic RTL styling for desktop
-                  ...(i18n.language === "ar" && {
-                    direction: "rtl",
-                    "& .MuiDataGrid-cell": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeader": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-columnHeaderTitle": {
-                      textAlign: "right !important",
-                    },
-                    "& .MuiDataGrid-cellContent": {
-                      textAlign: "right !important",
-                    },
-                  }),
-                }}
-              />
+              <>
+                {/* Fixed height container with proper toolbar spacing and scrollable rows */}
+             <Grid
+  item
+  xs={12}
+  sx={{
+    height: {
+      xs: "250px !important", // extra small
+      sm: "300px !important", // small
+      md: "386px !important", // medium
+      lg: "489px !important", // large
+      xl: "800px !important", // extra large
+    },
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+  }}
+>
+
+                  <DataGrid
+                    apiRef={gridApiRef}
+                    rows={filteredOrders}
+                    columns={visibleColumns}
+                    pageSize={pageSize}
+                    rowCount={total}
+                    onRowClick={handleRowClick}
+                    columnVisibilityModel={columnVisibilityModel}
+                    onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                    sortModel={sortModel}
+                    onSortModelChange={handleSortModelChange}
+                    disableSelectionOnClick
+                    disableColumnMenu
+                    hideFooter={true}
+                    hideFooterPagination={true}
+                    pagination={false}
+                    rowHeight={55}
+                    showToolbar
+                    slots={{
+                      toolbar: () => (
+                        <CustomToolbar
+                          searchQuery={searchQuery}
+                          filterAnchor={filterAnchor}
+                          onSearch={handleSearch}
+                          setSearchQuery={setSearchQuery}
+                          setFilterAnchor={setFilterAnchor}
+                          handleFilterChange={handleFilterChange}
+                          onColumnVisibilityChange={setColumnVisibilityModel}
+                          columns={filteredData}
+                          filters={filters}
+                          columnVisibilityModel={columnVisibilityModel}
+                          searchPlaceholder="Search orders..."
+                          showColumnVisibility={true}
+                          showFilters={true}
+                          showExport={!isApprovalMode}
+                          showUpload={isV("uploadButton")}
+                          showAdd={isV("addButton")}
+                          buttonName={t("add")}
+                          showApproval={
+                            isV("approvalButton") &&
+                            filters.entity?.toLowerCase() ===
+                            Constants.ENTITY.VMCO?.toLowerCase()
+                          }
+                          handleAddClick={handleAddOrder}
+                          handleUploadClick={HandleBulkOrderUpload}
+                          columnsToDisplay={columnsToDisplay}
+                          handleApproval={handleApproval}
+                          isApprovalMode={isApprovalMode}
+                          handleExportClick={handleExportAll}
+                        />
+                      ),
+                    }}
+                    sx={{
+                      // Flex grow to fill available space
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+
+                      '& .MuiDataGrid-toolbar': {
+                        padding: '0px 8px  !important',
+                        minHeight: '56px !important',
+                        flexShrink: 0,
+                      },
+
+                      '& .MuiDataGrid-main': {
+                        flex: 1,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      },
+
+                      // Ensure only the virtual scroller (rows) is scrollable
+                      '& .MuiDataGrid-virtualScroller': {
+                        overflow: 'auto !important',
+                        flex: 1,
+                      },
+
+                      // Keep headers sticky and non-scrollable
+                      '& .MuiDataGrid-columnHeaders': {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 1,
+                        backgroundColor: 'white',
+                        borderBottom: '1px solid #e0e0e0',
+                        flexShrink: 0, // Prevent header from shrinking
+                      },
+
+                      '& .MuiDataGrid-row': {
+                        cursor: "default",
+                        "&:hover": {
+                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        },
+                      },
+
+                      // Arabic RTL styling
+                      ...(i18n.language === "ar" && {
+                        direction: "rtl",
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "right !important",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "right !important",
+                        }
+                      }),
+
+                      // Default LTR styling (left alignment)
+                      ...(!i18n.language === "ar" && {
+                        "& .MuiDataGrid-cell": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeader": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-columnHeaderTitle": {
+                          textAlign: "left",
+                        },
+                        "& .MuiDataGrid-cellContent": {
+                          textAlign: "left",
+                        }
+                      })
+                    }}
+                  />
+                </Grid>
+              </>
             )}
           </div>
         )}
-
         {bulkUploadPopUp && (
           <div>
             <div className="gp-backdrop" onClick={onClose} />
@@ -2572,7 +2729,6 @@ function Orders() {
             )}
           </div>
         )}
-
         {showCustomerPopup && (
           <GetCustomers
             onClose={() => setShowCustomerPopup(false)}

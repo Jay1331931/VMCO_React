@@ -81,7 +81,15 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
-
+ const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
+const pageName= "support"
+      const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
     // Fetch tickets from API
     const fetchTickets = useCallback(async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
         setLoading(true);
@@ -358,7 +366,10 @@ const handleShowAllDetailsClick = async (ticket) => {
     const totalPages = Number.isFinite(total) && Number.isFinite(pageSize) && total > 0 && pageSize > 0
         ? Math.ceil(total / pageSize)
         : 1;
-
+   const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
     return (
         <Sidebar title={t("Support")}>
             {isV('supportContent') && (
@@ -380,7 +391,6 @@ const handleShowAllDetailsClick = async (ticket) => {
                                     setSelectedRow={setSelectedRow}
                                     showRowPopup={showRowPopup}
                                     setShowRowPopup={setShowRowPopup}
-                                    // getPaymentStatusClass={getPaymentStatusClass}
                                     dataGridComponent={
                                        <DataGrid
                                 apiRef={gridApiRef}
@@ -390,7 +400,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 rowCount={total}
                                 onRowClick={(params) => handleRowClick(params.row)}
                                 columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                                onColumnVisibilityModelChange={handleColumnVisibilityChange}
                                 sortModel={sortModel}
                                 onSortModelChange={handleSortModelChange}
                                 disableSelectionOnClick
@@ -444,117 +454,155 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 }}
                             />
                                     }
-                                  />
-                                )}
-                              </div>
-                            ) : (<div className="table-container">
-                        {loading ? (
-                            <LoadingSpinner />
-                        ) : error ? (
-                            <div className="error-message">{error}</div>
-                        ) : (
-                            <DataGrid
-                                apiRef={gridApiRef}
-                                rows={initialTickets}
-                                columns={visibleColumns}
-                                pageSize={pageSize}
-                                rowCount={total}
-                                onRowClick={(params) => handleRowClick(params.row)}
-                                columnVisibilityModel={columnVisibilityModel}
-                                onColumnVisibilityModelChange={setColumnVisibilityModel}
-                                sortModel={sortModel}
-                                onSortModelChange={handleSortModelChange}
-                                disableSelectionOnClick
-                                disableColumnMenu
-                                hideFooter={true}
-                                hideFooterPagination={true}
-                                disableExtendRowFullWidth={true}
-                                pagination={false}
-                                autoHeight
-                                 rowHeight={55}
-                                showToolbar
-                                slots={{
-                                    toolbar: () => (
-                                        <CustomToolbar
-                                            searchQuery={searchQuery}
-                                            filterAnchor={filterAnchor}
-                                            onSearch={handleSearch}
-                                            setSearchQuery={setSearchQuery}
-                                            setFilterAnchor={setFilterAnchor}
-                                            handleFilterChange={handleFilterChange}
-                                            onColumnVisibilityChange={setColumnVisibilityModel}
-                                            columns={filteredData}
-                                            filters={filters}
+                                />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="table-container">
+                            {loading ? (
+                                <LoadingSpinner />
+                            ) : error ? (
+                                <div className="error-message">{error}</div>
+                            ) : (
+                                <>
+                                    {/* Fixed height container for DataGrid with scrollable rows only */}
+                                    <div style={{
+                                        height: '400px',
+                                        width: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'column'
+                                    }}>
+                                        <DataGrid
+                                            apiRef={gridApiRef}
+                                            rows={initialTickets}
+                                            columns={visibleColumns}
+                                            pageSize={pageSize}
+                                            rowCount={total}
+                                            onRowClick={(params) => handleRowClick(params.row)}
                                             columnVisibilityModel={columnVisibilityModel}
-                                            searchPlaceholder="Search tickets..."
-                                            showColumnVisibility={true}
-                                            showFilters={true}
-                                            showExport={false}
-                                            showUpload={false}
-                                            showAdd={isV("btnAdd")}
-                                            buttonName={t("Add Ticket")}
-                                            showApproval={false}
-                                            handleAddClick={handleAddTicket}
-                                            columnsToDisplay={columnsToDisplay}
+                                            onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                                            sortModel={sortModel}
+                                            onSortModelChange={handleSortModelChange}
+                                            disableSelectionOnClick
+                                            disableColumnMenu
+                                            // Remove these to enable internal scrolling behavior
+                                            hideFooter={true}
+                                            hideFooterPagination={true}
+                                            pagination={false}
+                                            // Remove autoHeight to enable fixed height with scrolling
+                                            rowHeight={55}
+                                            showToolbar
+                                            slots={{
+                                                toolbar: () => (
+                                                    <CustomToolbar
+                                                        searchQuery={searchQuery}
+                                                        filterAnchor={filterAnchor}
+                                                        onSearch={handleSearch}
+                                                        setSearchQuery={setSearchQuery}
+                                                        setFilterAnchor={setFilterAnchor}
+                                                        handleFilterChange={handleFilterChange}
+                                                        onColumnVisibilityChange={handleColumnVisibilityChange}
+                                                        columns={filteredData}
+                                                        filters={filters}
+                                                        columnVisibilityModel={columnVisibilityModel}
+                                                        searchPlaceholder="Search tickets..."
+                                                        showColumnVisibility={true}
+                                                        showFilters={true}
+                                                        showExport={false}
+                                                        showUpload={false}
+                                                        showAdd={isV("btnAdd")}
+                                                        buttonName={t("Add Ticket")}
+                                                        showApproval={false}
+                                                        handleAddClick={handleAddTicket}
+                                                        columnsToDisplay={columnsToDisplay}
+                                                    />
+                                                ),
+                                            }}
+                                            sx={{
+                                                // Flex grow to fill available space
+                                                flex: 1,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                '& .MuiDataGrid-main': {
+                                                    flex: 1,
+                                                    overflowX: 'scroll',
+                                                    overflowY: 'hidden',
+                                                },
+                                                '& .MuiDataGrid-toolbar': {
+                                                    padding: '0px 8px  !important',
+                                                    minHeight: '56px !important', // Ensure minimum height for toolbar
+                                                    flexShrink: 0, // Prevent toolbar from shrinking
+                                                },
+                                                // Ensure only the virtual scroller (rows) is scrollable
+                                                '& .MuiDataGrid-virtualScroller': {
+                                                    overflow: 'auto !important',
+                                                    flex: 1
+                                                },
+                                                // Keep headers sticky and non-scrollable
+                                                '& .MuiDataGrid-columnHeaders': {
+                                                    position: 'sticky',
+                                                    top: 0,
+                                                    zIndex: 1,
+                                                    backgroundColor: 'white',
+                                                    borderBottom: '1px solid #e0e0e0',
+                                                },
+                                                '& .MuiDataGrid-row': {
+                                                    cursor: 'pointer',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    },
+                                                },
+                                                // Arabic RTL styling
+                                                ...(isArabic && {
+                                                    direction: "rtl",
+                                                    "& .MuiDataGrid-cell": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeader": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                                        textAlign: "right !important",
+                                                    },
+                                                    "& .MuiDataGrid-cellContent": {
+                                                        textAlign: "right !important",
+                                                    }
+                                                }),
+                                                // Default LTR styling (left alignment)
+                                                ...(!isArabic && {
+                                                    "& .MuiDataGrid-cell": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeader": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-columnHeaderTitle": {
+                                                        textAlign: "left",
+                                                    },
+                                                    "& .MuiDataGrid-cellContent": {
+                                                        textAlign: "left",
+                                                    }
+                                                })
+                                            }}
                                         />
-                                    ),
-                                }}
-                                sx={{
-                                    '& .MuiDataGrid-row': {
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                        },
-                                    },
-                                    // Arabic RTL styling
-                                    ...(isArabic && {
-                                        direction: "rtl",
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "right !important",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "right !important",
-                                        }
-                                    }),
-                                    // Default LTR styling (left alignment)
-                                    ...(!isArabic && {
-                                        "& .MuiDataGrid-cell": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeader": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-columnHeaderTitle": {
-                                            textAlign: "left",
-                                        },
-                                        "& .MuiDataGrid-cellContent": {
-                                            textAlign: "left",
-                                        }
-                                    })
-                                }}
-                            />
-                        )}
+                                    </div>
 
-                        {/* Pagination component - added from Orders page */}
-                        {isV('supportPagination') && initialTickets.length > 0 && (
-                            <Pagination
-                                currentPage={page}
-                                totalPages={String(totalPages)}
-                                onPageChange={setPage}
-                            />
-                        )}
-                    </div>)}
+                                    {/* External Pagination component */}
+                                    {isV('supportPagination') && initialTickets.length > 0 && (
+                                        <Pagination
+                                            currentPage={page}
+                                            totalPages={String(totalPages)}
+                                            onPageChange={setPage}
+                                        />
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </Sidebar>
     );
 }
-
 
 export default Support;

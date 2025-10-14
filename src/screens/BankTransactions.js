@@ -49,6 +49,16 @@ const BankTransactions = () => {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
 
+  const role = user?.userType === "employee" ? user?.designation : user?.roles[0]
+  const pageName = "BankTransactions"
+  const storageKey = `${pageName}_${role}_columns`;
+  useEffect(() => {
+    const savedModel = localStorage.getItem(storageKey);
+    if (savedModel) {
+      setColumnVisibilityModel(JSON.parse(savedModel));
+    }
+  }, [storageKey]);
+
   // Fetch API
   const fetchTransactions = useCallback(
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
@@ -129,21 +139,21 @@ const BankTransactions = () => {
   };
   // Columns
   const transactionColumns = [
-    { field: "id", headerName: t("Transaction Id"), include: isV("TransactionIdCol"),      searchable: true,flex: 1 },
-    { field: "erpCustId", headerName: t("ERP Customer Id"), include: isV("erpCustIdCol"),     searchable: true, flex: 1 },
-    { field: "erpOrderId", headerName: t("ERP Order Id"), include: isV("erpOrderIdCol"),     searchable: false, flex: 1 },
-    { field: "orderId", headerName: t("Order Id"), include: isV("OrderIdCol"),      searchable: false,flex: 1 },
+    { field: "id", headerName: t("Transaction Id"), include: isV("TransactionIdCol"), searchable: true, flex: 1 },
+    { field: "erpCustId", headerName: t("ERP Customer Id"), include: isV("erpCustIdCol"), searchable: true, flex: 1 },
+    { field: "erpOrderId", headerName: t("ERP Order Id"), include: isV("erpOrderIdCol"), searchable: false, flex: 1 },
+    { field: "orderId", headerName: t("Order Id"), include: isV("OrderIdCol"), searchable: false, flex: 1 },
     {
       field: isArabic ? "companyNameAr" : "companyNameEn",
       headerName: t("Customer"),
       include: isV("customerCol"),
-           searchable: true,
+      searchable: true,
       flex: 2,
     },
-    { field: "amountTransferred", headerName: t("Amount Transferred"), include: isV("amountTransferredCol"),     searchable: false, flex: 1 },
-    { field: "transactionDate", headerName: t("Transaction Date"), include: isV("transactionDateCol"),      searchable: false,flex: 1 },
-    { field: "createdAt", headerName: t("Created At"), include: isV("createdAtCol"),     searchable: true, flex: 1 },
-    { field: "status", headerName: t("Transaction Status"), include: isV("statusCol"),       searchable: true,   flex: 1 },
+    { field: "amountTransferred", headerName: t("Amount Transferred"), include: isV("amountTransferredCol"), searchable: false, flex: 1 },
+    { field: "transactionDate", headerName: t("Transaction Date"), include: isV("transactionDateCol"), searchable: false, flex: 1 },
+    { field: "createdAt", headerName: t("Created At"), include: isV("createdAtCol"), searchable: true, flex: 1 },
+    { field: "status", headerName: t("Transaction Status"), include: isV("statusCol"), searchable: true, flex: 1 },
   ];
 
   const visibleColumns = transactionColumns.filter((col) => col.include !== false);
@@ -161,7 +171,10 @@ const BankTransactions = () => {
     createdAt: "Created At",
     status: "Status",
   };
-
+  const handleColumnVisibilityChange = (newModel) => {
+    setColumnVisibilityModel(newModel);
+    localStorage.setItem(storageKey, JSON.stringify(newModel));
+  };
   return (
     <Sidebar title={t("Bank Transactions")}>
       {isV("BankContent") && (
@@ -180,14 +193,15 @@ const BankTransactions = () => {
                 rowCount={total}
                 onRowClick={(params) => handleRowClick(params.row)}
                 columnVisibilityModel={columnVisibilityModel}
-                onColumnVisibilityModelChange={setColumnVisibilityModel}
+                onColumnVisibilityModelChange={handleColumnVisibilityChange}
                 sortModel={sortModel}
                 onSortModelChange={handleSortModelChange}
                 disableSelectionOnClick
                 disableColumnMenu
                 hideFooter={true}
-                autoHeight
-                  rowHeight={55}
+                hideFooterPagination={true}
+                pagination={false}
+                rowHeight={55}
                 showToolbar
                 slots={{
                   toolbar: () => (
@@ -198,7 +212,7 @@ const BankTransactions = () => {
                       setSearchQuery={setSearchQuery}
                       setFilterAnchor={setFilterAnchor}
                       handleFilterChange={handleFilterChange}
-                      onColumnVisibilityChange={setColumnVisibilityModel}
+                      onColumnVisibilityChange={handleColumnVisibilityChange}
                       columns={visibleColumns}
                       filters={filters}
                       columnVisibilityModel={columnVisibilityModel}
@@ -207,18 +221,77 @@ const BankTransactions = () => {
                       showFilters={true}
                       showExport={false}
                       showUpload={false}
-                       showAdd={isV('btnAdd')}
-                       handleAddClick={handleAddClick}
+                      showAdd={isV('btnAdd')}
+                      handleAddClick={handleAddClick}
                       buttonName={t("add")}
                       columnsToDisplay={columnsToDisplay}
                     />
                   ),
                 }}
                 sx={{
-                  "& .MuiDataGrid-row": {
-                    cursor: "pointer",
-                    "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  '& .MuiDataGrid-main': {
+                    flex: 1,
+                    overflow: 'hidden'
                   },
+                  '& .MuiDataGrid-toolbar': {
+                    padding: '0px 8px  !important',
+                    minHeight: '56px !important',
+                    flexShrink: 0,
+                  },
+                  
+                  // Ensure only the virtual scroller (rows) is scrollable
+                  '& .MuiDataGrid-virtualScroller': {
+                    overflow: 'auto !important',
+                    flex: 1
+                  },
+                  // Keep headers sticky and non-scrollable
+                  '& .MuiDataGrid-columnHeaders': {
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 1,
+                    backgroundColor: 'white',
+                    borderBottom: '1px solid #e0e0e0',
+                  },
+                  '& .MuiDataGrid-row': {
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  },
+                  // Arabic RTL styling (if needed)
+                  ...(isArabic && {
+                    direction: "rtl",
+                    "& .MuiDataGrid-cell": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      textAlign: "right !important",
+                    },
+                    "& .MuiDataGrid-cellContent": {
+                      textAlign: "right !important",
+                    }
+                  }),
+                  // Default LTR styling (left alignment)
+                  ...(!isArabic && {
+                    "& .MuiDataGrid-cell": {
+                      textAlign: "left",
+                    },
+                    "& .MuiDataGrid-columnHeader": {
+                      textAlign: "left",
+                    },
+                    "& .MuiDataGrid-columnHeaderTitle": {
+                      textAlign: "left",
+                    },
+                    "& .MuiDataGrid-cellContent": {
+                      textAlign: "left",
+                    }
+                  })
                 }}
               />
             )}

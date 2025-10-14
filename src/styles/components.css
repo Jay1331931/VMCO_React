@@ -33,14 +33,10 @@
   padding: 0px;
 }
 .customers-content {
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
 }
-/* Header controls styling */
 .page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 20px 0 20px 0;
+  margin: 10px;
 }
 .logs-header {
   display: flex;
@@ -1644,8 +1640,8 @@
     border-radius: var(--border-radius);
 }
 .status-rejected {
-  background: var(--logo-red);
-  color: var(--bg-transparent);
+  color: var(--logo-red);
+  background-color: var(--bg-transparent);
 }
 
 .status-cancelled {
@@ -1754,18 +1750,11 @@
     background-color: #f8f9fa;
   }
 }
-/* Support related styles */
-.support-content {
-  padding: 20px;
-}
 .support-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-}
-.maintenance-content {
-  padding: 20px;
 }
 .maintenance-header {
   display: flex;

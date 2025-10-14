@@ -338,7 +338,7 @@ const TimeInputGroup = ({
         onChange={(e) => onChange(day, type, "from", e.target.value)}
         onFocus={() => onFocus("from", time?.from)}
         onBlur={() => {}}
-        disabled={inApproval && !isModified}
+        // disabled={inApproval && !isModified}
         style={
           inApproval && isModified && mode === "edit"
             ? {
@@ -354,7 +354,7 @@ const TimeInputGroup = ({
         onChange={(e) => onChange(day, type, "to", e.target.value)}
         onFocus={() => onFocus("to", time?.to)}
         onBlur={() => {}}
-        disabled={inApproval && !isModified}
+        // disabled={inApproval && !isModified}
         style={
           inApproval && isModified && mode === "edit"
             ? {

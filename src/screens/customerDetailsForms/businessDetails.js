@@ -4,6 +4,7 @@ import {
   fetchDropdownFromBasicsMaster,
   getOptionsFromEmployeesWithManager,
   getOptionsFromEmployees,
+  checkFieldForUpdate,
 } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import Constants from "../../constants";
@@ -30,6 +31,7 @@ function BusinessDetails({
   setInterCompany,
   formErrors = {},
   logosToUpload = {}, // <-- Pass this from CustomerDetails.js
+  completeWorkflowData = {},
 }) {
   const { t, i18n } = useTranslation();
   const { token, user, isAuthenticated, logout, loading } = useAuth();
@@ -58,6 +60,32 @@ function BusinessDetails({
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const [employeeListWithManagers, setEmployeeListWithManagers] = useState([]);
   const [employeeList, setEmployeeList] = useState([]);
+  const [fieldsForUpdate, setFieldsForUpdate] = useState({});
+  const fieldList = [
+    {field: "companyType", fieldType: "customer"},
+    {field: "companyNameEn", fieldType: "customer"},
+    {field: "companyNameAr", fieldType: "customer"},
+    {field: "crNumber", fieldType: "customer"},
+    {field: "vatNumber", fieldType: "customer"},
+    {field: "governmentRegistrationNumber", fieldType: "customer"},
+    {field: "baladeahLicenseNumber", fieldType: "customer"},
+    {field: "deliveryLocations", fieldType: "customer"},
+    {field: "typeOfBusiness", fieldType: "customer"},
+    {field: "typeOfBusinessOther", fieldType: "customer"},
+    {field: "brandNameEn", fieldType: "customer"},
+    {field: "brandNameAr", fieldType: "customer"},
+    {field: "customerSource", fieldType: "customer"},
+    {field: "interCompany", fieldType: "customer"},
+    {field: "entity", fieldType: "customer"},
+    {field: "primaryBusinessUnit", fieldType: "customer"},
+    {field: "branch", fieldType: "customer"},
+    {field: "assignedTo", fieldType: "customer"},
+    {field: customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR]?.toString(), fieldType: "customer"},
+    {field: customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC]?.toString(), fieldType: "customer"},
+    {field: customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI]?.toString(), fieldType: "customer"},
+    {field: customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC]?.toString(), fieldType: "customer"},
+    {field: customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO]?.toString(), fieldType: "customer"},
+  ]
   let currentLanguage = i18n.language;
   useEffect(() => {
     const fetchData = async () => {
@@ -87,6 +115,38 @@ function BusinessDetails({
   useEffect(() => {
     setTypeOfBusiness(customerData?.typeOfBusiness || "");
   }, [customerData?.typeOfBusiness]);
+
+  useEffect(() => {
+    const checkFieldUpdates = async () => {
+      
+      try {
+        const fieldStatus = {};
+        
+        // Use for...of loop instead of forEach for async operations
+        for (const fieldItem of fieldList) {
+          const canUpdate = await checkFieldForUpdate(
+            fieldItem.fieldType, 
+            completeWorkflowData?.workflowName
+          );
+          fieldStatus[fieldItem.field] = canUpdate;
+        }
+        
+        setFieldsForUpdate(fieldStatus);
+      } catch (error) {
+        console.error('Error checking field updates:', error);
+        // Set all fields to false in case of error
+        const errorStatus = {};
+        fieldList.forEach(fieldItem => {
+          errorStatus[fieldItem.field] = false;
+        });
+        setFieldsForUpdate(errorStatus);
+      } 
+    };
+
+    if (completeWorkflowData?.workflowName) {
+      checkFieldUpdates();
+    }
+  }, [completeWorkflowData?.workflowName]); // Add other dependencies if needed
 
   // Refs for file inputs
   const companyLogoInputRef = useRef();
@@ -148,7 +208,45 @@ function BusinessDetails({
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
-  // View logo (same as handleViewFile in documents.js)
+const checkDisabledStatus = (fieldPath) => {
+  // Split the field path by dots to handle nested properties
+  const fieldParts = fieldPath?.split('?.');
+  
+  // Helper function to get nested value safely
+  const getNestedValue = (obj, path) => {
+    console.log('Input object:', obj);
+    console.log('Input path:', path);
+    
+    const result = path?.reduce((current, key) => {
+      console.log('Current:', current, 'Key:', key);
+      const next = current?.[key];
+      console.log('Next value:', next);
+      return next;
+    }, obj);
+    
+    console.log('Final result:', result);
+    return result;
+  };
+
+  const originalValue = getNestedValue(originalCustomerData, fieldParts);
+  const currentValue = getNestedValue(customerData, fieldParts);
+  
+  const commonConditions = originalCustomerData &&
+                          customerData &&
+                          originalValue === currentValue &&
+                          mode === "edit" &&
+                          customerData?.customerStatus !== "pending";
+
+  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
+    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
+    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
+  ) {
+    return commonConditions && !fieldsForUpdate?.[fieldPath];
+  }
+  
+  return commonConditions;
+};  
+// View logo (same as handleViewFile in documents.js)
   const handleViewLogo = async (customerId, fileName, fileType) => {
     let fileURL = "";
     try {
@@ -262,11 +360,7 @@ function BusinessDetails({
             });
           }}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyType === customerData?.companyType &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("companyType")
           }
           className={
             originalCustomerData &&
@@ -391,13 +485,8 @@ function BusinessDetails({
       value={customerData?.companyNameEn || ""}
       onChange={onChangeCustomerData}
       disabled={
-        originalCustomerData &&
-        customerData &&
-        originalCustomerData?.companyNameEn ===
-          customerData?.companyNameEn &&
-        mode === "edit" &&
-        customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-      }
+            checkDisabledStatus("companyNameEn")
+          }
       required
     />
     {isV("companyNameEnVerified") &&  (
@@ -461,12 +550,7 @@ function BusinessDetails({
           value={customerData?.companyNameAr || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.companyNameAr ===
-              customerData?.companyNameAr &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("companyNameAr")
           }
           required
         />
@@ -532,11 +616,7 @@ function BusinessDetails({
           value={customerData?.crNumber || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.crNumber === customerData?.crNumber &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("crNumber")
           }
           required
         />
@@ -602,11 +682,7 @@ function BusinessDetails({
           value={customerData?.vatNumber || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.vatNumber === customerData?.vatNumber &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("vatNumber")
           }
           required
         />
@@ -671,12 +747,7 @@ function BusinessDetails({
           value={customerData?.governmentRegistrationNumber || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.governmentRegistrationNumber ===
-              customerData?.governmentRegistrationNumber &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("governmentRegistrationNumber")
           }
           required
         />
@@ -746,12 +817,7 @@ function BusinessDetails({
           value={customerData?.baladeahLicenseNumber || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.baladeahLicenseNumber ===
-              customerData?.baladeahLicenseNumber &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("baladeahLicenseNumber")
           }
           required
         />
@@ -816,12 +882,7 @@ function BusinessDetails({
             });
           }}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.deliveryLocations ===
-              customerData?.deliveryLocations &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("deliveryLocations")
           }
           className={
             originalCustomerData &&
@@ -891,12 +952,7 @@ function BusinessDetails({
             });
           }}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.typeOfBusiness ===
-              customerData?.typeOfBusiness &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("typeOfBusiness")
           }
           className={
             originalCustomerData &&
@@ -971,13 +1027,8 @@ function BusinessDetails({
             value={customerData?.typeOfBusinessOther || ""}
             onChange={onChangeCustomerData}
             disabled={
-              originalCustomerData &&
-              customerData &&
-              originalCustomerData?.typeOfBusinessOther ===
-                customerData?.typeOfBusinessOther &&
-              mode === "edit" &&
-              customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-            }
+            checkDisabledStatus("typeOfBusinessOther")
+          }
           />
           {isV("typeOfBusinessOtherVerified") &&  (
     // (originalCustomerData &&
@@ -1043,11 +1094,7 @@ function BusinessDetails({
           value={customerData?.brandNameEn || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.brandNameEn === customerData?.brandNameEn &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("brandNameEn")
           }
         />
         { isV("brandNameEnVerified") && (
@@ -1106,11 +1153,7 @@ function BusinessDetails({
           value={customerData?.brandNameAr || ""}
           onChange={onChangeCustomerData}
           disabled={
-            originalCustomerData &&
-            customerData &&
-            originalCustomerData?.brandNameAr === customerData?.brandNameAr &&
-            mode === "edit" &&
-            customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
+            checkDisabledStatus("brandNameAr")
           }
         />
         {isV("brandNameArVerified") &&  (
@@ -1416,14 +1459,8 @@ function BusinessDetails({
             value={customerData?.customerSource || ""}
             onChange={onChangeCustomerData}
             disabled={
-              (originalCustomerData &&
-                customerData &&
-                originalCustomerData?.customerSource ===
-                  customerData?.customerSource &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR) ||
-              true
-            }
+            checkDisabledStatus("customerSource") || true
+          }
           />
           {isV("customerSourceVerified") && (
     // (originalCustomerData &&
@@ -1471,13 +1508,8 @@ function BusinessDetails({
                   checked={customerData?.interCompany}
                   onChange={setInterCompany}
                   disabled={
-                    originalCustomerData &&
-                    customerData &&
-                    originalCustomerData?.interCompany ===
-                      customerData?.interCompany &&
-                    mode === "edit" &&
-                    customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-                  }
+            checkDisabledStatus("interCompany")
+          }
                 />
                 {`\t ${t("Inter Company")}`}
               </label>
@@ -1529,12 +1561,8 @@ function BusinessDetails({
                 value={customerData?.entity || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.entity === customerData?.entity &&
-                  mode === "edit" &&
-                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-                }
+            checkDisabledStatus("entity")
+          }
                 required
               >
                 <option value="" disabled>
@@ -1607,13 +1635,8 @@ function BusinessDetails({
                 value={customerData?.primaryBusinessUnit || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.primaryBusinessUnit ===
-                    customerData?.primaryBusinessUnit &&
-                  mode === "edit" &&
-                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-                }
+            checkDisabledStatus("primaryBusinessUnit")
+          }
                 required
               >
                 <option value="" disabled>
@@ -1688,12 +1711,8 @@ function BusinessDetails({
                   });
                 }}
                 disabled={
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.branch === customerData?.branch &&
-                  mode === "edit" &&
-                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-                }
+            checkDisabledStatus("branch")
+          }
                 className={
                   originalCustomerData &&
                   customerData &&
@@ -1768,13 +1787,8 @@ function BusinessDetails({
                 value={customerData?.assignedTo || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-                  originalCustomerData &&
-                  customerData &&
-                  originalCustomerData?.assignedTo ===
-                    customerData?.assignedTo &&
-                  mode === "edit" &&
-                  customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-                }
+            checkDisabledStatus("assignedTo")
+          }
                 className={
                   originalCustomerData &&
                   customerData &&
@@ -1848,15 +1862,8 @@ function BusinessDetails({
               }
               onChange={setEntityWiseAssignment}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.assignedToEntityWise?.[
-                  Constants.ENTITY.DAR
-                ] ===
-                  customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR] &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-              }
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR]?.toString())
+          }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -1920,15 +1927,8 @@ function BusinessDetails({
               }
               onChange={setEntityWiseAssignment}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.assignedToEntityWise?.[
-                  Constants.ENTITY.VMCO
-                ] ===
-                  customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO] &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-              }
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO]?.toString())
+          }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -1991,15 +1991,8 @@ function BusinessDetails({
               }
               onChange={setEntityWiseAssignment}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.assignedToEntityWise?.[
-                  Constants.ENTITY.SHC
-                ] ===
-                  customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC] &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-              }
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC]?.toString())
+          }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -2062,15 +2055,8 @@ function BusinessDetails({
               }
               onChange={setEntityWiseAssignment}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.assignedToEntityWise?.[
-                  Constants.ENTITY.NAQI
-                ] ===
-                  customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI] &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-              }
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI]?.toString())
+          }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -2134,15 +2120,8 @@ function BusinessDetails({
               }
               onChange={setEntityWiseAssignment}
               disabled={
-                originalCustomerData &&
-                customerData &&
-                originalCustomerData?.assignedToEntityWise?.[
-                  Constants.ENTITY.GMTC
-                ] ===
-                  customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC] &&
-                mode === "edit" &&
-                customerData?.customerStatus !== "pending" && user?.designation !== Constants.DESIGNATIONS.OPS_COORDINATOR
-              }
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC]?.toString())
+          }
               className={
                 originalCustomerData &&
                 customerData &&

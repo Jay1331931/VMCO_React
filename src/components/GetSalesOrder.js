@@ -16,7 +16,7 @@ function GetSalesOrder({ open, onClose,formData,API_BASE_URL,setFormData, t = (x
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
-    pageSize: 5,
+    pageSize: 10,
     total: 0
   });
     const [customerOrders, setCustomerOrders] = useState([]);
@@ -65,8 +65,12 @@ const handleSelect = (customer) => {
     if (customer.erpOrderId) {
       if (prev.erpOrderId?.includes(customer.erpOrderId)) {
         updated.erpOrderId = prev.erpOrderId?.filter(id => id !== customer.erpOrderId);
+         updated.amountTransferred = 
+  parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
       } else {
         updated.erpOrderId = [...prev.erpOrderId, customer.erpOrderId];
+           updated.amountTransferred = 
+  parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
       }
     }
 
@@ -74,12 +78,16 @@ const handleSelect = (customer) => {
     if (customer?.id) {
       if (prev.orderId?.includes(customer.id)) {
         updated.orderId = prev.orderId.filter(id => id !== customer.id);
+              updated.amountTransferred = 
+  parseFloat(updated.amountTransferred || 0) - parseFloat(customer.totalAmount || 0);
       } else {
         updated.orderId = [...(prev.orderId || []), customer.id];
+         updated.amountTransferred = 
+  parseFloat(updated.amountTransferred || 0) + parseFloat(customer.totalAmount || 0);
       }
     }
     updated.branchVmcoRegion=customer?.branchRegion || null
-    updated.amountTransferred += parseFloat(customer.totalAmount) || 0;
+
     return updated;
   });
 };

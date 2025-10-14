@@ -57,6 +57,7 @@ function Cart() {
     const [selectedCustomerStatus, setSelectedCustomerStatus] = useState('');
     const [selectederpCustId, setSelectederpCustId] = useState('');
     const [selectedBranchName, setSelectedBranchName] = useState('No location selected');
+    const [selectedBranchNameEn, setSelectedBranchNameEn] = useState('');
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
@@ -84,10 +85,12 @@ function Cart() {
             if (location.state.selectedBranchId) setSelectedBranchId(location.state.selectedBranchId);
             if (location.state.selectedBranchName) setSelectedBranchName(location.state.selectedBranchName);
             if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
+            if (location.state.selectedBranchNameEn) setSelectedBranchNameEn(location.state.selectedBranchNameEn);
             if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
             if (location.state.selectedBranchSequenceId) setSelectedBranchSequenceId(location.state.selectedBranchSequenceId);
             if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
             if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
+            if (location.state.selectedBranchStatus) setSelectedBranchStatus(location.state.selectedBranchStatus);
         } else {
             if (user?.userId) setSelectedUserId(user.userId);
             if (user?.customerId) setSelectedCustomerId(user.customerId);
@@ -448,7 +451,7 @@ function Cart() {
         navigate('/catalog', {
             state: {
                 selectedBranchId,
-                selectedBranchName,
+                selectedBranchNameEn,
                 selectedBranchNameLc,
                 selectedBranchErpId,
                 selectedBranchRegion,
@@ -1332,36 +1335,36 @@ function Cart() {
                 }
             }
 
-            const orderPayload = {
-                customerId: selectedCustomerId,
-                erpCustId: erpCustId,
-                companyNameEn: companyNameEn,
-                companyNameAr: companyNameAr,
-                brandNameEn: brandNameEn,
-                brandNameAr: brandNameAr,
-                branchId: selectedBranchId,
-                branchNameEn: selectedBranchName,
-                branchNameLc: selectedBranchNameLc,
-                branchCity: selectedBranchCity,
-                erpBranchId: selectedBranchErpId,
-                branchSequenceId: selectedBranchSequenceId,
-                branchRegion: selectedBranchRegion,
-                orderBy: orderByName,
-                entity,
-                paymentMethod: selectedPaymentMethod,
-                totalAmount: finalTotalAmount.toFixed(2),
-                paidAmount: '0.00',
-                deliveryCharges: initialDeliveryCharges.toFixed(2),
-                paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
-                status: orderStatus,
-                pricingPolicy: pricingPolicy,
-                salesExecutive: assignedTo,
-                customerRegion: customerRegion,
-                productCategory: categoryName,
-                paymentPercentage: '100.00',
-                isMachine: isMachineOrder,
-                isFresh: isFresh
-            };
+                const orderPayload = {
+                    customerId: selectedCustomerId,
+                    erpCustId: erpCustId,
+                    companyNameEn: companyNameEn,
+                    companyNameAr: companyNameAr,
+                    brandNameEn: brandNameEn,
+                    brandNameAr: brandNameAr,
+                    branchId: selectedBranchId,
+                    branchNameEn: selectedBranchNameEn,
+                    branchNameLc: selectedBranchNameLc,
+                    branchCity: selectedBranchCity,
+                    erpBranchId: selectedBranchErpId,
+                    branchSequenceId: selectedBranchSequenceId,
+                    branchRegion: selectedBranchRegion,
+                    orderBy: orderByName,
+                    entity,
+                    paymentMethod: selectedPaymentMethod,
+                    totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
+                    paidAmount: '0.00',
+                    deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
+                    paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
+                    status: orderStatus,
+                    pricingPolicy: pricingPolicy,
+                    salesExecutive: assignedTo,
+                    customerRegion: customerRegion,
+                    productCategory: categoryName,
+                    paymentPercentage: '100.00',
+                    isMachine: isMachineOrder,
+                    isFresh: isFresh
+                };
 
             // Create order lines payload
             const orderLinesPayload = [];
@@ -2252,10 +2255,15 @@ function Cart() {
             <div className="cart-header">
                 <div className="delivery-info">
                     <span className="delivery-link">
-                        {t('Delivering to')}{' '}
-                        {selectedBranchName && selectedBranchName !== 'No location selected'
-                            ? <strong>{selectedBranchName}</strong>
-                            : <em>(No location selected)</em>}
+                        {t("Delivering to")} {selectedBranchName !== "No location selected" ?
+                            <strong>
+                                {i18n.language === "en" ?
+                                    (selectedBranchNameEn || selectedBranchName) :
+                                    (selectedBranchNameLc || selectedBranchName)
+                                }
+                            </strong> :
+                            <em>No location selected</em>
+                        }
                     </span>
                 </div>
             </div>

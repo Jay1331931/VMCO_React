@@ -403,7 +403,7 @@ const BranchDetailsForm = ({
       );
       setOriginalBranchDetails(branchData);
       setBranchContacts(
-        isAppMode && temp && Object.keys(temp?.contacts).length > 0
+        isAppMode && temp?.contacts && Object.keys(temp?.contacts)?.length > 0
           ? { ...contactsData, ...temp?.contacts }
           : contactsData
       );
@@ -1321,9 +1321,8 @@ const BranchDetailsForm = ({
                   isBlocking ||
                   isUnblocking
                 }
-                hidden={
-                  branch?.id !== completeWorkflowData?.id
-                }
+               hidden={Number(branch?.id) !== Number(completeWorkflowData?.id)}
+
               >
                 {isApproving ? t("Approving...") : t("Approve")}
               </button>
@@ -1341,9 +1340,8 @@ const BranchDetailsForm = ({
                   isBlocking ||
                   isUnblocking
                 }
-                hidden={
-                  branch?.id !== completeWorkflowData?.id
-                }
+               hidden={Number(branch?.id) !== Number(completeWorkflowData?.id)}
+
               >
                 {isRejecting ? t("Rejecting...") : t("Reject")}
               </button>

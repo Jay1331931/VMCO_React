@@ -15,6 +15,7 @@ import {
   faBookOpen,
   faShoppingCart,
   faUsers,
+  faCodeBranch,
   faHeadset,
   faTools,
   faBuilding,
@@ -24,9 +25,10 @@ import {
   faLanguage,
   faBank,
   faFile,
-  faUpload
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
+import { icon } from "@fortawesome/fontawesome-svg-core";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -69,8 +71,8 @@ function Sidebar({ children, title }) {
     const contacts = Array.isArray(customerContacts)
       ? customerContacts
       : customerContacts
-        ? [customerContacts]
-        : [];
+      ? [customerContacts]
+      : [];
 
     // Create a map of contactType to contact data (note: using contactType instead of contact_type)
     const contactsMap = contacts.reduce((acc, contact) => {
@@ -372,16 +374,36 @@ function Sidebar({ children, title }) {
               customerId: customerData?.id,
               workflowId: customerData?.workflowInstanceId,
               mode: "add",
+              // activeTabRequired: "Branches",
             },
           });
         } catch (err) {
           console.error("Failed to fetch customer:", err);
         }
         break;
-
-        case "Reports":
-          navigate("/reports");
-          break;
+      case "Branches":
+        try {
+          const customerData = await fetchApprovedCustomer(user);
+          // navigate('/customersDetails', {
+          //   state: {
+          //     transformedCustomer: JSON.parse(JSON.stringify(customerData))
+          //   }
+          // });
+          navigate("/customerDetails", {
+            state: {
+              customerId: customerData?.id,
+              workflowId: customerData?.workflowInstanceId,
+              mode: "add",
+              activeTabRequired: "Branches",
+            },
+          });
+        } catch (err) {
+          console.error("Failed to fetch customer:", err);
+        }
+        break;
+      case "Reports":
+        navigate("/reports");
+        break;
 
       default:
         // If no match is found, stay on current page
@@ -406,6 +428,7 @@ function Sidebar({ children, title }) {
     { icon: faHouse, label: "Dashboard", default: true },
     { icon: faBookOpen, label: "Catalog" },
     { icon: faShoppingCart, label: "Orders" },
+    { icon: faCodeBranch, label: "Branches" },
     { icon: faUsers, label: "Customers" },
     { icon: faHeadset, label: "Support" },
     { icon: faTools, label: "Maintenance" },
@@ -433,36 +456,40 @@ function Sidebar({ children, title }) {
   };
 
   const formatKey = (key) => {
-  // Add space before capital letters and capitalize the first letter
-  return key
-    .replace(/([a-z])([A-Z])/g, '$1 $2') // insert space before capital letter
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2') // handle consecutive caps like ERP
-    .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
-};
-const formatValue = (value) => {
-  if (Array.isArray(value)) {
-    // Handle array of objects with name property
-    if (value?.length > 0 && typeof value[0] === 'object' && value[0]?.name) {
-      return value?.map(item => item?.name).join(', ');
+    // Add space before capital letters and capitalize the first letter
+    return key
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // insert space before capital letter
+      .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // handle consecutive caps like ERP
+      .replace(/^./, (str) => str.toUpperCase()); // capitalize first letter
+  };
+  const formatValue = (value) => {
+    if (Array.isArray(value)) {
+      // Handle array of objects with name property
+      if (value?.length > 0 && typeof value[0] === "object" && value[0]?.name) {
+        return value?.map((item) => item?.name).join(", ");
+      }
+      // Handle array of strings or numbers
+      return value?.join(", ");
     }
-    // Handle array of strings or numbers
-    return value?.join(', ');
-  }
-  
-  return value
-};
-const popupValidKey = (key) => {
-if(key.toLowerCase() === "test" || user[key]===null || user[key]?.length === 0)
-  return false
-else
-  return true
-};
+
+    return value;
+  };
+  const popupValidKey = (key) => {
+    if (
+      key.toLowerCase() === "test" ||
+      user[key] === null ||
+      user[key]?.length === 0
+    )
+      return false;
+    else return true;
+  };
 
   return (
     <div className={`app ${isRTL ? "rtl" : ""}`}>
       <div
-        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${isSidebarExpanded ? "expanded" : ""
-          }`}
+        className={`sidebar ${isSidebarCollapsed ? "collapsed" : ""} ${
+          isSidebarExpanded ? "expanded" : ""
+        }`}
       >
         <div className="sidebar-header">
           {isSidebarCollapsed ? (
@@ -476,7 +503,11 @@ else
           ) : (
             // Expanded logo: show different image based on RTL
             <img
-              src={isRTL ? "/logos/talab_point_lc.png" : "/logos/talab_point_en.png"}
+              src={
+                isRTL
+                  ? "/logos/talab_point_lc.png"
+                  : "/logos/talab_point_en.png"
+              }
               alt="Talab Point Logo Expanded"
               className="logo-expanded"
               style={{ maxWidth: "100%", maxHeight: "100%", padding: "10px" }}
@@ -484,46 +515,77 @@ else
           )}
         </div>
         <div className="sidebar-menu">
-       
-  <div className="main-menu-items">
-    {menuItems
-      .filter(({ label }) => label.toLowerCase() !== "company")
-      .map(({ icon, label, permission }) => (
-        <div
-          key={label}
-          className={`menu-item ${activeMenu === label ? "active" : ""}`}
-          onClick={() => handleMenuClick(label)}
-          style={{ display: isV(permission || label) ? "flex" : "none" }}
-        >
-          <FontAwesomeIcon icon={icon} />
-          <span>{t(label)}</span>
-        </div>
-      ))}
-  </div>
+          <div className="main-menu-items">
+            {menuItems
+              .filter(({ label }) => label.toLowerCase() !== "company")
+              .map(({ icon, label, permission }) => (
+                <div
+                  key={label}
+                  className={`menu-item ${
+                    activeMenu === label ? "active" : ""
+                  }`}
+                  onClick={() => handleMenuClick(label)}
+                  style={{
+                    display: isV(permission || label) ? "flex" : "none",
+                  }}
+                >
+                  <FontAwesomeIcon icon={icon} />
+                  <span>{t(label)}</span>
+                </div>
+              ))}
+          </div>
 
-  <div className="bottom-menu-section">
-    {menuItems
-      .filter(({ label }) => label.toLowerCase() === "company")
-      .map(({ icon, label, permission }) => (
-        <div
-          key={label}
-          className={`menu-item ${activeMenu === label ? "active" : ""}`}
-          onClick={() => handleMenuClick(label)}
-          style={{ display: isV(permission || label) ? "flex" : "none" }}
-        >
-          <FontAwesomeIcon icon={icon} />
-          <span>{t(label)}</span>
-        </div>
-      ))}
-  
-</div>
-
+          <div className="bottom-menu-section">
+            {menuItems
+              .filter(({ label }) => label.toLowerCase() === "company")
+              .map(({ icon, label, permission }) => (
+                <div
+                  key={label}
+                  className={`menu-item ${
+                    activeMenu === label ? "active" : ""
+                  }`}
+                  onClick={() => handleMenuClick(label)}
+                  style={{
+                    display: isV(permission || label) ? "flex" : "none",
+                  }}
+                >
+                  <FontAwesomeIcon icon={icon} />
+                  <span>{t(label)}</span>
+                </div>
+              ))}
+          </div>
         </div>
 
         <div className="sidebar-footer">
+          {/* {user?.userType?.toLowerCase() === "employee" && (<div className="user-text">
+                  <div className="user-details-footer" title={user?.employeeId}>{t("Employee ID")}: {user?.employeeId}</div>
+                  <div className="user-details-footer" title={user?.designation}>{t("Designation")}: {user?.designation}</div>
+                  <div className="user-details-footer">{user?.designation}</div>
+                  <div className="user-details-footer" title={user?.roles}>{t("Role")}: {user?.roles}</div>
+                </div>)} */}
+          {/* {user?.userType?.toLowerCase() === "customer" && user?.roles[0] === "customer_primary" && (<div className="user-text">
+                  <div className="user-details-footer" title={user?.erpCustomerId}>{t("Customer ID")}: {user?.erpCustomerId}</div>
+                  <div className="user-details-footer" title={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>{t("Company")}: {i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div>
+                  <EllipsisToolTip content={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>
+      {t("Company")}: {i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}
+    </EllipsisToolTip>
+                  <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div>
+                  <div className="user-details-footer" title={user?.branchNumber}>{t("Branches")}: {user?.branchNumber}</div>
+                </div>)} */}
+          {/* {user?.userType?.toLowerCase() === "customer" && user?.roles[0] === "branch_primary" && (<div className="user-text">
+                  <div className="user-details-footer" title={user?.erpCustomerId}>{t("Customer Id")}: {user?.erpCustomerId}</div>
+                  <div className="user-details-footer">{t("Company")}:</div>
+                  <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div>
+                  <div className="user-details-footer" title={user?.branchNumberPrimary}>{Number(user?.branchNumberPrimary) ? t("Branch") : t("Branch ID")}: {user?.branchNumberPrimary}</div>
+                </div>)} */}
+
           <div className="user-card">
             <div className="user-info">
-              <div className="user-details" onClick={handlePopupToggle} style={{ cursor: 'pointer' }}>
+              <div
+                className="user-details"
+                onClick={handlePopupToggle}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="user-avatar">
                   <FontAwesomeIcon icon={faUser} />
                 </div>
@@ -539,30 +601,38 @@ else
           </div>
         </div>
         {showPopup && (
-        <div className="user-popup-overlay" onClick={handlePopupToggle}>
-          <div className="user-popup" onClick={(e) => e.stopPropagation()}>
-            <div className="user-popup-header"><h2>User Details</h2></div>
-            <div className="user-popup-content">
-  {Object.entries(user).map(([key, value]) =>
-  value ? 
-    popupValidKey(key) && (<>
-    <div className="row-detail-row" key={key}>
-      
-      <span className="row-detail-label">{formatKey(key)}:</span>
-      <span className="row-detail-value">{formatValue(value)}</span>
-      
-    </div>
-    </>)
-   : null
-)}
-</div>
-            {/* Add more fields as needed */}
-            <div className="user-popup-footer">
-            <button onClick={handlePopupToggle} className="close-dialog">Close</button>
+          <div className="user-popup-overlay" onClick={handlePopupToggle}>
+            <div className="user-popup" onClick={(e) => e.stopPropagation()}>
+              <div className="user-popup-header">
+                <h2>User Details</h2>
+              </div>
+              <div className="user-popup-content">
+                {Object.entries(user).map(([key, value]) =>
+                  value
+                    ? popupValidKey(key) && (
+                        <>
+                          <div className="row-detail-row" key={key}>
+                            <span className="row-detail-label">
+                              {formatKey(key)}:
+                            </span>
+                            <span className="row-detail-value">
+                              {formatValue(value)}
+                            </span>
+                          </div>
+                        </>
+                      )
+                    : null
+                )}
+              </div>
+              {/* Add more fields as needed */}
+              <div className="user-popup-footer">
+                <button onClick={handlePopupToggle} className="close-dialog">
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       <div
@@ -581,8 +651,8 @@ else
                   ? faChevronLeft
                   : faChevronRight
                 : isRTL
-                  ? faChevronRight
-                  : faChevronLeft
+                ? faChevronRight
+                : faChevronLeft
             }
           />
         </div>
@@ -595,8 +665,8 @@ else
             window.innerWidth <= 768
               ? {}
               : isRTL
-                ? { marginRight: sidebarOffset, marginLeft: 0 }
-                : { marginLeft: sidebarOffset, marginRight: 0 }
+              ? { marginRight: sidebarOffset, marginLeft: 0 }
+              : { marginLeft: sidebarOffset, marginRight: 0 }
           }
         >
           <header className="header">
@@ -609,10 +679,94 @@ else
             </button>
             <div className="header-title">{t(activeMenu)}</div>
             {/* Saudi time next to language switch */}
-            <button className="lang-switch-btn" onClick={toggleLanguage}>
+            <div className="user-text-header">
+              <div className="text">
+            {user?.userType?.toLowerCase() === "employee" && (
+              // <div className="user-text-header">
+              <div className="text">
+                <div className="user-details-footer" title={user?.employeeId}>
+                  {t("Employee ID")}: {user?.employeeId}
+                </div>
+                <div className="user-details-footer" title={user?.designation}>
+                  {t("Designation")}: {user?.designation}
+                </div>
+                {/* <div className="user-details-footer">{user?.designation}</div> */}
+                <div className="user-details-footer" title={user?.roles}>
+                  {t("Role")}: {user?.roles}
+                </div>
+              {/* </div> */}
+              </div>
+            )}
+            {user?.userType?.toLowerCase() === "customer" &&
+              user?.roles[0] === "customer_primary" && (
+                // <div className="user-text-header">
+                <div className="text">
+                <div
+                    className="user-details-footer"
+                    title={user?.erpCustomerId}
+                  >
+                    {t("Customer ID")}: {user?.erpCustomerId}
+                  </div>
+                  <div
+                    className="user-details-footer"
+                    title={
+                      i18n.language === "en"
+                        ? user?.companyNameEn
+                        : user?.companyNameAr
+                    }
+                  >
+                    {t("Company")}:{" "}
+                    {i18n.language === "en"
+                      ? user?.companyNameEn
+                      : user?.companyNameAr}
+                  </div>
+                  {/* <EllipsisToolTip content={i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}>
+      {t("Company")}: {i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}
+    </EllipsisToolTip> */}
+                  {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
+                  <div
+                    className="user-details-footer"
+                    title={user?.branchNumber}
+                  >
+                    {t("Branches")}: {user?.branchNumber}
+                  </div>
+                {/* </div> */}
+                </div>
+                  
+              )}
+            {user?.userType?.toLowerCase() === "customer" &&
+              user?.roles[0] === "branch_primary" && (
+                // <div className="user-text-header">
+               <div className="text">
+                <div
+                    className="user-details-footer"
+                    title={user?.erpCustomerId}
+                  >
+                    {t("Customer ID")}: {user?.erpCustomerId}
+                  </div>
+                  {/* <div className="user-details-footer">{t("Company")}:</div> */}
+                  {/* <div className="user-details-footer">{i18n.language === "en" ? user?.companyNameEn : user?.companyNameAr}</div> */}
+                  <div
+                    className="user-details-footer"
+                    title={user?.branchNumberPrimary}
+                  >
+                    {Number(user?.branchNumberPrimary)
+                      ? t("Branch")
+                      : t("Branch ID")}
+                    : {user?.branchNumberPrimary}
+                  </div>
+                {/* </div> */}
+                </div>
+                  
+              )}
+              </div>
+            
+              <button className="lang-switch-btn" onClick={toggleLanguage}>
               <FontAwesomeIcon icon={faLanguage} />
               <span>{isRTL ? "EN" : "عربى"}</span>
             </button>
+            </div>
+            
           </header>
           <div className="content">{children}</div>
         </div>

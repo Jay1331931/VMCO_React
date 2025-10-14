@@ -1,3 +1,5 @@
+import Constants from "../constants";
+
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 export const getOptionsFromBasicsMaster = async (fieldName, token) => {
   const params = new URLSearchParams({
@@ -119,27 +121,39 @@ export const getOptionsFromEmployees = async (token) => {
   const params = new URLSearchParams({
     filters: { designation: "sales executive" }, // Properly stringify the filter
   });
-  const supportStaffDesignation = "sales executive";
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/employees/pagination?filters={"designation": "${supportStaffDesignation}"}`,
-      {
-        method: "GET",
-        headers: { 
-          "Content-Type": "application/json",
-          ...(token && { "Authorization": `Bearer ${token}` })
-        },
-        
+  const supportStaffDesignation = ["sales executive","area sales manager"];
+   try {
+    const allResults = [];
+
+    for (const designation of supportStaffDesignation) {
+      const filters = encodeURIComponent(JSON.stringify({ designation }));
+
+      const response = await fetch(
+        `${API_BASE_URL}/employees/pagination?filters=${filters}`,
+        {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            ...(token && { "Authorization": `Bearer ${token}` })
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`Failed to fetch ${designation}: ${response.status}`);
+        continue;
       }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+
+      const result = await response.json();
+      const options = result.data.data.map((item) => ({
+        name: item.name,
+        employeeId: item.employeeId,
+      }));
+
+      allResults.push(...options); // Add to the combined array
     }
-    const result = await response.json();
-    const options = result.data.data.map((item) => {
-      return { name: item.name, employeeId: item.employeeId };
-    });
-    return options;
+
+    return allResults;
   } catch (err) {
     console.error("Error fetching employee options:", err);
     return [];
@@ -180,5 +194,27 @@ export const getOptionsFromEmployeesWithManager = async (region, token) => {
     return [];
   }
 };
+
+export const checkFieldForUpdate = async (fieldType, workflowName) => {
+  if(fieldType.toLowerCase() === "customer") {
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.CUSTOMER_DETAILS.toLowerCase() || workflowName.toLowerCase() === Constants.WORKFLOW_NAME.CUSTOMER_POST_APPROVAL.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if (fieldType.toLowerCase() === "pricingpolicy"){
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.PRICING_POLICY.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if(fieldType.toLowerCase() === "payments"){
+    if(workflowName.toLowerCase() === Constants.WORKFLOW_NAME.PAYMENT_METHODS.toLowerCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
 
 

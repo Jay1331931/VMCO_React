@@ -109,6 +109,42 @@ const fetchCurrentDataOfCustomer = async (customerId, token) => {
   }
 };
 
+const fetchCurrentDataOfCustomerBranches = async (customerId, token) => {
+  try {
+    const query = new URLSearchParams({
+      // page: currentPage,
+      // pageSize: pageSize,
+      sortBy: "id",
+      sortOrder: "asc",
+      // search: search,
+      filters: JSON.stringify({
+customer_id: customerId,
+      }),
+    });
+    
+      const branchResponse = await fetch(
+        `${API_BASE_URL}/customer-branches/pagination?${query.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!branchResponse.ok) {
+        throw new Error("Failed to fetch branches");
+      }
+      const data = await branchResponse.json();
+      // setCurrentPage(data.page);
+      // setBranches(data.data);
+      return data?.totalRecords;
+  } catch (error) {
+    console.error("Error fetching current customer data:", error);
+    throw error;
+  }
+}
+
 //TODO: Implement this function to fetch workflow data of a customer from server --WF
 
 const checkInApproval = async (customerId, module, token) => {
@@ -405,10 +441,11 @@ function CustomerDetails() {
   const { t } = useTranslation();
   const [tabsHeight, setTabsHeight] = useState("auto");
   const { token, user, isAuthenticated, logout, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState(
-    user?.roles[0] === "branch_primary" ? "Branches" : "Business Details"
-  );
   const location = useLocation();
+  const activeTabRequired = location?.state?.activeTabRequired;
+  const [activeTab, setActiveTab] = useState(
+    user?.roles[0] === "branch_primary" ? "Branches" : activeTabRequired ? activeTabRequired : "Business Details"
+  );
   const customerId = location?.state?.customerId;
   const workflowId = location?.state?.workflowId;
   console.log("@@@@@location?.state?.workflowInstanceId:", location?.state);
@@ -445,7 +482,7 @@ function CustomerDetails() {
   const [isRejecting, setIsRejecting] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [isUnblocking, setIsUnblocking] = useState(false);
-
+  const [branchTotal, setBranchTotal] = useState(null);
   var updatedCustomerData = useRef({});
   var updatedCustomerContactsData = useRef({});
   var updatedCustomerPaymentMethodsData = useRef({});
@@ -488,7 +525,7 @@ function CustomerDetails() {
       const workflowDataJson = await response.json();
       console.log("Workflow Data JSON~~~~~~~~~~~~~", workflowDataJson);
       setWorkflowHistory(workflowDataJson?.data?.approvalHistory);
-      setCompleteWorkflowData(workflowDataJson?.data?.workflowData);
+      setCompleteWorkflowData(workflowDataJson?.data);
       return workflowDataJson?.data?.workflowData?.updates;
     } catch (error) {
       console.error("Error fetching workflow data:", error);
@@ -514,6 +551,8 @@ function CustomerDetails() {
         navigate("/*");
       }
       const resp = await fetchCurrentDataOfCustomer(customerId, token);
+      const total = await fetchCurrentDataOfCustomerBranches(customerId, token);
+      setBranchTotal(total)
       const customerContacts = await fetchCurrentDataOfCustomerContacts(
         customerId,
         token
@@ -808,7 +847,7 @@ const handleVerifiedDataChange = (e) => {
     // "brandLogo",
     // "brandNameEn",
     // "brandNameAr",
-    // "buildingName",
+    "buildingName",
     "street",
     "city",
     "district",
@@ -875,7 +914,7 @@ const handleVerifiedDataChange = (e) => {
     // "brandLogo",
     // "brandNameEn",
     // "brandNameAr",
-    // "buildingName",
+    "buildingName",
     "street",
     "city",
     "district",
@@ -2078,6 +2117,8 @@ if (uniqueFieldsList.includes(field)) {
         customerId,
         token
       );
+      const total = await fetchCurrentDataOfCustomerBranches(customerId, token);
+      setBranchTotal(total);
       const contactsDataSubmit = await fetchCurrentDataOfCustomerContacts(
         customerId,
         token
@@ -2327,12 +2368,19 @@ if (uniqueFieldsList.includes(field)) {
                       {t("Branches")}
                       {wfCustomerData?.branch?.customerId ===
                         originalCustomerData?.id &&
-                        mode === "edit" && (
+                        mode === "edit" ? (
                           <span
                             className="update-badge"
                             style={{ marginLeft: 8 }}
                           >
                             {1}
+                          </span>
+                        ) : (
+                          <span
+                            className="update-badge"
+                            style={{ marginLeft: 8, background: "blue", color: "white" }}
+                          >
+                            {branchTotal}
                           </span>
                         )}
                     </div>
@@ -2353,6 +2401,7 @@ if (uniqueFieldsList.includes(field)) {
                     setInterCompany={setInterCompany}
                     formErrors={formErrors}
                     logosToUpload={logosToUpload} // <-- pass to BusinessDetails
+                    completeWorkflowData={completeWorkflowData}
                   />
                 )}
               {activeTab === "Contact Details" && isV("contactDetailsTab") && (
@@ -2372,6 +2421,7 @@ if (uniqueFieldsList.includes(field)) {
                   mode={mode}
                   setTabsHeight={setTabsHeight}
                   formErrors={formErrors}
+                  completeWorkflowData={completeWorkflowData}
                 />
               )}
               {activeTab === "Financial Information" &&
@@ -2397,6 +2447,7 @@ if (uniqueFieldsList.includes(field)) {
                     mode={mode}
                     setTabsHeight={setTabsHeight}
                     formErrors={formErrors}
+                    completeWorkflowData={completeWorkflowData}
                   />
                 )}
               {activeTab === "Documents" && isV("documentsTab") && (
