@@ -25,7 +25,8 @@ const TapCardPayment = () => {
   const amountDecoded = atob(decodeURIComponent(amount));
   const customerIdDecoded = atob(decodeURIComponent(customerId));
   const orderTypeDecoded = atob(decodeURIComponent(orderType));
-
+  const TAP_PUIBLIC_KEY = process.env.REACT_APP_PAYMENT_TAP_PUBLIC_KEY;
+   const TAP_MERCHANT_ID = process.env.REACT_APP_TAP_MERCHANT_ID
   // Fetch customer details
   useEffect(() => {
     const fetchCustomerDetails = async () => {
@@ -129,8 +130,8 @@ const TapCardPayment = () => {
         container.appendChild(sdkElement);
 
         renderTapCard("card-sdk-id", {
-          publicKey: "pk_test_FcYVGop4TyCRLb0qBhIHJzmn",
-          merchant: { id: "67979587" },
+           publicKey: TAP_PUIBLIC_KEY, //"pk_test_FcYVGop4TyCRLb0qBhIHJzmn",
+          merchant: {id:TAP_MERCHANT_ID},//{ id: "67979587" },
           transaction: { amount: parseFloat(amountDecoded), currency: Currencies.SAR },
           customer: {
             id: CustomerDetails?.tap_cust_id || "",
