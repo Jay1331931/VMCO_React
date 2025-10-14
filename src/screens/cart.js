@@ -638,7 +638,8 @@ function Cart() {
 
                         if (paymentLinkResponse?.data?.details?.url) {
                             console.log('Payment link generated successfully, redirecting to:', paymentLinkResponse.data.details.url);
-                            window.open(paymentLinkResponse.data.details.url);
+                            // window.open(paymentLinkResponse.data.details.url);
+                            window.location.replace(paymentLinkResponse?.data?.details?.url)
                         } else {
                             console.error('Payment URL not found in response:', paymentLinkResponse.data);
                         }
@@ -1654,7 +1655,8 @@ function Cart() {
                     });
 
                     if (paymentLinkResponse?.data?.details?.url) {
-                        window.open(paymentLinkResponse.data.details.url);
+                        // window.open(paymentLinkResponse.data.details.url);
+                           window.location.replace(paymentLinkResponse?.data?.details?.urlL)
                     }
                 } catch (error) {
                     console.error('Error generating payment link:', error);
