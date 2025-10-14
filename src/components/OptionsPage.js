@@ -648,10 +648,10 @@ const orderTypeEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURICompone
       <div className="button-wrapper">
         {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.VMCO?.toLowerCase() ||
-          OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.NAQI?.toLowerCase()) &&DecodedorderTpe?.toLowerCase()!=="cart" && (
+         ( OrderDetails[0]?.entity?.toLowerCase()|| TempOrderDetails[0]?.entity?.toLowerCase()) ===
+            Constants.ENTITY?.NAQI?.toLowerCase()) && (
           <button
-            onClick={() => handleBankTransaction(amount, decodedOrderID)}
+            onClick={() => handleBankTransaction(amount, DecodedorderTpe.toLowerCase()==="cart" ?  tempdecodedOrderID :decodedOrderID)}
             className="option-button blue"
           >
             <FontAwesomeIcon icon={faBuilding} style={{ marginRight: "10px" }} />
