@@ -1533,7 +1533,7 @@ function OrderDetails() {
         `${API_BASE_URL}/generatePayment-link`,
         {
           id: orderId,
-          endPoint: "payment-opations/order",
+          endPoint: "payment-options/order",
           IsEmail: email,
         },
         {

@@ -1968,21 +1968,21 @@ function OrderDetails() {
     }
   };
 
-  const handleCheckout = async (orderId, email = false, copyUrl = false) => {
-    try {
-      const { data } = await axios.post(
-        `${API_BASE_URL}/generatePayment-link`,
-        {
-          id: orderId,
-          endPoint: "payment-opations/order",
-          IsEmail: email,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const handleCheckout = async (orderId, email = false, copyUrl = false) => {
+        try {
+            const { data } = await axios.post(
+                `${API_BASE_URL}/generatePayment-link`,
+                {
+                    id: orderId,
+                    endPoint: "payment-options/order",
+                    IsEmail: email,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
       if (email) {
         Swal.fire({
