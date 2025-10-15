@@ -206,6 +206,7 @@ function DeliveryScheduleEditor() {
                                     }
                                 }}
                                 title={params.row.isActive ? t("Turn off") : t("Turn on")}
+                                style={i18n.language === "ar" ? { transform: "rotate(180deg)" } : {}}
                             />
                         </div>
 
@@ -634,15 +635,15 @@ function DeliveryScheduleEditor() {
                         borderRadius: "8px",
                         border: "1px solid #dee2e6"
                     }}>
-                        <h4>Add New Delivery Schedule for {activeCategory}</h4>
+                        <h4>{t("Add New Delivery Schedule for")} {t(activeCategory)}</h4>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "10px", marginBottom: "10px" }}>
                             <div>
-                                <label>Region</label>
+                                <label>{t("Region")}</label>
                                 <SearchableDropdown
                                     name="region"
                                     value={selectedRegion}
                                     onChange={handleRegionChange}
-                                    placeholder="Select Region"
+                                    placeholder={t("Select Region")}
                                     options={getRegionOptions()}
                                     style={{
                                         marginTop: "10px",
@@ -655,12 +656,12 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>City</label>
+                                <label>{t("City")}</label>
                                 <SearchableDropdown
                                     name="city"
                                     value={selectedCity}
                                     onChange={handleCityChange}
-                                    placeholder="Select City"
+                                    placeholder={t("Select City")}
                                     options={getCityOptions(selectedRegion)}
                                     disabled={!selectedRegion}
                                     style={{
@@ -674,14 +675,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Cut-off Day</label>
+                                <label>{t("Cut-off Day")}</label>
                                 <SearchableDropdown
                                     name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, cutoffDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -694,14 +695,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Pickup Day</label>
+                                <label>{t("Pickup Day")}</label>
                                 <SearchableDropdown
                                     name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, pickupDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -714,14 +715,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Delivery Day</label>
+                                <label>{t("Delivery Day")}</label>
                                 <SearchableDropdown
                                     name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, deliveryDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -748,7 +749,7 @@ function DeliveryScheduleEditor() {
                                     marginRight: '10px'
                                 }}
                             >
-                                {loading ? 'Creating...' : 'Create Schedule'}
+                                {loading ? t('Creating...') : t("Create Schedule")}
                             </button>
                         </div>
                     </div>
