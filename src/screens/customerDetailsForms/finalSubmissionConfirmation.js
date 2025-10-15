@@ -220,96 +220,102 @@ const FinalSubmissionConfirmation = ({
 
   return (
     <>
-    <div className="customer-onboarding-form-grid">
-      <h3>{t("Final Submission")}</h3>
-      <div className="form-header full-width">
-        {t(
-          "I hereby confirm that all the information provided is accurate and up-to-date. I understand that any discrepancies may result in the rejection of this onboarding application."
-        )}
-      </div>
-      <div className="form-group">
-        <label htmlFor="confirmationName">
-          {t("Name")}
-          <span className="required-field">*</span>
-        </label>
-        <div className="input-with-verification">
-        <input
-          type="text"
-          id="declarationName"
-          name="declarationName"
-          value={customerData.declarationName || ""}
-          onChange={onChangeCustomerData}
-          required
-          disabled={mode === "edit" || isE("declarationName")}
-        />
-        {isV("declarationNameVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="declarationNameVerified"
-        name="declarationNameVerified"
-        checked={verifiedData?.declarationNameVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="declarationNameVerified">Verified</label>
-      </div>)}
-      </div>
-        {formErrors?.declarationName && (
-          <div className="error">{t(formErrors.declarationName)}</div>
-        )}
-      </div>
+      <div className="customer-onboarding-form-grid">
+        <h3>{t("Final Submission")}</h3>
+        <div className="form-header full-width">
+          {t(
+            "I hereby confirm that all the information provided is accurate and up-to-date. I understand that any discrepancies may result in the rejection of this onboarding application."
+          )}
+        </div>
+        <div className="form-group">
+          <label htmlFor="confirmationName">
+            {t("Name")}
+            <span className="required-field">*</span>
+          </label>
+          <div className="input-with-verification">
+            <input
+              type="text"
+              id="declarationName"
+              name="declarationName"
+              value={customerData.declarationName || ""}
+              onChange={onChangeCustomerData}
+              required
+              disabled={mode === "edit" || isE("declarationName")}
+            />
+            {isV("declarationNameVerified") &&
+              // (originalCustomerData &&
+              //     customerData &&
+              //     originalCustomerData?.companyNameEn !==
+              //       customerData?.companyNameEn &&
+              //     mode === "edit") ||
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="declarationNameVerified"
+                    name="declarationNameVerified"
+                    checked={verifiedData?.declarationNameVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="declarationNameVerified">Verified</label>
+                </div>
+              )}
+          </div>
+          {formErrors?.declarationName && (
+            <div className="error">{t(formErrors.declarationName)}</div>
+          )}
+        </div>
 
-      <div className="form-group">
-        <label htmlFor="confirmationDate">{t("Date")}</label>
-        <div className="input-with-verification">
-        <input
-          type="date"
-          id="confirmationDate"
-          name="date"
-          value={
-            customerData?.declarationDate
-              ? new Date(customerData.declarationDate).toLocaleDateString(
-                  "en-CA"
-                )
-              : new Date().toLocaleDateString("en-CA")
-          }
-          readOnly
-          disabled
-        />
-        {isV("confirmationDateVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="confirmationDateVerified"
-        name="confirmationDateVerified"
-        checked={verifiedData?.confirmationDateVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="confirmationDateVerified">Verified</label>
-      </div>)}
-      </div>
-      </div>
+        <div className="form-group">
+          <label htmlFor="confirmationDate">{t("Date")}</label>
+          <div className="input-with-verification">
+            <input
+              type="date"
+              id="confirmationDate"
+              name="date"
+              value={
+                customerData?.declarationDate
+                  ? new Date(customerData.declarationDate).toLocaleDateString(
+                      "en-CA"
+                    )
+                  : new Date().toLocaleDateString("en-CA")
+              }
+              readOnly
+              disabled
+            />
+            {isV("confirmationDateVerified") &&
+              // (originalCustomerData &&
+              //     customerData &&
+              //     originalCustomerData?.companyNameEn !==
+              //       customerData?.companyNameEn &&
+              //     mode === "edit") ||
+              mode === "edit" &&
+              customerData?.customerStatus === "pending" && (
+                <div className="verification-checkbox">
+                  <input
+                    type="checkbox"
+                    id="confirmationDateVerified"
+                    name="confirmationDateVerified"
+                    checked={verifiedData?.confirmationDateVerified || false}
+                    onChange={onChangeVerifiedData}
+                    // className="verified-checkbox"
+                  />
+                  <label htmlFor="confirmationDateVerified">Verified</label>
+                </div>
+              )}
+          </div>
+        </div>
 
-      <div className="form-group">
-        <label htmlFor="confirmationSignature">
-          {t("Signature")}
-          <span className="required-field">*</span>
-        </label>
+        <div className="form-group">
+          <label htmlFor="confirmationSignature">
+            {t("Signature")}
+            {/* <span className="required-field">*</span> */}
+          </label>
 
-        {/* Signature Canvas */}
-        {/* <div className="signature-container">
+          {/* Signature Canvas */}
+          {/* <div className="signature-container">
           <div
             style={{
               border: "1px solid #ccc",
@@ -358,172 +364,181 @@ const FinalSubmissionConfirmation = ({
           </div>
         </div> */}
 
-        <div className="signature-container">
-          <div className="signature-wrapper">
-            <p className="signature-hint">{t('Click and drag to sign')}</p>
-            <SignatureCanvas
-              ref={sigCanvasRef}
-              penColor="black"
-              minWidth={0.5}
-              maxWidth={1.5}
-              dotSize={0.2}
-              canvasProps={{
-                width: 400,
-                height: 150,
-                className: "signature-canvas-fa",
-              }}
-            />
-            <div className="fa-cursor">
-              <FontAwesomeIcon icon={faPen} />
+          <div className="signature-container">
+            <div className="signature-wrapper">
+              <p className="signature-hint">{t("Click and drag to sign")}</p>
+              <SignatureCanvas
+                ref={sigCanvasRef}
+                penColor="black"
+                minWidth={0.5}
+                maxWidth={1.5}
+                dotSize={0.2}
+                canvasProps={{
+                  width: 400,
+                  height: 150,
+                  className: "signature-canvas-fa",
+                }}
+              />
+              <div className="fa-cursor">
+                <FontAwesomeIcon icon={faPen} />
+              </div>
+            </div>
+
+            <div className="signature-buttons">
+              <button
+                type="button"
+                onClick={handleSaveSignature}
+                disabled={
+                  (mode === "edit" &&
+                    customerData?.customerStatus === "pending") ||
+                  isE("declarationName")
+                }
+                className="custom-file-button"
+              >
+                {t("Save Signature")}
+              </button>
+              <button
+                type="button"
+                onClick={handleClearSignature}
+                disabled={
+                  (mode === "edit" &&
+                    customerData?.customerStatus === "pending") ||
+                  isE("declarationName")
+                }
+                style={{ marginLeft: "10px" }}
+                className="custom-file-button"
+              >
+                {t("Clear")}
+              </button>
             </div>
           </div>
-          
-          <div className="signature-buttons">
-            <button
-              type="button"
-              onClick={handleSaveSignature}
-              disabled={
-                (mode === "edit" && customerData?.customerStatus === "pending") ||
-                isE("declarationName")
-              }
-              className="custom-file-button"
-            >
-              {t("Save Signature")}
-            </button>
-            <button
-              type="button"
-              onClick={handleClearSignature}
-              disabled={
-                (mode === "edit" && customerData?.customerStatus === "pending") ||
-                isE("declarationName")
-              }
-              style={{ marginLeft: "10px" }}
-              className="custom-file-button"
-            >
-              {t("Clear")}
-            </button>
-          </div>
-        </div>
 
-        {/* Show preview if signature is saved but not yet submitted */}
-        {signaturePreviews.declarationSignature && (
-          <div className="signature-preview">
-            <img
-              src={signaturePreviews.declarationSignature}
-              alt="Signature Preview"
-              style={{
-                maxWidth: 200,
-                maxHeight: 80,
-                marginTop: 8,
-                border: "1px solid #ccc",
-                borderRadius: 4,
-              }}
-            />
-            <button
-              type="button"
-              className="delete-file-button"
-              onClick={() => {
-                setSignaturePreviews((prev) => {
-                  if (prev.declarationSignature)
-                    URL.revokeObjectURL(prev.declarationSignature);
-                  return { ...prev, declarationSignature: null };
-                });
-                handleSignatureDelete("declarationSignature");
-              }}
-              style={{ marginLeft: 8, fontSize: "20px" }}
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Show uploaded signature as link if present and no preview */}
-        {!signaturePreviews.declarationSignature &&
-          customerData?.declarationSignature && (
+          {/* Show preview if signature is saved but not yet submitted */}
+          {signaturePreviews.declarationSignature && (
             <div className="signature-preview">
-              <a
-                href="#"
-                className="file-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleViewSignature(
-                    customerData.id,
-                    customerData.declarationSignature,
-                    "declarationSignature"
-                  );
+              <img
+                src={signaturePreviews.declarationSignature}
+                alt="Signature Preview"
+                style={{
+                  maxWidth: 200,
+                  maxHeight: 80,
+                  marginTop: 8,
+                  border: "1px solid #ccc",
+                  borderRadius: 4,
                 }}
-                style={{ marginRight: 8 }}
-              >
-                {typeof customerData.declarationSignature === "string"
-                  ? (() => {
-                      const name = customerData.declarationSignature
-                        .split("_")
-                        .slice(0, 2)
-                        .join(" ");
-                      const maxLen = 20;
-                      return name.length > maxLen
-                        ? name.substring(0, maxLen) + "..."
-                        : name;
-                    })()
-                  : "View Signature"}
-              </a>
+              />
               <button
                 type="button"
                 className="delete-file-button"
-                onClick={() => handleSignatureDelete("declarationSignature")}
-                style={{ marginLeft: 8, fontSize: "15px" }}
+                onClick={() => {
+                  setSignaturePreviews((prev) => {
+                    if (prev.declarationSignature)
+                      URL.revokeObjectURL(prev.declarationSignature);
+                    return { ...prev, declarationSignature: null };
+                  });
+                  handleSignatureDelete("declarationSignature");
+                }}
+                style={{ marginLeft: 8, fontSize: "20px" }}
               >
-                <FontAwesomeIcon icon={faTrash} />
+                ×
               </button>
-              <div className="input-with-verification">
-              {isV("declarationSignatureVerified") && (
-    // (originalCustomerData &&
-    //     customerData &&
-    //     originalCustomerData?.companyNameEn !==
-    //       customerData?.companyNameEn &&
-    //     mode === "edit") ||
-        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
-      <input
-        type="checkbox"
-        id="declarationSignatureVerified"
-        name="declarationSignatureVerified"
-        checked={verifiedData?.declarationSignatureVerified || false}
-        onChange={onChangeVerifiedData}
-        // className="verified-checkbox"
-      />
-      <label htmlFor="declarationSignatureVerified">Verified</label>
-      </div>)}
-            </div>
             </div>
           )}
-        {formErrors?.declarationSignature && (
-          <div className="error">{t(formErrors.declarationSignature)}</div>
-        )}
-      </div>
 
-      {isV("assignedToEntityWise") && (
-      <>
-      <div className="form-header full-width">
-        {t(
-          "I hereby verify all customer information and declare that the details provided by the customer have been verified."
-        )}
-      </div>
-      <div className="form-group">
-        <label htmlFor="confirmationName">
-          {t("Name")}
-          <span className="required-field">*</span>
-        </label>
-        <div className="input-with-verification">
-        <input
-          type="text"
-          id="verifiedBy"
-          name="verifiedBy"
-          value={customerData.verifiedBy || user?.userName}
-          onChange={onChangeCustomerData}
-          required
-          disabled={isE("declarationName")}
-        />
-        {/* {isV("declarationNameVerified") && (
+          {/* Show uploaded signature as link if present and no preview */}
+          {!signaturePreviews.declarationSignature &&
+            customerData?.declarationSignature && (
+              <div className="signature-preview">
+                <a
+                  href="#"
+                  className="file-link"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleViewSignature(
+                      customerData.id,
+                      customerData.declarationSignature,
+                      "declarationSignature"
+                    );
+                  }}
+                  style={{ marginRight: 8 }}
+                >
+                  {typeof customerData.declarationSignature === "string"
+                    ? (() => {
+                        const name = customerData.declarationSignature
+                          .split("_")
+                          .slice(0, 2)
+                          .join(" ");
+                        const maxLen = 20;
+                        return name.length > maxLen
+                          ? name.substring(0, maxLen) + "..."
+                          : name;
+                      })()
+                    : "View Signature"}
+                </a>
+                <button
+                  type="button"
+                  className="delete-file-button"
+                  onClick={() => handleSignatureDelete("declarationSignature")}
+                  style={{ marginLeft: 8, fontSize: "15px" }}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+                <div className="input-with-verification">
+                  {isV("declarationSignatureVerified") &&
+                    // (originalCustomerData &&
+                    //     customerData &&
+                    //     originalCustomerData?.companyNameEn !==
+                    //       customerData?.companyNameEn &&
+                    //     mode === "edit") ||
+                    mode === "edit" &&
+                    customerData?.customerStatus === "pending" && (
+                      <div className="verification-checkbox">
+                        <input
+                          type="checkbox"
+                          id="declarationSignatureVerified"
+                          name="declarationSignatureVerified"
+                          checked={
+                            verifiedData?.declarationSignatureVerified || false
+                          }
+                          onChange={onChangeVerifiedData}
+                          // className="verified-checkbox"
+                        />
+                        <label htmlFor="declarationSignatureVerified">
+                          Verified
+                        </label>
+                      </div>
+                    )}
+                </div>
+              </div>
+            )}
+          {formErrors?.declarationSignature && (
+            <div className="error">{t(formErrors.declarationSignature)}</div>
+          )}
+        </div>
+
+        {isV("assignedToEntityWise") && (
+          <>
+            <div className="form-header full-width">
+              {t(
+                "I hereby verify all customer information and declare that the details provided by the customer have been verified."
+              )}
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmationName">
+                {t("Name")}
+                <span className="required-field">*</span>
+              </label>
+              <div className="input-with-verification">
+                <input
+                  type="text"
+                  id="verifiedBy"
+                  name="verifiedBy"
+                  value={customerData.verifiedBy || user?.userName}
+                  onChange={onChangeCustomerData}
+                  required
+                  disabled={isE("declarationName")}
+                />
+                {/* {isV("declarationNameVerified") && (
     // (originalCustomerData &&
     //     customerData &&
     //     originalCustomerData?.companyNameEn !==
@@ -540,30 +555,30 @@ const FinalSubmissionConfirmation = ({
       />
       <label htmlFor="declarationNameVerified">Verified</label>
       </div>)} */}
-      </div>
-        {formErrors?.verifiedBy && (
-          <div className="error">{t(formErrors.verifiedBy)}</div>
-        )}
-      </div>
+              </div>
+              {formErrors?.verifiedBy && (
+                <div className="error">{t(formErrors.verifiedBy)}</div>
+              )}
+            </div>
 
-      <div className="form-group">
-        <label htmlFor="confirmationDate">{t("Date")}</label>
-        <div className="input-with-verification">
-        <input
-          type="date"
-          id="confirmationDate"
-          name="date"
-          value={
-            customerData?.verified
-              ? new Date(customerData.verified).toLocaleDateString(
-                  "en-CA"
-                )
-              : new Date().toLocaleDateString("en-CA")
-          }
-          readOnly
-          disabled
-        />
-        {/* {isV("confirmationDateVerified") && (
+            <div className="form-group">
+              <label htmlFor="confirmationDate">{t("Date")}</label>
+              <div className="input-with-verification">
+                <input
+                  type="date"
+                  id="confirmationDate"
+                  name="date"
+                  value={
+                    customerData?.verified
+                      ? new Date(customerData.verified).toLocaleDateString(
+                          "en-CA"
+                        )
+                      : new Date().toLocaleDateString("en-CA")
+                  }
+                  readOnly
+                  disabled
+                />
+                {/* {isV("confirmationDateVerified") && (
     // (originalCustomerData &&
     //     customerData &&
     //     originalCustomerData?.companyNameEn !==
@@ -580,13 +595,11 @@ const FinalSubmissionConfirmation = ({
       />
       <label htmlFor="confirmationDateVerified">Verified</label>
       </div>)} */}
+              </div>
+            </div>
+          </>
+        )}
       </div>
-      </div>
-
-      </>
-      )}
-    </div>
-    
     </>
   );
 };
