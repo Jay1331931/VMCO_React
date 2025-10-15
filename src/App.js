@@ -40,6 +40,7 @@ import TapCardComponent from "./screens/TapCardComponent";
 import DeliveryScheduleEditor from "./screens/deliveryScheduleEditor";
 import PriceListEditor from "./screens/priceListEditor";
 import CustomersMUI from "./screens/customersmui";
+import DomainVerification from "./screens/DomainVerification"
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -91,6 +92,8 @@ function App() {
         <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
+      <Route path="/.well-known/apple-developer-merchantid-domain-association" element={<DomainVerification/>} />   {/*component={DomainVerification} */}
+
         <Route path="/login/employee" element={ <LoginScreen />} />
         <Route
           path="/customers/registration"

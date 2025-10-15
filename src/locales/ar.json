@@ -788,6 +788,7 @@
     "Select City": "اختر المدينة",
     "Select Day": "اختر الأيام",
     "Warehouse Required": "المستودع مطلوب",
-    "Please select a warehouse before approving.": "يرجى اختيار مستودع قبل الموافقة."
+    "Please select a warehouse before approving.": "يرجى اختيار مستودع قبل الموافقة.",
+    "Verifing...":"تقديم..."
 
 }

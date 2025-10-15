@@ -54,6 +54,7 @@ const AddBankTransaction = () => {
   const [orderIds, setOrderIds] = useState();
   const [TemporderIds, setTempOrderIds] = useState();
   const [totalamount, setAmount] = useState(0);
+    const [isSubmitting, setisSubmitting] = useState(null);
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
       ? user?.designation
@@ -128,6 +129,7 @@ const AddBankTransaction = () => {
   };
 
   const handleSubmit = async () => {
+    setisSubmitting(true)
     try {
       const errors = {};
       if (!formData.erpCustId) errors.erpCustId = "ERP Customer ID is required";
@@ -208,6 +210,8 @@ const AddBankTransaction = () => {
         error.message ||
         t("Failed to submit");
       setError(msg);
+    }finally{
+       setisSubmitting(false)
     }
   };
 
@@ -228,6 +232,7 @@ const AddBankTransaction = () => {
     setShowCustomerPopup(false);
   };
   const handleUpdate = async (status, id) => {
+     setisSubmitting(true)
     try {
       const payload = { status };
 
@@ -254,6 +259,8 @@ const AddBankTransaction = () => {
         confirmButtonText: t("OK"),
       });
       console.error("Update failed:", error);
+    }finally{
+      setisSubmitting(false)
     }
   };
 
@@ -945,9 +952,10 @@ const AddBankTransaction = () => {
             <div className="form-actions">
               {!id && (
                 <>
-                  <button className="submit-btn" onClick={handleSubmit}>
-                    {t("Submit")}
-                  </button>
+                  <button className="submit-btn" onClick={handleSubmit} disabled={isSubmitting}
+    >
+      {isSubmitting ? t("Submitting...") : t("Submit")}
+    </button>
                   <button className="cancel-btn" onClick={() => handleCancel()}>
                     {t("Cancel")}
                   </button>{" "}
@@ -959,8 +967,12 @@ const AddBankTransaction = () => {
                   <button
                     className="submit-btn"
                     onClick={() => handleUpdate("verified", id)}
-                  >
-                    {t("Verify")}
+                     disabled={isSubmitting}
+    >
+     
+   {isSubmitting ? t("Verifing...") : t("Verify")}
+                  
+                    {}
                   </button>
                 )}
               {isE("btnReject") &&
@@ -968,6 +980,7 @@ const AddBankTransaction = () => {
                   <button
                     className="cancel-btn"
                     onClick={() => handleUpdate("rejected", id)}
+                    disabled={isSubmitting}
                   >
                     {t("Reject")}
                   </button>
