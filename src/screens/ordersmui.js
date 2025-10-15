@@ -821,15 +821,13 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
     }
   };
 
-  // Modified handleRowClick - removed navigation logic as it's now handled by order number click
+  // navigation logic by order number click
   const handleRowClick = async (params) => {
-    // Only handle mobile popup functionality here
     const order = params?.row;
     if (isMobile) {
       setSelectedRow(order);
       setShowRowPopup(true);
     }
-    // Row click no longer navigates - only order number click does
   };
 
   const handlePay = async (order, email = false, copyUrl = false) => {

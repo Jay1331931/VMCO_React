@@ -205,6 +205,7 @@ function DeliveryScheduleEditor() {
                                         'aria-label': `Toggle active status for ${params.row.region} - ${params.row.city}`
                                     }
                                 }}
+                                title={params.row.isActive ? t("Turn off") : t("Turn on")}
                             />
                         </div>
 
