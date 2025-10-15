@@ -484,7 +484,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 <>
                                     {/* Fixed height container for DataGrid with scrollable rows only */}
                                     <div style={{
-                                        height: '400px',
+                                        //height: '400px',
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -554,12 +554,12 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 },
                                                 // Ensure only the virtual scroller (rows) is scrollable
                                                 '& .MuiDataGrid-virtualScroller': {
-                                                    overflow: 'auto !important',
+                                                    //overflow: 'auto !important',
                                                     flex: 1
                                                 },
                                                 // Keep headers sticky and non-scrollable
                                                 '& .MuiDataGrid-columnHeaders': {
-                                                    position: 'sticky',
+                                                    //position: 'sticky',
                                                     top: 0,
                                                     zIndex: 1,
                                                     backgroundColor: 'white',

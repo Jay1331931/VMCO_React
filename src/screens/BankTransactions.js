@@ -244,12 +244,12 @@ const BankTransactions = () => {
                   
                   // Ensure only the virtual scroller (rows) is scrollable
                   '& .MuiDataGrid-virtualScroller': {
-                    overflow: 'auto !important',
+                    //overflow: 'auto !important',
                     flex: 1
                   },
                   // Keep headers sticky and non-scrollable
                   '& .MuiDataGrid-columnHeaders': {
-                    position: 'sticky',
+                    //position: 'sticky',
                     top: 0,
                     zIndex: 1,
                     backgroundColor: 'white',
