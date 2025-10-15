@@ -758,7 +758,7 @@ function DeliveryScheduleEditor() {
                 {/* Main Table Container */}
                 <div className="table-container">
                     <div style={{
-                        height: "400px",
+                        //height: "400px",
                         width: "100%",
                         display: "flex",
                         flexDirection: "column"
@@ -827,7 +827,7 @@ function DeliveryScheduleEditor() {
                                     flex: 1,
                                 },
                                 "& .MuiDataGrid-columnHeaders": {
-                                    position: "sticky",
+                                    //position: "sticky",
                                     top: 0,
                                     zIndex: 1,
                                     backgroundColor: "white",

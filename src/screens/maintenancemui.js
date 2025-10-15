@@ -503,7 +503,7 @@ function Maintenance() {
                                 <>
                                     {/* Fixed height container with proper toolbar spacing and scrollable rows */}
                                     <div style={{ 
-                                        height: '400px', 
+                                        //height: '400px', 
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -575,13 +575,13 @@ function Maintenance() {
                                                 
                                                 // Ensure only the virtual scroller (rows) is scrollable
                                                 '& .MuiDataGrid-virtualScroller': {
-                                                    overflow: 'auto !important',
+                                                    //overflow: 'auto !important',
                                                     flex: 1,
                                                 },
                                                 
                                                 // Keep headers sticky and non-scrollable
                                                 '& .MuiDataGrid-columnHeaders': {
-                                                    position: 'sticky',
+                                                    //position: 'sticky',
                                                     top: 0,
                                                     zIndex: 1,
                                                     backgroundColor: 'white',

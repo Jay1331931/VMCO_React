@@ -2443,13 +2443,13 @@ const handleColumnResize = (params) => {
   item
   xs={12}
   sx={{
-    height: {
-      xs: "250px !important", // extra small
-      sm: "300px !important", // small
-      md: "386px !important", // medium
-      lg: "489px !important", // large
-      xl: "800px !important", // extra large
-    },
+    // height: {
+    //   xs: "250px !important", // extra small
+    //   sm: "300px !important", // small
+    //   md: "386px !important", // medium
+    //   lg: "489px !important", // large
+    //   xl: "800px !important", // extra large
+    // },
     width: "100%",
     display: "flex",
     flexDirection: "column",
@@ -2531,13 +2531,13 @@ const handleColumnResize = (params) => {
 
                       // Ensure only the virtual scroller (rows) is scrollable
                       '& .MuiDataGrid-virtualScroller': {
-                        overflow: 'auto !important',
+                        //overflow: 'auto !important',
                         flex: 1,
                       },
 
                       // Keep headers sticky and non-scrollable
                       '& .MuiDataGrid-columnHeaders': {
-                        position: 'sticky',
+                        //position: 'sticky',
                         top: 0,
                         zIndex: 1,
                         backgroundColor: 'white',
