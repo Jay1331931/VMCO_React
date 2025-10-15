@@ -59,6 +59,7 @@ const OptionsPage = () => {
       setTempDecodedOrderID(data?.details?.orderIds)
     }else{
  setDecodedOrderID(data?.details?.orderIds);
+    setDecodedOrderType(data?.details?.orderType)
     }
 
    
@@ -591,12 +592,12 @@ setAmount(parseFloat(totalAmount));
   // };
 
 try {
-  const orderIdEncoded =DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
+  const orderIdEncoded =DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(tempdecodedOrderID)) :  encodeURIComponent(btoa(decodedOrderID));
 const amountEncoded = encodeURIComponent(btoa(amount.toString()));
 // const emailEncoded = encodeURIComponent(btoa(CustomerDetails?.contact_email));
 // const companyEncoded = encodeURIComponent(btoa(OrderDetails[0]?.companyNameEn));
-const customerIdEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
-const orderTypeEncoded=DecodedorderTpe.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
+const customerIdEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(TempOrderDetails[0]?.orderDetails?.customerId)) :encodeURIComponent(btoa(OrderDetails[0]?.customerId))
+const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
     // const response = await makeRequest();
 
   const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
