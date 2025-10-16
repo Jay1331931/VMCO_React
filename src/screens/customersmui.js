@@ -1218,7 +1218,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
         // }));
         setTotal(result.data.totalRecords);
       } else {
-        throw new Error(response.data.message || "Failed to fetch invites");
+        console.log(response?.data?.message || "Failed to fetch invites");
       }
     } catch (err) {
       setError(err.message);
