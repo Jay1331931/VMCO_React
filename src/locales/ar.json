@@ -595,7 +595,6 @@
     "Frozen": "مجمد",
     "Click to view": "انقر لعرض",
     "Pricing Plan": "خطة التسعير",
-    "Delivery date will be updated soon": "سيتم تحديث تاريخ التسليم قريبًا",
     "Delivery Date will be updated later": "سيتم تحديث تاريخ التسليم لاحقًا",
     "New Order": "طلب جديد",
     "Select Category": "اختر الفئة",
@@ -773,5 +772,23 @@
     "Latitude": "خط العرض",
     "Longitude": "خط الطول",
     "Apply Coordinates": "تطبيق الإحداثيات",
-    "ERP": "رقم ERP"
+    "ERP": "رقم ERP",
+    "Last Modified By": "آخر تعديل بواسطة",
+    "Delivery date will update soon": "سيتم تحديث تاريخ التسليم قريبًا",
+    "Warehouse": "المستودع",
+    "Select Warehouse": "اختر المستودع",
+    "Add New Delivery Schedule for": "إضافة جدول تسليم جديد لـ",
+    "Cut-off Day": "يوم القطع",
+    "Pickup Day": "يوم الالتقاط",
+    "Delivery Day": "يوم التسليم",
+    "Create Schedule": "إنشاء جدول",
+    "Creating...": "جارٍ الإنشاء...",
+    "Delivery Schedule Editor": "محرر جدول التسليم",
+    "Select Region": "اختر المنطقة",
+    "Select City": "اختر المدينة",
+    "Select Day": "اختر الأيام",
+    "Warehouse Required": "المستودع مطلوب",
+    "Please select a warehouse before approving.": "يرجى اختيار مستودع قبل الموافقة.",
+    "Verifing...":"تقديم..."
+
 }

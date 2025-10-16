@@ -537,7 +537,7 @@ function CustomerDetails() {
     user?.userType == "employee" && user?.roles[0] !== "admin"
       ? user?.designation
       : user?.roles[0],
-    mode === "add" || customerData?.customerStatus === "new"
+    mode === "add" || customerData?.customerStatus?.toLowerCase() === "new"
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
@@ -868,7 +868,7 @@ const handleVerifiedDataChange = (e) => {
     // "customerContract",
     // "creditApplication",
     "declarationName",
-    "declarationSignature",
+    // "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
     "methodDetails",
@@ -935,7 +935,7 @@ const handleVerifiedDataChange = (e) => {
     // "customerContract",
     // "creditApplication",
     "declarationName",
-    "declarationSignature",
+    // "declarationSignature",
     // "declarationDate",
     "pricingPolicy",
     "methodDetails",
@@ -1860,11 +1860,11 @@ if (uniqueFieldsList.includes(field)) {
           wfCustomerData.customer.nonTradingDocuments
         );
       }
-      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
+      if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
         updatedCustomerData.current.verified = new Date().toLocaleDateString("en-CA");
         updatedCustomerData.current.verifiedBy = user.userName;
       }
-      if(customerData?.customerStatus === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
+      if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
         updatedCustomerData.current.approved = new Date().toLocaleDateString("en-CA");
       }
       const mergedData = {
@@ -1883,7 +1883,7 @@ if (uniqueFieldsList.includes(field)) {
         id: customerId,
       };
       var dataToBeValidated = {};
-      if (customerData?.customerStatus === "pending") {
+      if (customerData?.customerStatus?.toLowerCase() === "pending") {
         dataToBeValidated = { ...customerData, ...customerContactsData };
       } else {
         dataToBeValidated = {
@@ -2328,8 +2328,8 @@ if (uniqueFieldsList.includes(field)) {
                 )}
 
                 {(isV("finalSubmissionTab") ||
-                  customerData?.customerStatus === "new" ||
-                  customerData?.customerStatus === "pending") && (
+                  customerData?.customerStatus?.toLowerCase() === "new" ||
+                  customerData?.customerStatus?.toLowerCase() === "pending") && (
                   <div
                     key={"Final Submission"}
                     className={`tab ${
@@ -2342,8 +2342,8 @@ if (uniqueFieldsList.includes(field)) {
                 )}
 
                 {isV("productsTab") &&
-                  customerData?.customerStatus !== "new" &&
-                  customerData?.customerStatus !== "pending" && (
+                  customerData?.customerStatus?.toLowerCase() !== "new" &&
+                  customerData?.customerStatus?.toLowerCase() !== "pending" && (
                     <div
                       key={"Products"}
                       className={`tab ${
@@ -2356,8 +2356,8 @@ if (uniqueFieldsList.includes(field)) {
                   )}
 
                 {isV("branchesTab") &&
-                  customerData?.customerStatus !== "new" &&
-                  customerData?.customerStatus !== "pending" && (
+                  customerData?.customerStatus?.toLowerCase() !== "new" &&
+                  customerData?.customerStatus?.toLowerCase() !== "pending" && (
                     <div
                       key={"Branches"}
                       className={`tab ${
@@ -2527,7 +2527,7 @@ if (uniqueFieldsList.includes(field)) {
               "Final Submission",
             ].includes(activeTab) && (
               <div className="action-buttons">
-                {isV("btnSave") && customerData?.customerStatus === "new" && (
+                {isV("btnSave") && customerData?.customerStatus?.toLowerCase() === "new" && (
                   <button
                     className="save"
                     onClick={() => handleSave("save")}
@@ -2545,7 +2545,7 @@ if (uniqueFieldsList.includes(field)) {
                     {isSaving ? t("Saving...") : t("Save")}
                   </button>
                 )}
-                {isV("btnSubmit") && customerData?.customerStatus === "new" && (
+                {isV("btnSubmit") && customerData?.customerStatus?.toLowerCase() === "new" && (
                   <button
                     className="save"
                     onClick={() => handleSubmit("save")}
@@ -2565,7 +2565,7 @@ if (uniqueFieldsList.includes(field)) {
                 )}
 
                 {isV("btnSaveChanges") &&
-                  customerData?.customerStatus !== "new" && (
+                  customerData?.customerStatus?.toLowerCase() !== "new" && (
                     <button
                       className="save"
                       onClick={() => handleSaveChanges("save")}
@@ -2598,9 +2598,9 @@ if (uniqueFieldsList.includes(field)) {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking  || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
+                        isUnblocking  || (customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")
                       }
-                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
+                      hidden={(customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")}
                     >
                       {isApproving ? t("Approving...") : t("Approve")}
                     </button>
@@ -2619,9 +2619,9 @@ if (uniqueFieldsList.includes(field)) {
                         isApproving ||
                         isRejecting ||
                         isBlocking ||
-                        isUnblocking || (customerData?.customerStatus === "pending" && activeTab !== "Final Submission")
+                        isUnblocking || (customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")
                       }
-                      hidden={(customerData?.customerStatus === "pending" && activeTab !== "Final Submission")}
+                      hidden={(customerData?.customerStatus?.toLowerCase() === "pending" && activeTab !== "Final Submission")}
                     >
                       {isRejecting ? t("Rejecting...") : t("Reject")}
                     </button>

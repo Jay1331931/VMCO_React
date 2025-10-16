@@ -987,7 +987,6 @@ function OrderDetails() {
           .json()
           .catch(() => ({ message: "Unknown error" }));
         console.error("Server response:", errorData);
-        // Show user-friendly error message
         Swal.fire({
           icon: "error",
           title: t("Error"),
@@ -1968,21 +1967,21 @@ function OrderDetails() {
     }
   };
 
-    const handleCheckout = async (orderId, email = false, copyUrl = false) => {
-        try {
-            const { data } = await axios.post(
-                `${API_BASE_URL}/generatePayment-link`,
-                {
-                    id: orderId,
-                    endPoint: "payment-options/order",
-                    IsEmail: email,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+  const handleCheckout = async (orderId, email = false, copyUrl = false) => {
+    try {
+      const { data } = await axios.post(
+        `${API_BASE_URL}/generatePayment-link`,
+        {
+          id: orderId,
+          endPoint: "payment-options/order",
+          IsEmail: email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (email) {
         Swal.fire({
@@ -3891,14 +3890,19 @@ function OrderDetails() {
                         <label>{t("Order By")}</label>
                         <input
                           name="orderBy"
-                          value={
-                            formData.orderBy !== undefined &&
-                              formData.orderBy !== null
-                              ? formData.orderBy
-                              : ""
-                          }
+                          value={ orderFromNav.createdByUsername || "" }
                           onChange={handleInputChange}
                           disabled={!isE("orderBy")}
+                        />
+                      </div>
+                    )}
+                    {isV("lastModifiedBy") && (
+                      <div className="order-details-field">
+                        <label>{t("Last Modified By")}</label>
+                        <input
+                          name="lastModifiedBy"
+                          value={ orderFromNav.modifiedByUsername || "" }
+                          disabled={!isE("lastModifiedBy")}
                         />
                       </div>
                     )}
@@ -4135,7 +4139,7 @@ function OrderDetails() {
                                   TIMEZONES.SAUDI_ARABIA,
                                   "DD/MM/YYYY"
                                 )
-                                : "Delivery date will be updated soon"
+                                : "Delivery date will update soon"
                             }
                             disabled
                             readOnly
@@ -4162,7 +4166,7 @@ function OrderDetails() {
                           <input
                             type="text"
                             name="expectedDeliveryDate"
-                            value={t("Delivery date will be updated soon")}
+                            value={t("Delivery date will update soon")}
                             disabled
                             readOnly
                             style={{
@@ -4938,7 +4942,7 @@ function OrderDetails() {
                         formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
-                           formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
+                        formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
                       )
                     )
                   ) && (
@@ -4976,7 +4980,7 @@ function OrderDetails() {
                         formData?.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase() ||
                         formData?.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
-                           formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
+                        formData?.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()
                       )
                     )
                   ) && (

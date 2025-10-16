@@ -84,6 +84,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
  const role=  user?.userType === "employee" ? user?.designation :user?.roles[0]
 const pageName= "support"
       const storageKey = `${pageName}_${role}_columns`;
+const columnWidthsKey = `${pageName}_${role}_columnWidths`;
+const [columnDimensions, setColumnDimensions] = useState({});
   useEffect(() => {
     const savedModel = localStorage.getItem(storageKey);
     if (savedModel) {
@@ -178,6 +180,19 @@ const pageName= "support"
         fetchTickets(1, searchQuery, filters, model);
     };
 
+    // Add the column resize handler
+const handleColumnResize = (params) => {
+  const { colDef } = params;
+  setColumnDimensions(prev => {
+    const newDimensions = {
+      ...prev,
+      [colDef.field]: { width: colDef.width }
+    };
+    localStorage.setItem(columnWidthsKey, JSON.stringify(newDimensions));
+    return newDimensions;
+  });
+};
+
     // Define columns for the DataGrid
     const supportColumns = [
         {
@@ -185,7 +200,7 @@ const pageName= "support"
             headerName: t("Ticket #"), 
             include: isV('ticketIdCol'), 
             searchable: true, 
-            flex: 1,
+            width: columnDimensions["ticketId"]?.width || 100,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -197,9 +212,9 @@ const pageName= "support"
             headerName: t("Customer"), 
             include: isV('customerCol'), 
             searchable: false, 
-            sortable: false, 
-            minWidth: 60, 
-            flex: 1,
+            width: i18n.language === "ar" 
+          ? columnDimensions["companyNameAr"]?.width || 150 
+          : columnDimensions["companyNameEn"]?.width || 150,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -212,8 +227,10 @@ const pageName= "support"
             include: isV('branchCol'), 
             searchable: false, 
             sortable: false, 
-            minWidth: 60, 
-            flex: 1,
+            width: i18n.language === "ar" 
+              ? columnDimensions["branchNameLc"]?.width || 60 
+              : columnDimensions["branchNameEn"]?.width || 60, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -225,8 +242,8 @@ const pageName= "support"
             headerName: t("Issue Name"), 
             include: isV('issueNameCol'), 
             searchable: true, 
-            minWidth: 100, 
-            flex: 1,
+            width: columnDimensions["grievanceName"]?.width || 100, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -238,8 +255,8 @@ const pageName= "support"
             headerName: t("Issue Type"), 
             include: isV('issueTypeCol'), 
             searchable: true, 
-            minWidth: 120, 
-            flex: 1,
+            width: columnDimensions["grievanceType"]?.width || 120, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -251,8 +268,8 @@ const pageName= "support"
             headerName: t("Created Date"), 
             include: isV('createdDateCol'), 
             searchable: false, 
-            minWidth: 100, 
-            flex: 1,
+            width: columnDimensions["createdAt"]?.width || 100, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -269,8 +286,8 @@ const pageName= "support"
             include: isV('createdByCol'), 
             searchable: false, 
             sortable: false, 
-            minWidth: 100, 
-            flex: 1,
+            width: columnDimensions["createdByUsername"]?.width || 100, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -282,8 +299,8 @@ const pageName= "support"
             headerName: t("Assigned To"), 
             include: isV('assignedToCol'), 
             searchable: false, 
-            minWidth: 100, 
-            flex: 1,
+            width: columnDimensions["assignedTo"]?.width || 100, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -295,8 +312,8 @@ const pageName= "support"
             headerName: t("Status"), 
             include: isV('statusCol'), 
             searchable: true, 
-            minWidth: 80, 
-            flex: 1,
+            width: columnDimensions["status"]?.width || 80, 
+            // flex: 1,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             cellClassName: (params) => getStatusClass(params.value),
@@ -467,7 +484,7 @@ const handleShowAllDetailsClick = async (ticket) => {
                                 <>
                                     {/* Fixed height container for DataGrid with scrollable rows only */}
                                     <div style={{
-                                        height: '400px',
+                                        //height: '400px',
                                         width: '100%',
                                         display: 'flex',
                                         flexDirection: 'column'
@@ -492,6 +509,8 @@ const handleShowAllDetailsClick = async (ticket) => {
                                             // Remove autoHeight to enable fixed height with scrolling
                                             rowHeight={55}
                                             showToolbar
+                                            onColumnResize={handleColumnResize}
+                                            columnDimensions={columnDimensions}
                                             slots={{
                                                 toolbar: () => (
                                                     <CustomToolbar
@@ -535,12 +554,12 @@ const handleShowAllDetailsClick = async (ticket) => {
                                                 },
                                                 // Ensure only the virtual scroller (rows) is scrollable
                                                 '& .MuiDataGrid-virtualScroller': {
-                                                    overflow: 'auto !important',
+                                                    //overflow: 'auto !important',
                                                     flex: 1
                                                 },
                                                 // Keep headers sticky and non-scrollable
                                                 '& .MuiDataGrid-columnHeaders': {
-                                                    position: 'sticky',
+                                                    //position: 'sticky',
                                                     top: 0,
                                                     zIndex: 1,
                                                     backgroundColor: 'white',

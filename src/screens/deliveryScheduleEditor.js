@@ -14,6 +14,7 @@ import SearchableDropdown from "../components/SearchableDropdown";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 import EditCalendarIcon from '@mui/icons-material/EditCalendar';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Switch from '@mui/material/Switch';
 
 function DeliveryScheduleEditor() {
     const [deliverySchedules, setDeliverySchedules] = useState([]);
@@ -43,6 +44,7 @@ function DeliveryScheduleEditor() {
     const [activeCategory, setActiveCategory] = useState("SHC");
     const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
     const [filterAnchor, setFilterAnchor] = useState(null);
+    const [switchLoading, setSwitchLoading] = useState({});
 
     // Geographic data states
     const [geoData, setGeoData] = useState(null);
@@ -71,6 +73,49 @@ function DeliveryScheduleEditor() {
         "deliveryScheduleEditor"
     );
     const isV = rbacMgr.isV.bind(rbacMgr);
+
+    // Updated handleToggleActive function to use your specified API format
+    const handleToggleActive = async (schedule, newValue) => {
+        const scheduleKey = `${schedule.region}-${schedule.city}-${schedule.cutoffDay}`;
+        setSwitchLoading(prev => ({ ...prev, [scheduleKey]: true }));
+
+        try {
+            // Using your specified API format: router.patch("/delivery-schedule/:entity/:region/:city/:cutoffDay", DeliveryScheduleController.updateDeliverySchedule);
+            const apiUrl = `${API_BASE_URL}/delivery-schedule/${activeCategory}/${schedule.region}/${schedule.city}/${schedule.cutoffDay}`;
+            const payload = {
+                isActive: newValue
+            };
+
+            const response = await axios.patch(apiUrl, payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.data?.status?.toLowerCase() === "ok") {
+                setDeliverySchedules(prevSchedules =>
+                    prevSchedules.map(s =>
+                        s.region === schedule.region &&
+                            s.city === schedule.city &&
+                            s.cutoffDay === schedule.cutoffDay
+                            ? { ...s, isActive: newValue }
+                            : s
+                    )
+                );
+            }
+        } catch (err) {
+            console.error("Error toggling delivery schedule status:", err);
+            Swal.fire({
+                title: "Error",
+                text: err.response?.data?.message || "Failed to update delivery schedule status",
+                icon: "error",
+                confirmButtonText: "OK",
+            });
+        } finally {
+            setSwitchLoading(prev => ({ ...prev, [scheduleKey]: false }));
+        }
+    };
 
     // Define columns for DataGrid with searchable fields
     const columns = [
@@ -130,51 +175,85 @@ function DeliveryScheduleEditor() {
             sortable: false,
             searchable: false,
             include: true,
-            width: 150,
+            width: 200,
             align: "center",
             headerAlign: "center",
-            renderCell: (params) => (
-                <div style={{ display: "flex", gap: "8px", alignContent: "center", justifyContent: "center" }}>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditClick(params.row);
-                        }}
-                        style={{
-                            padding: "4px 8px",
-                            backgroundColor: "transparent",
-                            color: "#3D5654",
-                            cursor: "pointer",
-                            display: "flex",
-                            border: "none",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                        title={t("Edit")}
-                    >
-                        <EditCalendarIcon fontSize="small" />
-                    </button>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteClick(params.row);
-                        }}
-                        style={{
-                            padding: "4px 8px",
-                            backgroundColor: "transparent",
-                            color: "#3D5654",
-                            cursor: "pointer",
-                            display: "flex",
-                            border: "none",
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                        title={t("Delete")}
-                    >
-                        <DeleteIcon fontSize="small" />
-                    </button>
-                </div>
-            ),
+            renderCell: (params) => {
+                const scheduleKey = `${params.row.region}-${params.row.city}-${params.row.cutoffDay}`;
+                const isLoading = switchLoading[scheduleKey] || false;
+
+                return (
+                    <div style={{
+                        display: "flex",
+                        gap: "12px",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}>
+                        {/* Active/Inactive Switch */}
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                            <Switch
+                                checked={params.row.isActive || false}
+                                onChange={(event) => {
+                                    event.stopPropagation();
+                                    handleToggleActive(params.row, event.target.checked);
+                                }}
+                                disabled={isLoading}
+                                size="small"
+                                color="success"
+                                slotProps={{
+                                    input: {
+                                        'aria-label': `Toggle active status for ${params.row.region} - ${params.row.city}`
+                                    }
+                                }}
+                                title={params.row.isActive ? t("Turn off") : t("Turn on")}
+                                style={i18n.language === "ar" ? { transform: "rotate(180deg)" } : {}}
+                            />
+                        </div>
+
+                        {/* Edit Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(params.row);
+                            }}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: "transparent",
+                                color: "#3D5654",
+                                cursor: "pointer",
+                                display: "flex",
+                                border: "none",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                            title={t("Edit")}
+                        >
+                            <EditCalendarIcon fontSize="small" />
+                        </button>
+
+                        {/* Delete Button */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteClick(params.row);
+                            }}
+                            style={{
+                                padding: "4px 8px",
+                                backgroundColor: "transparent",
+                                color: "#3D5654",
+                                cursor: "pointer",
+                                display: "flex",
+                                border: "none",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                            title={t("Delete")}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </button>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -340,6 +419,7 @@ function DeliveryScheduleEditor() {
                 cutoffDay: newSchedule.cutoffDay,
                 pickupDay: newSchedule.pickupDay,
                 deliveryDay: newSchedule.deliveryDay,
+                isActive: true,
                 createdBy: user?.id || 1,
                 modifiedBy: user?.id || 1
             };
@@ -555,15 +635,15 @@ function DeliveryScheduleEditor() {
                         borderRadius: "8px",
                         border: "1px solid #dee2e6"
                     }}>
-                        <h4>Add New Delivery Schedule for {activeCategory}</h4>
+                        <h4>{t("Add New Delivery Schedule for")} {t(activeCategory)}</h4>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px", marginTop: "10px", marginBottom: "10px" }}>
                             <div>
-                                <label>Region</label>
+                                <label>{t("Region")}</label>
                                 <SearchableDropdown
                                     name="region"
                                     value={selectedRegion}
                                     onChange={handleRegionChange}
-                                    placeholder="Select Region"
+                                    placeholder={t("Select Region")}
                                     options={getRegionOptions()}
                                     style={{
                                         marginTop: "10px",
@@ -576,12 +656,12 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>City</label>
+                                <label>{t("City")}</label>
                                 <SearchableDropdown
                                     name="city"
                                     value={selectedCity}
                                     onChange={handleCityChange}
-                                    placeholder="Select City"
+                                    placeholder={t("Select City")}
                                     options={getCityOptions(selectedRegion)}
                                     disabled={!selectedRegion}
                                     style={{
@@ -595,14 +675,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Cut-off Day</label>
+                                <label>{t("Cut-off Day")}</label>
                                 <SearchableDropdown
                                     name="cutoffDay"
                                     value={newSchedule.cutoffDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, cutoffDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -615,14 +695,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Pickup Day</label>
+                                <label>{t("Pickup Day")}</label>
                                 <SearchableDropdown
                                     name="pickupDay"
                                     value={newSchedule.pickupDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, pickupDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -635,14 +715,14 @@ function DeliveryScheduleEditor() {
                                 />
                             </div>
                             <div>
-                                <label>Delivery Day</label>
+                                <label>{t("Delivery Day")}</label>
                                 <SearchableDropdown
                                     name="deliveryDay"
                                     value={newSchedule.deliveryDay}
                                     onChange={(e) => {
                                         setNewSchedule({ ...newSchedule, deliveryDay: e.target.value });
                                     }}
-                                    placeholder="Select Day"
+                                    placeholder={t("Select Day")}
                                     options={daysOfWeek.map(day => ({ value: day, name: day }))}
                                     style={{
                                         marginTop: "10px",
@@ -661,7 +741,7 @@ function DeliveryScheduleEditor() {
                                 disabled={loading}
                                 style={{
                                     padding: '8px 16px',
-                                    backgroundColor: '#007bff',
+                                    backgroundColor: 'var(--logo-deep-green)',
                                     color: '#fff',
                                     border: 'none',
                                     borderRadius: '4px',
@@ -669,7 +749,7 @@ function DeliveryScheduleEditor() {
                                     marginRight: '10px'
                                 }}
                             >
-                                {loading ? 'Creating...' : 'Create Schedule'}
+                                {loading ? t('Creating...') : t("Create Schedule")}
                             </button>
                         </div>
                     </div>
@@ -678,7 +758,7 @@ function DeliveryScheduleEditor() {
                 {/* Main Table Container */}
                 <div className="table-container">
                     <div style={{
-                        height: "400px",
+                        //height: "400px",
                         width: "100%",
                         display: "flex",
                         flexDirection: "column"
@@ -747,7 +827,7 @@ function DeliveryScheduleEditor() {
                                     flex: 1,
                                 },
                                 "& .MuiDataGrid-columnHeaders": {
-                                    position: "sticky",
+                                    //position: "sticky",
                                     top: 0,
                                     zIndex: 1,
                                     backgroundColor: "white",
@@ -802,6 +882,7 @@ function DeliveryScheduleEditor() {
                         onPageChange={setPage}
                     />
                 )}
+
                 {/* Edit Modal */}
                 {showEditModal && (
                     <div style={{
