@@ -38,6 +38,13 @@ function Sidebar({ children, title }) {
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(
     window.innerWidth > 768
   );
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+   useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
   const [isSidebarExpanded, setSidebarExpanded] = useState(false);
   const [activeMenu, setActiveMenu] = useState("Dashboard");
   const { t, i18n } = useTranslation();
@@ -600,7 +607,7 @@ function Sidebar({ children, title }) {
             </div>
           </div>
         </div>
-        {showPopup && (
+        {!isMobile && showPopup && (
           <div className="user-popup-overlay" onClick={handlePopupToggle}>
             <div className="user-popup" onClick={(e) => e.stopPropagation()}>
               <div className="user-popup-header">
@@ -680,7 +687,7 @@ function Sidebar({ children, title }) {
             <div className="header-title">{t(activeMenu)}</div>
             {/* Saudi time next to language switch */}
             <div className="user-text-header">
-              <div className="text">
+              {!isMobile && (<div className="text">
             {user?.userType?.toLowerCase() === "employee" && (
               // <div className="user-text-header">
               <div className="text">
@@ -759,7 +766,7 @@ function Sidebar({ children, title }) {
                 </div>
                   
               )}
-              </div>
+              </div>)}
             
               <button className="lang-switch-btn" onClick={toggleLanguage}>
               <FontAwesomeIcon icon={faLanguage} />
