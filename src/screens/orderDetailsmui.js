@@ -3675,7 +3675,9 @@ function OrderDetails() {
     formData.products ? formData.products.length : 0,
     formMode,
   ]);
-
+const handlePayments =()=>{
+  navigate(`/payments/${formData?.id}`)
+}
   const handleViewSignature = async (orderId, customerId, Invoices) => {
     setShowModal(true);
     try {
@@ -4852,6 +4854,7 @@ function OrderDetails() {
           </div>
           {isV("orderFooter") && (
             <div className="order-details-footer">
+             
               {isV("orderStatus") && (
                 <div className="order-status">
                   <span className="status-label">{t("Status")}:</span>
@@ -4864,6 +4867,17 @@ function OrderDetails() {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
+                 {(isV("paymentLines"))  &&  formData?.paymentStatus?.toLowerCase() === "paid"&&(
+                      <button
+                    className="order-action-btn"
+                    onClick={() => handlePayments("save")}
+                    disabled={isE("paymentLines")
+                      
+                    }
+                  >
+                    {t('Payments')}
+                  </button>
+                  ) }
                 {isV("btnSave", fromApproval, false) && isE("btnSave") && (
                   <button
                     className="order-action-btn"

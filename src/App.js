@@ -42,6 +42,7 @@ import PriceListEditor from "./screens/priceListEditor";
 import CustomersMUI from "./screens/customersmui";
 import DomainVerification from "./screens/DomainVerification";
 import ApprovalHistory from "./screens/approvalHistory";
+import PaymentLines from "./components/PaymentLines";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -127,6 +128,7 @@ function App() {
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent/>} />
+            <Route path="/payments/:orderId" element={ <PaymentLines />} />
       </Routes>
     </Router>
   );
