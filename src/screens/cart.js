@@ -1324,8 +1324,8 @@ function Cart() {
                 orderStatus = 'Pending';
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 orderStatus = 'Open';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                orderStatus = 'Pending';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+                orderStatus = 'Open';
             } else {
                 const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                 if (pm === 'credit' || pm === 'cash on delivery') {
