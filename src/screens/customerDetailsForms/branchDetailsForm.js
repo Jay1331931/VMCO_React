@@ -1245,7 +1245,7 @@ const BranchDetailsForm = ({
             ) : (
               branch?.branchStatus !== "pending" &&
               !branch?.isNew &&
-              mode === "add" && (
+              mode === "add" && isV("btnBranchSaveChanges")&& (
                 <>
                   <button
                     className="save changes"

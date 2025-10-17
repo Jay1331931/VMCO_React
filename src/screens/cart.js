@@ -657,7 +657,8 @@ function Cart() {
             } else {
                 if (freshProducts.length > 0) {
                     console.log('Placing order for SHC fresh products with selected payment method:', selectedPaymentMethod);
-                    const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, false, true);
+                     const isPrePayment= selectedPaymentMethod?.toLowerCase()==="pre payment" ? false :true;
+                    const freshOrderId = await placeOrderForCategory(freshProducts, categoryName + ' - Fresh', selectedPaymentMethod, isPrePayment, true);
                     console.log('Fresh order result:', freshOrderId);
                     if (freshOrderId) {
                         orderIds.push(freshOrderId);
@@ -666,7 +667,8 @@ function Cart() {
                 }
                 if (nonFreshProducts.length > 0) {
                     console.log('Placing order for SHC non-fresh products with selected payment method:', selectedPaymentMethod);
-                    const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, false, false);
+                    const isPrePayment= selectedPaymentMethod?.toLowerCase()==="pre payment" ? false :true;
+                    const nonFreshOrderId = await placeOrderForCategory(nonFreshProducts, categoryName + ' - Non-Fresh', selectedPaymentMethod, isPrePayment, false);
                     console.log('Non-fresh order result:', nonFreshOrderId);
                     if (nonFreshOrderId) {
                         orderIds.push(nonFreshOrderId);
@@ -1322,8 +1324,8 @@ function Cart() {
                 orderStatus = 'Pending';
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 orderStatus = 'Open';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                orderStatus = 'Pending';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+                orderStatus = 'Open';
             } else {
                 const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                 if (pm === 'credit' || pm === 'cash on delivery') {
@@ -1529,6 +1531,7 @@ function Cart() {
     const createNormalOrder = async (orderPayload, orderLinesPayload, categoryItems, showSuccessMessage, categoryName, entity, selectedPaymentMethod) => {
         try {
             // Create the sales order
+            console.log("showSuccessMessage11111",showSuccessMessage)
             const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                 method: 'POST',
                 headers: {
@@ -1640,7 +1643,6 @@ function Cart() {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-
                 if (cartCheckResponse.ok) {
                     const cartCheckResult = await cartCheckResponse.json();
                     const cartProducts = Array.isArray(cartCheckResult.data?.data) ? cartCheckResult.data.data : (Array.isArray(cartCheckResult.data) ? cartCheckResult.data : []);
@@ -1648,8 +1650,8 @@ function Cart() {
                         console.log(`Found ${cartProducts.length} items in cart, proceeding with deletion`);
 
                         const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
-                        deleteUrl.searchParams.append('customerid', selectedCustomerId);
-                        deleteUrl.searchParams.append('branchid', selectedBranchId);
+                        deleteUrl.searchParams.append('customer_id', selectedCustomerId);
+                        deleteUrl.searchParams.append('branch_id', selectedBranchId);
                         deleteUrl.searchParams.append('entity', entity);
 
                         const deleteResponse = await fetch(deleteUrl, {
