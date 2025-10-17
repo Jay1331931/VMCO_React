@@ -789,6 +789,10 @@
     "Select Day": "اختر الأيام",
     "Warehouse Required": "المستودع مطلوب",
     "Please select a warehouse before approving.": "يرجى اختيار مستودع قبل الموافقة.",
-    "Verifing...":"تقديم..."
+    "Verifing...":"تقديم...",
+    "Bank Transaction ID":"معرف المعاملة المصرفية",
+    "Payment Lines for Order":"خطوط الدفع للطلب",
+    "Payment Date Time":"تاريخ الدفع الوقت",
+    "Payments":"المدفوعات"
 
 }
