@@ -176,12 +176,14 @@ const AddBankTransaction = () => {
         });
       }
 
-      if (response.data.status === "success" && !orderIds) {
-        if (TemporderIds.length > 0) {
-          navigate("/orders");
-        } else {
-          navigate("/banktransactions");
-        }
+      if (response.data.status === "success" ) {
+        // if (TemporderIds.length > 0) {
+        //   navigate("/orders");
+        // } else {
+        //   // navigate("/banktransactions");
+            const URL = `${window.location.protocol}//${window.location.host}/orders`;
+   window.location.replace(URL)
+        // }
       }
     } catch (error) {
       // if (error?.response?.status === 401 && orderIds) {

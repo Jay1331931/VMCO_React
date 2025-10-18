@@ -793,6 +793,7 @@
     "Bank Transaction ID":"معرف المعاملة المصرفية",
     "Payment Lines for Order":"خطوط الدفع للطلب",
     "Payment Date Time":"تاريخ الدفع الوقت",
-    "Payments":"المدفوعات"
+    "Payments":"المدفوعات",
+    "Approval History":"تاريخ الموافقة"
 
 }
