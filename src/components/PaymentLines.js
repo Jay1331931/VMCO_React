@@ -40,7 +40,7 @@ const PaymentLines = () => {
         }
       );
 
-      if (response.data.success && response.data.details) {
+      if (response?.data?.success && response?.data?.details) {
         setPayment(response.data.details);
       } else {
         Swal.fire({
