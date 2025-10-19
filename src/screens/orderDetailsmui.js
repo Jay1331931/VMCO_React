@@ -4871,7 +4871,7 @@ const handlePayments =()=>{
                       <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
-                    disabled={isE("paymentLines")
+                    disabled={!isE("paymentLines")
                       
                     }
                   >
