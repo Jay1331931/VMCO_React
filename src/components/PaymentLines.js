@@ -57,7 +57,7 @@ const PaymentLines = () => {
      
        Swal.fire({
           title: "Error",
-          text: error?.data?.message ||  "Something went wrong while fetching payment lines",
+          text: error?.response?.data?.message ||  "Something went wrong while fetching payment lines",
           icon: "error",
           confirmButtonText: "OK",
           confirmButtonColor: "#dc3545",
