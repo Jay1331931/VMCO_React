@@ -1537,6 +1537,7 @@ function OrderDetails() {
         warehouseNameEn: formData.warehouseNameEn || "",
         warehouseNameAr: formData.warehouseNameAr || "",
         sampleOrder: sampleMode,
+        orderSource: "Sales Executive"
       };
       try {
         setLoading(true);

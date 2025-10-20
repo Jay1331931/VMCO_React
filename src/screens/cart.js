@@ -750,7 +750,8 @@ function Cart() {
                 paymentStatus: 'Pending',
                 status: 'Open',
                 productCategory: categoryName,
-                isFresh: isFresh
+                isFresh: isFresh,
+                orderSource: "Cart"
             };
 
             const orderLinesPayload = [];
@@ -1363,7 +1364,8 @@ function Cart() {
                 productCategory: categoryName,
                 paymentPercentage: '100.00',
                 isMachine: isMachineOrder,
-                isFresh: isFresh
+                isFresh: isFresh,
+                orderSource: "Cart"
             };
 
             // Create order lines payload
