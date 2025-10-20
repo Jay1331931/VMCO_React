@@ -4201,16 +4201,16 @@ const handlePayments =()=>{
                           </select>
                         </div>
                       )}
-                    {isV("warehouse", fromApproval, true) &&
-                      fromApproval && (
+                    {isV("warehouse") &&
+                       formMode === "edit" && (
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
                           <SearchableDropdown
                             options={warehouseOptions}
-                            value={selectedWarehouse || ""} // Use selectedWarehouse state
+                            value={selectedWarehouse || ""} 
                             onChange={handleWarehouseChange}
-                            disabled={!isE("warehouse") || warehousesLoading}
-                            placeholder={warehousesLoading ? t("Loading warehouses...") : t("Select Warehouse")}
+                            disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
+                            placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             className="entity-dropdown"
                           />
                           {warehousesLoading && <div className="loading-indicator">Loading...</div>}
