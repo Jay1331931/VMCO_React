@@ -229,7 +229,7 @@ const AddBankTransaction = () => {
       description: "",
       bankDocuments: [],
       orderId: [],
-      customerVmcoRegion: customer?.region || null,
+      customerVmcoRegion: customer?.branch || null
     }));
     setShowCustomerPopup(false);
   };
