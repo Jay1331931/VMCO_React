@@ -254,6 +254,11 @@ const ProductCard = ({
                         width: 140px !important;
                         font-size: 14px;
                     }
+                    
+                    .favorite-btn, button[style*="position: absolute"] {
+                    left: 5px;
+                    right: auto;
+            }
                 }
                 
                 .product-card.rtl {

@@ -410,12 +410,16 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
     "erpOrderId",
     "erpCustId",
     "companyNameEn",
+    "companyNameAr",
     "branchNameEn",
+    "branchNameLc",
     "entity",
     "paymentMethod",
     "paymentStatus",
     "status",
     "erpBranchId",
+    "warehouseNameEn",
+    "warehouseNameAr",
   ];
 
   const toggleApprovalMode = () => {
@@ -1278,6 +1282,17 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       renderCell: (params) => (
         <span>{t(params.row.currentApprover || "")}</span>
       ),
+    },
+    {
+      field: isArabic ? "warehouseNameAr" : "warehouseNameEn",
+      headerName: t("Warehouse"),
+      include: isV("warehouseName"),
+      searchable: true,
+      // flex: 1,
+      width: i18n.language === "ar" ? columnDimensions["warehouseNameAr"]?.width || 100 : columnDimensions["warehouseNameEn"]?.width || 100,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "paymentStatus",

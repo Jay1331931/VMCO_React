@@ -1537,6 +1537,7 @@ function OrderDetails() {
         warehouseNameEn: formData.warehouseNameEn || "",
         warehouseNameAr: formData.warehouseNameAr || "",
         sampleOrder: sampleMode,
+        orderSource: "Sales Executive"
       };
       try {
         setLoading(true);
@@ -3675,7 +3676,9 @@ function OrderDetails() {
     formData.products ? formData.products.length : 0,
     formMode,
   ]);
-
+const handlePayments =()=>{
+  navigate(`/payments/${formData?.id}`)
+}
   const handleViewSignature = async (orderId, customerId, Invoices) => {
     setShowModal(true);
     try {
@@ -4199,16 +4202,16 @@ function OrderDetails() {
                           </select>
                         </div>
                       )}
-                    {isV("warehouse", fromApproval, true) &&
-                      fromApproval && (
+                    {isV("warehouse") &&
+                       formMode === "edit" && (
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
                           <SearchableDropdown
                             options={warehouseOptions}
-                            value={selectedWarehouse || ""} // Use selectedWarehouse state
+                            value={selectedWarehouse || ""} 
                             onChange={handleWarehouseChange}
-                            disabled={!isE("warehouse") || warehousesLoading}
-                            placeholder={warehousesLoading ? t("Loading warehouses...") : t("Select Warehouse")}
+                            disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
+                            placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
                             className="entity-dropdown"
                           />
                           {warehousesLoading && <div className="loading-indicator">Loading...</div>}
@@ -4852,6 +4855,7 @@ function OrderDetails() {
           </div>
           {isV("orderFooter") && (
             <div className="order-details-footer">
+             
               {isV("orderStatus") && (
                 <div className="order-status">
                   <span className="status-label">{t("Status")}:</span>
@@ -4864,6 +4868,17 @@ function OrderDetails() {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
+                 {(isV("paymentLines"))  &&  formData?.paymentStatus?.toLowerCase() === "paid"&&(
+                      <button
+                    className="order-action-btn"
+                    onClick={() => handlePayments("save")}
+                    disabled={!isE("paymentLines")
+                      
+                    }
+                  >
+                    {t('Payments')}
+                  </button>
+                  ) }
                 {isV("btnSave", fromApproval, false) && isE("btnSave") && (
                   <button
                     className="order-action-btn"

@@ -40,7 +40,9 @@ import TapCardComponent from "./screens/TapCardComponent";
 import DeliveryScheduleEditor from "./screens/deliveryScheduleEditor";
 import PriceListEditor from "./screens/priceListEditor";
 import CustomersMUI from "./screens/customersmui";
-import DomainVerification from "./screens/DomainVerification"
+import DomainVerification from "./screens/DomainVerification";
+import ApprovalHistory from "./screens/approvalHistory";
+import PaymentLines from "./components/PaymentLines";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName,setPageName]=useState("")
@@ -111,6 +113,7 @@ function App() {
         <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
         <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor/></ProtectedRoute>} />
         <Route path="/priceListEditor" element={<ProtectedRoute page ="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
+        <Route path="/approvalHistory" element={<ProtectedRoute page ="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
@@ -125,6 +128,7 @@ function App() {
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent/>} />
+            <Route path="/payments/:orderId" element={ <PaymentLines />} />
       </Routes>
     </Router>
   );

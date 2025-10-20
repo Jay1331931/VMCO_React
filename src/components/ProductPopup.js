@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QuantityController from './QuantityController';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -16,7 +16,13 @@ function ProductPopup({
 }) {
     const { t, i18n } = useTranslation();
     const { user } = useAuth();
-
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+ useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
     // Initialize RBAC manager
     const rbacMgr = new RbacManager(
         user?.userType === 'employee' && user?.roles[0] !== 'admin'
@@ -87,9 +93,55 @@ function ProductPopup({
                             ))}
                         </div>
                     </div>
+                    {/* <div className="popup-image-section">
+  <div className="popup-image-container">
+    <div 
+      className="auto-scroll-carousel"
+      style={{ '--total-slides': images.length }}
+      onMouseEnter={() => document.querySelector('.auto-scroll-carousel')?.classList.add('paused')}
+      onMouseLeave={() => document.querySelector('.auto-scroll-carousel')?.classList.remove('paused')}
+    >
+      {images.map((img, idx) => (
+        <div key={idx} className="carousel-slide">
+          {isV('favoriteButton') && (
+            <FavButton 
+              initialState={product.favorite || false}
+              onToggle={handleFavoriteToggle}
+            />
+          )}
+          {img ? (
+            <img
+              src={img}
+              alt={`${product.name} - View ${idx + 1}`}
+              className="popup-image"
+            />
+          ) : (
+            <div className="popup-image placeholder"></div>
+          )}
+        </div>
+      ))}
+      
+     
+      {images.map((img, idx) => (
+        <div key={`dup-${idx}`} className="carousel-slide">
+          {img ? (
+            <img
+              src={img}
+              alt={`${product.name} - View ${idx + 1}`}
+              className="popup-image"
+            />
+          ) : (
+            <div className="popup-image placeholder"></div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+</div> */}
                     <div className="popup-details">
                         <h2 className="popup-product-name">{product.name}</h2>
-                        {product.entity && <div className="popup-product-entity">{t(product.entity)}</div>}
+                        {!isMobile && product.entity && <div className="popup-product-entity">{t(product.entity)}</div>
+                        }
                         
                         <p className="popup-product-description">
                             {(i18n.language === 'en' ? product.description : product.descriptionLc)}
@@ -332,7 +384,7 @@ function ProductPopup({
                         .popup-content {
                             flex-direction: column;
                             gap: 18px;
-                            padding: 18px 4px 12px 4px;
+                            padding: 18px 18px 18px 18px;
                         }
                         .popup-image {
                             min-width: 120px;
@@ -353,3 +405,70 @@ function ProductPopup({
 }
 
 export default ProductPopup;
+
+{/*
+    .popup-image-section {
+  position: relative;
+  width: 100%;
+}
+
+.popup-image-container {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.auto-scroll-carousel {
+  display: flex;
+  animation: autoScroll 120s linear infinite;
+  width: max-content;
+}
+
+.auto-scroll-carousel.paused {
+  animation-play-state: paused;
+}
+
+.carousel-slide {
+  position: relative;
+  flex-shrink: 0;
+  width: 100vw;
+}
+
+.popup-image {
+  width: 100%;
+  height: 300px;
+  object-fit: contain;
+  display: block;
+}
+
+.popup-image.placeholder {
+  background: #f0f0f0;
+  height: 300px;
+}
+
+
+@keyframes autoScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(-100% * var(--total-slides)));
+  }
+}
+
+
+@media (min-width: 769px) {
+  .auto-scroll-carousel:hover {
+    animation-play-state: paused;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .popup-image-container {
+    margin: 0 -16px; 
+    width: calc(100% + 32px);
+  }
+}
+
+    */}

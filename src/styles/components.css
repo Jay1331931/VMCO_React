@@ -446,6 +446,10 @@
   }
   }
 .go-to-cart-btn {
+  position: absolute;
+  right: 40px;
+  z-index: 1000;
+  top: 85px;
   padding: 0 14px;
   background-color: #00205b;
   color: white;

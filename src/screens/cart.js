@@ -750,7 +750,8 @@ function Cart() {
                 paymentStatus: 'Pending',
                 status: 'Open',
                 productCategory: categoryName,
-                isFresh: isFresh
+                isFresh: isFresh,
+                orderSource: "Cart"
             };
 
             const orderLinesPayload = [];
@@ -1324,8 +1325,8 @@ function Cart() {
                 orderStatus = 'Pending';
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
                 orderStatus = 'Open';
-            } else if (entity && entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase()) {
-                orderStatus = 'Pending';
+            } else if (entity && entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+                orderStatus = 'Open';
             } else {
                 const pm = selectedPaymentMethod ? selectedPaymentMethod.toLowerCase() : '';
                 if (pm === 'credit' || pm === 'cash on delivery') {
@@ -1363,7 +1364,8 @@ function Cart() {
                 productCategory: categoryName,
                 paymentPercentage: '100.00',
                 isMachine: isMachineOrder,
-                isFresh: isFresh
+                isFresh: isFresh,
+                orderSource: "Cart"
             };
 
             // Create order lines payload

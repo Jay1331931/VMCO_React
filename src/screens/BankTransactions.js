@@ -158,7 +158,9 @@ const BankTransactions = () => {
 
   const visibleColumns = transactionColumns.filter((col) => col.include !== false);
   const searchableFields = visibleColumns.filter((c) => c.searchable).map((c) => c.field);
-
+ const filteredData = visibleColumns?.filter((item) =>
+    searchableFields?.includes(item?.field)
+  );
   // Columns mapping for toolbar
   const columnsToDisplay = {
     id: "Transaction Id",
@@ -213,7 +215,7 @@ const BankTransactions = () => {
                       setFilterAnchor={setFilterAnchor}
                       handleFilterChange={handleFilterChange}
                       onColumnVisibilityChange={handleColumnVisibilityChange}
-                      columns={visibleColumns}
+                      columns={filteredData}
                       filters={filters}
                       columnVisibilityModel={columnVisibilityModel}
                       searchPlaceholder={t("Search transactions...")}
