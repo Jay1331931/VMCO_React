@@ -165,18 +165,24 @@ const AddBankTransaction = () => {
         headers: { Authorization: `Bearer ${cookieToken}` },
       });
 
-      if (orderIds && response.data.status === "success") {
-        Swal.fire({
+      // if ( response.data.status === "success") {
+      //   Swal.fire({
+      //     title: t("Success"),
+      //     text: t("Transaction created successfully"),
+      //     icon: "success",
+      //     confirmButtonText: t("OK"),
+      //   }).then(() => {
+      //     window.close();
+      //   });
+      // }
+
+      if (response.data.status === "success" ) {
+         Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
-        }).then(() => {
-          window.close();
-        });
-      }
-
-      if (response.data.status === "success" ) {
+        })
         // if (TemporderIds.length > 0) {
         //   navigate("/orders");
         // } else {
