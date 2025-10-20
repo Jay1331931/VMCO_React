@@ -448,7 +448,7 @@ function Sidebar({ children, title }) {
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
     { icon: faUpload, label: "General" },
-      { icon: faHistory, label: "Approval History" },
+      { icon: faHistory, label: "approval History" , permission: "approvalHistory"},
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";
