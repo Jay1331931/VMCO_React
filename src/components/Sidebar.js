@@ -25,10 +25,11 @@ import {
   faLanguage,
   faBank,
   faFile,
-  faUpload,
+  faUpload,faHistory
 } from "@fortawesome/free-solid-svg-icons";
 import { CustomerProvider } from "../context/CustomerContext";
 import { icon } from "@fortawesome/fontawesome-svg-core";
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -411,6 +412,9 @@ function Sidebar({ children, title }) {
       case "Reports":
         navigate("/reports");
         break;
+      case "Approval History":
+        navigate("/approvalHistory");
+        break;
 
       default:
         // If no match is found, stay on current page
@@ -444,6 +448,7 @@ function Sidebar({ children, title }) {
     { icon: faBuilding, label: "Company" },
     { icon: faCog, label: "Settings" },
     { icon: faUpload, label: "General" },
+      { icon: faHistory, label: "Approval History" },
   ];
 
   const sidebarOffset = isSidebarCollapsed ? "70px" : "240px";

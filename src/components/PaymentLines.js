@@ -40,18 +40,28 @@ const PaymentLines = () => {
         }
       );
 
-      if (response.data.success && response.data.details) {
+      if (response?.data?.success && response?.data?.details) {
         setPayment(response.data.details);
       } else {
-        Swal.fire("Error", "Failed to fetch payment lines", "error");
+        Swal.fire({
+          title: "Error",
+          text: response?.data?.message ||  "Something went wrong while fetching payment lines",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
+       
       }
     } catch (error) {
       console.error(error);
-      Swal.fire(
-        "Error",
-        "Something went wrong while fetching payment lines",
-        "error"
-      );
+     
+       Swal.fire({
+          title: "Error",
+          text: error?.response?.data?.message ||  "Something went wrong while fetching payment lines",
+          icon: "error",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#dc3545",
+        });
     } finally {
       setLoading(false);
     }
