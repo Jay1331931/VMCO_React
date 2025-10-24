@@ -465,11 +465,9 @@ function Cart() {
     // Updated function to handle SHC existing orders check with payment validation
     const handleSHCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod) => {
         try {
-            // Don't set global isPlacingOrder here - use category-specific loading
-
             // Separate SHC products into fresh and frozen
             const freshProducts = categoryItems.filter(item => item.isFresh === true);
-            const frozenProducts = categoryItems.filter(item => item.isFresh !== true);
+            const frozenProducts = categoryItems.filter(item => item.isFresh === false);
 
             console.log('SHC products separated for existing order check:', {
                 total: categoryItems.length,
@@ -512,7 +510,7 @@ function Cart() {
         }
     };
 
-    // Helper function to process existing orders for SHC fresh/frozen types with payment validation
+    // Updated processExistingOrderForSHCType function with proper product line checking
     const processExistingOrderForSHCType = async (products, paymentMethod, isFresh, typeLabel) => {
         try {
             // Calculate total amount for new products
@@ -570,20 +568,6 @@ function Cart() {
                     productsIsFresh: isFresh
                 });
 
-                // Double-check that we have the right order type
-                if (existingOrder.isFresh !== isFresh) {
-                    console.warn(`Order type mismatch! Expected isFresh=${isFresh}, but found order with isFresh=${existingOrder.isFresh}`);
-                    // Create new order instead
-                    console.log(`No matching ${typeLabel} open orders found, creating new order`);
-                    const categoryName = `${pendingOrderCategory} - ${typeLabel}`;
-                    const orderId = await placeOrderForCategory(products, categoryName, paymentMethod, false, isFresh);
-                    return {
-                        orderId: orderId,
-                        action: 'created',
-                        type: typeLabel
-                    };
-                }
-
                 // Validate payment method limits before updating
                 const canUpdate = await validatePaymentMethodForUpdate(
                     selectedCustomerId,
@@ -594,7 +578,7 @@ function Cart() {
 
                 if (canUpdate) {
                     console.log(`Payment validation passed, updating existing ${typeLabel} order:`, existingOrder.id);
-                    await updateExistingOrder(existingOrder.id, products, paymentMethod);
+                    await updateExistingOrderWithProductLineCheck(existingOrder.id, products, paymentMethod);
                     return {
                         orderId: existingOrder.id,
                         action: 'updated',
@@ -607,7 +591,6 @@ function Cart() {
             } else {
                 // No existing open orders of this type, create new order
                 console.log(`No existing ${typeLabel} open orders found, creating new order`);
-
                 const categoryName = `${pendingOrderCategory} - ${typeLabel}`;
                 const orderId = await placeOrderForCategory(products, categoryName, paymentMethod, false, isFresh);
                 return {
@@ -623,14 +606,45 @@ function Cart() {
         }
     };
 
-    // Updated handleSelectPaymentMethod function for GMTC with payment validation
+    const showOrderSuccessMessage = (results, paymentMethod) => {
+        if (!results || results.length === 0) return;
+
+        let message = '';
+        if (results.length === 1) {
+            const result = results[0];
+            message = result.action === 'updated'
+                ? `${result.type} order ${result.orderId} has been updated successfully!`
+                : `${result.type} order ${result.orderId} has been created successfully!`;
+        } else {
+            const updated = results.filter(r => r.action === 'updated');
+            const created = results.filter(r => r.action === 'created');
+
+            const parts = [];
+            if (updated.length > 0) {
+                parts.push(`Updated: ${updated.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
+            }
+            if (created.length > 0) {
+                parts.push(`Created: ${created.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
+            }
+            message = parts.join(' | ');
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: t('Orders Processed Successfully'),
+            text: `${message} Payment Method: ${paymentMethod}`,
+            confirmButtonText: t('OK')
+        });
+    };
+
+    // Updated handleSelectPaymentMethod function for SHC/GMTC with proper logic
     const handleSelectPaymentMethod = async (method) => {
         setShowPaymentPopup(false);
 
         try {
             const entity = getEntityFromCategory(pendingOrderCategory);
 
-            // For SHC or GMTC using credit or cash on delivery
+            // For SHC or GMTC using cash on delivery or credit, check for existing open orders
             if ((entity?.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() ||
                 entity?.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) &&
                 (method.toLowerCase() === 'credit' || method.toLowerCase() === 'cash on delivery')) {
@@ -678,7 +692,7 @@ function Cart() {
         }
     };
 
-    // New function to handle GMTC existing orders check with payment validation
+    // Updated handleGMTCExistingOrdersCheck function with product line checking
     const handleGMTCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod) => {
         try {
             // Calculate total amount for new products
@@ -743,7 +757,7 @@ function Cart() {
 
                 if (canUpdate) {
                     console.log('Payment validation passed, updating existing GMTC order:', existingOrder.id);
-                    await updateExistingOrder(existingOrder.id, categoryItems, selectedPaymentMethod);
+                    await updateExistingOrderWithProductLineCheck(existingOrder.id, categoryItems, selectedPaymentMethod);
 
                     showOrderSuccessMessage([{
                         orderId: existingOrder.id,
@@ -770,48 +784,199 @@ function Cart() {
         }
     };
 
-    const showOrderSuccessMessage = (results, paymentMethod) => {
-        if (!results || results.length === 0) return;
+    // Main function to update existing order with product line checking
+    const updateExistingOrderWithProductLineCheck = async (orderId, categoryItems, selectedPaymentMethod) => {
+        try {
+            setIsPlacingOrder(true);
 
-        const updatedOrders = results.filter(r => r.action === 'updated');
-        const createdOrders = results.filter(r => r.action === 'created');
-
-        let message = '';
-
-        if (updatedOrders.length > 0 && createdOrders.length === 0) {
-            // Only updates
-            if (updatedOrders.length === 1) {
-                message = `Order ${updatedOrders[0].orderId} has been updated. Payment method: ${paymentMethod}`;
-            } else {
-                const orderNumbers = updatedOrders.map(o => o.orderId).join(' and ');
-                message = `Orders ${orderNumbers} have been updated. Payment method: ${paymentMethod}`;
-            }
-        } else if (createdOrders.length > 0 && updatedOrders.length === 0) {
-            // Only creations
-            if (createdOrders.length === 1) {
-                message = `Order ${createdOrders[0].orderId} has been created. Payment method: ${paymentMethod}`;
-            } else {
-                const orderNumbers = createdOrders.map(o => o.orderId).join(' and ');
-                message = `Orders ${orderNumbers} have been created. Payment method: ${paymentMethod}`;
-            }
-        } else if (updatedOrders.length > 0 && createdOrders.length > 0) {
-            // Mixed updates and creations
-            const updatedNumbers = updatedOrders.map(o => o.orderId).join(' and ');
-            const createdNumbers = createdOrders.map(o => o.orderId).join(' and ');
-            message = `Orders ${updatedNumbers} have been updated and orders ${createdNumbers} have been created. Payment method: ${paymentMethod}`;
-        }
-
-        if (message) {
-            Swal.fire({
-                icon: 'success',
-                title: t('Order Processed'),
-                text: message,
-                confirmButtonText: t('OK')
+            // First, fetch the existing order details
+            const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
             });
+
+            if (!orderResponse.ok) {
+                throw new Error('Failed to fetch existing order');
+            }
+
+            const existingOrder = await orderResponse.json();
+
+            // Fetch existing order lines
+            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!orderLinesResponse.ok) {
+                throw new Error('Failed to fetch existing order lines');
+            }
+
+            const existingOrderLines = await orderLinesResponse.json();
+            const existingLines = existingOrderLines.data?.data || [];
+
+            let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
+            let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
+
+            // Process each new item
+            for (const item of categoryItems) {
+                const newQuantity = Number(quantities[item.id] || item.quantity || 1);
+                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+                const vatPercentage = parseFloat(item.vatPercentage || 0);
+
+                // Check if product already exists in order lines
+                const existingLine = existingLines.find(line =>
+                    line.productId === (item.productId || item.product_id)
+                );
+
+                if (existingLine) {
+                    // Product line exists - update quantity and totals
+                    const updatedQuantity = existingLine.quantity + newQuantity;
+                    const baseAmount = unitPrice * updatedQuantity;
+                    const vatAmount = baseAmount * (vatPercentage / 100);
+                    const netAmount = baseAmount + vatAmount;
+
+                    const updateLinePayload = {
+                        quantity: updatedQuantity,
+                        salesTaxAmount: vatAmount.toFixed(2),
+                        netAmount: netAmount.toFixed(2)
+                    };
+
+                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.product_id}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(updateLinePayload)
+                    });
+
+                    if (!updateLineResponse.ok) {
+                        throw new Error(`Failed to update existing line for product ${item.productId || item.product_id}`);
+                    }
+
+                    // Update totals (subtract old amounts, add new amounts)
+                    updatedTotalAmount -= (parseFloat(existingLine.netAmount) || 0);
+                    updatedTotalSalesTax -= (parseFloat(existingLine.salesTaxAmount) || 0);
+                    updatedTotalAmount += netAmount;
+                    updatedTotalSalesTax += vatAmount;
+
+                    console.log(`Updated existing line for product ${item.productId || item.product_id}:`);
+                    console.log(`  Old quantity: ${existingLine.quantity}, New quantity: ${updatedQuantity}`);
+                    console.log(`  Old total: ${existingLine.netAmount}, New total: ${netAmount.toFixed(2)}`);
+                } else {
+                    // Product line doesn't exist - create new line
+                    const baseAmount = unitPrice * newQuantity;
+                    const vatAmount = baseAmount * (vatPercentage / 100);
+                    const netAmount = baseAmount + vatAmount;
+
+                    // Get the next line number
+                    const maxLineNumber = existingLines.length > 0 ?
+                        Math.max(...existingLines.map(line => line.lineNumber || 0)) : 0;
+                    const nextLineNumber = maxLineNumber + 1;
+
+                    const newLinePayload = {
+                        orderId: orderId,
+                        productId: item.productId || item.product_id,
+                        productName: item.productName || item.name,
+                        productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
+                        quantity: newQuantity,
+                        unit: item.unit || 'EA',
+                        unitPrice: unitPrice,
+                        vatPercentage: vatPercentage,
+                        salesTaxAmount: vatAmount.toFixed(2),
+                        netAmount: netAmount.toFixed(2),
+                        lineNumber: nextLineNumber,
+                        erpProdId: item.erpProdId || item.productCode || (item.productId || item.product_id),
+                        // Add isFresh flag based on item and entity
+                        isFresh: item.isFresh || false
+                    };
+
+                    const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(newLinePayload)
+                    });
+
+                    if (!createLineResponse.ok) {
+                        throw new Error(`Failed to create new line for product ${item.productId || item.product_id}`);
+                    }
+
+                    // Update totals
+                    updatedTotalAmount += netAmount;
+                    updatedTotalSalesTax += vatAmount;
+
+                    console.log(`Created new line for product ${item.productId || item.product_id}:`);
+                    console.log(`  Quantity: ${newQuantity}, Unit Price: ${unitPrice}, Total: ${netAmount.toFixed(2)}`);
+                }
+            }
+
+            // Update order totals
+            const updateOrderPayload = {
+                totalAmount: updatedTotalAmount.toFixed(2),
+                totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
+                paymentMethod: selectedPaymentMethod
+            };
+
+            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updateOrderPayload)
+            });
+
+            if (!updateOrderResponse.ok) {
+                throw new Error('Failed to update order totals');
+            }
+
+            console.log(`Successfully updated order ${orderId}:`);
+            console.log(`  Final total amount: ${updatedTotalAmount.toFixed(2)}`);
+            console.log(`  Final sales tax: ${updatedTotalSalesTax.toFixed(2)}`);
+
+            // Delete items from cart after successful update
+            await deleteCartItems(selectedCustomerId, selectedBranchId,
+                getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
+
+            // Update UI
+            setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                    items: category.items.filter(cartItem =>
+                        !categoryItems.some(ci => ci.id === cartItem.id)
+                    )
+                }))
+            );
+
+            // Clean up quantities state
+            setQuantities(prevQuantities => {
+                const newQuantities = { ...prevQuantities };
+                categoryItems.forEach(item => {
+                    delete newQuantities[item.id];
+                });
+                return newQuantities;
+            });
+
+            return orderId;
+
+        } catch (error) {
+            console.error('Error updating existing order with product line check:', error);
+            throw error;
+        } finally {
+            setIsPlacingOrder(false);
         }
     };
 
-    // New function to validate payment method limits for order updates
+    // Updated validatePaymentMethodForUpdate function to handle credit balance and COD limits
     const validatePaymentMethodForUpdate = async (customerId, totalAmount, paymentMethod, entityType) => {
         try {
             if (paymentMethod.toLowerCase() === 'credit') {
