@@ -805,7 +805,7 @@ function Cart() {
             const existingOrder = await orderResponse.json();
 
             // Fetch existing order lines
-            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
+            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -818,7 +818,7 @@ function Cart() {
             }
 
             const existingOrderLines = await orderLinesResponse.json();
-            const existingLines = existingOrderLines.data?.data || [];
+            const existingLines = existingOrderLines.data || [];
 
             let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
             let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
@@ -828,11 +828,7 @@ function Cart() {
                 const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                 const unitPrice = parseFloat(item.price || item.unitPrice || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                // Check if product already exists in order lines
-                const existingLine = existingLines.find(line =>
-                    line.productId === (item.productId || item.product_id)
-                );
+                const existingLine = existingLines.find(line => line?.productId === (item?.productId));
 
                 if (existingLine) {
                     // Product line exists - update quantity and totals
@@ -847,7 +843,7 @@ function Cart() {
                         netAmount: netAmount.toFixed(2)
                     };
 
-                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.product_id}`, {
+                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
