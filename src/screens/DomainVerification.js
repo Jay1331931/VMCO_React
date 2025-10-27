@@ -44,7 +44,7 @@ const DomainVerification = () => {
 
   return (
     <div>
-      <h3>Domain verification file pending from Tap</h3>
+      <h3>Domain verification file downloaded</h3>
     </div>
   );
 };
