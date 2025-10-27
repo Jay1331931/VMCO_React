@@ -124,7 +124,7 @@ function App() {
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
-        <Route path="/payment-options/order/:orderId/:orderType" element={<OptionsPage/>} />
+        <Route path="/payment-opations/order/:orderId/:orderType" element={<OptionsPage/>} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent/>} />
