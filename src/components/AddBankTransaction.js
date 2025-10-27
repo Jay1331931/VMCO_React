@@ -165,23 +165,31 @@ const AddBankTransaction = () => {
         headers: { Authorization: `Bearer ${cookieToken}` },
       });
 
-      if (orderIds && response.data.status === "success") {
-        Swal.fire({
+      // if ( response.data.status === "success") {
+      //   Swal.fire({
+      //     title: t("Success"),
+      //     text: t("Transaction created successfully"),
+      //     icon: "success",
+      //     confirmButtonText: t("OK"),
+      //   }).then(() => {
+      //     window.close();
+      //   });
+      // }
+
+      if (response.data.status === "success" ) {
+         Swal.fire({
           title: t("Success"),
           text: t("Transaction created successfully"),
           icon: "success",
           confirmButtonText: t("OK"),
-        }).then(() => {
-          window.close();
-        });
-      }
-
-      if (response.data.status === "success" && !orderIds) {
-        if (TemporderIds.length > 0) {
-          navigate("/orders");
-        } else {
-          navigate("/banktransactions");
-        }
+        })
+        // if (TemporderIds.length > 0) {
+        //   navigate("/orders");
+        // } else {
+        //   // navigate("/banktransactions");
+            const URL = `${window.location.protocol}//${window.location.host}/orders`;
+   window.location.replace(URL)
+        // }
       }
     } catch (error) {
       // if (error?.response?.status === 401 && orderIds) {
@@ -227,7 +235,7 @@ const AddBankTransaction = () => {
       description: "",
       bankDocuments: [],
       orderId: [],
-      customerVmcoRegion: customer?.region || null,
+      customerVmcoRegion: customer?.branch || null
     }));
     setShowCustomerPopup(false);
   };
