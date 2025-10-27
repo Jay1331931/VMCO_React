@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchDropdownFromBasicsMaster, checkFieldForUpdate, } from "../../utilities/commonServices";
+import { fetchDropdownFromBasicsMaster } from "../../utilities/commonServices";
 import "../../styles/forms.css";
 import "react-phone-number-input/style.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,8 +11,6 @@ import {
   faLocationDot,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { Padding } from "maplibre-gl";
 import RbacManager from "../../utilities/rbac";
 import { useAuth } from "../../context/AuthContext";
 import SearchableDropdown from "../../components/SearchableDropdown";
@@ -31,6 +29,13 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import maplibregl from "maplibre-gl";
+
+// Google Maps API key - replace with your actual key
+const GOOGLE_MAPS_API_KEY =
+  process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "YOUR_GOOGLE_MAPS_API_KEY";
+const OLA_MAPS_API_KEY =
+  process.env.REACT_APP_OLA_MAPS_API_KEY || "YOUR_OLA_MAPS_API_KEY";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   Constants.DOCUMENTS_NAME.CUSTOMER_APPROVAL_CHECKLIST;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
@@ -51,20 +56,14 @@ function ContactDetails({
   mode,
   setTabsHeight,
   formErrors = {},
-  completeWorkflowData = {},
 }) {
-  // Now you can access both objects
   const { t, i18n } = useTranslation();
-  // const [businessHeadSameAsPrimary, setBusinessHeadSameAsPrimary] =
-  //   useState(false);
-
-  // Dropdown state
   const dropdownFields = ["zone", "branch"];
   const [basicMasterLists, setBasicMasterLists] = useState({});
   const [selectedRegion, setSelectedRegion] = useState(customerData?.region);
   const [selectedCity, setSelectedCity] = useState(customerData?.city);
   const [geoData, setGeoData] = useState(null);
-  const [currentEmail, setcurrentEmail] = useState(""); // example current email
+  const [currentEmail, setcurrentEmail] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -79,43 +78,10 @@ function ContactDetails({
       ? "custDetailsAdd"
       : "custDetailsEdit"
   );
-  const [fieldsForUpdate, setFieldsForUpdate] = useState({});
-  const [contactFieldsForUpdate, setContactFieldsForUpdate] = useState({});
-    const fieldList = [
-      {field: "buildingName", fieldType: "customer"},
-      {field: "street", fieldType: "customer"},
-      {field: "region", fieldType: "customer"},
-      {field: "city", fieldType: "customer"},
-      {field: "cityOther", fieldType: "customer"},
-      {field: "district", fieldType: "customer"},
-      {field: "districtOther", fieldType: "customer"},
-      {field: "zone", fieldType: "customer"},
-      {field: "pincode", fieldType: "customer"},
-      {field: "geolocation", fieldType: "customer"},
-    ]
-
-    const contactFieldList = [
-{field: "primaryContactName", fieldType: "customer"},
-      {field: "primaryContactDesignation", fieldType: "customer"},
-      {field: "primaryContactEmail", fieldType: "customer"},
-      {field: "primaryContactMobile", fieldType: "customer"},
-      {field: "businessHeadName", fieldType: "customer"},
-      {field: "businessHeadDesignation", fieldType: "customer"},
-      {field: "businessHeadEmail", fieldType: "customer"},
-      {field: "businessHeadMobile", fieldType: "customer"},
-      {field: "financeHeadName", fieldType: "customer"},
-      {field: "financeHeadDesignation", fieldType: "customer"},
-      {field: "financeHeadEmail", fieldType: "customer"},
-      {field: "financeHeadMobile", fieldType: "customer"},
-      {field: "purchasingHeadName", fieldType: "customer"},
-      {field: "purchasingHeadDesignation", fieldType: "customer"},
-      {field: "purchasingHeadEmail", fieldType: "customer"},
-      {field: "purchasingHeadMobile", fieldType: "customer"},
-    ]
-  console.log("RBAC Manager:", customerData.id);
 
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+
   useEffect(() => {
     const fetchData = async () => {
       const listOfBasicsMaster = await fetchDropdownFromBasicsMaster(
@@ -127,6 +93,7 @@ function ContactDetails({
     fetchData();
     setTabsHeight("auto");
   }, []);
+
   useEffect(() => {
     const fetchGeoData = async () => {
       try {
@@ -147,6 +114,7 @@ function ContactDetails({
     };
     fetchGeoData();
   }, []);
+
   const getBindingValue = (contactType, fieldname) => {
     if (Array.isArray(customerContactsData.data)) {
       const contact = customerContactsData.data.find(
@@ -156,69 +124,35 @@ function ContactDetails({
     }
     return "";
   };
-  useEffect(() => {
-      const checkFieldUpdates = async () => {
-        
-        try {
-          const fieldStatus = {};
-          const contactFieldStatus = {};
-          // Use for...of loop instead of forEach for async operations
-          for (const fieldItem of fieldList) {
-            const canUpdate = await checkFieldForUpdate(
-              fieldItem.fieldType, 
-              completeWorkflowData?.workflowName
-            );
-            fieldStatus[fieldItem.field] = canUpdate;
-          }
-          
-          for (const fieldItem of contactFieldList) {
-            const canUpdate = await checkFieldForUpdate(
-              fieldItem.fieldType, 
-              completeWorkflowData?.workflowName
-            );
-            contactFieldStatus[fieldItem.field] = canUpdate;
-          }
-          console.log("field status", fieldStatus)
-          setFieldsForUpdate(fieldStatus);
-          setContactFieldsForUpdate(contactFieldStatus);
-        } catch (error) {
-          console.error('Error checking field updates:', error);
-          // Set all fields to false in case of error
-          const errorStatus = {};
-          fieldList.forEach(fieldItem => {
-            errorStatus[fieldItem.field] = false;
-          });
-          setFieldsForUpdate(errorStatus);
-        } 
-      };
-  
-      // if (completeWorkflowData?.workflowName) {
-        checkFieldUpdates();
-      // }
-    }, []); // Add other dependencies if needed
-  
 
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
   const LocationPicker = ({ onLocationSelect, initialLat, initialLng }) => {
     const mapContainer = useRef(null);
-    const markerRef = useRef(null);
     const [map, setMap] = useState(null);
     const { t, i18n } = useTranslation();
     const [coords, setCoords] = useState("Detecting your location...");
     const [coordsArabic, setCoordsArabic] = useState(
       t("Detecting your location...")
     );
-    const [defaultCenter] = useState([77.5946, 12.9716]); // [lng, lat]
-    const [zoom] = useState(14);
-    const [confirmedLocation, setConfirmedLocation] = useState(null);
+    const [defaultCenter] = useState({ lat: 12.9716, lng: 77.5946 }); // Default center for Google Maps
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const [marker, setMarker] = useState(null);
 
-    // Add search states
+    // Search states
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-    // Validate and sanitize coordinates
+    const [manualLat, setManualLat] = useState("");
+    const [manualLng, setManualLng] = useState("");
+    const [showManualInput, setShowManualInput] = useState(false);
+
+    // Google Maps services
+    const [autocompleteService, setAutocompleteService] = useState(null);
+    const [placesService, setPlacesService] = useState(null);
+    const [geocoder, setGeocoder] = useState(null);
+
     const isValidCoordinate = (lat, lng) => {
       return (
         typeof lat === "number" &&
@@ -232,396 +166,268 @@ function ContactDetails({
       );
     };
 
-    const getInitialCenter = () => {
-      // Parse coordinates if they're strings
-      const lat =
-        typeof initialLat === "string" ? parseFloat(initialLat) : initialLat;
-      const lng =
-        typeof initialLng === "string" ? parseFloat(initialLng) : initialLng;
-
-      if (isValidCoordinate(lat, lng)) {
-        return [lng, lat]; // MapLibre expects [lng, lat]
+    // Initialize Google Maps services
+    useEffect(() => {
+      if (window.google) {
+        setAutocompleteService(new window.google.maps.places.AutocompleteService());
+        setPlacesService(new window.google.maps.places.PlacesService(document.createElement('div')));
+        setGeocoder(new window.google.maps.Geocoder());
       }
-      return defaultCenter;
-    };
+    }, []);
 
-    // Add search function
+    // Google Places Autocomplete
     const searchLocation = async (query) => {
-      if (!query.trim()) {
+      if (!query.trim() || !autocompleteService) {
         setSearchResults([]);
         return;
       }
 
       setIsSearching(true);
       try {
-        // Using MapTiler Geocoding API
-        const response = await fetch(
-          `https://api.maptiler.com/geocoding/${encodeURIComponent(
-            query
-          )}.json?key=NxvpwMoXuYLINUijkWEc&limit=5`
+        autocompleteService.getPlacePredictions(
+          {
+            input: query,
+            types: ['geocode', 'establishment']
+          },
+          (predictions, status) => {
+            if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+              setSearchResults(predictions);
+            } else {
+              setSearchResults([]);
+            }
+            setIsSearching(false);
+          }
         );
-        const data = await response.json();
-
-        if (data.features) {
-          setSearchResults(
-            data.features.map((feature) => ({
-              id: feature.id,
-              name: feature.place_name,
-              coordinates: feature.center,
-            }))
-          );
-        }
       } catch (error) {
-        console.error("Search error:", error);
+        console.error("Error during autocomplete:", error);
         setSearchResults([]);
-      } finally {
         setIsSearching(false);
       }
     };
-    // Enhanced utility function to extract coordinates from all Google Maps URLs
-const parseGoogleMapsUrl = (url) => {
-  if (!url) return null;
 
-  try {
-    const cleanedUrl = url.trim();
-    
-    // Case 1: Short URL (maps.app.goo.gl) - we need to extract from query parameters
-    if (cleanedUrl.includes('maps.app.goo.gl')) {
-      const urlObj = new URL(cleanedUrl);
-      const queryParams = new URLSearchParams(urlObj.search);
-      
-      // Try to get coordinates from the 'q' parameter
-      const qParam = queryParams.get('q');
-      if (qParam) {
-        const coordMatch = qParam.match(/^(-?\d+\.\d+),(-?\d+\.\d+)$/);
-        if (coordMatch) {
-          return {
-            lat: parseFloat(coordMatch[1]),
-            lng: parseFloat(coordMatch[2]),
-            source: 'short_url_coordinates'
-          };
-        }
-        // If it's a place name, return as query
-        return {
-          query: qParam,
-          source: 'short_url_place'
-        };
-      }
-      
-      // Try to get data from the 'link' parameter (common in short URLs)
-      const linkParam = queryParams.get('link');
-      if (linkParam) {
-        const decodedLink = decodeURIComponent(linkParam);
-        return parseGoogleMapsUrl(decodedLink); // Recursively parse the decoded link
-      }
-    }
+    const handlePlaceSelect = async (place) => {
+      setSearchQuery(place.description);
+      setSearchResults([]);
 
-    // Case 2: Regular Google Maps URL with coordinates
-    const coordMatch = cleanedUrl.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (coordMatch) {
-      return {
-        lat: parseFloat(coordMatch[1]),
-        lng: parseFloat(coordMatch[2]),
-        source: 'google_maps_url'
-      };
-    }
-
-    // Case 3: Place ID or place name in regular URL
-    const placeMatch = cleanedUrl.match(/[?&]q=([^&]+)/);
-    if (placeMatch) {
-      const placeQuery = decodeURIComponent(placeMatch[1]);
-      
-      // Check if it's coordinates in text form
-      const coordTextMatch = placeQuery.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
-      if (coordTextMatch) {
-        return {
-          lat: parseFloat(coordTextMatch[1]),
-          lng: parseFloat(coordTextMatch[2]),
-          source: 'coordinates_text'
-        };
-      }
-      
-      return {
-        query: placeQuery,
-        source: 'place_query'
-      };
-    }
-
-    // Case 4: Maps App deep link (comgooglemaps://)
-    const deepLinkMatch = cleanedUrl.match(/comgooglemaps:\/\/\?.*center=(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (deepLinkMatch) {
-      return {
-        lat: parseFloat(deepLinkMatch[1]),
-        lng: parseFloat(deepLinkMatch[2]),
-        source: 'google_maps_app'
-      };
-    }
-
-    // Case 5: New Google Maps format with @ coordinates
-    const atCoordMatch = cleanedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (atCoordMatch) {
-      return {
-        lat: parseFloat(atCoordMatch[1]),
-        lng: parseFloat(atCoordMatch[2]),
-        source: 'google_maps_at_format'
-      };
-    }
-
-    // Case 6: Place details with coordinates (!3d and !4d)
-    const placeCoordMatch = cleanedUrl.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
-    if (placeCoordMatch) {
-      return {
-        lat: parseFloat(placeCoordMatch[1]),
-        lng: parseFloat(placeCoordMatch[2]),
-        source: 'google_maps_3d_format'
-      };
-    }
-
-    // Case 7: Direct coordinates pattern (lat,lng)
-    const directCoordMatch = cleanedUrl.match(/^(-?\d+\.\d+)[,\s]+(-?\d+\.\d+)$/);
-    if (directCoordMatch) {
-      return {
-        lat: parseFloat(directCoordMatch[1]),
-        lng: parseFloat(directCoordMatch[2]),
-        source: 'direct_coordinates'
-      };
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error parsing Google Maps URL:', error);
-    return null;
-  }
-};
-
-const searchByCoordinates = async (lat, lng) => {
-    // try {
-    //   const response = await fetch(
-    //     `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=NxvpwMoXuYLINUijkWEc&limit=1`
-    //   );
-
-    //   if (!response.ok) throw new Error('Reverse geocoding failed');
-
-    //   const data = await response.json();
-      
-    //   if (data.features?.[0]) {
-    //     const feature = data.features[0];
-    //     return [{
-    //       id: feature.id,
-    //       name: feature.place_name,
-    //       coordinates: [lng, lat],
-    //       type: feature.place_type?.[0],
-    //       relevance: 1,
-    //       isFromCoordinates: true
-    //     }];
-    //   }
-    //   return [];
-    // } catch (error) {
-    //   console.error('Reverse geocoding error:', error);
-    //   throw error;
-    // }
-      if (isValidCoordinate(lat, lng)) {
-        updateMarker(map, lng, lat);
-        setSearchResults([]);
-      }
-
-  };
-
-    // Handle search input change with debounce
-    // useEffect(() => {
-    //   const timeoutId = setTimeout(() => {
-    //     const urlData = parseGoogleMapsUrl(searchQuery);
-    //     if (urlData.lat && urlData.lng) {
-    //         // We have direct coordinates from URL
-    //         const results = await searchByCoordinates(urlData.lat, urlData.lng);
-    //         setSearchResults(results);
-            
-    //         if (results.length === 0) {
-    //           setSearchError('Location not found for these coordinates');
-    //         }
-    //         return;
-    //       } else {
-    //     searchLocation(searchQuery);
-    //       }
-    //   }, 500); // 500ms debounce
-
-    //   return () => clearTimeout(timeoutId);
-    // }, [searchQuery]);
-// Handle search input change with debounce
-useEffect(() => {
-  const handleSearch = async () => {
-    const urlData = parseGoogleMapsUrl(searchQuery);
-    if (urlData?.lat && urlData?.lng) {
-      // We have direct coordinates from URL
       try {
-        const results = await searchByCoordinates(urlData.lat, urlData.lng);
-        setSearchResults(results);
-        // if (results.length === 0) {
-        //   setSearchError('Location not found for these coordinates');
-        // }
+        if (!placesService) return;
+
+        const request = {
+          placeId: place.place_id,
+          fields: ['geometry', 'name', 'formatted_address']
+        };
+
+        placesService.getDetails(request, (placeDetails, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK && placeDetails.geometry) {
+            const lat = placeDetails.geometry.location.lat();
+            const lng = placeDetails.geometry.location.lng();
+            
+            if (isValidCoordinate(lat, lng) && map) {
+              moveMarkerToLocation(lat, lng);
+            }
+          }
+        });
       } catch (error) {
-        // setSearchError('Failed to get location from coordinates');
-        setSearchResults([]);
-      }
-    } else {
-      searchLocation(searchQuery);
-    }
-  };
-
-  const timeoutId = setTimeout(() => {
-    handleSearch();
-  }, 500); // 500ms debounce
-
-  return () => clearTimeout(timeoutId);
-}, [searchQuery]);
-
-    // Handle search result selection
-    const handleSearchResultClick = (result) => {
-      const [lng, lat] = result.coordinates;
-      if (isValidCoordinate(lat, lng) && map) {
-        updateMarker(map, lng, lat);
-        setSearchQuery(result.name);
-        setSearchResults([]);
+        console.error("Error fetching place details:", error);
       }
     };
 
-    const updateMarker = (map, lng, lat) => {
-      // Validate coordinates before updating marker
-      if (!isValidCoordinate(lat, lng)) {
-        console.error("Invalid coordinates:", lat, lng);
-        return;
+    // Function to move marker to specific location
+    const moveMarkerToLocation = (lat, lng, mapRef = map) => {
+      if (!mapRef) return;
+
+      // Remove existing marker
+      if (marker) {
+        marker.setMap(null);
       }
 
-      // Remove existing marker if it exists
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
-      }
+      // Create new draggable marker
+      const newMarker = new window.google.maps.Marker({
+        position: { lat, lng },
+        map: mapRef,
+        draggable: true,
+      });
 
-      // Create new marker
-      const newMarker = new maplibregl.Marker()
-        .setLngLat([lng, lat])
-        .addTo(map);
+      // Add drag end event listener
+      newMarker.addListener("dragend", () => {
+        const position = newMarker.getPosition();
+        const newLat = position.lat();
+        const newLng = position.lng();
 
-      markerRef.current = newMarker;
-      setCoords(`Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`);
-      setCoordsArabic(
-        `خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
+        setCoords(
+          `Latitude: ${newLat.toFixed(6)}, Longitude: ${newLng.toFixed(6)}`
+        );
+        setCoordsArabic(
+          `خط العرض: ${newLat.toFixed(6)}, خط الطول: ${newLng.toFixed(6)}`
+        );
+        setSelectedLocation({ lat: newLat, lng: newLng });
+        setManualLat(newLat.toFixed(6));
+        setManualLng(newLng.toFixed(6));
+      });
+
+      setMarker(newMarker);
+      setSelectedLocation({ lat, lng });
+      setCoords(
+        `Latitude: ${Number(lat).toFixed(6)}, Longitude: ${Number(lng).toFixed(6)}`
       );
+      setCoordsArabic(
+        `خط العرض: ${Number(lat).toFixed(6)}, خط الطول: ${Number(lng).toFixed(6)}`
+      );
+      
+      // Update manual input fields
+      setManualLat(Number(lat).toFixed(6));
+      setManualLng(Number(lng).toFixed(6));
 
-      map.setCenter([lng, lat]);
+      // Center map on the selected location
+      mapRef.setCenter({ lat, lng });
+      mapRef.setZoom(14);
     };
 
+    const handleManualCoordinates = () => {
+      const lat = parseFloat(manualLat);
+      const lng = parseFloat(manualLng);
+
+      if (isValidCoordinate(lat, lng)) {
+        moveMarkerToLocation(lat, lng);
+        setShowManualInput(false);
+      } else {
+        alert("Please enter valid coordinates:\nLatitude: -90 to 90\nLongitude: -180 to 180");
+      }
+    };
+
+    // Initialize Google Map
     useEffect(() => {
       let mapInstance;
 
-      const initializeMap = async () => {
+      const initializeMap = () => {
         try {
-          mapInstance = new maplibregl.Map({
-            container: mapContainer.current,
-            style:
-              "https://api.maptiler.com/maps/streets/style.json?key=NxvpwMoXuYLINUijkWEc",
-            center: getInitialCenter(), // Use the validated center
-            zoom: zoom,
+          if (!window.google) {
+            console.error("Google Maps API not loaded");
+            return;
+          }
+
+          // Determine initial center
+          let initialCenter = defaultCenter;
+          if (initialLat && initialLng) {
+            initialCenter = { lat: initialLat, lng: initialLng };
+            setManualLat(Number(initialLat).toFixed(6));
+            setManualLng(Number(initialLng).toFixed(6));
+          }
+
+          mapInstance = new window.google.maps.Map(mapContainer.current, {
+            center: initialCenter,
+            zoom: 12,
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
           });
 
-          mapInstance.on("load", async () => {
-            setMap(mapInstance);
-            try {
-              let position;
-              const lat =
-                typeof initialLat === "string"
-                  ? parseFloat(initialLat)
-                  : initialLat;
-              const lng =
-                typeof initialLng === "string"
-                  ? parseFloat(initialLng)
-                  : initialLng;
+          setMap(mapInstance);
 
-              if (isValidCoordinate(lat, lng)) {
-                position = { coords: { latitude: lat, longitude: lng } };
-              } else {
-                position = await getCurrentPosition();
-              }
+          // Add initial marker if coordinates exist
+          if (initialLat && initialLng) {
+            moveMarkerToLocation(initialLat, initialLng, mapInstance);
+          } else {
+            setCoords("Click on the map to select a location");
+            setCoordsArabic("انقر على الخريطة لتحديد موقع");
+          }
 
-              const { latitude, longitude } = position.coords;
-              if (isValidCoordinate(latitude, longitude)) {
-                updateMarker(mapInstance, longitude, latitude);
-              }
-            } catch (error) {
-              console.log("Geolocation error:", error);
-              setCoords("Click on the map to select a location");
-              setCoordsArabic(t("Click on the map to select a location"));
-            }
+          // Add click listener to map
+          mapInstance.addListener("click", (e) => {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            moveMarkerToLocation(lat, lng, mapInstance);
           });
 
-          mapInstance.on("click", (e) => {
-            if (!confirmedLocation) {
-              const { lng, lat } = e.lngLat;
-              if (isValidCoordinate(lat, lng)) {
-                updateMarker(mapInstance, lng, lat);
-              }
-            }
-          });
         } catch (error) {
           console.error("Map initialization error:", error);
         }
       };
 
-      const getCurrentPosition = () => {
-        return new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-          });
-        });
-      };
-
-      initializeMap();
+      // Load Google Maps script if not already loaded
+      if (!window.google) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeMap;
+        document.head.appendChild(script);
+      } else {
+        initializeMap();
+      }
 
       return () => {
         if (mapInstance) {
           try {
-            if (markerRef.current) markerRef.current.remove();
-            mapInstance.remove();
+            if (marker) marker.setMap(null);
           } catch (error) {
             console.error("Error cleaning up map:", error);
           }
         }
       };
-    }, [confirmedLocation, initialLat, initialLng]);
+    }, []);
+
+    // Search debounce effect
+    useEffect(() => {
+      const timeoutId = setTimeout(() => {
+        if (searchQuery.trim()) {
+          searchLocation(searchQuery);
+        } else {
+          setSearchResults([]);
+        }
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
 
     const handleConfirm = () => {
-      if (markerRef.current) {
-        const lngLat = markerRef.current.getLngLat();
-        const lat = lngLat.lat;
-        const lng = lngLat.lng;
+      if (selectedLocation) {
+        const { lat, lng } = selectedLocation;
 
         if (isValidCoordinate(lat, lng)) {
+          // Call the parent component's callback
           onLocationSelect(lat, lng);
-          setConfirmedLocation(lngLat);
-          handleLocationSelect(lat, lng);
+
+          // Show confirmation message
+          setCoords(
+            `Location confirmed! Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`
+          );
+          setCoordsArabic(
+            `تم تأكيد الموقع! خط العرض: ${lat.toFixed(6)}, خط الطول: ${lng.toFixed(6)}`
+          );
           setGeoLocation({
             x: lat.toFixed(6),
             y: lng.toFixed(6),
           });
+          console.log("Location confirmed:", { lat, lng });
         }
+      } else {
+        setCoords("Please select a location first");
+        setCoordsArabic("يرجى تحديد موقع أولاً");
       }
     };
 
     const handleReset = () => {
-      if (markerRef.current) {
-        markerRef.current.remove();
-        markerRef.current = null;
+      // Remove marker
+      if (marker) {
+        marker.setMap(null);
+        setMarker(null);
       }
-      setConfirmedLocation(null);
+
+      // Reset states
+      setSelectedLocation(null);
       setCoords("Click on the map to select a location");
-      setCoordsArabic(t("Click on the map to select a location"));
+      setCoordsArabic("انقر على الخريطة لتحديد موقع");
+      setSearchQuery("");
+      setSearchResults([]);
+      setManualLat("");
+      setManualLng("");
+      setShowManualInput(false);
     };
 
     return (
       <div className="location-picker-container">
-        {/* Add search input */}
+        {/* Search input */}
         <div className="location-search">
           <input
             type="text"
@@ -635,17 +441,67 @@ useEffect(() => {
           )}
 
           {/* Search results dropdown */}
-          {searchResults?.length > 0 && (
+          {searchResults.length > 0 && (
             <div className="search-results">
-              {searchResults.map((result) => (
+              {searchResults.map((place, index) => (
                 <div
-                  key={result.id}
+                  key={place.place_id || index}
                   className="search-result-item"
-                  onClick={() => handleSearchResultClick(result)}
+                  onClick={() => handlePlaceSelect(place)}
                 >
-                  {result.name}
+                  {place.description}
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Manual Coordinates Input */}
+        <div className="manual-coordinates-section">
+          <button
+            type="button"
+            className="toggle-manual-input-btn"
+            onClick={() => setShowManualInput(!showManualInput)}
+          >
+            {showManualInput ? t("Hide Manual Input") : t("Enter Coordinates Manually")}
+          </button>
+
+          {showManualInput && (
+            <div className="manual-input-fields">
+              <div className="coord-input-group">
+                <label>{t("Latitude")}:</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="-90"
+                  max="90"
+                  placeholder="e.g., 12.9716"
+                  value={manualLat}
+                  onChange={(e) => setManualLat(e.target.value)}
+                  className="coord-input"
+                />
+              </div>
+              <div className="coord-input-group">
+                <label>{t("Longitude")}:</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="-180"
+                  max="180"
+                  placeholder="e.g., 77.5946"
+                  value={manualLng}
+                  onChange={(e) => setManualLng(e.target.value)}
+                  className="coord-input"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleManualCoordinates}
+                className="apply-coordinates-btn"
+                disabled={!manualLat || !manualLng}
+              >
+                {t("Apply Coordinates")}
+              </button>
             </div>
           )}
         </div>
@@ -655,42 +511,32 @@ useEffect(() => {
           className="map-container"
           style={{ width: "100%", height: "300px" }}
         />
+
         <div className="location-coords">
           {i18n.language === "ar" ? coordsArabic : coords}
         </div>
+
         <div className="location-actions">
-          {!confirmedLocation ? (
-            <button
-              className="confirm-location-button"
-              onClick={handleConfirm}
-              disabled={!markerRef.current}
-            >
-              {t("Confirm Location")}
-            </button>
-          ) : (
-            <>
-              <div className="location-confirmed">
-                {t("Location confirmed!")}
-              </div>
-              <button className="reset-location-button" onClick={handleReset}>
-                {t("Change Location")}
-              </button>
-            </>
-          )}
+          <button
+            className="confirm-location-button"
+            onClick={handleConfirm}
+            disabled={!selectedLocation}
+          >
+            {t("Confirm Location")}
+          </button>
+
+          {/* <button className="reset-location-button" onClick={handleReset}>
+            {t("Reset Location")}
+          </button> */}
         </div>
       </div>
     );
   };
 
-  const handleLocationSelect = useCallback(
-    (lat, lng) => {
-      setSelectedLocation({ lat, lng });
-      setShowMap(false);
-      // Store as object for display but convert to string for backend
-      // handleBranchFieldChange(branch.id, "geolocation", { x: lat, y: lng });
-    }
-    // [branch.id, handleBranchFieldChange]
-  );
+  const handleLocationSelect = useCallback((lat, lng) => {
+    setSelectedLocation({ lat, lng });
+    setShowMap(false);
+  }, []);
 
   const getLocationDisplay = (location) => {
     if (!location) return "Select Location";
@@ -798,84 +644,6 @@ useEffect(() => {
       },
     });
   };
-
-const checkDisabledStatus = (fieldPath) => {
-  // Split the field path by dots to handle nested properties
-  const fieldParts = fieldPath?.split('?.');
-  
-  // Helper function to get nested value safely
-  const getNestedValue = (obj, path) => {
-    console.log('Input object:', obj);
-    console.log('Input path:', path);
-    
-    const result = path?.reduce((current, key) => {
-      console.log('Current:', current, 'Key:', key);
-      const next = current?.[key];
-      console.log('Next value:', next);
-      return next;
-    }, obj);
-    
-    console.log('Final result:', result);
-    return result;
-  };
-
-  const originalValue = getNestedValue(originalCustomerData, fieldParts);
-  const currentValue = getNestedValue(customerData, fieldParts);
-  
-  const commonConditions = originalCustomerData &&
-                          customerData &&
-                          originalValue === currentValue &&
-                          mode === "edit" &&
-                          customerData?.customerStatus !== "pending";
-
-  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
-  ) {
-    return commonConditions && !fieldsForUpdate?.[fieldPath];
-  }
-  
-  return commonConditions;
-};
-
-const checkDisabledStatusContact = (fieldPath) => {
-  // Split the field path by dots to handle nested properties
-  const fieldParts = fieldPath?.split('?.');
-  
-  // Helper function to get nested value safely
-  const getNestedValue = (obj, path) => {
-    console.log('Input object:', obj);
-    console.log('Input path:', path);
-    
-    const result = path?.reduce((current, key) => {
-      console.log('Current:', current, 'Key:', key);
-      const next = current?.[key];
-      console.log('Next value:', next);
-      return next;
-    }, obj);
-    
-    console.log('Final result:', result);
-    return result;
-  };
-
-  const originalValue = getNestedValue(originalCustomerContactsData, fieldParts);
-  const currentValue = getNestedValue(customerContactsData, fieldParts);
-  
-  const commonConditions = originalCustomerContactsData &&
-                          customerContactsData &&
-                          originalValue === currentValue &&
-                          mode === "edit" &&
-                          customerData?.customerStatus !== "pending";
-
-  if (user?.designation === Constants.DESIGNATIONS.OPS_COORDINATOR || user?.designation === Constants.DESIGNATIONS.AREA_SALES_MANAGER ||
-    user?.designation === Constants.DESIGNATIONS.SALES_EXECUTIVE || user?.designation === Constants.DESIGNATIONS.OPS_MANAGER ||
-    user?.roles[0] === Constants.ROLES.SUPER_ADMIN
-  ) {
-    return commonConditions && !contactFieldsForUpdate?.[fieldPath];
-  }
-  
-  return commonConditions;
-};
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
@@ -1010,8 +778,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.primaryContactName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("primaryContactName")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactName ===
+                customerContactsData?.primaryContactName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("primaryContactNameVerified") &&
@@ -1078,8 +851,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.primaryContactDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("primaryContactDesignation")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactDesignation ===
+                customerContactsData?.primaryContactDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("primaryContactDesignationVerified") &&
@@ -1153,21 +931,29 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.primaryContactEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("primaryContactEmail") || true
-          }
+              (originalCustomerContactsData &&
+                customerContactsData &&
+                originalCustomerContactsData?.primaryContactEmail ===
+                  customerContactsData?.primaryContactEmail &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              true
+            }
             required
           />
-          {customerData?.customerStatus?.toLowerCase()==='approved'&& isE('emailEdit')&& isV('emailEdit') && (
-            <IconButton
-              onClick={() => {
-                setcurrentEmail(customerContactsData?.primaryContactEmail);
-                setPopup(true);
-              }}
-              sx={{ padding: "5px" }}
-            >
-              <EditIcon />
-            </IconButton>
-          )}
+          {customerData?.customerStatus?.toLowerCase() === "approved" &&
+            isE("emailEdit") &&
+            isV("emailEdit") && (
+              <IconButton
+                onClick={() => {
+                  setcurrentEmail(customerContactsData?.primaryContactEmail);
+                  setPopup(true);
+                }}
+                sx={{ padding: "5px" }}
+              >
+                <EditIcon />
+              </IconButton>
+            )}
           {isV("primaryContactEmailVerified") &&
             // (originalCustomerData &&
             //     customerData &&
@@ -1294,8 +1080,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               });
             }}
             disabled={
-            checkDisabledStatusContact("primaryContactMobile")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.primaryContactMobile ===
+                customerContactsData?.primaryContactMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("primaryContactMobileVerified") &&
@@ -1388,8 +1179,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.businessHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("businessHeadName")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadName ===
+                customerContactsData?.businessHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("businessHeadNameVerified") &&
@@ -1458,8 +1254,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.businessHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("businessHeadDesignation")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadDesignation ===
+                customerContactsData?.businessHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("businessHeadDesignationVerified") &&
@@ -1533,8 +1334,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.businessHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("businessHeadEmail")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadEmail ===
+                customerContactsData?.businessHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("businessHeadEmailVerified") &&
@@ -1665,8 +1471,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               });
             }}
             disabled={
-            checkDisabledStatusContact("businessHeadMobile")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.businessHeadMobile ===
+                customerContactsData?.businessHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("businessHeadMobileVerified") &&
@@ -1738,8 +1549,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.financeHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("financeHeadName")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadName ===
+                customerContactsData?.financeHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("financeHeadNameVerified") &&
@@ -1808,8 +1624,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.financeHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("financeHeadDesignation")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadDesignation ===
+                customerContactsData?.financeHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("financeHeadDesignationVerified") &&
@@ -1881,8 +1702,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.financeHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("financeHeadEmail")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadEmail ===
+                customerContactsData?.financeHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("financeHeadEmailVerified") &&
@@ -2013,8 +1839,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               });
             }}
             disabled={
-            checkDisabledStatusContact("financeHeadMobile")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.financeHeadMobile ===
+                customerContactsData?.financeHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("financeHeadMobileVerified") &&
@@ -2085,8 +1916,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.purchasingHeadName || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("purchasingHeadName")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadName ===
+                customerContactsData?.purchasingHeadName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("purchasingHeadNameVerified") &&
@@ -2155,8 +1991,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.purchasingHeadDesignation || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("purchasingHeadDesignation")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadDesignation ===
+                customerContactsData?.purchasingHeadDesignation &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("purchasingHeadDesignationVerified") &&
@@ -2230,8 +2071,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerContactsData?.purchasingHeadEmail || ""}
             onChange={onChangeCustomerContactsData}
             disabled={
-            checkDisabledStatusContact("purchasingHeadEmail")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadEmail ===
+                customerContactsData?.purchasingHeadEmail &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("purchasingHeadEmailVerified") &&
@@ -2362,8 +2208,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               });
             }}
             disabled={
-            checkDisabledStatusContact("purchasingHeadMobile")
-          }
+              originalCustomerContactsData &&
+              customerContactsData &&
+              originalCustomerContactsData?.purchasingHeadMobile ===
+                customerContactsData?.purchasingHeadMobile &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("purchasingHeadMobileVerified") &&
@@ -2407,7 +2258,7 @@ const checkDisabledStatusContact = (fieldPath) => {
       <div className="form-group">
         <label htmlFor="buildingName">
           {t("Building Name")}
-          <span className="required-field">*</span>
+          {/* <span className="required-field">*</span> */}
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.buildingName != customerData?.buildingName &&
@@ -2433,8 +2284,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.buildingName || ""}
             onChange={onChangeCustomerData}
             disabled={
-            checkDisabledStatus("buildingName")
-          }
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.buildingName ===
+                customerData?.buildingName &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("buildingNameVerified") &&
@@ -2499,8 +2355,12 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.street || ""}
             onChange={onChangeCustomerData}
             disabled={
-            checkDisabledStatus("street")
-          }
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.street === customerData?.street &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("streetVerified") &&
@@ -2566,8 +2426,12 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.region || ""}
             onChange={handleRegionChange}
             disabled={
-            checkDisabledStatus("region")
-          }
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.region === customerData?.region &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             className={
               originalCustomerData &&
               customerData &&
@@ -2632,8 +2496,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.city || ""}
             onChange={handleCityChange}
             disabled={
-            checkDisabledStatus("city") || !selectedRegion
-          }
+              (originalCustomerData &&
+                customerData &&
+                originalCustomerData?.city === customerData?.city &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              !selectedRegion
+            }
             className={
               originalCustomerData &&
               customerData &&
@@ -2707,8 +2576,12 @@ const checkDisabledStatusContact = (fieldPath) => {
               value={customerData?.cityOther || ""}
               onChange={onChangeCustomerData}
               disabled={
-            checkDisabledStatus("cityOther")
-          }
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.cityOther === customerData?.cityOther &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
             />
             {isV("cityOtherVerified") &&
               // (originalCustomerData &&
@@ -2764,8 +2637,13 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.district || ""}
             onChange={handleDistrictChange}
             disabled={
-            checkDisabledStatus("district") || !selectedCity
-          }
+              (originalCustomerData &&
+                customerData &&
+                originalCustomerData?.district === customerData?.district &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending") ||
+              !selectedCity
+            }
             className={
               originalCustomerData &&
               customerData &&
@@ -2842,8 +2720,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               value={customerData?.districtOther || ""}
               onChange={onChangeCustomerData}
               disabled={
-            checkDisabledStatus("districtOther")
-          }
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.districtOther ===
+                  customerData?.districtOther &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
             />
             {isV("districtOtherVerified") &&
               // (originalCustomerData &&
@@ -2908,8 +2791,12 @@ const checkDisabledStatusContact = (fieldPath) => {
                 });
               }}
               disabled={
-            checkDisabledStatus("zone")
-          }
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.zone === customerData?.zone &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
               className={
                 originalCustomerData &&
                 customerData &&
@@ -2981,8 +2868,12 @@ const checkDisabledStatusContact = (fieldPath) => {
             value={customerData?.pincode || ""}
             onChange={onChangeCustomerData}
             disabled={
-            checkDisabledStatus("pincode")
-          }
+              originalCustomerData &&
+              customerData &&
+              originalCustomerData?.pincode === customerData?.pincode &&
+              mode === "edit" &&
+              customerData?.customerStatus !== "pending"
+            }
             required
           />
           {isV("pincodeVerified") &&
@@ -3047,8 +2938,13 @@ const checkDisabledStatusContact = (fieldPath) => {
               placeholder={t("Select Location")}
               onChange={onChangeCustomerData}
               disabled={
-            checkDisabledStatus("geolocation")
-          }
+                originalCustomerData &&
+                customerData &&
+                originalCustomerData?.geolocation ===
+                  customerData?.geolocation &&
+                mode === "edit" &&
+                customerData?.customerStatus !== "pending"
+              }
               className={`text-field small ${
                 originalCustomerData &&
                 customerData &&
