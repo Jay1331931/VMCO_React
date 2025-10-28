@@ -420,6 +420,8 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
     "erpBranchId",
     "warehouseNameEn",
     "warehouseNameAr",
+    "branchRegion",
+    "branchCity"
   ];
 
   const toggleApprovalMode = () => {

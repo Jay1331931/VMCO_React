@@ -963,8 +963,15 @@
   }
 .go-to-cart-btn {
     align-self: flex-end; 
+    min-width: auto;
+    top: 70px;
+    right: 20px;
+    height: 40px;
   }
-  
+  [dir="rtl"] .go-to-cart-btn {
+    right: auto;
+    left: 20px;
+  }
  
 }
 /* Responsive styles for popup */
@@ -1072,7 +1079,7 @@
     padding: 0px;
   }
   .catalog-header {
-    justify-content: center;
+    /* justify-content: center; */
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
