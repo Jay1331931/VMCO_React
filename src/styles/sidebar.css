@@ -92,7 +92,7 @@
     transform: translateX(100%); /* Hide collapsed sidebar in RTL */
   }
   .app.rtl .mobile-menu-btn {
-    margin-right: 10px; /* Adjust mobile menu button for RTL */
+    margin-right: 30px; /* Adjust mobile menu button for RTL */
     margin-left: auto;
   }
   .app.rtl .main-content {
@@ -398,6 +398,7 @@
 @media (max-width: 768px) {
   .mobile-menu-btn {
     display: block;
+    margin-left: 30px;
   }
   .content {
     padding: 20px;
