@@ -1508,7 +1508,7 @@ const checkDisabledStatus = (fieldPath) => {
                   checked={customerData?.interCompany}
                   onChange={setInterCompany}
                   disabled={
-            checkDisabledStatus("interCompany")
+            checkDisabledStatus("interCompany") || customerData?.customerStatus === "new"
           }
                 />
                 {`\t ${t("Inter Company")}`}
@@ -1561,7 +1561,7 @@ const checkDisabledStatus = (fieldPath) => {
                 value={customerData?.entity || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-            checkDisabledStatus("entity")
+            checkDisabledStatus("entity") || customerData?.customerStatus === "new"
           }
                 required
               >
@@ -1635,7 +1635,7 @@ const checkDisabledStatus = (fieldPath) => {
                 value={customerData?.primaryBusinessUnit || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-            checkDisabledStatus("primaryBusinessUnit")
+            checkDisabledStatus("primaryBusinessUnit") || customerData?.customerStatus === "new"
           }
                 required
               >
@@ -1711,7 +1711,7 @@ const checkDisabledStatus = (fieldPath) => {
                   });
                 }}
                 disabled={
-            checkDisabledStatus("branch")
+            checkDisabledStatus("branch") || customerData?.customerStatus === "new"
           }
                 className={
                   originalCustomerData &&
@@ -1787,7 +1787,7 @@ const checkDisabledStatus = (fieldPath) => {
                 value={customerData?.assignedTo || ""}
                 onChange={onChangeCustomerData}
                 disabled={
-            checkDisabledStatus("assignedTo")
+            checkDisabledStatus("assignedTo") || customerData?.customerStatus === "new"
           }
                 className={
                   originalCustomerData &&
@@ -1862,7 +1862,7 @@ const checkDisabledStatus = (fieldPath) => {
               }
               onChange={setEntityWiseAssignment}
               disabled={
-            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR]?.toString())
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.DAR]?.toString()) || customerData?.customerStatus === "new"
           }
               className={
                 originalCustomerData &&
@@ -1927,7 +1927,7 @@ const checkDisabledStatus = (fieldPath) => {
               }
               onChange={setEntityWiseAssignment}
               disabled={
-            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO]?.toString())
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.VMCO]?.toString()) || customerData?.customerStatus === "new"
           }
               className={
                 originalCustomerData &&
@@ -1991,7 +1991,7 @@ const checkDisabledStatus = (fieldPath) => {
               }
               onChange={setEntityWiseAssignment}
               disabled={
-            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC]?.toString())
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.SHC]?.toString()) || customerData?.customerStatus === "new"
           }
               className={
                 originalCustomerData &&
@@ -2055,7 +2055,7 @@ const checkDisabledStatus = (fieldPath) => {
               }
               onChange={setEntityWiseAssignment}
               disabled={
-            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI]?.toString())
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.NAQI]?.toString()) || customerData?.customerStatus === "new"
           }
               className={
                 originalCustomerData &&
@@ -2120,7 +2120,7 @@ const checkDisabledStatus = (fieldPath) => {
               }
               onChange={setEntityWiseAssignment}
               disabled={
-            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC]?.toString())
+            checkDisabledStatus(customerData?.assignedToEntityWise?.[Constants.ENTITY.GMTC]?.toString()) || customerData?.customerStatus === "new"
           }
               className={
                 originalCustomerData &&
