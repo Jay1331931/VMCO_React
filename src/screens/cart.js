@@ -462,6 +462,38 @@ function Cart() {
         });
     };
 
+    const clearCartAfterOrderSuccess = async (categoryItems) => {
+        try {
+            await deleteCartItems(selectedCustomerId, selectedBranchId,
+                getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
+
+            setCartItems(prevCartItems =>
+                prevCartItems.map(category => ({
+                    ...category,
+                    items: category.items.filter(cartItem =>
+                        !categoryItems.some(ci => ci.id === cartItem.id)
+                    )
+                }))
+            );
+
+            setQuantities(prevQuantities => {
+                const newQuantities = { ...prevQuantities };
+                categoryItems.forEach(item => {
+                    delete newQuantities[item.id];
+                });
+                return newQuantities;
+            });
+            await fetchCartItems();
+
+            console.log('Cart successfully cleared after order placement');
+
+        } catch (error) {
+            console.error('Error clearing cart after order success:', error);
+            await fetchCartItems();
+        }
+    };
+
+
     // Updated function to handle SHC existing orders check with payment validation
     const handleSHCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod) => {
         try {
@@ -503,6 +535,8 @@ function Cart() {
                 // Show appropriate success message based on what happened
                 showOrderSuccessMessage(processedResults, selectedPaymentMethod);
             }
+
+            await clearCartAfterOrderSuccess(categoryItems);
 
         } catch (error) {
             console.error('Error in SHC existing orders check:', error);
@@ -634,6 +668,8 @@ function Cart() {
             title: t('Orders Processed Successfully'),
             text: `${message} Payment Method: ${paymentMethod}`,
             confirmButtonText: t('OK')
+        }).then(() => {
+            fetchCartItems();
         });
     };
 
@@ -765,7 +801,8 @@ function Cart() {
                         type: 'GMTC'
                     }], selectedPaymentMethod);
                 }
-                // If validation failed, alert is already shown in validation function
+                await clearCartAfterOrderSuccess(categoryItems);
+
             } else {
                 // No existing open orders, create new GMTC order
                 console.log('No existing GMTC open orders found, creating new order');
@@ -777,6 +814,8 @@ function Cart() {
                     type: 'GMTC'
                 }], selectedPaymentMethod);
             }
+
+            await clearCartAfterOrderSuccess(categoryItems);
 
         } catch (error) {
             console.error('Error in GMTC existing orders check:', error);
@@ -939,9 +978,10 @@ function Cart() {
             console.log(`  Final total amount: ${updatedTotalAmount.toFixed(2)}`);
             console.log(`  Final sales tax: ${updatedTotalSalesTax.toFixed(2)}`);
 
-            // Delete items from cart after successful update
             await deleteCartItems(selectedCustomerId, selectedBranchId,
                 getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
+
+            // Update cart items state to remove ordered items
             setCartItems(prevCartItems =>
                 prevCartItems.map(category => ({
                     ...category,
@@ -959,6 +999,10 @@ function Cart() {
                 });
                 return newQuantities;
             });
+
+            setTimeout(() => {
+                fetchCartItems();
+            }, 500);
 
             return orderId;
 
