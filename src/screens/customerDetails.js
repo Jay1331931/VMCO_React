@@ -1016,7 +1016,7 @@ const handleVerifiedDataChange = (e) => {
     ];
 
     const uniqueContactFieldsList = [
-      // { name: "primaryContactEmail", field: "email" },
+      { name: "primaryContactEmail", field: "email" },
       // { name: "businessHeadEmail", field: "email" },
       // { name: "financeHeadEmail", field: "email" },
       // { name: "purchasingHeadEmail", field: "email" },
