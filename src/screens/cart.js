@@ -805,7 +805,7 @@ function Cart() {
             const existingOrder = await orderResponse.json();
 
             // Fetch existing order lines
-            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
+            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -818,7 +818,7 @@ function Cart() {
             }
 
             const existingOrderLines = await orderLinesResponse.json();
-            const existingLines = existingOrderLines.data?.data || [];
+            const existingLines = existingOrderLines.data || [];
 
             let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
             let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
@@ -828,11 +828,7 @@ function Cart() {
                 const newQuantity = Number(quantities[item.id] || item.quantity || 1);
                 const unitPrice = parseFloat(item.price || item.unitPrice || 0);
                 const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                // Check if product already exists in order lines
-                const existingLine = existingLines.find(line =>
-                    line.productId === (item.productId || item.product_id)
-                );
+                const existingLine = existingLines.find(line => line?.productId === (item?.productId));
 
                 if (existingLine) {
                     // Product line exists - update quantity and totals
@@ -847,7 +843,7 @@ function Cart() {
                         netAmount: netAmount.toFixed(2)
                     };
 
-                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.product_id}`, {
+                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId}`, {
                         method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
@@ -946,8 +942,6 @@ function Cart() {
             // Delete items from cart after successful update
             await deleteCartItems(selectedCustomerId, selectedBranchId,
                 getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
-
-            // Update UI
             setCartItems(prevCartItems =>
                 prevCartItems.map(category => ({
                     ...category,
@@ -1761,37 +1755,34 @@ function Cart() {
                     if (machineOrderId) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
 
+                        // Update cart items state to remove ordered items
+                        setCartItems(prevCartItems =>
+                            prevCartItems.map(category => ({
+                                ...category,
+                                items: category.items.filter(
+                                    cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
+                            })));
+
+                        // Clear quantities for ordered items
+                        setQuantities(prevQuantities => {
+                            const newQuantities = { ...prevQuantities };
+                            categoryItems.forEach(item => {
+                                delete newQuantities[item.id];
+                            });
+                            return newQuantities;
+                        });
+
                         Swal.fire({
                             icon: 'success',
                             title: t('Request Sent'),
                             text: t(`Your request has been sent for approval! Order #${machineOrderId}`),
                             confirmButtonText: t('OK')
                         }).then(() => {
-                            // Update cart items state to remove ordered items
-                            setCartItems(prevCartItems =>
-                                prevCartItems.map(category => ({
-                                    ...category,
-                                    items: category.items.filter(
-                                        cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                                })));
-
-                            // Clear quantities for ordered items
-                            setQuantities(prevQuantities => {
-                                const newQuantities = { ...prevQuantities };
-                                categoryItems.forEach(item => {
-                                    delete newQuantities[item.id];
-                                });
-                                return newQuantities;
-                            });
-
-                            // Force a refresh of cart items
                             fetchCartItems();
                         });
                     }
                 }
             } else if (entity && entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
-                // For SHC entity, handle fresh/non-fresh splitting with payment method determination
-                // Calculate total amount for all products
                 let totalAmount = 0;
                 categoryItems.forEach(item => {
                     const baseAmount = Number(item.price) * Number(quantities[item.id] || item.quantity || 1);
@@ -2413,7 +2404,6 @@ function Cart() {
                 }
             }
 
-            // Show success message and update UI
             if (showSuccessMessage) {
                 const orderStatusMessage = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                     ? t('Your request has been sent for approval!')
