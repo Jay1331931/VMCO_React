@@ -45,8 +45,8 @@ import ApprovalHistory from "./screens/approvalHistory";
 import PaymentLines from "./components/PaymentLines";
 function App() {
   const { user, token, loading } = useAuth();
-  const [pageName,setPageName]=useState("")
-  
+  const [pageName, setPageName] = useState("")
+
   useEffect(() => {
     if (user) {
       const rbacMgr = new RbacManager(
@@ -66,9 +66,9 @@ function App() {
         }
       }
     }
-  }, [user]); 
+  }, [user]);
 
-  if(loading) {
+  if (loading) {
     return <div>Loading...</div>; // or a loading spinner
   }
 
@@ -77,26 +77,26 @@ function App() {
   // if(tokenIsValid){
   // RbacManager.loadRbacConfig(role,token);
   // }
-         
+
   return (
     <Router>
       <Routes>
         {/* <Route path="/" element={<LoginScreen />} /> */}
-         <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
+        <Route path="/" element={tokenIsValid ? <Navigate to={`/${pageName}`} /> : <LoginScreen />} />
 
         {/* <Route path="/orders" element={<ProtectedRoute page="orders"><Orders /></ProtectedRoute>} /> */}
         <Route path="/orders" element={<ProtectedRoute page="orders"><OrdersMui /></ProtectedRoute>} />
         {/* <Route path="/customers" element={<ProtectedRoute page="customers"><Customers /></ProtectedRoute>}/> */}
-        <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>}/> 
+        <Route path="/customers" element={<ProtectedRoute page="customers"><CustomersMUI /></ProtectedRoute>} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/support" element={<ProtectedRoute page="support"><SupportMui /></ProtectedRoute>} />
         <Route path="/maintenance" element={<ProtectedRoute page="maintenance"><MaintenanceMui /></ProtectedRoute>} />
-        <Route path="/cart" element={<ProtectedRoute  page="cart"><Cart /></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
-      <Route path="/.well-known/apple-developer-merchantid-domain-association" element={<DomainVerification/>} />   {/*component={DomainVerification} */}
+        <Route path="/.well-known/apple-developer-merchantid-domain-association" element={<DomainVerification />} />   {/*component={DomainVerification} */}
 
-        <Route path="/login/employee" element={ <LoginScreen />} />
+        <Route path="/login/employee" element={<LoginScreen />} />
         <Route
           path="/customers/registration"
           element={<CustomersOnboarding />}
@@ -110,10 +110,10 @@ function App() {
         <Route path="/orderDetails" element={<ProtectedRoute page="orderDetails"><OrderDetailsMui /></ProtectedRoute>} />
         <Route path="/supportDetails" element={<ProtectedRoute page="supportDetails"><SupportDetails /></ProtectedRoute>} />
         <Route path="/maintenanceDetails" element={<ProtectedRoute page="maintenanceDetails"><MaintenanceDetails /></ProtectedRoute>} />
-        <Route path="/rbacEditor" element={<ProtectedRoute page ="rbacEditor"><RbacEditor/></ProtectedRoute>} />
-        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page ="deliveryScheduleEditor"><DeliveryScheduleEditor/></ProtectedRoute>} />
-        <Route path="/priceListEditor" element={<ProtectedRoute page ="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
-        <Route path="/approvalHistory" element={<ProtectedRoute page ="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
+        <Route path="/rbacEditor" element={<ProtectedRoute page="rbacEditor"><RbacEditor /></ProtectedRoute>} />
+        <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page="deliveryScheduleEditor"><DeliveryScheduleEditor /></ProtectedRoute>} />
+        <Route path="/priceListEditor" element={<ProtectedRoute page="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
+        <Route path="/approvalHistory" element={<ProtectedRoute page="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
@@ -124,11 +124,11 @@ function App() {
         <Route path="/customerDetails" element={<CustomerDetails />} />
         {/* Catch-all route for 404 Not Found */}
         <Route path="*" element={<NotFound />} />
-        <Route path="/payment-options/order/:orderId/:orderType" element={<OptionsPage/>} />
+        <Route path="/payment-options/order/:orderId/:orderType" element={<OptionsPage />} />
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
-        <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent/>} />
-            <Route path="/payments/:orderId" element={ <PaymentLines />} />
+        <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent />} />
+        <Route path="/payments/:orderId" element={<PaymentLines />} />
       </Routes>
     </Router>
   );

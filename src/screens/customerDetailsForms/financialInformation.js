@@ -953,7 +953,7 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.prePayment?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("prePayment?.isAllowed")
+                  checkDisabledStatusPayment("prePayment?.isAllowed") || customerData?.customerStatus === "new"
                 }
               />
               {`\t ${t("Pre-Payment")}`}
@@ -993,7 +993,7 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.COD?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("COD?.isAllowed")
+                  checkDisabledStatusPayment("COD?.isAllowed") || customerData?.customerStatus === "new"
                 }
               />
               {`\t ${t("Cash on Delivery (COD) per Branch")}`}
@@ -1027,7 +1027,7 @@ const checkDisabledStatus = (fieldPath) => {
                   }
                   onChange={onChangeCustomerPaymentMethodsData}
                   disabled={
-                  checkDisabledStatusPayment("COD?.limit")
+                  checkDisabledStatusPayment("COD?.limit") || customerData?.customerStatus === "new"
                 }
                 />
               </>
@@ -1048,7 +1048,7 @@ const checkDisabledStatus = (fieldPath) => {
                 }
                 onChange={setCustomerCreditChange}
                 disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed")
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed") || customerData?.customerStatus === "new"
                 }
               />
               {`\t ${t(Constants.ENTITY.DAR)}`}
@@ -1089,7 +1089,7 @@ const checkDisabledStatus = (fieldPath) => {
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit")
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit") || customerData?.customerStatus === "new"
                 }
                   />
                   {customerPaymentMethodsData &&
@@ -1141,7 +1141,7 @@ const checkDisabledStatus = (fieldPath) => {
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period")
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period") || customerData?.customerStatus === "new"
                 }
                   />
                   {customerPaymentMethodsData &&
@@ -1174,7 +1174,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed")}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed") || customerData?.customerStatus === "new"}
               />
               {`\t ${t(Constants.ENTITY.VMCO)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.VMCO].isAllowed !==
@@ -1213,7 +1213,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1263,7 +1263,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1295,7 +1295,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.SHC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed")}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed") || customerData?.customerStatus === "new"}
               />
               {`\t ${t(Constants.ENTITY.SHC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.SHC].isAllowed !==
@@ -1334,7 +1334,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1384,7 +1384,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1416,7 +1416,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed")}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed") || customerData?.customerStatus === "new"}
               />
               {`\t ${t(Constants.ENTITY.NAQI)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.NAQI].isAllowed !==
@@ -1455,7 +1455,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1505,7 +1505,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1537,7 +1537,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed")}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed") || customerData?.customerStatus === "new"}
               />
               {`\t ${t(Constants.ENTITY.GMTC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.GMTC].isAllowed !==
@@ -1576,7 +1576,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1626,7 +1626,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period")}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period") || customerData?.customerStatus === "new"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
