@@ -106,6 +106,14 @@ function Catalog() {
   const categoryFilterRef = useRef(categoryFilter);
   const subCategoryFilterRef = useRef(subCategoryFilter);
   const searchQueryRef = useRef(searchQuery);
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+    useEffect(() => {
+      const handleResize = () => setIsMobile(window.innerWidth < 768);
+      console.log("isMobile", isMobile);
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
   // FIXED: Update refs when values change
   useEffect(() => {
@@ -1423,7 +1431,7 @@ function Catalog() {
                 disabled={!selectedLocation}
               >
                 <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                <span>{t("Go to Cart")}</span>
+                {!isMobile && (<span>{t("Go to Cart")}</span>)}
               </button>
             )}
           </div>
@@ -1543,7 +1551,7 @@ function Catalog() {
             </div>
           )}
         </div>
-
+          
         {/* Loading spinner when fetching more products */}
         {isLoadingMore && (
           <div className="loading-more-container">
@@ -1575,6 +1583,51 @@ function Catalog() {
           />
         )}
       </div>
+      {/* {isMobile && isV("selectBranch") && (
+          <div className="catalog-header">
+            <div className="location-selector">
+              <SearchableDropdown
+                id={`location-select-${catalogId}`}
+                name="locationSelect"
+                value={selectedLocation}
+                onChange={handleBranchSelect}
+                options={branches.map((b) => ({
+                  ...b,
+                  name: b.label || b.name || b.value,
+                  disabled: b.disabled,
+                }))}
+                className="location-select"
+                placeholder={t("Select Branch")}
+                disabled={isLoading || branches.length === 0}
+              />
+              {isLoading && branches.length === 0 && (
+                <div className="dropdown-loading">
+                  <LoadingSpinner size="small" />
+                </div>
+              )}
+              {!isLoading && branches.length === 0 && (
+                <div className="no-branches-message">
+                  {t("No branches available")}
+                </div>
+              )}
+            </div>
+            {isV("goToCart") && (
+              <button
+                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""
+                  }`}
+                style={{
+                  opacity: !selectedLocation ? 0.6 : 1,
+                  cursor: !selectedLocation ? "not-allowed" : "pointer",
+                }}
+                onClick={handleGoToCart}
+                disabled={!selectedLocation}
+              >
+                <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                <span>{t("Go to Cart")}</span>
+              </button>
+            )}
+          </div>
+        )} */}
       <style jsx="true">{`
         .no-products-message {
           width: 100%;
