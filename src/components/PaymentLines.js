@@ -111,8 +111,8 @@ const PaymentLines = () => {
   };
 
   const paymentLines = payment?.paymentlines || [];
-  const isErpOrderId = paymentLines.some((line) => !line.erpOrderId);
-  const isUnsynced =  payment?.sync === false && isErpOrderId ;
+  const isErpOrderId = paymentLines?.some((line) => !line.erpOrderId);
+  const isUnsynced =  (payment?.sync === false || payment?.sync==null)  && isErpOrderId ;
   const formatToRiyadhTime = (dateString) => {
     if (!dateString) return "—";
     try {
@@ -178,7 +178,7 @@ const PaymentLines = () => {
                             {t("Payment Method")}
                           </Typography>
                           <Typography variant="h6" fontWeight={600}>
-                            {payment.payment_method || "—"}
+                            {payment?.payment_method || "—"}
                           </Typography>
                         </Grid>
 
@@ -190,7 +190,7 @@ const PaymentLines = () => {
                             {t("Total Amount")}
                           </Typography>
                           <Typography variant="h6" fontWeight={600}>
-                            ₹ {payment.totalamount?.toLocaleString() || "—"}
+                            ₹ {payment?.totalamount?.toLocaleString() || "—"}
                           </Typography>
                         </Grid>
 
@@ -202,7 +202,7 @@ const PaymentLines = () => {
                             {t("Bank Transaction ID")}
                           </Typography>
                           <Typography variant="body1">
-                            {payment.bank_transaction_id || "—"}
+                            {payment?.bank_transaction_id || "—"}
                           </Typography>
                         </Grid>
 
@@ -226,8 +226,8 @@ const PaymentLines = () => {
                             {t("Payment Date Time")}
                           </Typography>
                           <Typography variant="body1">
-                            {payment.payment_date_time
-                              ? formatToRiyadhTime(payment.payment_date_time)
+                            {payment?.payment_date_time
+                              ? formatToRiyadhTime(payment?.payment_date_time)
                               : "—"}
                           </Typography>
                         </Grid>
@@ -240,7 +240,7 @@ const PaymentLines = () => {
                             {t("Remarks")}
                           </Typography>
                           <Typography variant="body1">
-                            {payment.paymentremarks || "No remarks"}
+                            {payment?.paymentremarks || "No remarks"}
                           </Typography>
                         </Grid>
                       </Grid>
@@ -284,7 +284,7 @@ const PaymentLines = () => {
 
             {/* Payment Lines Section */}
           <Grid container spacing={3}>
-  {paymentLines.length > 0 ? (
+  {paymentLines?.length > 0 ? (
     paymentLines?.map((line, index) => (
       <Grid item xs={12} sm={6} md={4} key={index}>
         <Card
@@ -304,13 +304,13 @@ const PaymentLines = () => {
         >
           <CardContent>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              {t("Order ID")}: {line.orderId}
+              {t("Order ID")}: {line?.orderId}
             </Typography>
             <Typography variant="h6" fontWeight={600}>
-              {t("Amount")}: ₹ {parseFloat(line.Amount).toLocaleString()}
+              {t("Amount")}: ₹ {parseFloat(line?.Amount)?.toLocaleString()}
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={1}>
-              {t("ERP Order ID")}: {line.erpOrderId || "—"}
+              {t("ERP Order ID")}: {line?.erpOrderId || "—"}
             </Typography>
           </CardContent>
         </Card>
