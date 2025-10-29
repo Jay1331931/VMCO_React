@@ -153,6 +153,8 @@ const BankTransactions = () => {
     { field: "amountTransferred", headerName: t("Amount Transferred"), include: isV("amountTransferredCol"), searchable: false, flex: 1 },
     { field: "transactionDate", headerName: t("Transaction Date"), include: isV("transactionDateCol"), searchable: false, flex: 1 },
     { field: "createdAt", headerName: t("Created At"), include: isV("createdAtCol"), searchable: true, flex: 1 },
+        { field: "modifiedByName", headerName: t("verified By"), include: isV("modifiedByNameCol"), searchable: false, flex: 1 },
+    { field: "createdByName", headerName: t("created By"), include: isV("createdByNameCol"), searchable: false, flex: 1 },
     { field: "status", headerName: t("Transaction Status"), include: isV("statusCol"), searchable: true, flex: 1 },
   ];
 
