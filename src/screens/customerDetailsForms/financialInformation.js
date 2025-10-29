@@ -681,7 +681,7 @@ const checkDisabledStatus = (fieldPath) => {
               value={customerData?.pricingPolicy?.[Constants.ENTITY.DAR] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.DAR])
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.DAR]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
             >
               <option value="" disabled>
@@ -732,7 +732,7 @@ const checkDisabledStatus = (fieldPath) => {
               value={customerData?.pricingPolicy?.[Constants.ENTITY.VMCO] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.VMCO])
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.VMCO]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
             >
               <option value="" disabled>
@@ -783,7 +783,7 @@ const checkDisabledStatus = (fieldPath) => {
               value={customerData?.pricingPolicy?.[Constants.ENTITY.SHC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.SHC])
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.SHC]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
             >
               <option value="" disabled>
@@ -835,7 +835,7 @@ const checkDisabledStatus = (fieldPath) => {
               value={customerData?.pricingPolicy?.[Constants.ENTITY.NAQI] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.NAQI])
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.NAQI]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
             >
               <option value="" disabled>
@@ -887,7 +887,7 @@ const checkDisabledStatus = (fieldPath) => {
               value={customerData?.pricingPolicy?.[Constants.ENTITY.GMTC] || ""}
               onChange={setEntityWisePricePlan}
               disabled={
-            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.GMTC])
+            checkDisabledStatus("pricingPolicy?." + [Constants.ENTITY.GMTC]) || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
             >
               <option value="" disabled>
@@ -925,7 +925,7 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={customerData?.isDeliveryChargesApplicable}
                 onChange={setIsDeliveryChargesApplicable}
                 disabled={
-            checkDisabledStatus("isDeliveryChargesApplicable")
+            checkDisabledStatus("isDeliveryChargesApplicable") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
           }
               />
               {`\t ${t("Is delivery charges applicable")}`}
@@ -953,7 +953,7 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.prePayment?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("prePayment?.isAllowed") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("prePayment?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t("Pre-Payment")}`}
@@ -993,7 +993,7 @@ const checkDisabledStatus = (fieldPath) => {
                 checked={paymentMethods?.COD?.isAllowed}
                 onChange={onChangeCustomerPaymentMethodsData}
                 disabled={
-                  checkDisabledStatusPayment("COD?.isAllowed") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("COD?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t("Cash on Delivery (COD) per Branch")}`}
@@ -1027,7 +1027,7 @@ const checkDisabledStatus = (fieldPath) => {
                   }
                   onChange={onChangeCustomerPaymentMethodsData}
                   disabled={
-                  checkDisabledStatusPayment("COD?.limit") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("COD?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
                 />
               </>
@@ -1048,7 +1048,7 @@ const checkDisabledStatus = (fieldPath) => {
                 }
                 onChange={setCustomerCreditChange}
                 disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
               />
               {`\t ${t(Constants.ENTITY.DAR)}`}
@@ -1089,7 +1089,7 @@ const checkDisabledStatus = (fieldPath) => {
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
                   />
                   {customerPaymentMethodsData &&
@@ -1141,7 +1141,7 @@ const checkDisabledStatus = (fieldPath) => {
                     }
                     onChange={setCustomerCreditChange}
                     disabled={
-                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period") || customerData?.customerStatus === "new"
+                  checkDisabledStatusPayment("credit?." + [Constants.ENTITY.DAR] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"
                 }
                   />
                   {customerPaymentMethodsData &&
@@ -1174,7 +1174,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.VMCO]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed") || customerData?.customerStatus === "new"}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
               />
               {`\t ${t(Constants.ENTITY.VMCO)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.VMCO].isAllowed !==
@@ -1213,7 +1213,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1263,7 +1263,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.VMCO] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1295,7 +1295,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.SHC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed") || customerData?.customerStatus === "new"}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
               />
               {`\t ${t(Constants.ENTITY.SHC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.SHC].isAllowed !==
@@ -1334,7 +1334,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1384,7 +1384,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.SHC] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1416,7 +1416,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.NAQI]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed") || customerData?.customerStatus === "new"}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
               />
               {`\t ${t(Constants.ENTITY.NAQI)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.NAQI].isAllowed !==
@@ -1455,7 +1455,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1505,7 +1505,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.NAQI] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1537,7 +1537,7 @@ const checkDisabledStatus = (fieldPath) => {
                   paymentMethods?.credit?.[Constants.ENTITY.GMTC]?.isAllowed
                 }
                 onChange={setCustomerCreditChange}
-                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed") || customerData?.customerStatus === "new"}
+                disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.isAllowed") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
               />
               {`\t ${t(Constants.ENTITY.GMTC)}`}
               {paymentMethods?.credit?.[Constants.ENTITY.GMTC].isAllowed !==
@@ -1576,7 +1576,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.limit || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.limit") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
@@ -1626,7 +1626,7 @@ const checkDisabledStatus = (fieldPath) => {
                       ]?.period || ""
                     }
                     onChange={setCustomerCreditChange}
-                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period") || customerData?.customerStatus === "new"}
+                    disabled={checkDisabledStatusPayment("credit?." + [Constants.ENTITY.GMTC] + "?.period") || customerData?.customerStatus?.toLowerCase() === "new" || customerData?.customerStatus?.toLowerCase() === "pending"}
                   />
                   {customerPaymentMethodsData &&
                     originalCustomerPaymentMethodsData &&
