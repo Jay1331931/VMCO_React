@@ -2659,7 +2659,7 @@ function OrderDetails() {
   // Define columns for the products DataGrid
   const productColumns = [
     {
-      field: "id",
+      field: "erpProdId",
       headerName: t("Product ID"),
       include: isV("productIdCol"),
       minWidth: 80,
