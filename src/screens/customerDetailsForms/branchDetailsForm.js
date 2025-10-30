@@ -590,7 +590,7 @@ const BranchDetailsForm = ({
 
   const handleSubmit = async (id) => {
     setIsSubmitting(true);
-
+let branchdata;
     try {
       handleSave(id, "submit");
 
@@ -630,7 +630,7 @@ const BranchDetailsForm = ({
         }
       );
 
-      const result = await response.json();
+       branchdata = await response.json();
 
       // Keep loading for 3 seconds then reload
       setTimeout(() => {
@@ -643,11 +643,12 @@ const BranchDetailsForm = ({
     }
 
     // Create user if primary contact email exists with default password
-    const primaryContactEmail = branchContacts.primaryContactEmail;
+ 
+  const primaryContactEmail = branchContacts?.primaryContactEmail;
     if (primaryContactEmail) {
       const userPayload = {
         email: primaryContactEmail,
-        password: "Pass@123",
+        password: "Talab@"  + branchDetails?.sequenceId,
         userType: "customer",
         roles: ["branch_primary"],
       };
@@ -673,6 +674,8 @@ const BranchDetailsForm = ({
         console.error("Error creating user:", error);
       }
     }
+    
+  
   };
 
   const handleSave = async (id, action) => {
