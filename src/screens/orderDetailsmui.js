@@ -1098,6 +1098,7 @@ function OrderDetails() {
             return createSalesOrderLine(
               formData.id,
               productId,
+              product.erpProdId,
               unitPrice,
               quantity,
               netAmount,
@@ -1646,8 +1647,7 @@ function OrderDetails() {
             erpLineNumber: index + 1,
             productId: product.id || product.product_id,
             productName: product.productName || product.product_name_en,
-            productNameLc:
-              product.productNameLc || product.product_name_lc || "",
+            productNameLc: product.productNameLc || product.product_name_lc || "",
             erpProdId: product.erpProdId || product.erp_prod_id || "",
             isMachine: product.isMachine || product.is_machine,
             isFresh: product.isFresh,
@@ -2318,14 +2318,7 @@ function OrderDetails() {
   };
 
   // Function to create a new sales order line
-  const createSalesOrderLine = async (
-    orderId,
-    productId,
-    unitPrice,
-    quantity,
-    netAmount,
-    vatPercentage
-  ) => {
+  const createSalesOrderLine = async (orderId, productId, erpProdId, unitPrice, quantity, netAmount, vatPercentage) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
       let finalVat = vatPercentage;
@@ -2338,23 +2331,26 @@ function OrderDetails() {
       const vatAmount = (baseAmount * finalVat) / 100;
 
       // Find the product object to get productName, productNameLc, unit
-      const productObj = formData.products.find(
-        (p) => (p.id || p.product_id) === productId
-      );
+      const productObj = formData.products.find((p) => (p.id || p.product_id) === productId);
+      const existingLineNumbers = formData.products.map(p => p.lineNumber || 0).filter(lineNum => lineNum > 0);
+      const maxLineNumber = existingLineNumbers.length > 0 ? Math.max(...existingLineNumbers) : 0;
+      const newLineNumber = maxLineNumber + 1;
+      
       const payload = {
-        order_id: orderId,
-        product_id: productId,
-        isMachine: productObj?.isMachine || productObj?.is_machine,
+        orderId: orderId,
+        lineNumber: newLineNumber,
+        erpLineNumber: newLineNumber,
+        productId: productId,
+        erpProdId: productObj.erpProdId,
+        isMachine: productObj?.isMachine || productObj?.isMachine,
         quantity: parseInt(quantity, 10),
-        unit_price: parseFloat(unitPrice),
-        net_amount: parseFloat(netAmount),
-        sales_tax_amount: vatAmount.toFixed(2),
-        product_name:
-          productObj?.productName || productObj?.product_name_en || "",
-        product_name_lc:
-          productObj?.productNameLc || productObj?.product_name_lc || "",
-        unit: productObj?.unit || "",
-        vat_percentage: Number(finalVat).toFixed(2),
+        unitPrice: parseFloat(unitPrice),
+        netAmount: parseFloat(netAmount),
+        salesTaxAmount: vatAmount.toFixed(2),
+        productName: productObj?.productName || productObj?.productNameEn,
+        productNameLc: productObj?.productNameLc || productObj?.productnamelc,
+        unit: productObj?.unit,
+        vatPercentage: Number(finalVat.toFixed(2)),
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: "POST",
@@ -3319,7 +3315,7 @@ function OrderDetails() {
     }
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
-  }; 
+  };
   const handleDialogSubmit = async (comment) => {
 
     let updates = {
@@ -3676,9 +3672,9 @@ function OrderDetails() {
     formData.products ? formData.products.length : 0,
     formMode,
   ]);
-const handlePayments =()=>{
-  navigate(`/payments/${formData?.id}`)
-}
+  const handlePayments = () => {
+    navigate(`/payments/${formData?.id}`)
+  }
   const handleViewSignature = async (orderId, customerId, Invoices) => {
     setShowModal(true);
     try {
@@ -3893,7 +3889,7 @@ const handlePayments =()=>{
                         <label>{t("Order By")}</label>
                         <input
                           name="orderBy"
-                          value={ orderFromNav.createdByUsername || "" }
+                          value={orderFromNav.createdByUsername || ""}
                           onChange={handleInputChange}
                           disabled={!isE("orderBy")}
                         />
@@ -3904,7 +3900,7 @@ const handlePayments =()=>{
                         <label>{t("Last Modified By")}</label>
                         <input
                           name="lastModifiedBy"
-                          value={ orderFromNav.modifiedByUsername || "" }
+                          value={orderFromNav.modifiedByUsername || ""}
                           disabled={!isE("lastModifiedBy")}
                         />
                       </div>
@@ -4203,12 +4199,12 @@ const handlePayments =()=>{
                         </div>
                       )}
                     {isV("warehouse") &&
-                       formMode === "edit" && (
+                      formMode === "edit" && (
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
                           <SearchableDropdown
                             options={warehouseOptions}
-                            value={selectedWarehouse || ""} 
+                            value={selectedWarehouse || ""}
                             onChange={handleWarehouseChange}
                             disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
                             placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
@@ -4855,7 +4851,7 @@ const handlePayments =()=>{
           </div>
           {isV("orderFooter") && (
             <div className="order-details-footer">
-             
+
               {isV("orderStatus") && (
                 <div className="order-status">
                   <span className="status-label">{t("Status")}:</span>
@@ -4868,17 +4864,17 @@ const handlePayments =()=>{
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                 {(isV("paymentLines"))  &&  formData?.paymentStatus?.toLowerCase() === "paid"&&(
-                      <button
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && (
+                  <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
                     disabled={!isE("paymentLines")
-                      
+
                     }
                   >
                     {t('Payments')}
                   </button>
-                  ) }
+                )}
                 {isV("btnSave", fromApproval, false) && isE("btnSave") && (
                   <button
                     className="order-action-btn"
