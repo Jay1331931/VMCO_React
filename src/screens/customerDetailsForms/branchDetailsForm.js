@@ -643,12 +643,12 @@ let branchdata;
     }
 
     // Create user if primary contact email exists with default password
-    console.log("branchdata",branchdata)
-    const primaryContactEmail = branchContacts.primaryContactEmail;
+ 
+  const primaryContactEmail = branchContacts?.primaryContactEmail;
     if (primaryContactEmail) {
       const userPayload = {
         email: primaryContactEmail,
-        password: "Talab@"  + branchdata?.branch?.sequenceId,
+        password: "Talab@"  + branchDetails?.sequenceId,
         userType: "customer",
         roles: ["branch_primary"],
       };
@@ -674,6 +674,8 @@ let branchdata;
         console.error("Error creating user:", error);
       }
     }
+    
+  
   };
 
   const handleSave = async (id, action) => {
