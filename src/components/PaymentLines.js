@@ -111,7 +111,7 @@ const PaymentLines = () => {
   };
 
   const paymentLines = payment?.paymentlines || [];
-  const isErpOrderId = paymentLines?.some((line) => !line.erpOrderId);
+  const isErpOrderId = paymentLines?.some((line) => line.erpOrderId);
   const isUnsynced =  (payment?.sync === false || payment?.sync==null)  && isErpOrderId ;
   const formatToRiyadhTime = (dateString) => {
     if (!dateString) return "—";
