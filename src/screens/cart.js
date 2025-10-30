@@ -61,6 +61,7 @@ function Cart() {
     const [selectedBranchNameLc, setSelectedBranchNameLc] = useState('');
     const [selectedBranchId, setSelectedBranchId] = useState('');
     const [selectedBranchErpId, setSelectedBranchErpId] = useState('');
+    const [selectedCustSequenceId, setSelectedCustSequenceId] = useState('');
     const [selectedBranchSequenceId, setSelectedBranchSequenceId] = useState('');
     const [selectedBranchRegion, setSelectedBranchRegion] = useState('');
     const [selectedBranchCity, setSelectedBranchCity] = useState('');
@@ -88,6 +89,7 @@ function Cart() {
             if (location.state.selectedBranchNameLc) setSelectedBranchNameLc(location.state.selectedBranchNameLc);
             if (location.state.selectedBranchNameEn) setSelectedBranchNameEn(location.state.selectedBranchNameEn);
             if (location.state.selectedBranchErpId) setSelectedBranchErpId(location.state.selectedBranchErpId);
+            if (location.state.selectedCustSequenceId) setSelectedCustSequenceId(location.state.selectedCustSequenceId);
             if (location.state.selectedBranchSequenceId) setSelectedBranchSequenceId(location.state.selectedBranchSequenceId);
             if (location.state.selectedBranchRegion) setSelectedBranchRegion(location.state.selectedBranchRegion);
             if (location.state.selectedBranchCity) setSelectedBranchCity(location.state.selectedBranchCity);
@@ -1454,7 +1456,7 @@ function Cart() {
         }
     };
 
-    const createTempOrder = async (categoryItems, categoryName, selectedPaymentMethod, isFresh) => {
+    const createTempOrder = async (categoryItems, categoryName, selectedPaymentMethod, isMachine, isFresh) => {
         try {
             const entity = getEntityFromCategory(categoryName);
             const userId = user?.userId;
@@ -1483,34 +1485,9 @@ function Cart() {
 
             const customerData = await customerResponse.json();
 
-            const orderPayload = {
-                customerId: selectedCustomerId,
-                erpCustId: user?.erpCustomerId,
-                companyNameEn: customerData?.data?.companyNameEn,
-                companyNameAr: customerData?.data?.companyNameAr,
-                brandNameEn: customerData?.data?.brandNameEn,
-                brandNameAr: customerData?.data?.brandNameAr,
-                branchId: selectedBranchId,
-                branchNameEn: selectedBranchName,
-                branchNameLc: selectedBranchNameLc,
-                branchCity: selectedBranchCity,
-                erpBranchId: selectedBranchErpId,
-                branchSequenceId: selectedBranchSequenceId,
-                branchRegion: selectedBranchRegion,
-                entity: entity,
-                paymentMethod: selectedPaymentMethod,
-                totalAmount: totalAmount.toFixed(2),
-                paidAmount: '0.00',
-                deliveryCharges: '0.00',
-                paymentStatus: 'Pending',
-                status: 'Open',
-                productCategory: categoryName,
-                isFresh: isFresh,
-                orderSource: "Cart"
-            };
-
             const orderLinesPayload = [];
             let lineNumber = 1;
+            let totalSalesTaxAmount = 0;
 
             for (const item of categoryItems) {
                 const quantity = Number(quantities[item.id] || item.quantity || 1);
@@ -1536,8 +1513,43 @@ function Cart() {
                 };
 
                 orderLinesPayload.push(linePayload);
+                totalSalesTaxAmount += vatAmount;
                 lineNumber++;
             }
+
+            const orderPayload = {
+                customerId: selectedCustomerId,
+                custSequenceId: customerData?.data?.sequenceId,
+                companyNameEn: customerData?.data?.companyNameEn,
+                companyNameAr: customerData?.data?.companyNameAr,
+                brandNameEn: customerData?.data?.brandNameEn,
+                brandNameAr: customerData?.data?.brandNameAr,
+                branchId: selectedBranchId,
+                branchNameEn: selectedBranchName,
+                branchNameLc: selectedBranchNameLc,
+                branchCity: selectedBranchCity,
+                branchSequenceId: selectedBranchSequenceId,
+                branchRegion: selectedBranchRegion,
+                entity: entity,
+                erpCustId: user?.erpCustomerId,
+                erpBranchId: selectedBranchErpId,
+                paymentMethod: selectedPaymentMethod,
+                totalAmount: totalAmount.toFixed(2),
+                totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
+                customerRegion: customerData?.data?.region,
+                vmcoCustomerRegion: customerData?.data?.branch,
+                paidAmount: '0.00',
+                deliveryCharges: totalAmount <=150.00 ? '20.00' : '0.00',
+                paymentStatus: 'Pending',
+                status: 'Open',
+                productCategory: categoryName,
+                isMachine: isMachine,
+                isFresh: isFresh,
+                salesExecutive: customerData?.data?.assignedToEntityWise?.[entity],
+                createdBy: userId,
+                modifiedBy: userId,
+                orderSource: "Cart"
+            };
 
             const tempOrderPayload = {
                 userId: userId,
