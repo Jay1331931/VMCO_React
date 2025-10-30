@@ -104,6 +104,7 @@ function Cart() {
     const userId = selectedUserId || user?.userId;
     const customerId = selectedCustomerId || user?.customerId;
     const erpCustId = user?.erpCustomerId;
+    const sequenceId = user?.sequenceId;
 
     // Get current language
     const currentLanguage = i18n.language;
@@ -1360,6 +1361,7 @@ function Cart() {
                         freshProducts,
                         `SHC - FRESH`,
                         selectedPaymentMethod,
+                        false,
                         true
                     );
                     if (freshTempOrderId) {
@@ -1373,6 +1375,7 @@ function Cart() {
                         nonFreshProducts,
                         `SHC - FROZEN`,
                         selectedPaymentMethod,
+                        false,
                         false
                     );
                     if (nonFreshTempOrderId) {
@@ -1469,6 +1472,9 @@ function Cart() {
                 const baseAmount = unitPrice * quantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
                 totalAmount += baseAmount + vatAmount;
+                if(totalAmount <= 150){
+                    totalAmount = totalAmount + 20.00;
+                }
             });
 
             const customerResponse = await fetch(`${API_BASE_URL}/customers/id/${selectedCustomerId}`, {
@@ -1533,23 +1539,25 @@ function Cart() {
                 entity: entity,
                 erpCustId: user?.erpCustomerId,
                 erpBranchId: selectedBranchErpId,
+                orderBy: user?.userName || "ABCD",
                 paymentMethod: selectedPaymentMethod,
-                totalAmount: totalAmount.toFixed(2),
+                totalAmount: totalAmount,
                 totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
                 customerRegion: customerData?.data?.region,
                 vmcoCustomerRegion: customerData?.data?.branch,
-                paidAmount: '0.00',
-                deliveryCharges: totalAmount <=150.00 ? '20.00' : '0.00',
-                paymentStatus: 'Pending',
-                status: 'Open',
+                paidAmount: "0.00",
+                deliveryCharges: totalAmount <= 150.00 ? "20.00" : "0.00",
+                paymentStatus: "Pending",
+                status: "Open",
                 productCategory: categoryName,
-                isMachine: isMachine,
-                isFresh: isFresh,
+                isMachine: isMachine || false,
+                isFresh: isFresh || false,
+                pricingPolicy: customerData?.data?.pricingPolicy?.[entity],
                 salesExecutive: customerData?.data?.assignedToEntityWise?.[entity],
                 createdBy: userId,
                 modifiedBy: userId,
                 orderSource: "Cart"
-            };
+            }
 
             const tempOrderPayload = {
                 userId: userId,
@@ -2033,24 +2041,12 @@ function Cart() {
             const brandNameAr = customerData?.data?.brandNameAr;
             const pricingPolicy = entity ? customerData?.data?.pricingPolicy?.[entity] : null;
             const customerRegion = customerData.data?.region;
-            const assignedToEntityWiseRaw = customerData?.data?.assignedToEntityWise;
+            const vmcoCustomerRegion = customerData?.data?.branch;
+            const assignedToEntityWise = customerData?.data?.assignedToEntityWise?.[entity];
 
-            let assignedTo = customerData?.data?.assignedTo;
-            if (assignedToEntityWiseRaw) {
-                try {
-                    const assignedToEntityWise = typeof assignedToEntityWiseRaw === 'string'
-                        ? JSON.parse(assignedToEntityWiseRaw)
-                        : assignedToEntityWiseRaw;
-
-                    if (entity && assignedToEntityWise[entity.toLowerCase()]) {
-                        assignedTo = assignedToEntityWise[entity.toLowerCase()];
-                    }
-                } catch (e) {
-                    console.error('Error parsing assignedToEntityWise:', e);
-                }
-            }
 
             let initialTotalAmount = 0;
+            let initialTotalSalesTaxAmount = 0;
             for (const item of categoryItems) {
                 const newQuantity = Number(quantities[item.id] || item.quantity || item.moq || 1);
                 const unitPrice = parseFloat(item.unitPrice || item.price || 0);
@@ -2074,6 +2070,7 @@ function Cart() {
                 const vatAmount = (baseAmount * vatPercentage) / 100;
                 const netAmount = baseAmount + vatAmount;
                 initialTotalAmount += netAmount;
+                initialTotalSalesTaxAmount += vatAmount;
 
                 console.log(`Item ${item.id} calculation:`, {
                     quantity: newQuantity,
@@ -2107,6 +2104,7 @@ function Cart() {
             }
 
             const finalTotalAmount = initialTotalAmount + initialDeliveryCharges;
+            const finalTotalSalesTaxAmount = initialTotalSalesTaxAmount;
             console.log('Delivery charges calculation:', {
                 isDeliveryChargesApplicable,
                 isVmcoMachine,
@@ -2140,6 +2138,7 @@ function Cart() {
                 erpCustId: erpCustId,
                 companyNameEn: companyNameEn,
                 companyNameAr: companyNameAr,
+                custSequenceId: user?.sequenceId,
                 brandNameEn: brandNameEn,
                 brandNameAr: brandNameAr,
                 branchId: selectedBranchId,
@@ -2152,22 +2151,22 @@ function Cart() {
                 orderBy: orderByName,
                 entity,
                 paymentMethod: selectedPaymentMethod,
-                totalAmount: finalTotalAmount.toFixed(2), // Use finalTotalAmount instead of initialTotalAmount
-                paidAmount: '0.00',
+                totalAmount: finalTotalAmount,
+                totalSalesTaxAmount: finalTotalSalesTaxAmount.toFixed(2),
+                paidAmount: selectedPaymentMethod.toLowerCase() === 'credit' ? finalTotalAmount.toFixed(2) : '0.00',
                 deliveryCharges: initialDeliveryCharges.toFixed(2), // Add delivery charges to payload
                 paymentStatus: selectedPaymentMethod === 'Credit' ? 'Credit' : 'Pending',
                 status: orderStatus,
                 pricingPolicy: pricingPolicy,
-                salesExecutive: assignedTo,
+                salesExecutive: assignedToEntityWise,
                 customerRegion: customerRegion,
+                vmcoCustomerRegion: vmcoCustomerRegion,
                 productCategory: categoryName,
-                paymentPercentage: '100.00',
                 isMachine: isMachineOrder,
-                isFresh: isFresh,
+                isFresh: isFreshOrder,
                 orderSource: "Cart"
             };
 
-            // Create order lines payload
             const orderLinesPayload = [];
             let lineNumber = 1;
 

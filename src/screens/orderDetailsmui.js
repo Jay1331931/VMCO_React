@@ -1516,7 +1516,7 @@ function OrderDetails() {
         isMachine: formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ? true : false,
         paymentMethod: finalPaymentMethod,
         paymentPercentage: "100.00",
-        status: sampleMode ? "Approved" : orderStatus,
+        status: orderStatus,
         salesExecutive: user.employeeId,
         paymentStatus: sampleMode ? "Paid" : paymentStatus,
         entity: formData.entity || "",
