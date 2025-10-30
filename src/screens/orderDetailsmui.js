@@ -1508,29 +1508,21 @@ function OrderDetails() {
         erpCustId: formData.erpCustId,
         branchId: formData.branchId || "",
         erpBranchId: formData.erpBranchId || "",
-        branchNameEn: formData.branchNameEn || "", // Always use value from formData
-        branchNameLc: formData.branchNameLc || "", // Always use value from formData
-        branchRegion: formData.branchRegion || "", // Include branch region
-        branchCity: formData.branchCity || "", // Include branch city
-        orderBy: orderByName, // <-- Use fetched employee name here
-        isMachine:
-          formData.category.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
-            ? true
-            : false,
+        branchNameEn: formData.branchNameEn || "", 
+        branchNameLc: formData.branchNameLc || "", 
+        branchRegion: formData.branchRegion || "",
+        branchCity: formData.branchCity || "",
+        orderBy: orderByName,
+        isMachine: formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ? true : false,
         paymentMethod: finalPaymentMethod,
-        paymentPercentage: "100.00", // Always set to 100.00 when creating sales orders
+        paymentPercentage: "100.00",
         status: sampleMode ? "Approved" : orderStatus,
         salesExecutive: user.employeeId,
         paymentStatus: sampleMode ? "Paid" : paymentStatus,
         entity: formData.entity || "",
         deliveryCharges: formData.deliveryCharges || "0",
         totalAmount: formData.totalAmount || "0",
-        paidAmount: sampleMode
-          ? 0.0
-          : finalPaymentMethod.toLowerCase() === "credit"
-            ? formData.totalAmount
-            : 0.0,
+        paidAmount: sampleMode ? 0.0 : finalPaymentMethod.toLowerCase() === "credit" ? formData.totalAmount : 0.0,
         pricingPolicy: formData.pricingPolicy?.[formData.entity],
         customerRegion: formData.customerRegion || "",
         productCategory: formData.category || "",
@@ -2444,7 +2436,7 @@ function OrderDetails() {
               productName: product.productName,
               productNameLc: product.productNameLc,
               erpProdId: product.erpProdId || product.erp_prod_id || "",
-              quantity: moq,
+              quantity: sampleMode ? 1 : moq,
               unit: product.unit,
               isMachine: product.isMachine || product.is_machine || false,
               isFresh: product.isFresh || false,
@@ -2452,7 +2444,7 @@ function OrderDetails() {
               unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
               netAmount: netAmount,
               vatPercentage: vatPercentage,
-              moq: moq,
+              moq: sampleMode ? 1 : moq,
             };
             updatedProducts.push(newProduct);
           }
@@ -4471,8 +4463,8 @@ function OrderDetails() {
                                   formData.products.length > 0)
                               }
                               style={{
-                                backgroundColor: sampleMode ? "#ffeb3b" : "white",
-                                color: sampleMode ? "black" : "#333",
+                                backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
+                                color: "black",
                                 border: "1px solid #ccc",
                                 cursor:
                                   !isE("sampleOrder") ||
