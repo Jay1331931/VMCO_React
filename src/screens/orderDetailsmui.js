@@ -1098,6 +1098,7 @@ function OrderDetails() {
             return createSalesOrderLine(
               formData.id,
               productId,
+              product.erpProdId,
               unitPrice,
               quantity,
               netAmount,
@@ -1507,29 +1508,21 @@ function OrderDetails() {
         erpCustId: formData.erpCustId,
         branchId: formData.branchId || "",
         erpBranchId: formData.erpBranchId || "",
-        branchNameEn: formData.branchNameEn || "", // Always use value from formData
-        branchNameLc: formData.branchNameLc || "", // Always use value from formData
-        branchRegion: formData.branchRegion || "", // Include branch region
-        branchCity: formData.branchCity || "", // Include branch city
-        orderBy: orderByName, // <-- Use fetched employee name here
-        isMachine:
-          formData.category.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
-            ? true
-            : false,
+        branchNameEn: formData.branchNameEn || "", 
+        branchNameLc: formData.branchNameLc || "", 
+        branchRegion: formData.branchRegion || "",
+        branchCity: formData.branchCity || "",
+        orderBy: orderByName,
+        isMachine: formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() ? true : false,
         paymentMethod: finalPaymentMethod,
-        paymentPercentage: "100.00", // Always set to 100.00 when creating sales orders
-        status: sampleMode ? "Approved" : orderStatus,
+        paymentPercentage: "100.00",
+        status: orderStatus,
         salesExecutive: user.employeeId,
         paymentStatus: sampleMode ? "Paid" : paymentStatus,
         entity: formData.entity || "",
         deliveryCharges: formData.deliveryCharges || "0",
         totalAmount: formData.totalAmount || "0",
-        paidAmount: sampleMode
-          ? 0.0
-          : finalPaymentMethod.toLowerCase() === "credit"
-            ? formData.totalAmount
-            : 0.0,
+        paidAmount: sampleMode ? 0.0 : finalPaymentMethod.toLowerCase() === "credit" ? formData.totalAmount : 0.0,
         pricingPolicy: formData.pricingPolicy?.[formData.entity],
         customerRegion: formData.customerRegion || "",
         productCategory: formData.category || "",
@@ -1646,8 +1639,7 @@ function OrderDetails() {
             erpLineNumber: index + 1,
             productId: product.id || product.product_id,
             productName: product.productName || product.product_name_en,
-            productNameLc:
-              product.productNameLc || product.product_name_lc || "",
+            productNameLc: product.productNameLc || product.product_name_lc || "",
             erpProdId: product.erpProdId || product.erp_prod_id || "",
             isMachine: product.isMachine || product.is_machine,
             isFresh: product.isFresh,
@@ -2318,14 +2310,7 @@ function OrderDetails() {
   };
 
   // Function to create a new sales order line
-  const createSalesOrderLine = async (
-    orderId,
-    productId,
-    unitPrice,
-    quantity,
-    netAmount,
-    vatPercentage
-  ) => {
+  const createSalesOrderLine = async (orderId, productId, erpProdId, unitPrice, quantity, netAmount, vatPercentage) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
       let finalVat = vatPercentage;
@@ -2338,23 +2323,26 @@ function OrderDetails() {
       const vatAmount = (baseAmount * finalVat) / 100;
 
       // Find the product object to get productName, productNameLc, unit
-      const productObj = formData.products.find(
-        (p) => (p.id || p.product_id) === productId
-      );
+      const productObj = formData.products.find((p) => (p.id || p.product_id) === productId);
+      const existingLineNumbers = formData.products.map(p => p.lineNumber || 0).filter(lineNum => lineNum > 0);
+      const maxLineNumber = existingLineNumbers.length > 0 ? Math.max(...existingLineNumbers) : 0;
+      const newLineNumber = maxLineNumber + 1;
+      
       const payload = {
-        order_id: orderId,
-        product_id: productId,
-        isMachine: productObj?.isMachine || productObj?.is_machine,
+        orderId: orderId,
+        lineNumber: newLineNumber,
+        erpLineNumber: newLineNumber,
+        productId: productId,
+        erpProdId: productObj.erpProdId,
+        isMachine: productObj?.isMachine || productObj?.isMachine,
         quantity: parseInt(quantity, 10),
-        unit_price: parseFloat(unitPrice),
-        net_amount: parseFloat(netAmount),
-        sales_tax_amount: vatAmount.toFixed(2),
-        product_name:
-          productObj?.productName || productObj?.product_name_en || "",
-        product_name_lc:
-          productObj?.productNameLc || productObj?.product_name_lc || "",
-        unit: productObj?.unit || "",
-        vat_percentage: Number(finalVat).toFixed(2),
+        unitPrice: parseFloat(unitPrice),
+        netAmount: parseFloat(netAmount),
+        salesTaxAmount: vatAmount.toFixed(2),
+        productName: productObj?.productName || productObj?.productNameEn,
+        productNameLc: productObj?.productNameLc || productObj?.productnamelc,
+        unit: productObj?.unit,
+        vatPercentage: Number(finalVat.toFixed(2)),
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: "POST",
@@ -2448,7 +2436,7 @@ function OrderDetails() {
               productName: product.productName,
               productNameLc: product.productNameLc,
               erpProdId: product.erpProdId || product.erp_prod_id || "",
-              quantity: moq,
+              quantity: sampleMode ? 1 : moq,
               unit: product.unit,
               isMachine: product.isMachine || product.is_machine || false,
               isFresh: product.isFresh || false,
@@ -2456,7 +2444,7 @@ function OrderDetails() {
               unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
               netAmount: netAmount,
               vatPercentage: vatPercentage,
-              moq: moq,
+              moq: sampleMode ? 1 : moq,
             };
             updatedProducts.push(newProduct);
           }
@@ -3319,7 +3307,7 @@ function OrderDetails() {
     }
     setApprovalAction(action);
     setIsApprovalDialogOpen(true);
-  }; 
+  };
   const handleDialogSubmit = async (comment) => {
 
     let updates = {
@@ -3676,9 +3664,9 @@ function OrderDetails() {
     formData.products ? formData.products.length : 0,
     formMode,
   ]);
-const handlePayments =()=>{
-  navigate(`/payments/${formData?.id}`)
-}
+  const handlePayments = () => {
+    navigate(`/payments/${formData?.id}`)
+  }
   const handleViewSignature = async (orderId, customerId, Invoices) => {
     setShowModal(true);
     try {
@@ -3893,7 +3881,7 @@ const handlePayments =()=>{
                         <label>{t("Order By")}</label>
                         <input
                           name="orderBy"
-                          value={ orderFromNav.createdByUsername || "" }
+                          value={orderFromNav.createdByUsername || ""}
                           onChange={handleInputChange}
                           disabled={!isE("orderBy")}
                         />
@@ -3904,7 +3892,7 @@ const handlePayments =()=>{
                         <label>{t("Last Modified By")}</label>
                         <input
                           name="lastModifiedBy"
-                          value={ orderFromNav.modifiedByUsername || "" }
+                          value={orderFromNav.modifiedByUsername || ""}
                           disabled={!isE("lastModifiedBy")}
                         />
                       </div>
@@ -4203,12 +4191,12 @@ const handlePayments =()=>{
                         </div>
                       )}
                     {isV("warehouse") &&
-                       formMode === "edit" && (
+                      formMode === "edit" && (
                         <div className="order-details-field">
                           <label>{t("Warehouse")} *</label>
                           <SearchableDropdown
                             options={warehouseOptions}
-                            value={selectedWarehouse || ""} 
+                            value={selectedWarehouse || ""}
                             onChange={handleWarehouseChange}
                             disabled={!isE("warehouse") || warehousesLoading || formData.status.toLowerCase() === "approved" || !fromApproval}
                             placeholder={selectedWarehouse ? selectedWarehouse : t("Select Warehouse")}
@@ -4475,8 +4463,8 @@ const handlePayments =()=>{
                                   formData.products.length > 0)
                               }
                               style={{
-                                backgroundColor: sampleMode ? "#ffeb3b" : "white",
-                                color: sampleMode ? "black" : "#333",
+                                backgroundColor: sampleMode || formData.sampleOrder ? "var(--logo-orange)" : "white",
+                                color: "black",
                                 border: "1px solid #ccc",
                                 cursor:
                                   !isE("sampleOrder") ||
@@ -4855,7 +4843,7 @@ const handlePayments =()=>{
           </div>
           {isV("orderFooter") && (
             <div className="order-details-footer">
-             
+
               {isV("orderStatus") && (
                 <div className="order-status">
                   <span className="status-label">{t("Status")}:</span>
@@ -4868,17 +4856,17 @@ const handlePayments =()=>{
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                 {(isV("paymentLines"))  &&  formData?.paymentStatus?.toLowerCase() === "paid"&&(
-                      <button
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && (
+                  <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
                     disabled={!isE("paymentLines")
-                      
+
                     }
                   >
                     {t('Payments')}
                   </button>
-                  ) }
+                )}
                 {isV("btnSave", fromApproval, false) && isE("btnSave") && (
                   <button
                     className="order-action-btn"

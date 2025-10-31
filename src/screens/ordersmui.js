@@ -1161,13 +1161,13 @@ const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
         let badge = null;
-        if (params.value === "VMCO") {
+        if (params?.value.toLowerCase() === Constants?.ENTITY?.VMCO.toLowerCase()) {
           badge = params.row.isMachine ? (
             <span className="badge badge-blue">{t("Machines")}</span>
           ) : (
             <span className="badge badge-blue">{t("Consumables")}</span>
           );
-        } else if (params.value === "SHC") {
+        } else if (params?.value.toLowerCase() === Constants?.ENTITY?.SHC.toLowerCase()) {
           badge = params.row.isFresh ? (
             <span className="badge badge-blue">{t("Fresh")}</span>
           ) : (

@@ -67,6 +67,7 @@ function Catalog() {
   const [categories] = useState(initialCategories);
   const [activeCategory, setActiveCategory] = useState(initialCategories[0].value);
   const [selectedLocation, setSelectedLocation] = useState("");
+  const [selectedCustSequenceId, setSelectedCustSequenceId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [branches, setBranches] = useState([]);
   const [selectedBranchRegion, setSelectedBranchRegion] = useState("");
@@ -612,12 +613,20 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     activeCategory,
   ]);
   const customerId = user?.customerId;
+  const custSequenceId = user?.sequenceId;
   const userId = user?.userId;
   useEffect(() => {
     if (customerId) {
       setSelectedCustomerId(customerId);
+      console.log("CustomerId:", customerId);
     }
-  }, [customerId]);
+    if (custSequenceId) {
+      setSelectedCustSequenceId(custSequenceId);
+      
+      console.log("CustomerSequenceId:", selectedCustSequenceId);
+    }
+
+  }, [customerId, custSequenceId]);
 
   // Map product fields from backend to component props
   const mapProductToCardProps = useCallback(
@@ -704,6 +713,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
         selectedBranchRegion,
         selectedBranchCity,
         selectedBranchStatus: selectedBranch?.raw?.branchStatus || "",
+        selectedCustSequenceId: selectedCustSequenceId,
         selectedBranchSequenceId: selectedBranch?.raw?.sequenceId,
       },
     });

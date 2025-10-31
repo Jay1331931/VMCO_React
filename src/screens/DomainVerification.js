@@ -6,36 +6,33 @@ const APPLEPAYFILE=process.env.REACT_APP_APPLE_PAY
 const token = localStorage.getItem("token");
 
 const DomainVerification = () => {
-  const fetchUploadedFile = useCallback(async (fileName, type) => {
-    try {
-      if (!fileName) return;
+const fetchUploadedFile = useCallback(async (fileName, type) => {
+  try {
+    if (!fileName) return;
 
-      const response = await axios.post(
-        `${API_BASE_URL}/get-files`,
-        { fileName, containerType: type },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          
-        }
-      );
+    const response = await axios.post(
+      `${API_BASE_URL}/auth/get-files`,
+      { fileName, containerType: type },
+      
+    );
 
-      if (response.data) {
-        const blob = new Blob([response.data]);
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(downloadUrl);
-      }
-    } catch (error) {
-      console.error(`Error fetching ${type} file:`, error);
+    const fileData = response?.data?.data;
+    if (fileData?.url) {
+      const link = document.createElement("a");
+      link.href = fileData.url; 
+      link.download = fileData.fileName || fileName; 
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      return;
     }
-  }, []);
+
+    console.error("No valid file URL received from backend.");
+  } catch (error) {
+    console.error(`Error fetching ${type} file:`, error);
+  }
+}, []);
+
 
   useEffect(() => {
     
