@@ -392,7 +392,7 @@ customer_id: customer?.id,
   // Update tabs height when expanded rows change
   useEffect(() => {
     const baseRowHeight = 80;
-    const collapsedExtraHeight = 100;
+    const collapsedExtraHeight = 220;
     const expandedExtraHeight = 1600;
     const numRows = branches.length || 3;
     const rowHeightTotal = numRows * baseRowHeight;

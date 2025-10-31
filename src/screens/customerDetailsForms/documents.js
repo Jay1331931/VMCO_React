@@ -18,6 +18,7 @@ function Documents({
   tradingFilesToUpload = {},
   nonTradingFilesToUpload = {},
   customerData = {},
+  customerPaymentMethodsData={},
   originalCustomerData = {},
   verifiedData = {},
   onChangeVerifiedData,
@@ -923,7 +924,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="nationalId">
                 {t("Copy of national ID/Iqama of the auth. sign..")}
-                <span className="required-field">*</span>
+                {/* <span className="required-field">*</span> */}
                 {customerData?.nationalId !==
                   originalCustomerData?.nationalId && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -2229,7 +2230,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationShc">
                 {t("Credit Application SHC")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationShc !==
                   originalCustomerData?.creditApplicationShc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -2392,7 +2393,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationNaqi">
                 {t("Credit Application NAQI")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationNaqi !==
                   originalCustomerData?.creditApplicationNaqi && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -2555,7 +2556,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationGmtc">
                 {t("Credit Application GMTC")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationGmtc !==
                   originalCustomerData?.creditApplicationGmtc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -2718,7 +2719,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationDar">
                 {t("Credit Application DAR")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationDar !==
                   originalCustomerData?.creditApplicationDar && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -2881,7 +2882,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationVmco">
                 {t("Credit Application VMCO")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationVmco !==
                   originalCustomerData?.creditApplicationVmco && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -3868,7 +3869,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationShc">
                 {t("Credit Application SHC")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.SHC]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationShc !==
                   originalCustomerData?.creditApplicationShc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -4031,7 +4032,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationNaqi">
                 {t("Credit Application NAQI")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.NAQI]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationNaqi !==
                   originalCustomerData?.creditApplicationNaqi && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -4194,7 +4195,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationGmtc">
                 {t("Credit Application GMTC")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.GMTC]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationGmtc !==
                   originalCustomerData?.creditApplicationGmtc && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -4357,7 +4358,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationDar">
                 {t("Credit Application DAR")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.DAR]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationDar !==
                   originalCustomerData?.creditApplicationDar && mode === "edit" && (
                   <span className="update-badge">Updated</span>
@@ -4520,7 +4521,7 @@ const [customDocName, setCustomDocName] = useState("");
             >
               <label htmlFor="creditApplicationVmco">
                 {t("Credit Application VMCO")}
-                {/* <span className="required-field">*</span> */}
+                {customerPaymentMethodsData?.methodDetails?.credit?.[Constants.ENTITY.VMCO]?.isAllowed && (<span className="required-field">*</span>)}
                 {customerData?.creditApplicationVmco !==
                   originalCustomerData?.creditApplicationVmco && mode === "edit" && (
                   <span className="update-badge">Updated</span>
