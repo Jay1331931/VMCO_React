@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faXmark,
+  faXmark, faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { useTranslation } from "react-i18next";
 const parseTimeRange = (timeRange) => {
@@ -326,19 +326,21 @@ const TimeInputGroup = ({
   customerFormMode,
   mode,
 }) => {
+  const {t} = useTranslation();
   return (
     <div
       className={`time-input-group ${
         day === "friday" ? "friday-time-input-group" : ""
       }`}
     >
+      <div className="time-input-wrapper">
       <input
         type="time"
         value={time?.from}
         onChange={(e) => onChange(day, type, "from", e.target.value)}
         onFocus={() => onFocus("from", time?.from)}
         onBlur={() => {}}
-        // disabled={inApproval && !isModified}
+        // disabled={inApproval && !isModified}'
         style={
           inApproval && isModified && mode === "edit"
             ? {
@@ -347,7 +349,10 @@ const TimeInputGroup = ({
             : {}
         }
       />
+      {<span className="time-placeholder">{t("From")}</span>}
+      </div>
       <span>-</span>
+      <div className="time-input-wrapper">
       <input
         type="time"
         value={time?.to}
@@ -363,12 +368,13 @@ const TimeInputGroup = ({
             : {}
         }
       />
-
+      {<span className="time-placeholder">{t("To")}</span>}
+      </div>
       {(isActive === `${day}-${type}-from` ||
         isActive === `${day}-${type}-to`) && (
         <div className="time-action-buttons">
           <button className="time-confirm-button" /*onClick={onConfirm}*/>
-            {/* <FontAwesomeIcon icon={faCheck} /> */}
+            <FontAwesomeIcon icon={faCheck} />
           </button>
           <button className="time-cancel-button" onClick={onCancel} >
             <FontAwesomeIcon icon={faXmark} />

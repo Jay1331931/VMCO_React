@@ -1064,6 +1064,8 @@
   .go-to-cart-btn {
     /* width: 90%; */
     margin: 0px 10px 0px 10px;
+    position: static;
+    z-index: 0;
   }
   /* .products-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -1082,7 +1084,7 @@
     /* justify-content: center; */
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    /* gap: 10px; */
     margin-top: 10px;
   }
   .filter-section {
@@ -1145,6 +1147,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    margin-top: 20px;
   }
   .cart-items-panel,
   .cart-summary-panel {

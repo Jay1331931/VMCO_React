@@ -853,13 +853,13 @@ const handleVerifiedDataChange = (e) => {
     "district",
     "region",
     "pincode",
-    // "geolocation",
+    "geolocation",
     "bankName",
     // "bankAccountNumber",
     "iban",
     "crCertificate",
     "vatCertificate",
-    "nationalId",
+    // "nationalId",
     "bankLetter",
     "nationalAddress",
     "customerSource",
@@ -897,7 +897,12 @@ const handleVerifiedDataChange = (e) => {
     "purchasingHeadEmail",
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
-  ];
+  customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
+].filter(Boolean); 
 
   const mandatoryFieldsForApproval = [
     "companyNameEn",
@@ -920,13 +925,13 @@ const handleVerifiedDataChange = (e) => {
     "district",
     "region",
     "pincode",
-    // "geolocation",
+    "geolocation",
     "bankName",
     // "bankAccountNumber",
     "iban",
     "crCertificate",
     "vatCertificate",
-    "nationalId",
+    // "nationalId",
     "bankLetter",
     "nationalAddress",
     "customerSource",
@@ -966,7 +971,12 @@ const handleVerifiedDataChange = (e) => {
     "purchasingHeadMobile",
     "purchasingHeadDesignation",
     "branch",
-  ];
+  customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
+].filter(Boolean); 
 
   const isArabicText = (text) => {
     return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
@@ -994,7 +1004,12 @@ const handleVerifiedDataChange = (e) => {
       "nationalAddress",
       "contractAgreement",
       "creditApplication",
-    ];
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
+].filter(Boolean); 
     const nonTradingDocumentList = [
       "acknowledgementSignature",
       "nationalId",
@@ -1002,7 +1017,13 @@ const handleVerifiedDataChange = (e) => {
       "nationalAddress",
       "contractAgreement",
       "creditApplication",
-    ];
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.SHC]?.isAllowed  ? "creditApplicationShc" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.VMCO]?.isAllowed  ? "creditApplicationVmco" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.DAR]?.isAllowed  ? "creditApplicationDar" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.NAQI]?.isAllowed  ? "creditApplicationNaqi" : null,
+      customerPaymentMethodsData?.methodDetails?.credit?.[constants.ENTITY.GMTC]?.isAllowed  ? "creditApplicationGmtc" : null,
+].filter(Boolean); 
+
     const documentList =
       customerData?.companyType === "trading"
         ? tradingDocumentList
@@ -1134,9 +1155,9 @@ const handleVerifiedDataChange = (e) => {
       }
 
       if (field.toLowerCase().includes("bankaccountnumber")) {
-        const saudiBankAccountRegex = /^\d{15,20}$/;
+        const saudiBankAccountRegex = /^\d{14}$/;
         if (value && !saudiBankAccountRegex.test(value)) {
-          errors[field] = "Invalid format! 15 to 20 digits accepted";
+          errors[field] = "Invalid format! 14 digits accepted";
         }
       }
 
@@ -1271,7 +1292,7 @@ const handleVerifiedDataChange = (e) => {
       // }
 // In your frontend validation function, modify the uniqueFieldsList check:
 
-if (uniqueFieldsList.includes(field)) {
+if (uniqueFieldsList.includes(field) && value) {
     // Special handling for VAT and CR numbers
     if (field === 'vatNumber' || field === 'crNumber') {
         const additionalData = {
@@ -2252,7 +2273,8 @@ if (uniqueFieldsList.includes(field)) {
           }`}
         >
           <div className="customer-onboarding-details">
-            <div className="customer-onboarding-body">
+            <div className="customer-onboarding-body"
+            style={!isMobile ? { height: tabsHeight } : {}}>
               <div
                 className="customer-onboarding-tabs-vertical"
                 style={!isMobile ? { height: tabsHeight } : {}}
@@ -2456,6 +2478,7 @@ if (uniqueFieldsList.includes(field)) {
                   tradingFilesToUpload={tradingFilesToUpload}
                   nonTradingFilesToUpload={nonTradingFilesToUpload}
                   customerData={customerData}
+                  customerPaymentMethodsData={customerPaymentMethodsData}
                   originalCustomerData={originalCustomerData}
                   verifiedData={verifiedData}
                   onChangeVerifiedData={handleVerifiedDataChange}
@@ -2493,6 +2516,7 @@ if (uniqueFieldsList.includes(field)) {
                   onChangeVerifiedData={handleVerifiedDataChange}
                   onChangeCustomerData={handleCustomerDataChange}
                   formErrors={formErrors}
+                  setTabsHeight={setTabsHeight}
                   mode={mode}
                   signatureToUpload={signatureToUpload}
                 />
