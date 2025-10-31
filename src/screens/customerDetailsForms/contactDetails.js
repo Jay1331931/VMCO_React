@@ -277,7 +277,6 @@ function ContactDetails({
       // Update manual input fields
       setManualLat(Number(lat).toFixed(6));
       setManualLng(Number(lng).toFixed(6));
-
       // Center map on the selected location
       mapRef.setCenter({ lat, lng });
       mapRef.setZoom(14);
@@ -289,10 +288,11 @@ function ContactDetails({
 
       if (isValidCoordinate(lat, lng)) {
         moveMarkerToLocation(lat, lng);
-        setShowManualInput(false);
-      } else {
-        alert("Please enter valid coordinates:\nLatitude: -90 to 90\nLongitude: -180 to 180");
+        // setShowManualInput(false);
       }
+      //  else {
+      //   alert("Please enter valid coordinates:\nLatitude: -90 to 90\nLongitude: -180 to 180");
+      // }
     };
 
     // Initialize Google Map
@@ -380,6 +380,9 @@ function ContactDetails({
       return () => clearTimeout(timeoutId);
     }, [searchQuery]);
 
+    useEffect(() => {
+  handleManualCoordinates();
+}, [manualLat, manualLng]);
     const handleConfirm = () => {
       if (selectedLocation) {
         const { lat, lng } = selectedLocation;
@@ -399,6 +402,7 @@ function ContactDetails({
             x: lat.toFixed(6),
             y: lng.toFixed(6),
           });
+          setShowMap(false)
           console.log("Location confirmed:", { lat, lng });
         }
       } else {
@@ -496,7 +500,10 @@ function ContactDetails({
               </div>
               <button
                 type="button"
-                onClick={handleManualCoordinates}
+                 onClick={() => {
+    handleManualCoordinates();
+    setShowManualInput(false);
+  }}
                 className="apply-coordinates-btn"
                 disabled={!manualLat || !manualLng}
               >
@@ -2913,7 +2920,7 @@ function ContactDetails({
       <div className="form-group">
         <label htmlFor="geolocation">
           {t("Geolocation")}
-          {/* <span className="required-field">*</span> */}
+          <span className="required-field">*</span>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.geolocation != customerData?.geolocation &&

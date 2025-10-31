@@ -864,6 +864,25 @@ body::-webkit-scrollbar {
   gap: 5px;
   position: relative;
 }
+.time-input-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.time-placeholder {
+  position: absolute;
+  left: 2px;
+  top: 20%;
+  transform: translateY(-40%);
+  color: #999;
+  pointer-events: none;
+  z-index: 1;
+  font-size: 12px;
+}
+[dir="rtl"] .time-placeholder {
+  left: auto;
+  right: 2px;
+}
+
 .friday-time-input-group {
   display: flex;
   align-items: center;
@@ -872,12 +891,13 @@ body::-webkit-scrollbar {
   color: orange; /* Blue color for Friday */
 }
 .time-input-group input[type="time"] {
-  padding: 4px;
+  padding: 12px 0px 0px 0px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  /* margin-top: 1px; */
 }
 .friday-time-input-group input[type="time"] {
-  padding: 4px;
+  padding: 12px 0px 0px 0px;
   border: 1px solid #ddd;
   border-radius: 4px;
   color: orange;
