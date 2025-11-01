@@ -240,60 +240,7 @@ const fetchtempSaleOrder = useCallback(async () => {
       fetchtempSaleOrder();
     }
   }, [tempdecodedOrderID, fetchtempSaleOrder]);
-  //   useEffect(() => {
-  //     console.log("OrderDetails:", OrderDetails);
-  //   if (!OrderDetails || OrderDetails.length === 0) return;
-
-  //   const totalAmount = OrderDetails.reduce(
-  //     (sum, order) => sum + (parseFloat(order.totalAmount) || 0),
-  //     0
-  //   );
-  //   const paidAmount = OrderDetails?.reduce(
-  //     (sum, order) => sum + (parseFloat(order.paidAmount) || 0),
-  //     0
-  //   );
-  //   const paidPercentage = (paidAmount / totalAmount) * 100;
-
-  //   const firstOrder = OrderDetails[0];
-  //   const paymentPercentage = parseFloat(firstOrder.paymentPercentage) || 0;
-  //   const entity = firstOrder?.entity?.toLowerCase();
-  //   const paymentStatus = firstOrder?.paymentStatus?.toLowerCase();
-
-  //   console.log("Total:", totalAmount, "Paid:", paidAmount, "Percentage:", paidPercentage);
-
-  //   if (paymentStatus === "paid" && paidAmount >= totalAmount) {
-  //     Swal.fire({
-  //       title: "Payment Already Done",
-  //       text: "This order has already been paid.",
-  //       icon: "info",
-  //       confirmButtonText: "OK",
-  //     }).then(() => {
-  //   window.close(); // Close the current window/tab after OK
-  // });
-  //     window.close();
-  //     return;
-  //   } else if (paidPercentage === 0 && paymentPercentage === 100) {
-  //     setAmount(totalAmount);
-  //   } else if (
-  //     paidAmount === 0 &&
-  //     paymentPercentage === 30 &&
-  //     entity === Constants.ENTITY?.VMCO?.toLowerCase()
-  //   ) {
-  //     setAmount((paymentPercentage / 100) * totalAmount);
-  //   } else if (paidAmount > 0 && paymentPercentage === 30) {
-  //     setAmount(totalAmount - paidAmount);
-  //   } else {
-  //     Swal.fire({
-  //       title: "Payment Amount Error",
-  //       text: "Could not process the payment amount.",
-  //       icon: "error",
-  //       confirmButtonText: "OK",
-  //     }).then(() => {
-  //   window.close(); // Close the current window/tab after OK
-  // });
-  //     return;
-  //   }
-  // }, [OrderDetails]);
+ 
       useEffect(() => {
     console.log("OrderDetails:", TempOrderDetails);
     if (!TempOrderDetails || TempOrderDetails.length === 0) return;
@@ -321,39 +268,48 @@ setAmount(parseFloat(totalAmount));
     );
 
     // Check if all orders are fully paid
+    // const allPaid = OrderDetails.every(
+    //   (order) =>
+    //     order.paymentStatus?.toLowerCase() === "paid" &&
+    //     parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
+    // );
     const allPaid = OrderDetails.every(
-      (order) =>
-        order.paymentStatus?.toLowerCase() === "paid" &&
-        parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
-    );
+  (order) =>
+    order.paymentStatus?.toLowerCase() === "paid" &&
+    Math.floor(Number(order.paidAmount)) >= Math.floor(Number(order.totalAmount))
+);
+
 
     // Check if all orders have 100% payment config and none are paid yet
-    const allZeroPaidAndFullPayment = OrderDetails.every(
-      (order) =>
-        parseFloat(order.paidPercentage || 0) === 0 &&
-        parseFloat(order.paymentPercentage || 0) === 100 &&
-        order.paymentStatus?.toLowerCase() !== "paid"
-    );
+   const allZeroPaidAndFullPayment = OrderDetails.every(
+  (order) =>
+    Math.floor(Number(order.paidPercentage || 0)) === 0 &&
+    Math.floor(Number(order.paymentPercentage || 0)) === 100 &&
+    order.paymentStatus?.toLowerCase() !== "paid"
+);
+
 
     // Check if entity is VMCO and all orders are unpaid and paymentPercentage = 30
-    const allUnpaidVMCO = OrderDetails.every(
-      (order) =>
-        (parseFloat(order.paidAmount) == 0.0 || order.paidAmount == null) &&
-        parseFloat(order.paymentPercentage || 0) == 30.0 &&
-        order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
-    );
+   const allUnpaidVMCO = OrderDetails.every(
+  (order) =>
+    (Number(order.paidAmount) === 0 || order.paidAmount == null) &&
+    Math.floor(Number(order.paymentPercentage || 0)) === 30 &&
+    order.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
+);
+
     console.log("Amount match:", 0 == null);
     // Mixed condition: paid partially and paymentPercentage is 30 and 70% amount is not paid
-    const somePaid30 = OrderDetails.every(
-      (order) =>
-        (parseFloat(order.paidAmount || 0)  > 0.0 || order.paidAmount == null) &&
-        parseFloat(order.paymentPercentage || 0) === 30.0
-    );
-    const paidOrders = OrderDetails.filter(
-      (order) =>
-        order.paymentStatus?.toLowerCase() === "paid" &&
-        parseFloat(order.paidAmount) >= parseFloat(order.totalAmount)
-    );
+   const somePaid30 = OrderDetails.every(
+  (order) =>
+    (Number(order.paidAmount || 0) > 0 || order.paidAmount == null) &&
+    Math.floor(Number(order.paymentPercentage || 0)) === 30
+);
+const paidOrders = OrderDetails.filter(
+  (order) =>
+    order.paymentStatus?.toLowerCase() === "paid" &&
+    Math.floor(Number(order.paidAmount)) >= Math.floor(Number(order.totalAmount))
+);
+
 
     if (paidOrders.length > 0) {
       const paidIds = paidOrders.map((order) => order.id).join(", ");
@@ -391,49 +347,6 @@ setAmount(parseFloat(totalAmount));
 
 
 
-  //  useEffect(() => {
-  //   if (!OrderDetails || Object.keys(OrderDetails).length === 0) return;
-
-  //   const totalAmount = parseFloat(OrderDetails.totalAmount) || 0;
-  //   const paidAmount = parseFloat(OrderDetails.paidAmount) || 0;
-  //   const paidPercentage = parseFloat(OrderDetails.paidPercentage) || 0;
-  //   const paymentPercentage = parseFloat(OrderDetails.paymentPercentage) || 0;
-
-  //   if (
-  //     OrderDetails?.paymentStatus?.toLowerCase() === "paid" &&
-  //     paidAmount >= totalAmount
-  //   ) {
-  //     Swal.fire({
-  //       title: "Payment Already Done",
-  //       text: "This order has already been paid.",
-  //       icon: "info",
-  //       confirmButtonText: "OK",
-  //     });
-  //     // window.close();
-  //     return;
-  //   } else if (paidPercentage === 0 && paymentPercentage === 100) {
-  //     setAmount(totalAmount);
-  //   } else if (
-  //     paidAmount === 0 &&
-  //     paymentPercentage === 30 &&
-  //     OrderDetails?.entity?.toLowerCase() === Constants.ENTITY?.VMCO?.toLowerCase()
-  //   ) {
-  //   setAmount((paymentPercentage / 100) * totalAmount)
-  //   } else if (paidAmount > 0 && paymentPercentage === 30) {
-
-  //     setAmount(totalAmount - paidAmount)
-  //   } else {
-
-  //     Swal.fire({
-  //       title: "Payment Amount Error",
-  //       text: "Could not process the payment amount.",
-  //       icon: "error",
-  //       confirmButtonText: "OK",
-  //     });
-  //     return;
-  //   }
-
-  // }, [OrderDetails]);
 
  const handleBankTransaction = async (amount, decodedOrderID) => {
   try {
