@@ -1004,7 +1004,7 @@ function OrderDetails() {
       let existingProductMap = {};
       try {
         const linesResponse = await fetch(
-          `${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(
+          `${API_BASE_URL}/sales-order-lines/pagination?page=1&pageSize=10000&filters=${encodeURIComponent(
             JSON.stringify({ orderId: formData.id })
           )}`,
           {
@@ -3076,7 +3076,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 10,
+          pageSize: 10000,
           search: "",
           sortBy: "id",
           sortOrder: "asc",
