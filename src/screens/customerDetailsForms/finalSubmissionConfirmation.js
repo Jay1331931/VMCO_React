@@ -14,6 +14,7 @@ const FinalSubmissionConfirmation = ({
   verifiedData = {},
   onChangeVerifiedData,
   formErrors = {},
+  setTabsHeight,
   mode,
   signatureToUpload = {},
 }) => {
@@ -36,6 +37,10 @@ const FinalSubmissionConfirmation = ({
   const [signaturePreviews, setSignaturePreviews] = useState({
     declarationSignature: null,
   });
+
+  useEffect(() => {
+      setTabsHeight("auto");
+    }, []);
 
   // Add this useEffect to track mouse movement
   useEffect(() => {
