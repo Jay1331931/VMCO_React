@@ -26,7 +26,7 @@ export default function ProductsGrid({
         display: "flex",
         flexWrap: "wrap",
         gap: "20px",
-        justifyContent: {  md: "flex-start" },
+        justifyContent:  "flex-start" ,
         scrollBehavior: "smooth",
         boxSizing: "border-box",
       }}
