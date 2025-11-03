@@ -1004,7 +1004,7 @@ function OrderDetails() {
       let existingProductMap = {};
       try {
         const linesResponse = await fetch(
-          `${API_BASE_URL}/sales-order-lines/pagination?filters=${encodeURIComponent(
+          `${API_BASE_URL}/sales-order-lines/pagination?page=1&pageSize=10000&filters=${encodeURIComponent(
             JSON.stringify({ orderId: formData.id })
           )}`,
           {
@@ -1640,8 +1640,8 @@ function OrderDetails() {
             productId: product.id || product.product_id,
             productName: product.productName || product.product_name_en,
             productNameLc: product.productNameLc || product.product_name_lc || "",
-            erpProdId: product.erpProdId || product.erp_prod_id || "",
-            isMachine: product.isMachine || product.is_machine,
+            erpProdId: product.erpProdId,
+            isMachine: product.isMachine,
             isFresh: product.isFresh,
             quantity: parseInt(product.quantity || 1, 10),
             unit: product.unit || "",
@@ -2334,7 +2334,8 @@ function OrderDetails() {
         erpLineNumber: newLineNumber,
         productId: productId,
         erpProdId: productObj.erpProdId,
-        isMachine: productObj?.isMachine || productObj?.isMachine,
+        isMachine: productObj?.isMachine,
+        isFresh: productObj?.isFresh,
         quantity: parseInt(quantity, 10),
         unitPrice: parseFloat(unitPrice),
         netAmount: parseFloat(netAmount),
@@ -3076,7 +3077,7 @@ function OrderDetails() {
       try {
         const params = new URLSearchParams({
           page: 1,
-          pageSize: 10,
+          pageSize: 10000,
           search: "",
           sortBy: "id",
           sortOrder: "asc",
@@ -3387,12 +3388,10 @@ function OrderDetails() {
                   body: JSON.stringify({
                     orderId: formData.id,
                     productId: productId,
-                    productName:
-                      product.productName || product.product_name_en || "",
-                    productNameLc:
-                      product.productNameLc || product.product_name_lc || "",
-                    isMachine: product.isMachine || product.is_machine,
-                    isFresh: product.isFresh || product.is_fresh,
+                    productName: product.productName || product.product_name_en || "",
+                    productNameLc: product.productNameLc || product.product_name_lc || "",
+                    isMachine: product.isMachine,
+                    isFresh: product.isFresh,
                     quantity,
                     unitPrice,
                     net_amount: netAmount.toFixed(2),

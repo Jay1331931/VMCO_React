@@ -19,7 +19,7 @@ const FavoritesButton = ({ initialState = false, onToggle = null }) => {
             cursor: 'pointer',
             zIndex: 10,  // Ensure high z-index
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'end',
             alignItems: 'center',
             padding: '5px',  // Slightly larger padding
             borderRadius: '50%',

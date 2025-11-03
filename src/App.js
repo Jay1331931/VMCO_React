@@ -68,9 +68,9 @@ function App() {
     }
   }, [user]);
 
-  if (loading) {
-    return <div>Loading...</div>; // or a loading spinner
-  }
+  // if (loading) {
+  //   return <div>Loading...</div>; // or a loading spinner
+  // }
 
   const tokenIsValid = token && isTokenValid(token);
   //     const role= user?.roles[0] && user?.roles[0]?.toLowerCase() ==="employee" ?  user?.designation : user?.roles[0];

@@ -796,6 +796,12 @@
     "Payment Lines for Order":"خطوط الدفع للطلب",
     "Payment Date Time":"تاريخ الدفع الوقت",
     "Payments":"المدفوعات",
-    "Approval History":"تاريخ الموافقة"
-
+    "Approval History":"تاريخ الموافقة",
+    "Product already exists in cart":"المنتج موجود بالفعل في سلة التسوق",
+    "Do you want to update it?":"هل تريد تحديثه؟",
+    "Yes, update it":"نعم، قم بتحديثه",
+    "No, cancel":"لا، إلغاء",
+    "Product quantity updated successfully":"تم تحديث كمية المنتج بنجاح",
+    "Update cancelled":"تم إلغاء التحديث",
+    "This item already has a quantity of":"هذا العنصر لديه بالفعل كمية من"
 }
