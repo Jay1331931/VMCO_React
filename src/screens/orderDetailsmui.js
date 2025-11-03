@@ -621,16 +621,22 @@ function OrderDetails() {
     }
 
     // Determine payment method first if not provided and not in edit mode
-    if (formMode === "add" && !selectedMethod) {
-      const isVmcoEntity =
-        formData.entity &&
+    let finalPaymentMethod = selectedMethod;
+
+    // **SAMPLE MODE CHECK - Override payment method determination**
+    if (sampleMode) {
+      finalPaymentMethod = "Pre Payment";
+    } else if (formMode === "add" && !selectedMethod) {
+      // Original payment method determination logic
+      const isVmcoEntity = formData.entity &&
         formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+
       if (isVmcoEntity) {
-        const machineProducts =
-          formData.products.length > 0 &&
-          formData.products.every((product) => product.isMachine === true);
+        const machineProducts = formData.products.length > 0 &&
+          formData.products.every(product => product.isMachine === true);
+
         if (machineProducts) {
-          selectedMethod = "Pre Payment";
+          finalPaymentMethod = "Pre Payment";
         } else {
           const totalAmount = parseFloat(formData.totalAmount);
           const isCreditAllowed = await isCreditPaymentAllowed(
@@ -639,16 +645,14 @@ function OrderDetails() {
             totalAmount,
             action
           );
+
           if (isCreditAllowed === "Payment popup") {
             setSaving(false);
             return;
-          } else if (isCreditAllowed === "Insufficient balance") {
-            setSaving(false);
-            return;
-          } else if (!isCreditAllowed) {
-            selectedMethod = "Pre Payment";
+          } else if (isCreditAllowed === false) {
+            finalPaymentMethod = "Pre Payment";
           } else {
-            selectedMethod = "Credit";
+            finalPaymentMethod = "Credit";
           }
         }
       } else {
@@ -659,16 +663,14 @@ function OrderDetails() {
           totalAmount,
           action
         );
+
         if (isCreditAllowed === "Payment popup") {
           setSaving(false);
           return;
-        } else if (isCreditAllowed === "Insufficient balance") {
-          setSaving(false);
-          return;
-        } else if (!isCreditAllowed) {
-          selectedMethod = "Pre Payment";
+        } else if (isCreditAllowed === false) {
+          finalPaymentMethod = "Pre Payment";
         } else {
-          selectedMethod = "Credit";
+          finalPaymentMethod = "Credit";
         }
       }
     }
@@ -939,36 +941,51 @@ function OrderDetails() {
         formData.category &&
         formData.category.toLowerCase() ===
         Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
-      fieldsToUpdate.forEach((field) => {
+      fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === "paymentPercentage") {
             payload[field] = formData[field]
-              ? formData[field] === "100%"
-                ? "100.00"
-                : formData[field] === "30%"
-                  ? "30.00"
-                  : "0.00"
-              : "0.00";
-          } else if (field === "paymentMethod" && isVmcoMachinesCategory) {
-            // Always set payment method to 'Pre Payment' for VMCO Machines category
-            payload[field] = "Pre Payment";
-          } else if (
-            field === "status" &&
-            formData.entity &&
-            formData.entity.toLowerCase() ===
-            Constants.ENTITY.VMCO.toLowerCase()
-          ) {
-            // Set status to 'Pending' for vmco entity
-            payload[field] = "Pending";
+              ? formData[field] === 100
+                ? 100.0
+                : formData[field] === 30
+                  ? 30.0
+                  : 0.0
+              : 0.0;
+          } else if (field === "paymentMethod") {
+            // **SAMPLE MODE: Use Pre Payment**
+            payload[field] = sampleMode ? "Pre Payment" : finalPaymentMethod;
+          } else if (field === "status") {
+            if (sampleMode) {
+              if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+                payload[field] = "Pending";
+              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase())) {
+                payload[field] = "Open";
+              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() )) {
+                payload[field] = "Approved";
+              } else {
+                payload[field] = "Pending"; // Fallback
+              }
+            } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+              // Set status to Pending for vmco entity (non-sample mode)
+              payload[field] = "Pending";
+            } else {
+              // For non-sample mode and non-VMCO entities, keep the current status
+              payload[field] = formData[field];
+            }
+          } else if (field === "paidAmount") {
+            // **SAMPLE MODE: Set paidAmount to totalAmount when Paid**
+            payload[field] = sampleMode ? formData.totalAmount || 0.0 : formData[field];
           } else if (field === "expectedDeliveryDate") {
             // Handle date fields - convert empty strings to null to avoid database errors
             payload[field] = safeDateValue(formData[field]);
           } else {
             payload[field] = formData[field];
           }
-
         }
       });
+
+      payload.paymentStatus = sampleMode ? "Paid" : formData.paymentStatus || "Pending";
+
 
       // First update the sales order
       const orderResponse = await fetch(
@@ -1314,8 +1331,7 @@ function OrderDetails() {
         formData.products.every((product) => product.isFresh === true);
 
       const orderFiltersObj =
-        formData.entity &&
-          formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
+        formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
           ? {
             customerId: formData.customerId,
             branchId: branchIdForFilter,
@@ -1341,10 +1357,11 @@ function OrderDetails() {
 
       console.log("Order filter object created:", orderFiltersObj);
 
-      // Always include status: 'Open' in the filters for existing order check
+      // Always include status: 'Open' and sample order = false in the filters for existing order check
       const orderFiltersObjWithOpenStatus = {
         ...orderFiltersObj,
         status: "Open",
+        sampleOrder: false
       };
       const orderFilters = new URLSearchParams({
         filters: JSON.stringify(orderFiltersObjWithOpenStatus),
@@ -1441,60 +1458,48 @@ function OrderDetails() {
     }
 
     while (attempt < maxAttempts) {
-      let orderStatus = ""; // Default status
-      let paymentStatus = "Pending"; // Default payment status
+      let orderStatus;
+      let paymentStatus = "Pending";
 
-      const finalPaymentMethod =
-        formData.category &&
-          formData.category.toLowerCase() ===
-          Constants.CATEGORY.VMCO_MACHINES.toLowerCase()
-          ? "Pre Payment"
-          : selectedMethod || formData.paymentMethod || "";
-
-      // Determine status based on entity and payment method
-      if (
-        formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
-      ) {
-        orderStatus = "Pending";
-        if (finalPaymentMethod.toLowerCase() === "pre payment") {
-          // For VMCO entity with Pre Payment
-          paymentStatus = "Pending";
-        } else if (finalPaymentMethod.toLowerCase() === "credit") {
+      if (sampleMode) {
+        finalPaymentMethod = "Pre Payment";
+        paymentStatus = "Paid";
+        if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
           orderStatus = "Pending";
-          paymentStatus = "Credit";
-        }
-      } else if (
-        formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
-      ) {
-        // For other entities (SHC)
-        orderStatus = "Open";
-        paymentStatus = finalPaymentMethod === "Credit" ? "Credit" : "Pending";
-      } else if (
-        formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()
-      ) {
-        // For other entities (GMTC)
-        orderStatus = "Open";
-        paymentStatus = finalPaymentMethod === "Credit" ? "Credit" : "Pending";
-      } else {
-        // For NAQI and DAR entities
-        if (finalPaymentMethod.toLowerCase() === "pre payment") {
-          orderStatus = "Pending";
-          paymentStatus = "Pending";
-        } else if (
-          finalPaymentMethod.toLowerCase() === "credit" ||
-          finalPaymentMethod.toLowerCase() === "cash on delivery"
-        ) {
+        } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+          orderStatus = "Open";
+        } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
           orderStatus = "Approved";
-          paymentStatus =
-            finalPaymentMethod.toLowerCase() === "credit"
-              ? "Credit"
-              : "Pending";
         } else {
-          orderStatus = "Approved";
-          paymentStatus = "Pending";
+          orderStatus = "Pending";
+        }
+      } else {
+        if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+          orderStatus = "Pending";
+          if (finalPaymentMethod.toLowerCase() === "pre payment") {
+            paymentStatus = "Pending";
+          } else if (finalPaymentMethod.toLowerCase() === "credit") {
+            orderStatus = "Pending";
+            paymentStatus = "Credit";
+          }
+        } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+          orderStatus = "Open";
+          paymentStatus = finalPaymentMethod === "Credit" ? "Credit" : "Pending";
+        } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
+          orderStatus = "Open";
+          paymentStatus = finalPaymentMethod === "Credit" ? "Credit" : "Pending";
+        } else {
+          // For NAQI and DAR entities
+          if (finalPaymentMethod.toLowerCase() === "pre payment") {
+            orderStatus = "Pending";
+            paymentStatus = "Pending";
+          } else if (finalPaymentMethod.toLowerCase() === "credit" || finalPaymentMethod.toLowerCase() === "cash on delivery") {
+            orderStatus = "Approved";
+            paymentStatus = finalPaymentMethod.toLowerCase() === "credit" ? "Credit" : "Pending";
+          } else {
+            orderStatus = "Approved";
+            paymentStatus = "Pending";
+          }
         }
       }
 
@@ -1508,8 +1513,8 @@ function OrderDetails() {
         erpCustId: formData.erpCustId,
         branchId: formData.branchId || "",
         erpBranchId: formData.erpBranchId || "",
-        branchNameEn: formData.branchNameEn || "", 
-        branchNameLc: formData.branchNameLc || "", 
+        branchNameEn: formData.branchNameEn || "",
+        branchNameLc: formData.branchNameLc || "",
         branchRegion: formData.branchRegion || "",
         branchCity: formData.branchCity || "",
         orderBy: orderByName,
@@ -1518,7 +1523,7 @@ function OrderDetails() {
         paymentPercentage: "100.00",
         status: orderStatus,
         salesExecutive: user.employeeId,
-        paymentStatus: sampleMode ? "Paid" : paymentStatus,
+        paymentStatus: paymentStatus,
         entity: formData.entity || "",
         deliveryCharges: formData.deliveryCharges || "0",
         totalAmount: formData.totalAmount || "0",
@@ -1764,7 +1769,7 @@ function OrderDetails() {
             isMachine: hasAnyMachine,
             isFresh: hasAnyFresh,
             sampleOrder: sampleMode ? true : false,
-            status: sampleMode ? "Approved" : orderStatus,
+            status: orderStatus,
           };
 
           const updateOrderResponse = await fetch(
@@ -2327,7 +2332,7 @@ function OrderDetails() {
       const existingLineNumbers = formData.products.map(p => p.lineNumber || 0).filter(lineNum => lineNum > 0);
       const maxLineNumber = existingLineNumbers.length > 0 ? Math.max(...existingLineNumbers) : 0;
       const newLineNumber = maxLineNumber + 1;
-      
+
       const payload = {
         orderId: orderId,
         lineNumber: newLineNumber,
@@ -4870,11 +4875,7 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave("save")}
-                    disabled={
-                      saving ||
-                      (formData.status &&
-                        !["open"].includes(formData.status.toLowerCase()))
-                    }
+                    disabled={ saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
                   >
                     {saving ? t("Saving...") : t("Save Changes")}
                   </button>

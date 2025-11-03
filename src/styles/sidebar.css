@@ -211,7 +211,6 @@
 .user-text-header .text {
   display: flex;
   flex-direction: column;
-  
 }
 /* .user-text {
     display: flex;
@@ -401,22 +400,25 @@
     margin-left: 30px;
   }
   .content {
-    padding: 20px;
-    padding-top: 0px !important;
-    overflow-x: hidden !important;
-    touch-action: none;
+    padding: 0 20px 20px;
+    /* overflow-x: hidden !important; */
+    /* touch-action: none;
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    user-select: none;
+    user-select: none; */
+
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    box-sizing: border-box;
   }
   .header-title {
-  padding: 0px !important;
-  font-size: 1.3rem !important;
-  font-weight: 600;
-}
+    padding: 0px !important;
+    font-size: 1.3rem !important;
+    font-weight: 600;
+  }
 }
 .header-title {
   padding: 35px;

@@ -2265,7 +2265,7 @@ function ContactDetails({
       <div className="form-group">
         <label htmlFor="buildingName">
           {t("Building Name")}
-          {/* <span className="required-field">*</span> */}
+          <span className="required-field">*</span>
           {originalCustomerData &&
             customerData &&
             originalCustomerData?.buildingName != customerData?.buildingName &&

@@ -1538,10 +1538,10 @@ td.label-cell {
   }
   .mobile-title {
     font-weight: bold;
-    font-size: 20px;
+    font-size: 15px;
   }
   .mobile-subtitle {
-    font-size: 16px;
+    font-size: 12px;
     color: #666;
   }
   .branches-toggle-row-btn {
