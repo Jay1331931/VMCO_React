@@ -16,6 +16,7 @@ import RbacManager from "../utilities/rbac";
 import Swal from "sweetalert2";
 import Constants from "../constants";
 import SearchableDropdown from "../components/SearchableDropdown";
+import ProductsGrid from "./ProductsGrid";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 // Initial categories with their corresponding entity values
 const initialCategories = [
@@ -999,39 +1000,65 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
       );
       const checkResult = await checkResponse.json();
       console.log("Check cart response:", checkResult);
-      if (checkResult.data.data && checkResult.data.data.length > 0) {
-        // Item exists in cart, update the quantity
-        const existingItem = checkResult.data.data[0];
-        const updatedQuantity =
-          parseInt(existingItem.quantityOrdered) + parseInt(quantity);
-        const updateResponse = await fetch(
-          `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              quantityOrdered: updatedQuantity,
-              netAmount: unitPrice * updatedQuantity,
-            }),
-          }
-        );
-        if (!updateResponse.ok) {
-          const errorData = await updateResponse.json().catch(() => ({}));
-          throw new Error(
-            `Failed to update cart item: ${errorData.message || updateResponse.statusText
-            }`
+     if (checkResult?.data?.data && checkResult?.data?.data?.length > 0) {
+      // Item already exists in cart
+      const existingItem = checkResult?.data?.data[0];
+      const updatedQuantity =
+        parseInt(existingItem?.quantityOrdered) + parseInt(quantity);
+
+      Swal.fire({
+        icon: "warning",
+        title: t("Product already exists in cart"),
+       text: t(`This item already has a quantity of`) + t(`${existingItem?.quantityOrdered}. `) + t(`Do you want to update it?`),
+        showCancelButton: true,
+        confirmButtonText: t("Yes, update it"),
+        cancelButtonText: t("No, cancel"),
+        reverseButtons: true,
+      }).then(async (result) => {
+        if (result?.isConfirmed) {
+          // User confirmed update
+          const updateResponse = await fetch(
+            `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                quantityOrdered: updatedQuantity,
+                netAmount: unitPrice * updatedQuantity,
+              }),
+            }
           );
+
+          if (!updateResponse.ok) {
+            const errorData = await updateResponse?.json().catch(() => ({}));
+            throw new Error(
+              `Failed to update cart item: ${
+                errorData?.message || updateResponse?.statusText
+              }`
+            );
+          }
+
+          Swal.fire({
+            icon: "success",
+            title: t("Product quantity updated successfully"),
+            showConfirmButton: false,
+            timer: 1000,
+          });
+        } else if (result?.dismiss === Swal.DismissReason.cancel) {
+          // User cancelled update
+          Swal.fire({
+            icon: "info",
+            title: t("Update cancelled"),
+            showConfirmButton: false,
+            timer: 1000,
+          });
         }
-        Swal.fire({
-          icon: "success",
-          title: t("Product quantity to cart successfully"),
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      } else {
+      });
+    }
+      else {
         // Item doesn't exist in cart, add it as new
         const cartItem = {
           userId: userId,
@@ -1559,8 +1586,23 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
             <div className="loading-container">
               <LoadingSpinner size="medium" />
             </div>
-          )}
+          )} 
+          {/* for  mobile  app dont remove*/}
+            {/* <ProductsGrid 
+             displayedProducts={displayedProducts}
+  isLoading={isLoading}
+  searchQuery={searchQuery}
+  t={t}
+  mapProductToCardProps={mapProductToCardProps}
+  quantities={quantities}
+  handleQuantityChange={handleQuantityChange}
+  handleAddToCart={handleAddToCart}
+  handleProductClick={handleProductClick}
+  setQuantities={setQuantities}
+  handleToggleFavorite={handleToggleFavorite}/> */}
         </div>
+
+      
           
         {/* Loading spinner when fetching more products */}
         {isLoadingMore && (
