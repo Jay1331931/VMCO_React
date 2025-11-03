@@ -37,27 +37,27 @@ setLoading(false)
 
 return (
     <div style={{ padding: "20px" }}>
-      <h3>🍎 Apple Pay Domain Verification</h3>
+{/*      
       {loading ? (
         <p>Loading and reading file...</p>
-      ) : fileContent ? (
+      ) : fileContent ? ( */}
         <>
-          <h4>File Content:</h4>
+         
           <pre
-            style={{
-              backgroundColor: "#f5f5f5",
-              padding: "10px",
-              borderRadius: "6px",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
+            // style={{
+            //   backgroundColor: "#f5f5f5",
+            //   padding: "10px",
+            //   borderRadius: "6px",
+            //   whiteSpace: "pre-wrap",
+            //   wordBreak: "break-word",
+            // }}
           >
             {fileContent}
           </pre>
         </>
-      ) : (
+      {/* ) : (
         <p style={{ color: "red" }}>No content found.</p>
-      )}
+      )} */}
     </div>
   );
 };
