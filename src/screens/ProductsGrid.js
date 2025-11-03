@@ -19,13 +19,14 @@ export default function ProductsGrid({
   return (
     <Box
       sx={{
-        width: "100%",
+        // width: "100%",
+        width:{ xs: "350px", md: "100%" },
         overflowY: "auto", 
-        // padding: { xs: "12px", md: "20px" },
+        padding: { xs: "12px", md: "20px" },
         display: "flex",
         flexWrap: "wrap",
         gap: "20px",
-        justifyContent: { xs: "center", md: "flex-start" },
+        justifyContent: {  md: "flex-start" },
         scrollBehavior: "smooth",
         boxSizing: "border-box",
       }}
