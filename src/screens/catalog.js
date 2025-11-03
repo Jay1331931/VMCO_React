@@ -1554,8 +1554,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
           </div>
         </div>
-        <div>
-          {/* {displayedProducts.length > 0
+        <div className="products-grid">
+          {displayedProducts.length > 0
             ? displayedProducts?.map((product) => (
               <ProductCard
                 key={product.id}
@@ -1586,9 +1586,9 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
             <div className="loading-container">
               <LoadingSpinner size="medium" />
             </div>
-          )}  */}
+          )} 
           {/* for  mobile  app dont remove*/}
-            <ProductsGrid 
+            {/* <ProductsGrid 
              displayedProducts={displayedProducts}
   isLoading={isLoading}
   searchQuery={searchQuery}
@@ -1599,7 +1599,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   handleAddToCart={handleAddToCart}
   handleProductClick={handleProductClick}
   setQuantities={setQuantities}
-  handleToggleFavorite={handleToggleFavorite}/>
+  handleToggleFavorite={handleToggleFavorite}/> */}
         </div>
 
       
