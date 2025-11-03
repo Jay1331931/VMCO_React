@@ -528,7 +528,7 @@ function Cart() {
                     freshProducts,
                     selectedPaymentMethod,
                     true,
-                    'SHC - FRESH'
+                    'FRESH'
                 );
                 if (freshResult) processedResults.push(freshResult);
             }
@@ -539,7 +539,7 @@ function Cart() {
                     frozenProducts,
                     selectedPaymentMethod,
                     false,
-                    'SHC - FROZEN'
+                    'FROZEN'
                 );
                 if (frozenResult) processedResults.push(frozenResult);
             }
@@ -636,7 +636,8 @@ function Cart() {
             } else {
                 // No existing order - create new
                 console.log(`No existing ${typeLabel} open orders found, creating new order`);
-                const categoryName = `${pendingOrderCategory} - ${typeLabel}`;
+                const entity = Constants.ENTITY.SHC;
+                const categoryName = `${entity} - ${typeLabel}`;
                 // CRITICAL: Pass skipCartDeletion=true
                 const orderId = await placeOrderForCategory(
                     products,
@@ -1472,7 +1473,7 @@ function Cart() {
                 const baseAmount = unitPrice * quantity;
                 const vatAmount = (baseAmount * vatPercentage) / 100;
                 totalAmount += baseAmount + vatAmount;
-                if(totalAmount <= 150){
+                if (totalAmount <= 150) {
                     totalAmount = totalAmount + 20.00;
                 }
             });
@@ -1595,8 +1596,8 @@ function Cart() {
     const handleVMCOOrderProcessing = async (categoryItems, categoryName, selectedPaymentMethod) => {
         try {
             setIsPlacingOrder(true);
-            const entity = getEntityFromCategory(categoryName);
-
+            const entity = categoryItems.length > 0 ? categoryItems[0].entity : Constants.ENTITY.VMCO;
+            console.log("VMCO order processing - entity from items:", entity, "categoryName:", categoryName);
             // Separate VMCO products into machines and consumables
             const machineProducts = categoryItems.filter(item => item.isMachine === true);
             const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
@@ -1625,12 +1626,20 @@ function Cart() {
 
             // Then, place order for non-machine products with selected payment method
             if (nonMachineProducts.length > 0) {
-                console.log('Placing order for VMCO consumables with selected payment method:', selectedPaymentMethod);
-                const consumableOrderId = await placeOrderForCategory(nonMachineProducts, 'VMCO - Consumables', selectedPaymentMethod, false);
-                console.log('Consumable order result:', consumableOrderId);
+                console.log("Placing order for VMCO consumables with selected payment method:", selectedPaymentMethod);
+
+                // FIX: Use explicit category name instead of relying on categoryName parameter
+                const consumableOrderId = await placeOrderForCategory(
+                    nonMachineProducts,
+                    "VMCO - Consumables", 
+                    selectedPaymentMethod,
+                    false
+                );
+
+                console.log("Consumable order result:", consumableOrderId);
                 if (consumableOrderId) {
                     orderIds.push(consumableOrderId);
-                    console.log('Added consumable order ID to array:', consumableOrderId);
+                    console.log("Added consumable order ID to array:", consumableOrderId);
                 }
             }
 
