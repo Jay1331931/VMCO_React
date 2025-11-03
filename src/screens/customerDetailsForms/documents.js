@@ -85,6 +85,8 @@ const [customDocName, setCustomDocName] = useState("");
   useEffect(() => {
     setTabsHeight("auto");
   }, []);
+  const ALLOWED_FILE_TYPES = ['.pdf'];
+
   // Handle file upload for specific document types
   const handleTradingDocumentChange = (e, documentType) => {
     const docListToUpload = isTrading
@@ -109,6 +111,22 @@ const [customDocName, setCustomDocName] = useState("");
         });
         return;
       }
+
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_FILE_TYPES.includes(fileExtension)) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "Invalid file type. Please upload only PDF files."
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // Clear the file input
+      e.target.value = '';
+      return;
+    }
+
       // Update the specific document in state
       setTradingDocuments((prevDocs) => ({
         ...prevDocs,
@@ -154,6 +172,28 @@ const [customDocName, setCustomDocName] = useState("");
         });
         return;
       }
+
+      const invalidFiles = files.filter(file => {
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      return !ALLOWED_FILE_TYPES.includes(fileExtension);
+    });
+
+    if (invalidFiles.length > 0) {
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t(
+          "The following files have invalid format. Please upload only PDF files: {{files}}",
+          {
+            files: invalidFiles.map((file) => file.name).join(", "),
+          }
+        ),
+        confirmButtonText: t("OK"),
+      });
+      // Clear the file input
+      e.target.value = '';
+      return;
+    }
 
       // Add a fileName property in files which holds custDocType
       files.forEach((file) => {

@@ -409,7 +409,7 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none; */
-
+    touch-action: pan-y;
     overflow-y: auto;
     scroll-behavior: smooth;
     box-sizing: border-box;
