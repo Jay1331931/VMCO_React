@@ -1032,7 +1032,6 @@ const TableMobile = ({
                                 display: flex;
                                 justify-content: space-between;
                                 align-items: flex-start;
-                                margin-bottom: 12px;
                                 padding: 8px 0;
                                 gap: 16px;
                             }
@@ -1048,6 +1047,7 @@ const TableMobile = ({
                                 flex: 1;
                                 word-break: break-word;
                                 overflow-wrap: break-word;
+                                font-size: smaller;
                             }
                             .status-badge-large {
                                 padding: 6px 16px;
@@ -1124,7 +1124,7 @@ const TableMobile = ({
                                     margin: 0;
                                 }
                                 .popup-content {
-                                    padding: 24px 12px 20px 12px;
+                                    padding: 24px 24px 24px 24px;
                                 }
                             }
                                 /* All Details Button Styles */

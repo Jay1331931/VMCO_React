@@ -132,8 +132,8 @@ const ProductCard = ({
                 
                 /* RTL support for favorite button */
                 .product-card.rtl .favorite-btn {
-                    right: auto;
-                    left: 10px;
+                    right: auto !important;
+                    left: 10px !important;
                 }
                 
                 .buttons-container {
@@ -256,8 +256,8 @@ const ProductCard = ({
                     }
                     
                     .favorite-btn, button[style*="position: absolute"] {
-                    left: 5px;
-                    right: auto;
+                    left: 5px !important;
+                    right: auto !important;
             }
                 }
                 
