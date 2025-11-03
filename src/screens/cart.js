@@ -576,7 +576,8 @@ function Cart() {
                 status: 'Open',
                 entity: Constants.ENTITY.SHC,
                 paymentMethod: paymentMethod === 'Credit' ? 'Credit' : 'Cash on Delivery',
-                isFresh: isFresh
+                isFresh: isFresh,
+                sampleOrder: false
             };
             existingOrderFilters.append('filters', JSON.stringify(filters));
 
@@ -764,7 +765,8 @@ function Cart() {
                 branchId: selectedBranchId,
                 status: 'Open',
                 entity: Constants.ENTITY.GMTC,
-                paymentMethodNot: 'Pre Payment'
+                paymentMethodNot: 'Pre Payment',
+                sampleOrder: false
             };
             existingOrderFilters.append('filters', JSON.stringify(filters));
 
