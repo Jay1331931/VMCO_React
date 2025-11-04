@@ -1051,7 +1051,7 @@ function OrderDetails() {
 
             orderLines.forEach((line) => {
               if (line.productId) {
-                existingProductMap[line.productId] = line;
+                existingProductMap[line.productId] = line.productId;
                 console.log(
                   `Mapped existing line for product ID ${line.productId} to line ID ${line.id}`
                 );
@@ -1064,8 +1064,43 @@ function OrderDetails() {
       } catch (err) {
         console.error("Error fetching existing order lines:", err);
       }
-
+ // Track if any products were deleted for success message
+      let productsDeleted = false;
       // Now update each product line
+        // Check for deleted products by comparing originalProducts with current products
+      if (originalProducts && originalProducts.length > 0) {
+        console.log("Checking for deleted products...");
+
+        // Create a map of current products for easy lookup
+        const currentProductsMap = {};
+        formData.products.forEach((product) => {
+          const productId = product.id || product.productId;
+          if (productId) {
+            currentProductsMap[productId] = true;
+          }
+        });
+
+        // Find products that were in originalProducts but are no longer in formData.products
+        const deletePromises = originalProducts
+          .filter((product) => {
+            const productId = product.id || product.productId;
+            return productId && !currentProductsMap[productId];
+          })
+          .map((product) => {
+            const productId = product.id || product.productId;
+            console.log(`Deleting removed product ID ${productId} from order`);
+            return deleteSalesOrderLine(formData.id, productId);
+          });
+
+        // Wait for all delete operations to complete
+        if (deletePromises.length > 0) {
+          console.log(`Found ${deletePromises.length} products to delete`);
+          await Promise.all(deletePromises);
+          productsDeleted = true;
+        } else {
+          console.log("No products were removed from the order");
+        }
+      }
       if (formData.products && formData.products.length > 0) {
         console.log("Updating sales order lines");
 
@@ -1095,7 +1130,7 @@ function OrderDetails() {
             );
           }
           // Existing products with salesOrderLineId but not found in existingProductMap
-          else if (product.salesOrderLineId) {
+          else if (product?.salesOrderLineId &&product?.salesOrderLineId) {
             console.log(
               `Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`
             );
@@ -1109,7 +1144,7 @@ function OrderDetails() {
             );
           }
           // New products need to be added
-          else {
+          else if( !existingLine) {
             console.log(`Creating new line for product ID ${productId}`);
 
             return createSalesOrderLine(
@@ -1198,43 +1233,9 @@ function OrderDetails() {
         }
       }
 
-      // Track if any products were deleted for success message
-      let productsDeleted = false;
+     
 
-      // Check for deleted products by comparing originalProducts with current products
-      if (originalProducts && originalProducts.length > 0) {
-        console.log("Checking for deleted products...");
-
-        // Create a map of current products for easy lookup
-        const currentProductsMap = {};
-        formData.products.forEach((product) => {
-          const productId = product.id || product.productId;
-          if (productId) {
-            currentProductsMap[productId] = true;
-          }
-        });
-
-        // Find products that were in originalProducts but are no longer in formData.products
-        const deletePromises = originalProducts
-          .filter((product) => {
-            const productId = product.id || product.productId;
-            return productId && !currentProductsMap[productId];
-          })
-          .map((product) => {
-            const productId = product.id || product.productId;
-            console.log(`Deleting removed product ID ${productId} from order`);
-            return deleteSalesOrderLine(formData.id, productId);
-          });
-
-        // Wait for all delete operations to complete
-        if (deletePromises.length > 0) {
-          console.log(`Found ${deletePromises.length} products to delete`);
-          await Promise.all(deletePromises);
-          productsDeleted = true;
-        } else {
-          console.log("No products were removed from the order");
-        }
-      }
+    
       // // Check if this is a VMCO Machines order that needs discount workflow approval
       // if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
       //   (formData.isMachine && formData.isMachine === true) &&
