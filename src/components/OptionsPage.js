@@ -513,8 +513,15 @@ const customerIdEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompo
 const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURIComponent(btoa(DecodedorderTpe)):encodeURIComponent(btoa("orders"))
     // const response = await makeRequest();
 
-  const URL = `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
-   window.location.replace(URL)
+  let URL 
+  if(paymentType?.toLowerCase()=='cardpay'){
+ URL= `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+  
+  }else{
+     URL= `${window.location.protocol}//${window.location.host}/applyPay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+  
+  }
+  window.location.replace(URL)
     // window.close();
     // navigate(URL)
   } catch (error) {
@@ -579,12 +586,12 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.SHC?.toLowerCase()) && (
+            Constants.ENTITY?.SHC?.toLowerCase() || [Constants.ENTITY?.SHC?.toLowerCase(), Constants.ENTITY?.GMTC?.toLowerCase(),Constants.ENTITY?.DAR?.toLowerCase()].includes(TempOrderDetails[0]?.entity?.toLowerCase())) && (
           <button
             onClick={() => handlePayment("Apple Pay")}
             className="option-button black"
@@ -592,7 +599,7 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )} */}
+        )}
       </div>
       <style>
         {`.options-container {
