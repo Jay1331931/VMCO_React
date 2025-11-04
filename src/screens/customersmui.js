@@ -2286,6 +2286,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Customer Name")}
                 </label>
+                <span className="required-field">*</span>
                 <input
                   type="text"
                   name="name"
@@ -2301,6 +2302,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Email")}
                 </label>
+                <span className="required-field">*</span>
                 <input
                   type="email"
                   name="email"
@@ -2322,6 +2324,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Company Name")}
                 </label>
+                <span className="required-field">*</span>
                 <input
                   type="text"
                   name="company"
@@ -2358,6 +2361,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Phone Number")}
                 </label>
+                <span className="required-field">*</span>
                 <PhoneInput
                   international
                   defaultCountry="SA" // Set your preferred default country
@@ -2401,6 +2405,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Region")}
                 </label>
+                <span className="required-field">*</span>
                 <SearchableDropdown
                   name="region"
                   // options={basicMasterLists?.region || []}
@@ -2425,6 +2430,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Primary Business Unit")}
                 </label>
+                <span className="required-field">*</span>
                 <SearchableDropdown
                   name="primaryBusinessUnit"
                   // options={basicMasterLists?.region || []}
@@ -2442,6 +2448,7 @@ const handleColumnResize = (params) => {
                 >
                   {t("Source")}
                 </label>
+                <span className="required-field">*</span>
                 <select
                   name="source"
                   value={inviteData.source}
@@ -2537,7 +2544,10 @@ const handleColumnResize = (params) => {
         gap: 1rem;
       }
       .form-group-1 { flex: 1 1 100%; }
-
+.required-field {
+  color: red;
+  margin-left: 4px;
+}
       @media (min-width: 768px) and (max-width: 1000px) {
        .invite-dialog {         top: 60%;         }
         .form-group-1            { flex: 1 1 calc(50% - 0.5rem); }

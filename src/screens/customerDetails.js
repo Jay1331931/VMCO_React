@@ -1049,7 +1049,7 @@ const handleVerifiedDataChange = (e) => {
     );
     if (mandatoryCheckRequired) {
       mandatoryFields?.forEach((field) => {
-        if (field === "assignedToEntityWise" || (field === "crNumber" && customerData?.companyType.toLowerCase() !== "trading") || (field === "vatNumber" && customerData?.companyType.toLowerCase() !== "trading")) {
+        if (field === "assignedToEntityWise" || (field === "crNumber" && customerData?.companyType?.toLowerCase() !== "trading") || (field === "vatNumber" && customerData?.companyType?.toLowerCase() !== "trading")) {
           // Skip here, handle below
           return;
         }
@@ -1130,7 +1130,7 @@ const handleVerifiedDataChange = (e) => {
         errors[field] = "Please enter English text.";
       }
 
-      if (field.toLowerCase().includes("email")) {
+      if (field?.toLowerCase().includes("email")) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (value && !emailRegex.test(value)) {
           errors[field] = "Invalid email format";
@@ -1138,8 +1138,8 @@ const handleVerifiedDataChange = (e) => {
       }
 
       if (
-        field.toLowerCase().includes("mobile") ||
-        field.toLowerCase().includes("phone")
+        field?.toLowerCase().includes("mobile") ||
+        field?.toLowerCase().includes("phone")
       ) {
         const universalMobileRegex = /^\+?[1-9]\d{7,14}$/;
         if (value && !universalMobileRegex.test(value)) {
@@ -1147,60 +1147,60 @@ const handleVerifiedDataChange = (e) => {
         }
       }
 
-      if (field.toLowerCase().includes("iban")) {
+      if (field?.toLowerCase().includes("iban")) {
         const saudiIbanRegex = /^SA\d{22}$/;
         if (value && !saudiIbanRegex.test(value)) {
           errors[field] = "Invalid format! SAXXXXXXXXXXXXXXXXXXXXXX accepted";
         }
       }
 
-      if (field.toLowerCase().includes("bankaccountnumber")) {
+      if (field?.toLowerCase().includes("bankaccountnumber")) {
         const saudiBankAccountRegex = /^\d{14}$/;
         if (value && !saudiBankAccountRegex.test(value)) {
           errors[field] = "Invalid format! 14 digits accepted";
         }
       }
 
-      if (field.toLowerCase().includes("baladeahlicensenumber")) {
+      if (field?.toLowerCase().includes("baladeahlicensenumber")) {
         const baladeahLicenseRegex = /^\d{9,10}$/;
         if (value && !baladeahLicenseRegex.test(value)) {
           errors[field] = "Invalid format! 9 to 10 digits accepted";
         }
       }
 
-      if (field.toLowerCase().includes("vatnumber")) {
+      if (field?.toLowerCase().includes("vatnumber")) {
         const saudiVatRegex = /^\d{15}$/;
         if (value && !saudiVatRegex.test(value)) {
           errors[field] = "Invalid format! 15 digits required";
         }
       }
 
-      if (field.toLowerCase().includes("crnumber")) {
+      if (field?.toLowerCase().includes("crnumber")) {
         const crNumberRegex = /^[1-9]\d{9}$/;
         if (value && !crNumberRegex.test(value)) {
           errors[field] = "Invalid format! 10 digits required";
         }
       }
-      if (field.toLowerCase().includes("governmentregistrationnumber")) {
+      if (field?.toLowerCase().includes("governmentregistrationnumber")) {
         const govRegNumberRegex = /^[1-9]\d{7,8}$/;
         if (value && !govRegNumberRegex.test(value)) {
           errors[field] = "Invalid format! 8 to 9 digits accepted";
         }
       }
 
-      if (field.toLowerCase().includes("pincode")) {
+      if (field?.toLowerCase().includes("pincode")) {
         const saudiPincodeRegex = /^\d{5}$/;
         if (value && !saudiPincodeRegex.test(value)) {
           errors[field] = "Invalid format! 5 digits required";
         }
       }
       if (
-        field.toLowerCase().includes("financeheademail") ||
-        field.toLowerCase().includes("purchasingheademail")
+        field?.toLowerCase().includes("financeheademail") ||
+        field?.toLowerCase().includes("purchasingheademail")
       ) {
         for (const f in dataToValidate) {
           if (
-            f.toLowerCase().includes("email") &&
+            f?.toLowerCase().includes("email") &&
             f !== field &&
             dataToValidate[f] === value
           ) {
@@ -1210,7 +1210,7 @@ const handleVerifiedDataChange = (e) => {
         }
         for (const f in customerContactsData) {
           if (
-            f.toLowerCase().includes("email") &&
+            f?.toLowerCase().includes("email") &&
             f !== field &&
             customerContactsData[f] === value
           ) {
@@ -1220,12 +1220,12 @@ const handleVerifiedDataChange = (e) => {
         }
       }
       if (
-        field.toLowerCase().includes("financeheadmobile") ||
-        field.toLowerCase().includes("purchasingheadmobile")
+        field?.toLowerCase().includes("financeheadmobile") ||
+        field?.toLowerCase().includes("purchasingheadmobile")
       ) {
         for (const f in dataToValidate) {
           if (
-            f.toLowerCase().includes("mobile") &&
+            f?.toLowerCase().includes("mobile") &&
             f !== field &&
             dataToValidate[f] === value
           ) {
@@ -1235,7 +1235,7 @@ const handleVerifiedDataChange = (e) => {
         }
         for (const f in customerContactsData) {
           if (
-            f.toLowerCase().includes("mobile") &&
+            f?.toLowerCase().includes("mobile") &&
             f !== field &&
             customerContactsData[f] === value
           ) {
@@ -1882,11 +1882,11 @@ if (uniqueFieldsList.includes(field) && value) {
         );
       }
       if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_COORDINATOR) {
-        updatedCustomerData.current.verified = new Date().toLocaleDateString("en-CA");
+        updatedCustomerData.current.verified = new Date()?.toLocaleDateString("en-CA");
         updatedCustomerData.current.verifiedBy = user.userName;
       }
       if(customerData?.customerStatus?.toLowerCase() === "pending" && user?.designation === constants.DESIGNATIONS.OPS_MANAGER) {
-        updatedCustomerData.current.approved = new Date().toLocaleDateString("en-CA");
+        updatedCustomerData.current.approved = new Date()?.toLocaleDateString("en-CA");
       }
       const mergedData = {
         updates: {
@@ -2200,7 +2200,7 @@ if (uniqueFieldsList.includes(field) && value) {
         confirmButtonText: t("OK"),
       });
       // alert("Error updating customer data:", error.message);
-      console.error("Error updating customer:", error.message);
+      // console.error("Error updating customer:", error.message);
     }
   };
 
