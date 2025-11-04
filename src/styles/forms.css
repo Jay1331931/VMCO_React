@@ -1557,7 +1557,7 @@ td.label-cell {
   .expanded-form-container {
     padding: 10px;
     position: sticky;
-    max-height: 40vh;
+    max-height: 55vh;
     overflow-y: scroll;
     scrollbar-width: none;
     z-index: 10;

@@ -33,6 +33,13 @@ import { Tooltip } from "@mui/material";
 import axios from "axios";
 import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import TableMobile from "../../components/TableMobile";
+import {
+  DataGrid,
+  GridFooterContainer,
+  GridPagination,
+  useGridApiRef,
+} from "@mui/x-data-grid";
 import {
   Box,
   TextField,
@@ -75,7 +82,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [nextTempId, setNextTempId] = useState(-1);
   const [isFirstBranch, setIsFirstBranch] = useState(false);
   const [search, setSearch] = useState("");
-  const isMobile = false;
+const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +92,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [syncLoadingId, setSyncLoadingId] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filters, setFilters] = useState({});
+  const gridApiRef = useGridApiRef();
   let customerFormMode;
   if (mode === "edit") {
     customerFormMode = "custDetailsEdit";
@@ -145,6 +153,12 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   //   setSearch(e.target.value)
   //   setCurrentPage(1);
   // }, 400);
+  useEffect(() => {
+          const handleResize = () => setIsMobile(window.innerWidth < 768);
+          console.log("isMobile", isMobile);
+          window.addEventListener("resize", handleResize);
+          return () => window.removeEventListener("resize", handleResize);
+        }, []);
   const columns = [
 {
   field: i18n.language === "en" ? "branchNameEn" : "branchNameLc",
@@ -177,6 +191,31 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   searchable: true,
 },
   ]
+
+  // Add to your component state
+const [selectedBranch, setSelectedBranch] = useState(null);
+const [showBranchPopup, setShowBranchPopup] = useState(false);
+const [showAllDetails, setShowAllDetails] = useState(false);
+// Handler for "View All Details" click
+const handleBranchAllDetailsClick = (branch) => {
+  setShowBranchPopup(false);
+  setShowAllDetails(true)
+};
+
+// Toggle row expansion
+// const toggleRow = (branchId) => {
+//   // Your existing toggle logic
+//   setExpandedRows(prev => ({
+//     ...prev,
+//     [branchId]: !prev[branchId]
+//   }));
+// };
+
+// const isExpanded = (branchId) => {
+//   return expandedRows[branchId] || false;
+// };
+
+
   const handleSearchChange = useCallback(
       (event, newValue) => {
         setSearch(newValue);
@@ -388,6 +427,13 @@ customer_id: customer?.id,
     setExpandedRows((prev) => (prev.includes(branchId) ? [] : [branchId]));
     const isAppMode = await checkIfBranchIsInApproval(branchId);
     // setIsApprovalMode(isAppMode);
+   if (isMobile) {
+    // ✅ FIX: Use === for comparison and find the correct branch
+    const selectedBranch = currentItems.find(item => item.id === branchId);
+    console.log("Selected branch:", selectedBranch);
+    setSelectedBranch(selectedBranch);
+    setShowAllDetails(true);
+  }
   };
   // Update tabs height when expanded rows change
   useEffect(() => {
@@ -1581,7 +1627,7 @@ customer_id: customer?.id,
           </div>
         </div>
       </div>
-      {isMobile ? (
+      {/* {isMobile ? (
         <div className="branches-list">
           {currentItems.map((branch) => (
             <div key={branch.id} className="branch-card">
@@ -1645,7 +1691,108 @@ customer_id: customer?.id,
             </div>
           ))}
         </div>
-      ) : (
+      ) : */}
+      {isMobile ? (
+  
+<>
+{!showAllDetails && (
+  <div className="branches-list">
+    {currentItems.map((branch) => (
+      <div key={branch.id} className="branch-card">
+        <div
+          className="branch-summary"
+          onClick={() => toggleRow(branch.id)}
+        >
+          <div className="branch-id">
+            {branch.erp_branch_id || branch.id}
+          </div>
+          <div className="branch-name">{branch.branchNameEn}</div>
+          <div className="branch-status">
+            <span
+              className={`branches-status-badge ${getStatusClass(
+                branch.branchStatus
+              )}`}
+            >
+              {t(branch.branchStatus)}
+            </span>
+          </div>
+          <button className="branches-toggle-row-btn">
+            {isExpanded(branch.id) ? (
+              <FontAwesomeIcon icon={faChevronDown} />
+            ) : (
+              <FontAwesomeIcon icon={faChevronRight} />
+            )}
+          </button>
+        </div>
+      </div>
+    ))}
+    {/* Mobile Pagination */}
+        {branches && branches.length > 0 && (
+          
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(page) => {
+                setExpandedRows([]);
+                setCurrentPage(page);
+              }}
+              startIndex={startIndex}
+              endIndex={Math.min(endIndex, branches.length)}
+              totalItems={branches.length}
+            />
+        )}
+
+  </div>
+)}
+    {/* Branch Details Form Popup */}
+    {showAllDetails &&  (
+      <>
+      {/* <div className="branch-form-popup-overlay" onClick={() => setShowBranchPopup(false)}> */}
+      {/* <div className="branch-form-popup" onClick={(e) => e.stopPropagation()}> */}
+          {/* <button className="popup-close" onClick={() => setShowAllDetails(false)}>
+            ×
+          </button> */}
+          
+          {/* <div className="popup-content"> */}
+            {/* <div className="popup-header-section">
+              <h2 className="popup-branch-title">{t("Branch Details")}</h2>
+              <div className="branch-id">ID: {selectedBranch.erp_branch_id || selectedBranch.id}</div>
+            </div>
+             */}
+            <div className="branch-form-sections">
+              <BranchDetailsForm
+                branchId={selectedBranch.id}
+                branch={selectedBranch}
+                setBranches={setBranches}
+                customer={customer}
+                branchChanges={branchChanges}
+                handleBranchFieldChange={handleBranchFieldChange}
+                isApprovalMode={isApprovalMode}
+                mode={mode}
+                setExpandedRows={setExpandedRows}
+                isFirstBranch={isFirstBranch}
+              />
+            {/* </div> */}
+            
+            <div className="branch-popup-actions">
+              <div className="action-buttons-popup">
+                <button 
+                  className="action-button outline"
+                  onClick={() => {setShowAllDetails(false); setExpandedRows([])}}
+                >
+                  {t("Close")}
+                </button>
+              </div>
+            </div>
+          {/* </div>
+        </div> */}
+      </div>
+      </>
+      
+    )}
+  </>
+) :  
+       (
         <div className="branches-table-container">
           <table className="branches-data-table">
             <thead>
