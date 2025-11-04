@@ -597,43 +597,38 @@ function Cart() {
             const existingOrders = existingOrdersResult.data?.data;
 
             if (existingOrders.length > 0) {
-                // Existing order found
                 const existingOrder = existingOrders[0];
-                const existingTotal = parseFloat(existingOrder.totalAmount || 0);
-                const combinedTotal = existingTotal + newProductsTotal;
-
-                console.log(`Found existing ${typeLabel} order`, {
-                    orderId: existingOrder.id,
-                    existingTotal,
-                    newProductsTotal,
-                    combinedTotal,
-                    paymentMethod,
-                    existingOrderIsFresh: existingOrder.isFresh,
-                    productsIsFresh: isFresh
+                
+                await Swal.fire({
+                    icon: 'info',
+                    title: t('Existing Open Order Found'),
+                    text: `An open ${typeLabel} order (${existingOrder.id}) already exists. The system will update that order with your new items.`,
+                    confirmButtonText: t('OK')
                 });
+                return;
 
-                const canUpdate = await validatePaymentMethodForUpdate(
-                    selectedCustomerId,
-                    combinedTotal,
-                    paymentMethod,
-                    typeLabel,
-                    Constants.ENTITY.SHC
-                );
+                // const canUpdate = await validatePaymentMethodForUpdate(
+                //     selectedCustomerId,
+                //     combinedTotal,
+                //     paymentMethod,
+                //     typeLabel,
+                //     Constants.ENTITY.SHC
+                // );
 
-                if (canUpdate) {
-                    console.log(`Payment validation passed, updating existing ${typeLabel} order`, existingOrder.id);
-                    // CRITICAL: Pass skipCartDeletion=true
-                    await updateExistingOrderWithProductLineCheck(
-                        existingOrder.id,
-                        products,
-                        paymentMethod,
-                        Constants.ENTITY.SHC,
-                        true // skipCartDeletion = true
-                    );
-                    return { orderId: existingOrder.id, action: 'updated', type: typeLabel };
-                } else {
-                    return null;
-                }
+                // if (canUpdate) {
+                //     console.log(`Payment validation passed, updating existing ${typeLabel} order`, existingOrder.id);
+                //     // CRITICAL: Pass skipCartDeletion=true
+                //     await updateExistingOrderWithProductLineCheck(
+                //         existingOrder.id,
+                //         products,
+                //         paymentMethod,
+                //         Constants.ENTITY.SHC,
+                //         true // skipCartDeletion = true
+                //     );
+                //     return { orderId: existingOrder.id, action: 'updated', type: typeLabel };
+                // } else {
+                //     return null;
+                // }
             } else {
                 // No existing order - create new
                 console.log(`No existing ${typeLabel} open orders found, creating new order`);
@@ -786,34 +781,40 @@ function Cart() {
             const existingOrders = existingOrdersResult.data?.data;
 
             if (existingOrders.length > 0) {
-                // Existing order found - validate payment method before updating
                 const existingOrder = existingOrders[0];
-                const existingTotal = parseFloat(existingOrder.totalAmount || 0);
-                const combinedTotal = existingTotal + newProductsTotal;
+                // const existingTotal = parseFloat(existingOrder.totalAmount || 0);
+                // const combinedTotal = existingTotal + newProductsTotal;
 
-                console.log('Found existing GMTC order', {
-                    orderId: existingOrder.id,
-                    existingTotal,
-                    newProductsTotal,
-                    combinedTotal,
-                    paymentMethod: selectedPaymentMethod
+                // console.log('Found existing GMTC order', {
+                //     orderId: existingOrder.id,
+                //     existingTotal,
+                //     newProductsTotal,
+                //     combinedTotal,
+                //     paymentMethod: selectedPaymentMethod
+                // });
+
+                await Swal.fire({
+                    icon: 'info',
+                    title: t('Existing Open Order Found'),
+                    text: `An open order (${existingOrder.id}) already exists for this entity. Please update that order instead of creating a new one.`,
+                    confirmButtonText: t('OK')
                 });
+                return;
+                // // Validate payment method limits before updating
+                // const canUpdate = await validatePaymentMethodForUpdate(
+                //     selectedCustomerId,
+                //     combinedTotal,
+                //     selectedPaymentMethod,
+                //     'GMTC',
+                //     Constants.ENTITY.GMTC
+                // );
 
-                // Validate payment method limits before updating
-                const canUpdate = await validatePaymentMethodForUpdate(
-                    selectedCustomerId,
-                    combinedTotal,
-                    selectedPaymentMethod,
-                    'GMTC',
-                    Constants.ENTITY.GMTC
-                );
-
-                if (canUpdate) {
-                    console.log('Payment validation passed, updating existing GMTC order', existingOrder.id);
-                    await updateExistingOrderWithProductLineCheck(existingOrder.id, categoryItems, selectedPaymentMethod, Constants.ENTITY.GMTC);
-                    showOrderSuccessMessage([{ orderId: existingOrder.id, action: 'updated', type: 'GMTC' }], selectedPaymentMethod);
-                    await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.GMTC);
-                }
+                // if (canUpdate) {
+                //     console.log('Payment validation passed, updating existing GMTC order', existingOrder.id);
+                //     await updateExistingOrderWithProductLineCheck(existingOrder.id, categoryItems, selectedPaymentMethod, Constants.ENTITY.GMTC);
+                //     showOrderSuccessMessage([{ orderId: existingOrder.id, action: 'updated', type: 'GMTC' }], selectedPaymentMethod);
+                //     await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.GMTC);
+                // }
             } else {
                 // No existing open orders, create new GMTC order
                 console.log('No existing GMTC open orders found, creating new order with category:', orderCategoryName);
@@ -836,496 +837,496 @@ function Cart() {
         }
     };
 
-    const updateExistingOrderWithProductLineCheck = async (orderId, categoryItems, selectedPaymentMethod, entity = null, skipCartDeletion = false) => {
-        try {
-            setIsPlacingOrder(true);
-
-            // First, fetch the existing order details
-            const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!orderResponse.ok) {
-                throw new Error('Failed to fetch existing order');
-            }
-
-            const existingOrder = await orderResponse.json();
-
-            // Fetch existing order lines
-            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!orderLinesResponse.ok) {
-                throw new Error('Failed to fetch existing order lines');
-            }
-
-            const existingOrderLines = await orderLinesResponse.json();
-            const existingLines = existingOrderLines.data;
-
-            let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount || 0);
-            let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount || 0);
-
-            // Process each new item
-            for (const item of categoryItems) {
-                const newQuantity = Number(quantities[item.id] || item.quantity || 1);
-                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-                const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                const existingLine = existingLines.find(line => line?.productId === item?.productId);
-
-                if (existingLine) {
-                    const existingQuantity = Number(existingLine.quantity || 0);
-                    const updatedQuantity = existingQuantity + newQuantity;
-
-                    console.log(`Updating quantity for product ${item.productId || item.productid}:`, {
-                        existingQuantity,
-                        newQuantity,
-                        updatedQuantity,
-                        existingLineQuantityType: typeof existingLine.quantity,
-                        newQuantityType: typeof newQuantity
-                    });
-
-                    const baseAmount = unitPrice * updatedQuantity;
-                    const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const netAmount = baseAmount + vatAmount;
-
-                    const updateLinePayload = {
-                        quantity: updatedQuantity,  // Now properly calculated as a number
-                        salesTaxAmount: vatAmount.toFixed(2),
-                        netAmount: netAmount.toFixed(2)
-                    };
-
-                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(updateLinePayload)
-                    });
-
-                    if (!updateLineResponse.ok) {
-                        throw new Error(`Failed to update existing line for product ${item.productId || item.productid}`);
-                    }
-
-                    // Update totals (subtract old amounts, add new amounts)
-                    updatedTotalAmount -= parseFloat(existingLine.netAmount || 0);
-                    updatedTotalSalesTax -= parseFloat(existingLine.salesTaxAmount || 0);
-                    updatedTotalAmount += netAmount;
-                    updatedTotalSalesTax += vatAmount;
-
-                    console.log(`Updated existing line for product ${item.productId || item.productid}`);
-                } else {
-                    // Product line doesn't exist - create new line
-                    const baseAmount = unitPrice * newQuantity;
-                    const vatAmount = (baseAmount * vatPercentage) / 100;
-                    const netAmount = baseAmount + vatAmount;
-
-                    const maxLineNumber = existingLines.length > 0
-                        ? Math.max(...existingLines.map(line => line.lineNumber || 0))
-                        : 0;
-                    const nextLineNumber = maxLineNumber + 1;
-
-                    const newLinePayload = {
-                        orderId: orderId,
-                        productId: item.productId || item.productid,
-                        productName: item.productName || item.name,
-                        productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
-                        quantity: newQuantity,
-                        unit: item.unit || 'EA',
-                        unitPrice: unitPrice,
-                        vatPercentage: vatPercentage,
-                        salesTaxAmount: vatAmount.toFixed(2),
-                        netAmount: netAmount.toFixed(2),
-                        lineNumber: nextLineNumber,
-                        erpProdId: item.erpProdId || item.productCode || item.productId || item.productid,
-                        isFresh: item.isFresh || false
-                    };
-
-                    const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(newLinePayload)
-                    });
-
-                    if (!createLineResponse.ok) {
-                        throw new Error(`Failed to create new line for product ${item.productId || item.productid}`);
-                    }
-
-                    updatedTotalAmount += netAmount;
-                    updatedTotalSalesTax += vatAmount;
-
-                    console.log(`Created new line for product ${item.productId || item.productid}`);
-                }
-            }
-
-            // Update order totals
-            const updateOrderPayload = {
-                totalAmount: updatedTotalAmount.toFixed(2),
-                totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
-                paymentMethod: selectedPaymentMethod
-            };
-
-            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updateOrderPayload)
-            });
-
-            if (!updateOrderResponse.ok) {
-                throw new Error('Failed to update order totals');
-            }
-
-            console.log('Successfully updated order ' + orderId);
-
-            if (!skipCartDeletion) {
-                const entityToUse = entity || getEntityFromCategory(pendingOrderCategory);
-
-                await deleteCartItems(selectedCustomerId, selectedBranchId, entityToUse, null, null, categoryItems);
-
-                setCartItems(prevCartItems =>
-                    prevCartItems.map(category => ({
-                        ...category,
-                        items: category.items.filter(cartItem =>
-                            !categoryItems.some(ci => ci.id === cartItem.id))
-                    })));
-
-                setQuantities(prevQuantities => {
-                    const newQuantities = { ...prevQuantities };
-                    categoryItems.forEach(item => {
-                        delete newQuantities[item.id];
-                    });
-                    return newQuantities;
-                });
-
-                setTimeout(() => {
-                    fetchCartItems();
-                }, 500);
-            } else {
-                console.log('Skipping cart deletion - will be handled by parent function');
-            }
-
-            return orderId;
-        } catch (error) {
-            console.error('Error updating existing order with product line check:', error);
-            throw error;
-        } finally {
-            setIsPlacingOrder(false);
-        }
-    };
-
-    // Updated validatePaymentMethodForUpdate function to handle credit balance and COD limits
-    const validatePaymentMethodForUpdate = async (customerId, totalAmount, paymentMethod, entityType, entity) => {
-        try {
-            if (paymentMethod.toLowerCase() === 'credit') {
-                // Validate credit balance
-                const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    console.error('Failed to fetch payment method details for credit validation');
-                    return false;
-                }
-
-                const result = await response.json();
-
-                if (result.status === 'Ok' && result.data) {
-                    const currentBalance = result.data.currentBalance || {};
-                    const methodDetails = result.data.methodDetails || {};
-
-                    // Get entity-specific credit balance
-                    let creditBalance = 0;
-
-                    if (currentBalance[entity] !== undefined) {
-                        creditBalance = Math.abs(currentBalance[entity] || 0);
-                    } else if (methodDetails.credit && methodDetails.credit.balance !== undefined) {
-                        creditBalance = Number(methodDetails.credit.balance);
-                    }
-
-                    console.log(`Credit validation for ${entityType}:`, {
-                        totalAmount,
-                        creditBalance,
-                        sufficient: totalAmount <= creditBalance
-                    });
-
-                    if (totalAmount > creditBalance) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: t('Insufficient Credit Balance'),
-                            text: t(`There is not enough credit balance to update the order. Current credit balance: ${creditBalance.toFixed(2)} SAR`),
-                            confirmButtonText: t('OK')
-                        });
-                        return false;
-                    }
-                }
-
-                return true;
-
-            } else if (paymentMethod.toLowerCase() === 'cash on delivery') {
-                // Validate COD limit
-                const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    console.error('Failed to fetch payment method details for COD validation');
-                    return false;
-                }
-
-                const result = await response.json();
-
-                if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-                    const methodDetails = result.data.methodDetails;
-
-                    if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
-                        const codLimit = Number(methodDetails.COD.limit) || 0;
-
-                        console.log(`COD validation for ${entityType}:`, {
-                            totalAmount,
-                            codLimit,
-                            withinLimit: totalAmount <= codLimit
-                        });
-
-                        if (totalAmount > codLimit) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: t('COD Limit Reached'),
-                                text: t(`The COD limit has been reached. Total amount (${totalAmount.toFixed(2)} SAR) exceeds the COD limit of ${codLimit.toFixed(2)} SAR`),
-                                confirmButtonText: t('OK')
-                            });
-                            return false;
-                        }
-                    } else {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: t('COD Not Available'),
-                            text: t('Cash on Delivery is not available for this customer'),
-                            confirmButtonText: t('OK')
-                        });
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
-            // For other payment methods (like Pre Payment), no additional validation needed
-            return true;
-
-        } catch (error) {
-            console.error('Error validating payment method for update:', error);
-            return false;
-        }
-    };
-
-
-    // Updated updateExistingOrder function (keeping the same logic as before)
-    const updateExistingOrder = async (orderId, categoryItems, selectedPaymentMethod) => {
-        try {
-            setIsPlacingOrder(true);
-
-            // First, fetch the existing order details
-            const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!orderResponse.ok) {
-                throw new Error('Failed to fetch existing order');
-            }
-
-            const existingOrder = await orderResponse.json();
-
-            // Fetch existing order lines
-            const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!orderLinesResponse.ok) {
-                throw new Error('Failed to fetch existing order lines');
-            }
-
-            const existingOrderLines = await orderLinesResponse.json();
-            const existingLines = existingOrderLines.data?.data || [];
-
-            let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
-            let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
-
-            // Process each new item
-            for (const item of categoryItems) {
-                const newQuantity = Number(quantities[item.id] || item.quantity || 1);
-                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-                const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-                // Check if product already exists in order lines
-                const existingLine = existingLines.find(line =>
-                    line.productId === (item.productId || item.id)
-                );
-
-                if (existingLine) {
-                    // Update existing line quantity
-                    const updatedQuantity = existingLine.quantity + newQuantity;
-                    const baseAmount = unitPrice * updatedQuantity;
-                    const vatAmount = baseAmount * (vatPercentage / 100);
-                    const netAmount = baseAmount + vatAmount;
-
-                    const updateLinePayload = {
-                        quantity: updatedQuantity,
-                        salesTaxAmount: vatAmount.toFixed(2),
-                        netAmount: netAmount.toFixed(2)
-                    };
-
-                    const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.id}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(updateLinePayload)
-                    });
-
-                    if (!updateLineResponse.ok) {
-                        throw new Error(`Failed to update existing line for product ${item.productId || item.id}`);
-                    }
-
-                    // Update totals (subtract old amounts, add new amounts)
-                    updatedTotalAmount -= (parseFloat(existingLine.netAmount) || 0);
-                    updatedTotalSalesTax -= (parseFloat(existingLine.salesTaxAmount) || 0);
-                    updatedTotalAmount += netAmount;
-                    updatedTotalSalesTax += vatAmount;
-
-                    console.log(`Updated existing line for product ${item.productId || item.id}`);
-                } else {
-                    // Insert new line
-                    const baseAmount = unitPrice * newQuantity;
-                    const vatAmount = baseAmount * (vatPercentage / 100);
-                    const netAmount = baseAmount + vatAmount;
-
-                    // Get the next line number
-                    const maxLineNumber = existingLines.length > 0 ?
-                        Math.max(...existingLines.map(line => line.lineNumber || 0)) : 0;
-                    const nextLineNumber = maxLineNumber + 1;
-
-                    const newLinePayload = {
-                        orderId: orderId,
-                        productId: item.productId || item.productid || item.id,
-                        productName: item.productName || item.name,
-                        productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
-                        quantity: newQuantity,
-                        unit: item.unit || 'EA',
-                        unitPrice: unitPrice,
-                        vatPercentage: vatPercentage,
-                        salesTaxAmount: vatAmount.toFixed(2),
-                        netAmount: netAmount.toFixed(2),
-                        lineNumber: nextLineNumber,
-                        erpProdId: item.erpProdId || item.productCode || (item.productId || item.productid || item.id)
-                    };
-
-                    const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(newLinePayload)
-                    });
-
-                    if (!createLineResponse.ok) {
-                        throw new Error(`Failed to create new line for product ${item.productId || item.id}`);
-                    }
-
-                    // Update totals
-                    updatedTotalAmount += netAmount;
-                    updatedTotalSalesTax += vatAmount;
-
-                    console.log(`Created new line for product ${item.productId || item.id}`);
-                }
-            }
-
-            // Update order totals
-            const updateOrderPayload = {
-                totalAmount: updatedTotalAmount.toFixed(2),
-                totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
-                paymentMethod: selectedPaymentMethod
-            };
-
-            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updateOrderPayload)
-            });
-
-            if (!updateOrderResponse.ok) {
-                throw new Error('Failed to update order totals');
-            }
-
-            // Delete items from cart after successful update
-            await deleteCartItems(selectedCustomerId, selectedBranchId,
-                getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
-
-            // Update UI
-            setCartItems(prevCartItems =>
-                prevCartItems.map(category => ({
-                    ...category,
-                    items: category.items.filter(cartItem =>
-                        !categoryItems.some(ci => ci.id === cartItem.id)
-                    )
-                }))
-            );
-
-            // Clean up quantities state
-            setQuantities(prevQuantities => {
-                const newQuantities = { ...prevQuantities };
-                categoryItems.forEach(item => {
-                    delete newQuantities[item.id];
-                });
-                return newQuantities;
-            });
-
-            console.log(`Successfully updated existing order ${orderId}`);
-            return orderId;
-
-        } catch (error) {
-            console.error('Error updating existing order:', error);
-            throw error;
-        } finally {
-            setIsPlacingOrder(false);
-        }
-    };
+    // const updateExistingOrderWithProductLineCheck = async (orderId, categoryItems, selectedPaymentMethod, entity = null, skipCartDeletion = false) => {
+    //     try {
+    //         setIsPlacingOrder(true);
+
+    //         // First, fetch the existing order details
+    //         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (!orderResponse.ok) {
+    //             throw new Error('Failed to fetch existing order');
+    //         }
+
+    //         const existingOrder = await orderResponse.json();
+
+    //         // Fetch existing order lines
+    //         const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}`, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (!orderLinesResponse.ok) {
+    //             throw new Error('Failed to fetch existing order lines');
+    //         }
+
+    //         const existingOrderLines = await orderLinesResponse.json();
+    //         const existingLines = existingOrderLines.data;
+
+    //         let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount || 0);
+    //         let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount || 0);
+
+    //         // Process each new item
+    //         for (const item of categoryItems) {
+    //             const newQuantity = Number(quantities[item.id] || item.quantity || 1);
+    //             const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+    //             const vatPercentage = parseFloat(item.vatPercentage || 0);
+
+    //             const existingLine = existingLines.find(line => line?.productId === item?.productId);
+
+    //             if (existingLine) {
+    //                 const existingQuantity = Number(existingLine.quantity || 0);
+    //                 const updatedQuantity = existingQuantity + newQuantity;
+
+    //                 console.log(`Updating quantity for product ${item.productId || item.productid}:`, {
+    //                     existingQuantity,
+    //                     newQuantity,
+    //                     updatedQuantity,
+    //                     existingLineQuantityType: typeof existingLine.quantity,
+    //                     newQuantityType: typeof newQuantity
+    //                 });
+
+    //                 const baseAmount = unitPrice * updatedQuantity;
+    //                 const vatAmount = (baseAmount * vatPercentage) / 100;
+    //                 const netAmount = baseAmount + vatAmount;
+
+    //                 const updateLinePayload = {
+    //                     quantity: updatedQuantity,  // Now properly calculated as a number
+    //                     salesTaxAmount: vatAmount.toFixed(2),
+    //                     netAmount: netAmount.toFixed(2)
+    //                 };
+
+    //                 const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId}`, {
+    //                     method: 'PATCH',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                         'Authorization': `Bearer ${token}`
+    //                     },
+    //                     body: JSON.stringify(updateLinePayload)
+    //                 });
+
+    //                 if (!updateLineResponse.ok) {
+    //                     throw new Error(`Failed to update existing line for product ${item.productId || item.productid}`);
+    //                 }
+
+    //                 // Update totals (subtract old amounts, add new amounts)
+    //                 updatedTotalAmount -= parseFloat(existingLine.netAmount || 0);
+    //                 updatedTotalSalesTax -= parseFloat(existingLine.salesTaxAmount || 0);
+    //                 updatedTotalAmount += netAmount;
+    //                 updatedTotalSalesTax += vatAmount;
+
+    //                 console.log(`Updated existing line for product ${item.productId || item.productid}`);
+    //             } else {
+    //                 // Product line doesn't exist - create new line
+    //                 const baseAmount = unitPrice * newQuantity;
+    //                 const vatAmount = (baseAmount * vatPercentage) / 100;
+    //                 const netAmount = baseAmount + vatAmount;
+
+    //                 const maxLineNumber = existingLines.length > 0
+    //                     ? Math.max(...existingLines.map(line => line.lineNumber || 0))
+    //                     : 0;
+    //                 const nextLineNumber = maxLineNumber + 1;
+
+    //                 const newLinePayload = {
+    //                     orderId: orderId,
+    //                     productId: item.productId || item.productid,
+    //                     productName: item.productName || item.name,
+    //                     productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
+    //                     quantity: newQuantity,
+    //                     unit: item.unit || 'EA',
+    //                     unitPrice: unitPrice,
+    //                     vatPercentage: vatPercentage,
+    //                     salesTaxAmount: vatAmount.toFixed(2),
+    //                     netAmount: netAmount.toFixed(2),
+    //                     lineNumber: nextLineNumber,
+    //                     erpProdId: item.erpProdId || item.productCode || item.productId || item.productid,
+    //                     isFresh: item.isFresh || false
+    //                 };
+
+    //                 const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                         'Authorization': `Bearer ${token}`
+    //                     },
+    //                     body: JSON.stringify(newLinePayload)
+    //                 });
+
+    //                 if (!createLineResponse.ok) {
+    //                     throw new Error(`Failed to create new line for product ${item.productId || item.productid}`);
+    //                 }
+
+    //                 updatedTotalAmount += netAmount;
+    //                 updatedTotalSalesTax += vatAmount;
+
+    //                 console.log(`Created new line for product ${item.productId || item.productid}`);
+    //             }
+    //         }
+
+    //         // Update order totals
+    //         const updateOrderPayload = {
+    //             totalAmount: updatedTotalAmount.toFixed(2),
+    //             totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
+    //             paymentMethod: selectedPaymentMethod
+    //         };
+
+    //         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+    //             method: 'PATCH',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             },
+    //             body: JSON.stringify(updateOrderPayload)
+    //         });
+
+    //         if (!updateOrderResponse.ok) {
+    //             throw new Error('Failed to update order totals');
+    //         }
+
+    //         console.log('Successfully updated order ' + orderId);
+
+    //         if (!skipCartDeletion) {
+    //             const entityToUse = entity || getEntityFromCategory(pendingOrderCategory);
+
+    //             await deleteCartItems(selectedCustomerId, selectedBranchId, entityToUse, null, null, categoryItems);
+
+    //             setCartItems(prevCartItems =>
+    //                 prevCartItems.map(category => ({
+    //                     ...category,
+    //                     items: category.items.filter(cartItem =>
+    //                         !categoryItems.some(ci => ci.id === cartItem.id))
+    //                 })));
+
+    //             setQuantities(prevQuantities => {
+    //                 const newQuantities = { ...prevQuantities };
+    //                 categoryItems.forEach(item => {
+    //                     delete newQuantities[item.id];
+    //                 });
+    //                 return newQuantities;
+    //             });
+
+    //             setTimeout(() => {
+    //                 fetchCartItems();
+    //             }, 500);
+    //         } else {
+    //             console.log('Skipping cart deletion - will be handled by parent function');
+    //         }
+
+    //         return orderId;
+    //     } catch (error) {
+    //         console.error('Error updating existing order with product line check:', error);
+    //         throw error;
+    //     } finally {
+    //         setIsPlacingOrder(false);
+    //     }
+    // };
+
+    // // Updated validatePaymentMethodForUpdate function to handle credit balance and COD limits
+    // const validatePaymentMethodForUpdate = async (customerId, totalAmount, paymentMethod, entityType, entity) => {
+    //     try {
+    //         if (paymentMethod.toLowerCase() === 'credit') {
+    //             // Validate credit balance
+    //             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
+    //                 method: 'GET',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'Authorization': `Bearer ${token}`
+    //                 }
+    //             });
+
+    //             if (!response.ok) {
+    //                 console.error('Failed to fetch payment method details for credit validation');
+    //                 return false;
+    //             }
+
+    //             const result = await response.json();
+
+    //             if (result.status === 'Ok' && result.data) {
+    //                 const currentBalance = result.data.currentBalance || {};
+    //                 const methodDetails = result.data.methodDetails || {};
+
+    //                 // Get entity-specific credit balance
+    //                 let creditBalance = 0;
+
+    //                 if (currentBalance[entity] !== undefined) {
+    //                     creditBalance = Math.abs(currentBalance[entity] || 0);
+    //                 } else if (methodDetails.credit && methodDetails.credit.balance !== undefined) {
+    //                     creditBalance = Number(methodDetails.credit.balance);
+    //                 }
+
+    //                 console.log(`Credit validation for ${entityType}:`, {
+    //                     totalAmount,
+    //                     creditBalance,
+    //                     sufficient: totalAmount <= creditBalance
+    //                 });
+
+    //                 if (totalAmount > creditBalance) {
+    //                     Swal.fire({
+    //                         icon: 'warning',
+    //                         title: t('Insufficient Credit Balance'),
+    //                         text: t(`There is not enough credit balance to update the order. Current credit balance: ${creditBalance.toFixed(2)} SAR`),
+    //                         confirmButtonText: t('OK')
+    //                     });
+    //                     return false;
+    //                 }
+    //             }
+
+    //             return true;
+
+    //         } else if (paymentMethod.toLowerCase() === 'cash on delivery') {
+    //             // Validate COD limit
+    //             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
+    //                 method: 'GET',
+    //                 headers: {
+    //                     'Content-Type': 'application/json',
+    //                     'Authorization': `Bearer ${token}`
+    //                 }
+    //             });
+
+    //             if (!response.ok) {
+    //                 console.error('Failed to fetch payment method details for COD validation');
+    //                 return false;
+    //             }
+
+    //             const result = await response.json();
+
+    //             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
+    //                 const methodDetails = result.data.methodDetails;
+
+    //                 if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
+    //                     const codLimit = Number(methodDetails.COD.limit) || 0;
+
+    //                     console.log(`COD validation for ${entityType}:`, {
+    //                         totalAmount,
+    //                         codLimit,
+    //                         withinLimit: totalAmount <= codLimit
+    //                     });
+
+    //                     if (totalAmount > codLimit) {
+    //                         Swal.fire({
+    //                             icon: 'warning',
+    //                             title: t('COD Limit Reached'),
+    //                             text: t(`The COD limit has been reached. Total amount (${totalAmount.toFixed(2)} SAR) exceeds the COD limit of ${codLimit.toFixed(2)} SAR`),
+    //                             confirmButtonText: t('OK')
+    //                         });
+    //                         return false;
+    //                     }
+    //                 } else {
+    //                     Swal.fire({
+    //                         icon: 'warning',
+    //                         title: t('COD Not Available'),
+    //                         text: t('Cash on Delivery is not available for this customer'),
+    //                         confirmButtonText: t('OK')
+    //                     });
+    //                     return false;
+    //                 }
+    //             }
+
+    //             return true;
+    //         }
+
+    //         // For other payment methods (like Pre Payment), no additional validation needed
+    //         return true;
+
+    //     } catch (error) {
+    //         console.error('Error validating payment method for update:', error);
+    //         return false;
+    //     }
+    // };
+
+
+    // // Updated updateExistingOrder function (keeping the same logic as before)
+    // const updateExistingOrder = async (orderId, categoryItems, selectedPaymentMethod) => {
+    //     try {
+    //         setIsPlacingOrder(true);
+
+    //         // First, fetch the existing order details
+    //         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (!orderResponse.ok) {
+    //             throw new Error('Failed to fetch existing order');
+    //         }
+
+    //         const existingOrder = await orderResponse.json();
+
+    //         // Fetch existing order lines
+    //         const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
+    //             method: 'GET',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             }
+    //         });
+
+    //         if (!orderLinesResponse.ok) {
+    //             throw new Error('Failed to fetch existing order lines');
+    //         }
+
+    //         const existingOrderLines = await orderLinesResponse.json();
+    //         const existingLines = existingOrderLines.data?.data || [];
+
+    //         let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
+    //         let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
+
+    //         // Process each new item
+    //         for (const item of categoryItems) {
+    //             const newQuantity = Number(quantities[item.id] || item.quantity || 1);
+    //             const unitPrice = parseFloat(item.price || item.unitPrice || 0);
+    //             const vatPercentage = parseFloat(item.vatPercentage || 0);
+
+    //             // Check if product already exists in order lines
+    //             const existingLine = existingLines.find(line =>
+    //                 line.productId === (item.productId || item.id)
+    //             );
+
+    //             if (existingLine) {
+    //                 // Update existing line quantity
+    //                 const updatedQuantity = existingLine.quantity + newQuantity;
+    //                 const baseAmount = unitPrice * updatedQuantity;
+    //                 const vatAmount = baseAmount * (vatPercentage / 100);
+    //                 const netAmount = baseAmount + vatAmount;
+
+    //                 const updateLinePayload = {
+    //                     quantity: updatedQuantity,
+    //                     salesTaxAmount: vatAmount.toFixed(2),
+    //                     netAmount: netAmount.toFixed(2)
+    //                 };
+
+    //                 const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.id}`, {
+    //                     method: 'PATCH',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                         'Authorization': `Bearer ${token}`
+    //                     },
+    //                     body: JSON.stringify(updateLinePayload)
+    //                 });
+
+    //                 if (!updateLineResponse.ok) {
+    //                     throw new Error(`Failed to update existing line for product ${item.productId || item.id}`);
+    //                 }
+
+    //                 // Update totals (subtract old amounts, add new amounts)
+    //                 updatedTotalAmount -= (parseFloat(existingLine.netAmount) || 0);
+    //                 updatedTotalSalesTax -= (parseFloat(existingLine.salesTaxAmount) || 0);
+    //                 updatedTotalAmount += netAmount;
+    //                 updatedTotalSalesTax += vatAmount;
+
+    //                 console.log(`Updated existing line for product ${item.productId || item.id}`);
+    //             } else {
+    //                 // Insert new line
+    //                 const baseAmount = unitPrice * newQuantity;
+    //                 const vatAmount = baseAmount * (vatPercentage / 100);
+    //                 const netAmount = baseAmount + vatAmount;
+
+    //                 // Get the next line number
+    //                 const maxLineNumber = existingLines.length > 0 ?
+    //                     Math.max(...existingLines.map(line => line.lineNumber || 0)) : 0;
+    //                 const nextLineNumber = maxLineNumber + 1;
+
+    //                 const newLinePayload = {
+    //                     orderId: orderId,
+    //                     productId: item.productId || item.productid || item.id,
+    //                     productName: item.productName || item.name,
+    //                     productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
+    //                     quantity: newQuantity,
+    //                     unit: item.unit || 'EA',
+    //                     unitPrice: unitPrice,
+    //                     vatPercentage: vatPercentage,
+    //                     salesTaxAmount: vatAmount.toFixed(2),
+    //                     netAmount: netAmount.toFixed(2),
+    //                     lineNumber: nextLineNumber,
+    //                     erpProdId: item.erpProdId || item.productCode || (item.productId || item.productid || item.id)
+    //                 };
+
+    //                 const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+    //                     method: 'POST',
+    //                     headers: {
+    //                         'Content-Type': 'application/json',
+    //                         'Authorization': `Bearer ${token}`
+    //                     },
+    //                     body: JSON.stringify(newLinePayload)
+    //                 });
+
+    //                 if (!createLineResponse.ok) {
+    //                     throw new Error(`Failed to create new line for product ${item.productId || item.id}`);
+    //                 }
+
+    //                 // Update totals
+    //                 updatedTotalAmount += netAmount;
+    //                 updatedTotalSalesTax += vatAmount;
+
+    //                 console.log(`Created new line for product ${item.productId || item.id}`);
+    //             }
+    //         }
+
+    //         // Update order totals
+    //         const updateOrderPayload = {
+    //             totalAmount: updatedTotalAmount.toFixed(2),
+    //             totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
+    //             paymentMethod: selectedPaymentMethod
+    //         };
+
+    //         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+    //             method: 'PATCH',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //                 'Authorization': `Bearer ${token}`
+    //             },
+    //             body: JSON.stringify(updateOrderPayload)
+    //         });
+
+    //         if (!updateOrderResponse.ok) {
+    //             throw new Error('Failed to update order totals');
+    //         }
+
+    //         // Delete items from cart after successful update
+    //         await deleteCartItems(selectedCustomerId, selectedBranchId,
+    //             getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
+
+    //         // Update UI
+    //         setCartItems(prevCartItems =>
+    //             prevCartItems.map(category => ({
+    //                 ...category,
+    //                 items: category.items.filter(cartItem =>
+    //                     !categoryItems.some(ci => ci.id === cartItem.id)
+    //                 )
+    //             }))
+    //         );
+
+    //         // Clean up quantities state
+    //         setQuantities(prevQuantities => {
+    //             const newQuantities = { ...prevQuantities };
+    //             categoryItems.forEach(item => {
+    //                 delete newQuantities[item.id];
+    //             });
+    //             return newQuantities;
+    //         });
+
+    //         console.log(`Successfully updated existing order ${orderId}`);
+    //         return orderId;
+
+    //     } catch (error) {
+    //         console.error('Error updating existing order:', error);
+    //         throw error;
+    //     } finally {
+    //         setIsPlacingOrder(false);
+    //     }
+    // };
 
     // Handle SHC order splitting into fresh and non-fresh products
     const handleSHCOrderSplitting = async (categoryItems, categoryName, selectedPaymentMethod) => {
@@ -1633,7 +1634,7 @@ function Cart() {
                 // FIX: Use explicit category name instead of relying on categoryName parameter
                 const consumableOrderId = await placeOrderForCategory(
                     nonMachineProducts,
-                    "VMCO - Consumables", 
+                    "VMCO - Consumables",
                     selectedPaymentMethod,
                     false
                 );
@@ -2408,7 +2409,7 @@ function Cart() {
             }
 
             // Add delivery charges
-            const deliveryCharges = parseFloat(orderPayload.deliveryCharges || 0);
+            const deliveryCharges = parseFloat(orderPayload.deliveryCharges);
             const finalTotalAmount = linesTotal + deliveryCharges;
 
             // Update order with correct totals
