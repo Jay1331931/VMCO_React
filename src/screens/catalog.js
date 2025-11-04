@@ -108,14 +108,25 @@ function Catalog() {
   const categoryFilterRef = useRef(categoryFilter);
   const subCategoryFilterRef = useRef(subCategoryFilter);
   const searchQueryRef = useRef(searchQuery);
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-    // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
-    useEffect(() => {
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      console.log("isMobile", isMobile);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }, []);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+
+  useEffect(() => {
+    // Add class to body when catalog mounts
+    document.body.classList.add('catalog-page');
+
+    // Remove class when catalog unmounts
+    return () => {
+      document.body.classList.remove('catalog-page');
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // FIXED: Update refs when values change
   useEffect(() => {
@@ -623,7 +634,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     }
     if (custSequenceId) {
       setSelectedCustSequenceId(custSequenceId);
-      
+
       console.log("CustomerSequenceId:", selectedCustSequenceId);
     }
 
@@ -1000,64 +1011,63 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
       );
       const checkResult = await checkResponse.json();
       console.log("Check cart response:", checkResult);
-     if (checkResult?.data?.data && checkResult?.data?.data?.length > 0) {
-      // Item already exists in cart
-      const existingItem = checkResult?.data?.data[0];
-      const updatedQuantity =
-        parseInt(existingItem?.quantityOrdered) + parseInt(quantity);
+      if (checkResult?.data?.data && checkResult?.data?.data?.length > 0) {
+        // Item already exists in cart
+        const existingItem = checkResult?.data?.data[0];
+        const updatedQuantity =
+          parseInt(existingItem?.quantityOrdered) + parseInt(quantity);
 
-      Swal.fire({
-        icon: "warning",
-        title: t("Product already exists in cart"),
-       text: t(`This item already has a quantity of`) + t(`${existingItem?.quantityOrdered}. `) + t(`Do you want to update it?`),
-        showCancelButton: true,
-        confirmButtonText: t("Yes, update it"),
-        cancelButtonText: t("No, cancel"),
-        reverseButtons: true,
-      }).then(async (result) => {
-        if (result?.isConfirmed) {
-          // User confirmed update
-          const updateResponse = await fetch(
-            `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                quantityOrdered: updatedQuantity,
-                netAmount: unitPrice * updatedQuantity,
-              }),
-            }
-          );
-
-          if (!updateResponse.ok) {
-            const errorData = await updateResponse?.json().catch(() => ({}));
-            throw new Error(
-              `Failed to update cart item: ${
-                errorData?.message || updateResponse?.statusText
-              }`
+        Swal.fire({
+          icon: "warning",
+          title: t("Product already exists in cart"),
+          text: t(`This item already has a quantity of`) + t(`${existingItem?.quantityOrdered}. `) + t(`Do you want to update it?`),
+          showCancelButton: true,
+          confirmButtonText: t("Yes, update it"),
+          cancelButtonText: t("No, cancel"),
+          reverseButtons: true,
+        }).then(async (result) => {
+          if (result?.isConfirmed) {
+            // User confirmed update
+            const updateResponse = await fetch(
+              `${API_BASE_URL}/cart/update?customer_id=${customerId}&branch_id=${selectedLocation}&product_id=${productId}`,
+              {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  quantityOrdered: updatedQuantity,
+                  netAmount: unitPrice * updatedQuantity,
+                }),
+              }
             );
-          }
 
-          Swal.fire({
-            icon: "success",
-            title: t("Product quantity updated successfully"),
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        } else if (result?.dismiss === Swal.DismissReason.cancel) {
-          // User cancelled update
-          Swal.fire({
-            icon: "info",
-            title: t("Update cancelled"),
-            showConfirmButton: false,
-            timer: 1000,
-          });
-        }
-      });
-    }
+            if (!updateResponse.ok) {
+              const errorData = await updateResponse?.json().catch(() => ({}));
+              throw new Error(
+                `Failed to update cart item: ${errorData?.message || updateResponse?.statusText
+                }`
+              );
+            }
+
+            Swal.fire({
+              icon: "success",
+              title: t("Product quantity updated successfully"),
+              showConfirmButton: false,
+              timer: 1000,
+            });
+          } else if (result?.dismiss === Swal.DismissReason.cancel) {
+            // User cancelled update
+            Swal.fire({
+              icon: "info",
+              title: t("Update cancelled"),
+              showConfirmButton: false,
+              timer: 1000,
+            });
+          }
+        });
+      }
       else {
         // Item doesn't exist in cart, add it as new
         const cartItem = {
@@ -1424,201 +1434,189 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   return (
     <Sidebar title={t("Catalog")}>
       <div
-        className={`catalog-content${isRTL ? " rtl" : ""}`}
+        className={`catalog-wrapper${isRTL ? " rtl" : ""}`}
         style={{ direction: dir, textAlign: isRTL ? "right" : "left" }}
         dir={dir}
       >
-        {isV("selectBranch") && (
-          <div className="catalog-header">
-            <div className="location-selector">
-              <SearchableDropdown
-                id={`location-select-${catalogId}`}
-                name="locationSelect"
-                value={selectedLocation}
-                onChange={handleBranchSelect}
-                options={branches.map((b) => ({
-                  ...b,
-                  name: b.label || b.name || b.value,
-                  disabled: b.disabled,
-                }))}
-                className="location-select"
-                placeholder={t("Select Branch")}
-                disabled={isLoading || branches.length === 0}
-              />
-              {isLoading && branches.length === 0 && (
-                <div className="dropdown-loading">
-                  <LoadingSpinner size="small" />
-                </div>
-              )}
-              {!isLoading && branches.length === 0 && (
-                <div className="no-branches-message">
-                  {t("No branches available")}
-                </div>
-              )}
-            </div>
-            {isV("goToCart") && (
-              <button
-                className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""
-                  }`}
-                style={{
-                  opacity: !selectedLocation ? 0.6 : 1,
-                  cursor: !selectedLocation ? "not-allowed" : "pointer",
-                }}
-                onClick={handleGoToCart}
-                disabled={!selectedLocation}
-              >
-                <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
-                {!isMobile && (<span>{t("Go to Cart")}</span>)}
-              </button>
-            )}
-          </div>
-        )}
-        <div className="filter-section">
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              alignItems: "center",
-              gap: 12,
-              overflowX: "auto",
-              scrollbarWidth: "none"
-            }}
-          >
-            <Tabs
-              tabs={filteredCategoryTabs}
-              activeTab={activeCategory}
-              onTabChange={(newCategory) => {
-                console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
-                setActiveCategory(newCategory);
-                setSearchQuery("");
-                setCategoryFilter(""); // Reset category filter
-                setSubCategoryFilter(""); // Reset subcategory filter
-                setSubCategoryOptions([]); // Clear subcategory options immediately
-              }}
-              variant="category"
-            />
-
-          </div>
-        </div>
-
-        <div className="search-section">
-          <div className="search-container">
-            {isV("search") && (
-              <SearchInput
-                onSearch={(searchTerm) => {
-                  setSearchQuery(searchTerm);
-                }}
-                debounceTime={500}
-              />
-            )}{" "}
-            <SearchableDropdown
-              id={`category-filter-${catalogId}`}
-              name="categoryFilter"
-              options={categoryOptions}
-              className={`category-filter ${[
-                Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
-                Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
-              ].includes(activeCategory.toLowerCase())
-                ? "tab-linked-filter"
-                : ""
-                }`}
-              placeholder={t("Category")}
-              value={categoryFilter}
-              onChange={(e) => {
-                const newCategoryValue = e.target.value;
-                setCategoryFilter(newCategoryValue);
-
-                // Always reset subcategory when category changes
-                setSubCategoryFilter("");
-
-                // If no category is selected, clear subcategory options immediately
-                if (!newCategoryValue) {
-                  setSubCategoryOptions([]);
-                }
-                // If category is selected, subcategories will be fetched by useEffect
-              }}
-            />
-
-            <SearchableDropdown
-              id={`subcategory-filter-${catalogId}`}
-              name="subCategoryFilter"
-              options={subCategoryOptions}
-              className="category-filter"
-              placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
-              value={subCategoryFilter}
-              onChange={(e) => {
-                setSubCategoryFilter(e.target.value);
-              }}
-              disabled={!categoryFilter || subCategoryOptions.length === 0}
-            />
-
-          </div>
-        </div>
-        <div className="products-grid">
-          {displayedProducts.length > 0
-            ? displayedProducts?.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={mapProductToCardProps(product)}
-                quantities={quantities}
-                onQuantityChange={handleQuantityChange}
-                onAddToCart={() => handleAddToCart(product.id)}
-                onProductClick={() => handleProductClick(product)}
-                setQuantities={setQuantities}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))
-            : !isLoading && (
-              <div className="no-products-message">
-                {searchQuery ? (
-                  <p>
-                    {t(
-                      'No products found matching your search term "{{searchTerm}}".',
-                      { searchTerm: searchQuery }
-                    )}
-                  </p>
-                ) : (
-                  <p>{t("No products found matching your criteria.")}</p>
+        {/* Fixed Header Container */}
+        <div className="catalog-fixed-header">
+          {/* Location Selector and Cart Button */}
+          {isV("selectBranch") && (
+            <div className="catalog-header">
+              <div className="location-selector">
+                <SearchableDropdown
+                  id={`location-select-${catalogId}`}
+                  name="locationSelect"
+                  value={selectedLocation}
+                  onChange={handleBranchSelect}
+                  options={branches.map((b) => ({
+                    ...b,
+                    name: b.label || b.name || b.value,
+                    disabled: b.disabled,
+                  }))}
+                  className="location-select"
+                  placeholder={t("Select Branch")}
+                  disabled={isLoading || branches.length === 0}
+                />
+                {isLoading && branches.length === 0 && (
+                  <div className="dropdown-loading">
+                    <LoadingSpinner size="small" />
+                  </div>
+                )}
+                {!isLoading && branches.length === 0 && (
+                  <div className="no-branches-message">
+                    {t("No branches available")}
+                  </div>
                 )}
               </div>
-            )}
-          {isLoading && (
-            <div className="loading-container">
-              <LoadingSpinner size="medium" />
+              {isV("goToCart") && (
+                <button
+                  className={`go-to-cart-btn ${!selectedLocation ? "disabled" : ""}`}
+                  style={{
+                    opacity: !selectedLocation ? 0.6 : 1,
+                    cursor: !selectedLocation ? "not-allowed" : "pointer",
+                  }}
+                  onClick={handleGoToCart}
+                  disabled={!selectedLocation}
+                >
+                  <FontAwesomeIcon icon={faShoppingCart} className="cart-icon" />
+                  {!isMobile && <span>{t("Go to Cart")}</span>}
+                </button>
+              )}
             </div>
-          )} 
-          {/* for  mobile  app dont remove*/}
-            {/* <ProductsGrid 
-             displayedProducts={displayedProducts}
-  isLoading={isLoading}
-  searchQuery={searchQuery}
-  t={t}
-  mapProductToCardProps={mapProductToCardProps}
-  quantities={quantities}
-  handleQuantityChange={handleQuantityChange}
-  handleAddToCart={handleAddToCart}
-  handleProductClick={handleProductClick}
-  setQuantities={setQuantities}
-  handleToggleFavorite={handleToggleFavorite}/> */}
+          )}
+
+          {/* Tabs Section */}
+          <div className="filter-section">
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: 12,
+                overflowX: "auto",
+                scrollbarWidth: "none",
+              }}
+            >
+              <Tabs
+                tabs={filteredCategoryTabs}
+                activeTab={activeCategory}
+                onTabChange={(newCategory) => {
+                  console.log("🔄 Tab changing from", activeCategory, "to", newCategory);
+                  setActiveCategory(newCategory);
+                  setSearchQuery("");
+                  setCategoryFilter("");
+                  setSubCategoryFilter("");
+                  setSubCategoryOptions([]);
+                }}
+                variant="category"
+              />
+            </div>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="search-section">
+            <div className="search-container">
+              {isV("search") && (
+                <SearchInput
+                  onSearch={(searchTerm) => {
+                    setSearchQuery(searchTerm);
+                  }}
+                  debounceTime={500}
+                />
+              )}
+              <SearchableDropdown
+                id={`category-filter-${catalogId}`}
+                name="categoryFilter"
+                options={categoryOptions}
+                className={`category-filter ${[
+                  Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
+                  Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
+                ].includes(activeCategory.toLowerCase())
+                  ? "tab-linked-filter"
+                  : ""
+                  }`}
+                placeholder={t("Category")}
+                value={categoryFilter}
+                onChange={(e) => {
+                  const newCategoryValue = e.target.value;
+                  setCategoryFilter(newCategoryValue);
+                  setSubCategoryFilter("");
+                  if (!newCategoryValue) {
+                    setSubCategoryOptions([]);
+                  }
+                }}
+              />
+              <SearchableDropdown
+                id={`subcategory-filter-${catalogId}`}
+                name="subCategoryFilter"
+                options={subCategoryOptions}
+                className="category-filter"
+                placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
+                value={subCategoryFilter}
+                onChange={(e) => {
+                  setSubCategoryFilter(e.target.value);
+                }}
+                disabled={!categoryFilter || subCategoryOptions.length === 0}
+              />
+            </div>
+          </div>
         </div>
 
-      
-          
-        {/* Loading spinner when fetching more products */}
-        {isLoadingMore && (
-          <div className="loading-more-container">
-            <LoadingSpinner size="medium" />
-            <span className="loading-more-text">{t("Loading more products...")}</span>
+        {/* Scrollable Products Container */}
+        <div className="catalog-scrollable-content">
+          <div className="products-grid">
+            {displayedProducts.length > 0
+              ? displayedProducts?.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={mapProductToCardProps(product)}
+                  quantities={quantities}
+                  onQuantityChange={handleQuantityChange}
+                  onAddToCart={() => handleAddToCart(product.id)}
+                  onProductClick={() => handleProductClick(product)}
+                  setQuantities={setQuantities}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))
+              : !isLoading && (
+                <div className="no-products-message">
+                  {searchQuery ? (
+                    <p>
+                      {t(
+                        'No products found matching your search term "{{searchTerm}}".',
+                        { searchTerm: searchQuery }
+                      )}
+                    </p>
+                  ) : (
+                    <p>{t("No products found matching your criteria.")}</p>
+                  )}
+                </div>
+              )}
+            {isLoading && (
+              <div className="loading-container">
+                <LoadingSpinner size="medium" />
+              </div>
+            )}
           </div>
-        )}
 
-        {/* End of catalog message */}
-        {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && (
-          <div className="end-of-catalog-message" style={{ textAlign: 'center', margin: '20px 0', color: '#666' }}>
-            <p>{t("End of product catalog")}</p>
-          </div>
-        )}
+          {/* Loading More Indicator */}
+          {isLoadingMore && (
+            <div className="loading-more-container">
+              <LoadingSpinner size="medium" />
+              <span className="loading-more-text">{t("Loading more products...")}</span>
+            </div>
+          )}
 
+          {/* End of Catalog Message */}
+          {!hasMore && displayedProducts.length > 0 && !isLoading && !isLoadingMore && (
+            <div className="end-of-catalog-message">
+              <p>{t("End of product catalog")}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Product Popup */}
         {selectedProduct && (
           <ProductPopup
             product={mapProductToCardProps(selectedProduct)}
@@ -1635,6 +1633,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
           />
         )}
       </div>
+
       {/* {isMobile && isV("selectBranch") && (
           <div className="catalog-header">
             <div className="location-selector">
