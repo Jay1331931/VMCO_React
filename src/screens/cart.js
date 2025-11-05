@@ -1380,12 +1380,12 @@ function Cart() {
                         // Validate credit balance
                         const isBalanceValid = await validateCreditBalance(selectedCustomerId, consumablesTotalAmount, entity);
 
-                        if (isBalanceValid) {
-                            // Credit user with sufficient balance - check for existing open orders
-                            console.log('GMTC user is credit user with sufficient balance, checking for existing open orders');
-                            await handleGMTCExistingOrdersCheck(categoryItems, 'Credit', categoryName);
-                            return;
-                        } else {
+                        
+                        if (isBalanceValid ) {
+                          
+                           await handleVMCOOrderProcessing(categoryItems,categoryName,'Credit')
+                  
+                        }   else {
                             // Credit user but insufficient balance - show payment popup
                             console.log('VMCO user is credit user but has insufficient balance, showing payment popup');
                             setPendingOrderCategory(categoryName);
