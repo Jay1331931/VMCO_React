@@ -14,6 +14,7 @@ import {
   DataGrid,
   useGridApiRef,
 } from "@mui/x-data-grid";
+import Pagination from "../components/Pagination";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -92,7 +93,7 @@ const BankTransactions = () => {
         }));
 
         setTransactions(formattedData);
-        setTotal(data.pagination?.totalRecords || formattedData.length);
+        setTotal(data.pagination?.totalPages || formattedData?.lengt || 1);
       } catch (err) {
         console.error("Error fetching transactions:", err);
         setError(err.message);
@@ -300,6 +301,14 @@ const BankTransactions = () => {
               />
             )}
           </div>
+           {
+                              transactions?.length > 0 && (
+                                <Pagination
+                                  currentPage={page}
+                                  totalPages={String(total)}
+                                  onPageChange={setPage}
+                                />
+                              )}
         </div>
       )}
     </Sidebar>

@@ -311,7 +311,7 @@ function OrderDetails() {
       console.log("Successfully loaded pre-fetched sales order lines", processedProducts);
       return;
     }
-    
+
     const fetchOrderProducts = async () => {
       if (!orderFromNav.id) {
         console.log("No order ID available, skipping sales order lines fetch");
@@ -2997,8 +2997,9 @@ function OrderDetails() {
 
     fetchPaymentMethodOptions();
   }, []);
+  // In edit mode, show the totalAmount from the sales order data
+  // DO NOT include delivery charges in the totalAmount calculation
 
-  // Calculate totalAmount as the sum of netAmount plus VAT for all products
   useEffect(() => {
     // If it's a sample order, always set values to 0.00
     if (sampleMode || formData.sample_order) {
@@ -3010,7 +3011,15 @@ function OrderDetails() {
       return;
     }
 
-    // Calculate totals for non-sample orders
+    // In EDIT MODE: Use the existing totalAmount from the sales order
+    if (formMode === "edit" && formData.id) {
+      // Don't recalculate totalAmount in edit mode
+      // totalAmount stays as-is from the order
+      console.log("Edit mode: Using existing totalAmount:", formData.totalAmount);
+      return;
+    }
+
+    // In ADD MODE: Calculate totalAmount from products
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       // Since netAmount already includes VAT, just sum the netAmount values
       const netTotalWithVAT = formData.products.reduce((sum, p) => {
@@ -3018,56 +3027,27 @@ function OrderDetails() {
         return sum + net;
       }, 0);
 
-      // Calculate delivery charges based on net amount (this should use base amount without VAT if available)
-      // For delivery calculation, we might need base amount without VAT
-      const netTotalForDelivery = formData.products.reduce((sum, p) => {
-        const net = parseFloat(p.netAmount) || 0;
-        const vatPercentage = parseFloat(p.vatPercentage) || 0;
-        // Calculate base amount by removing VAT from netAmount
-        const baseAmount =
-          vatPercentage > 0 ? net / (1 + vatPercentage / 100) : net;
-        return sum + baseAmount;
-      }, 0);
-
-      // Calculate delivery charges based on base amount (without VAT)
-      let deliveryCharges = "0.00";
-      if (
-        formData.entity &&
-        formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()
-      ) {
-        if (netTotalForDelivery <= 150) {
-          deliveryCharges = "20.00";
-        }
-      }
-
-      // Final total = net with VAT + delivery charges
-      const finalTotal = netTotalWithVAT + parseFloat(deliveryCharges);
+      // Final total = net with VAT (delivery charges NOT included)
+      const finalTotal = netTotalWithVAT;
 
       // Update only if values have changed
-      if (
-        formData.deliveryCharges !== deliveryCharges ||
-        formData.totalAmount !== finalTotal.toFixed(2)
-      ) {
+      if (formData.totalAmount !== finalTotal.toFixed(2)) {
         setFormData((prev) => ({
           ...prev,
-          deliveryCharges,
           totalAmount: finalTotal.toFixed(2),
         }));
       }
     } else {
       // No products, set everything to 0
-      if (
-        formData.totalAmount !== "0.00" ||
-        formData.deliveryCharges !== "0.00"
-      ) {
+      if (formData.totalAmount !== "0.00") {
         setFormData((prev) => ({
           ...prev,
-          deliveryCharges: "0.00",
           totalAmount: "0.00",
         }));
       }
     }
-  }, [formData.products, formData.entity, sampleMode, formData.sample_order]);
+  }, [formData.products, formMode, formData.id, sampleMode, formData.sample_order]);
+
 
   // Set payment percentage based on category
   useEffect(() => {
@@ -3905,7 +3885,7 @@ function OrderDetails() {
                         <input
                           name="lastModifiedBy"
                           value={orderFromNav.modifiedByUsername || ""}
-                          disabled = {true}
+                          disabled={true}
                         />
                       </div>
                     )}
@@ -4041,7 +4021,7 @@ function OrderDetails() {
                         <label>{t("Total Amount")}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount}
+                          value={parseFloat(formData.totalAmount).toFixed(2)}
                           disabled
                           readOnly
                         />
@@ -4109,12 +4089,30 @@ function OrderDetails() {
                     {isV("deliveryCharges") && (
                       <div className="order-details-field">
                         <label>{t("Delivery Charges")}</label>
-                        <input
-                          name="deliveryCharges"
-                          value={formData.deliveryCharges ?? ""}
-                          disabled
-                          readOnly
-                        />
+                        {formMode === "add" ? (
+                          <input
+                            type="text"
+                            name="deliveryCharges"
+                            value={t("Will be automatically updated")}
+                            disabled
+                            readOnly
+                            style={{
+                              background: "#f9f9f9",
+                              color: "#999",
+                              cursor: "not-allowed",
+                            }}
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            name="deliveryCharges"
+                            value={formData.deliveryCharges ?? "0.00"}
+                            onChange={handleInputChange}
+                            disabled={!isE("deliveryCharges")}
+                            placeholder={t("Delivery Charges")}
+                            step="0.01"
+                          />
+                        )}
                       </div>
                     )}
                     {isV("expectedDeliveryDate") && (
