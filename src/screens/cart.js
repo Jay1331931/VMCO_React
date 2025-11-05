@@ -546,8 +546,38 @@ function Cart() {
 
             if (processedResults.length > 0) {
                 // Show appropriate success message based on what happened
-                showOrderSuccessMessage(processedResults, selectedPaymentMethod);
-                await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.SHC);
+                showSHCOrderSuccessMessage(processedResults, selectedPaymentMethod);
+
+                // Selective cart deletion: delete only items from created order types
+                for (const result of processedResults) {
+                    if (result.action === 'created') {
+                        const itemsToDelete = result.createdType === 'FRESH' ? freshProducts : frozenProducts;
+                        if (itemsToDelete.length > 0) {
+                            await deleteCartItems(
+                                selectedCustomerId,
+                                selectedBranchId,
+                                Constants.ENTITY.SHC,
+                                result.createdType === 'FRESH' ? true : false,
+                                null,
+                                itemsToDelete
+                            );
+                        }
+                    }
+                }
+
+                setCartItems(prevCartItems =>
+                    prevCartItems.map(category => ({
+                        ...category,
+                        items: category.items.filter(cartItem => {
+                            return processedResults.some(result =>
+                                result.hasOppositeOrder &&
+                                ((result.createdType === 'FRESH' && cartItem.isFresh !== true) ||
+                                    (result.createdType === 'FROZEN' && cartItem.isFresh === true))
+                            );
+                        })
+                    }))
+                );
+                await fetchCartItems();
             }
         } catch (error) {
             console.error('Error in SHC existing orders check:', error);
@@ -568,7 +598,36 @@ function Cart() {
                 newProductsTotal += (baseAmount + vatAmount);
             });
 
-            // Check for existing open orders of the same type (fresh or frozen)
+            const oppositeIsFresh = !isFresh;
+            const oppositeTypeLabel = isFresh ? 'FROZEN' : 'FRESH';
+
+            const oppositeOrderFilters = new URLSearchParams();
+            const oppositeFilters = {
+                customerId: selectedCustomerId,
+                branchId: selectedBranchId,
+                status: 'Open',
+                entity: Constants.ENTITY.SHC,
+                paymentMethod: paymentMethod === 'Credit' ? 'Credit' : 'Cash on Delivery',
+                isFresh: oppositeIsFresh,
+                sampleOrder: false
+            };
+            oppositeOrderFilters.append('filters', JSON.stringify(oppositeFilters));
+
+            const oppositeOrdersResponse = await fetch(`${API_BASE_URL}/sales-order/pagination?${oppositeOrderFilters}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!oppositeOrdersResponse.ok) {
+                throw new Error(`Failed to fetch existing ${oppositeTypeLabel} orders`);
+            }
+
+            const oppositeOrdersResult = await oppositeOrdersResponse.json();
+            const oppositeOrders = oppositeOrdersResult.data?.data;
+
             const existingOrderFilters = new URLSearchParams();
             const filters = {
                 customerId: selectedCustomerId,
@@ -598,17 +657,20 @@ function Cart() {
 
             if (existingOrders.length > 0) {
                 const existingOrder = existingOrders[0];
-                
+
                 await Swal.fire({
                     icon: 'info',
                     title: t('Existing Open Order Found'),
                     text: `An open ${typeLabel} order (${existingOrder.id}) already exists. Please update that order instead of creating a new one.`,
                     confirmButtonText: t('OK')
                 });
-                return;
-            } else {
-                // No existing order - create new
-                console.log(`No existing ${typeLabel} open orders found, creating new order`);
+                return null;
+            }
+
+            if (oppositeOrders.length > 0) {
+                const oppositeOrder = oppositeOrders[0];
+
+                console.log(`No existing ${typeLabel} open orders found, but ${oppositeTypeLabel} order exists, creating new ${typeLabel} order`);
                 const entity = Constants.ENTITY.SHC;
                 const categoryName = `${entity} - ${typeLabel}`;
                 const orderId = await placeOrderForCategory(
@@ -619,8 +681,31 @@ function Cart() {
                     isFresh,
                     true
                 );
-                return { orderId: orderId, action: 'created', type: typeLabel };
+
+                return {
+                    orderId: orderId,
+                    action: 'created',
+                    type: typeLabel,
+                    createdType: typeLabel,
+                    existingType: oppositeTypeLabel,
+                    existingOrderId: oppositeOrder.id,
+                    hasOppositeOrder: true
+                };
             }
+
+            console.log(`No existing ${typeLabel} or ${oppositeTypeLabel} orders found, creating new ${typeLabel} order`);
+            const entity = Constants.ENTITY.SHC;
+            const categoryName = `${entity} - ${typeLabel}`;
+            const orderId = await placeOrderForCategory(
+                products,
+                categoryName,
+                paymentMethod,
+                false,
+                isFresh,
+                true
+            );
+            return { orderId: orderId, action: 'created', type: typeLabel };
+
         } catch (error) {
             console.error(`Error processing ${typeLabel} SHC orders:`, error);
             throw error;
@@ -633,17 +718,11 @@ function Cart() {
         let message = '';
         if (results.length === 1) {
             const result = results[0];
-            message = result.action === 'updated'
-                ? `${result.type} order ${result.orderId} has been updated successfully!`
-                : `${result.type} order ${result.orderId} has been created successfully!`;
+            message = `${result.type} order ${result.orderId} has been created successfully!`;
         } else {
-            const updated = results.filter(r => r.action === 'updated');
+            const parts = [];
             const created = results.filter(r => r.action === 'created');
 
-            const parts = [];
-            if (updated.length > 0) {
-                parts.push(`Updated: ${updated.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
-            }
             if (created.length > 0) {
                 parts.push(`Created: ${created.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
             }
@@ -653,6 +732,38 @@ function Cart() {
         Swal.fire({
             icon: 'success',
             title: t('Orders Processed Successfully'),
+            text: `${message} Payment Method: ${paymentMethod}`,
+            confirmButtonText: t('OK')
+        }).then(() => {
+            fetchCartItems();
+        });
+    };
+
+    const showSHCOrderSuccessMessage = (results, paymentMethod) => {
+        if (!results || results.length === 0) return;
+
+        let message = '';
+        const createdResults = results.filter(r => r.action === 'created');
+        const existingResults = results.filter(r => r.hasOppositeOrder);
+
+        if (createdResults.length === 1 && existingResults.length > 0) {
+            const created = createdResults[0];
+            const existing = existingResults[0];
+            message = `${created.createdType} order #${created.orderId} created but the ${created.existingType} order #${created.existingOrderId} already exists. Please update that instead of creating a new one.`;
+        } else if (createdResults.length === 2) {
+            // Both orders were created
+            const fresh = createdResults.find(r => r.type === 'FRESH');
+            const frozen = createdResults.find(r => r.type === 'FROZEN');
+            message = `Fresh order #${fresh?.orderId} and Frozen order #${frozen?.orderId} have been created successfully!`;
+        } else if (createdResults.length === 1) {
+            // Only one type was created
+            const created = createdResults[0];
+            message = `${created.type} order #${created.orderId} has been created successfully!`;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: t('Order Processed'),
             text: `${message} Payment Method: ${paymentMethod}`,
             confirmButtonText: t('OK')
         }).then(() => {
@@ -905,7 +1016,6 @@ function Cart() {
                 const orderText = orderIds.length === 1
                     ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                     : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-
             }
 
         } catch (err) {
