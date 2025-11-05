@@ -1910,9 +1910,10 @@ function Cart() {
     };
 
     const createNormalOrder = async (orderPayload, orderLinesPayload, categoryItems, showSuccessMessage, categoryName, entity, selectedPaymentMethod) => {
+        let orderId = null; // Track orderId for potential cancellation
         try {
             // Create the sales order
-            console.log("showSuccessMessage11111", showSuccessMessage)
+            console.log("Creating sales order...");
             const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                 method: 'POST',
                 headers: {
@@ -1928,78 +1929,104 @@ function Cart() {
             }
 
             const orderResult = await orderResponse.json();
-            const orderId = orderResult.data.id;
-
+            orderId = orderResult.data.id;
             console.log('Created sales order with ID:', orderId);
 
-            // Create order lines
+            console.log('Starting to post sales order lines...');
             let lineNumber = 1;
-            for (const linePayload of orderLinesPayload) {
-                const lineWithOrderId = {
-                    ...linePayload,
-                    orderId: orderId,
-                    lineNumber: lineNumber
+            let hasLineError = false;
+            let lineErrorMessage = '';
+
+            try {
+                for (const linePayload of orderLinesPayload) {
+                    const lineWithOrderId = {
+                        ...linePayload,
+                        orderId: orderId,
+                        lineNumber: lineNumber
+                    };
+
+                    const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(lineWithOrderId)
+                    });
+
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error(`Failed to create line for product ${linePayload.productId}:`, errorText);
+                        lineErrorMessage = JSON.parse(errorText)?.message || errorText;
+                        hasLineError = true;
+                        throw new Error(`Error posting order line ${lineNumber}: ${lineErrorMessage}`);
+                    }
+
+                    const newLine = await createResponse.json();
+                    console.log(`Successfully created line for product ${linePayload.productId}:`, newLine);
+                    lineNumber++;
+                }
+
+            } catch (lineError) {
+                console.error('Error occurred while posting sales order lines:', lineError);
+                hasLineError = true;
+                lineErrorMessage = lineError.message;
+                throw lineError; // Re-throw to trigger cancellation
+            }
+
+            // Calculate totals for order update
+            console.log('Calculating and updating order totals...');
+            let linesTotal = 0;
+            let totalSalesTaxAmount = 0;
+
+            try {
+                for (const line of orderLinesPayload) {
+                    const netAmount = parseFloat(line.netAmount || 0);
+                    const salesTaxAmount = parseFloat(line.salesTaxAmount || 0);
+
+                    if (!isNaN(netAmount)) {
+                        linesTotal += netAmount;
+                    }
+                    if (!isNaN(salesTaxAmount)) {
+                        totalSalesTaxAmount += salesTaxAmount;
+                    }
+                }
+
+                // Add delivery charges
+                const deliveryCharges = parseFloat(orderPayload.deliveryCharges);
+                const finalTotalAmount = linesTotal + deliveryCharges;
+
+                // Update order with correct totals
+                const updateOrderPayload = {
+                    totalAmount: finalTotalAmount.toFixed(2),
+                    totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
+                    deliveryCharges: deliveryCharges.toFixed(2),
+                    status: orderResult?.data?.status
                 };
 
-                const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                    method: 'POST',
+                console.log('Updating order with totals:', updateOrderPayload);
+
+                const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(lineWithOrderId)
+                    body: JSON.stringify(updateOrderPayload)
                 });
 
-                if (!createResponse.ok) {
-                    const errorText = await createResponse.text();
-                    console.error(`Failed to create line for product ${linePayload.productId}:`, errorText);
-                    throw new Error(errorText);
+                if (!updateOrderResponse.ok) {
+                    const errorText = await updateOrderResponse.text();
+                    console.error('Failed to update order totals:', errorText);
+                    const errorMessage = JSON.parse(errorText)?.message || errorText;
+                    throw new Error(`Failed to update order totals: ${errorMessage}`);
                 }
 
-                const newLine = await createResponse.json();
-                console.log(`Successfully created line for product ${linePayload.productId}:`, newLine);
-                lineNumber++;
-            }
+                console.log('Successfully updated order totals');
 
-            // Calculate totals for order update
-            let linesTotal = 0;
-            let totalSalesTaxAmount = 0;
-
-            for (const line of orderLinesPayload) {
-                const netAmount = parseFloat(line.netAmount || 0);
-                const salesTaxAmount = parseFloat(line.salesTaxAmount || 0);
-
-                if (!isNaN(netAmount)) {
-                    linesTotal += netAmount;
-                }
-                if (!isNaN(salesTaxAmount)) {
-                    totalSalesTaxAmount += salesTaxAmount;
-                }
-            }
-
-            // Add delivery charges
-            const deliveryCharges = parseFloat(orderPayload.deliveryCharges);
-            const finalTotalAmount = linesTotal + deliveryCharges;
-
-            // Update order with correct totals
-            const updateOrderPayload = {
-                totalAmount: finalTotalAmount.toFixed(2),
-                totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
-                deliveryCharges: deliveryCharges.toFixed(2),
-                status:orderResult?.data?.status
-            };
-
-            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updateOrderPayload)
-            });
-
-            if (!updateOrderResponse.ok) {
-                console.error('Failed to update order totals, but order was created successfully');
+            } catch (updateError) {
+                console.error('Error occurred while updating order totals:', updateError);
+                throw updateError; // Re-throw to trigger cancellation
             }
 
             // Delete from cart
@@ -2025,9 +2052,11 @@ function Cart() {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+
                 if (cartCheckResponse.ok) {
                     const cartCheckResult = await cartCheckResponse.json();
                     const cartProducts = Array.isArray(cartCheckResult.data?.data) ? cartCheckResult.data.data : (Array.isArray(cartCheckResult.data) ? cartCheckResult.data : []);
+
                     if (cartProducts.length > 0) {
                         console.log(`Found ${cartProducts.length} items in cart, proceeding with deletion`);
 
@@ -2049,16 +2078,12 @@ function Cart() {
                         } else {
                             console.log('Successfully deleted cart items after order placement');
                         }
-                    } else {
-                        console.log('No items found in cart, skipping deletion');
                     }
-                } else {
-                    console.error('Error checking cart items:', cartCheckResponse.statusText);
                 }
             } catch (err) {
                 console.error('Error during cart check and cleanup:', err);
+                // Continue even if cart cleanup fails - order was successful
             }
-
 
             // Generate payment link for Pre Payment orders (non-VMCO entities)
             if (selectedPaymentMethod && selectedPaymentMethod.toLowerCase() === 'pre payment' &&
@@ -2084,6 +2109,7 @@ function Cart() {
                 }
             }
 
+            // Success - show message and update cart
             if (showSuccessMessage) {
                 const orderStatusMessage = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                     ? t('Your request has been sent for approval!')
@@ -2121,7 +2147,39 @@ function Cart() {
             return orderId;
 
         } catch (error) {
-            console.error('Error in createNormalOrder:', error);
+            console.error('Error in order creation process:', error);
+
+            // CRITICAL: Cancel the order if any error occurs
+            if (orderId) {
+                console.log('Attempting to cancel order:', orderId, 'due to error:', error.message);
+                try {
+                    const cancelResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ status: 'Cancelled' })
+                    });
+
+                    if (cancelResponse.ok) {
+                        console.log('Successfully cancelled order:', orderId);
+                    } else {
+                        console.error('Failed to cancel order:', cancelResponse.statusText);
+                    }
+                } catch (cancelError) {
+                    console.error('Error while attempting to cancel order:', cancelError);
+                }
+            }
+
+            // Show error message to user
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Processing Failed'),
+                text: `${t('Error')}: ${error.message}\n${orderId ? `${t('Order')} ${orderId} ${t('has been cancelled.')}` : ''}`,
+                confirmButtonText: t('OK')
+            });
+
             throw error;
         }
     };
