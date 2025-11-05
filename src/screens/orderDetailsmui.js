@@ -106,6 +106,8 @@ function OrderDetails() {
   const { user, token } = useAuth(); // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || "view";
   const orderFromNav = location.state?.order || {};
+
+  console.log("Order details from nav", orderFromNav);
   const salesOrderLinesFromNav =
     orderFromNav &&
       orderFromNav.salesOrderLines &&
@@ -169,6 +171,12 @@ function OrderDetails() {
     Constants.CATEGORY.VMCO_MACHINES,
     Constants.CATEGORY.VMCO_CONSUMABLES,
   ];
+
+  const SHC_CATEGORIES = [
+    Constants.CATEGORY.SHC_FRESH,
+    Constants.CATEGORY.SHC_FROZEN,
+  ];
+
   const paymentPercentageOptions = [
     { label: "100%", value: "100%" },
     { label: "30%", value: "30%" },
@@ -218,6 +226,18 @@ function OrderDetails() {
     fetchWarehouseOptions();
   }, [fromApproval, token, i18n.language]);
 
+  // Helper function to derive category from entity and product flags
+  const deriveCategoryFromOrder = (entity, isMachine, isFresh) => {
+    if (!entity) return '';
+
+    if (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+      return isMachine === true ? Constants.CATEGORY.VMCO_MACHINES : Constants.CATEGORY.VMCO_CONSUMABLES;
+    } else if (entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+      return isFresh === true ? Constants.CATEGORY.SHC_FRESH : Constants.CATEGORY.SHC_FROZEN;
+    }
+    return '';
+  };
+
   const handleWarehouseChange = (e) => {
     const selectedWarehouseName = e.target.value;
     if (!selectedWarehouseName) {
@@ -262,39 +282,36 @@ function OrderDetails() {
   useEffect(() => {
     if (formMode === "add") return;
 
-    if (
-      salesOrderLinesFromNav &&
-      Array.isArray(salesOrderLinesFromNav) &&
-      salesOrderLinesFromNav.length > 0
-    ) {
-      console.log(
-        "Using pre-fetched sales order lines:",
-        salesOrderLinesFromNav.length,
-        "formData?s"
-      );
-      const processedProducts = salesOrderLinesFromNav.map((product) => ({
+    if (salesOrderLinesFromNav && Array.isArray(salesOrderLinesFromNav) && salesOrderLinesFromNav.length > 0) {
+      console.log("Using pre-fetched sales order lines", salesOrderLinesFromNav.length);
+
+      const processedProducts = salesOrderLinesFromNav.map(product => ({
         ...product,
         id: product.productId || product.id,
-        productName:
-          product.productName || product.product_name || product.erp_prod_id,
+        productName: product.productName || product.productname || product.erpprodid,
         isMachine: product.isMachine,
         isFresh: product.isFresh,
         quantity: product.quantity,
       }));
 
-      setFormData((prev) => ({
+      // Derive category from orderFromNav entity and flags
+      const derivedCategory = deriveCategoryFromOrder(
+        orderFromNav.entity,
+        orderFromNav.isMachine,
+        orderFromNav.isFresh
+      );
+
+      setFormData(prev => ({
         ...prev,
         products: processedProducts,
+        category: derivedCategory, // Set the derived category
       }));
 
       setOriginalProducts(processedProducts);
-      console.log(
-        "Successfully loaded pre-fetched sales order lines:",
-        processedProducts
-      );
+      console.log("Successfully loaded pre-fetched sales order lines", processedProducts);
       return;
     }
-
+    
     const fetchOrderProducts = async () => {
       if (!orderFromNav.id) {
         console.log("No order ID available, skipping sales order lines fetch");
@@ -389,11 +406,7 @@ function OrderDetails() {
     };
     fetchOrderProducts();
     // eslint-disable-next-line
-  }, [
-    orderFromNav.id,
-    formMode,
-    salesOrderLinesFromNav ? salesOrderLinesFromNav.length : 0,
-  ]); // Use length with safety check
+  }, [orderFromNav.id, formMode, salesOrderLinesFromNav?.length]);
 
   // Refactored isCreditPaymentAllowed to include COD limit logic
   const isCreditPaymentAllowed = async (
@@ -625,11 +638,11 @@ function OrderDetails() {
 
     // **SAMPLE MODE CHECK - Override payment method determination**
     if (sampleMode) {
-      finalPaymentMethod = "Pre Payment";
+      selectedMethod = "Pre Payment"
+      finalPaymentMethod = selectedMethod;
     } else if (formMode === "add" && !selectedMethod) {
       // Original payment method determination logic
-      const isVmcoEntity = formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+      const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
 
       if (isVmcoEntity) {
         const machineProducts = formData.products.length > 0 &&
@@ -937,10 +950,8 @@ function OrderDetails() {
       ];
 
       const payload = {}; // Check if category is VMCO Machines
-      const isVmcoMachinesCategory =
-        formData.category &&
-        formData.category.toLowerCase() ===
-        Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+      const isShcFreshCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.SHC_FRESH.toLowerCase();
       fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === "paymentPercentage") {
@@ -958,9 +969,9 @@ function OrderDetails() {
             if (sampleMode) {
               if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                 payload[field] = "Pending";
-              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase())) {
+              } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase())) {
                 payload[field] = "Open";
-              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() )) {
+              } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
                 payload[field] = "Approved";
               } else {
                 payload[field] = "Pending"; // Fallback
@@ -1064,10 +1075,10 @@ function OrderDetails() {
       } catch (err) {
         console.error("Error fetching existing order lines:", err);
       }
- // Track if any products were deleted for success message
+      // Track if any products were deleted for success message
       let productsDeleted = false;
       // Now update each product line
-        // Check for deleted products by comparing originalProducts with current products
+      // Check for deleted products by comparing originalProducts with current products
       if (originalProducts && originalProducts.length > 0) {
         console.log("Checking for deleted products...");
 
@@ -1130,7 +1141,7 @@ function OrderDetails() {
             );
           }
           // Existing products with salesOrderLineId but not found in existingProductMap
-          else if (product?.salesOrderLineId &&product?.salesOrderLineId) {
+          else if (product?.salesOrderLineId && product?.salesOrderLineId) {
             console.log(
               `Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`
             );
@@ -1144,7 +1155,7 @@ function OrderDetails() {
             );
           }
           // New products need to be added
-          else if( !existingLine) {
+          else if (!existingLine) {
             console.log(`Creating new line for product ID ${productId}`);
 
             return createSalesOrderLine(
@@ -1233,9 +1244,9 @@ function OrderDetails() {
         }
       }
 
-     
 
-    
+
+
       // // Check if this is a VMCO Machines order that needs discount workflow approval
       // if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
       //   (formData.isMachine && formData.isMachine === true) &&
@@ -1469,7 +1480,7 @@ function OrderDetails() {
           orderStatus = "Pending";
         } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
           orderStatus = "Open";
-        } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
+        } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
           orderStatus = "Approved";
         } else {
           orderStatus = "Pending";
@@ -1801,12 +1812,8 @@ function OrderDetails() {
           } // If we get here, both order and products were saved successfully
           console.log("Complete order creation process finished successfully"); // Check if this is a VMCO Machines order that needs discount workflow approval
           if (
-            formData.entity &&
-            formData.entity.toLowerCase() ===
-            Constants.ENTITY.VMCO.toLowerCase() &&
-            formData.productCategory &&
-            formData.productCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
+            formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+            formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
             formData.customerId
           ) {
             // Directly trigger the discount workflow without checking if it already exists
@@ -3898,7 +3905,7 @@ function OrderDetails() {
                         <input
                           name="lastModifiedBy"
                           value={orderFromNav.modifiedByUsername || ""}
-                          disabled={!isE("lastModifiedBy")}
+                          disabled = {true}
                         />
                       </div>
                     )}
@@ -3976,31 +3983,33 @@ function OrderDetails() {
                     )}
                     {isV("category") && (
                       <div className="order-details-field">
-                        <label>{t("VMCO Category")}</label>
+                        <label>{t("VMCO / SHC Category")}</label>
                         {formMode === "add" ? (
                           <Dropdown
                             name="category"
                             value={formData.category || ""}
                             onChange={handleInputChange}
                             options={
-                              formData.entity &&
-                                formData.entity.toLowerCase() ===
-                                Constants.ENTITY.VMCO.toLowerCase()
+                              formData?.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                                 ? VMCO_CATEGORIES.map((category) => ({
                                   value: category,
-                                  label: category,
+                                  label: category
                                 }))
-                                : []
+                                : formData?.entity?.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                                  ? SHC_CATEGORIES.map((category) => ({
+                                    value: category,
+                                    label: category
+                                  }))
+                                  : []
                             }
                             className="category-dropdown"
-                            placeholder={t("Applicable for VMCO products")}
+                            placeholder={t("Applicable for VMCO or SHC")}
                             disabled={
                               !isE("category") ||
-                              (formData.products &&
-                                formData.products.length > 0) ||
+                              (formData.products && formData.products.length > 0) ||
                               !formData.entity ||
-                              formData.entity.toLowerCase() !==
-                              Constants.ENTITY.VMCO.toLowerCase()
+                              (formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
+                                formData.entity.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase())
                             }
                           />
                         ) : (
@@ -4876,7 +4885,7 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave("save")}
-                    disabled={ saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
+                    disabled={saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
                   >
                     {saving ? t("Saving...") : t("Save Changes")}
                   </button>

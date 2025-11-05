@@ -803,5 +803,9 @@
     "No, cancel":"لا، إلغاء",
     "Product quantity updated successfully":"تم تحديث كمية المنتج بنجاح",
     "Update cancelled":"تم إلغاء التحديث",
-    "This item already has a quantity of":"هذا العنصر لديه بالفعل كمية من"
+    "This item already has a quantity of":"هذا العنصر لديه بالفعل كمية من",
+    "VMCO / SHC Category":  "SHC /فئة في /إم سي أو",
+    "Applicable for VMCO or SHC": "ينطبق على VMCO أو SHC",
+    "SHC - Fresh": "إس إتش سي - طازج",
+    "SHC - Frozen": "SHC - مجمدة"
 }
