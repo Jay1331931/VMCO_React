@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Pagination from "./Pagination";
 import SearchableDropdown from "./SearchableDropdown";
 import { useTranslation } from 'react-i18next';
+import Constants from "../constants";
 
 function GetProducts({
   open,
@@ -89,6 +90,26 @@ function GetProducts({
   // Check if all products are selected
   const areAllSelected = backendProducts.length > 0 && selectedProducts.length === backendProducts.length;
 
+  const getApiParameters = () => {
+    const params = {};
+
+    if (entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+      if (category?.toLowerCase() === "vmco machines") {
+        params.isMachine = true;
+      } else if (category?.toLowerCase() === "vmco consumables") {
+        params.isMachine = false;
+      }
+    } else if (entity?.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+      if (category?.toLowerCase() === "shc - fresh") {
+        params.isFresh = true;
+      } else if (category?.toLowerCase() === "shc - frozen") {
+        params.isFresh = false;
+      }
+    }
+
+    return params;
+  };
+
   // Debounce search input
   useEffect(() => {
     if (!open) return;
@@ -125,14 +146,14 @@ function GetProducts({
     try {
       // Build query parameters like in catalog
       const params = new URLSearchParams({ entity: entity });
-      
-      // Add isMachine parameter for VMCO entity tabs (similar to catalog logic)
-      if (entity === "VMCO") {
-        if (category && category.toLowerCase() === "vmco machines") {
-          params.append("isMachine", "true");
-        } else {
-          params.append("isMachine", "false");
-        }
+
+      // Add parameters based on entity and category
+      const apiParams = getApiParameters();
+      if (apiParams.isMachine !== undefined) {
+        params.append("isMachine", apiParams.isMachine);
+      }
+      if (apiParams.isFresh !== undefined) {
+        params.append("isFresh", apiParams.isFresh);
       }
 
       const response = await fetch(`${API_BASE_URL}/product-categories?${params.toString()}`, {
@@ -171,6 +192,14 @@ function GetProducts({
         category: categoryValue,
       });
 
+      const apiParams = getApiParameters();
+      if (apiParams.isMachine !== undefined) {
+        params.append("isMachine", apiParams.isMachine);
+      }
+      if (apiParams.isFresh !== undefined) {
+        params.append("isFresh", apiParams.isFresh);
+      }
+
       const response = await fetch(`${API_BASE_URL}/product-subcategories?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -204,7 +233,7 @@ function GetProducts({
       setCategorySearch("");
       setSubcategorySearch("");
     }
-  }, [open, API_BASE_URL, token, entity]);
+  }, [open, API_BASE_URL, token, entity, category]);
 
   // Effect to fetch subcategories when category changes
   useEffect(() => {
@@ -238,15 +267,23 @@ function GetProducts({
         filters.subcategoryId = parseInt(selectedSubcategory);
       }
 
+      const apiParams = getApiParameters();
       const params = new URLSearchParams({
         page: pagination.page,
         pageSize: pagination.pageSize,
         search: searchQuery,
         filters: JSON.stringify(filters),
         sortBy: "id",
-        sortOrder: "asc",
-        isMachine: category && category.toLowerCase() === "vmco machines" ? true : false
+        sortOrder: "asc"
       });
+
+      // Add entity-specific parameters
+      if (apiParams.isMachine !== undefined) {
+        params.append("isMachine", apiParams.isMachine);
+      }
+      if (apiParams.isFresh !== undefined) {
+        params.append("isFresh", apiParams.isFresh);
+      }
 
       // Add entity filter
       if (entity) {
@@ -314,7 +351,7 @@ function GetProducts({
   // Effect to trigger product fetch when relevant dependencies change
   useEffect(() => {
     fetchProducts();
-  }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity]);
+  }, [open, API_BASE_URL, token, pagination.page, pagination.pageSize, searchQuery, selectedCategory, selectedSubcategory, entity, category]);
 
   // Filter categories based on search
   const filteredCategories = categories.filter(cat =>
@@ -379,12 +416,12 @@ function GetProducts({
             >
               {t("Cancel")}
             </button>
-             <button
+            <button
               className="gp-select-btn"
               onClick={handleSelectProducts}
               disabled={selectedProducts.length === 0}
-              style={{ 
-                marginRight: isRTL ? '0' : '8px', 
+              style={{
+                marginRight: isRTL ? '0' : '8px',
                 marginLeft: isRTL ? '8px' : '0',
                 opacity: selectedProducts.length === 0 ? 0.5 : 1,
                 cursor: selectedProducts.length === 0 ? 'not-allowed' : 'pointer'
@@ -501,8 +538,8 @@ function GetProducts({
                           cursor: "pointer"
                         }}
                       />
-                      <span style={{ 
-                        flex: 1, 
+                      <span style={{
+                        flex: 1,
                         textAlign: isRTL ? 'right' : 'left',
                         fontSize: "1rem"
                       }}>

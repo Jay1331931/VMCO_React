@@ -36,7 +36,9 @@ const Constants = {
     FAVORITES: 'Favorites',
     CATEGORY:{
         VMCO_MACHINES: 'VMCO Machines',
-        VMCO_CONSUMABLES: 'VMCO Consumables'
+        VMCO_CONSUMABLES: 'VMCO Consumables',
+        SHC_FRESH: 'SHC - Fresh',
+        SHC_FROZEN: 'SHC - Frozen'
     },
     MAINTENANCE_REGIONAL_CITY:{
         RIYADH: 'Riyadh',
