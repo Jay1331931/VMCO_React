@@ -1985,7 +1985,8 @@ function Cart() {
             const updateOrderPayload = {
                 totalAmount: finalTotalAmount.toFixed(2),
                 totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
-                deliveryCharges: deliveryCharges.toFixed(2)
+                deliveryCharges: deliveryCharges.toFixed(2),
+                status:orderResult?.data?.status
             };
 
             const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
