@@ -638,11 +638,11 @@ function OrderDetails() {
 
     // **SAMPLE MODE CHECK - Override payment method determination**
     if (sampleMode) {
-      finalPaymentMethod = "Pre Payment";
+      selectedMethod = "Pre Payment"
+      finalPaymentMethod = selectedMethod;
     } else if (formMode === "add" && !selectedMethod) {
       // Original payment method determination logic
-      const isVmcoEntity = formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+      const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
 
       if (isVmcoEntity) {
         const machineProducts = formData.products.length > 0 &&
