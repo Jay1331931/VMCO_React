@@ -453,12 +453,16 @@ function OrderDetails() {
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-        if (totalAmount > currentCreditBalance) {
+          const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+        if (netAmountToatl > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
             title: t("Insuffiecient Credit balance"),
             text: t(`Your credit balance is ${currentCreditBalance}.`),
           });
+          setSaving(false)
           return "Insufficient balance";
         } else {
           return true;
@@ -511,9 +515,8 @@ function OrderDetails() {
         if (sampleMode) {
           updatedProducts[idx].netAmount = "0.00";
         } else {
-          const unitPrice = parseFloat(updatedProducts[idx].unitPrice) || 0;
-          const vatPercentage =
-            parseFloat(updatedProducts[idx].vatPercentage) || 0;
+          const unitPrice = parseFloat(updatedProducts[idx].unitPrice);
+          const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage);
           const baseAmount = unitPrice * numericQuantity;
           const vatAmount = baseAmount * (vatPercentage / 100);
           updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
@@ -582,9 +585,9 @@ function OrderDetails() {
 
       // Recalculate net amounts after MOQ correction
       const finalUpdatedProducts = updatedProducts.map((product) => {
-        const unitPrice = parseFloat(product.unitPrice) || 0;
-        const quantity = parseInt(product.quantity) || 0;
-        const vatPercentage = parseFloat(product.vatPercentage) || 0;
+        const unitPrice = parseFloat(product.unitPrice);
+        const quantity = parseInt(product.quantity);
+        const vatPercentage = parseFloat(product.vatPercentage);
         const baseAmount = unitPrice * quantity;
         const vatAmount = baseAmount * (vatPercentage / 100);
 
@@ -708,9 +711,15 @@ function OrderDetails() {
             paymentMethod: "Cash on Delivery",
           }),
         });
-        console.log(`Fetching existing orders with filters: ${orderFilters}`);
+        console.log(`Fetching existing orders with filters: ${formData}`);
+        let COD='Cash on Delivery'
+        const isFresh= formData?.products[0]?.isFresh
+
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
         const existingOrdersResponse = await fetch(
-          `${API_BASE_URL}/sales-order/pagination?${orderFilters}`,
+          `${API_BASE_URL}/sales-order/existing-open-order?customerId=${formData?.customerId}&branchId=${formData?.branchId}&entity=${formData?.entity}&status=open&paymentMethod=${COD}&isFresh=${isFresh}`,
           {
             method: "GET",
             headers: {
@@ -728,13 +737,13 @@ function OrderDetails() {
 
         // Calculate total amount of existing COD orders
         let existingCODTotal = 0;
-        if (existingOrdersResult.data?.data) {
-          existingOrdersResult.data.data.forEach((order) => {
+        if (existingOrdersResult?.success && existingOrdersResult?.details ) {
+        
             // Skip current order if we're editing
-            if (order.id !== formData.id) {
-              existingCODTotal += Number(order.totalAmount) || 0;
+            if (existingOrdersResult?.details?.id !== formData.id) {
+              existingCODTotal += Number(existingOrdersResult?.details?.totalAmount) || 0;
             }
-          });
+          
         }
 
         // Get customer's COD limit
@@ -759,7 +768,7 @@ function OrderDetails() {
           Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
 
         // Compare total with COD limit
-        if (existingCODTotal + Number(currentOrderTotal) >= codLimit) {
+        if (netAmountToatl >= codLimit) {
           console.log(
             `COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + Number(currentOrderTotal)
             }, current=${currentOrderTotal}, limit=${codLimit}`
@@ -787,6 +796,22 @@ function OrderDetails() {
         setSaving(false);
         return;
       }
+    }
+
+    if (selectedMethod && selectedMethod.toLowerCase() === "credit") {
+       const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+      const isCredit=await isCreditPaymentAllowed(
+          formData.customerId,
+          formData.entity,
+        netAmountToatl
+        );
+        if(isCredit=="Insufficient balance"){
+          setSaving(false)
+          return;
+        }
+       
     }
 
     if (formMode !== "add" && formData.paymentMethod === "Pre Payment") {
@@ -997,6 +1022,10 @@ function OrderDetails() {
 
       payload.paymentStatus = sampleMode ? "Paid" : formData.paymentStatus || "Pending";
 
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+
 
       // First update the sales order
       const orderResponse = await fetch(
@@ -1121,7 +1150,7 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const netAmount = parseFloat(product.netAmount);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
 
           // Check if product already exists in the order
           const existingLine = existingProductMap[productId];
@@ -1174,9 +1203,9 @@ function OrderDetails() {
         // After updating sales order lines, calculate and update totalSalesTaxAmount
         let totalSalesTaxAmount = 0;
         formData.products.forEach((product) => {
-          const unitPrice = parseFloat(product.unitPrice || 0);
+          const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity || 0, 10);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
           const baseAmount = unitPrice * quantity;
           const vatAmount = (baseAmount * vatPercentage) / 100;
           totalSalesTaxAmount += vatAmount;
@@ -2194,15 +2223,10 @@ function OrderDetails() {
               result.data.unitPrice || product.unitPrice
             );
             const quantity = parseInt(product.quantity, 10);
-            const vatPercentage = parseFloat(
-              result.data.vatPercentage || product.vatPercentage || 0
-            );
+            const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage);
 
             // Calculate new net amount with updated price
-            const netAmount = (
-              unitPrice * quantity +
-              (vatPercentage / 100) * (unitPrice * quantity)
-            ).toFixed(2);
+            const netAmount = (unitPrice * quantity + (vatPercentage / 100) * (unitPrice * quantity)).toFixed(2);
 
             // Update product in array
             updatedProducts[index] = {
@@ -2390,11 +2414,7 @@ function OrderDetails() {
           const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
           // Determine VAT based on companyType and sample mode
           let vatPercentage = 0.0;
-          if (
-            !sampleMode &&
-            companyType &&
-            companyType.toLowerCase() === "trading"
-          ) {
+          if ( !sampleMode && companyType && companyType.toLowerCase() === "trading" ) {
             vatPercentage = parseFloat(product.vatPercentage);
           }
 
@@ -2409,21 +2429,13 @@ function OrderDetails() {
             const newQuantity =
               (parseInt(existingProduct.quantity, 10) || moq) + moq;
             // In sample mode, netAmount is always 0
-            const newNetAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * newQuantity +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * newQuantity)
-                  : 0)
-              ).toFixed(2);
-
+            const newNetAmount = sampleMode ? "0.00" : ( unitPrice * newQuantity + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * newQuantity) : 0) ).toFixed(2);
             updatedProducts[existingIdx] = {
               ...existingProduct,
               quantity: newQuantity,
               netAmount: newNetAmount,
               moq: moq,
-              vatPercentage: vatPercentage,
+              vatPercentage: product.vatPercentage,
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
               // Keep both names updated
@@ -2435,14 +2447,7 @@ function OrderDetails() {
           } else {
             // Product does not exist, add as new row with MOQ as quantity
             // In sample mode, netAmount is always 0
-            const netAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * moq +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * moq)
-                  : 0)
-              ).toFixed(2);
+            const netAmount = sampleMode ? "0.00" : ( unitPrice * moq + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * moq) : 0)).toFixed(2);
 
             const newProduct = {
               id: product.id,
@@ -2457,7 +2462,7 @@ function OrderDetails() {
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
               netAmount: netAmount,
-              vatPercentage: vatPercentage,
+              vatPercentage: sampleMode ? "0.00" : product.vatPercentage,
               moq: sampleMode ? 1 : moq,
             };
             updatedProducts.push(newProduct);
@@ -3603,10 +3608,7 @@ function OrderDetails() {
   // Debug effect to monitor products loading
   useEffect(() => {
     console.log("formData.products changed:", {
-      count:
-        formData.products && formData.products.length
-          ? formData.products.length
-          : 0,
+      count: formData.products && formData.products.length ? formData.products.length : 0,
       products: formData.products,
       mode: formMode,
       fromApproval,
@@ -4190,7 +4192,7 @@ function OrderDetails() {
                             value={formData.pricingPolicy || ""}
                             onChange={handleInputChange}
                             className="entity-dropdown"
-                            disabled={!isE("pricingPolicy")}
+                            disabled={!isE("pricingPolicy") ||  !formData?.isMachine}
                           >
                             {pricingPolicyOptions.map(
                               (pricingPolicy, index) => (
@@ -4868,7 +4870,7 @@ function OrderDetails() {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && (
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" &&  formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !==true && (
                   <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
