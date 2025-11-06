@@ -4190,7 +4190,7 @@ function OrderDetails() {
                             value={formData.pricingPolicy || ""}
                             onChange={handleInputChange}
                             className="entity-dropdown"
-                            disabled={!isE("pricingPolicy")}
+                            disabled={!isE("pricingPolicy") ||  !formData?.isMachine}
                           >
                             {pricingPolicyOptions.map(
                               (pricingPolicy, index) => (
