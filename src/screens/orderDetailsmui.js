@@ -453,12 +453,16 @@ function OrderDetails() {
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-        if (totalAmount > currentCreditBalance) {
+          const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+        if (netAmountToatl > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
             title: t("Insuffiecient Credit balance"),
             text: t(`Your credit balance is ${currentCreditBalance}.`),
           });
+          setSaving(false)
           return "Insufficient balance";
         } else {
           return true;
@@ -708,9 +712,15 @@ function OrderDetails() {
             paymentMethod: "Cash on Delivery",
           }),
         });
-        console.log(`Fetching existing orders with filters: ${orderFilters}`);
+        console.log(`Fetching existing orders with filters: ${formData}`);
+        let COD='Cash on Delivery'
+        const isFresh= formData?.products[0]?.isFresh
+
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
         const existingOrdersResponse = await fetch(
-          `${API_BASE_URL}/sales-order/pagination?${orderFilters}`,
+          `${API_BASE_URL}/sales-order/existing-open-order?customerId=${formData?.customerId}&branchId=${formData?.branchId}&entity=${formData?.entity}&status=open&paymentMethod=${COD}&isFresh=${isFresh}`,
           {
             method: "GET",
             headers: {
@@ -728,13 +738,13 @@ function OrderDetails() {
 
         // Calculate total amount of existing COD orders
         let existingCODTotal = 0;
-        if (existingOrdersResult.data?.data) {
-          existingOrdersResult.data.data.forEach((order) => {
+        if (existingOrdersResult?.success && existingOrdersResult?.details ) {
+        
             // Skip current order if we're editing
-            if (order.id !== formData.id) {
-              existingCODTotal += Number(order.totalAmount) || 0;
+            if (existingOrdersResult?.details?.id !== formData.id) {
+              existingCODTotal += Number(existingOrdersResult?.details?.totalAmount) || 0;
             }
-          });
+          
         }
 
         // Get customer's COD limit
@@ -759,7 +769,7 @@ function OrderDetails() {
           Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
 
         // Compare total with COD limit
-        if (existingCODTotal + Number(currentOrderTotal) >= codLimit) {
+        if (netAmountToatl >= codLimit) {
           console.log(
             `COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + Number(currentOrderTotal)
             }, current=${currentOrderTotal}, limit=${codLimit}`
@@ -787,6 +797,22 @@ function OrderDetails() {
         setSaving(false);
         return;
       }
+    }
+
+    if (selectedMethod && selectedMethod.toLowerCase() === "credit") {
+       const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+      const isCredit=await isCreditPaymentAllowed(
+          formData.customerId,
+          formData.entity,
+        netAmountToatl
+        );
+        if(isCredit=="Insufficient balance"){
+          setSaving(false)
+          return;
+        }
+       
     }
 
     if (formMode !== "add" && formData.paymentMethod === "Pre Payment") {
@@ -996,6 +1022,10 @@ function OrderDetails() {
       });
 
       payload.paymentStatus = sampleMode ? "Paid" : formData.paymentStatus || "Pending";
+
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
 
 
       // First update the sales order
