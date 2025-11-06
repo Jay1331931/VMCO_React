@@ -511,9 +511,8 @@ function OrderDetails() {
         if (sampleMode) {
           updatedProducts[idx].netAmount = "0.00";
         } else {
-          const unitPrice = parseFloat(updatedProducts[idx].unitPrice) || 0;
-          const vatPercentage =
-            parseFloat(updatedProducts[idx].vatPercentage) || 0;
+          const unitPrice = parseFloat(updatedProducts[idx].unitPrice);
+          const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage);
           const baseAmount = unitPrice * numericQuantity;
           const vatAmount = baseAmount * (vatPercentage / 100);
           updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
@@ -582,9 +581,9 @@ function OrderDetails() {
 
       // Recalculate net amounts after MOQ correction
       const finalUpdatedProducts = updatedProducts.map((product) => {
-        const unitPrice = parseFloat(product.unitPrice) || 0;
-        const quantity = parseInt(product.quantity) || 0;
-        const vatPercentage = parseFloat(product.vatPercentage) || 0;
+        const unitPrice = parseFloat(product.unitPrice);
+        const quantity = parseInt(product.quantity);
+        const vatPercentage = parseFloat(product.vatPercentage);
         const baseAmount = unitPrice * quantity;
         const vatAmount = baseAmount * (vatPercentage / 100);
 
@@ -1121,7 +1120,7 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const netAmount = parseFloat(product.netAmount);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
 
           // Check if product already exists in the order
           const existingLine = existingProductMap[productId];
@@ -1174,9 +1173,9 @@ function OrderDetails() {
         // After updating sales order lines, calculate and update totalSalesTaxAmount
         let totalSalesTaxAmount = 0;
         formData.products.forEach((product) => {
-          const unitPrice = parseFloat(product.unitPrice || 0);
+          const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity || 0, 10);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
           const baseAmount = unitPrice * quantity;
           const vatAmount = (baseAmount * vatPercentage) / 100;
           totalSalesTaxAmount += vatAmount;
@@ -2194,15 +2193,10 @@ function OrderDetails() {
               result.data.unitPrice || product.unitPrice
             );
             const quantity = parseInt(product.quantity, 10);
-            const vatPercentage = parseFloat(
-              result.data.vatPercentage || product.vatPercentage || 0
-            );
+            const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage);
 
             // Calculate new net amount with updated price
-            const netAmount = (
-              unitPrice * quantity +
-              (vatPercentage / 100) * (unitPrice * quantity)
-            ).toFixed(2);
+            const netAmount = (unitPrice * quantity + (vatPercentage / 100) * (unitPrice * quantity)).toFixed(2);
 
             // Update product in array
             updatedProducts[index] = {
@@ -2390,11 +2384,7 @@ function OrderDetails() {
           const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
           // Determine VAT based on companyType and sample mode
           let vatPercentage = 0.0;
-          if (
-            !sampleMode &&
-            companyType &&
-            companyType.toLowerCase() === "trading"
-          ) {
+          if ( !sampleMode && companyType && companyType.toLowerCase() === "trading" ) {
             vatPercentage = parseFloat(product.vatPercentage);
           }
 
@@ -2409,21 +2399,13 @@ function OrderDetails() {
             const newQuantity =
               (parseInt(existingProduct.quantity, 10) || moq) + moq;
             // In sample mode, netAmount is always 0
-            const newNetAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * newQuantity +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * newQuantity)
-                  : 0)
-              ).toFixed(2);
-
+            const newNetAmount = sampleMode ? "0.00" : ( unitPrice * newQuantity + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * newQuantity) : 0) ).toFixed(2);
             updatedProducts[existingIdx] = {
               ...existingProduct,
               quantity: newQuantity,
               netAmount: newNetAmount,
               moq: moq,
-              vatPercentage: vatPercentage,
+              vatPercentage: product.vatPercentage,
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
               // Keep both names updated
@@ -2435,14 +2417,7 @@ function OrderDetails() {
           } else {
             // Product does not exist, add as new row with MOQ as quantity
             // In sample mode, netAmount is always 0
-            const netAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * moq +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * moq)
-                  : 0)
-              ).toFixed(2);
+            const netAmount = sampleMode ? "0.00" : ( unitPrice * moq + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * moq) : 0)).toFixed(2);
 
             const newProduct = {
               id: product.id,
@@ -2457,7 +2432,7 @@ function OrderDetails() {
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
               netAmount: netAmount,
-              vatPercentage: vatPercentage,
+              vatPercentage: sampleMode ? "0.00" : product.vatPercentage,
               moq: sampleMode ? 1 : moq,
             };
             updatedProducts.push(newProduct);
@@ -3603,10 +3578,7 @@ function OrderDetails() {
   // Debug effect to monitor products loading
   useEffect(() => {
     console.log("formData.products changed:", {
-      count:
-        formData.products && formData.products.length
-          ? formData.products.length
-          : 0,
+      count: formData.products && formData.products.length ? formData.products.length : 0,
       products: formData.products,
       mode: formMode,
       fromApproval,
