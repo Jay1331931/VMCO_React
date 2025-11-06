@@ -4190,7 +4190,7 @@ function OrderDetails() {
                             value={formData.pricingPolicy || ""}
                             onChange={handleInputChange}
                             className="entity-dropdown"
-                            disabled={!isE("pricingPolicy")}
+                            disabled={!isE("pricingPolicy") ||  !formData?.isMachine}
                           >
                             {pricingPolicyOptions.map(
                               (pricingPolicy, index) => (
@@ -4868,7 +4868,7 @@ function OrderDetails() {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && (
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" &&  formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !==true && (
                   <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
