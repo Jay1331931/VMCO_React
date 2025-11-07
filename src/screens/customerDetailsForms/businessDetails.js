@@ -333,7 +333,71 @@ const checkDisabledStatus = (fieldPath) => {
           </a>
         </div>
       )} */}
-
+{/* Customer ERP ID */}
+      <div className="form-group">
+  <label htmlFor="erpCustId">
+    {t("Customer ERP ID")}
+    {/* <span className="required-field">*</span>
+    {originalCustomerData &&
+      customerData &&
+      originalCustomerData?.companyNameEn !=
+        customerData?.companyNameEn &&
+      mode === "edit" && (
+        <span className="update-badge">{t("Updated")}</span>
+      )} */}
+  </label>
+  <div className="input-with-verification">
+    <input
+      type="text"
+      id="erpCustId"
+      name="erpCustId"
+      // className={`text-field small 
+      //   ${
+      //   originalCustomerData &&
+      //   customerData &&
+      //   originalCustomerData?.companyNameEn !=
+      //     customerData?.companyNameEn &&
+      //   mode === "edit"
+      //     ? "update-field"
+      //     : ""
+      // }`}
+      className={`text-field small `}
+      // placeholder={t("Enter company name")}
+      value={customerData?.erpCustId || ""}
+      // onChange={onChangeCustomerData}
+      disabled={true}
+      required
+    />
+    {/* {isV("companyNameEnVerified") &&  (
+    // (originalCustomerData &&
+    //     customerData &&
+    //     originalCustomerData?.companyNameEn !==
+    //       customerData?.companyNameEn &&
+    //     mode === "edit") ||
+        (mode === "edit" && customerData?.customerStatus === "pending")) && (<div className="verification-checkbox">
+      <input
+        type="checkbox"
+        id="companyNameEnVerified"
+        name="companyNameEnVerified"
+        checked={verifiedData?.companyNameEnVerified || false}
+        onChange={onChangeVerifiedData}
+      />
+      <label htmlFor="companyNameEnVerified">Verified</label>
+    </div>)} */}
+  </div>
+  {/* {originalCustomerData &&
+    customerData &&
+    originalCustomerData?.companyNameEn != customerData?.companyNameEn &&
+    mode === "edit" && (
+      <div className="current-value">
+        Previous: {originalCustomerData?.companyNameEn || "(empty)"}
+      </div>
+    )} */}
+  {/* {formErrors.companyNameEn && (
+    <div className="error">{t(formErrors.companyNameEn)}</div>
+  )} */}
+      </div>
+<div className="form-group"></div>
       {/* Company Type Dropdown */}
       <div className="form-group">
         <label htmlFor="companyType">

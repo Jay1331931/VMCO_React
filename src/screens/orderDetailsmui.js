@@ -1306,7 +1306,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           ),
           confirmButtonText: t("OK"),
         }).then(() => {
-          window.location.reload();
+          navigate("/orders");
         });
       } else {
         Swal.fire({
@@ -1315,7 +1315,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           text: t("Order updated successfully!"),
           confirmButtonText: t("OK"),
         }).then(() => {
-          window.location.reload();
+          navigate("/orders");
         });
       }
       return; // Exit function after successful update
@@ -4466,7 +4466,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                               {t("Add products")}
                             </button>
                           )}
-                          {isV("sampleOrder") && (
+                          {isV("sampleOrder", fromApproval, true) && (
                             <button
                               type="button"
                               className="order-action-btn"
