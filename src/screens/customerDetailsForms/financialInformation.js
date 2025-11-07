@@ -1792,6 +1792,9 @@ const checkDisabledStatus = (fieldPath) => {
           overflow: hidden;
           animation: gi-fadein 0.2s;
         }
+        [dir="rtl"] .credit-balance-dialog {
+          transform: translate(-25%, -50%);
+        }
         @keyframes gi-fadein {
           from {
             opacity: 0;
