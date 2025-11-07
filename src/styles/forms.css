@@ -752,7 +752,7 @@ body::-webkit-scrollbar {
   display: flex;
   align-items: center;
   gap: 15px;
-  flex: 1;
+  /* flex: 1; */
   width: 80%;
   justify-content: space-between;
 }
@@ -785,6 +785,7 @@ body::-webkit-scrollbar {
 .expanded-form-container {
   background: #f9f9f9;
   padding: 1rem;
+  width: 125%;
   /* border-top: 1px solid #ccc; */
 }
 .form-section {
@@ -1260,6 +1261,15 @@ td.file-display-cell {
 @media (max-width: 768px) {
   .customers .customer-onboarding-content {
     padding: 0px;
+    width: 100%;
+  }
+  .branchDropDown {
+    width: 100% !important;
+    /* height: 40px !important; */
+  }
+  .form-row .form-group input {
+    width: 100% !important;
+    height: 30px !important;
   }
   .customers .customer-onboarding-form-grid {
     grid-template-columns: 1fr; /* Single column on smaller screens */
@@ -1284,6 +1294,7 @@ td.file-display-cell {
     margin-bottom: 10px;
     background: white;
     padding-right: 20px;
+    top: 60px;
   }
   .customers .customer-onboarding-tabs-vertical .tab {
     border-left: none; /* Remove left border on smaller screens */
@@ -1505,7 +1516,13 @@ td.label-cell {
     border-right: none;
   }
   .branches-header-controls {
-    flex-direction: column;
+    flex-direction: row;
+  }
+  .css-d4ze00 {
+    width: 300px !important
+  }
+  .branches-page-header {
+    margin-top: 70px !important;
   }
   .branches-add-button {
     margin-left: 0;
@@ -1561,10 +1578,16 @@ td.label-cell {
     overflow-y: scroll;
     scrollbar-width: none;
     z-index: 10;
-    max-width: 40vh;
+    max-width: 100% !important;
+  }
+  .branch-card {
+    padding: 0.9rem;
+    margin: 10px;
   }
   .form-section {
     margin-bottom: 15px;
+    margin-left: 15px;
+    margin-right: 15px;
   }
   .form-row {
     display: flex;
@@ -1711,7 +1734,7 @@ td.label-cell {
     margin-bottom: 12px;
   }
   .hours-table {
-    display: block;
+    /* display: block; */
     overflow-x: auto;
     white-space: nowrap;
   }
@@ -1984,6 +2007,15 @@ td.label-cell {
 .branch-arabic-field {
   text-align: right;
   direction: rtl;
+  border: 1px solid #ccc;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.branch-text-field {
+border: 1px solid #ccc;
+  font-size: 12px;
+  border-radius: 4px;
 }
 /* For the searchable dropdown if needed */
 .branchDropDown[name="branchNameLc"] .dropdown-header {

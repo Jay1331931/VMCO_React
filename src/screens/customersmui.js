@@ -648,6 +648,17 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       renderCell: (params) => { <span>{params.value}</span> }
     },
     {
+      field: "branchCount",
+      headerName: t("Branches"),
+      include: isV("branchCount"),
+      searchable: true,
+      // flex: 1,
+      width: columnDimensions["branchCount"]?.width || 140,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
+    },
+    {
       field: "typeOfBusiness",
       headerName: t("Type Of Business"),
       include: isMobile ? false : isV("typeOfBusiness"),
@@ -819,6 +830,17 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       // flex: 1,
       align: isArabic ? 'right' : 'left',
       renderCell: (params) => { <span style={{ textAlign: "center", display: "flex", justifyContent: "center" }}>{params.value}</span> }
+    },
+    {
+      field: "branchCount",
+      headerName: t("Branches"),
+      include: isV("branchCount"),
+      searchable: true,
+      // flex: 1,
+      width: columnDimensions["branchCount"]?.width || 140,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
     },
     {
       field: "workflowName",

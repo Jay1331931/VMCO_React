@@ -34,6 +34,7 @@ import axios from "axios";
 import Constants from "../../constants";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import TableMobile from "../../components/TableMobile";
+import { formatDate } from "../../utilities/dateFormatter";
 import {
   DataGrid,
   GridFooterContainer,
@@ -1803,6 +1804,7 @@ customer_id: customer?.id,
                 <th className="desktop-only">{t("City")}</th>
                 <th className="desktop-only">{t("Location Type")}</th>
                 <th className="desktop-only">{t("Region")}</th>
+                <th className="desktop-only">{t("Created Date")}</th>
                 <th className="desktop-only">{t("Current Approver")}</th>
                 <th>{t("Status")}</th>
                 {/* <th>{t("Actions")}</th> */}
@@ -1854,6 +1856,7 @@ customer_id: customer?.id,
                     <td className="desktop-only">{branch.city}</td>
                     <td className="desktop-only">{branch.locationType}</td>
                     <td className="desktop-only">{branch.region}</td>
+                    <td className="desktop-only">{branch?.createdAt ? formatDate(branch.createdAt, "DD/MM/YYYY") : " "}</td>
                     <td className="desktop-only">{branch.currentApprover}</td>
                     <td className="desktop-only">
                       <span
