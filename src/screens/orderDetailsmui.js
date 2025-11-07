@@ -4466,7 +4466,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                               {t("Add products")}
                             </button>
                           )}
-                          {isV("sampleOrder") && (
+                          {isV("sampleOrder", fromApproval, true) && (
                             <button
                               type="button"
                               className="order-action-btn"
