@@ -106,6 +106,8 @@ function OrderDetails() {
   const { user, token } = useAuth(); // Get form mode from location state (add, edit, view)
   const formMode = location.state?.mode || "view";
   const orderFromNav = location.state?.order || {};
+
+  console.log("Order details from nav", orderFromNav);
   const salesOrderLinesFromNav =
     orderFromNav &&
       orderFromNav.salesOrderLines &&
@@ -169,6 +171,12 @@ function OrderDetails() {
     Constants.CATEGORY.VMCO_MACHINES,
     Constants.CATEGORY.VMCO_CONSUMABLES,
   ];
+
+  const SHC_CATEGORIES = [
+    Constants.CATEGORY.SHC_FRESH,
+    Constants.CATEGORY.SHC_FROZEN,
+  ];
+
   const paymentPercentageOptions = [
     { label: "100%", value: "100%" },
     { label: "30%", value: "30%" },
@@ -218,6 +226,18 @@ function OrderDetails() {
     fetchWarehouseOptions();
   }, [fromApproval, token, i18n.language]);
 
+  // Helper function to derive category from entity and product flags
+  const deriveCategoryFromOrder = (entity, isMachine, isFresh) => {
+    if (!entity) return '';
+
+    if (entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
+      return isMachine === true ? Constants.CATEGORY.VMCO_MACHINES : Constants.CATEGORY.VMCO_CONSUMABLES;
+    } else if (entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+      return isFresh === true ? Constants.CATEGORY.SHC_FRESH : Constants.CATEGORY.SHC_FROZEN;
+    }
+    return '';
+  };
+
   const handleWarehouseChange = (e) => {
     const selectedWarehouseName = e.target.value;
     if (!selectedWarehouseName) {
@@ -262,36 +282,33 @@ function OrderDetails() {
   useEffect(() => {
     if (formMode === "add") return;
 
-    if (
-      salesOrderLinesFromNav &&
-      Array.isArray(salesOrderLinesFromNav) &&
-      salesOrderLinesFromNav.length > 0
-    ) {
-      console.log(
-        "Using pre-fetched sales order lines:",
-        salesOrderLinesFromNav.length,
-        "formData?s"
-      );
-      const processedProducts = salesOrderLinesFromNav.map((product) => ({
+    if (salesOrderLinesFromNav && Array.isArray(salesOrderLinesFromNav) && salesOrderLinesFromNav.length > 0) {
+      console.log("Using pre-fetched sales order lines", salesOrderLinesFromNav.length);
+
+      const processedProducts = salesOrderLinesFromNav.map(product => ({
         ...product,
         id: product.productId || product.id,
-        productName:
-          product.productName || product.product_name || product.erp_prod_id,
+        productName: product.productName || product.productname || product.erpprodid,
         isMachine: product.isMachine,
         isFresh: product.isFresh,
         quantity: product.quantity,
       }));
 
-      setFormData((prev) => ({
+      // Derive category from orderFromNav entity and flags
+      const derivedCategory = deriveCategoryFromOrder(
+        orderFromNav.entity,
+        orderFromNav.isMachine,
+        orderFromNav.isFresh
+      );
+
+      setFormData(prev => ({
         ...prev,
         products: processedProducts,
+        category: derivedCategory, // Set the derived category
       }));
 
       setOriginalProducts(processedProducts);
-      console.log(
-        "Successfully loaded pre-fetched sales order lines:",
-        processedProducts
-      );
+      console.log("Successfully loaded pre-fetched sales order lines", processedProducts);
       return;
     }
 
@@ -389,11 +406,7 @@ function OrderDetails() {
     };
     fetchOrderProducts();
     // eslint-disable-next-line
-  }, [
-    orderFromNav.id,
-    formMode,
-    salesOrderLinesFromNav ? salesOrderLinesFromNav.length : 0,
-  ]); // Use length with safety check
+  }, [orderFromNav.id, formMode, salesOrderLinesFromNav?.length]);
 
   // Refactored isCreditPaymentAllowed to include COD limit logic
   const isCreditPaymentAllowed = async (
@@ -440,12 +453,16 @@ function OrderDetails() {
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-        if (totalAmount > currentCreditBalance) {
+          const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+        if (netAmountToatl > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
             title: t("Insuffiecient Credit balance"),
             text: t(`Your credit balance is ${currentCreditBalance}.`),
           });
+          setSaving(false)
           return "Insufficient balance";
         } else {
           return true;
@@ -498,9 +515,8 @@ function OrderDetails() {
         if (sampleMode) {
           updatedProducts[idx].netAmount = "0.00";
         } else {
-          const unitPrice = parseFloat(updatedProducts[idx].unitPrice) || 0;
-          const vatPercentage =
-            parseFloat(updatedProducts[idx].vatPercentage) || 0;
+          const unitPrice = parseFloat(updatedProducts[idx].unitPrice);
+          const vatPercentage = parseFloat(updatedProducts[idx].vatPercentage);
           const baseAmount = unitPrice * numericQuantity;
           const vatAmount = baseAmount * (vatPercentage / 100);
           updatedProducts[idx].netAmount = (baseAmount + vatAmount).toFixed(2);
@@ -569,9 +585,9 @@ function OrderDetails() {
 
       // Recalculate net amounts after MOQ correction
       const finalUpdatedProducts = updatedProducts.map((product) => {
-        const unitPrice = parseFloat(product.unitPrice) || 0;
-        const quantity = parseInt(product.quantity) || 0;
-        const vatPercentage = parseFloat(product.vatPercentage) || 0;
+        const unitPrice = parseFloat(product.unitPrice);
+        const quantity = parseInt(product.quantity);
+        const vatPercentage = parseFloat(product.vatPercentage);
         const baseAmount = unitPrice * quantity;
         const vatAmount = baseAmount * (vatPercentage / 100);
 
@@ -625,11 +641,11 @@ function OrderDetails() {
 
     // **SAMPLE MODE CHECK - Override payment method determination**
     if (sampleMode) {
-      finalPaymentMethod = "Pre Payment";
+      selectedMethod = "Pre Payment"
+      finalPaymentMethod = selectedMethod;
     } else if (formMode === "add" && !selectedMethod) {
       // Original payment method determination logic
-      const isVmcoEntity = formData.entity &&
-        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
+      const isVmcoEntity = formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase();
 
       if (isVmcoEntity) {
         const machineProducts = formData.products.length > 0 &&
@@ -695,9 +711,15 @@ function OrderDetails() {
             paymentMethod: "Cash on Delivery",
           }),
         });
-        console.log(`Fetching existing orders with filters: ${orderFilters}`);
+        console.log(`Fetching existing orders with filters: ${formData}`);
+        let COD='Cash on Delivery'
+        const isFresh= formData?.products[0]?.isFresh
+
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
         const existingOrdersResponse = await fetch(
-          `${API_BASE_URL}/sales-order/pagination?${orderFilters}`,
+          `${API_BASE_URL}/sales-order/existing-open-order?customerId=${formData?.customerId}&branchId=${formData?.branchId}&entity=${formData?.entity}&status=open&paymentMethod=${COD}&isFresh=${isFresh}`,
           {
             method: "GET",
             headers: {
@@ -715,13 +737,13 @@ function OrderDetails() {
 
         // Calculate total amount of existing COD orders
         let existingCODTotal = 0;
-        if (existingOrdersResult.data?.data) {
-          existingOrdersResult.data.data.forEach((order) => {
+        if (existingOrdersResult?.success && existingOrdersResult?.details ) {
+        
             // Skip current order if we're editing
-            if (order.id !== formData.id) {
-              existingCODTotal += Number(order.totalAmount) || 0;
+            if (existingOrdersResult?.details?.id !== formData.id) {
+              existingCODTotal += Number(existingOrdersResult?.details?.totalAmount) || 0;
             }
-          });
+          
         }
 
         // Get customer's COD limit
@@ -746,7 +768,7 @@ function OrderDetails() {
           Number(customerData?.data?.methodDetails?.COD?.limit) || 0;
 
         // Compare total with COD limit
-        if (existingCODTotal + Number(currentOrderTotal) >= codLimit) {
+        if (netAmountToatl >= codLimit) {
           console.log(
             `COD limit reached: existing=${existingCODTotal}, Sum=${existingCODTotal + Number(currentOrderTotal)
             }, current=${currentOrderTotal}, limit=${codLimit}`
@@ -774,6 +796,22 @@ function OrderDetails() {
         setSaving(false);
         return;
       }
+    }
+
+    if (selectedMethod && selectedMethod.toLowerCase() === "credit") {
+       const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
+      const isCredit=await isCreditPaymentAllowed(
+          formData.customerId,
+          formData.entity,
+        netAmountToatl
+        );
+        if(isCredit=="Insufficient balance"){
+          setSaving(false)
+          return;
+        }
+       
     }
 
     if (formMode !== "add" && formData.paymentMethod === "Pre Payment") {
@@ -937,10 +975,8 @@ function OrderDetails() {
       ];
 
       const payload = {}; // Check if category is VMCO Machines
-      const isVmcoMachinesCategory =
-        formData.category &&
-        formData.category.toLowerCase() ===
-        Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+      const isVmcoMachinesCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase();
+      const isShcFreshCategory = formData.category && formData.category.toLowerCase() === Constants.CATEGORY.SHC_FRESH.toLowerCase();
       fieldsToUpdate.forEach(field => {
         if (formData[field] !== undefined && formData[field] !== null) {
           if (field === "paymentPercentage") {
@@ -958,9 +994,9 @@ function OrderDetails() {
             if (sampleMode) {
               if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) {
                 payload[field] = "Pending";
-              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase())) {
+              } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase())) {
                 payload[field] = "Open";
-              } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase() )) {
+              } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
                 payload[field] = "Approved";
               } else {
                 payload[field] = "Pending"; // Fallback
@@ -985,6 +1021,10 @@ function OrderDetails() {
       });
 
       payload.paymentStatus = sampleMode ? "Paid" : formData.paymentStatus || "Pending";
+
+const netAmountToatl = formData?.products?.reduce((total, item) => {
+  return total + parseFloat(item.netAmount);
+}, 0);
 
 
       // First update the sales order
@@ -1064,10 +1104,10 @@ function OrderDetails() {
       } catch (err) {
         console.error("Error fetching existing order lines:", err);
       }
- // Track if any products were deleted for success message
+      // Track if any products were deleted for success message
       let productsDeleted = false;
       // Now update each product line
-        // Check for deleted products by comparing originalProducts with current products
+      // Check for deleted products by comparing originalProducts with current products
       if (originalProducts && originalProducts.length > 0) {
         console.log("Checking for deleted products...");
 
@@ -1110,7 +1150,7 @@ function OrderDetails() {
           const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity, 10);
           const netAmount = parseFloat(product.netAmount);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
 
           // Check if product already exists in the order
           const existingLine = existingProductMap[productId];
@@ -1130,7 +1170,7 @@ function OrderDetails() {
             );
           }
           // Existing products with salesOrderLineId but not found in existingProductMap
-          else if (product?.salesOrderLineId &&product?.salesOrderLineId) {
+          else if (product?.salesOrderLineId && product?.salesOrderLineId) {
             console.log(
               `Product has salesOrderLineId ${product.salesOrderLineId} but not found in existing lines, updating`
             );
@@ -1144,7 +1184,7 @@ function OrderDetails() {
             );
           }
           // New products need to be added
-          else if( !existingLine) {
+          else if (!existingLine) {
             console.log(`Creating new line for product ID ${productId}`);
 
             return createSalesOrderLine(
@@ -1163,9 +1203,9 @@ function OrderDetails() {
         // After updating sales order lines, calculate and update totalSalesTaxAmount
         let totalSalesTaxAmount = 0;
         formData.products.forEach((product) => {
-          const unitPrice = parseFloat(product.unitPrice || 0);
+          const unitPrice = parseFloat(product.unitPrice);
           const quantity = parseInt(product.quantity || 0, 10);
-          const vatPercentage = parseFloat(product.vatPercentage || 0);
+          const vatPercentage = parseFloat(product.vatPercentage);
           const baseAmount = unitPrice * quantity;
           const vatAmount = (baseAmount * vatPercentage) / 100;
           totalSalesTaxAmount += vatAmount;
@@ -1233,9 +1273,9 @@ function OrderDetails() {
         }
       }
 
-     
 
-    
+
+
       // // Check if this is a VMCO Machines order that needs discount workflow approval
       // if ((formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()) &&
       //   (formData.isMachine && formData.isMachine === true) &&
@@ -1469,7 +1509,7 @@ function OrderDetails() {
           orderStatus = "Pending";
         } else if (formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.SHC.toLowerCase() || formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.GMTC.toLowerCase()) {
           orderStatus = "Open";
-        } else if (formData.entity && ( formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
+        } else if (formData.entity && (formData.entity.toLowerCase() === Constants.ENTITY.NAQI.toLowerCase() || formData.entity.toLowerCase() === Constants.ENTITY.DAR.toLowerCase())) {
           orderStatus = "Approved";
         } else {
           orderStatus = "Pending";
@@ -1801,12 +1841,8 @@ function OrderDetails() {
           } // If we get here, both order and products were saved successfully
           console.log("Complete order creation process finished successfully"); // Check if this is a VMCO Machines order that needs discount workflow approval
           if (
-            formData.entity &&
-            formData.entity.toLowerCase() ===
-            Constants.ENTITY.VMCO.toLowerCase() &&
-            formData.productCategory &&
-            formData.productCategory.toLowerCase() ===
-            Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
+            formData.entity && formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+            formData.productCategory && formData.productCategory.toLowerCase() === Constants.CATEGORY.VMCO_MACHINES.toLowerCase() &&
             formData.customerId
           ) {
             // Directly trigger the discount workflow without checking if it already exists
@@ -2187,15 +2223,10 @@ function OrderDetails() {
               result.data.unitPrice || product.unitPrice
             );
             const quantity = parseInt(product.quantity, 10);
-            const vatPercentage = parseFloat(
-              result.data.vatPercentage || product.vatPercentage || 0
-            );
+            const vatPercentage = parseFloat(result.data.vatPercentage || product.vatPercentage);
 
             // Calculate new net amount with updated price
-            const netAmount = (
-              unitPrice * quantity +
-              (vatPercentage / 100) * (unitPrice * quantity)
-            ).toFixed(2);
+            const netAmount = (unitPrice * quantity + (vatPercentage / 100) * (unitPrice * quantity)).toFixed(2);
 
             // Update product in array
             updatedProducts[index] = {
@@ -2383,11 +2414,7 @@ function OrderDetails() {
           const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
           // Determine VAT based on companyType and sample mode
           let vatPercentage = 0.0;
-          if (
-            !sampleMode &&
-            companyType &&
-            companyType.toLowerCase() === "trading"
-          ) {
+          if ( !sampleMode && companyType && companyType.toLowerCase() === "trading" ) {
             vatPercentage = parseFloat(product.vatPercentage);
           }
 
@@ -2402,21 +2429,13 @@ function OrderDetails() {
             const newQuantity =
               (parseInt(existingProduct.quantity, 10) || moq) + moq;
             // In sample mode, netAmount is always 0
-            const newNetAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * newQuantity +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * newQuantity)
-                  : 0)
-              ).toFixed(2);
-
+            const newNetAmount = sampleMode ? "0.00" : ( unitPrice * newQuantity + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * newQuantity) : 0) ).toFixed(2);
             updatedProducts[existingIdx] = {
               ...existingProduct,
               quantity: newQuantity,
               netAmount: newNetAmount,
               moq: moq,
-              vatPercentage: vatPercentage,
+              vatPercentage: product.vatPercentage,
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : existingProduct.unitPrice,
               // Keep both names updated
@@ -2428,14 +2447,7 @@ function OrderDetails() {
           } else {
             // Product does not exist, add as new row with MOQ as quantity
             // In sample mode, netAmount is always 0
-            const netAmount = sampleMode
-              ? "0.00"
-              : (
-                unitPrice * moq +
-                (vatPercentage
-                  ? (vatPercentage / 100) * (unitPrice * moq)
-                  : 0)
-              ).toFixed(2);
+            const netAmount = sampleMode ? "0.00" : ( unitPrice * moq + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * moq) : 0)).toFixed(2);
 
             const newProduct = {
               id: product.id,
@@ -2450,7 +2462,7 @@ function OrderDetails() {
               // In sample mode, unitPrice is always 0
               unitPrice: sampleMode ? "0.00" : unitPrice.toFixed(2),
               netAmount: netAmount,
-              vatPercentage: vatPercentage,
+              vatPercentage: sampleMode ? "0.00" : product.vatPercentage,
               moq: sampleMode ? 1 : moq,
             };
             updatedProducts.push(newProduct);
@@ -2990,8 +3002,9 @@ function OrderDetails() {
 
     fetchPaymentMethodOptions();
   }, []);
+  // In edit mode, show the totalAmount from the sales order data
+  // DO NOT include delivery charges in the totalAmount calculation
 
-  // Calculate totalAmount as the sum of netAmount plus VAT for all products
   useEffect(() => {
     // If it's a sample order, always set values to 0.00
     if (sampleMode || formData.sample_order) {
@@ -3003,7 +3016,15 @@ function OrderDetails() {
       return;
     }
 
-    // Calculate totals for non-sample orders
+    // In EDIT MODE: Use the existing totalAmount from the sales order
+    if (formMode === "edit" && formData.id) {
+      // Don't recalculate totalAmount in edit mode
+      // totalAmount stays as-is from the order
+      console.log("Edit mode: Using existing totalAmount:", formData.totalAmount);
+      return;
+    }
+
+    // In ADD MODE: Calculate totalAmount from products
     if (Array.isArray(formData.products) && formData.products.length > 0) {
       // Since netAmount already includes VAT, just sum the netAmount values
       const netTotalWithVAT = formData.products.reduce((sum, p) => {
@@ -3011,56 +3032,27 @@ function OrderDetails() {
         return sum + net;
       }, 0);
 
-      // Calculate delivery charges based on net amount (this should use base amount without VAT if available)
-      // For delivery calculation, we might need base amount without VAT
-      const netTotalForDelivery = formData.products.reduce((sum, p) => {
-        const net = parseFloat(p.netAmount) || 0;
-        const vatPercentage = parseFloat(p.vatPercentage) || 0;
-        // Calculate base amount by removing VAT from netAmount
-        const baseAmount =
-          vatPercentage > 0 ? net / (1 + vatPercentage / 100) : net;
-        return sum + baseAmount;
-      }, 0);
-
-      // Calculate delivery charges based on base amount (without VAT)
-      let deliveryCharges = "0.00";
-      if (
-        formData.entity &&
-        formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase()
-      ) {
-        if (netTotalForDelivery <= 150) {
-          deliveryCharges = "20.00";
-        }
-      }
-
-      // Final total = net with VAT + delivery charges
-      const finalTotal = netTotalWithVAT + parseFloat(deliveryCharges);
+      // Final total = net with VAT (delivery charges NOT included)
+      const finalTotal = netTotalWithVAT;
 
       // Update only if values have changed
-      if (
-        formData.deliveryCharges !== deliveryCharges ||
-        formData.totalAmount !== finalTotal.toFixed(2)
-      ) {
+      if (formData.totalAmount !== finalTotal.toFixed(2)) {
         setFormData((prev) => ({
           ...prev,
-          deliveryCharges,
           totalAmount: finalTotal.toFixed(2),
         }));
       }
     } else {
       // No products, set everything to 0
-      if (
-        formData.totalAmount !== "0.00" ||
-        formData.deliveryCharges !== "0.00"
-      ) {
+      if (formData.totalAmount !== "0.00") {
         setFormData((prev) => ({
           ...prev,
-          deliveryCharges: "0.00",
           totalAmount: "0.00",
         }));
       }
     }
-  }, [formData.products, formData.entity, sampleMode, formData.sample_order]);
+  }, [formData.products, formMode, formData.id, sampleMode, formData.sample_order]);
+
 
   // Set payment percentage based on category
   useEffect(() => {
@@ -3616,10 +3608,7 @@ function OrderDetails() {
   // Debug effect to monitor products loading
   useEffect(() => {
     console.log("formData.products changed:", {
-      count:
-        formData.products && formData.products.length
-          ? formData.products.length
-          : 0,
+      count: formData.products && formData.products.length ? formData.products.length : 0,
       products: formData.products,
       mode: formMode,
       fromApproval,
@@ -3898,7 +3887,7 @@ function OrderDetails() {
                         <input
                           name="lastModifiedBy"
                           value={orderFromNav.modifiedByUsername || ""}
-                          disabled={!isE("lastModifiedBy")}
+                          disabled={true}
                         />
                       </div>
                     )}
@@ -3976,31 +3965,33 @@ function OrderDetails() {
                     )}
                     {isV("category") && (
                       <div className="order-details-field">
-                        <label>{t("VMCO Category")}</label>
+                        <label>{t("VMCO / SHC Category")}</label>
                         {formMode === "add" ? (
                           <Dropdown
                             name="category"
                             value={formData.category || ""}
                             onChange={handleInputChange}
                             options={
-                              formData.entity &&
-                                formData.entity.toLowerCase() ===
-                                Constants.ENTITY.VMCO.toLowerCase()
+                              formData?.entity?.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                                 ? VMCO_CATEGORIES.map((category) => ({
                                   value: category,
-                                  label: category,
+                                  label: category
                                 }))
-                                : []
+                                : formData?.entity?.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()
+                                  ? SHC_CATEGORIES.map((category) => ({
+                                    value: category,
+                                    label: category
+                                  }))
+                                  : []
                             }
                             className="category-dropdown"
-                            placeholder={t("Applicable for VMCO products")}
+                            placeholder={t("Applicable for VMCO or SHC")}
                             disabled={
                               !isE("category") ||
-                              (formData.products &&
-                                formData.products.length > 0) ||
+                              (formData.products && formData.products.length > 0) ||
                               !formData.entity ||
-                              formData.entity.toLowerCase() !==
-                              Constants.ENTITY.VMCO.toLowerCase()
+                              (formData.entity.toLowerCase() !== Constants.ENTITY.VMCO.toLowerCase() &&
+                                formData.entity.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase())
                             }
                           />
                         ) : (
@@ -4032,7 +4023,7 @@ function OrderDetails() {
                         <label>{t("Total Amount")}</label>
                         <input
                           name="totalAmount"
-                          value={formData.totalAmount}
+                          value={parseFloat(formData.totalAmount).toFixed(2)}
                           disabled
                           readOnly
                         />
@@ -4100,12 +4091,30 @@ function OrderDetails() {
                     {isV("deliveryCharges") && (
                       <div className="order-details-field">
                         <label>{t("Delivery Charges")}</label>
-                        <input
-                          name="deliveryCharges"
-                          value={formData.deliveryCharges ?? ""}
-                          disabled
-                          readOnly
-                        />
+                        {formMode === "add" ? (
+                          <input
+                            type="text"
+                            name="deliveryCharges"
+                            value={t("Will be automatically updated")}
+                            disabled
+                            readOnly
+                            style={{
+                              background: "#f9f9f9",
+                              color: "#999",
+                              cursor: "not-allowed",
+                            }}
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            name="deliveryCharges"
+                            value={formData.deliveryCharges ?? "0.00"}
+                            onChange={handleInputChange}
+                            disabled={!isE("deliveryCharges")}
+                            placeholder={t("Delivery Charges")}
+                            step="0.01"
+                          />
+                        )}
                       </div>
                     )}
                     {isV("expectedDeliveryDate") && (
@@ -4183,7 +4192,7 @@ function OrderDetails() {
                             value={formData.pricingPolicy || ""}
                             onChange={handleInputChange}
                             className="entity-dropdown"
-                            disabled={!isE("pricingPolicy")}
+                            disabled={!isE("pricingPolicy") ||  !formData?.isMachine}
                           >
                             {pricingPolicyOptions.map(
                               (pricingPolicy, index) => (
@@ -4861,7 +4870,7 @@ function OrderDetails() {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && (
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" &&  formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !==true && (
                   <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}
@@ -4876,7 +4885,7 @@ function OrderDetails() {
                   <button
                     className="order-action-btn"
                     onClick={() => handleSave("save")}
-                    disabled={ saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
+                    disabled={saving || (formData.status && !["open"].includes(formData.status.toLowerCase()))}
                   >
                     {saving ? t("Saving...") : t("Save Changes")}
                   </button>

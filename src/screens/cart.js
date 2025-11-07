@@ -467,7 +467,6 @@ function Cart() {
 
     const clearCartAfterOrderSuccess = async (categoryItems, entity = null) => {
         try {
-            // CRITICAL: Use explicit entity parameter or derive from pendingOrderCategory
             const entityToUse = entity || getEntityFromCategory(pendingOrderCategory);
 
             console.log('Clearing cart after order success', {
@@ -479,7 +478,6 @@ function Cart() {
             // Delete cart items with explicit entity
             await deleteCartItems(selectedCustomerId, selectedBranchId, entityToUse, null, null, categoryItems);
 
-            // Update cart items state to remove ordered items
             setCartItems(prevCartItems =>
                 prevCartItems.map(category => ({
                     ...category,
@@ -508,67 +506,9 @@ function Cart() {
     };
 
 
-    const handleSHCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod) => {
-        try {
-            // Separate SHC products into fresh and frozen
-            const freshProducts = categoryItems.filter(item => item.isFresh === true);
-            const frozenProducts = categoryItems.filter(item => item.isFresh !== true);
-
-            console.log('SHC products separated for existing order check:', {
-                total: categoryItems.length,
-                fresh: freshProducts.length,
-                frozen: frozenProducts.length
-            });
-
-            const processedResults = [];
-
-            // Process fresh products
-            if (freshProducts.length > 0) {
-                const freshResult = await processExistingOrderForSHCType(
-                    freshProducts,
-                    selectedPaymentMethod,
-                    true,
-                    'FRESH'
-                );
-                if (freshResult) processedResults.push(freshResult);
-            }
-
-            // Process frozen products
-            if (frozenProducts.length > 0) {
-                const frozenResult = await processExistingOrderForSHCType(
-                    frozenProducts,
-                    selectedPaymentMethod,
-                    false,
-                    'FROZEN'
-                );
-                if (frozenResult) processedResults.push(frozenResult);
-            }
-
-            if (processedResults.length > 0) {
-                // Show appropriate success message based on what happened
-                showOrderSuccessMessage(processedResults, selectedPaymentMethod);
-                await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.SHC);
-            }
-        } catch (error) {
-            console.error('Error in SHC existing orders check:', error);
-            throw error;
-        }
-    };
-
     const processExistingOrderForSHCType = async (products, paymentMethod, isFresh, typeLabel) => {
         try {
-            // Calculate total amount for new products
-            let newProductsTotal = 0;
-            products.forEach(item => {
-                const quantity = Number(quantities[item.id] || item.quantity || 1);
-                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-                const vatPercentage = parseFloat(item.vatPercentage || 0);
-                const baseAmount = unitPrice * quantity;
-                const vatAmount = (baseAmount * vatPercentage) / 100;
-                newProductsTotal += (baseAmount + vatAmount);
-            });
-
-            // Check for existing open orders of the same type (fresh or frozen)
+            // Check for existing order of the SAME type (not opposite type)
             const existingOrderFilters = new URLSearchParams();
             const filters = {
                 customerId: selectedCustomerId,
@@ -594,93 +534,125 @@ function Cart() {
             }
 
             const existingOrdersResult = await existingOrdersResponse.json();
-            const existingOrders = existingOrdersResult.data?.data;
+            const existingOrders = existingOrdersResult.data?.data || [];
 
-            if (existingOrders.length > 0) {
-                const existingOrder = existingOrders[0];
-                
-                await Swal.fire({
-                    icon: 'info',
-                    title: t('Existing Open Order Found'),
-                    text: `An open ${typeLabel} order (${existingOrder.id}) already exists. The system will update that order with your new items.`,
-                    confirmButtonText: t('OK')
-                });
-                return;
-
-                // const canUpdate = await validatePaymentMethodForUpdate(
-                //     selectedCustomerId,
-                //     combinedTotal,
-                //     paymentMethod,
-                //     typeLabel,
-                //     Constants.ENTITY.SHC
-                // );
-
-                // if (canUpdate) {
-                //     console.log(`Payment validation passed, updating existing ${typeLabel} order`, existingOrder.id);
-                //     // CRITICAL: Pass skipCartDeletion=true
-                //     await updateExistingOrderWithProductLineCheck(
-                //         existingOrder.id,
-                //         products,
-                //         paymentMethod,
-                //         Constants.ENTITY.SHC,
-                //         true // skipCartDeletion = true
-                //     );
-                //     return { orderId: existingOrder.id, action: 'updated', type: typeLabel };
-                // } else {
-                //     return null;
-                // }
-            } else {
-                // No existing order - create new
-                console.log(`No existing ${typeLabel} open orders found, creating new order`);
-                const entity = Constants.ENTITY.SHC;
-                const categoryName = `${entity} - ${typeLabel}`;
-                // CRITICAL: Pass skipCartDeletion=true
-                const orderId = await placeOrderForCategory(
-                    products,
-                    categoryName,
-                    paymentMethod,
-                    false,
-                    isFresh,
-                    true // skipCartDeletion = true
-                );
-                return { orderId: orderId, action: 'created', type: typeLabel };
+            // If an order of the SAME type exists, return early with hasExisting flag
+            if (existingOrders && existingOrders.length > 0) {
+                console.log(`Existing ${typeLabel} order found with ID: ${existingOrders[0].id}`);
+                return {
+                    type: typeLabel,
+                    hasExisting: true,
+                    existingOrderId: existingOrders[0].id,
+                    action: 'skipped'
+                };
             }
+
+            // No existing order of same type - create new order
+            console.log(`No existing ${typeLabel} order found, creating new order`);
+            const entity = Constants.ENTITY.SHC;
+            const categoryName = `${entity} - ${typeLabel}`;
+            const orderId = await placeOrderForCategory(
+                products,
+                categoryName,
+                paymentMethod,
+                false,
+                isFresh,
+                true
+            );
+
+            return {
+                orderId: orderId,
+                action: 'created',
+                type: typeLabel
+            };
+
         } catch (error) {
             console.error(`Error processing ${typeLabel} SHC orders:`, error);
             throw error;
         }
     };
 
-    const showOrderSuccessMessage = (results, paymentMethod) => {
+    const buildSuccessMessage = (orderResults) => {
+        if (!orderResults || orderResults.length === 0) return '';
+
+        let messageParts = [];
+
+        // Separate created and existing orders
+        const createdOrders = orderResults.filter(r => r.action === 'created');
+        const existingOrders = orderResults.filter(r => r.hasExisting);
+
+        // Build message based on entity
+        const entity = orderResults[0].entity;
+
+        if (entity === Constants.ENTITY.VMCO) {
+            const machines = createdOrders.filter(r => r.type === 'Machines');
+            const consumables = createdOrders.filter(r => r.type === 'Consumables');
+
+            if (machines.length > 0 && consumables.length > 0) {
+                messageParts.push(`Order #${machines[0].orderId} and #${consumables[0].orderId} Sent for Approval`);
+            } else if (machines.length > 0) {
+                messageParts.push(`Order #${machines[0].orderId} Sent for Approval`);
+            } else if (consumables.length > 0) {
+                messageParts.push(`Order #${consumables[0].orderId} Sent for Approval`);
+            }
+        } else if (entity === Constants.ENTITY.SHC) {
+            const fresh = createdOrders.filter(r => r.type === 'FRESH');
+            const frozen = createdOrders.filter(r => r.type === 'FROZEN');
+
+            if (fresh.length > 0 && frozen.length > 0) {
+                messageParts.push(`Fresh order #${fresh[0].orderId} and Frozen order #${frozen[0].orderId} placed successfully`);
+            } else if (fresh.length > 0) {
+                messageParts.push(`Fresh order #${fresh[0].orderId} placed successfully`);
+            } else if (frozen.length > 0) {
+                messageParts.push(`Frozen order #${frozen[0].orderId} placed successfully`);
+            }
+
+            // Handle existing order messages
+            if (existingOrders.length > 0) {
+                const existingIds = existingOrders.map(r => `#${r.existingOrderId}`).join(' and ');
+                messageParts.push(`But open order ${existingIds} already exist. Please update instead of creating new one`);
+            }
+        } else if (entity === Constants.ENTITY.GMTC) {
+            if (createdOrders.length > 0) {
+                messageParts.push(`Order #${createdOrders[0].orderId} placed successfully`);
+            }
+            if (existingOrders.length > 0) {
+                messageParts.push(`An open order #${existingOrders[0].existingOrderId} already exists. Please update instead of creating new one`);
+            }
+        } else if (entity === Constants.ENTITY.NAQI || entity === Constants.ENTITY.DAR) {
+            if (createdOrders.length > 0) {
+                messageParts.push(`Order #${createdOrders[0].orderId} placed successfully`);
+            }
+        }
+
+        return messageParts.join('. ');
+    };
+
+    const showOrderSuccessMessage = (results, paymentMethod, shouldDeleteCart = true) => {
         if (!results || results.length === 0) return;
 
-        let message = '';
-        if (results.length === 1) {
-            const result = results[0];
-            message = result.action === 'updated'
-                ? `${result.type} order ${result.orderId} has been updated successfully!`
-                : `${result.type} order ${result.orderId} has been created successfully!`;
-        } else {
-            const updated = results.filter(r => r.action === 'updated');
-            const created = results.filter(r => r.action === 'created');
+        const messageText = buildSuccessMessage(results);
+        const paymentText = `Payment Method: ${paymentMethod}`;
 
-            const parts = [];
-            if (updated.length > 0) {
-                parts.push(`Updated: ${updated.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
-            }
-            if (created.length > 0) {
-                parts.push(`Created: ${created.map(r => `${r.type} (${r.orderId})`).join(', ')}`);
-            }
-            message = parts.join(' | ');
+        let icon = 'success';
+        let title = t('Order Processed');
+
+        // Check if there are any existing order conflicts
+        const hasExistingOrders = results.some(r => r.hasExisting);
+        if (hasExistingOrders) {
+            icon = 'warning';
+            title = t('Warning');
         }
 
         Swal.fire({
-            icon: 'success',
-            title: t('Orders Processed Successfully'),
-            text: `${message} Payment Method: ${paymentMethod}`,
+            icon: icon,
+            title: title,
+            text: `${messageText}. ${paymentText}`,
             confirmButtonText: t('OK')
         }).then(() => {
-            fetchCartItems();
+            if (shouldDeleteCart) {
+                fetchCartItems();
+            }
         });
     };
 
@@ -739,19 +711,241 @@ function Cart() {
         }
     };
 
+    const handleSHCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod) => {
+        try {
+            // Separate SHC products into fresh and frozen
+            const freshProducts = categoryItems.filter(item => item.isFresh === true);
+            const frozenProducts = categoryItems.filter(item => item.isFresh !== true);
+
+            console.log('SHC order check - Products separated:', {
+                total: categoryItems.length,
+                fresh: freshProducts.length,
+                frozen: frozenProducts.length
+            });
+
+            const processedResults = [];
+            let shouldDeleteCart = true; // Track whether to delete cart
+
+            // Process fresh products
+            if (freshProducts.length > 0) {
+                const freshResult = await processExistingOrderForSHCType(
+                    freshProducts,
+                    selectedPaymentMethod,
+                    true,
+                    'FRESH'
+                );
+                if (freshResult) {
+                    processedResults.push(freshResult);
+                }
+            }
+
+            // Process frozen products
+            if (frozenProducts.length > 0) {
+                const frozenResult = await processExistingOrderForSHCType(
+                    frozenProducts,
+                    selectedPaymentMethod,
+                    false,
+                    'FROZEN'
+                );
+                if (frozenResult) {
+                    processedResults.push(frozenResult);
+                }
+            }
+
+            // Analyze results to determine message and cart deletion behavior
+            if (processedResults.length > 0) {
+                const createdResults = processedResults.filter(r => r.action === 'created');
+                const existingResults = processedResults.filter(r => r.hasExisting);
+
+                console.log('SHC Processing Results:', {
+                    created: createdResults.length,
+                    existing: existingResults.length,
+                    total: processedResults.length
+                });
+
+                // SCENARIO 1: All orders exist (no creation)
+                if (createdResults.length === 0 && existingResults.length > 0) {
+                    const existingIds = existingResults.map(r => `#${r.existingOrderId}`).join(' and ');
+                    const messageText = `Open order${existingResults.length > 1 ? 's' : ''} ${existingIds} already exist${existingResults.length > 1 ? '' : 's'}. Please update the open order${existingResults.length > 1 ? 's' : ''} instead of creating a new one.`;
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: t('Warning'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = false; // Don't delete cart for existing orders
+                }
+                // SCENARIO 2: Both created successfully
+                else if (createdResults.length === 2 && existingResults.length === 0) {
+                    const freshOrder = createdResults.find(r => r.type === 'FRESH');
+                    const frozenOrder = createdResults.find(r => r.type === 'FROZEN');
+                    const messageText = `Fresh order #${freshOrder?.orderId} and Frozen order #${frozenOrder?.orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: t('Order Placed'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = true; // Delete entire cart
+                }
+                // SCENARIO 3: Only fresh created
+                else if (createdResults.length === 1 && existingResults.length === 0 && createdResults[0].type === 'FRESH') {
+                    const messageText = `Fresh order #${createdResults[0].orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: t('Order Placed'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = true; // Delete entire cart
+                }
+                // SCENARIO 4: Only frozen created
+                else if (createdResults.length === 1 && existingResults.length === 0 && createdResults[0].type === 'FROZEN') {
+                    const messageText = `Frozen order #${createdResults[0].orderId} placed successfully. Payment Method: ${selectedPaymentMethod}`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: t('Order Placed'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = true; // Delete entire cart
+                }
+                // SCENARIO 5: Mixed - Fresh created, Frozen exists
+                else if (createdResults.length === 1 && existingResults.length === 1 &&
+                    createdResults[0].type === 'FRESH' && existingResults[0].type === 'FROZEN') {
+                    const messageText = `Fresh Order #${createdResults[0].orderId} created successfully. But Frozen order #${existingResults[0].existingOrderId} already exists. Please update the open order instead of creating a new one. Payment Method: ${selectedPaymentMethod}`;
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: t('Partial Success'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = 'fresh_only'; // Delete only fresh items
+                }
+                // SCENARIO 6: Mixed - Frozen created, Fresh exists
+                else if (createdResults.length === 1 && existingResults.length === 1 &&
+                    createdResults[0].type === 'FROZEN' && existingResults[0].type === 'FRESH') {
+                    const messageText = `Frozen Order #${createdResults[0].orderId} created successfully. But Fresh order #${existingResults[0].existingOrderId} already exists. Please update the open order instead of creating a new one. Payment Method: ${selectedPaymentMethod}`;
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: t('Partial Success'),
+                        text: messageText,
+                        confirmButtonText: t('OK')
+                    });
+
+                    shouldDeleteCart = 'frozen_only'; // Delete only frozen items
+                }
+
+                // Execute cart deletion based on scenario
+                if (shouldDeleteCart === true) {
+                    // Delete all SHC items from cart
+                    await deleteCartItems(
+                        selectedCustomerId,
+                        selectedBranchId,
+                        Constants.ENTITY.SHC,
+                        null,
+                        null,
+                        categoryItems
+                    );
+
+                    // Remove all items from cart state
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(cartItem =>
+                                !categoryItems.some(ci => ci.id === cartItem.id)
+                            )
+                        }))
+                    );
+
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        categoryItems.forEach(item => delete newQuantities[item.id]);
+                        return newQuantities;
+                    });
+                } else if (shouldDeleteCart === 'fresh_only') {
+                    // Delete only fresh items
+                    await deleteCartItems(
+                        selectedCustomerId,
+                        selectedBranchId,
+                        Constants.ENTITY.SHC,
+                        true,
+                        null,
+                        freshProducts
+                    );
+
+                    // Remove fresh items from cart state
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(cartItem =>
+                                !freshProducts.some(ci => ci.id === cartItem.id)
+                            )
+                        }))
+                    );
+
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        freshProducts.forEach(item => delete newQuantities[item.id]);
+                        return newQuantities;
+                    });
+                } else if (shouldDeleteCart === 'frozen_only') {
+                    // Delete only frozen items
+                    await deleteCartItems(
+                        selectedCustomerId,
+                        selectedBranchId,
+                        Constants.ENTITY.SHC,
+                        false,
+                        null,
+                        frozenProducts
+                    );
+
+                    // Remove frozen items from cart state
+                    setCartItems(prevCartItems =>
+                        prevCartItems.map(category => ({
+                            ...category,
+                            items: category.items.filter(cartItem =>
+                                !frozenProducts.some(ci => ci.id === cartItem.id)
+                            )
+                        }))
+                    );
+
+                    setQuantities(prevQuantities => {
+                        const newQuantities = { ...prevQuantities };
+                        frozenProducts.forEach(item => delete newQuantities[item.id]);
+                        return newQuantities;
+                    });
+                }
+                // If shouldDeleteCart === false, don't delete anything
+
+                await fetchCartItems();
+            }
+        } catch (error) {
+            console.error('Error in SHC existing orders check:', error);
+            Swal.fire({
+                icon: 'error',
+                title: t('Error'),
+                text: t(`Error processing SHC orders: ${error.message}`),
+                confirmButtonText: t('OK')
+            });
+            throw error;
+        }
+    };
+
     const handleGMTCExistingOrdersCheck = async (categoryItems, selectedPaymentMethod, categoryName = null) => {
         try {
             const orderCategoryName = categoryName || pendingOrderCategory;
-            // Calculate total amount for new products
-            let newProductsTotal = 0;
-            categoryItems.forEach(item => {
-                const quantity = Number(quantities[item.id] || item.quantity || 1);
-                const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-                const vatPercentage = parseFloat(item.vatPercentage || 0);
-                const baseAmount = unitPrice * quantity;
-                const vatAmount = (baseAmount * vatPercentage) / 100;
-                newProductsTotal += (baseAmount + vatAmount);
-            });
 
             // Check for existing open orders
             const existingOrderFilters = new URLSearchParams();
@@ -780,553 +974,35 @@ function Cart() {
             const existingOrdersResult = await existingOrdersResponse.json();
             const existingOrders = existingOrdersResult.data?.data;
 
-            if (existingOrders.length > 0) {
-                const existingOrder = existingOrders[0];
-                // const existingTotal = parseFloat(existingOrder.totalAmount || 0);
-                // const combinedTotal = existingTotal + newProductsTotal;
-
-                // console.log('Found existing GMTC order', {
-                //     orderId: existingOrder.id,
-                //     existingTotal,
-                //     newProductsTotal,
-                //     combinedTotal,
-                //     paymentMethod: selectedPaymentMethod
-                // });
-
-                await Swal.fire({
-                    icon: 'info',
-                    title: t('Existing Open Order Found'),
-                    text: `An open order (${existingOrder.id}) already exists for this entity. Please update that order instead of creating a new one.`,
-                    confirmButtonText: t('OK')
-                });
+            if (existingOrders && existingOrders.length > 0) {
+                // Show warning message and DON'T delete cart
+                showOrderSuccessMessage([{
+                    entity: Constants.ENTITY.GMTC,
+                    hasExisting: true,
+                    existingOrderId: existingOrders[0].id
+                }], selectedPaymentMethod, false);
                 return;
-                // // Validate payment method limits before updating
-                // const canUpdate = await validatePaymentMethodForUpdate(
-                //     selectedCustomerId,
-                //     combinedTotal,
-                //     selectedPaymentMethod,
-                //     'GMTC',
-                //     Constants.ENTITY.GMTC
-                // );
-
-                // if (canUpdate) {
-                //     console.log('Payment validation passed, updating existing GMTC order', existingOrder.id);
-                //     await updateExistingOrderWithProductLineCheck(existingOrder.id, categoryItems, selectedPaymentMethod, Constants.ENTITY.GMTC);
-                //     showOrderSuccessMessage([{ orderId: existingOrder.id, action: 'updated', type: 'GMTC' }], selectedPaymentMethod);
-                //     await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.GMTC);
-                // }
-            } else {
-                // No existing open orders, create new GMTC order
-                console.log('No existing GMTC open orders found, creating new order with category:', orderCategoryName);
-
-                // CRITICAL: Pass orderCategoryName to ensure correct entity determination
-                const orderId = await placeOrderForCategory(categoryItems, orderCategoryName, selectedPaymentMethod, false);
-
-                // Only show success message and clear cart if order was created successfully
-                if (orderId) {
-                    showOrderSuccessMessage([{ orderId: orderId, action: 'created', type: 'GMTC' }], selectedPaymentMethod);
-                    await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.GMTC);
-                } else {
-                    console.error('Failed to create GMTC order - orderId is null');
-                    // Error message is already shown by placeOrderForCategory
-                }
             }
+
+            // No existing orders, create new one
+            const orderId = await placeOrderForCategory(categoryItems, orderCategoryName, selectedPaymentMethod, false);
+
+            if (orderId) {
+                showOrderSuccessMessage([{
+                    entity: Constants.ENTITY.GMTC,
+                    action: 'created',
+                    orderId: orderId
+                }], selectedPaymentMethod, true);
+
+                // Delete cart
+                await clearCartAfterOrderSuccess(categoryItems, Constants.ENTITY.GMTC);
+            }
+
         } catch (error) {
             console.error('Error in GMTC existing orders check:', error);
             throw error;
         }
     };
-
-    // const updateExistingOrderWithProductLineCheck = async (orderId, categoryItems, selectedPaymentMethod, entity = null, skipCartDeletion = false) => {
-    //     try {
-    //         setIsPlacingOrder(true);
-
-    //         // First, fetch the existing order details
-    //         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             }
-    //         });
-
-    //         if (!orderResponse.ok) {
-    //             throw new Error('Failed to fetch existing order');
-    //         }
-
-    //         const existingOrder = await orderResponse.json();
-
-    //         // Fetch existing order lines
-    //         const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             }
-    //         });
-
-    //         if (!orderLinesResponse.ok) {
-    //             throw new Error('Failed to fetch existing order lines');
-    //         }
-
-    //         const existingOrderLines = await orderLinesResponse.json();
-    //         const existingLines = existingOrderLines.data;
-
-    //         let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount || 0);
-    //         let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount || 0);
-
-    //         // Process each new item
-    //         for (const item of categoryItems) {
-    //             const newQuantity = Number(quantities[item.id] || item.quantity || 1);
-    //             const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-    //             const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-    //             const existingLine = existingLines.find(line => line?.productId === item?.productId);
-
-    //             if (existingLine) {
-    //                 const existingQuantity = Number(existingLine.quantity || 0);
-    //                 const updatedQuantity = existingQuantity + newQuantity;
-
-    //                 console.log(`Updating quantity for product ${item.productId || item.productid}:`, {
-    //                     existingQuantity,
-    //                     newQuantity,
-    //                     updatedQuantity,
-    //                     existingLineQuantityType: typeof existingLine.quantity,
-    //                     newQuantityType: typeof newQuantity
-    //                 });
-
-    //                 const baseAmount = unitPrice * updatedQuantity;
-    //                 const vatAmount = (baseAmount * vatPercentage) / 100;
-    //                 const netAmount = baseAmount + vatAmount;
-
-    //                 const updateLinePayload = {
-    //                     quantity: updatedQuantity,  // Now properly calculated as a number
-    //                     salesTaxAmount: vatAmount.toFixed(2),
-    //                     netAmount: netAmount.toFixed(2)
-    //                 };
-
-    //                 const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId}`, {
-    //                     method: 'PATCH',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'Authorization': `Bearer ${token}`
-    //                     },
-    //                     body: JSON.stringify(updateLinePayload)
-    //                 });
-
-    //                 if (!updateLineResponse.ok) {
-    //                     throw new Error(`Failed to update existing line for product ${item.productId || item.productid}`);
-    //                 }
-
-    //                 // Update totals (subtract old amounts, add new amounts)
-    //                 updatedTotalAmount -= parseFloat(existingLine.netAmount || 0);
-    //                 updatedTotalSalesTax -= parseFloat(existingLine.salesTaxAmount || 0);
-    //                 updatedTotalAmount += netAmount;
-    //                 updatedTotalSalesTax += vatAmount;
-
-    //                 console.log(`Updated existing line for product ${item.productId || item.productid}`);
-    //             } else {
-    //                 // Product line doesn't exist - create new line
-    //                 const baseAmount = unitPrice * newQuantity;
-    //                 const vatAmount = (baseAmount * vatPercentage) / 100;
-    //                 const netAmount = baseAmount + vatAmount;
-
-    //                 const maxLineNumber = existingLines.length > 0
-    //                     ? Math.max(...existingLines.map(line => line.lineNumber || 0))
-    //                     : 0;
-    //                 const nextLineNumber = maxLineNumber + 1;
-
-    //                 const newLinePayload = {
-    //                     orderId: orderId,
-    //                     productId: item.productId || item.productid,
-    //                     productName: item.productName || item.name,
-    //                     productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
-    //                     quantity: newQuantity,
-    //                     unit: item.unit || 'EA',
-    //                     unitPrice: unitPrice,
-    //                     vatPercentage: vatPercentage,
-    //                     salesTaxAmount: vatAmount.toFixed(2),
-    //                     netAmount: netAmount.toFixed(2),
-    //                     lineNumber: nextLineNumber,
-    //                     erpProdId: item.erpProdId || item.productCode || item.productId || item.productid,
-    //                     isFresh: item.isFresh || false
-    //                 };
-
-    //                 const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-    //                     method: 'POST',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'Authorization': `Bearer ${token}`
-    //                     },
-    //                     body: JSON.stringify(newLinePayload)
-    //                 });
-
-    //                 if (!createLineResponse.ok) {
-    //                     throw new Error(`Failed to create new line for product ${item.productId || item.productid}`);
-    //                 }
-
-    //                 updatedTotalAmount += netAmount;
-    //                 updatedTotalSalesTax += vatAmount;
-
-    //                 console.log(`Created new line for product ${item.productId || item.productid}`);
-    //             }
-    //         }
-
-    //         // Update order totals
-    //         const updateOrderPayload = {
-    //             totalAmount: updatedTotalAmount.toFixed(2),
-    //             totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
-    //             paymentMethod: selectedPaymentMethod
-    //         };
-
-    //         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-    //             method: 'PATCH',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             },
-    //             body: JSON.stringify(updateOrderPayload)
-    //         });
-
-    //         if (!updateOrderResponse.ok) {
-    //             throw new Error('Failed to update order totals');
-    //         }
-
-    //         console.log('Successfully updated order ' + orderId);
-
-    //         if (!skipCartDeletion) {
-    //             const entityToUse = entity || getEntityFromCategory(pendingOrderCategory);
-
-    //             await deleteCartItems(selectedCustomerId, selectedBranchId, entityToUse, null, null, categoryItems);
-
-    //             setCartItems(prevCartItems =>
-    //                 prevCartItems.map(category => ({
-    //                     ...category,
-    //                     items: category.items.filter(cartItem =>
-    //                         !categoryItems.some(ci => ci.id === cartItem.id))
-    //                 })));
-
-    //             setQuantities(prevQuantities => {
-    //                 const newQuantities = { ...prevQuantities };
-    //                 categoryItems.forEach(item => {
-    //                     delete newQuantities[item.id];
-    //                 });
-    //                 return newQuantities;
-    //             });
-
-    //             setTimeout(() => {
-    //                 fetchCartItems();
-    //             }, 500);
-    //         } else {
-    //             console.log('Skipping cart deletion - will be handled by parent function');
-    //         }
-
-    //         return orderId;
-    //     } catch (error) {
-    //         console.error('Error updating existing order with product line check:', error);
-    //         throw error;
-    //     } finally {
-    //         setIsPlacingOrder(false);
-    //     }
-    // };
-
-    // // Updated validatePaymentMethodForUpdate function to handle credit balance and COD limits
-    // const validatePaymentMethodForUpdate = async (customerId, totalAmount, paymentMethod, entityType, entity) => {
-    //     try {
-    //         if (paymentMethod.toLowerCase() === 'credit') {
-    //             // Validate credit balance
-    //             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-    //                 method: 'GET',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'Authorization': `Bearer ${token}`
-    //                 }
-    //             });
-
-    //             if (!response.ok) {
-    //                 console.error('Failed to fetch payment method details for credit validation');
-    //                 return false;
-    //             }
-
-    //             const result = await response.json();
-
-    //             if (result.status === 'Ok' && result.data) {
-    //                 const currentBalance = result.data.currentBalance || {};
-    //                 const methodDetails = result.data.methodDetails || {};
-
-    //                 // Get entity-specific credit balance
-    //                 let creditBalance = 0;
-
-    //                 if (currentBalance[entity] !== undefined) {
-    //                     creditBalance = Math.abs(currentBalance[entity] || 0);
-    //                 } else if (methodDetails.credit && methodDetails.credit.balance !== undefined) {
-    //                     creditBalance = Number(methodDetails.credit.balance);
-    //                 }
-
-    //                 console.log(`Credit validation for ${entityType}:`, {
-    //                     totalAmount,
-    //                     creditBalance,
-    //                     sufficient: totalAmount <= creditBalance
-    //                 });
-
-    //                 if (totalAmount > creditBalance) {
-    //                     Swal.fire({
-    //                         icon: 'warning',
-    //                         title: t('Insufficient Credit Balance'),
-    //                         text: t(`There is not enough credit balance to update the order. Current credit balance: ${creditBalance.toFixed(2)} SAR`),
-    //                         confirmButtonText: t('OK')
-    //                     });
-    //                     return false;
-    //                 }
-    //             }
-
-    //             return true;
-
-    //         } else if (paymentMethod.toLowerCase() === 'cash on delivery') {
-    //             // Validate COD limit
-    //             const response = await fetch(`${API_BASE_URL}/payment-method-balances/id/${customerId}`, {
-    //                 method: 'GET',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'Authorization': `Bearer ${token}`
-    //                 }
-    //             });
-
-    //             if (!response.ok) {
-    //                 console.error('Failed to fetch payment method details for COD validation');
-    //                 return false;
-    //             }
-
-    //             const result = await response.json();
-
-    //             if (result.status === 'Ok' && result.data && result.data.methodDetails) {
-    //                 const methodDetails = result.data.methodDetails;
-
-    //                 if (methodDetails.COD && methodDetails.COD.isAllowed === true) {
-    //                     const codLimit = Number(methodDetails.COD.limit) || 0;
-
-    //                     console.log(`COD validation for ${entityType}:`, {
-    //                         totalAmount,
-    //                         codLimit,
-    //                         withinLimit: totalAmount <= codLimit
-    //                     });
-
-    //                     if (totalAmount > codLimit) {
-    //                         Swal.fire({
-    //                             icon: 'warning',
-    //                             title: t('COD Limit Reached'),
-    //                             text: t(`The COD limit has been reached. Total amount (${totalAmount.toFixed(2)} SAR) exceeds the COD limit of ${codLimit.toFixed(2)} SAR`),
-    //                             confirmButtonText: t('OK')
-    //                         });
-    //                         return false;
-    //                     }
-    //                 } else {
-    //                     Swal.fire({
-    //                         icon: 'warning',
-    //                         title: t('COD Not Available'),
-    //                         text: t('Cash on Delivery is not available for this customer'),
-    //                         confirmButtonText: t('OK')
-    //                     });
-    //                     return false;
-    //                 }
-    //             }
-
-    //             return true;
-    //         }
-
-    //         // For other payment methods (like Pre Payment), no additional validation needed
-    //         return true;
-
-    //     } catch (error) {
-    //         console.error('Error validating payment method for update:', error);
-    //         return false;
-    //     }
-    // };
-
-
-    // // Updated updateExistingOrder function (keeping the same logic as before)
-    // const updateExistingOrder = async (orderId, categoryItems, selectedPaymentMethod) => {
-    //     try {
-    //         setIsPlacingOrder(true);
-
-    //         // First, fetch the existing order details
-    //         const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             }
-    //         });
-
-    //         if (!orderResponse.ok) {
-    //             throw new Error('Failed to fetch existing order');
-    //         }
-
-    //         const existingOrder = await orderResponse.json();
-
-    //         // Fetch existing order lines
-    //         const orderLinesResponse = await fetch(`${API_BASE_URL}/sales-order-lines/pagination?filters=${JSON.stringify({ orderId: orderId })}`, {
-    //             method: 'GET',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             }
-    //         });
-
-    //         if (!orderLinesResponse.ok) {
-    //             throw new Error('Failed to fetch existing order lines');
-    //         }
-
-    //         const existingOrderLines = await orderLinesResponse.json();
-    //         const existingLines = existingOrderLines.data?.data || [];
-
-    //         let updatedTotalAmount = parseFloat(existingOrder.data.totalAmount) || 0;
-    //         let updatedTotalSalesTax = parseFloat(existingOrder.data.totalSalesTaxAmount) || 0;
-
-    //         // Process each new item
-    //         for (const item of categoryItems) {
-    //             const newQuantity = Number(quantities[item.id] || item.quantity || 1);
-    //             const unitPrice = parseFloat(item.price || item.unitPrice || 0);
-    //             const vatPercentage = parseFloat(item.vatPercentage || 0);
-
-    //             // Check if product already exists in order lines
-    //             const existingLine = existingLines.find(line =>
-    //                 line.productId === (item.productId || item.id)
-    //             );
-
-    //             if (existingLine) {
-    //                 // Update existing line quantity
-    //                 const updatedQuantity = existingLine.quantity + newQuantity;
-    //                 const baseAmount = unitPrice * updatedQuantity;
-    //                 const vatAmount = baseAmount * (vatPercentage / 100);
-    //                 const netAmount = baseAmount + vatAmount;
-
-    //                 const updateLinePayload = {
-    //                     quantity: updatedQuantity,
-    //                     salesTaxAmount: vatAmount.toFixed(2),
-    //                     netAmount: netAmount.toFixed(2)
-    //                 };
-
-    //                 const updateLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines/${orderId}/${item.productId || item.id}`, {
-    //                     method: 'PATCH',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'Authorization': `Bearer ${token}`
-    //                     },
-    //                     body: JSON.stringify(updateLinePayload)
-    //                 });
-
-    //                 if (!updateLineResponse.ok) {
-    //                     throw new Error(`Failed to update existing line for product ${item.productId || item.id}`);
-    //                 }
-
-    //                 // Update totals (subtract old amounts, add new amounts)
-    //                 updatedTotalAmount -= (parseFloat(existingLine.netAmount) || 0);
-    //                 updatedTotalSalesTax -= (parseFloat(existingLine.salesTaxAmount) || 0);
-    //                 updatedTotalAmount += netAmount;
-    //                 updatedTotalSalesTax += vatAmount;
-
-    //                 console.log(`Updated existing line for product ${item.productId || item.id}`);
-    //             } else {
-    //                 // Insert new line
-    //                 const baseAmount = unitPrice * newQuantity;
-    //                 const vatAmount = baseAmount * (vatPercentage / 100);
-    //                 const netAmount = baseAmount + vatAmount;
-
-    //                 // Get the next line number
-    //                 const maxLineNumber = existingLines.length > 0 ?
-    //                     Math.max(...existingLines.map(line => line.lineNumber || 0)) : 0;
-    //                 const nextLineNumber = maxLineNumber + 1;
-
-    //                 const newLinePayload = {
-    //                     orderId: orderId,
-    //                     productId: item.productId || item.productid || item.id,
-    //                     productName: item.productName || item.name,
-    //                     productNameLc: item.productNameLc || item.nameLc || item.productName || item.name,
-    //                     quantity: newQuantity,
-    //                     unit: item.unit || 'EA',
-    //                     unitPrice: unitPrice,
-    //                     vatPercentage: vatPercentage,
-    //                     salesTaxAmount: vatAmount.toFixed(2),
-    //                     netAmount: netAmount.toFixed(2),
-    //                     lineNumber: nextLineNumber,
-    //                     erpProdId: item.erpProdId || item.productCode || (item.productId || item.productid || item.id)
-    //                 };
-
-    //                 const createLineResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-    //                     method: 'POST',
-    //                     headers: {
-    //                         'Content-Type': 'application/json',
-    //                         'Authorization': `Bearer ${token}`
-    //                     },
-    //                     body: JSON.stringify(newLinePayload)
-    //                 });
-
-    //                 if (!createLineResponse.ok) {
-    //                     throw new Error(`Failed to create new line for product ${item.productId || item.id}`);
-    //                 }
-
-    //                 // Update totals
-    //                 updatedTotalAmount += netAmount;
-    //                 updatedTotalSalesTax += vatAmount;
-
-    //                 console.log(`Created new line for product ${item.productId || item.id}`);
-    //             }
-    //         }
-
-    //         // Update order totals
-    //         const updateOrderPayload = {
-    //             totalAmount: updatedTotalAmount.toFixed(2),
-    //             totalSalesTaxAmount: updatedTotalSalesTax.toFixed(2),
-    //             paymentMethod: selectedPaymentMethod
-    //         };
-
-    //         const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-    //             method: 'PATCH',
-    //             headers: {
-    //                 'Content-Type': 'application/json',
-    //                 'Authorization': `Bearer ${token}`
-    //             },
-    //             body: JSON.stringify(updateOrderPayload)
-    //         });
-
-    //         if (!updateOrderResponse.ok) {
-    //             throw new Error('Failed to update order totals');
-    //         }
-
-    //         // Delete items from cart after successful update
-    //         await deleteCartItems(selectedCustomerId, selectedBranchId,
-    //             getEntityFromCategory(pendingOrderCategory), null, null, categoryItems);
-
-    //         // Update UI
-    //         setCartItems(prevCartItems =>
-    //             prevCartItems.map(category => ({
-    //                 ...category,
-    //                 items: category.items.filter(cartItem =>
-    //                     !categoryItems.some(ci => ci.id === cartItem.id)
-    //                 )
-    //             }))
-    //         );
-
-    //         // Clean up quantities state
-    //         setQuantities(prevQuantities => {
-    //             const newQuantities = { ...prevQuantities };
-    //             categoryItems.forEach(item => {
-    //                 delete newQuantities[item.id];
-    //             });
-    //             return newQuantities;
-    //         });
-
-    //         console.log(`Successfully updated existing order ${orderId}`);
-    //         return orderId;
-
-    //     } catch (error) {
-    //         console.error('Error updating existing order:', error);
-    //         throw error;
-    //     } finally {
-    //         setIsPlacingOrder(false);
-    //     }
-    // };
 
     // Handle SHC order splitting into fresh and non-fresh products
     const handleSHCOrderSplitting = async (categoryItems, categoryName, selectedPaymentMethod) => {
@@ -1446,7 +1122,6 @@ function Cart() {
                 const orderText = orderIds.length === 1
                     ? t(`Your order has been placed successfully! Order #${orderIds[0]}`)
                     : t(`Your orders have been placed successfully! Orders: ${orderIds.map(id => `#${id}`).join(' and ')}`);
-
             }
 
         } catch (err) {
@@ -1600,97 +1275,80 @@ function Cart() {
         try {
             setIsPlacingOrder(true);
             const entity = categoryItems.length > 0 ? categoryItems[0].entity : Constants.ENTITY.VMCO;
-            console.log("VMCO order processing - entity from items:", entity, "categoryName:", categoryName);
+
             // Separate VMCO products into machines and consumables
             const machineProducts = categoryItems.filter(item => item.isMachine === true);
-            const nonMachineProducts = categoryItems.filter(item => !item.isMachine);
-
-            console.log('VMCO order processing separated:', {
-                total: categoryItems.length,
-                machines: machineProducts.length,
-                consumables: nonMachineProducts.length,
-                machineProductIds: machineProducts.map(p => p.product_id),
-                nonMachineProductIds: nonMachineProducts.map(p => p.product_id),
-                selectedPaymentMethod
-            });
+            const consumableProducts = categoryItems.filter(item => !item.isMachine);
 
             const orderIds = [];
+            const results = [];
 
-            // First, place order for machines with Pre Payment
+            // Place order for machines with Pre Payment
             if (machineProducts.length > 0) {
-                console.log('Placing order for VMCO machines with Pre Payment');
                 const machineOrderId = await placeOrderForCategory(machineProducts, 'VMCO - Machines', 'Pre Payment', false);
-                console.log('Machine order result:', machineOrderId);
                 if (machineOrderId) {
                     orderIds.push(machineOrderId);
-                    console.log('Added machine order ID to array:', machineOrderId);
+                    results.push({
+                        entity: Constants.ENTITY.VMCO,
+                        action: 'created',
+                        type: 'Machines',
+                        orderId: machineOrderId
+                    });
                 }
             }
 
-            // Then, place order for non-machine products with selected payment method
-            if (nonMachineProducts.length > 0) {
-                console.log("Placing order for VMCO consumables with selected payment method:", selectedPaymentMethod);
-
-                // FIX: Use explicit category name instead of relying on categoryName parameter
+            // Place order for consumables with selected payment method
+            if (consumableProducts.length > 0) {
                 const consumableOrderId = await placeOrderForCategory(
-                    nonMachineProducts,
-                    "VMCO - Consumables",
+                    consumableProducts,
+                    'VMCO - Consumables',
                     selectedPaymentMethod,
                     false
                 );
-
-                console.log("Consumable order result:", consumableOrderId);
                 if (consumableOrderId) {
                     orderIds.push(consumableOrderId);
-                    console.log("Added consumable order ID to array:", consumableOrderId);
+                    results.push({
+                        entity: Constants.ENTITY.VMCO,
+                        action: 'created',
+                        type: 'Consumables',
+                        orderId: consumableOrderId
+                    });
                 }
             }
 
-            // Show combined success message for VMCO orders
+            // Show combined success message
             if (orderIds.length > 0) {
-                console.log('Order IDs collected:', orderIds);
-                const orderText = orderIds.length === 1
-                    ? t(`Your order is successfully placed and is under review for approval.`) + t(` #${orderIds[0]}`)
-                    : t(`Your orders is successfully placed and is under review for approval.:`) + ` ${orderIds.map(id => `#${id}`).join(t('and'))}`;
-
-                console.log('Order success message:', orderText);
-
+                // Show appropriate message
                 Swal.fire({
                     icon: 'success',
                     title: t('Request Sent'),
-                    text: orderText,
+                    text: `Order ${orderIds.map(id => `#${id}`).join(' and ')} Sent for Approval. Payment Method: ${selectedPaymentMethod}`,
                     confirmButtonText: t('OK')
                 }).then(async () => {
-                    // Delete machine products from cart after successful order
+                    // Delete cart items
                     if (machineProducts.length > 0) {
                         await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, true, machineProducts);
-                        console.log('Deleted machine products from cart after order:', machineProducts);
+                    }
+                    if (consumableProducts.length > 0) {
+                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, consumableProducts);
                     }
 
-                    // Delete non-machine products from cart after successful order
-                    if (nonMachineProducts.length > 0) {
-                        await deleteCartItems(selectedCustomerId, selectedBranchId, entity, null, false, nonMachineProducts);
-                        console.log('Deleted non-machine products from cart after order:', nonMachineProducts);
-                    }
-
-                    // Update cart items state to remove ordered items
+                    // Update cart state
                     setCartItems(prevCartItems =>
                         prevCartItems.map(category => ({
                             ...category,
                             items: category.items.filter(
-                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id))
-                        })));
+                                cartItem => !categoryItems.some(ci => ci.id === cartItem.id)
+                            )
+                        }))
+                    );
 
-                    // Clean up quantities state for removed items
                     setQuantities(prevQuantities => {
                         const newQuantities = { ...prevQuantities };
-                        categoryItems.forEach(item => {
-                            delete newQuantities[item.id];
-                        });
+                        categoryItems.forEach(item => delete newQuantities[item.id]);
                         return newQuantities;
                     });
 
-                    // Force a refresh of cart items
                     fetchCartItems();
                 });
             }
@@ -1811,11 +1469,11 @@ function Cart() {
                         // Validate credit balance
                         const isBalanceValid = await validateCreditBalance(selectedCustomerId, consumablesTotalAmount, entity);
 
+
                         if (isBalanceValid) {
-                            // Credit user with sufficient balance - check for existing open orders
-                            console.log('GMTC user is credit user with sufficient balance, checking for existing open orders');
-                            await handleGMTCExistingOrdersCheck(categoryItems, 'Credit', categoryName);
-                            return;
+
+                            await handleVMCOOrderProcessing(categoryItems, categoryName, 'Credit')
+
                         } else {
                             // Credit user but insufficient balance - show payment popup
                             console.log('VMCO user is credit user but has insufficient balance, showing payment popup');
@@ -2341,9 +1999,10 @@ function Cart() {
     };
 
     const createNormalOrder = async (orderPayload, orderLinesPayload, categoryItems, showSuccessMessage, categoryName, entity, selectedPaymentMethod) => {
+        let orderId = null; // Track orderId for potential cancellation
         try {
             // Create the sales order
-            console.log("showSuccessMessage11111", showSuccessMessage)
+            console.log("Creating sales order...");
             const orderResponse = await fetch(`${API_BASE_URL}/sales-order`, {
                 method: 'POST',
                 headers: {
@@ -2359,78 +2018,106 @@ function Cart() {
             }
 
             const orderResult = await orderResponse.json();
-            const orderId = orderResult.data.id;
-
+            orderId = orderResult.data.id;
             console.log('Created sales order with ID:', orderId);
 
-            // Create order lines
+            console.log('Starting to post sales order lines...');
             let lineNumber = 1;
-            for (const linePayload of orderLinesPayload) {
-                const lineWithOrderId = {
-                    ...linePayload,
-                    orderId: orderId,
-                    lineNumber: lineNumber
+            let hasLineError = false;
+            let lineErrorMessage = '';
+
+            try {
+                for (const linePayload of orderLinesPayload) {
+                    const lineWithOrderId = {
+                        ...linePayload,
+                        orderId: orderId,
+                        lineNumber: lineNumber
+                    };
+
+                    const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(lineWithOrderId)
+                    });
+
+                    if (!createResponse.ok) {
+                        const errorText = await createResponse.text();
+                        console.error(`Failed to create line for product ${linePayload.productId}:`, errorText);
+                        lineErrorMessage = JSON.parse(errorText)?.message || errorText;
+                        hasLineError = true;
+                        throw new Error(`Error posting order line ${lineNumber}: ${lineErrorMessage}`);
+                    }
+
+                    const newLine = await createResponse.json();
+                    console.log(`Successfully created line for product ${linePayload.productId}:`, newLine);
+                    lineNumber++;
+                }
+
+            } catch (lineError) {
+                console.error('Error occurred while posting sales order lines:', lineError);
+                hasLineError = true;
+                lineErrorMessage = lineError.message;
+                throw lineError; // Re-throw to trigger cancellation
+            }
+
+            // Calculate totals for order update
+            console.log('Calculating and updating order totals...');
+            let linesTotal = 0;
+            let totalSalesTaxAmount = 0;
+
+            try {
+                for (const line of orderLinesPayload) {
+                    const netAmount = parseFloat(line.netAmount || 0);
+                    const salesTaxAmount = parseFloat(line.salesTaxAmount || 0);
+
+                    if (!isNaN(netAmount)) {
+                        linesTotal += netAmount;
+                    }
+                    if (!isNaN(salesTaxAmount)) {
+                        totalSalesTaxAmount += salesTaxAmount;
+                    }
+                }
+
+                // Add delivery charges
+                const deliveryCharges = parseFloat(orderPayload.deliveryCharges);
+                const finalTotalAmount = linesTotal + deliveryCharges;
+
+                // Update order with correct totals
+                const updateOrderPayload = {
+                    totalAmount: finalTotalAmount.toFixed(2),
+                    totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
+                    deliveryCharges: deliveryCharges.toFixed(2),
+                    status: orderResult?.data?.status
                 };
 
-                const createResponse = await fetch(`${API_BASE_URL}/sales-order-lines`, {
-                    method: 'POST',
+                console.log('Updating order with totals:', updateOrderPayload);
+
+                const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                    method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(lineWithOrderId)
+                    body: JSON.stringify(updateOrderPayload)
                 });
 
-                if (!createResponse.ok) {
-                    const errorText = await createResponse.text();
-                    console.error(`Failed to create line for product ${linePayload.productId}:`, errorText);
-                    throw new Error(errorText);
+                if (!updateOrderResponse.ok) {
+                    const errorText = await updateOrderResponse.text();
+                    console.error('Failed to update order totals:', errorText);
+                    const errorMessage = JSON.parse(errorText)?.message || errorText;
+                    throw new Error(`Failed to update order totals: ${errorMessage}`);
                 }
 
-                const newLine = await createResponse.json();
-                console.log(`Successfully created line for product ${linePayload.productId}:`, newLine);
-                lineNumber++;
+                console.log('Successfully updated order totals');
+
+            } catch (updateError) {
+                console.error('Error occurred while updating order totals:', updateError);
+                throw updateError; // Re-throw to trigger cancellation
             }
 
-            // Calculate totals for order update
-            let linesTotal = 0;
-            let totalSalesTaxAmount = 0;
-
-            for (const line of orderLinesPayload) {
-                const netAmount = parseFloat(line.netAmount || 0);
-                const salesTaxAmount = parseFloat(line.salesTaxAmount || 0);
-
-                if (!isNaN(netAmount)) {
-                    linesTotal += netAmount;
-                }
-                if (!isNaN(salesTaxAmount)) {
-                    totalSalesTaxAmount += salesTaxAmount;
-                }
-            }
-
-            // Add delivery charges
-            const deliveryCharges = parseFloat(orderPayload.deliveryCharges);
-            const finalTotalAmount = linesTotal + deliveryCharges;
-
-            // Update order with correct totals
-            const updateOrderPayload = {
-                totalAmount: finalTotalAmount.toFixed(2),
-                totalSalesTaxAmount: totalSalesTaxAmount.toFixed(2),
-                deliveryCharges: deliveryCharges.toFixed(2)
-            };
-
-            const updateOrderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(updateOrderPayload)
-            });
-
-            if (!updateOrderResponse.ok) {
-                console.error('Failed to update order totals, but order was created successfully');
-            }
 
             // Delete from cart
             try {
@@ -2455,10 +2142,13 @@ function Cart() {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+
                 if (cartCheckResponse.ok) {
                     const cartCheckResult = await cartCheckResponse.json();
                     const cartProducts = Array.isArray(cartCheckResult.data?.data) ? cartCheckResult.data.data : (Array.isArray(cartCheckResult.data) ? cartCheckResult.data : []);
-                    if (cartProducts.length > 0) {
+
+                    // UPDATED: Skip deletion for SHC entity (already handled in handleSHCExistingOrdersCheck)
+                    if (cartProducts.length > 0 && entity?.toLowerCase() !== Constants.ENTITY.SHC.toLowerCase()) {
                         console.log(`Found ${cartProducts.length} items in cart, proceeding with deletion`);
 
                         const deleteUrl = new URL(`${API_BASE_URL}/cart/delete`);
@@ -2479,16 +2169,13 @@ function Cart() {
                         } else {
                             console.log('Successfully deleted cart items after order placement');
                         }
-                    } else {
-                        console.log('No items found in cart, skipping deletion');
+                    } else if (entity?.toLowerCase() === Constants.ENTITY.SHC.toLowerCase()) {
+                        console.log('Skipping cart deletion for SHC entity - already handled in handleSHCExistingOrdersCheck');
                     }
-                } else {
-                    console.error('Error checking cart items:', cartCheckResponse.statusText);
                 }
             } catch (err) {
                 console.error('Error during cart check and cleanup:', err);
             }
-
 
             // Generate payment link for Pre Payment orders (non-VMCO entities)
             if (selectedPaymentMethod && selectedPaymentMethod.toLowerCase() === 'pre payment' &&
@@ -2514,6 +2201,7 @@ function Cart() {
                 }
             }
 
+            // Success - show message and update cart
             if (showSuccessMessage) {
                 const orderStatusMessage = entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                     ? t('Your request has been sent for approval!')
@@ -2524,7 +2212,7 @@ function Cart() {
                     title: entity && entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase()
                         ? t('Request Sent')
                         : t('Order Placed'),
-                    text: `${orderStatusMessage} Order: ${orderId}. Payment Method: ${selectedPaymentMethod}`,
+                    text: `${orderStatusMessage} Order #${orderId}. Payment Method: ${selectedPaymentMethod}`,
                     confirmButtonText: t('OK')
                 }).then(() => {
                     // Update cart items state to remove ordered items
@@ -2551,7 +2239,39 @@ function Cart() {
             return orderId;
 
         } catch (error) {
-            console.error('Error in createNormalOrder:', error);
+            console.error('Error in order creation process:', error);
+
+            // CRITICAL: Cancel the order if any error occurs
+            if (orderId) {
+                console.log('Attempting to cancel order:', orderId, 'due to error:', error.message);
+                try {
+                    const cancelResponse = await fetch(`${API_BASE_URL}/sales-order/id/${orderId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ status: 'Cancelled' })
+                    });
+
+                    if (cancelResponse.ok) {
+                        console.log('Successfully cancelled order:', orderId);
+                    } else {
+                        console.error('Failed to cancel order:', cancelResponse.statusText);
+                    }
+                } catch (cancelError) {
+                    console.error('Error while attempting to cancel order:', cancelError);
+                }
+            }
+
+            // Show error message to user
+            Swal.fire({
+                icon: 'error',
+                title: t('Order Processing Failed'),
+                text: `${t('Error')}: ${error.message}\n${orderId ? `${t('Order')} ${orderId} ${t('has been cancelled.')}` : ''}`,
+                confirmButtonText: t('OK')
+            });
+
             throw error;
         }
     };
@@ -2976,18 +2696,12 @@ function Cart() {
         try {
             const deletePromises = products.map(async (product) => {
                 let deleteUrl = new URL(`${API_BASE_URL}/cart/delete?customer_id=${customerId}&branch_id=${branchId}&entity=${entity}`);
-                // deleteUrl.searchParams.append('customer_id', customerId);
-                // deleteUrl.searchParams.append('branch_id', branchId);
-                // deleteUrl.searchParams.append('entity', entity);
                 if (isFresh !== null && isFresh !== undefined) {
-                    // deleteUrl.searchParams.append('isFresh', isFresh);
                     deleteUrl += `&isFresh=${isFresh}`
                 }
                 if (isMachine !== null && isMachine !== undefined) {
                     deleteUrl += `&isMachine=${isMachine}`
-                    // deleteUrl.searchParams.append('isMachine', isMachine);
                 }
-                // deleteUrl.searchParams.append('product_id', product.product_id || product.productId);
                 deleteUrl += `&product_id=${product.product_id || product.productId}`
                 console.log(`Deleting cart item with params: ${deleteUrl}`);
 
