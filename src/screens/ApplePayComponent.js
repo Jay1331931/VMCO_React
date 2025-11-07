@@ -83,7 +83,8 @@ const ApplePayComponent = () => {
           scope: Scope.TapToken,
           merchant: {
             id: 67979587,//TAP_MERCHANT_ID,
-            domain:"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+            // domain:"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+            domain:window.location.hostname,
           },
           transaction: {
             currency: "SAR",
