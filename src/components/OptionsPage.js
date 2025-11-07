@@ -563,7 +563,15 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
   }
     // navigate(data?.data?.InvoiceURL)
   };
+const allowedEntities = Object.values({
+  SHC: Constants.ENTITY?.SHC,
+  GMTC: Constants.ENTITY?.GMTC,
+  DAR: Constants.ENTITY?.DAR
+}).map(e => e?.toLowerCase());
 
+const currentEntity = TempOrderDetails?.[0]?.entity?.toLowerCase();
+const isMatch = allowedEntities.includes(currentEntity);
+console.log("currentEntity",isMatch,currentEntity)
   return (
     <div className="options-container">
       <div className="button-wrapper">
@@ -586,12 +594,12 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
-            Constants.ENTITY?.SHC?.toLowerCase() || [Constants.ENTITY?.SHC?.toLowerCase(), Constants.ENTITY?.GMTC?.toLowerCase(),Constants.ENTITY?.DAR?.toLowerCase()].includes(TempOrderDetails[0]?.entity?.toLowerCase())) && (
+            Constants.ENTITY?.SHC?.toLowerCase() || isMatch) && (
           <button
             onClick={() => handlePayment("Apple Pay")}
             className="option-button black"
@@ -599,7 +607,7 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )} */}
+        )}
       </div>
       <style>
         {`.options-container {
