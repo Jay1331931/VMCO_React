@@ -13,6 +13,7 @@ import RbacManager from "../utilities/rbac";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import SearchableDropdown from "../components/SearchableDropdown";
+import Constants from "../constants";
 import axios from "axios";
 
 function SupportDetails() {
@@ -69,6 +70,14 @@ function SupportDetails() {
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(currentLanguage === "en" ? (ticket.branchNameEn || "") : (ticket.branchNameLc || ""));
 
+  // State for entity dropdown
+  const [entityOptions, setEntityOptions] = useState([
+    { value: Constants.ENTITY.VMCO, displayText: "VMCO" },
+    { value: Constants.ENTITY.SHC, displayText: "SHC" },
+    { value: Constants.ENTITY.NAQI, displayText: "NAQI" },
+    { value: Constants.ENTITY.GMTC, displayText: "GMTC" },
+    { value: Constants.ENTITY.DAR, displayText: "DAR" },
+  ]);
   // State for employees dropdown
   const [employees, setEmployees] = useState([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
@@ -705,6 +714,7 @@ function SupportDetails() {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true); // Start saving
+
     // Basic validation
     if (!ticket.branchId) {
       Swal.fire({
@@ -712,89 +722,132 @@ function SupportDetails() {
         text: t("Please select a branch"),
         icon: "warning",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
+        confirmButtonColor: "#3085d6",
       });
-      setSaving(false); // End saving if validation fails
+      setSaving(false);
       return;
     }
+
+    // Add entity validation - make it mandatory
+    if (!ticket.entity) {
+      Swal.fire({
+        title: t("Validation Error"),
+        text: t("Please select a business unit"),
+        icon: "warning",
+        confirmButtonText: t("OK"),
+        confirmButtonColor: "#3085d6",
+      });
+      setSaving(false);
+      return;
+    }
+
     if (!ticket.grievanceType) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please select an issue type"),
         icon: "warning",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
+        confirmButtonColor: "#3085d6",
       });
-      setSaving(false); // End saving if validation fails
+      setSaving(false);
       return;
     }
+
     if (!ticket.grievanceName?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please enter an issue name"),
         icon: "warning",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
+        confirmButtonColor: "#3085d6",
       });
-      setSaving(false); // End saving if validation fails
+      setSaving(false);
       return;
     }
+
     if (!ticket.description?.trim()) {
       Swal.fire({
         title: t("Validation Error"),
         text: t("Please enter issue details"),
         icon: "warning",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#3085d6"
+        confirmButtonColor: "#3085d6",
       });
-      setSaving(false); // End saving if validation fails
+      setSaving(false);
       return;
     }
 
     try {
       // Ensure comments is always an array of plain objects and filter out invalid entries
       const commentsArray = Array.isArray(ticket.comments)
-        ? ticket.comments.filter(c => c && typeof c === 'object' && !Array.isArray(c))
-        : (typeof ticket.comments === 'string' && ticket.comments.trim().startsWith('['))
-          ? (() => { try { return JSON.parse(ticket.comments).filter(c => c && typeof c === 'object' && !Array.isArray(c)); } catch { return []; } })()
+        ? ticket.comments.filter((c) => c && typeof c === "object" && !Array.isArray(c))
+        : typeof ticket.comments === "string" && ticket.comments.trim().startsWith("[")
+          ? (() => {
+            try {
+              return JSON.parse(ticket.comments).filter(
+                (c) => c && typeof c === "object" && !Array.isArray(c)
+              );
+            } catch {
+              return [];
+            }
+          })()
           : [];
 
       // Convert dateOfComplaint to ISO string if it's a Date object or object
       let dateOfComplaintValue = ticket.dateOfComplaint;
       if (ticket.dateOfComplaint instanceof Date) {
         dateOfComplaintValue = ticket.dateOfComplaint.toISOString();
-      } else if (typeof ticket.dateOfComplaint === 'object' && ticket.dateOfComplaint !== null && ticket.dateOfComplaint.toISOString) {
+      } else if (
+        typeof ticket.dateOfComplaint === "object" &&
+        ticket.dateOfComplaint !== null &&
+        ticket.dateOfComplaint.toISOString
+      ) {
         dateOfComplaintValue = ticket.dateOfComplaint.toISOString();
-      } else if (typeof ticket.dateOfComplaint === 'object' && ticket.dateOfComplaint !== null) {
+      } else if (
+        typeof ticket.dateOfComplaint === "object" &&
+        ticket.dateOfComplaint !== null
+      ) {
         // If it's an object but not a Date, set to null or empty string
-        dateOfComplaintValue = '';
+        dateOfComplaintValue = "";
       }
 
       // Only send required fields
       const ticketData = {
-        customerId: user?.userType === 'customer' ? user.customerId : ticket.customerId,
+        customerId:
+          user?.userType === "customer" ? user.customerId : ticket.customerId,
         branchId: ticket.branchId,
+        entity: ticket.entity, // Include entity field
         grievanceType: ticket.grievanceType,
         grievanceName: ticket.grievanceName,
         description: ticket.description,
-        dateOfComplaint: formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
+        dateOfComplaint:
+          formMode === "add" ? new Date().toISOString() : dateOfComplaintValue,
         assignedTeamMember: ticket.assignedTeamMember || "",
         assignedTeamMemberDept: ticket.assignedTeamMemberDept || selectedDepartment || "",
         status: formMode === "add" ? "New" : ticket.status,
-        attachment: formMode === "add" ? { images: images || [], videos: videos || [] } : ticket.attachment,
+        attachment:
+          formMode === "add"
+            ? { images: images || [], videos: videos || [] }
+            : ticket.attachment,
         comments: commentsArray,
-        branchRegion: ticket.branchRegion || ""
+        branchRegion: ticket.branchRegion,
+        isOpen: formMode === "add" ? true : ticket.isOpen,
       };
 
-      // Update status to "In Progress" if an employee is assigned
-      if (ticketData.assignedTeamMember && ticketData.assignedTeamMember.trim() !== "") {
+      if (
+        ticketData.assignedTeamMember &&
+        ticketData.assignedTeamMember.trim() !== ""
+      ) {
         ticketData.status = "In Progress";
       }
 
-      const endPoint = formMode === "add" ? "/grievances" : `/grievances/id/${ticket.id}`;
+      const endPoint =
+        formMode === "add" ? "/grievances" : `/grievances/id/${ticket.id}`;
       const method = formMode === "add" ? "POST" : "PATCH";
 
-      const apiUrl = process.env.REACT_APP_API_BASE_URL ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}` : null;
+      const apiUrl = process.env.REACT_APP_API_BASE_URL
+        ? `${process.env.REACT_APP_API_BASE_URL}${endPoint}`
+        : null;
 
       if (!apiUrl) {
         throw new Error("API base URL is not configured");
@@ -804,14 +857,15 @@ function SupportDetails() {
       if (!Array.isArray(ticketData.comments)) {
         ticketData.comments = [];
       }
-      const { createdAt, ...filterdata } = ticketData
+
+      const { createdAt, ...filterdata } = ticketData;
+
       const response = await fetch(apiUrl, {
         method: method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-
         body: JSON.stringify(filterdata),
       });
 
@@ -828,14 +882,16 @@ function SupportDetails() {
 
       // Upload files if there are any images or videos
 
-
       // Show success message with SweetAlert and navigate after OK
       await Swal.fire({
         title: t("Success!"),
-        text: formMode === "add" ? t("Ticket created successfully!") : t("Ticket updated successfully!"),
+        text:
+          formMode === "add"
+            ? t("Ticket created successfully!")
+            : t("Ticket updated successfully!"),
         icon: "success",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#28a745"
+        confirmButtonColor: "#28a745",
       });
 
       // Set editing to false and redirect to support page
@@ -850,7 +906,7 @@ function SupportDetails() {
         text: t("Failed to save ticket. Please try again."),
         icon: "error",
         confirmButtonText: t("OK"),
-        confirmButtonColor: "#dc3545"
+        confirmButtonColor: "#dc3545",
       });
 
       // Keep editing mode active on error
@@ -858,8 +914,9 @@ function SupportDetails() {
     } finally {
       setSaving(false); // End saving
     }
+    console.log("Ticket data before save:", images);
   };
-  console.log("Ticket data before save:", images);
+
   // Handle close ticket
   const handleCloseTicket = async () => {
     setClosing(true); // Start closing
@@ -892,6 +949,7 @@ function SupportDetails() {
 
         body: JSON.stringify({
           status: "Closed",
+          isOpen: false,
           comments: ticket.comments // Explicitly preserve comments
         }),
       });
@@ -1138,6 +1196,34 @@ function SupportDetails() {
                 />
               </div>
             )}
+            {isV('entity') && (
+              <div className='support-details-field'>
+                <label>{t("Business Unit")} *</label>
+                <select
+                  id='entity'
+                  name='entity'
+                  value={ticket.entity || ""}
+                  onChange={handleInputChange}
+                  disabled={!isE("entity") || isReadOnly}
+                  style={{
+                    color:'#999',
+                  }}
+                >
+                  <option value="" style={{ color: '#000000ff' }}>
+                    {t("Select Business Unit")}
+                  </option>
+                  {entityOptions.map((entity, index) => (
+                    <option
+                      key={index}
+                      value={entity.value || entity}
+                      style={{ color: '#000' }}
+                    >
+                      {entity.displayText || entity}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             {isV('issueType') && (
               <div className='support-details-field'>
                 <label>{t("Issue Type")} *</label>
@@ -1148,12 +1234,12 @@ function SupportDetails() {
                   onChange={handleInputChange}
                   disabled={!isE("issueType") || isReadOnly}
                   style={{
-                    color: ticket.grievanceType ? 'inherit' : '#999',
+                    color: '#999',
                   }}
                 >
-                  <option value="" style={{ color: '#999' }}>{t("Select Issue Type")}</option>
+                  <option value="" style={{ color: '#000000ff' }}>{t("Select Issue Type")}</option>
                   {issueTypeOptions.map((issueType, index) => (
-                    <option key={index} value={issueType.value || issueType} style={{ color: 'inherit' }}>
+                    <option key={index} value={issueType.value || issueType} style={{ color: '#000' }}>
                       {issueType.displayText || issueType}
                     </option>
                   ))}

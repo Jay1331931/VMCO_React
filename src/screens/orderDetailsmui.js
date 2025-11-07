@@ -132,6 +132,12 @@ function OrderDetails() {
     setOrderId(formData.id || "");
   }, [formData.id]);
 
+  useEffect(() => {
+    if (fromApproval && orderFromNav.sampleOrder) {
+      setSampleMode(true);
+    }
+  }, [fromApproval, orderFromNav.sampleOrder]);
+
   // State variables
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -453,9 +459,9 @@ function OrderDetails() {
         );
         const currentCreditBalance =
           creditResult?.data?.currentBalance?.[entity] || 0;
-          const netAmountToatl = formData?.products?.reduce((total, item) => {
-  return total + parseFloat(item.netAmount);
-}, 0);
+        const netAmountToatl = formData?.products?.reduce((total, item) => {
+          return total + parseFloat(item.netAmount);
+        }, 0);
         if (netAmountToatl > currentCreditBalance) {
           Swal.fire({
             icon: "warning",
@@ -712,12 +718,12 @@ function OrderDetails() {
           }),
         });
         console.log(`Fetching existing orders with filters: ${formData}`);
-        let COD='Cash on Delivery'
-        const isFresh= formData?.products[0]?.isFresh
+        let COD = 'Cash on Delivery'
+        const isFresh = formData?.products[0]?.isFresh
 
-const netAmountToatl = formData?.products?.reduce((total, item) => {
-  return total + parseFloat(item.netAmount);
-}, 0);
+        const netAmountToatl = formData?.products?.reduce((total, item) => {
+          return total + parseFloat(item.netAmount);
+        }, 0);
         const existingOrdersResponse = await fetch(
           `${API_BASE_URL}/sales-order/existing-open-order?customerId=${formData?.customerId}&branchId=${formData?.branchId}&entity=${formData?.entity}&status=open&paymentMethod=${COD}&isFresh=${isFresh}`,
           {
@@ -737,13 +743,13 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
 
         // Calculate total amount of existing COD orders
         let existingCODTotal = 0;
-        if (existingOrdersResult?.success && existingOrdersResult?.details ) {
-        
-            // Skip current order if we're editing
-            if (existingOrdersResult?.details?.id !== formData.id) {
-              existingCODTotal += Number(existingOrdersResult?.details?.totalAmount) || 0;
-            }
-          
+        if (existingOrdersResult?.success && existingOrdersResult?.details) {
+
+          // Skip current order if we're editing
+          if (existingOrdersResult?.details?.id !== formData.id) {
+            existingCODTotal += Number(existingOrdersResult?.details?.totalAmount) || 0;
+          }
+
         }
 
         // Get customer's COD limit
@@ -799,19 +805,19 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
     }
 
     if (selectedMethod && selectedMethod.toLowerCase() === "credit") {
-       const netAmountToatl = formData?.products?.reduce((total, item) => {
-  return total + parseFloat(item.netAmount);
-}, 0);
-      const isCredit=await isCreditPaymentAllowed(
-          formData.customerId,
-          formData.entity,
+      const netAmountToatl = formData?.products?.reduce((total, item) => {
+        return total + parseFloat(item.netAmount);
+      }, 0);
+      const isCredit = await isCreditPaymentAllowed(
+        formData.customerId,
+        formData.entity,
         netAmountToatl
-        );
-        if(isCredit=="Insufficient balance"){
-          setSaving(false)
-          return;
-        }
-       
+      );
+      if (isCredit == "Insufficient balance") {
+        setSaving(false)
+        return;
+      }
+
     }
 
     if (formMode !== "add" && formData.paymentMethod === "Pre Payment") {
@@ -1022,9 +1028,9 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
 
       payload.paymentStatus = sampleMode ? "Paid" : formData.paymentStatus || "Pending";
 
-const netAmountToatl = formData?.products?.reduce((total, item) => {
-  return total + parseFloat(item.netAmount);
-}, 0);
+      const netAmountToatl = formData?.products?.reduce((total, item) => {
+        return total + parseFloat(item.netAmount);
+      }, 0);
 
 
       // First update the sales order
@@ -1306,7 +1312,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           ),
           confirmButtonText: t("OK"),
         }).then(() => {
-          window.location.reload();
+          navigate("/orders");
         });
       } else {
         Swal.fire({
@@ -1315,7 +1321,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           text: t("Order updated successfully!"),
           confirmButtonText: t("OK"),
         }).then(() => {
-          window.location.reload();
+          navigate("/orders");
         });
       }
       return; // Exit function after successful update
@@ -2414,7 +2420,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           const unitPrice = sampleMode ? 0 : parseFloat(product.unitPrice);
           // Determine VAT based on companyType and sample mode
           let vatPercentage = 0.0;
-          if ( !sampleMode && companyType && companyType.toLowerCase() === "trading" ) {
+          if (!sampleMode && companyType && companyType.toLowerCase() === "trading") {
             vatPercentage = parseFloat(product.vatPercentage);
           }
 
@@ -2429,7 +2435,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
             const newQuantity =
               (parseInt(existingProduct.quantity, 10) || moq) + moq;
             // In sample mode, netAmount is always 0
-            const newNetAmount = sampleMode ? "0.00" : ( unitPrice * newQuantity + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * newQuantity) : 0) ).toFixed(2);
+            const newNetAmount = sampleMode ? "0.00" : (unitPrice * newQuantity + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * newQuantity) : 0)).toFixed(2);
             updatedProducts[existingIdx] = {
               ...existingProduct,
               quantity: newQuantity,
@@ -2447,7 +2453,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
           } else {
             // Product does not exist, add as new row with MOQ as quantity
             // In sample mode, netAmount is always 0
-            const netAmount = sampleMode ? "0.00" : ( unitPrice * moq + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * moq) : 0)).toFixed(2);
+            const netAmount = sampleMode ? "0.00" : (unitPrice * moq + (product?.vatPercentage ? (product?.vatPercentage / 100) * (unitPrice * moq) : 0)).toFixed(2);
 
             const newProduct = {
               id: product.id,
@@ -3393,7 +3399,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                     quantity,
                     unitPrice,
                     net_amount: netAmount.toFixed(2),
-                    vatPercentage: product.vatPercentage.toFixed(2),
+                    vatPercentage: product.vatPercentage,
                     erpProdId: product.erpProdId || product.erp_prod_id || "",
                     unit: product.unit || "",
                   }),
@@ -4192,7 +4198,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                             value={formData.pricingPolicy || ""}
                             onChange={handleInputChange}
                             className="entity-dropdown"
-                            disabled={!isE("pricingPolicy") ||  !formData?.isMachine}
+                            disabled={!isE("pricingPolicy") || !formData?.isMachine}
                           >
                             {pricingPolicyOptions.map(
                               (pricingPolicy, index) => (
@@ -4466,7 +4472,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                               {t("Add products")}
                             </button>
                           )}
-                          {isV("sampleOrder") && (
+                          {isV("sampleOrder", fromApproval, true) && (
                             <button
                               type="button"
                               className="order-action-btn"
@@ -4870,7 +4876,7 @@ const netAmountToatl = formData?.products?.reduce((total, item) => {
                 </div>
               )}
               <div className="" style={{ display: "flex", gap: "10px" }}>
-                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" &&  formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !==true && (
+                {(isV("paymentLines")) && formData?.paymentStatus?.toLowerCase() === "paid" && formData?.paymentMethod?.toLowerCase() == "pre payment" && formData?.sample_order !== true && (
                   <button
                     className="order-action-btn"
                     onClick={() => handlePayments("save")}

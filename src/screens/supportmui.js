@@ -208,6 +208,34 @@ const handleColumnResize = (params) => {
             )
         },
         {
+            field: "erpCustId", 
+            headerName: t("ERP Customer Id"), 
+            include: isV('erpCustomerIdCol'), 
+            searchable: true, 
+            width: i18n.language === "ar" 
+          ? columnDimensions["erpCustId"]?.width || 150 
+          : columnDimensions["erpCustId"]?.width || 150,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
+            renderCell: (params) => (
+                <span>{params.value}</span>
+            )
+        },
+        {
+            field: "assignedSalesExecutive", 
+            headerName: t("Primary Sales Executive"), 
+            include: isV('assignedSalesExecutive'), 
+            searchable: true, 
+            width: i18n.language === "ar" 
+          ? columnDimensions["assignedSalesExecutive"]?.width || 150 
+          : columnDimensions["assignedSalesExecutive"]?.width || 150,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
+            renderCell: (params) => (
+                <span>{params.value}</span>
+            )
+        },
+        {
             field: isArabic ? "companyNameAr" : "companyNameEn", 
             headerName: t("Customer"), 
             include: isV('customerCol'), 
@@ -231,6 +259,20 @@ const handleColumnResize = (params) => {
               ? columnDimensions["branchNameLc"]?.width || 60 
               : columnDimensions["branchNameEn"]?.width || 60, 
             // flex: 1,
+            align: isArabic ? 'right' : 'left',
+            headerAlign: isArabic ? 'right' : 'left',
+            renderCell: (params) => (
+                <span>{params.value}</span>
+            )
+        },
+        {
+            field: "entity", 
+            headerName: t("Entity"), 
+            include: isV('entityCol'), 
+            searchable: true, 
+            width: i18n.language === "ar" 
+          ? columnDimensions["entity"]?.width || 150 
+          : columnDimensions["entity"]?.width || 150,
             align: isArabic ? 'right' : 'left',
             headerAlign: isArabic ? 'right' : 'left',
             renderCell: (params) => (
@@ -370,8 +412,11 @@ const handleShowAllDetailsClick = async (ticket) => {
     // Columns to display mapping
     const columnsToDisplay = {
         ticketId: "Ticket #",
+        erpCustId: "ERP Customer ID",
+        assignedSalesExecutive: "Primary Sales Executive",
         companyNameEn: "Customer",
         branchNameEn: "Branch",
+        entity: "Entity",
         grievanceName: "Issue Name",
         grievanceType: "Issue Type",
         createdAt: "Created Date",
