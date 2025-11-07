@@ -990,7 +990,8 @@ function MaintenanceDetails() {
 
         body: JSON.stringify({
           status: "Closed",
-          comments: ticket.comments // Explicitly preserve comments
+          isOpen: false,
+          comments: ticket.comments
         }),
       });
 
