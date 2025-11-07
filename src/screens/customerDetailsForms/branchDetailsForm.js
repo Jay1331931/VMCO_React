@@ -1157,7 +1157,8 @@ let branchdata;
   };
 
   return (
-    <div className="expanded-form-container">
+    <>
+    {/* <div className="expanded-form-container"> */}
       {/* Branch Details Section */}
       <BranchDetailsSection
         branch={branchDetails}
@@ -1377,7 +1378,9 @@ let branchdata;
           <LoadingSpinner size="medium" />
         </div>
       )}
-    </div>
+    {/* </div> */}
+    </>
+    
   );
 };
 

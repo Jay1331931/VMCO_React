@@ -2478,6 +2478,16 @@ if (uniqueFieldsList.includes(field) && value) {
                         )}
                     </div>
                   )}
+
+                  {/* {user?.userType?.toLowerCase() === "employee" && customerData?.erpCustId && (
+                    <span
+                            // className="update-badge"
+                            style={{ marginTop: "10px", color: "blue" }}
+                          >
+                            ERP ID : {customerData?.erpCustId}
+                          </span>
+                  )
+                  } */}
               </div>
 
               {activeTab === "Business Details" &&
