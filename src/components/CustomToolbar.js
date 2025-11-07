@@ -12,6 +12,7 @@ import {
   useGridApiContext,
   GridToolbarContainer
 } from "@mui/x-data-grid";
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import {
   Box,
   TextField,
@@ -90,11 +91,13 @@ const CustomToolbar = ({
   showApproval,
   buttonName,
   showAddForm = false,
+  showAssignfilters=false
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
   const [filterObj, setFilterObj] = useState({});
   const [customFilters, setCustomFilters] = useState({});
+  const [assigned,setAssigned]=useState(null)
   const [dateFilter, setDateFilter] = useState([
     {
       startDate: new Date(),
@@ -256,7 +259,22 @@ const CustomToolbar = ({
       setDateFilterAnchor(null);
     }
   };
+const handleClick = (event) => {
+    setAssigned(event.currentTarget);
+  };
 
+  const handleClose = () => {
+    setAssigned   (null);
+  };
+  const handleSelectFilters = (option) => {
+    // filters.assignedType=option
+  handleFilterChange({
+                  ...filters,
+                  assignedType: option,
+                });
+    // handleFilterChange({...filterAnchor,assignedType:option})
+    handleClose();
+  };
   return (
     <>
       <Toolbar
@@ -402,7 +420,26 @@ const CustomToolbar = ({
           </Tooltip>
         )} */}
 
+  { showAssignfilters && (
+            <><Tooltip title={t("Assign Filters")}>
+            <IconButton onClick={handleClick}>
+          <AssignmentIcon />
+        </IconButton></Tooltip>
+            <Menu anchorEl={assigned} open={assigned} onClose={handleClose}>
+        <MenuItem onClick={() => handleSelectFilters("assignedto")}>
+          {t("Assigned To Me")}
+        </MenuItem>
+        <MenuItem onClick={() => handleSelectFilters("reportingto")}>
+          {t("Reporting To Me")}
+        </MenuItem>
+        <MenuItem onClick={() => handleSelectFilters("customerregion")}>
+          {t("Region")}
+        </MenuItem>
+      </Menu></>)
+          }
         <GridToolbarContainer>
+
+        
           {showColumnVisibility && (
             <Tooltip title={t("Columns")}>
               <ColumnsPanelTrigger
