@@ -1,22 +1,50 @@
 import { Box, Tab, Tabs } from "@mui/material";
 import { memo } from "react";
-// import { useAppTheme } from "../context/ThemeContext";
 import { useTranslation } from 'react-i18next';
+
 const AnimatedTabs = ({ 
   tabs = [], 
   value, 
   onChange, 
-  // New props for toggle functionality
-  toggleMode = false, // Enable toggle mode
-  leftLabel = "All", 
-  rightLabel = "My Approval" 
+  toggleMode = false,
+  leftLabel, // Made optional - will be auto-determined if not provided
+  rightLabel // Made optional - will be auto-determined if not provided
 }) => {
     const { mode } = "light";
     const { t } = useTranslation();
+
+    // Auto-determine labels based on value if not explicitly provided
+    const getLabels = () => {
+        if (leftLabel && rightLabel) {
+            // If explicitly provided, use them
+            return { left: leftLabel, right: rightLabel };
+        }
+
+        // Auto-determine based on current value
+        if (value === "all" || value === "approval") {
+            return { left: "All", right: "My Approval" };
+        } else if (value === "open" || value === "closed") {
+            return { left: "Open", right: "Closed" };
+        }
+
+        // Default fallback
+        return { left: "All", right: "My Approval" };
+    };
+
+    const labels = getLabels();
+
     const handleChange = (event, newIndex) => {
         if (toggleMode) {
-            // For toggle mode, switch between true/false or "all"/"approval"
-            const newValue = newIndex === 0 ? "all" : "approval";
+            // Determine the values based on current labels
+            let newValue;
+            if (labels.left === "All" && labels.right === "My Approval") {
+                newValue = newIndex === 0 ? "all" : "approval";
+            } else if (labels.left === "Open" && labels.right === "Closed") {
+                newValue = newIndex === 0 ? "open" : "closed";
+            } else {
+                // Fallback for custom labels
+                newValue = newIndex === 0 ? "all" : "approval";
+            }
             onChange(newValue);
         } else {
             // Original functionality for multiple tabs
@@ -29,13 +57,13 @@ const AnimatedTabs = ({
 
     // If toggle mode is enabled, create the two tabs
     const toggleTabs = toggleMode ? [
-        { value: "all", label: leftLabel },
-        { value: "approval", label: rightLabel }
+        { value: value === "all" || value === "approval" ? "all" : "open", label: labels.left },
+        { value: value === "all" || value === "approval" ? "approval" : "closed", label: labels.right }
     ] : tabs;
 
     // Get current index based on value
     const currentIndex = toggleMode 
-        ? (value === "all" || value === false ? 0 : 1)
+        ? (value === "all" || value === "open" || value === false ? 0 : 1)
         : tabs.findIndex((t) => t.value === value);
 
     return (
@@ -73,7 +101,7 @@ const AnimatedTabs = ({
                         textTransform: "none",
                         minHeight: 0,
                         maxHeight: "24px",
-                        minWidth: toggleMode ? "80px" : "100px", // Adjust width for toggle
+                        minWidth: toggleMode ? "100px" : "100px",
                         borderRadius: "30px",
                         fontSize: "12px",
                         color: "#000",

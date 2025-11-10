@@ -89,15 +89,18 @@ const CustomToolbar = ({
   isApprovalMode,
   handleApproval,
   showApproval,
+  isClosedMode,
+  showClosed,
+  handleClosedTickets,
   buttonName,
   showAddForm = false,
-  showAssignfilters=false
+  showAssignfilters = false
 }) => {
   const { t, i18n } = useTranslation();
   const [searchValue, setSearchValue] = useState(searchQuery || "");
   const [filterObj, setFilterObj] = useState({});
   const [customFilters, setCustomFilters] = useState({});
-  const [assigned,setAssigned]=useState(null)
+  const [assigned, setAssigned] = useState(null)
   const [dateFilter, setDateFilter] = useState([
     {
       startDate: new Date(),
@@ -259,19 +262,19 @@ const CustomToolbar = ({
       setDateFilterAnchor(null);
     }
   };
-const handleClick = (event) => {
+  const handleClick = (event) => {
     setAssigned(event.currentTarget);
   };
 
   const handleClose = () => {
-    setAssigned   (null);
+    setAssigned(null);
   };
   const handleSelectFilters = (option) => {
     // filters.assignedType=option
-  handleFilterChange({
-                  ...filters,
-                  assignedType: option,
-                });
+    handleFilterChange({
+      ...filters,
+      assignedType: option,
+    });
     // handleFilterChange({...filterAnchor,assignedType:option})
     handleClose();
   };
@@ -374,6 +377,7 @@ const handleClick = (event) => {
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "20px",
                     fontSize: "12px",
+                    minWidth: "250px",
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                       border: "1px solid #3D5654",
                     },
@@ -388,6 +392,7 @@ const handleClick = (event) => {
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",
                 fontSize: "15px",
+                minWidth: "250px",
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   border: "1px solid #3D5654",
                 },
@@ -401,6 +406,13 @@ const handleClick = (event) => {
               toggleMode={true}
               value={isApprovalMode ? "approval" : "all"}
               onChange={(mode) => handleApproval(mode)}
+            />
+          )}
+          {showClosed && (
+            <AnimatedTabs
+              toggleMode={true}
+              value={isClosedMode}
+              onChange={(mode) => handleClosedTickets(mode)}
             />
           )}
         </Box>
@@ -420,26 +432,26 @@ const handleClick = (event) => {
           </Tooltip>
         )} */}
 
-  { showAssignfilters && (
-            <><Tooltip title={t("Assign Filters")}>
+        {showAssignfilters && (
+          <><Tooltip title={t("Assign Filters")}>
             <IconButton onClick={handleClick}>
-          <AssignmentIcon />
-        </IconButton></Tooltip>
+              <AssignmentIcon />
+            </IconButton></Tooltip>
             <Menu anchorEl={assigned} open={assigned} onClose={handleClose}>
-        <MenuItem onClick={() => handleSelectFilters("assignedto")}>
-          {t("Assigned To Me")}
-        </MenuItem>
-        <MenuItem onClick={() => handleSelectFilters("reportingto")}>
-          {t("Reporting To Me")}
-        </MenuItem>
-        <MenuItem onClick={() => handleSelectFilters("customerregion")}>
-          {t("Region")}
-        </MenuItem>
-      </Menu></>)
-          }
+              <MenuItem onClick={() => handleSelectFilters("assignedto")}>
+                {t("Assigned To Me")}
+              </MenuItem>
+              <MenuItem onClick={() => handleSelectFilters("reportingto")}>
+                {t("Reporting To Me")}
+              </MenuItem>
+              <MenuItem onClick={() => handleSelectFilters("customerregion")}>
+                {t("Region")}
+              </MenuItem>
+            </Menu></>)
+        }
         <GridToolbarContainer>
 
-        
+
           {showColumnVisibility && (
             <Tooltip title={t("Columns")}>
               <ColumnsPanelTrigger

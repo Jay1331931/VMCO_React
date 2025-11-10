@@ -67,23 +67,24 @@ const ApplePayComponent = () => {
   // Initialize Apple Pay button
   useEffect(() => {
     if (!sdkLoaded || !customerDetails || initialized) return;
-  if (!(window.ApplePaySession && window.ApplePaySession.canMakePayments())) {
-    console.warn("Apple Pay not supported in this environment");
-    return; // ⛔ Prevent Tap SDK render on unsupported browsers
-  }
+  // if (!(window.ApplePaySession && window.ApplePaySession.canMakePayments())) {
+  //   console.warn("Apple Pay not supported in this environment");
+  //   return; // ⛔ Prevent Tap SDK render on unsupported browsers
+  // }
     const { render, ThemeMode, SupportedNetworks, Scope, Environment, Locale, ButtonType, Edges } =
       window.TapApplepaySDK;
 
     try {
       render(
         {
-          publicKey: TAP_PUBLIC_KEY,
+          publicKey:"pk_test_FcYVGop4TyCRLb0qBhIHJzmn", //TAP_PUBLIC_KEY,
           // environment: Environment.D,
-          environment: Environment.Development,
+          environment: Environment.Production,
           scope: Scope.TapToken,
           merchant: {
-            id: TAP_MERCHANT_ID,
-            domain:"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+            id: 67979587,//TAP_MERCHANT_ID,
+            // domain:"https://thankful-stone-03a740310-preview.centralus.1.azurestaticapps.net",
+            domain:window.location.hostname,
           },
           transaction: {
             currency: "SAR",
