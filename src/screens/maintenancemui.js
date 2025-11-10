@@ -42,6 +42,7 @@ function Maintenance() {
   const isArabic = i18n.language === "ar";
   const [searchQuery, setSearchQuery] = useState("");
   const [isMyTicketsMode, setMyTicketsMode] = useState(false);
+  const [isClosedMode, setClosedMode] = useState("open"); // Add this state
   const navigate = useNavigate();
 
   const [initialTickets, setTickets] = useState([]);
@@ -112,13 +113,19 @@ function Maintenance() {
       setLoading(true);
       setError(null);
       try {
+        // Add isOpen filter based on isClosedMode
+        const filtersWithStatus = {
+          ...customFilters,
+          isOpen: isClosedMode === "open", // true for open, false for closed
+        };
+
         const params = new URLSearchParams({
           page,
           pageSize,
           search: searchTerm,
           sortBy: sortedModel[0]?.field || "request_id",
           sortOrder: sortedModel[0]?.sort || "asc",
-          filters: JSON.stringify(customFilters),
+          filters: JSON.stringify(filtersWithStatus), // Use filtersWithStatus
         });
 
         let apiUrl;
@@ -197,6 +204,7 @@ function Maintenance() {
       isMyTicketsMode,
       token,
       pageSize,
+      isClosedMode, // Add to dependencies
     ]
   );
 
@@ -222,6 +230,7 @@ function Maintenance() {
     filters,
     sortModel,
     isMyTicketsMode,
+    isClosedMode, // Add to dependencies
   ]);
 
   // Handle search functionality
@@ -241,6 +250,13 @@ function Maintenance() {
   const handleApproval = (mode) => {
     setFilters({});
     setMyTicketsMode(mode === "approval");
+    setPage(1);
+  };
+
+  // Add handler for open/closed toggle
+  const handleShowClosedTickets = (mode) => {
+    console.log("Closed Mode:", mode);
+    setClosedMode(mode);
     setPage(1);
   };
 
@@ -290,8 +306,6 @@ function Maintenance() {
         ]?.width || 150,
       searchable: false,
       sortable: false,
-    //   minWidth: 100,
-    //   flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{params.value}</span>,
@@ -317,8 +331,6 @@ function Maintenance() {
         ]?.width || 150,
       searchable: false,
       sortable: false,
-    //   minWidth: 100,
-    //   flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{params.value}</span>,
@@ -329,7 +341,6 @@ function Maintenance() {
       include: isV("issueNameCol"),
       searchable: true,
       width: columnDimensions["issueName"]?.width || 100,
-    //   flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{params.value}</span>,
@@ -340,7 +351,6 @@ function Maintenance() {
       include: isV("issueTypeCol"),
       searchable: true,
       width: columnDimensions["issueType"]?.width || 120,
-    //   flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => <span>{params.value}</span>,
@@ -351,7 +361,6 @@ function Maintenance() {
       include: isV("createdDateCol"),
       searchable: false,
       width: columnDimensions["createdAt"]?.width || 100,
-    //   flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => (
@@ -496,6 +505,7 @@ function Maintenance() {
     setColumnVisibilityModel(newModel);
     localStorage.setItem(storageKey, JSON.stringify(newModel));
   };
+
   return (
     <Sidebar title={t("Maintenance")}>
       {isV("maintenanceContent") && (
@@ -563,6 +573,9 @@ function Maintenance() {
                               isV("toggleButton") &&
                               user?.designation === "maintenance head"
                             }
+                            showClosed={true}
+                            isClosedMode={isClosedMode}
+                            handleClosedTickets={handleShowClosedTickets}
                             handleAddClick={handleAdd}
                             columnsToDisplay={columnsToDisplay}
                             handleApproval={handleApproval}
@@ -651,6 +664,9 @@ function Maintenance() {
                               isV("toggleButton") &&
                               user?.designation === "maintenance head"
                             }
+                            showClosed={true}
+                            isClosedMode={isClosedMode}
+                            handleClosedTickets={handleShowClosedTickets}
                             handleAddClick={handleAdd}
                             columnsToDisplay={columnsToDisplay}
                             handleApproval={handleApproval}

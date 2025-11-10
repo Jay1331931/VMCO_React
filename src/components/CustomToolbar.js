@@ -377,6 +377,7 @@ const CustomToolbar = ({
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "20px",
                     fontSize: "12px",
+                    minWidth: "250px",
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                       border: "1px solid #3D5654",
                     },
@@ -391,6 +392,7 @@ const CustomToolbar = ({
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",
                 fontSize: "15px",
+                minWidth: "250px",
                 "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                   border: "1px solid #3D5654",
                 },
