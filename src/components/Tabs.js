@@ -94,8 +94,8 @@ const Tabs = ({
                         width: 100%;
                         justify-content: center;
                         display: flex;
-                        gap: 2px;
-                        border-bottom: 2px solid #D9D9D6;
+                        gap: 10px;
+                        // border-bottom: 2px solid #D9D9D6;
                     }
                     .tab-button {
                         width: 100%;
@@ -109,7 +109,15 @@ const Tabs = ({
                         padding: 4px;
                         width: max-content;
                         font-size: 0.73rem;
+                        color: black;
+                        border: 1px solid black;
+                        border-radius: 10px;
                     }
+                        .category-tab.active {
+                        color: white;
+                        background: #0b4c45;
+                        border: 1px solid #0b4c45;
+                        }
                 }
             `}</style>
         </div>

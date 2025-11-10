@@ -38,6 +38,8 @@ const BranchDetailsForm = ({
   handleDeliveryChargesChange,
   isFirstBranch,
   setSameAsCustomer,
+  setShowAllDetails,
+  setExpandedRows,
 }) => {
   const { t, i18n } = useTranslation();
   const [showMap, setShowMap] = useState(false);
@@ -45,6 +47,7 @@ const BranchDetailsForm = ({
   const [geoData, setGeoData] = useState(null);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const GOOGLE_MAPS_API_KEY =
   process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "YOUR_GOOGLE_MAPS_API_KEY";
 
@@ -98,6 +101,12 @@ const BranchDetailsForm = ({
       return []; // Return empty array on error
     }
   };
+     useEffect(() => {
+              const handleResize = () => setIsMobile(window.innerWidth < 768);
+              console.log("isMobile", isMobile);
+              window.addEventListener("resize", handleResize);
+              return () => window.removeEventListener("resize", handleResize);
+            }, []);
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       const options = {};
@@ -914,7 +923,34 @@ const BranchDetailsForm = ({
     <div className="form-section">
       {console.log(isUnderApproval)}
       {/* {(isUnderApproval) && <h2>{t('Branch is currently under Approval')}</h2>} */}
-      <h3>{t("Branch Details")}</h3>
+      <div style={{
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+}}>
+  <h3 style={{ margin: 0 }}>{t("Branch Details")}</h3>
+
+  {isMobile && (
+    <button
+      className="popup-close"
+      onClick={() => {
+        setShowAllDetails(false);
+        setExpandedRows([]);
+      }}
+      style={{
+        width: "25px",
+        height: "25px",
+        fontSize: "18px",
+        background: "light-gray",
+        border: "none",
+        cursor: "pointer",
+        lineHeight: "1",
+      }}
+    >
+      ×
+    </button>
+  )}
+</div>
 
       <div className="form-group">
         {/* <label>

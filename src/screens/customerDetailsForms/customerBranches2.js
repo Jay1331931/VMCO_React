@@ -1770,6 +1770,7 @@ customer_id: customer?.id,
                 handleBranchFieldChange={handleBranchFieldChange}
                 isApprovalMode={isApprovalMode}
                 mode={mode}
+                setShowAllDetails={setShowAllDetails}
                 setExpandedRows={setExpandedRows}
                 isFirstBranch={isFirstBranch}
               />
