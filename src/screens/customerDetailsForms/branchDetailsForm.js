@@ -21,6 +21,7 @@ const BranchDetailsForm = ({
   handleBranchFieldChange,
   isApprovalMode,
   mode,
+  setShowAllDetails,
   setExpandedRows,
   isFirstBranch,
 }) => {
@@ -1175,6 +1176,8 @@ let branchdata;
         handleDeliveryChargesChange={handleDeliveryChargesChange}
         isFirstBranch={isFirstBranch}
         setSameAsCustomer={setSameAsCustomer}
+        setShowAllDetails={setShowAllDetails}
+        setExpandedRows={setExpandedRows}
       />
 
       {/* Contact Section */}

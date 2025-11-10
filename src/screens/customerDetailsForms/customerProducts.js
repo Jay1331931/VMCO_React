@@ -61,6 +61,7 @@ function Products({ customerId, customer, setTabsHeight }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const actionMenuRef = useRef(null);
   const { t, i18n } = useTranslation();
   const [entities] = useState(initialEntities);
@@ -90,6 +91,12 @@ function Products({ customerId, customer, setTabsHeight }) {
   );
   const isV = rbacMgr.isV.bind(rbacMgr);
   const isE = rbacMgr.isE.bind(rbacMgr);
+   useEffect(() => {
+            const handleResize = () => setIsMobile(window.innerWidth < 768);
+            console.log("isMobile", isMobile);
+            window.addEventListener("resize", handleResize);
+            return () => window.removeEventListener("resize", handleResize);
+          }, []);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -573,7 +580,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             id="category-filter"
             name="categoryFilter"
             options={categoryOptions}
-            className="category-filter"
+            className={isMobile ? "mobile category-filter" : "category-filter"}
             placeholder={t("All Categories")}
             value={categoryFilter}
             onChange={(e) => {
@@ -587,7 +594,7 @@ function Products({ customerId, customer, setTabsHeight }) {
             id="subcategory-filter"
             name="subCategoryFilter"
             options={subCategoryOptions}
-            className="category-filter"
+            className={isMobile ? "mobile category-filter" : "category-filter"}
             placeholder={t("All Subcategories")}
             value={subCategoryFilter}
             onChange={(e) => {
@@ -725,8 +732,9 @@ function Products({ customerId, customer, setTabsHeight }) {
         }
         @media (max-width: 768px) {
           .product-search-input {
-            width: 100%;
+            width: 125px !important;
             margin-bottom: 10px;
+            padding: 5px 10px !important;
           }
           .products-header-controls {
             flex-direction: column;

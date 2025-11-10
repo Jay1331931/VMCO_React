@@ -1071,7 +1071,7 @@ body.catalog-page #root {
   }
   .tab-container {
     width: 100%;
-    margin-top: 40px;
+    margin-top: 30px;
   }
   .tabs {
     width: 100%;
@@ -1079,6 +1079,9 @@ body.catalog-page #root {
     display: flex;
     gap: 2px;
     border-bottom: 2px solid #d9d9d6;
+  }
+  .tab-container.catalog {
+    margin-top: 0px;
   }
   .tab-button {
     width: 100%;
@@ -2853,6 +2856,9 @@ display: flex;
 
 /* Mobile responsive */
 @media (max-width: 768px) {
+  .catalog-scrollable-content {
+    padding: 0px;
+  }
   .branch-form-popup {
     max-width: 95%;
     margin: 0;
