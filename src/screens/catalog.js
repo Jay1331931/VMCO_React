@@ -1454,7 +1454,7 @@ function Catalog() {
                     name: b.label || b.name || b.value,
                     disabled: b.disabled,
                   }))}
-                  className="location-select"
+                  className={isMobile ? "mobile-select-branch location-select" : "location-select"}
                   placeholder={t("Select Branch")}
                   disabled={isLoading || branches.length === 0}
                 />
@@ -1509,6 +1509,7 @@ function Catalog() {
                   setSubCategoryFilter("");
                   setSubCategoryOptions([]);
                 }}
+                className={isMobile ? "catalog" : ""}
                 variant="category"
               />
             </div>
@@ -1529,7 +1530,13 @@ function Catalog() {
                 id={`category-filter-${catalogId}`}
                 name="categoryFilter"
                 options={categoryOptions}
-                className={`category-filter ${[
+                className={!isMobile ? `category-filter ${[
+                  Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
+                  Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
+                ].includes(activeCategory.toLowerCase())
+                  ? "tab-linked-filter"
+                  : ""
+                  }` : `mobile category-filter ${[
                   Constants.CATEGORY.VMCO_MACHINES.toLowerCase(),
                   Constants.CATEGORY.VMCO_CONSUMABLES.toLowerCase(),
                 ].includes(activeCategory.toLowerCase())
@@ -1551,7 +1558,7 @@ function Catalog() {
                 id={`subcategory-filter-${catalogId}`}
                 name="subCategoryFilter"
                 options={subCategoryOptions}
-                className="category-filter"
+                className={!isMobile ? "category-filter" : "mobile category-filter"}
                 placeholder={!categoryFilter ? t("Select category first") : t("Sub category")}
                 value={subCategoryFilter}
                 onChange={(e) => {
@@ -1739,11 +1746,14 @@ function Catalog() {
 
         @media (max-width: 768px) {
           .product-search-input {
-            width: 100%;
+            width: 125px !important;
             margin-bottom: 10px;
+            padding: 5px 10px !important;
           }
           .search-container {
-            flex-direction: column;
+            flex-direction: row !important;
+            overflow-x: auto;
+            scrollbar-width: none;
           }
         }
       `}</style>

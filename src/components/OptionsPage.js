@@ -594,7 +594,7 @@ console.log("currentEntity",isMatch,currentEntity)
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
@@ -607,7 +607,7 @@ console.log("currentEntity",isMatch,currentEntity)
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )}
+        )} */}
       </div>
       <style>
         {`.options-container {
