@@ -43,7 +43,7 @@ return (
       ) : fileContent ? ( */}
         <>
          
-          <pre
+          <pre style="word-wrap: break-word; white-space: pre-wrap;"
             // style={{
             //   backgroundColor: "#f5f5f5",
             //   padding: "10px",
