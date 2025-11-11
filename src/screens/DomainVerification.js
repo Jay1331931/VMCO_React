@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState } from "react";
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const APPLEPAYFILE=process.env.REACT_APP_APPLE_PAY
+const APPLEPAYFILE=process.env.REACT_APP_APPLE_DOMAIN_VERIFICATION
 const token = localStorage.getItem("token");
 
 const DomainVerification = () => {
