@@ -1564,7 +1564,7 @@ function Orders() {
                 </Box>
               )}
 
-            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && (isValidForSync|| rowdata?.status?.toLowerCase()==='approved' && rowdata?.sampleOrder==true  )&& (
               <Box
                 component="span"
                 onClick={(e) => {
