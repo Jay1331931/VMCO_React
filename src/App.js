@@ -133,7 +133,7 @@ function App() {
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent />} />
          <Route path="/applyPay/:orderId/:amount/:customerId/:orderType" element={<ApplePayComponent/>}/>
         <Route path="/payments/:orderId" element={<PaymentLines />} />
-        <Route path='/apply-pay/testing' element={<ApplePaymentReact/>} />
+        <Route path='/apple-pay/testing' element={<ApplePaymentReact/>} />
       </Routes>
     </Router>
   );
