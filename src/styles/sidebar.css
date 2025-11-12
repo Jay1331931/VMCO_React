@@ -196,6 +196,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  padding: 10px;
 }
 .user-text-header {
   margin-left: auto;
@@ -410,7 +411,7 @@
     -ms-user-select: none;
     user-select: none; */
   touch-action: pan-y;
-    overflow-y: auto;
+    /* overflow-y: auto; */
     scroll-behavior: smooth;
     box-sizing: border-box;
   }

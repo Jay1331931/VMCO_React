@@ -254,6 +254,9 @@ const ProductCard = ({
                         width: 140px !important;
                         font-size: 14px;
                     }
+                        .buttons-container {
+                        flex-direction: column !important;
+                        }
                     
                     .favorite-btn, button[style*="position: absolute"] {
                     left: 5px !important;

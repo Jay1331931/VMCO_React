@@ -383,8 +383,8 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         }
                         .popup-content {
                             flex-direction: column;
-                            gap: 18px;
-                            padding: 18px 18px 18px 18px;
+                            gap: 0px;
+                            padding: 0px 10px 10px 10px;
                         }
                         .popup-image {
                             min-width: 120px;
@@ -393,6 +393,7 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
                         }
                         .popup-details {
                             min-width: 0;
+                            gap: 0px;
                         }
                         .add-to-cart-btn {
                             align-items: center;
