@@ -61,13 +61,29 @@ function GetProducts({
   };
 
   // NEW: Handle select all functionality
+  // NEW: Handle select all functionality
   const handleSelectAll = (isChecked) => {
     if (isChecked) {
-      setSelectedProducts([...backendProducts]);
+      // Add current page products to existing selections
+      // Filter out duplicates by checking if product already exists
+      setSelectedProducts(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const newProducts = backendProducts.filter(p => !existingIds.has(p.id));
+        return [...prev, ...newProducts];
+      });
     } else {
-      setSelectedProducts([]);
+      // Remove current page products from selections
+      setSelectedProducts(prev => {
+        const currentPageIds = new Set(backendProducts.map(p => p.id));
+        return prev.filter(p => !currentPageIds.has(p.id));
+      });
     }
   };
+
+  // Check if all products on current page are selected
+  const areAllSelected = backendProducts.length > 0 &&
+    backendProducts.every(product => selectedProducts.some(p => p.id === product.id));
+
 
   // NEW: Handle select button click
   const handleSelectProducts = () => {
@@ -75,7 +91,7 @@ function GetProducts({
       alert(t("Please select at least one product."));
       return;
     }
-    
+
     // Call the parent callback with selected products array
     onSelectProduct(selectedProducts);
     setSelectedProducts([]);
@@ -86,9 +102,6 @@ function GetProducts({
   const isProductSelected = (productId) => {
     return selectedProducts.some(p => p.id === productId);
   };
-
-  // Check if all products are selected
-  const areAllSelected = backendProducts.length > 0 && selectedProducts.length === backendProducts.length;
 
   const getApiParameters = () => {
     const params = {};
@@ -513,14 +526,14 @@ function GetProducts({
                   </label>
                 </div>
               )}
-              
+
               <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {backendProducts.map((product) => (
                   <li key={product.id}>
-                    <label className="gp-product-item" style={{ 
-                      display: "flex", 
-                      alignItems: "center", 
-                      padding: "8px 12px", 
+                    <label className="gp-product-item" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      padding: "8px 12px",
                       cursor: "pointer",
                       backgroundColor: isProductSelected(product.id) ? "#f0f8ff" : "#f9f9f9",
                       border: "1px solid #ddd",
@@ -532,8 +545,8 @@ function GetProducts({
                         type="checkbox"
                         checked={isProductSelected(product.id)}
                         onChange={(e) => handleProductCheck(product, e.target.checked)}
-                        style={{ 
-                          marginRight: isRTL ? "0" : "12px", 
+                        style={{
+                          marginRight: isRTL ? "0" : "12px",
                           marginLeft: isRTL ? "12px" : "0",
                           cursor: "pointer"
                         }}

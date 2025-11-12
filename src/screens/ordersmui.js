@@ -1579,7 +1579,7 @@ function Orders() {
                 </Box>
               )}
 
-            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && (isValidForSync|| rowdata?.status?.toLowerCase()==='approved' && rowdata?.sampleOrder==true  )&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -2767,6 +2767,7 @@ function Orders() {
                     disableSelectionOnClick
                     disableColumnMenu
                     hideFooter={true}
+                    getRowId={(row) => row?.workflowInstanceId | row?.id}
                     hideFooterPagination={true}
                     pagination={false}
                     rowHeight={55}

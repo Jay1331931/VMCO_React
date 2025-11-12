@@ -44,6 +44,8 @@ import DomainVerification from "./screens/DomainVerification";
 import ApprovalHistory from "./screens/approvalHistory";
 import PaymentLines from "./components/PaymentLines";
 import ApplePayComponent from "./screens/ApplePayComponent";
+import ApplePayment from "./components/ApplePayment";
+import ApplePaymentReact from "./components/ApplePaymentReact";
 function App() {
   const { user, token, loading } = useAuth();
   const [pageName, setPageName] = useState("")
@@ -131,6 +133,7 @@ function App() {
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent />} />
          <Route path="/applyPay/:orderId/:amount/:customerId/:orderType" element={<ApplePayComponent/>}/>
         <Route path="/payments/:orderId" element={<PaymentLines />} />
+        <Route path='/apple-pay/testing' element={<ApplePaymentReact/>} />
       </Routes>
     </Router>
   );
