@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useState } from "react";
 import axios from "axios";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-const APPLEPAYFILE=process.env.REACT_APP_APPLE_PAY
+const APPLEPAYFILE=process.env.REACT_APP_APPLE_DOMAIN_VERIFICATION
 const token = localStorage.getItem("token");
 
 const DomainVerification = () => {
@@ -43,7 +43,7 @@ return (
       ) : fileContent ? ( */}
         <>
          
-          <pre style="word-wrap: break-word; white-space: pre-wrap;"
+         <pre style={{ wordWrap: "break-word", whiteSpace: "pre-wrap" }}
             // style={{
             //   backgroundColor: "#f5f5f5",
             //   padding: "10px",
