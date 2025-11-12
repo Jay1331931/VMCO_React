@@ -1264,6 +1264,11 @@ td.file-display-cell {
     padding: 0px;
     width: 100%;
   }
+  .expanded-form-container-footer {
+  display: flex;
+  justify-content: center;
+  /* padding: 0px 20px; */
+}
   .branchDropDown {
     width: 100% !important;
     /* height: 40px !important; */
@@ -1274,7 +1279,7 @@ td.file-display-cell {
   }
   .customers .customer-onboarding-form-grid {
     grid-template-columns: 1fr; /* Single column on smaller screens */
-    margin-top: 70px; /* Add margin to the top */
+    margin-top: 25px; /* Add margin to the top */
     gap: 20px;
     margin-bottom: 20px;
     border-left: none;
@@ -1345,10 +1350,11 @@ td.file-display-cell {
     white-space: nowrap;
   }
   .customers .customer-onboarding-body {
-    border: 1px solid lightgray;
+    /* border: 1px solid lightgray; */
     border-radius: 10px;
     flex-direction: column; /* Stack content vertically on smaller screens */
     gap: 20px; /* Space between sections */
+    margin-top: 20px;
   }
   .customers .text-field.small {
     width: 250px;
@@ -1591,10 +1597,17 @@ td.label-cell {
     margin: 20px;
   }
   .css-d4ze00 {
-    width: 300px !important
+    width: 150px !important
+  }
+  .css-1ct4v4x {
+    width: 150px !important
+  }
+  .css-1n4771w-MuiTabs-root .MuiTab-root  {
+    /* width: 45px !important; */
+    min-width: 45px !important;
   }
   .branches-page-header {
-    margin-top: 70px !important;
+    margin-top: 30px !important;
     margin-bottom: 0px !important;
   }
   .branches-add-button {
@@ -1655,7 +1668,7 @@ td.label-cell {
   }
   .branch-card {
     padding: 0.9rem;
-    margin: 10px;
+    margin: 5px;
   }
   .form-section {
     margin-bottom: 15px;

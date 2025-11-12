@@ -49,10 +49,7 @@ import {
   Button,
   Typography,
 } from "@mui/material";
-import {
-  KeyboardDoubleArrowRight,
-  Add,
-} from "@mui/icons-material";
+import { KeyboardDoubleArrowRight, Add } from "@mui/icons-material";
 import { Autocomplete, Grid, Menu, MenuItem, Select } from "@mui/material";
 const CUSTOMER_APPROVAL_CHECKLIST_URL =
   Constants?.DOCUMENTS_NAME?.BRANCH_APPROVAL_CHECKLIST;
@@ -67,7 +64,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [isActionMenuOpen, setActionMenuOpen] = useState(false);
   const [expandedRows, setExpandedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+
   const [total, setTotal] = useState(0);
   const [branches, setBranches] = useState([]);
   const [branchChanges, setBranchChanges] = useState({});
@@ -83,7 +80,8 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
   const [nextTempId, setNextTempId] = useState(-1);
   const [isFirstBranch, setIsFirstBranch] = useState(false);
   const [search, setSearch] = useState("");
-const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [pageSize, setPageSize] = useState(isMobile ? 5 : 6);
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
   const { token, user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
@@ -155,96 +153,95 @@ const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   //   setCurrentPage(1);
   // }, 400);
   useEffect(() => {
-          const handleResize = () => setIsMobile(window.innerWidth < 768);
-          console.log("isMobile", isMobile);
-          window.addEventListener("resize", handleResize);
-          return () => window.removeEventListener("resize", handleResize);
-        }, []);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const columns = [
-{
-  field: i18n.language === "en" ? "branchNameEn" : "branchNameLc",
-  headerName: t("Branch Name"),
-  searchable: true,
-},
-{
-  field: "city",
-  headerName: t("City"),
-  searchable: true,
-},
-{
-  field: "erpBranchId",
-  headerName: t("ERP ID"),
-  searchable: true,
-},
-{
-  field: "locationType",
-  headerName: t("Location Type"),
-  searchable: true,
-},
-{
-  field: "region",
-  headerName: t("Region"),
-  searchable: true,
-},
-{
-  field: "currentApprover",
-  headerName: t("Current Approver"),
-  searchable: true,
-},
-  ]
+    {
+      field: i18n.language === "en" ? "branchNameEn" : "branchNameLc",
+      headerName: t("Branch Name"),
+      searchable: true,
+    },
+    {
+      field: "city",
+      headerName: t("City"),
+      searchable: true,
+    },
+    {
+      field: "erpBranchId",
+      headerName: t("ERP ID"),
+      searchable: true,
+    },
+    {
+      field: "locationType",
+      headerName: t("Location Type"),
+      searchable: true,
+    },
+    {
+      field: "region",
+      headerName: t("Region"),
+      searchable: true,
+    },
+    {
+      field: "currentApprover",
+      headerName: t("Current Approver"),
+      searchable: true,
+    },
+  ];
 
   // Add to your component state
-const [selectedBranch, setSelectedBranch] = useState(null);
-const [showBranchPopup, setShowBranchPopup] = useState(false);
-const [showAllDetails, setShowAllDetails] = useState(false);
-// Handler for "View All Details" click
-const handleBranchAllDetailsClick = (branch) => {
-  setShowBranchPopup(false);
-  setShowAllDetails(true)
-};
+  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [showBranchPopup, setShowBranchPopup] = useState(false);
+  const [showAllDetails, setShowAllDetails] = useState(false);
+  // Handler for "View All Details" click
+  const handleBranchAllDetailsClick = (branch) => {
+    setShowBranchPopup(false);
+    setShowAllDetails(true);
+  };
 
-// Toggle row expansion
-// const toggleRow = (branchId) => {
-//   // Your existing toggle logic
-//   setExpandedRows(prev => ({
-//     ...prev,
-//     [branchId]: !prev[branchId]
-//   }));
-// };
+  // Toggle row expansion
+  // const toggleRow = (branchId) => {
+  //   // Your existing toggle logic
+  //   setExpandedRows(prev => ({
+  //     ...prev,
+  //     [branchId]: !prev[branchId]
+  //   }));
+  // };
 
-// const isExpanded = (branchId) => {
-//   return expandedRows[branchId] || false;
-// };
-
+  // const isExpanded = (branchId) => {
+  //   return expandedRows[branchId] || false;
+  // };
 
   const handleSearchChange = useCallback(
-      (event, newValue) => {
-        setSearch(newValue);
-  
-        if (!newValue?.trim()) {
-          setSearchOptions([]);
-          return;
-        }
-  
-        // Generate options from columns that can be searched
-        const newOptions = columns
-          .filter(
-            (col) =>
-              col.field !== "updatedAt" &&
-              col.field !== "createdAt" &&
-              col?.searchable
-          )
-          .map((col) => ({
-            column: col.field,
-            searchString: newValue.trim(),
-            source: "search",
-            operator: "contains",
-          }));
-  
-        setSearchOptions(newOptions);
-      },
-      [columns]
-    );
+    (event, newValue) => {
+      setSearch(newValue);
+
+      if (!newValue?.trim()) {
+        setSearchOptions([]);
+        return;
+      }
+
+      // Generate options from columns that can be searched
+      const newOptions = columns
+        .filter(
+          (col) =>
+            col.field !== "updatedAt" &&
+            col.field !== "createdAt" &&
+            col?.searchable
+        )
+        .map((col) => ({
+          column: col.field,
+          searchString: newValue.trim(),
+          source: "search",
+          operator: "contains",
+        }));
+
+      setSearchOptions(newOptions);
+    },
+    [columns]
+  );
   // Transform branch data with contacts
   const transformBranchData = (branches, branchContacts) => {
     const branchesArray = Array.isArray(branches) ? branches : [branches];
@@ -390,8 +387,9 @@ const handleBranchAllDetailsClick = (branch) => {
       sortBy: "id",
       sortOrder: "asc",
       // search: search,
-      filters: JSON.stringify({...filters,
-customer_id: customer?.id,
+      filters: JSON.stringify({
+        ...filters,
+        customer_id: customer?.id,
         id: customer?.workflowId,
       }),
     });
@@ -428,13 +426,13 @@ customer_id: customer?.id,
     setExpandedRows((prev) => (prev.includes(branchId) ? [] : [branchId]));
     const isAppMode = await checkIfBranchIsInApproval(branchId);
     // setIsApprovalMode(isAppMode);
-   if (isMobile) {
-    // ✅ FIX: Use === for comparison and find the correct branch
-    const selectedBranch = currentItems.find(item => item.id === branchId);
-    console.log("Selected branch:", selectedBranch);
-    setSelectedBranch(selectedBranch);
-    setShowAllDetails(true);
-  }
+    if (isMobile) {
+      // ✅ FIX: Use === for comparison and find the correct branch
+      const selectedBranch = currentItems.find((item) => item.id === branchId);
+      console.log("Selected branch:", selectedBranch);
+      setSelectedBranch(selectedBranch);
+      setShowAllDetails(true);
+    }
   };
   // Update tabs height when expanded rows change
   useEffect(() => {
@@ -450,17 +448,19 @@ customer_id: customer?.id,
   }, [expandedRows?.length, branches?.length]);
   // Fetch branches on mount
   useEffect(() => {
+    setPageSize(isMobile ? 5 : 6)
     if (customer?.id) {
       fetchBranches();
     }
-  }, [customer?.id, filters, currentPage]);
+  }, [customer?.id, filters, currentPage, pageSize]);
   // Pagination variables
   const itemsPerPage = pageSize;
   const totalPages = Math.ceil(total / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   // const currentItems = branches.slice(startIndex, endIndex);
-  const currentItems = [...branches]?.slice(startIndex, endIndex);
+  const currentItems = [...branches]
+  // ?.slice(startIndex, endIndex);
   const isExpanded = (branchId) => expandedRows.includes(branchId);
   const getStatusClass = (status) => {
     switch (status) {
@@ -1431,112 +1431,117 @@ customer_id: customer?.id,
             className="branches-search-input"
           /> */}
           <Box
-                    sx={{
-                      width: "500px",
-                      gap: "20px",
-                      display: "flex",
-                      flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
-                      alignItems: { xs: "stretch", sm: "center" },
-                      marginRight: i18n.language === "en" ? "auto" : "none",
-                      marginLeft: i18n.language === "en" ? "none" : "auto",
-                    }}
-                  >
-                    <Autocomplete
-                      multiple
-                      freeSolo
-                      fullWidth
-                      size="small"
-                      value={Object.entries(filters)
-                        .map(([key, value]) => ({
-                          column: value?.column || key,
-                          searchString: value?.searchString || value,
-                        }))
-                        .filter((item) => item.searchString && columns.find(col => col.field === item.column)?.searchable)} // Filter out empty entries
-                      inputValue={search || ""}
-                      onInputChange={(event, newValue) =>
-                        handleSearchChange(event, newValue)
-                      }
-                      onChange={(event, newValue, details, reason) => {
-                        if (details === "removeOption") {
-                         const newFilterObj = {};
-                Object.entries(filters).forEach(([key, value]) => {
-                  if (key !== reason.option.column) {
-                    newFilterObj[key] = value;
-                  }
-                });
-                setFilters(newFilterObj);
-                        } else {
-                          const newFilterObj = { ...filters };
-                newValue.forEach((item) => {
-                  if (item.column && item.searchString) {
-                    newFilterObj[item.column] = item.searchString;
-                  }
-                });
-                setFilters(newFilterObj);
-                        }
-                      }}
-                      options={searchOptions}
-                      renderOption={(props, option) => {
-                        console.log("columns", columns, option);
-                        const columnName = columns.find(
-                          (col) => col.field === option.column
-                        )?.headerName;
-                        return (
-                          <Box component="li" {...props}>
-                            <Typography sx={{ fontSize: "14px" }}>
-                              {columnName} <KeyboardDoubleArrowRight fontSize="smaller" />{" "}
-                              {option.searchString}
-                            </Typography>
-                          </Box>
-                        );
-                      }}
-                      getOptionLabel={(option) => {
-                        if (typeof option === "string") return option;
-          
-                        const columnName =
-                          columns.find((col) => col.field === option.column)
-                            ?.headerName || option.column;
-                        return `${columnName}: ${
-                          typeof option.searchString === "string"
-                            ? option.searchString
-                            : `${option.searchString?.startDate?.split("T")[0] ?? ""} - ${
-                                option.searchString?.endDate?.split("T")[0] ?? ""
-                              }`
-                        }`;
-                      }}
-                      filterOptions={(options) => options} // Don't filter options, show all
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          placeholder={t("Search...")}
-                          variant="outlined"
-                          sx={{
-                            "& .MuiOutlinedInput-root": {
-                              borderRadius: "20px",
-                              fontSize: "12px",
-                              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                border: "1px solid #3D5654",
-                              },
-                            },
-                            "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
-                              display: "none",
-                            },
-                          }}
-                        />
-                      )}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          borderRadius: "10px",
-                          fontSize: "15px",
-                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                            border: "1px solid #3D5654",
-                          },
-                        },
-                        "& .MuiAutocomplete-popupIndicator": { borderRadius: "20px" },
-                        "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
-                      }}
-                    />
-                    </Box>
+            sx={{
+              width: "500px",
+              gap: "20px",
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" }, // column on mobile, row on desktop
+              alignItems: { xs: "stretch", sm: "center" },
+              marginRight: i18n.language === "en" ? "auto" : "none",
+              marginLeft: i18n.language === "en" ? "none" : "auto",
+            }}
+          >
+            <Autocomplete
+              multiple
+              freeSolo
+              fullWidth
+              size="small"
+              value={Object.entries(filters)
+                .map(([key, value]) => ({
+                  column: value?.column || key,
+                  searchString: value?.searchString || value,
+                }))
+                .filter(
+                  (item) =>
+                    item.searchString &&
+                    columns.find((col) => col.field === item.column)?.searchable
+                )} // Filter out empty entries
+              inputValue={search || ""}
+              onInputChange={(event, newValue) =>
+                handleSearchChange(event, newValue)
+              }
+              onChange={(event, newValue, details, reason) => {
+                if (details === "removeOption") {
+                  const newFilterObj = {};
+                  Object.entries(filters).forEach(([key, value]) => {
+                    if (key !== reason.option.column) {
+                      newFilterObj[key] = value;
+                    }
+                  });
+                  setFilters(newFilterObj);
+                } else {
+                  const newFilterObj = { ...filters };
+                  newValue.forEach((item) => {
+                    if (item.column && item.searchString) {
+                      newFilterObj[item.column] = item.searchString;
+                    }
+                  });
+                  setFilters(newFilterObj);
+                }
+              }}
+              options={searchOptions}
+              renderOption={(props, option) => {
+                console.log("columns", columns, option);
+                const columnName = columns.find(
+                  (col) => col.field === option.column
+                )?.headerName;
+                return (
+                  <Box component="li" {...props}>
+                    <Typography sx={{ fontSize: "14px" }}>
+                      {columnName}{" "}
+                      <KeyboardDoubleArrowRight fontSize="smaller" />{" "}
+                      {option.searchString}
+                    </Typography>
+                  </Box>
+                );
+              }}
+              getOptionLabel={(option) => {
+                if (typeof option === "string") return option;
+
+                const columnName =
+                  columns.find((col) => col.field === option.column)
+                    ?.headerName || option.column;
+                return `${columnName}: ${
+                  typeof option.searchString === "string"
+                    ? option.searchString
+                    : `${
+                        option.searchString?.startDate?.split("T")[0] ?? ""
+                      } - ${option.searchString?.endDate?.split("T")[0] ?? ""}`
+                }`;
+              }}
+              filterOptions={(options) => options} // Don't filter options, show all
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder={t("Search...")}
+                  variant="outlined"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        border: "1px solid #3D5654",
+                      },
+                    },
+                    "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
+                      display: "none",
+                    },
+                  }}
+                />
+              )}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "10px",
+                  fontSize: "15px",
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    border: "1px solid #3D5654",
+                  },
+                },
+                "& .MuiAutocomplete-popupIndicator": { borderRadius: "20px" },
+                "& .MuiAutocomplete-listbox": { borderRadius: "20px" },
+              }}
+            />
+          </Box>
           {/* <div className="branches-action-buttons">
                <button className="branches-upload-button" onClick={handleButtonClick}>
         <span> {loading ? t("Uploading Excel") : t("Upload Excel")}</span>
@@ -1694,107 +1699,105 @@ customer_id: customer?.id,
         </div>
       ) : */}
       {isMobile ? (
-  
-<>
-{!showAllDetails && (
-  <div className="branches-list">
-    {currentItems.map((branch) => (
-      <div key={branch.id} className="branch-card">
-        <div
-          className="branch-summary"
-          onClick={() => toggleRow(branch.id)}
-        >
-          <div className="branch-id">
-            {branch.erp_branch_id || branch.id}
-          </div>
-          <div className="branch-name">{branch.branchNameEn}</div>
-          <div className="branch-status">
-            <span
-              className={`branches-status-badge ${getStatusClass(
-                branch.branchStatus
-              )}`}
-            >
-              {t(branch.branchStatus)}
-            </span>
-          </div>
-          <button className="branches-toggle-row-btn">
-            {isExpanded(branch.id) ? (
-              <FontAwesomeIcon icon={faChevronDown} />
-            ) : (
-              <FontAwesomeIcon icon={faChevronRight} />
-            )}
-          </button>
-        </div>
-      </div>
-    ))}
-    {/* Mobile Pagination */}
-        {branches && branches.length > 0 && (
-          
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => {
-                setExpandedRows([]);
-                setCurrentPage(page);
-              }}
-              startIndex={startIndex}
-              endIndex={Math.min(endIndex, branches.length)}
-              totalItems={branches.length}
-            />
-        )}
-
-  </div>
-)}
-    {/* Branch Details Form Popup */}
-    {showAllDetails &&  (
-      <>
-      {/* <div className="branch-form-popup-overlay" onClick={() => setShowBranchPopup(false)}> */}
-      {/* <div className="branch-form-popup" onClick={(e) => e.stopPropagation()}> */}
-          {/* <button className="popup-close" onClick={() => setShowAllDetails(false)}>
+        <>
+          {!showAllDetails && (
+            <div className="branches-list">
+              {currentItems.map((branch) => (
+                <div key={branch.id} className="branch-card">
+                  <div
+                    className="branch-summary"
+                    onClick={() => toggleRow(branch.id)}
+                  >
+                    <div className="branch-id">
+                      {branch.erp_branch_id || branch.id}
+                    </div>
+                    <div className="branch-name">{branch.branchNameEn}</div>
+                    <div className="branch-status">
+                      <span
+                        className={`branches-status-badge ${getStatusClass(
+                          branch.branchStatus
+                        )}`}
+                      >
+                        {t(branch.branchStatus)}
+                      </span>
+                    </div>
+                    <button className="branches-toggle-row-btn">
+                      {isExpanded(branch.id) ? (
+                        <FontAwesomeIcon icon={faChevronDown} />
+                      ) : (
+                        <FontAwesomeIcon icon={faChevronRight} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {/* Mobile Pagination */}
+              {branches && branches.length > 0 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={(page) => {
+                    setExpandedRows([]);
+                    setCurrentPage(page);
+                  }}
+                  startIndex={startIndex}
+                  endIndex={Math.min(endIndex, branches.length)}
+                  totalItems={branches.length}
+                />
+              )}
+            </div>
+          )}
+          {/* Branch Details Form Popup */}
+          {showAllDetails && (
+            <>
+              {/* <div className="branch-form-popup-overlay" onClick={() => setShowBranchPopup(false)}> */}
+              {/* <div className="branch-form-popup" onClick={(e) => e.stopPropagation()}> */}
+              {/* <button className="popup-close" onClick={() => setShowAllDetails(false)}>
             ×
           </button> */}
-          
-          {/* <div className="popup-content"> */}
-            {/* <div className="popup-header-section">
+
+              {/* <div className="popup-content"> */}
+              {/* <div className="popup-header-section">
               <h2 className="popup-branch-title">{t("Branch Details")}</h2>
               <div className="branch-id">ID: {selectedBranch.erp_branch_id || selectedBranch.id}</div>
             </div>
              */}
-            <div className="branch-form-sections">
-              <BranchDetailsForm
-                branchId={selectedBranch.id}
-                branch={selectedBranch}
-                setBranches={setBranches}
-                customer={customer}
-                branchChanges={branchChanges}
-                handleBranchFieldChange={handleBranchFieldChange}
-                isApprovalMode={isApprovalMode}
-                mode={mode}
-                setShowAllDetails={setShowAllDetails}
-                setExpandedRows={setExpandedRows}
-                isFirstBranch={isFirstBranch}
-              />
-            {/* </div> */}
-            
-            <div className="branch-popup-actions">
-              <div className="action-buttons-popup">
-                <button 
-                  className="action-button outline"
-                  onClick={() => {setShowAllDetails(false); setExpandedRows([])}}
-                >
-                  {t("Close")}
-                </button>
-              </div>
-            </div>
-          {/* </div>
+              <div className="branch-form-sections">
+                <BranchDetailsForm
+                  branchId={selectedBranch.id}
+                  branch={selectedBranch}
+                  setBranches={setBranches}
+                  customer={customer}
+                  branchChanges={branchChanges}
+                  handleBranchFieldChange={handleBranchFieldChange}
+                  isApprovalMode={isApprovalMode}
+                  mode={mode}
+                  setShowAllDetails={setShowAllDetails}
+                  setExpandedRows={setExpandedRows}
+                  isFirstBranch={isFirstBranch}
+                />
+                {/* </div> */}
+
+                <div className="branch-popup-actions">
+                  <div className="action-buttons-popup">
+                    <button
+                      className="action-button outline"
+                      onClick={() => {
+                        setShowAllDetails(false);
+                        setExpandedRows([]);
+                      }}
+                    >
+                      {t("Close")}
+                    </button>
+                  </div>
+                </div>
+                {/* </div>
         </div> */}
-      </div>
-      </>
-      
-    )}
-  </>
-) :  
-       (
+              </div>
+            </>
+          )}
+        </>
+      ) : (
         <div className="branches-table-container">
           <table className="branches-data-table">
             <thead>
@@ -1819,7 +1822,14 @@ customer_id: customer?.id,
                     onClick={() => toggleRow(branch.id)}
                     className={`
               ${isExpanded(branch.id) ? "branches-expanded-row" : ""}
-              ${mode === "edit" && index === 0 && String(branch?.id) === String(customer?.completeWorkflowData?.workflowData?.id) ? "first-row-highlight" : ""}
+              ${
+                mode === "edit" &&
+                index === 0 &&
+                String(branch?.id) ===
+                  String(customer?.completeWorkflowData?.workflowData?.id)
+                  ? "first-row-highlight"
+                  : ""
+              }
             `}
                   >
                     <td
@@ -1857,7 +1867,11 @@ customer_id: customer?.id,
                     <td className="desktop-only">{branch.city}</td>
                     <td className="desktop-only">{branch.locationType}</td>
                     <td className="desktop-only">{branch.region}</td>
-                    <td className="desktop-only">{branch?.createdAt ? formatDate(branch.createdAt, "DD/MM/YYYY") : " "}</td>
+                    <td className="desktop-only">
+                      {branch?.createdAt
+                        ? formatDate(branch.createdAt, "DD/MM/YYYY")
+                        : " "}
+                    </td>
                     <td className="desktop-only">{branch.currentApprover}</td>
                     <td className="desktop-only">
                       <span
@@ -1871,29 +1885,29 @@ customer_id: customer?.id,
                     <td>
                       {!branch?.erpBranchId &&
                         branch.branchStatus.toLowerCase() === "approved" &&
-                        isV("BranchSync")&& isE("BranchSync")&& (
+                        isV("BranchSync") &&
+                        isE("BranchSync") && (
                           <span
                             // className="action-button pay"
                             disabled={syncLoading}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSyncLoadingId( branch?.id)
+                              setSyncLoadingId(branch?.id);
                               HandleFandOFailBranch(branch.id);
                             }}
                           >
-                             <Tooltip
-                                          title={
-                                            syncLoading && syncLoadingId === branch?.id
-                                              ? t("Syncing...")
-                                              : t("Sync")
-                                          }
-                                          arrow
-                                        >
-                                          <SyncIcon />{" "}
-                                        </Tooltip>
+                            <Tooltip
+                              title={
+                                syncLoading && syncLoadingId === branch?.id
+                                  ? t("Syncing...")
+                                  : t("Sync")
+                              }
+                              arrow
+                            >
+                              <SyncIcon />{" "}
+                            </Tooltip>
                             {/* {syncLoading ? t("Syncing...") : t("F&O Sync")} */}
                           </span>
-                          
                         )}
                     </td>
                     <td>
@@ -2031,9 +2045,14 @@ customer_id: customer?.id,
                 </div>
                 {/* Show selected file and submit button */}
                 {selectedFile && (
-                  <div style={{ marginTop: 16 , display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between", }}>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <p style={{ margin: 0 }}>
                       {t("Selected File")}: <b>{selectedFile.name}</b>
                     </p>
