@@ -601,7 +601,7 @@ function Sidebar({ children, title }) {
                 <div className="user-avatar">
                   <FontAwesomeIcon icon={faUser} />
                 </div>
-                <div className="user-text">
+                <div className="user-text" style={{marginLeft: "5px"}}>
                   <div className="user-name">{user?.userName}</div>
                   <div className="user-email">{user?.email}</div>
                 </div>

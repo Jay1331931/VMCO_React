@@ -18,7 +18,20 @@ function SearchableDropdown({
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
   const { t, i18n } = useTranslation();
-
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+const inputRef = useRef(null);
+useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        console.log("isMobile", isMobile);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+  useEffect(() => {
+    // ✅ Only focus on desktop
+    if (!isMobile && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isMobile]);
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -97,13 +110,14 @@ function SearchableDropdown({
       {isOpen && !disabled && (
         <div className={`dropdown-content  ${className || ""}`}>
           <input
+            ref={inputRef}
             type="text"
             className="dropdown-search"
             placeholder={t("Search...")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClick={(e) => e.stopPropagation()}
-            autoFocus
+            autoFocus={window.innerWidth > 768}
           />
 
           <div className="dropdown-options">

@@ -162,13 +162,20 @@ const Pagination = ({
                         margin: 16px 0 0 0;
                     }
                     .pagination-controls button {
-                        font-size: 0.98rem;
-                        padding: 6px 10px;
+                        font-size: 0.78rem;
+                        padding: 4px 5px;
                     }
                     .pagination-jump label,
                     .page-info {
-                        font-size: 0.97rem;
+                        font-size: 0.8rem;
                     }
+                        .page-jump-input {
+                        padding: 3px 4px;
+                        width: 30px;
+                        }
+                        .pagination-jump {
+                        margin-bottom: 5px;
+      }
                 }
             `}</style>
     </div>

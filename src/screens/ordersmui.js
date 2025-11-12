@@ -17,6 +17,8 @@ import { formatDate } from "../utilities/dateFormatter";
 import axios from "axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import GetCustomers from "../components/GetCustomers";
+import OrderCard from "../components/OrderCard";
+import OrderCardsMobile from "../components/OrderCardsMobile";
 import Tabs from "../components/Tabs";
 import GetBranches from "../components/GetBranches";
 import Constants from "../constants";
@@ -148,6 +150,7 @@ function Orders() {
   const isXL = useMediaQuery("(min-width:1280px)"); // XL breakpoint (MUI default)
   const isLG = useMediaQuery("(min-width:1024px) and (max-width:1279px)");
   const gridHeight = isXL ? "566px " : isLG ? "380px impo" : "380px";
+  const contentRef = useRef(null);
   const getLocalizedEntityName = (
     initialCategories,
     currentLanguage,
@@ -173,6 +176,18 @@ function Orders() {
       setColumnVisibilityModel(JSON.parse(savedModel));
     }
   }, [storageKey]);
+  const [isAtTop, setIsAtTop] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = contentRef.current?.scrollTop || 0;
+      setIsAtTop(scrollTop < 20); // detect near top
+    };
+
+    const container = contentRef.current;
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -1564,7 +1579,7 @@ function Orders() {
                 </Box>
               )}
 
-            {isV("FandOSyncSO") && !rowdata.erpOrderId && isValidForSync && (
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && (isValidForSync|| rowdata?.status?.toLowerCase()==='approved' && rowdata?.sampleOrder==true  )&& (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -2416,7 +2431,10 @@ function Orders() {
 
   return (
     <Sidebar title={t("Orders")}>
-      <div className="orders-content">
+      <div
+        className="orders-content"
+        style={isMobile ? { display: "flex", flexDirection: "column" } : {}}
+      >
         {user?.userType.toLowerCase() === "employee" && (
           <div className="filter-section">
             <div
@@ -2454,7 +2472,7 @@ function Orders() {
           </div>
         )}
 
-        {isMobile ? (
+        {/* {isMobile ? (
           <div className="table-container">
             {loading ? (
               <LoadingSpinner />
@@ -2546,6 +2564,169 @@ function Orders() {
             )}
           </div>
         ) : (
+          */}
+        {isMobile ? (
+          loading ? (
+            <LoadingSpinner />
+          ) : error ? (
+            <div className="error-message">{error}</div>
+          ) : (
+            <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+                <TableMobile
+                  columns={visibleColumns}
+                  // columns={[]}
+                  allColumns={isApprovalMode ? approvalColumns : orderColumns}
+                  data={filteredOrders}
+                  showAllDetails={true}
+                  handleAllDetailsClick={handleShowAllDetailsClick}
+                  selectedRow={selectedRow}
+                  setSelectedRow={setSelectedRow}
+                  showRowPopup={showRowPopup}
+                  setShowRowPopup={setShowRowPopup}
+                  getPaymentStatusClass={getPaymentStatusClass}
+                  dataGridComponent={
+                    <DataGrid
+                      apiRef={gridApiRef}
+                      rows={[]}
+                      columns={[]}
+                      pageSize={pageSize}
+                      rowCount={total}
+                      onRowClick={handleRowClick}
+                      columnVisibilityModel={columnVisibilityModel}
+                      onColumnVisibilityModelChange={setColumnVisibilityModel}
+                      sortModel={sortModel}
+                      onSortModelChange={handleSortModelChange}
+                      disableSelectionOnClick
+                      disableColumnMenu
+                      hideFooter={true}
+                      hideFooterPagination={true}
+                      disableExtendRowFullWidth={true}
+                      pagination={false}
+                      autoHeight
+                      rowHeight={55}
+                      showToolbar
+                      slots={{
+                        toolbar: () => (
+                          <CustomToolbar
+                            searchQuery={searchQuery}
+                            filterAnchor={filterAnchor}
+                            onSearch={handleSearch}
+                            setSearchQuery={setSearchQuery}
+                            setFilterAnchor={setFilterAnchor}
+                            handleFilterChange={handleFilterChange}
+                            onColumnVisibilityChange={setColumnVisibilityModel}
+                            columns={filteredData}
+                            filters={filters}
+                            columnVisibilityModel={columnVisibilityModel}
+                            searchPlaceholder="Search orders..."
+                            showColumnVisibility={false}
+                            showFilters={true}
+                            showExport={false}
+                            showUpload={isV("uploadButton")}
+                            showAdd={isV("addButton")}
+                            buttonName={t("add")}
+                            showApproval={
+                              isV("approvalButton") &&
+                              filters.entity?.toLowerCase() ===
+                                Constants.ENTITY.VMCO?.toLowerCase()
+                            }
+                            handleAddClick={handleAddOrder}
+                            handleUploadClick={HandleBulkOrderUpload}
+                            columnsToDisplay={columnsToDisplay}
+                            handleApproval={handleApproval}
+                            isApprovalMode={isApprovalMode}
+                          />
+                        ),
+                      }}
+                      // sx={{
+                      // "& .MuiDataGrid-row": {
+                      //   cursor: "default",
+                      //   "&:hover": {
+                      //     backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      //   },
+                      // },
+                      // ".MuiDataGrid-cell": {
+                      //   textAlign: "center",
+                      //   display: "flex",
+                      //   alignItems: "center",
+                      //   justifyContent: "center",
+                      // },
+                      sx={{
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
+                        },
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "0px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                      }}
+                      // }}
+                    />
+                  }
+                />
+              </div>
+
+              <OrderCard
+                orders={filteredOrders}
+                orderIds={filteredOrders.map((o) => o.id)}
+                setSelectedRow={handleOrderNumberClick}
+                handlePay={handlePay}
+                // toolbarProps={{
+                //   searchQuery,
+                //   setSearchQuery,
+                //   filterAnchor,
+                //   setFilterAnchor,
+                //   handleFilterChange,
+                //   onSearch: handleSearch,
+                //   visibleColumns,
+                //   columnVisibilityModel,
+                //   setColumnVisibilityModel,
+                //   isV,
+                //   handleAddOrder,
+                //   HandleBulkOrderUpload,
+                //   handleApproval,
+                //   isApprovalMode,
+                //   t,
+                // }}
+              />
+            </>
+          )
+        ) : (
           <div className="table-container">
             {loading ? (
               <LoadingSpinner />
@@ -2586,6 +2767,7 @@ function Orders() {
                     disableSelectionOnClick
                     disableColumnMenu
                     hideFooter={true}
+                    getRowId={(row) => row?.workflowInstanceId | row?.id}
                     hideFooterPagination={true}
                     pagination={false}
                     rowHeight={55}
