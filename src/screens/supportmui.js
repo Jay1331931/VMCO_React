@@ -12,7 +12,7 @@ import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../context/AuthContext";
 import RbacManager from "../utilities/rbac";
 import { formatDate } from "../utilities/dateFormatter";
-import { Box, Button, Typography, Tooltip, Chip } from "@mui/material";
+import { Box, Button, Typography, Tooltip, Chip, Badge } from "@mui/material"; // Added Badge import
 import {
     DataGrid,
     GridFooterContainer,
@@ -22,6 +22,7 @@ import {
 import TableMobile from "../components/TableMobile";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -50,6 +51,8 @@ function Support() {
     const [error, setError] = useState(null);
     const [userData, setUserData] = useState(null);
     const { token, user, isAuthenticated, logout } = useAuth();
+    const [openTicketsCount, setOpenTicketsCount] = useState(0); // New state for open tickets count
+
 
     // Pagination and filtering state
     const [page, setPage] = useState(1);
@@ -62,10 +65,12 @@ function Support() {
     const [selectedRow, setSelectedRow] = useState(null);
     const [showRowPopup, setShowRowPopup] = useState(false);
 
+
     // Grid API reference
     const gridApiRef = useGridApiRef();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -73,6 +78,7 @@ function Support() {
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, []);
+
 
     // RBAC
     const rbacMgr = new RbacManager(
@@ -85,13 +91,16 @@ function Support() {
     const isV = rbacMgr.isV.bind(rbacMgr);
     const isE = rbacMgr.isE.bind(rbacMgr);
 
+
     const role =
         user?.userType === "employee" ? user?.designation : user?.roles[0];
     const pageName = "support";
     const storageKey = `${pageName}_${role}_columns`;
     const columnWidthsKey = `${pageName}_${role}_columnWidths`;
 
+
     const [columnDimensions, setColumnDimensions] = useState({});
+
 
     useEffect(() => {
         const savedModel = localStorage.getItem(storageKey);
@@ -100,8 +109,8 @@ function Support() {
         }
     }, [storageKey]);
 
+
     // Fetch tickets from API - Modified to include isOpen filter
-    // MOVED BEFORE THE useEffect THAT USES IT
     const fetchTickets = useCallback(
         async (page = 1, searchTerm = "", customFilters = {}, sortedModel) => {
             setLoading(true);
@@ -113,6 +122,7 @@ function Support() {
                     isOpen: isClosedMode === "open"
                 };
 
+
                 const params = new URLSearchParams({
                     page,
                     pageSize,
@@ -121,6 +131,7 @@ function Support() {
                     sortOrder: sortedModel?.[0]?.sort || "asc",
                     filters: JSON.stringify(filtersWithStatus),
                 });
+
 
                 const apiUrl = `${API_BASE_URL}/grievances/pagination?${params.toString()}`;
                 const response = await fetch(apiUrl, {
@@ -131,10 +142,12 @@ function Support() {
                     },
                 });
 
+
                 const contentType = response.headers.get("content-type");
                 if (!contentType || !contentType.includes("application/json")) {
                     throw new Error("API did not return JSON. Check API URL and server.");
                 }
+
 
                 if (!response.ok) {
                     if (response.status === 401) {
@@ -145,8 +158,10 @@ function Support() {
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
 
+
                 const resp = await response.json();
                 console.log("Fetched tickets:", resp);
+
 
                 if (resp.status === "Ok" && resp.data) {
                     const processedTickets = (resp.data?.data || resp.data).map(
@@ -156,7 +171,13 @@ function Support() {
                         })
                     );
                     setTickets(processedTickets);
-                    setTotal(resp.data?.totalRecords || resp.totalRecords || processedTickets.length);
+                    const totalRecords = resp.data?.totalRecords || resp.totalRecords || processedTickets.length;
+                    setTotal(totalRecords);
+                    
+                    // Store open tickets count when in open mode
+                    if (isClosedMode === "open") {
+                        setOpenTicketsCount(totalRecords);
+                    }
                 } else {
                     throw new Error(resp.message || "Failed to fetch support tickets");
                 }
@@ -171,18 +192,20 @@ function Support() {
         [navigate, logout, user?.userType, token, pageSize, isClosedMode]
     );
 
-    // NOW the useEffect can safely reference fetchTickets
+
     useEffect(() => {
         if (user) {
             fetchTickets(page, searchQuery, filters, sortModel);
         }
     }, [page, searchQuery, user, fetchTickets, filters, isClosedMode, sortModel]);
 
+
     // Handle search functionality
     const handleSearch = (searchTerm) => {
         setSearchQuery(searchTerm);
         setPage(1);
     };
+
 
     // Updated toggle function to handle "open" and "closed" modes
     const handleShowClosedTickets = (mode) => {
@@ -191,12 +214,14 @@ function Support() {
         setPage(1);
     };
 
+
     // Handle sort model change
     const handleSortModelChange = (model) => {
         console.log("Sort model changed:", model);
         setSortModel(model);
         fetchTickets(page, searchQuery, filters, model);
     };
+
 
     // Add the column resize handler
     const handleColumnResize = (params) => {
@@ -210,6 +235,7 @@ function Support() {
             return newDimensions;
         });
     };
+
 
     // Define columns for the DataGrid
     const supportColumns = [
@@ -375,17 +401,21 @@ function Support() {
         },
     ];
 
+
     // Filter visible columns
     const visibleColumns = supportColumns.filter((col) => col.include !== false);
+
 
     // Searchable fields for the toolbar
     const searchableFields = visibleColumns
         .filter((item) => item.searchable)
         .map((item) => item.field);
 
+
     const handleShowAllDetailsClick = async (ticket) => {
         navigate("/supportDetails", { state: { ticket: ticket, mode: "edit" } });
     };
+
 
     // Handle row click to navigate to supportDetails page with ticket details
     const handleRowClick = (ticket) => {
@@ -517,6 +547,7 @@ function Support() {
                                                 handleClosedTickets: handleShowClosedTickets,
                                                 handleAddClick: handleAddTicket,
                                                 columnsToDisplay: columnsToDisplay,
+                                                openTicketsCount: openTicketsCount, // Pass the count to CustomToolbar
                                             },
                                         }}
                                         sx={{
@@ -601,6 +632,7 @@ function Support() {
                                             handleClosedTickets: handleShowClosedTickets,
                                             handleAddClick: handleAddTicket,
                                             columnsToDisplay: columnsToDisplay,
+                                            openTicketsCount: openTicketsCount,
                                         },
                                     }}
                                     sx={{

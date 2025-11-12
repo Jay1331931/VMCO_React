@@ -1712,17 +1712,17 @@ function Orders() {
     // Brand Name
     // Branches
 
-    // {
-    //   field: isArabic ? "branchNameLc" : "branchNameEn",
-    //   headerName: t("Branch"),
-    //   include: isV("branchName"),
-    //   searchable: true,
-    //   minWidth: 140,
-    //   flex: 1,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    //   renderCell: (params) => <span>{t(params.value)}</span>,
-    // },
+    {
+      field: isArabic ? "branchNameLc" : "branchNameEn",
+      headerName: t("Branch"),
+      include: isV("branchName"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
+    },
     {
       field: "branchRegion",
       headerName: t("Branch Region"),
@@ -1745,88 +1745,88 @@ function Orders() {
     //   headerAlign: isArabic ? "right" : "left",
     //   renderCell: (params) => <span>{t(params.value)}</span>,
     // },
-    // {
-    //   field: "workflowName",
-    //   headerName: t("Workflow Name"),
-    //   include: isV("workflowName"),
-    //   searchable: true,
-    //   minWidth: 140,
-    //   flex: 1,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    //   renderCell: (params) => <span>{t(params.value)}</span>,
-    // },
-    // {
-    //   field: "entity",
-    //   headerName: t("Entity"),
-    //   include: isV("entity"),
-    //   searchable: true,
-    //   flex: 1,
-    //   minWidth: 140,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    //   renderCell: (params) => {
-    //     let badge = null;
-    //     if (params.value === "VMCO") {
-    //       badge = params.row.isMachine ? (
-    //         <span className="badge badge-blue">{t("Machines")}</span>
-    //       ) : (
-    //         <span className="badge badge-blue">{t("Consumables")}</span>
-    //       );
-    //     } else if (params.value === "SHC") {
-    //       badge = params.row.isFresh ? (
-    //         <span className="badge badge-blue">{t("Fresh")}</span>
-    //       ) : (
-    //         <span className="badge badge-blue">{t("Frozen")}</span>
-    //       );
-    //     }
-    //     return (
-    //       <Box
-    //         sx={{
-    //           display: "flex",
-    //           flexDirection: "column",
-    //           justifyContent: "center",
-    //           height: "100%",
-    //         }}
-    //       >
-    //         <Typography align={isArabic ? "right" : "center"}>
-    //           {params.value?.toUpperCase()}
-    //         </Typography>
-    //         <Typography align={isArabic ? "right" : "center"}>
-    //           {badge}
-    //         </Typography>
-    //       </Box>
-    //     );
-    //   },
-    // },
-    // {
-    //   field: "paymentMethod",
-    //   headerName: t("Payment Method"),
-    //   include: isV("paymentMethod"),
-    //   searchable: true,
-    //   minWidth: 130,
-    //   flex: 1,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    //   renderCell: (params) => {
-    //     const value =
-    //       params?.value?.toLowerCase() === "pre payment"
-    //         ? "Card Payment"
-    //         : params.value;
-    //     return <span>{t(value)}</span>;
-    //   },
-    // },
-    // {
-    //   field: "createdByUsername",
-    //   headerName: t("Created By"),
-    //   include: isV("createdBy"),
-    //   searchable: false,
-    //   sortable: false,
-    //   minWidth: 100,
-    //   flex: 1,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    // },
+    {
+      field: "workflowName",
+      headerName: t("Workflow Name"),
+      include: isV("workflowName"),
+      searchable: true,
+      minWidth: 140,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => <span>{t(params.value)}</span>,
+    },
+    {
+      field: "entity",
+      headerName: t("Entity"),
+      include: isV("entity"),
+      searchable: true,
+      flex: 1,
+      minWidth: 140,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => {
+        let badge = null;
+        if (params.value === "VMCO") {
+          badge = params.row.isMachine ? (
+            <span className="badge badge-blue">{t("Machines")}</span>
+          ) : (
+            <span className="badge badge-blue">{t("Consumables")}</span>
+          );
+        } else if (params.value === "SHC") {
+          badge = params.row.isFresh ? (
+            <span className="badge badge-blue">{t("Fresh")}</span>
+          ) : (
+            <span className="badge badge-blue">{t("Frozen")}</span>
+          );
+        }
+        return (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              height: "100%",
+            }}
+          >
+            <Typography align={isArabic ? "right" : "center"}>
+              {params.value?.toUpperCase()}
+            </Typography>
+            <Typography align={isArabic ? "right" : "center"}>
+              {badge}
+            </Typography>
+          </Box>
+        );
+      },
+    },
+    {
+      field: "paymentMethod",
+      headerName: t("Payment Method"),
+      include: isV("paymentMethod"),
+      searchable: true,
+      minWidth: 130,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => {
+        const value =
+          params?.value?.toLowerCase() === "pre payment"
+            ? "Card Payment"
+            : params.value;
+        return <span>{t(value)}</span>;
+      },
+    },
+    {
+      field: "createdByUsername",
+      headerName: t("Created By"),
+      include: isV("createdBy"),
+      searchable: false,
+      sortable: false,
+      minWidth: 100,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+    },
     {
       field: "createdAt",
       headerName: t("Created Date"),
@@ -1878,20 +1878,20 @@ function Orders() {
         );
       },
     },
-    // {
-    //   field: "totalAmount",
-    //   headerName: t("Total Amount"),
-    //   include: isV("totalAmount"),
-    //   searchable: false,
-    //   sortable: false,
-    //   minWidth: 100,
-    //   flex: 1,
-    //   align: isArabic ? "right" : "left",
-    //   headerAlign: isArabic ? "right" : "left",
-    //   renderCell: (params) => (
-    //     <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
-    //   ),
-    // },
+    {
+      field: "totalAmount",
+      headerName: t("Total Amount"),
+      include: isV("totalAmount"),
+      searchable: false,
+      sortable: false,
+      minWidth: 100,
+      flex: 1,
+      align: isArabic ? "right" : "left",
+      headerAlign: isArabic ? "right" : "left",
+      renderCell: (params) => (
+        <span>{parseFloat(params?.row?.totalAmount).toFixed(2)}</span>
+      ),
+    },
     // {
     //   field: "totalItemQuantity",
     //   headerName: t("Total Quantity"),
@@ -1934,7 +1934,7 @@ function Orders() {
     {
       field: "seApprover",
       sortable: false,
-      headerName: t("Sales Executive"),
+      headerName: t("SE Approver"),
       include: isV("seApprover"),
       searchable: true,
       width: columnDimensions["seApprover"]?.width || 120,
