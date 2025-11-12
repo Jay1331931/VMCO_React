@@ -299,50 +299,118 @@ function ContactDetails({
     useEffect(() => {
       let mapInstance;
 
-      const initializeMap = () => {
-        try {
-          if (!window.google) {
-            console.error("Google Maps API not loaded");
-            return;
-          }
+      // const initializeMap = () => {
+      //   try {
+      //     if (!window.google) {
+      //       console.error("Google Maps API not loaded");
+      //       return;
+      //     }
 
-          // Determine initial center
-          let initialCenter = defaultCenter;
-          if (initialLat && initialLng) {
-            initialCenter = { lat: initialLat, lng: initialLng };
-            setManualLat(Number(initialLat).toFixed(6));
-            setManualLng(Number(initialLng).toFixed(6));
-          }
+      //     // Determine initial center
+      //     let initialCenter = defaultCenter;
+      //     if (initialLat && initialLng) {
+      //       initialCenter = { lat: initialLat, lng: initialLng };
+      //       setManualLat(Number(initialLat).toFixed(6));
+      //       setManualLng(Number(initialLng).toFixed(6));
+      //     }
 
-          mapInstance = new window.google.maps.Map(mapContainer.current, {
-            center: initialCenter,
-            zoom: 12,
-            mapTypeControl: true,
-            streetViewControl: true,
-            fullscreenControl: true,
-          });
+      //     mapInstance = new window.google.maps.Map(mapContainer.current, {
+      //       center: initialCenter,
+      //       zoom: 12,
+      //       mapTypeControl: true,
+      //       streetViewControl: true,
+      //       fullscreenControl: true,
+      //     });
 
-          setMap(mapInstance);
+      //     setMap(mapInstance);
 
-          // Add initial marker if coordinates exist
-          if (initialLat && initialLng) {
-            moveMarkerToLocation(initialLat, initialLng, mapInstance);
-          } else {
-            setCoords("Click on the map to select a location");
-            setCoordsArabic("انقر على الخريطة لتحديد موقع");
-          }
+      //     // Add initial marker if coordinates exist
+      //     if (initialLat && initialLng) {
+      //       moveMarkerToLocation(initialLat, initialLng, mapInstance);
+      //     } else {
+      //       setCoords("Click on the map to select a location");
+      //       setCoordsArabic("انقر على الخريطة لتحديد موقع");
+      //     }
 
-          // Add click listener to map
-          mapInstance.addListener("click", (e) => {
-            const lat = e.latLng.lat();
-            const lng = e.latLng.lng();
-            moveMarkerToLocation(lat, lng, mapInstance);
-          });
+      //     // Add click listener to map
+      //     mapInstance.addListener("click", (e) => {
+      //       const lat = e.latLng.lat();
+      //       const lng = e.latLng.lng();
+      //       moveMarkerToLocation(lat, lng, mapInstance);
+      //     });
 
-        } catch (error) {
-          console.error("Map initialization error:", error);
-        }
-      };
+      //   } catch (error) {
+      //     console.error("Map initialization error:", error);
+      //   }
+      // };
+const initializeMap = () => {
+  try {
+    if (!window.google) {
+      console.error("Google Maps API not loaded");
+      return;
+    }
+
+    let initialCenter = defaultCenter;
+
+    // If a saved location exists, use it
+    if (initialLat && initialLng) {
+      initialCenter = { lat: initialLat, lng: initialLng };
+      setManualLat(Number(initialLat).toFixed(6));
+      setManualLng(Number(initialLng).toFixed(6));
+    }
+
+    // Create the map instance
+    const mapInstance = new window.google.maps.Map(mapContainer.current, {
+      center: initialCenter,
+      zoom: 12,
+      mapTypeControl: true,
+      streetViewControl: true,
+      fullscreenControl: true,
+    });
+
+    setMap(mapInstance);
+
+    // ✅ If no location selected, try to detect user’s current location
+    if (!initialLat && !initialLng && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          moveMarkerToLocation(latitude, longitude, mapInstance);
+
+          setCoords(
+            `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`
+          );
+          setCoordsArabic(
+            `خط العرض: ${latitude.toFixed(6)}, خط الطول: ${longitude.toFixed(6)}`
+          );
+        },
+        (error) => {
+          console.warn("Geolocation error:", error.message);
+          // Fallback if denied or unavailable
+          setCoords("Unable to detect current location.");
+          setCoordsArabic("تعذر تحديد الموقع الحالي.");
+          mapInstance.setCenter(defaultCenter);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else if (initialLat && initialLng) {
+      // Add initial marker if coordinates exist
+      moveMarkerToLocation(initialLat, initialLng, mapInstance);
+    } else {
+      setCoords("Click on the map to select a location");
+      setCoordsArabic("انقر على الخريطة لتحديد موقع");
+    }
+
+    // Add click listener to map
+    mapInstance.addListener("click", (e) => {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      moveMarkerToLocation(lat, lng, mapInstance);
+    });
+  } catch (error) {
+    console.error("Map initialization error:", error);
+  }
+};
 
       // Load Google Maps script if not already loaded
       if (!window.google) {

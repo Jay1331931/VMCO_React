@@ -118,6 +118,9 @@ const Tabs = ({
                         background: #0b4c45;
                         border: 1px solid #0b4c45;
                         }
+                        .category-tabs {
+                            border-bottom: none;
+                        }
                 }
             `}</style>
         </div>
