@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "../src/components/Sidebar";
 import Orders from "./screens/orders";
 import OrdersMui from "./screens/ordersmui";
@@ -97,7 +97,7 @@ function App() {
         <Route path="/cart" element={<ProtectedRoute page="cart"><Cart /></ProtectedRoute>} />
         <Route path="/customersDetails" element={<CustomersDetails />} />
         <Route path="/login" element={<LoginScreen />} />
-        <Route path="/.well-known/apple-developer-merchantid-domain-association" element={<DomainVerification />} />   {/*component={DomainVerification} */}
+        {/* <Route path="/.well-known/apple-developer-merchantid-domain-association" element={<DomainVerification />} />   component={DomainVerification} */}
 
         <Route path="/login/employee" element={<LoginScreen />} />
         <Route
@@ -131,7 +131,7 @@ function App() {
         <Route path="/reports" element={<ProtectedRoute page="reports"><Reports /></ProtectedRoute>} />
         <Route path="/apiLogsReport" element={<ProtectedRoute page="reports"><ApiLogsReport /></ProtectedRoute>} />
         <Route path="/tapcard/:orderId/:amount/:customerId/:orderType" element={<TapCardComponent />} />
-         <Route path="/applyPay/:orderId/:amount/:customerId/:orderType" element={<ApplePayComponent/>}/>
+         <Route path="/apple-pay/:orderId/:amount/:customerId/:orderType" element={<ApplePayComponent/>}/>
         <Route path="/payments/:orderId" element={<PaymentLines />} />
         <Route path='/apple-pay/testing' element={<ApplePaymentReact/>} />
       </Routes>

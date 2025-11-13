@@ -518,7 +518,7 @@ const orderTypeEncoded=DecodedorderTpe?.toLowerCase()==="cart" ? encodeURICompon
  URL= `${window.location.protocol}//${window.location.host}/tapcard/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
   
   }else{
-     URL= `${window.location.protocol}//${window.location.host}/applyPay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
+     URL= `${window.location.protocol}//${window.location.host}/apple-pay/${orderIdEncoded}/${amountEncoded}/${customerIdEncoded}/${orderTypeEncoded}`;
   
   }
   window.location.replace(URL)
@@ -594,7 +594,7 @@ console.log("currentEntity",isMatch,currentEntity)
           <FontAwesomeIcon icon={faCreditCard} style={{ marginRight: "10px" }} />
           Cards Pay
         </button>
-        {/* {(OrderDetails[0]?.entity?.toLowerCase() ===
+        {(OrderDetails[0]?.entity?.toLowerCase() ===
           Constants.ENTITY?.DAR?.toLowerCase() ||
           OrderDetails[0]?.entity?.toLowerCase() ===
             Constants.ENTITY?.GMTC?.toLowerCase() ||
@@ -607,7 +607,7 @@ console.log("currentEntity",isMatch,currentEntity)
             <FontAwesomeIcon icon={faMobile} style={{ marginRight: "10px" }} />
             Apple Pay
           </button>
-        )} */}
+        )}
       </div>
       <style>
         {`.options-container {
