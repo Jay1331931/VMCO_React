@@ -990,7 +990,7 @@ function Orders() {
           },
         });
       } else if (!email && !copyUrl && data?.details?.url) {
-        window.open(data.details.url, "_blank");
+        window.location.replace(data.details.url);
       }
     } catch (error) {
       console.error("Error generating payment link:", error);
