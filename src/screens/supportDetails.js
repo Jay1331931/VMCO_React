@@ -1446,11 +1446,11 @@ function SupportDetails() {
                     {closing ? t("Closing...") : t("Close Ticket")}
                   </button>
                 )}
-                {isV('btnCancel') && isE('btnCancel') && (
+                {/* {isV('btnCancel') && isE('btnCancel') && (
                   <button className="support-action-btn cancel" onClick={handleCancel} disabled={isReadOnly || saving || closing}>
                     {t("Cancel")}
                   </button>
-                )}
+                )} */}
               </>
             ) : (
               <>
