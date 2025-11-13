@@ -171,6 +171,7 @@ function OrderDetails() {
   const [warehouseOptions, setWarehouseOptions] = useState([]);
   const [warehousesLoading, setWarehousesLoading] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState(i18n.language === 'ar' ? formData.warehouseNameAr : formData.warehouseNameEn);
+  const [editingDiscount, setEditingDiscount] = useState({});
 
   // Use VMCO categories from constants
   const VMCO_CATEGORIES = [
@@ -1157,22 +1158,24 @@ function OrderDetails() {
           const quantity = parseInt(product.quantity, 10);
           const netAmount = parseFloat(product.netAmount);
           const vatPercentage = parseFloat(product.vatPercentage);
+          const lineDiscount = parseFloat(product.lineDiscount || 0);
 
           // Check if product already exists in the order
           const existingLine = existingProductMap[productId];
 
           if (existingLine) {
             console.log(
-              `Found existing line for product ID ${productId}, updating quantity and amounts`
+              `Found existing line for product ID ${productId}, updating quantity, amounts, and discount`
             );
-            // Update existing line
+            // Update existing line with lineDiscount
             return updateSalesOrderLine(
               formData.id,
               productId,
               unitPrice,
               quantity,
               netAmount,
-              vatPercentage
+              vatPercentage,
+              lineDiscount
             );
           }
           // Existing products with salesOrderLineId but not found in existingProductMap
@@ -1186,7 +1189,8 @@ function OrderDetails() {
               unitPrice,
               quantity,
               netAmount,
-              vatPercentage
+              vatPercentage,
+              parseFloat(product.lineDiscount || 0)
             );
           }
           // New products need to be added
@@ -1200,7 +1204,8 @@ function OrderDetails() {
               unitPrice,
               quantity,
               netAmount,
-              vatPercentage
+              vatPercentage,
+              lineDiscount = 0
             );
           }
         });
@@ -2267,6 +2272,110 @@ function OrderDetails() {
       // alert(t('Failed to update prices. Please try again.'));
     }
   };
+
+  // Handle line discount changes
+  const handleLineDiscountChange = async (idx, discountPercentage) => {
+    const product = formData.products[idx];
+
+    if (!product || !formData.customerId || !formData.entity) {
+      console.warn('Missing required data:', {
+        hasProduct: !!product,
+        customerId: formData.customerId,
+        entity: formData.entity
+      });
+      return;
+    }
+
+    const pricingPolicy = formData.pricingPolicy;
+
+    if (!pricingPolicy) {
+      console.warn('Pricing policy not found for entity:', formData.entity);
+      return;
+    }
+
+    console.log('Fetching price for discount change:', {
+      productId: product.id,
+      customerId: formData.customerId,
+      entity: formData.entity,
+      pricingPolicy: pricingPolicy.toLowerCase(),
+      discount: discountPercentage
+    });
+
+    try {
+      // Call the API to get the base price
+      const response = await fetch(`${API_BASE_URL}/product/price`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          customerId: formData.customerId,
+          entity: formData.entity,
+          pricingPolicy: pricingPolicy.toLowerCase(),
+        }),
+      });
+
+      console.log('API Response status:', response.status);
+
+      if (!response.ok) {
+        console.error('Failed to fetch product price');
+        return;
+      }
+
+      const result = await response.json();
+      console.log('API Response data:', result);
+
+      if (result.status === "Ok" && result.data) {
+        const basePrice = parseFloat(result.data.basePrice);
+        const vatPercentage = parseFloat(product.vatPercentage || 0);
+        const quantity = parseInt(product.quantity, 10);
+
+        // Calculate unit price after discount
+        const discountAmount = (basePrice * discountPercentage) / 100;
+        const unitPrice = basePrice - discountAmount;
+
+        // Calculate amounts
+        const baseAmount = unitPrice * quantity;
+        const vatAmount = (baseAmount * vatPercentage) / 100;
+        const netAmount = baseAmount + vatAmount;
+
+        console.log('Calculated values:', {
+          basePrice,
+          discountPercentage,
+          unitPrice,
+          baseAmount,
+          vatAmount,
+          netAmount
+        });
+
+        // Update the product with new values
+        setFormData((prev) => {
+          const updatedProducts = [...prev.products];
+          updatedProducts[idx] = {
+            ...updatedProducts[idx],
+            lineDiscount: discountPercentage.toFixed(2),
+            unitPrice: unitPrice.toFixed(2),
+            netAmount: netAmount.toFixed(2),
+          };
+          return {
+            ...prev,
+            products: updatedProducts,
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching product price:', error);
+      Swal.fire({
+        icon: "error",
+        title: t("Error"),
+        text: t("Failed to update product price. Please try again."),
+        confirmButtonText: t("OK"),
+      });
+    }
+  };
+
   // Function to update sales order line
   const updateSalesOrderLine = async (
     orderId,
@@ -2274,7 +2383,8 @@ function OrderDetails() {
     unitPrice,
     quantity,
     netAmount,
-    vatPercentage
+    vatPercentage,
+    lineDiscount = 0
   ) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
@@ -2295,13 +2405,13 @@ function OrderDetails() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-
           body: JSON.stringify({
             quantity,
             unitPrice,
             net_amount: netAmount.toFixed(2),
             sales_tax_amount: vatAmount.toFixed(2),
             vatPercentage: Number(finalVat).toFixed(2),
+            line_discount: parseFloat(lineDiscount).toFixed(2),
           }),
         }
       );
@@ -2353,7 +2463,7 @@ function OrderDetails() {
   };
 
   // Function to create a new sales order line
-  const createSalesOrderLine = async (orderId, productId, erpProdId, unitPrice, quantity, netAmount, vatPercentage) => {
+  const createSalesOrderLine = async (orderId, productId, erpProdId, unitPrice, quantity, netAmount, vatPercentage, lineDiscount = 0) => {
     try {
       // Ensure vatPercentage is 0.00 (decimal) for non trading companies
       let finalVat = vatPercentage;
@@ -2387,6 +2497,7 @@ function OrderDetails() {
         productNameLc: productObj?.productNameLc || productObj?.productnamelc,
         unit: productObj?.unit,
         vatPercentage: Number(finalVat.toFixed(2)),
+        lineDiscount: parseFloat(lineDiscount).toFixed(2),
       };
       const response = await fetch(`${API_BASE_URL}/sales-order-lines`, {
         method: "POST",
@@ -2797,6 +2908,91 @@ function OrderDetails() {
       renderCell: (params) => {
         const price = parseFloat(params.value || 0);
         return price.toFixed(2);
+      },
+    },
+    {
+      field: 'lineDiscount',
+      headerName: t('Discount') + ' %',
+      include: fromApproval && isV('lineDiscountCol'),
+      minWidth: 120,
+      flex: 1,
+      editable: false,
+      renderCell: (params) => {
+        const row = params.row;
+        const idx = formData.products.findIndex(
+          (p) => (p.id || p.productid) === (row.id || row.productid)
+        );
+
+        const productKey = row.id || row.productid;
+        const displayValue = editingDiscount[productKey] !== undefined
+          ? editingDiscount[productKey]
+          : (row.lineDiscount || 0);
+
+        return (
+          <input
+            type="number"
+            value={displayValue}
+            onChange={(e) => {
+              if (!isE('lineDiscountCol')) return;
+
+              const value = e.target.value;
+
+              // Update local state immediately for smooth typing
+              setEditingDiscount(prev => ({
+                ...prev,
+                [productKey]: value
+              }));
+            }}
+            onBlur={(e) => {
+              if (!isE('lineDiscountCol')) return;
+
+              const value = parseFloat(e.target.value);
+
+              // Validate range
+              if (isNaN(value) || value < 0 || value > 100) {
+                // Reset to original value if invalid
+                setEditingDiscount(prev => {
+                  const newState = { ...prev };
+                  delete newState[productKey];
+                  return newState;
+                });
+                return;
+              }
+
+              if (idx !== -1) {
+                console.log('Line discount changed for index:', idx, 'value:', value);
+                // Call API to update price
+                handleLineDiscountChange(idx, value);
+
+                // Clear the editing state after API call
+                setEditingDiscount(prev => {
+                  const newState = { ...prev };
+                  delete newState[productKey];
+                  return newState;
+                });
+              }
+            }}
+            onKeyPress={(e) => {
+              // Trigger on Enter key
+              if (e.key === 'Enter') {
+                e.target.blur();
+              }
+            }}
+            disabled={!isE('lineDiscountCol')}
+            min={0}
+            max={100}
+            step={0.01}
+            style={{
+              textAlign: 'center',
+              padding: '4px 8px',
+              fontSize: '14px',
+              width: '100%',
+              maxWidth: '80px',
+              border: '1px solid #ddd',
+              borderRadius: '4px'
+            }}
+          />
+        );
       },
     },
     {
@@ -3298,6 +3494,110 @@ function OrderDetails() {
     }
   };
 
+  // Function to trigger VMCO consumables discount workflow
+  const triggerConsumablesDiscountWorkflow = async (orderId, customerId) => {
+    try {
+      // Validate inputs
+      if (!orderId || orderId === null || orderId === undefined) {
+        console.error(
+          "Missing or invalid orderId in triggerConsumablesDiscountWorkflow:",
+          orderId
+        );
+        return false;
+      }
+
+      if (!customerId || customerId === null || customerId === undefined) {
+        console.error(
+          "Missing or invalid customerId in triggerConsumablesDiscountWorkflow:",
+          customerId
+        );
+        return false;
+      }
+
+      if (!API_BASE_URL) {
+        console.error(
+          "API_BASE_URL is not defined. Check your environment variables."
+        );
+        return false;
+      }
+
+      if (!token) {
+        console.error(
+          "Authentication token is not available. User may not be logged in."
+        );
+        return false;
+      }
+
+      // Convert IDs to strings
+      let orderIdStr, customerIdStr;
+
+      try {
+        orderIdStr = String(orderId).trim();
+        customerIdStr = String(customerId).trim();
+      } catch (err) {
+        console.error("Error converting IDs to strings:", err);
+        return false;
+      }
+
+      // Validate converted strings
+      if (!orderIdStr || orderIdStr === "null" || orderIdStr === "undefined") {
+        console.error("OrderId converted to invalid string:", orderIdStr);
+        return false;
+      }
+
+      if (
+        !customerIdStr ||
+        customerIdStr === "null" ||
+        customerIdStr === "undefined"
+      ) {
+        console.error("CustomerId converted to invalid string:", customerIdStr);
+        return false;
+      }
+
+      const payload = {
+        customerId: customerIdStr,
+        salesOrderId: orderIdStr,
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/workflow-instance/create/vmco/consumables/discount`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      console.log("Consumables discount workflow API response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `Error triggering consumables discount workflow (status: ${response.status}):`,
+          errorText
+        );
+        try {
+          const errorJson = JSON.parse(errorText);
+          console.error("Error details:", errorJson);
+        } catch (e) {
+          console.error("Raw error response:", errorText);
+        }
+        return false;
+      }
+
+      const result = await response.json();
+      console.log("Consumables discount workflow triggered successfully:", result);
+      return true;
+    } catch (err) {
+      console.error("Error triggering consumables discount workflow (exception):", err);
+      console.error(err.stack || "No stack trace available");
+      return false;
+    }
+  };
+
   //discount approval code block end -----------------------------------------------------------------------------------------------------
 
   const handleApprovalSubmit = (action) => {
@@ -3346,6 +3646,7 @@ function OrderDetails() {
             const quantity = parseInt(product.quantity, 10);
             const netAmount = parseFloat(product.netAmount);
             const vatPercentage = parseFloat(product.vatPercentage || 0);
+            const lineDiscount = parseFloat(product.lineDiscount || 0);
 
             // Check if this product exists in the original products (was part of the original order)
             const existsInOriginal = originalProducts.some(
@@ -3368,6 +3669,7 @@ function OrderDetails() {
                     unitPrice,
                     net_amount: netAmount.toFixed(2),
                     vatPercentage: vatPercentage.toFixed(2),
+                    lineDiscount: lineDiscount.toFixed(2)
                   }),
                 }
               );
@@ -3402,6 +3704,7 @@ function OrderDetails() {
                     vatPercentage: product.vatPercentage,
                     erpProdId: product.erpProdId || product.erp_prod_id || "",
                     unit: product.unit || "",
+                    lineDiscount: product.lineDiscount || 0
                   }),
                 }
               );
@@ -3434,6 +3737,10 @@ function OrderDetails() {
 
           if (formData.pricingPolicy) {
             patchPayload.pricingPolicy = formData.pricingPolicy;
+          }
+
+          if (formData.lineDiscount) {
+            patchPayload.lineDiscount = formData.lineDiscount;
           }
 
           const orderUpdateResponse = await fetch(
@@ -3537,6 +3844,60 @@ function OrderDetails() {
         console.log(`- isMachine is: ${formData.isMachine}`);
         console.log(`- customerId: ${Boolean(formData.customerId)}`);
       }
+
+      // After updating sales order lines in handleDialogSubmit, add this check:
+      // Check if any product has line discount > 0 for VMCO consumables
+      if (
+        formData.entity &&
+        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+        formData.products &&
+        formData.products.length > 0
+      ) {
+        // Check if any consumable (non-machine) product has discount > 0
+        const hasConsumablesWithDiscount = formData.products.some(
+          (product) =>
+            product.isMachine === false &&
+            parseFloat(product.lineDiscount || 0) > 0
+        );
+
+        if (hasConsumablesWithDiscount && formData.customerId) {
+          console.log(
+            `VMCO consumables with discount detected - triggering consumables discount workflow for order ${formData.id}`
+          );
+          await triggerConsumablesDiscountWorkflow(formData.id, formData.customerId);
+        } else {
+          console.log("No VMCO consumables with discount > 0 found");
+        }
+      }
+
+      // After the existing VMCO machines discount workflow trigger, add:
+
+      // Check for VMCO consumables discount workflow
+      if (
+        formData.entity &&
+        formData.entity.toLowerCase() === Constants.ENTITY.VMCO.toLowerCase() &&
+        formData.products &&
+        formData.products.length > 0 &&
+        formData.customerId
+      ) {
+        // Check if any consumable product has discount > 0
+        const consumablesWithDiscount = formData.products.filter(
+          (product) =>
+            product.isMachine === false &&
+            parseFloat(product.lineDiscount || 0) > 0
+        );
+
+        if (consumablesWithDiscount.length > 0) {
+          console.log(
+            `Found ${consumablesWithDiscount.length} consumables with discount - triggering consumables discount workflow`
+          );
+          console.log("Consumables with discount:", consumablesWithDiscount);
+          await triggerConsumablesDiscountWorkflow(formData.id, formData.customerId);
+        } else {
+          console.log("No consumables with line discount > 0 found");
+        }
+      }
+
 
       // STEP 3: Submit the approval for the sales order
       const payload = {
@@ -4520,6 +4881,7 @@ function OrderDetails() {
                                 p.quantity ||
                                 p.unit ||
                                 p.unitPrice ||
+                                p.lineDiscount ||
                                 p.netAmount ||
                                 p.vatPercentage
                             )}
