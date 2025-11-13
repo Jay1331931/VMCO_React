@@ -45,12 +45,10 @@ import "react-date-range/dist/theme/default.css";
 import { addDays, addYears } from "date-fns";
 import AnimatedTabs from "./AnimatedTabs";
 
-
 const operators = [
   { value: "equals", label: "Equals" },
   { value: "contains", label: "Contains" },
 ];
-
 
 function formatDatePure(date) {
   if (!date) return null;
@@ -61,7 +59,6 @@ function formatDatePure(date) {
 
   return `${yyyy}-${mm}-${dd}`;
 }
-
 
 const CustomToolbar = ({
   searchQuery,
@@ -146,11 +143,6 @@ const CustomToolbar = ({
     });
 
     setCustomFilters(updated);
-  };
-
-  const handleSearchClear = () => {
-    setSearchValue("");
-    onSearch("");
   };
 
   const handleFilterApply = () => {
@@ -499,9 +491,11 @@ const CustomToolbar = ({
             <Select
               variant="standard"
               value={filterObj?.column || ""}
-              onChange={(e) =>
-                setFilterObj((data) => ({ ...data, column: e.target.value }))
-              }
+              onChange={(e) => {
+                e.stopPropagation();
+                setFilterObj((data) => ({ ...data, column: e.target.value }));
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
               displayEmpty
               fullWidth
               size="small"
@@ -530,9 +524,11 @@ const CustomToolbar = ({
             <Select
               variant="standard"
               value={filterObj?.operator || ""}
-              onChange={(e) =>
-                setFilterObj((data) => ({ ...data, operator: e.target.value }))
-              }
+              onChange={(e) => {
+                e.stopPropagation();
+                setFilterObj((data) => ({ ...data, operator: e.target.value }));
+              }}
+              onKeyDown={(e) => e.stopPropagation()}
               displayEmpty
               fullWidth
               size="small"
@@ -555,20 +551,24 @@ const CustomToolbar = ({
               size="small"
               fullWidth
               placeholder="Enter value"
-              value={filterObj?.searchString}
+              value={filterObj?.searchString || ""}
               onChange={(e) => {
+                e.stopPropagation();
                 setFilterObj((data) => ({
                   ...data,
                   searchString: e.target.value,
                 }));
               }}
+              onKeyDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               sx={{ width: "100%" }}
             />
           </Grid>
           <Grid item>
             <Button
               sx={{ minWidth: 40 }}
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 handleFilterChange({
                   ...filters,
                   [filterObj?.column]: filterObj?.searchString,

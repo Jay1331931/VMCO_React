@@ -76,7 +76,7 @@ function Cart() {
     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
     const [processingCategories, setProcessingCategories] = useState(new Set());
     const { token, user, logout, loading } = useAuth();
-
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     // Use location.state to initialize userId, customerId, branchId if present
     useEffect(() => {
         if (location.state) {
@@ -99,7 +99,12 @@ function Cart() {
             if (user?.customerId) setSelectedCustomerId(user.customerId);
         }
     }, [location.state, user]);
-
+useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
     // Use the selectedUserId, selectedCustomerId, selectedBranchId for fetching cart items
     const userId = selectedUserId || user?.userId;
     const customerId = selectedCustomerId || user?.customerId;
@@ -2914,10 +2919,10 @@ function Cart() {
                                 </div>
 
                                 {!collapsedCategories.has(category.category) && (
-                                    <div className="category-items">
+                                    <div className= "category-items">
                                         {category.items.length === 0 ? (
                                             <div className="empty-category">{t('No items in this category')}</div>
-                                        ) : (
+                                        ) : !isMobile ? (
                                             category.items.map((item, idx) => (
                                                 <div key={item.id + '-' + idx} className="cart-item">
                                                     <div className="item-image">
@@ -2964,6 +2969,56 @@ function Cart() {
                                                         </button>
                                                     </div>
                                                 </div>
+                                            ))
+                                        ) : (
+                                            category.items.map((item, idx) => (
+                                                <>
+                                                <div key={item.id + '-' + idx} className="cart-item">
+                                                    <div className="item-image">
+                                                        <img
+                                                            src={item.imageUrl || '/placeholder-image.png'}
+                                                            alt={item.name}
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = '/placeholder-image.png';
+                                                            }}
+                                                            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8 }}
+                                                        />
+                                                    </div>
+                                                    <div className="item-details">
+                                                        <h4 className="item-name">{item.name}</h4>
+                                                        <p className="item-code">{item.productCode}</p>
+                                                        {item.description && <p className="item-description">{item.description}</p>}
+                                                        <QuantityController
+                                                            itemId={item.id}
+                                                            quantity={quantities[item.id] !== undefined ? quantities[item.id] : 0}
+                                                            onQuantityChange={handleQuantityChange}
+                                                            onInputChange={handleQuantityInputChange}  // Add this new handler
+                                                            stopPropagation={true}
+                                                            minQuantity={Number(item.moq) || 0}
+                                                            moq={Number(item.moq) || 0}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="item-price-panel">                                                        <span className="item-price">
+                                                        {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1)).toFixed(2)}
+                                                        <span className="sar-label"> {t("SAR")}</span>
+                                                    </span>
+
+                                                        <span className="tax-row">{t("VAT: ")}{Number(item.vatPercentage)}%</span>
+                                                        <span className="item-total-price">
+                                                            {t("Net Amount:")} {(Number(item.price) * Number(quantities[item.id] || item.quantity || 1) +
+                                                                (((Number(item.price) * Number(quantities[item.id] || item.quantity || 1)) / 100) * Number(item.vatPercentage))).toFixed(2)} {t("SAR")}
+                                                        </span>
+                                                        <button
+                                                            className="remove-btn"
+                                                            onClick={() => handleRemoveItem(item)}
+                                                            disabled={processingCategories.has(category.category)}
+                                                        >
+                                                            {processingCategories.has(category.category) ? t('Processing...') : t('Remove item')}
+                                                        </button>
+                                                    </div>
+                                                    </>
                                             ))
                                         )}
                                         {/* Show partial payment for VMCO Machines */}

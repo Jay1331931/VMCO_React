@@ -2594,6 +2594,7 @@ function Orders() {
                   showRowPopup={showRowPopup}
                   setShowRowPopup={setShowRowPopup}
                   getPaymentStatusClass={getPaymentStatusClass}
+                  disableExtendRowFullWidth={true}
                   dataGridComponent={
                     <DataGrid
                       apiRef={gridApiRef}

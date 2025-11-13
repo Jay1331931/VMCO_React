@@ -1707,6 +1707,10 @@ td.label-cell {
   .products-data-table input[type="text"] {
     width: 100px;
   }
+
+  .products-data-table td{
+    padding: 20px 4px;
+  }
   .signature-wrapper {
   position: relative;
   border: 1px solid #ddd;
