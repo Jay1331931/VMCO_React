@@ -510,6 +510,16 @@ function CustomerDetails() {
       window.addEventListener("resize", handleResize);
       return () => window.removeEventListener("resize", handleResize);
     }, []);
+    useEffect(() => {
+  const activeTab = document.querySelector(".customer-onboarding-tabs-vertical .tab.active");
+  if (activeTab) {
+    activeTab.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }
+}, [activeTab]);
   const fetchWorkflowDataOfCustomer = async (workflowId) => {
     try {
       const response = await fetch(

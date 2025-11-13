@@ -2695,6 +2695,10 @@ function Orders() {
                           borderRadius: "8px",
                           backgroundColor: "#f8f9fa",
                         },
+                        "& .MuiOutlinedInput-root": {
+                          width: "100% !important",
+                          minWidth: "230px !important", 
+                        }
                       }}
                       // }}
                     />

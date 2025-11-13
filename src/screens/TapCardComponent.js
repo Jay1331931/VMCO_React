@@ -237,7 +237,7 @@ const createChargeRequest = async (tokenDATA) => {
     }
   } catch (error) {
        if (error.response?.data?.status?.toLowerCase() === "error" && error.response?.data?.details?.errors?.length > 0) {
-      const errorMessage = error.response.data.details.errors
+      const errorMessage = error?.response?.data?.details?.errors
         .map((err) => `${err.code} - ${err.description}`)
         .join("\n");
 
@@ -569,7 +569,7 @@ const createChargeRequest = async (tokenDATA) => {
             marginBottom: "25px",
             border: "1px solid #e0e0e0",
             borderRadius: "10px",
-            padding: "20px",
+            padding: "20px 8px",
             backgroundColor: "#fafafa",
             display: initialized && !paymentProcessing ? "block" : "none",
           }}
