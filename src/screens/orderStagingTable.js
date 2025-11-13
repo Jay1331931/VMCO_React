@@ -244,6 +244,85 @@ function OrderStagingTable() {
         setFilterAnchor(null);
     };
 
+    // Handle order ID click - fetch sales order and sales order lines, then navigate
+    const handleOrderIdClick = async (tempOrder) => {
+        try {
+            console.log("Fetching order details for orderId:", tempOrder.orderId);
+
+            // Fetch sales order details
+            const orderResponse = await fetch(`${API_BASE_URL}/sales-order/id/${tempOrder.orderId}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!orderResponse.ok) {
+                throw new Error("Failed to fetch sales order details");
+            }
+
+            const orderResult = await orderResponse.json();
+            console.log("Sales order details:", orderResult);
+
+            if (orderResult.status !== "Ok" || !orderResult.data) {
+                throw new Error("Invalid order data received");
+            }
+
+            // Fetch sales order lines
+            const linesParams = new URLSearchParams({
+                page: "1",
+                pageSize: "10000",
+                search: "",
+                sortBy: "id",
+                sortOrder: "asc",
+                filters: JSON.stringify({ orderId: tempOrder.orderId }),
+            });
+
+            const linesResponse = await fetch(
+                `${API_BASE_URL}/sales-order-lines/pagination?${linesParams.toString()}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!linesResponse.ok) {
+                throw new Error("Failed to fetch sales order lines");
+            }
+
+            const linesResult = await linesResponse.json();
+            console.log("Sales order lines:", linesResult);
+
+            let salesOrderLines = [];
+            if (linesResult.status === "Ok" && linesResult.data && Array.isArray(linesResult.data.data)) {
+                salesOrderLines = linesResult.data.data;
+            }
+
+            // Navigate to order details with the fetched data
+            navigate("/orderDetails", {
+                state: {
+                    order: {
+                        ...orderResult.data,
+                        salesOrderLines,
+                    },
+                    mode: "edit",
+                },
+            });
+        } catch (err) {
+            console.error("Error fetching order details:", err);
+            Swal.fire({
+                title: "Error",
+                text: err.message || "Failed to fetch order details. Please try again.",
+                icon: "error",
+                confirmButtonText: "OK",
+            });
+        }
+    };
+
     // Export functionality
     const handleExportData = async () => {
         try {
@@ -336,7 +415,23 @@ function OrderStagingTable() {
             width: columnDimensions.orderId?.width || 100,
             align: isArabic ? "right" : "left",
             headerAlign: isArabic ? "right" : "left",
-            renderCell: (params) => <span>{params.value || "-"}</span>,
+            renderCell: (params) => (
+                <span
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleOrderIdClick(params.row);
+                    }}
+                    style={{
+                        color: "var(--navy-blue)",
+                        cursor: "pointer",
+                        textDecoration: "none",
+                    }}
+                    onMouseEnter={(e) => (e.target.style.textDecoration = "underline")}
+                    onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+                >
+                    {params.value || "-"}
+                </span>
+            ),
         },
         {
             field: "companyName",
