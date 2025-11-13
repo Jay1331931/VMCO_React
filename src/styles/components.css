@@ -1057,7 +1057,7 @@ body.catalog-page #root {
   font-size: 1rem !important;
 }
 .catalog-fixed-header {
-  padding: 20px 0px 0px 0px;
+  padding: 20px 0px 10px 0px;
 }
   .page-header {
     flex-direction: column;
@@ -1249,7 +1249,7 @@ body.catalog-page #root {
     padding: 0 10px 10px 10px;
   }
   .cart-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
     padding: 16px 0;
   }
@@ -1257,7 +1257,11 @@ body.catalog-page #root {
     margin-bottom: 0;
   }
   .item-price-panel {
+    flex-direction: row;
     align-items: flex-start;
+  }
+  .checkout-row {
+    flex-direction: column !important;
   }
   .checkout-btn {
     width: 100%;

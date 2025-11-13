@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import "../styles/components.css";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,7 @@ import SyncIcon from "@mui/icons-material/Sync";
 import IosShareIcon from "@mui/icons-material/IosShare";
 import TableMobile from "../components/TableMobile";
 import Constants from "../constants";
+import CustomerCard from "../components/CustomerCard";
 const getStatusClass = (status) => {
   switch (status) {
     case "Approved":
@@ -110,6 +111,19 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
   console.log("RBAC Manager:", rbacMgr);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   // const [paymentChangesIsThere, setPaymentChangesIsThere] = useState(false);
+    const contentRef = useRef(null);
+  const [isAtTop, setIsAtTop] = useState(true);
+  
+    useEffect(() => {
+      const handleScroll = () => {
+        const scrollTop = contentRef.current?.scrollTop || 0;
+        setIsAtTop(scrollTop < 20); // detect near top
+      };
+  
+      const container = contentRef.current;
+      container?.addEventListener("scroll", handleScroll);
+      return () => container?.removeEventListener("scroll", handleScroll);
+    }, []);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     console.log("isMobile", isMobile);
@@ -1754,14 +1768,26 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
       case t("customers"):
         const customerColumnsToUse = visibleColumns;
 
-        return isMobile ? (
-          <div className="table-container">
+        return isMobile ? 
+        (
+          <div className="orders-content">
             {loading ? (
               <LoadingSpinner />
             ) : error ? (
               <div className="error-message">{error}</div>
             ) : (
-              <TableMobile
+              <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+                <TableMobile
                 columns={customerColumnsToUse}
                 allColumns={isApprovalMode ? approvalColumns : customerColumns}
                 data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
@@ -1771,10 +1797,11 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                 setSelectedRow={setSelectedRow}
                 showRowPopup={showRowPopup}
                 setShowRowPopup={setShowRowPopup}
+                disableExtendRowFullWidth={true}
                 dataGridComponent={
                   <DataGrid
-                    rows={isApprovalMode ? paginatedApprovals : paginatedCustomers}
-                    columns={customerColumnsToUse}
+                    rows={[]}
+                    columns={[]}
                     pageSize={pageSize}
                     rowCount={total}
                     getRowId={(row) => row?.workflowInstanceId || row?.id}
@@ -1806,7 +1833,7 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                           filters={filters}
                           columnVisibilityModel={columnVisibilityModel}
                           searchPlaceholder="Search customers..."
-                          showColumnVisibility={true}
+                          showColumnVisibility={false}
                           showFilters={true}
                           showExport={false}
                           showUpload={false}
@@ -1817,26 +1844,141 @@ const columnWidthsKey = `${pageName}_${role}_columnWidths`;
                         />
                       ),
                     }}
+                    // sx={{
+                    //   "& .MuiDataGrid-row": {
+                    //     cursor: "pointer",
+                    //     "&:hover": {
+                    //       backgroundColor: "rgba(0, 0, 0, 0.04)",
+                    //     },
+                    //   },
+                    //   '.MuiDataGrid-cell': {
+                    //     textAlign: 'center',
+                    //     display: 'flex',
+                    //     alignItems: 'center',
+                    //     justifyContent: 'center',
+                    //   }
+                    // }}
                     sx={{
-                      "& .MuiDataGrid-row": {
-                        cursor: "pointer",
-                        "&:hover": {
-                          backgroundColor: "rgba(0, 0, 0, 0.04)",
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
                         },
-                      },
-                      '.MuiDataGrid-cell': {
-                        textAlign: 'center',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }
-                    }}
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "0px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                      }}
                   />
                 }
               />
+              </div>
+              <CustomerCard
+    customers={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+    handleViewDetails={handleShowAllDetailsClick}
+    handleSync={HandleFandOFailCustomer}
+  />
+              </>
+              // <TableMobile
+              //   columns={customerColumnsToUse}
+              //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
+              //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+              //   showAllDetails={true}
+              //   handleAllDetailsClick={handleShowAllDetailsClick}
+              //   selectedRow={selectedRow}
+              //   setSelectedRow={setSelectedRow}
+              //   showRowPopup={showRowPopup}
+              //   setShowRowPopup={setShowRowPopup}
+              //   dataGridComponent={
+              //     <DataGrid
+              //       rows={[]}
+              //       columns={[]}
+              //       pageSize={pageSize}
+              //       rowCount={total}
+              //       getRowId={(row) => row?.workflowInstanceId || row?.id}
+              //       onRowClick={handleRowClick}
+              //       columnVisibilityModel={columnVisibilityModel}
+              //       onColumnVisibilityModelChange={setColumnVisibilityModel}
+              //       sortModel={sortModel}
+              //       onSortModelChange={handleSortModelChange}
+              //       disableSelectionOnClick
+              //       disableColumnMenu
+              //       hideFooter={true}
+              //       hideFooterPagination={true}
+              //       disableExtendRowFullWidth={true}
+              //       pagination={false}
+              //       autoHeight
+              //       rowHeight={55}
+              //       showToolbar
+              //       slots={{
+              //         toolbar: () => (
+              //           <CustomToolbar
+              //             searchQuery={searchQuery}
+              //             filterAnchor={filterAnchor}
+              //             onSearch={handleSearch}
+              //             setSearchQuery={setSearchQuery}
+              //             setFilterAnchor={setFilterAnchor}
+              //             handleFilterChange={handleFilterChange}
+              //             onColumnVisibilityChange={setColumnVisibilityModel}
+              //             columns={filteredData}
+              //             filters={filters}
+              //             columnVisibilityModel={columnVisibilityModel}
+              //             searchPlaceholder="Search customers..."
+              //             showColumnVisibility={true}
+              //             showFilters={true}
+              //             showExport={false}
+              //             showUpload={false}
+              //             showApproval={true}
+              //             columnsToDisplay={columnsToDisplay}
+              //             handleApproval={handleApproval}
+              //             isApprovalMode={isApprovalMode}
+              //           />
+              //         ),
+              //       }}
+              //       sx={{
+              //         "& .MuiDataGrid-row": {
+              //           cursor: "pointer",
+              //           "&:hover": {
+              //             backgroundColor: "rgba(0, 0, 0, 0.04)",
+              //           },
+              //         },
+              //         '.MuiDataGrid-cell': {
+              //           textAlign: 'center',
+              //           display: 'flex',
+              //           alignItems: 'center',
+              //           justifyContent: 'center',
+              //         }
+              //       }}
+              //     />
+              //   }
+              // />
             )}
           </div>
-        ) : (
+        ) 
+        : (
           <div className="table-container">
             {loading ? (
               <LoadingSpinner />

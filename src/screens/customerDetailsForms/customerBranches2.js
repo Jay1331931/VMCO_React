@@ -1705,13 +1705,17 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
               {currentItems.map((branch) => (
                 <div key={branch.id} className="branch-card">
                   <div
-                    className="branch-summary"
+                    // className="branch-summary"
+                    style={{display: "flex", flexDirection: "row", justifyContent: "space-between"}}
                     onClick={() => toggleRow(branch.id)}
                   >
+                    <div style={{display: "flex"}}>
                     <div className="branch-id">
                       {branch.erp_branch_id || branch.id}
                     </div>
                     <div className="branch-name">{branch.branchNameEn}</div>
+                    </div>
+                    <div style={{display: "flex", justifySelf: "flex-end"}}>
                     <div className="branch-status">
                       <span
                         className={`branches-status-badge ${getStatusClass(
@@ -1728,6 +1732,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                         <FontAwesomeIcon icon={faChevronRight} />
                       )}
                     </button>
+                    </div>
                   </div>
                 </div>
               ))}
