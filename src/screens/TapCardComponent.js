@@ -1,6 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,7 @@ const TapCardPayment = () => {
   const [isPayButtonValid, setisPayButtonValid] = useState(false);
   const { token } = useAuth();
   const { t } = useTranslation();
+  const navigate=useNavigate()
 
   const orderIdDecoded = atob(decodeURIComponent(orderId));
   const amountDecoded = atob(decodeURIComponent(amount));
@@ -196,26 +197,66 @@ const TapCardPayment = () => {
     setisPayButtonValid(false);
   };
 
-  const createChargeRequest = async (tokenDATA) => {
-    try {
-      const payload = {
-        salesOrderId: orderIdDecoded,
-        amount: amountDecoded,
-        customerName: CustomerDetails?.company_name_en,
-        tokenData: tokenDATA,
-        orderType: orderTypeDecoded,
-      };
-      const { data } = await api.post(`/payment/generate-link`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
+const createChargeRequest = async (tokenDATA) => {
+  try {
+    const payload = {
+      salesOrderId: orderIdDecoded,
+      amount: amountDecoded,
+      customerName: CustomerDetails?.company_name_en,
+      tokenData: tokenDATA,
+      orderType: orderTypeDecoded,
+    };
+
+    const { data } = await api.post(`/payment/generate-link`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (data?.status?.toLowerCase() === "error" && data?.details?.errors?.length > 0) {
+      const errorMessage = data.details.errors
+        .map((err) => `${err.code} - ${err.description}`)
+        .join("\n");
+
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: errorMessage || "Something went wrong during payment.",
+        confirmButtonColor: "#0b4c45",
       });
-      if (data?.data?.url) window.location.replace(data.data.url);
-    } catch (error) {
-      console.error("Failed to create charge request", error);
-    } finally {
-      setIsProcessing(false);
-      setPaymentProcessing(false);
+
+      return; 
     }
-  };
+    if (data?.data?.url) {
+      const paymentUrl = data.data.url;
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        navigate("/orders");
+        window.open(paymentUrl, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.replace(paymentUrl);
+      }
+    }
+  } catch (error) {
+       if (error.response?.data?.status?.toLowerCase() === "error" && error.response?.data?.details?.errors?.length > 0) {
+      const errorMessage = error?.response?.data?.details?.errors
+        .map((err) => `${err.code} - ${err.description}`)
+        .join("\n");
+
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: errorMessage || "Something went wrong during payment.",
+        confirmButtonColor: "#0b4c45",
+      });
+
+      return; 
+    }
+    console.error("Failed to create charge request", error);
+  } finally {
+    setIsProcessing(false);
+    setPaymentProcessing(false);
+  }
+};
+
 
   return (
     // <div
@@ -528,7 +569,7 @@ const TapCardPayment = () => {
             marginBottom: "25px",
             border: "1px solid #e0e0e0",
             borderRadius: "10px",
-            padding: "20px",
+            padding: "20px 8px",
             backgroundColor: "#fafafa",
             display: initialized && !paymentProcessing ? "block" : "none",
           }}
