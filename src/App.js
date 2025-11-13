@@ -39,6 +39,7 @@ import BulkUploadBranchAndCustomer from "./screens/bulkUploadBranchAndCustomer";
 import TapCardComponent from "./screens/TapCardComponent";
 import DeliveryScheduleEditor from "./screens/deliveryScheduleEditor";
 import PriceListEditor from "./screens/priceListEditor";
+import OrderStagingTable from "./screens/orderStagingTable";
 import CustomersMUI from "./screens/customersmui";
 import DomainVerification from "./screens/DomainVerification";
 import ApprovalHistory from "./screens/approvalHistory";
@@ -117,6 +118,7 @@ function App() {
         <Route path="/deliveryScheduleEditor" element={<ProtectedRoute page="deliveryScheduleEditor"><DeliveryScheduleEditor /></ProtectedRoute>} />
         <Route path="/priceListEditor" element={<ProtectedRoute page="priceListEditor"><PriceListEditor /></ProtectedRoute>} />
         <Route path="/approvalHistory" element={<ProtectedRoute page="approvalHistory"><ApprovalHistory /></ProtectedRoute>} />
+        <Route path="/orderStagingTable" element={<ProtectedRoute page="orderStagingTable"><OrderStagingTable /></ProtectedRoute>} />
         {/* <Route path="/logout" element={<Logout />} /> */}
         <Route path="/payment" element={<Payment />} />
         <Route path="/bankTransactions" element={<BankTransactions />} />
