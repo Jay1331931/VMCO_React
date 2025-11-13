@@ -195,6 +195,16 @@ function Products({ customerId, customer, setTabsHeight }) {
     categoryFilter,
     subCategoryFilter,
   ]);
+  useEffect(() => {
+      const activeEl = document.querySelector(".tabs .category-tab.active");
+      if (activeEl) {
+        activeEl.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest",
+        });
+      }
+    }, [activeEntity]);
 
   const toggleApprovalMode = () => {
     setApprovalMode(!isApprovalMode);

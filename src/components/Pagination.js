@@ -19,26 +19,75 @@ const Pagination = ({
     setPageInput(currentPage.toString());
   }, [currentPage]);
 
+  // const renderPageNumbers = () => {
+  //   return Array.from({ length: totalPages }, (_, i) => i + 1)
+  //     .filter(
+  //       (page) =>
+  //         Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages
+  //     )
+  //     .map((page, idx, arr) => (
+  //       <React.Fragment key={page}>
+  //         {idx > 0 && page - arr[idx-1] > 1 && (
+  //           <span className="dots">…</span>
+  //         )}
+  //         <button
+  //           onClick={() => onPageChange(page)}
+  //           className={page === currentPage ? "active" : ""}
+  //         >
+  //           {page}
+  //         </button>
+  //       </React.Fragment>
+  //     ));
+  // };
   const renderPageNumbers = () => {
-    return Array.from({ length: totalPages }, (_, i) => i + 1)
-      .filter(
-        (page) =>
-          Math.abs(currentPage - page) <= 2 || page === 1 || page === totalPages
-      )
-      .map((page, idx, arr) => (
-        <React.Fragment key={page}>
-          {idx > 0 && page - arr[idx - 1] > 1 && (
-            <span className="dots">…</span>
-          )}
-          <button
-            onClick={() => onPageChange(page)}
-            className={page === currentPage ? "active" : ""}
-          >
-            {page}
-          </button>
-        </React.Fragment>
-      ));
-  };
+  const maxVisible = 3; // ✅ show at most 5 page buttons
+  const pages = [];
+
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = startPage + maxVisible - 1;
+
+  // Adjust when near the end
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
+  return (
+    <>
+      {/* Always show first page */}
+      {/* {startPage > 1 && (
+        <>
+          <button onClick={() => onPageChange(1)}>1</button>
+          {startPage > 2 && <span className="dots">…</span>}
+        </>
+      )} */}
+
+      {/* Visible pages */}
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page)}
+          className={page === currentPage ? "active" : ""}
+        >
+          {page}
+        </button>
+      ))}
+
+      {/* Always show last page */}
+      {/* {endPage < totalPages && (
+        <>
+          {endPage < totalPages - 1 && <span className="dots">…</span>}
+          <button onClick={() => onPageChange(totalPages)}>{totalPages}</button>
+        </>
+      )} */}
+    </>
+  );
+};
+
 
   const handlePageJump = (e) => {
     const pageNumber = Number(e.target.value);
@@ -163,7 +212,7 @@ const Pagination = ({
                     }
                     .pagination-controls button {
                         font-size: 0.78rem;
-                        padding: 4px 5px;
+                        padding: 4px 12px;
                     }
                     .pagination-jump label,
                     .page-info {

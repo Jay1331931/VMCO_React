@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Sidebar from "../components/Sidebar";
@@ -9,7 +9,8 @@ import { convertToTimezone, TIMEZONES } from "../utilities/convertToTimezone";
 import RbacManager from "../utilities/rbac";
 import CustomToolbar from "../components/CustomToolbar"; // same as used in Support
 import LoadingSpinner from "../components/LoadingSpinner";
-
+import BankTransactionsCard from "../components/BankTransactionsCard";
+import TableMobile from "../components/TableMobile";
 import {
   DataGrid,
   useGridApiRef,
@@ -38,9 +39,28 @@ const BankTransactions = () => {
   const [filters, setFilters] = useState({});
   const [columnVisibilityModel, setColumnVisibilityModel] = useState({});
   const [filterAnchor, setFilterAnchor] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const gridApiRef = useGridApiRef();
+  const contentRef = useRef(null);
+  const [isAtTop, setIsAtTop] = useState(true);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    console.log("isMobile", isMobile);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = contentRef.current?.scrollTop || 0;
+      setIsAtTop(scrollTop < 20); // detect near top
+    };
+
+    const container = contentRef.current;
+    container?.addEventListener("scroll", handleScroll);
+    return () => container?.removeEventListener("scroll", handleScroll);
+  }, []);
   // RBAC
   const rbacMgr = new RbacManager(
     user?.userType === "employee" && user?.roles[0] !== "admin"
@@ -184,7 +204,205 @@ const BankTransactions = () => {
     <Sidebar title={t("Bank Transactions")}>
       {isV("BankContent") && (
         <div className="bank-transactions-container">
-          <div className="table-container">
+          {isMobile ? 
+          (
+          <div className="orders-content">
+            {loading ? (
+              <LoadingSpinner />
+            ) : error ? (
+              <div className="error-message">{error}</div>
+            ) : (
+              <>
+              <div
+                className="catalog-fixed-header"
+                style={{
+                  top: isAtTop ? "60px" : "0px", // 👈 adjust height of filter-section
+                  position: "sticky",
+                  zIndex: 20,
+                  transition: "top 0.3s ease",
+                  background: "#fff",
+                }}
+              >
+                <TableMobile
+                columns={visibleColumns}
+                allColumns={visibleColumns}
+                data={transactions}
+                showAllDetails={true}
+                // handleAllDetailsClick={handleShowAllDetailsClick}
+                // selectedRow={selectedRow}
+                // setSelectedRow={setSelectedRow}
+                // showRowPopup={showRowPopup}
+                // setShowRowPopup={setShowRowPopup}
+                disableExtendRowFullWidth={true}
+                dataGridComponent={
+                  <DataGrid
+                apiRef={gridApiRef}
+                rows={transactions}
+                columns={visibleColumns}
+                pageSize={pageSize}
+                rowCount={total}
+                onRowClick={(params) => handleRowClick(params.row)}
+                columnVisibilityModel={columnVisibilityModel}
+                onColumnVisibilityModelChange={handleColumnVisibilityChange}
+                sortModel={sortModel}
+                onSortModelChange={handleSortModelChange}
+                disableSelectionOnClick
+                disableColumnMenu
+                hideFooter={true}
+                hideFooterPagination={true}
+                pagination={false}
+                rowHeight={55}
+                showToolbar
+                slots={{
+                  toolbar: () => (
+                    <CustomToolbar
+                      searchQuery={searchQuery}
+                      filterAnchor={filterAnchor}
+                      onSearch={handleSearch}
+                      setSearchQuery={setSearchQuery}
+                      setFilterAnchor={setFilterAnchor}
+                      handleFilterChange={handleFilterChange}
+                      onColumnVisibilityChange={handleColumnVisibilityChange}
+                      columns={filteredData}
+                      filters={filters}
+                      columnVisibilityModel={columnVisibilityModel}
+                      searchPlaceholder={t("Search transactions...")}
+                      showColumnVisibility={false}
+                      showFilters={true}
+                      showExport={false}
+                      showUpload={false}
+                      showAdd={isV('btnAdd')}
+                      handleAddClick={handleAddClick}
+                      buttonName={t("add")}
+                      columnsToDisplay={columnsToDisplay}
+                    />
+                  ),
+                }}
+                sx={{
+                        "& .MuiDataGrid-overlay": {
+                          display: "none !important", // ✅ hides “No rows” message
+                        },
+                        "& .MuiDataGrid-row": {
+                          // cursor: "default",
+                          // "&:hover": {
+                          //   backgroundColor: "rgba(0, 0, 0, 0.04)",
+                          // },
+                          display: "none !important",
+                        },
+                        ".MuiDataGrid-cell": {
+                          display: "none !important",
+                        },
+                        "& .MuiDataGrid-main": {
+                          display: "none", // ✅ hides the main grid body
+                        },
+                        "& .MuiDataGrid-toolbar": {
+                          // position: "sticky",
+                          // top: 0,
+                          // zIndex: 10, // keeps it above rows
+                          // backgroundColor: "#fff", // ensures it doesn't become transparent
+                          // borderBottom: "1px solid #e0e0e0",
+                          padding: "0px",
+                          gap: "0px",
+                          border: "none",
+                        },
+
+                        "&.catalog-datagrid": {
+                          border: "2px solid black",
+                          borderRadius: "8px",
+                          backgroundColor: "#f8f9fa",
+                        },
+                        "& .MuiOutlinedInput-root": {
+                          width: "100% !important",
+                          minWidth: "230px !important", 
+                        }
+                      }}
+              />
+                }
+              />
+              </div>
+              <BankTransactionsCard
+    transactions={transactions}
+    setSelectedRow={handleRowClick}
+  />
+              </>
+              // <TableMobile
+              //   columns={customerColumnsToUse}
+              //   allColumns={isApprovalMode ? approvalColumns : customerColumns}
+              //   data={isApprovalMode ? paginatedApprovals : paginatedCustomers}
+              //   showAllDetails={true}
+              //   handleAllDetailsClick={handleShowAllDetailsClick}
+              //   selectedRow={selectedRow}
+              //   setSelectedRow={setSelectedRow}
+              //   showRowPopup={showRowPopup}
+              //   setShowRowPopup={setShowRowPopup}
+              //   dataGridComponent={
+              //     <DataGrid
+              //       rows={[]}
+              //       columns={[]}
+              //       pageSize={pageSize}
+              //       rowCount={total}
+              //       getRowId={(row) => row?.workflowInstanceId || row?.id}
+              //       onRowClick={handleRowClick}
+              //       columnVisibilityModel={columnVisibilityModel}
+              //       onColumnVisibilityModelChange={setColumnVisibilityModel}
+              //       sortModel={sortModel}
+              //       onSortModelChange={handleSortModelChange}
+              //       disableSelectionOnClick
+              //       disableColumnMenu
+              //       hideFooter={true}
+              //       hideFooterPagination={true}
+              //       disableExtendRowFullWidth={true}
+              //       pagination={false}
+              //       autoHeight
+              //       rowHeight={55}
+              //       showToolbar
+              //       slots={{
+              //         toolbar: () => (
+              //           <CustomToolbar
+              //             searchQuery={searchQuery}
+              //             filterAnchor={filterAnchor}
+              //             onSearch={handleSearch}
+              //             setSearchQuery={setSearchQuery}
+              //             setFilterAnchor={setFilterAnchor}
+              //             handleFilterChange={handleFilterChange}
+              //             onColumnVisibilityChange={setColumnVisibilityModel}
+              //             columns={filteredData}
+              //             filters={filters}
+              //             columnVisibilityModel={columnVisibilityModel}
+              //             searchPlaceholder="Search customers..."
+              //             showColumnVisibility={true}
+              //             showFilters={true}
+              //             showExport={false}
+              //             showUpload={false}
+              //             showApproval={true}
+              //             columnsToDisplay={columnsToDisplay}
+              //             handleApproval={handleApproval}
+              //             isApprovalMode={isApprovalMode}
+              //           />
+              //         ),
+              //       }}
+              //       sx={{
+              //         "& .MuiDataGrid-row": {
+              //           cursor: "pointer",
+              //           "&:hover": {
+              //             backgroundColor: "rgba(0, 0, 0, 0.04)",
+              //           },
+              //         },
+              //         '.MuiDataGrid-cell': {
+              //           textAlign: 'center',
+              //           display: 'flex',
+              //           alignItems: 'center',
+              //           justifyContent: 'center',
+              //         }
+              //       }}
+              //     />
+              //   }
+              // />
+            )}
+          </div>
+        )
+          :
+          (<div className="table-container">
             {loading ? (
               <LoadingSpinner />
             ) : error ? (
@@ -300,7 +518,8 @@ const BankTransactions = () => {
                 }}
               />
             )}
-          </div>
+          </div>)
+          }
            {
                               transactions?.length > 0 && (
                                 <Pagination

@@ -28,9 +28,16 @@ const PaymentPage = () => {
 
     const handleCancel = () => {
         // window.close();
-         const URL = `${window.location.protocol}//${window.location.host}/orders`
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        window.close();
+      }else{
+ const URL = `${window.location.protocol}//${window.location.host}/orders`
         
         window.location.replace(URL)
+      }
+        
     };
 
     const handleContinue = async () => {
