@@ -210,7 +210,7 @@ const createChargeRequest = async (tokenDATA) => {
     const { data } = await api.post(`/payment/generate-link`, payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (data?.status === "Error" && data?.details?.errors?.length > 0) {
+    if (data?.status?.toLowerCase() === "error" && data?.details?.errors?.length > 0) {
       const errorMessage = data.details.errors
         .map((err) => `${err.code} - ${err.description}`)
         .join("\n");
@@ -236,6 +236,20 @@ const createChargeRequest = async (tokenDATA) => {
       }
     }
   } catch (error) {
+       if (error.response?.data?.status?.toLowerCase() === "error" && error.response?.data?.details?.errors?.length > 0) {
+      const errorMessage = error.response.data.details.errors
+        .map((err) => `${err.code} - ${err.description}`)
+        .join("\n");
+
+      Swal.fire({
+        icon: "error",
+        title: "Payment Error",
+        text: errorMessage || "Something went wrong during payment.",
+        confirmButtonColor: "#0b4c45",
+      });
+
+      return; 
+    }
     console.error("Failed to create charge request", error);
   } finally {
     setIsProcessing(false);
