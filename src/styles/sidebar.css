@@ -414,6 +414,7 @@
     /* overflow-y: auto; */
     scroll-behavior: smooth;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
   .header-title {
     padding: 0px !important;

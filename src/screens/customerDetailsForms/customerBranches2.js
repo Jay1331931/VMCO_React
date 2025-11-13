@@ -1522,6 +1522,7 @@ const CustomerBranches = ({ customer, setTabsHeight, mode, inApproval }) => {
                       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                         border: "1px solid #3D5654",
                       },
+                      width: "150%"
                     },
                     "& .css-1uhhrmm-MuiAutocomplete-endAdornment": {
                       display: "none",

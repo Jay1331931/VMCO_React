@@ -132,6 +132,18 @@ function Catalog() {
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
   }, [activeCategory]);
+  const tabsRef = useRef([]);
+
+  useEffect(() => {
+    const activeEl = document.querySelector(".tabs .category-tab.active");
+    if (activeEl) {
+      activeEl.scrollIntoView({
+        behavior: "smooth",
+        inline: "center",
+        block: "nearest",
+      });
+    }
+  }, [activeCategory]);
 
   useEffect(() => {
     categoryFilterRef.current = categoryFilter;

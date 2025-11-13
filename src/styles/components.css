@@ -28,6 +28,7 @@
 /* Apply font family to all elements */
 * {
   font-family: var(--font-family);
+  -webkit-tap-highlight-color: transparent;
 }
 .orders-content {
   padding: 0px;
@@ -1327,6 +1328,7 @@ body.catalog-page #root {
   align-items: center;
   flex-direction: column;
   margin-top: 10vh;
+  -webkit-tap-highlight-color: transparent;
 }
 .login-screen .login-screen-text {
   margin-bottom: 40px;
