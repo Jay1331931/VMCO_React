@@ -267,9 +267,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((cat) => ({
-              name: cat.category || cat.name || cat,
-              value: cat.category || cat.name || cat,
-            }))
+            name: cat.category || cat.name || cat,
+            value: cat.category || cat.name || cat,
+          }))
           : [];
         setCategoryOptions(options);
       } catch (err) {
@@ -310,9 +310,9 @@ function Orders() {
 
         const options = Array.isArray(result.data)
           ? result.data.map((sub) => ({
-              name: sub.subCategory || sub.subcategory || sub.name || sub,
-              value: sub.subCategory || sub.subcategory || sub.name || sub,
-            }))
+            name: sub.subCategory || sub.subcategory || sub.name || sub,
+            value: sub.subCategory || sub.subcategory || sub.name || sub,
+          }))
           : [];
         setSubCategoryOptions(options);
       } catch (err) {
@@ -467,18 +467,25 @@ function Orders() {
     async (page = 1, searchTerm = "", customFilters = {}, sortedModel = []) => {
       setLoading(true);
       setError(null);
-      // customFilters.assignedType = "customerregion";
+
       const filtersCopy = { ...customFilters };
-      if (
-        filtersCopy.paymentMethod &&
-        (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
-          filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-      ) {
-        filtersCopy.paymentMethod = "Pre payment";
+
+      // Transform payment method filters
+      if (filtersCopy.paymentMethod) {
+        const paymentMethodLower = filtersCopy.paymentMethod.toLowerCase();
+
+        // If user searches for FOC, send sampleOrder=true filter
+        if (["f", "fo", "foc"].includes(paymentMethodLower)) {
+          delete filtersCopy.paymentMethod;
+          filtersCopy.sampleOrder = true;
+        }
+        // Transform Card Payment to Pre Payment
+        else if (paymentMethodLower === "card payment" || paymentMethodLower === "cardpayment") {
+          filtersCopy.paymentMethod = "Pre payment";
+        }
       }
       if (user?.userType === "employee") {
         console.log("Active Category", activeCategory);
-        // filtersCopy.entity = activeCategory;
         console.log("Filters Copy", filtersCopy);
       }
       try {
@@ -516,12 +523,8 @@ function Orders() {
               order.selectedCustomerName ||
               order.erpCustId ||
               "",
-            branchNameEn:
-              // order.branchNameEn + " (" + order.branchSequenceId + ")",
-              order.branchNameEn,
-            branchNameLc:
-              // order.branchNameLc + " (" + order.branchSequenceId + ")",
-              order.branchNameLc,
+            branchNameEn: order.branchNameEn,
+            branchNameLc: order.branchNameLc,
           }));
 
           setFilteredOrders(processedOrders);
@@ -549,12 +552,20 @@ function Orders() {
     setLoading(true);
     setError(null);
     const filtersCopy = { ...customFilters };
-    if (
-      filtersCopy.paymentMethod &&
-      (filtersCopy.paymentMethod.toLowerCase() === "card payment" ||
-        filtersCopy.paymentMethod.toLowerCase() === "cardpayment")
-    ) {
-      filtersCopy.paymentMethod = "Pre payment";
+
+    // Transform payment method filters
+    if (filtersCopy.paymentMethod) {
+      const paymentMethodLower = filtersCopy.paymentMethod.toLowerCase();
+
+      // If user searches for FOC, send sampleOrder=true filter
+      if (["f", "fo", "foc"].includes(paymentMethodLower)) {
+        delete filtersCopy.paymentMethod;
+        filtersCopy.sampleOrder = true;
+      }
+      // Transform Card Payment to Pre Payment
+      else if (paymentMethodLower === "card payment" || paymentMethodLower === "cardpayment") {
+        filtersCopy.paymentMethod = "Pre payment";
+      }
     }
     try {
       const params = new URLSearchParams({
@@ -1229,10 +1240,15 @@ function Orders() {
       include: isV("paymentMethod"),
       searchable: true,
       width: columnDimensions["paymentMethod"]?.width || 130,
-      // flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
+        // Check if it's a sample order
+        if (params.row.sampleOrder === true) {
+          return <span>{t("FOC")}</span>;
+        }
+
+        // Regular payment method display
         const value =
           params?.value?.toLowerCase() === "pre payment"
             ? "Card Payment"
@@ -1402,11 +1418,18 @@ function Orders() {
       flex: 1,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
-      renderCell: (params) => (
-        <label className={getPaymentStatusClass(params.value)}>
-          {t(params.value)}
-        </label>
-      ),
+      renderCell: (params) => {
+        if (params.row.sampleOrder === true) {
+          return <span> </span>;
+        }
+
+        // Regular payment status display
+        return (
+          <label className={getPaymentStatusClass(params.value)}>
+            {t(params.value)}
+          </label>
+        );
+      },
     },
     {
       field: "status",
@@ -1447,18 +1470,18 @@ function Orders() {
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  Constants.ENTITY.GMTC.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase())) ||
+                  Constants.ENTITY.SHC.toLowerCase())) ||
               (params?.row?.status?.toLowerCase() === "pending" &&
                 (params?.row?.entity.toLowerCase() ===
                   Constants.ENTITY.DAR.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.GMTC.toLowerCase() ||
+                  Constants.ENTITY.GMTC.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.SHC.toLowerCase() ||
+                  Constants.ENTITY.SHC.toLowerCase() ||
                   params?.row?.entity.toLowerCase() ===
-                    Constants.ENTITY.NAQI.toLowerCase()))) && (
+                  Constants.ENTITY.NAQI.toLowerCase()))) && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1497,29 +1520,29 @@ function Orders() {
           [Constants.ENTITY.VMCO]: (rowdata) =>
             rowdata.isMachine
               ? [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ]
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ]
               : [
-                  {
-                    paymentMethod: "Pre Payment",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Credit",
-                    paymentStatus: "Credit",
-                    status: "approved",
-                  },
-                  {
-                    paymentMethod: "Cash on Delivery",
-                    paymentStatus: "Pending",
-                    status: "approved",
-                  },
-                ],
+                {
+                  paymentMethod: "Pre Payment",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Credit",
+                  paymentStatus: "Credit",
+                  status: "approved",
+                },
+                {
+                  paymentMethod: "Cash on Delivery",
+                  paymentStatus: "Pending",
+                  status: "approved",
+                },
+              ],
           [Constants.ENTITY.SHC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.GMTC]: () => COMMON_RULES.SHC_GMTC,
           [Constants.ENTITY.NAQI]: () => COMMON_RULES.NAQI_DAR,
@@ -1529,9 +1552,9 @@ function Orders() {
         const isValidForSync = rules.some(
           (rule) =>
             rule?.paymentMethod?.toLowerCase() ===
-              rowdata.paymentMethod?.toLowerCase() &&
+            rowdata.paymentMethod?.toLowerCase() &&
             rule?.paymentStatus?.toLowerCase() ===
-              rowdata.paymentStatus?.toLowerCase() &&
+            rowdata.paymentStatus?.toLowerCase() &&
             rule?.status?.toLowerCase() === rowdata.status?.toLowerCase()
         );
         return (
@@ -1549,18 +1572,18 @@ function Orders() {
                   (params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.DAR.toLowerCase() ||
                     params?.row?.entity.toLowerCase() ===
-                      Constants.ENTITY.GMTC.toLowerCase() ||
+                    Constants.ENTITY.GMTC.toLowerCase() ||
                     params?.row?.entity.toLowerCase() ===
-                      Constants.ENTITY.SHC.toLowerCase())) ||
+                    Constants.ENTITY.SHC.toLowerCase())) ||
                 (params?.row?.status?.toLowerCase() === "pending" &&
                   (params?.row?.entity.toLowerCase() ===
                     Constants.ENTITY.DAR.toLowerCase() ||
                     params?.row?.entity.toLowerCase() ===
-                      Constants.ENTITY.GMTC.toLowerCase() ||
+                    Constants.ENTITY.GMTC.toLowerCase() ||
                     params?.row?.entity.toLowerCase() ===
-                      Constants.ENTITY.SHC.toLowerCase() ||
+                    Constants.ENTITY.SHC.toLowerCase() ||
                     params?.row?.entity.toLowerCase() ===
-                      Constants.ENTITY.NAQI.toLowerCase()))) && (
+                    Constants.ENTITY.NAQI.toLowerCase()))) && (
                 <Box
                   component="span"
                   onClick={(e) => {
@@ -1579,7 +1602,7 @@ function Orders() {
                 </Box>
               )}
 
-            {isV("FandOSyncSO") && !rowdata.erpOrderId && (isValidForSync|| rowdata?.status?.toLowerCase()==='approved' && rowdata?.sampleOrder==true  )&& (
+            {isV("FandOSyncSO") && !rowdata.erpOrderId && (isValidForSync || rowdata?.status?.toLowerCase() === 'approved' && rowdata?.sampleOrder == true) && (
               <Box
                 component="span"
                 onClick={(e) => {
@@ -1819,11 +1842,13 @@ function Orders() {
       headerName: t("Payment Method"),
       include: isV("paymentMethod"),
       searchable: true,
-      minWidth: 130,
-      flex: 1,
+      width: columnDimensions["paymentMethod"]?.width || 130,
       align: isArabic ? "right" : "left",
       headerAlign: isArabic ? "right" : "left",
       renderCell: (params) => {
+        if (params.row.sampleOrder === true) {
+          return <span>{t("FOC")}</span>;
+        }
         const value =
           params?.value?.toLowerCase() === "pre payment"
             ? "Card Payment"
@@ -2240,18 +2265,15 @@ function Orders() {
           html: `
           <div style="text-align: center; margin: 20px 0;">
           <p><strong>${t("Processing Summary")}</strong></p>
-          ${
-            branchesProcessed > 0
-              ? `<span>${branchesProcessed} branch${
-                  branchesProcessed !== 1 ? "es" : ""
-                } processed</span><br/>`
+          ${branchesProcessed > 0
+              ? `<span>${branchesProcessed} branch${branchesProcessed !== 1 ? "es" : ""
+              } processed</span><br/>`
               : ""
-          }
-          ${
-            successMessageDetails
+            }
+          ${successMessageDetails
               ? `<p style="margin-top: 15px; font-weight: 500;">${successMessageDetails}</p>`
               : ""
-          }
+            }
           </div>`,
           icon: "success",
           confirmButtonText: t("OK"),
@@ -2299,9 +2321,9 @@ function Orders() {
 
   const totalPages =
     Number.isFinite(total) &&
-    Number.isFinite(pageSize) &&
-    total > 0 &&
-    pageSize > 0
+      Number.isFinite(pageSize) &&
+      total > 0 &&
+      pageSize > 0
       ? Math.ceil(total / pageSize)
       : 1;
 
@@ -2639,7 +2661,7 @@ function Orders() {
                             showApproval={
                               isV("approvalButton") &&
                               filters.entity?.toLowerCase() ===
-                                Constants.ENTITY.VMCO?.toLowerCase()
+                              Constants.ENTITY.VMCO?.toLowerCase()
                             }
                             handleAddClick={handleAddOrder}
                             handleUploadClick={HandleBulkOrderUpload}
@@ -2697,10 +2719,10 @@ function Orders() {
                         },
                         "& .MuiOutlinedInput-root": {
                           width: "100% !important",
-                          minWidth: "230px !important", 
+                          minWidth: "230px !important",
                         }
                       }}
-                      // }}
+                    // }}
                     />
                   }
                 />
@@ -2711,23 +2733,23 @@ function Orders() {
                 orderIds={filteredOrders.map((o) => o.id)}
                 setSelectedRow={handleOrderNumberClick}
                 handlePay={handlePay}
-                // toolbarProps={{
-                //   searchQuery,
-                //   setSearchQuery,
-                //   filterAnchor,
-                //   setFilterAnchor,
-                //   handleFilterChange,
-                //   onSearch: handleSearch,
-                //   visibleColumns,
-                //   columnVisibilityModel,
-                //   setColumnVisibilityModel,
-                //   isV,
-                //   handleAddOrder,
-                //   HandleBulkOrderUpload,
-                //   handleApproval,
-                //   isApprovalMode,
-                //   t,
-                // }}
+              // toolbarProps={{
+              //   searchQuery,
+              //   setSearchQuery,
+              //   filterAnchor,
+              //   setFilterAnchor,
+              //   handleFilterChange,
+              //   onSearch: handleSearch,
+              //   visibleColumns,
+              //   columnVisibilityModel,
+              //   setColumnVisibilityModel,
+              //   isV,
+              //   handleAddOrder,
+              //   HandleBulkOrderUpload,
+              //   handleApproval,
+              //   isApprovalMode,
+              //   t,
+              // }}
               />
             </>
           )
@@ -2800,7 +2822,7 @@ function Orders() {
                           showApproval={
                             isV("approvalButton") &&
                             filters.entity?.toLowerCase() ===
-                              Constants.ENTITY.VMCO?.toLowerCase()
+                            Constants.ENTITY.VMCO?.toLowerCase()
                           }
                           handleAddClick={handleAddOrder}
                           handleUploadClick={HandleBulkOrderUpload}
