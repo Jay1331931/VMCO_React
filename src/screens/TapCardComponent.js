@@ -210,7 +210,7 @@ const createChargeRequest = async (tokenDATA) => {
     const { data } = await api.post(`/payment/generate-link`, payload, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (data?.status === "Error" && data?.details?.errors?.length > 0) {
+    if (data?.status?.toLowerCase() === "error" && data?.details?.errors?.length > 0) {
       const errorMessage = data.details.errors
         .map((err) => `${err.code} - ${err.description}`)
         .join("\n");
